@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "EEZ Studio"
-#define MyAppVersion "0.7.0"
+#define MyAppVersion "M1"
 #define MyAppPublisher "Envox d.o.o."
 #define MyAppURL "http://www.envox.hr/eez/studio/studio-introduction.html"
 #define MyAppExeName "eezstudio.exe"
@@ -20,7 +20,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\{#MyAppName}
+DefaultDirName={pf64}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile=..\LICENSE.TXT
