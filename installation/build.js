@@ -80,4 +80,6 @@ const options = {
     ignore
 };
 
-packager(options).then(appPaths => {});
+packager(options).then(async appPaths => {
+    fs.copyFileSync("./LICENSE.TXT", appPaths + "/LICENSE.EEZSTUDIO.TXT");
+});
