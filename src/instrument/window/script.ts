@@ -242,7 +242,7 @@ function prepareJavaScriptModules(instrument: InstrumentObject, shortcut: IShort
         connection: getConnection(instrument),
 
         instrument: {
-            properties() {
+            get properties() {
                 return instrument.properties;
             }
         },
