@@ -63,11 +63,42 @@ The EEZ Studio is an open source cross-platform modular visual tool aimed to add
 
 ## Installation
 
-### Windows
-
-
 ### Linux
 
+Download `eezstudio-linux-x64.tar.gz`, unpack and select `eezstudio`.
 
 ### Mac
 
+Download `eezstudio-mac.zip`, unpack and move `eezstudio.app` to Applications.
+
+### Windows
+
+Download and start `EEZ_Studio_setup.exe`.
+
+### Build and run from source (all operating systems)
+
+- Install `Node.JS 8.9.x` or newer
+- Install `node-gyp`, more information at https://github.com/nodejs/node-gyp#installation
+
+```
+clone git clone https://github.com/eez-open/studio
+cd studio
+npm run build
+npm start
+```
+
+## FAQ
+
+### Where is database file located?
+
+- Linux: ~/.config/eezstudio/storage.db
+- Mac: ~/Library/Application\ Support/eezstudio/storage.db
+- Windows: %appdata%\eezstudio\storage.db
+
+Creating database someplace else can be done from ESW Settings.
+
+### Where are installed extensions stored?
+
+- Linux: ~/.config/eezstudio/extensions
+- Mac: ~/Library/Application\ Support/eezstudio/extensions
+- Windows: %appdata%\eezstudio\extensions
