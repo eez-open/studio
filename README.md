@@ -91,14 +91,14 @@ npm start
 
 ### Where is database file located?
 
-- Linux: ~/.config/eezstudio/storage.db
-- Mac: ~/Library/Application\ Support/eezstudio/storage.db
-- Windows: %appdata%\eezstudio\storage.db
+- Linux: `~/.config/eezstudio/storage.db`
+- Mac: `~/Library/Application\ Support/eezstudio/storage.db`
+- Windows: `%appdata%\eezstudio\storage.db`
 
 Creating database someplace else can be done from ESW Settings.
 
 ### Where are installed extensions stored?
 
-- Linux: ~/.config/eezstudio/extensions
-- Mac: ~/Library/Application\ Support/eezstudio/extensions
-- Windows: %appdata%\eezstudio\extensions
+- Linux: `~/.config/eezstudio/extensions`
+- Mac: `~/Library/Application\ Support/eezstudio/extensions`
+- Windows: `%appdata%\eezstudio\extensions`
