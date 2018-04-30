@@ -77,11 +77,13 @@ export interface IWaveformRenderJobSpecification {
 interface IAverageContinuation {
     offsets: number[];
     offset: number;
+    commitAlways: boolean;
 }
 
 interface IMinMaxContinuation {
     offsets: number[];
     offset: number;
+    commitAlways: boolean;
 }
 
 interface IGraduallyContinuation {
@@ -90,6 +92,7 @@ interface IGraduallyContinuation {
     K: number;
     offsets: number[];
     offset: number;
+    commitAlways: boolean;
 }
 
 export function renderWaveformPath(
@@ -212,7 +215,8 @@ export function renderWaveformPath(
             if (new Date().getTime() - startTime > CONF_SINGLE_STEP_TIMEOUT) {
                 return {
                     offsets,
-                    offset
+                    offset,
+                    commitAlways: false
                 };
             }
 
@@ -287,7 +291,8 @@ export function renderWaveformPath(
             if (new Date().getTime() - startTime > CONF_SINGLE_STEP_TIMEOUT) {
                 return {
                     offsets,
-                    offset
+                    offset,
+                    commitAlways: false
                 };
             }
 
@@ -336,7 +341,7 @@ export function renderWaveformPath(
             ctx.fillStyle = addAlphaToColor(strokeColor, alpha);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            continuation = { a, b, K, offsets, offset };
+            continuation = { a, b, K, offsets, offset, commitAlways: true };
             return true;
         }
 

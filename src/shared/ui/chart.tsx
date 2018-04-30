@@ -50,8 +50,6 @@ const CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_BLACK_BACKGROUND = "#222";
 
 export const CONF_CURSOR_RADIUS = 8;
 
-const CONF_ZOOM_ALL_PADDING_PERCENT = 0;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 interface IAnimation {
@@ -319,10 +317,7 @@ class DynamicAxisController extends AxisController {
         }
 
         if (this.axisModel.dynamic.zoomMode === "all") {
-            return this.position === "x"
-                ? this.minValue
-                : this.minValue -
-                      CONF_ZOOM_ALL_PADDING_PERCENT / 100 * (this.maxValue - this.minValue);
+            return this.minValue;
         }
 
         let from = this.axisModel.dynamic.from;
@@ -354,10 +349,7 @@ class DynamicAxisController extends AxisController {
         }
 
         if (this.axisModel.dynamic.zoomMode === "all") {
-            return this.position === "x"
-                ? this.maxValue
-                : this.maxValue +
-                      CONF_ZOOM_ALL_PADDING_PERCENT / 100 * (this.maxValue - this.minValue);
+            return this.maxValue;
         }
 
         let from = this.axisModel.dynamic.from;
@@ -732,17 +724,8 @@ class FixedAxisController extends AxisController {
         }
 
         if (this.axisModel.fixed.zoomMode === "all") {
-            return calcSubdivisionScaleOffset(
-                this.position === "x"
-                    ? this.minValue
-                    : this.minValue -
-                      CONF_ZOOM_ALL_PADDING_PERCENT / 100 * (this.maxValue - this.minValue),
-                this.position === "x"
-                    ? this.maxValue
-                    : this.maxValue +
-                      CONF_ZOOM_ALL_PADDING_PERCENT / 100 * (this.maxValue - this.minValue),
-                this.majorSubdivison
-            ).offset;
+            return calcSubdivisionScaleOffset(this.minValue, this.maxValue, this.majorSubdivison)
+                .offset;
         }
 
         return this.axisModel.fixed.subdivisionOffset;
@@ -761,17 +744,8 @@ class FixedAxisController extends AxisController {
         }
 
         if (this.axisModel.fixed.zoomMode === "all") {
-            return calcSubdivisionScaleOffset(
-                this.position === "x"
-                    ? this.minValue
-                    : this.minValue -
-                      CONF_ZOOM_ALL_PADDING_PERCENT / 100 * (this.maxValue - this.minValue),
-                this.position === "x"
-                    ? this.maxValue
-                    : this.maxValue +
-                      CONF_ZOOM_ALL_PADDING_PERCENT / 100 * (this.maxValue - this.minValue),
-                this.majorSubdivison
-            ).scale;
+            return calcSubdivisionScaleOffset(this.minValue, this.maxValue, this.majorSubdivison)
+                .scale;
         }
 
         return this.axisModel.fixed.subdivisonScale;

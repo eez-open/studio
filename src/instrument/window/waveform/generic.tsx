@@ -145,17 +145,25 @@ export class ViewOptions implements IViewOptions {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const CONF_RANGE_OVERFLOW_PERCENT = 5;
+
 export class WaveformAxisModel implements IAxisModel {
     constructor(private waveform: Waveform, private waveformLink: IWaveformLink | undefined) {}
 
     @computed
     get minValue() {
-        return this.waveform.minValue;
+        return (
+            this.waveform.minValue -
+            CONF_RANGE_OVERFLOW_PERCENT / 100 * (this.waveform.maxValue - this.waveform.minValue)
+        );
     }
 
     @computed
     get maxValue() {
-        return this.waveform.maxValue;
+        return (
+            this.waveform.maxValue +
+            CONF_RANGE_OVERFLOW_PERCENT / 100 * (this.waveform.maxValue - this.waveform.minValue)
+        );
     }
 
     @computed

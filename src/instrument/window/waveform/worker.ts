@@ -9,9 +9,9 @@ let canvasMap = new Map<
         continuation: any;
         continuationTimeoutId: any;
     }
-    >();
+>();
 
-onmessage = function (e) {
+onmessage = function(e) {
     if (e.data.canvas) {
         const canvasId: number = e.data.canvasId;
         const canvas: HTMLCanvasElement = e.data.canvas;
@@ -43,7 +43,9 @@ onmessage = function (e) {
             const canvasMapElement = foundCanvasMapElement;
 
             if (canvasMapElement.continuation) {
-                canvasMapElement.ctx.commit();
+                if (!canvasMapElement.continuation.commitAlways) {
+                    canvasMapElement.ctx.commit();
+                }
                 clearTimeout(canvasMapElement.continuationTimeoutId);
                 canvasMapElement.continuation = undefined;
                 canvasMapElement.continuationTimeoutId = undefined;
@@ -55,10 +57,10 @@ onmessage = function (e) {
 
                 const xAxisController = job.xAxisController;
                 const yAxisController = job.yAxisController;
-                xAxisController.pxToValue = yAxisController.pxToValue = function (px: number) {
+                xAxisController.pxToValue = yAxisController.pxToValue = function(px: number) {
                     return this.from + px / this.scale;
                 };
-                xAxisController.valueToPx = yAxisController.valueToPx = function (value: number) {
+                xAxisController.valueToPx = yAxisController.valueToPx = function(value: number) {
                     return (value - this.from) * this.scale;
                 };
 
@@ -70,6 +72,9 @@ onmessage = function (e) {
                     );
 
                     if (canvasMapElement.continuation) {
+                        if (canvasMapElement.continuation.commitAlways) {
+                            canvasMapElement.ctx.commit();
+                        }
                         canvasMapElement.continuationTimeoutId = setTimeout(doRender);
                     } else {
                         canvasMapElement.ctx.commit();
