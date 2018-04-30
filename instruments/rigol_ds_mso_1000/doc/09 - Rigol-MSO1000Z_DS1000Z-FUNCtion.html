@@ -1,0 +1,1112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<title></title>
+		<style type="text/css">
+			/* Reset */
+			ol, ul { margin: 0; padding: 0; }
+			li { list-style-position: outside; }
+			
+			/* Paragraphs and texts */
+			.Heading_1 { margin-top: 4.23mm; margin-bottom: 2.12mm; font-family: "Arial"; font-size: 14.0pt; font-weight: bold; color: #0066cc; }
+			.Heading_2 { margin-left: 7.62mm; margin-top: 4.5mm; margin-bottom: 2.5mm; text-indent: -7.62mm; font-family: "Arial"; font-size: 12.0pt; font-weight: bold; font-style: italic; color: #0066cc; }
+			.List_1 { text-align: left; margin-left: 10mm; margin-right: 1.99mm; text-indent: -6mm; }
+			.List_1_End { text-align: left; margin-left: 10mm; margin-right: 1.99mm; margin-bottom: 3mm; text-indent: -6mm; }
+			.List_1_Start { text-align: left; margin-left: 10mm; margin-right: 1.99mm; margin-top: 3mm; text-indent: -6mm; }
+			.Normal { text-align: left; margin-bottom: 0.09mm; text-indent: 0.16mm; color: #000000; }
+			p { text-align: justify; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; text-indent: 0; background: transparent; font-family: "Tahoma"; font-size: 10.0pt; font-weight: normal; font-style: normal; }
+			li { text-align: justify; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; text-indent: 0; background: transparent; font-family: "Tahoma"; font-size: 10.0pt; font-weight: normal; font-style: normal; }
+			.Table_Heading { text-align: center; font-weight: bold; }
+			.table_body_left { text-align: right; margin-right: 3mm; font-weight: bold; color: #0000cc; }
+			.Default_Paragraph_Font { font-family: "Arial"; font-size: 12.0pt; font-weight: normal; font-style: normal; background: transparent; }
+			
+			/* Footnotes & endnotes */
+			#webpub_footnotes_divider { clear: both; margin-top: 2em; width: 25%; border-top: 1px solid black; }
+			#webpub_footnotes { font-size: 80%; text-align: justify; }
+			#webpub_footnotes td.label { text-align: right; vertical-align: top; }
+			#webpub_footnotes td.content { }
+			a.webpub_footnote { font-size: 80%; vertical-align: super; }
+			#webpub_endnotes_divider { clear: both; margin-top: 2em; width: 25%; border-top: 3px double black; }
+			#webpub_endnotes { font-size: 80%; text-align: justify; }
+			#webpub_endnotes td.label { text-align: right; vertical-align: top; }
+			#webpub_endnotes td.content { }
+			a.webpub_endnote { font-size: 80%; vertical-align: super; }
+			
+		</style>
+	</head>
+	<body>
+		<p class="Heading_1"><a name="_scpi_subsys_fund"></a>:FUNCtion Commands (Option) </p>
+		<p>&#160;</p>
+		<p>The :FUNCtion commands are used to set the waveform recording and playback parameters.  </p>
+		<p>&#160;</p>
+		<p style="font-weight: bold;">Command List: </p>
+		<ul>
+			<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrec_fend"><span style="text-decoration: underline;">:FUNCtion:WRECord:FEND</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrec_fmax"><span style="text-decoration: underline;">:FUNCtion:WRECord:FMAX?</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrec_fint"><span style="text-decoration: underline;">:FUNCtion:WRECord:FINTerval</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrec_prom"><span style="text-decoration: underline;">:FUNCtion:WRECord:PROMpt</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrec_oper"><span style="text-decoration: underline;">:FUNCtion:WRECord:OPERate</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrec_enab"><span style="text-decoration: underline;">:FUNCtion:WRECord:ENABle</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrep_fst"><span style="text-decoration: underline;">:FUNCtion:WREPlay:FSTart</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrep_fend"><span style="text-decoration: underline;">:FUNCtion:WREPlay:FEND</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrep_fmax"><span style="text-decoration: underline;">:FUNCtion:WREPlay:FMAX?</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrep_fint"><span style="text-decoration: underline;">:FUNCtion:WREPlay:FINTerval</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrep_mode"><span style="text-decoration: underline;">:FUNCtion:WREPlay:MODE</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrep_dir"><span style="text-decoration: underline;">:FUNCtion:WREPlay:DIRection</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrep_oper"><span style="text-decoration: underline;">:FUNCtion:WREPlay:OPERate</span></a></li>
+			<li class="List_1_End" style="text-indent: 0; list-style-type: disc;"><a href="#func_wrep_fcur"><span style="text-decoration: underline;">:FUNCtion:WREPlay:FCURrent</span></a></li>
+		</ul>
+		<p class="Heading_2"><a name="func_wrec_fend"></a>:FUNCtion:WRECord:FEND</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrec_fend"></a>:FUNCtion:WRECord:FEND &lt;frame&gt;</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrec_fend2"></a>:FUNCtion:WRECord:FEND? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the end frame of waveform recording.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 39%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 17%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 15%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;frame&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Integer </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 39%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">1 to the maximum number of frames can be recorded currently </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 17%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">5000 </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p>Use the :FUNCtion:WRECord:FMAX? command to query the maximum number of frames can be recorded currently. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the current end frame in integer.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WRECord:FEND 4096    /*Set the end frame to 4096*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WRECord:FEND?        /*The query returns 4096*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrec_fmax"></a>:FUNCtion:WRECord:FMAX? </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrec_fmax"></a>:FUNCtion:WRECord:FMAX? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Query the maximum number of frames can be recorded currently.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-right: 1.13mm; margin-bottom: 0; text-indent: 0;">As the capacity of the waveform memory is fixed, the more the number of points each frame of waveform has, the less the number of waveform frames can be recorded. Thus, the maximum number of frames can be recorded currently is decided by the memory depth currently selected. The less the memory depth, the more the number of waveform frames can be recorded.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">The query returns the maximum number of frames can be recorded currently in integer. </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrec_fint"></a>:FUNCtion:WRECord:FINTerval </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 21.84mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrec_fint"></a>:FUNCtion:WRECord:FINTerval &lt;interval&gt;</p>
+					<p class="Normal" style="margin-right: 21.84mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrec_fint2"></a>:FUNCtion:WRECord:FINTerval? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the time interval between frames in waveform recording. The default unit is s.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;interval&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Real </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">100ns to 10s </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">100ns </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the time interval currently set in scientific notation.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WRECord:FINTerval 0.001    /*Set the time interval to 1ms*/ </p>
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">:FUNCtion:WRECord:FINTerval?        /*The query returns 1.000000e-03*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrec_prom"></a>:FUNCtion:WRECord:PROMpt</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 31.45mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrec_prom"></a>:FUNCtion:WRECord:PROMpt &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 31.45mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrec_prom2"></a>:FUNCtion:WRECord:PROMpt? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Turn on or off the sound prompt when the recording finishes, or query the status of the sound prompt when the recording finishes.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">1|ON </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p>When the sound prompt is turned on, the instrument exerts a sound promt when the recording finishes no matter whether the system sound (refer to :SYSTem:BEEPer) is turned on or not. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 58.21mm; margin-bottom: 0; text-indent: -58.21mm;">:FUNCtion:WRECord:PROMpt 1    /*Turn on the sound prompt when the recording finishes*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WRECord:PROMpt?    /*The query returns 1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrec_oper"></a>:FUNCtion:WRECord:OPERate</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 28.96mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrec_oper"></a>:FUNCtion:WRECord:OPERate &lt;opt&gt;</p>
+					<p class="Normal" style="margin-right: 28.96mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrec_oper2"></a>:FUNCtion:WRECord:OPERate? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Start or stop the waveform recording, or query the status of the waveform recording.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;opt&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{RUN|STOP} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">-- </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p>Before sending this command, send the :FUNCtion:WRECord:ENABle command to turn on the waveform recording function. Otherwise, this command is invalid.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns RUN or STOP. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WRECord:OPERate RUN    /*Start the waveform recording*/ </p>
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">:FUNCtion:WRECord:OPERate?       /*The query returns RUN if the recording is in    </p>
+					<p class="Normal" style="margin-left: 60.75mm; margin-bottom: 0; text-indent: 0;">progress and returns STOP if the recording has already finished*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrec_enab"></a>:FUNCtion:WRECord:ENABle </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 29.02mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrec_enab"></a>:FUNCtion:WRECord:ENABle &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 29.02mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrec_enab2"></a>:FUNCtion:WRECord:ENABle? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Turn on or off the waveform recording function, or query the status of the waveform recording function.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">0|OFF </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">The waveform recording function can only be enabled when the horizontal timebase mode is “YT” and the horizontal timebase is lower than 200ms.  </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">After turning on the waveform recording function, RUN/STOP can be used to start or stop the waveform recording. At this point, you can send the :FUNCtion:WRECord:OPERate command to start the recording.  </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WRECord:ENABle 1    /*Turn on the waveform recording function*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WRECord:ENABle?    /*The query returns 1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrep_fst"></a>:FUNCtion:WREPlay:FSTart </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_fst"></a>:FUNCtion:WREPlay:FSTart &lt;sta&gt;</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_fst2"></a>:FUNCtion:WREPlay:FSTart? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the start frame of waveform playback.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 15%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;sta&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Integer </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 44%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">1 to the maximum number of frames recorded </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">1 </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Use the :FUNCtion:WRECord:FEND command to set the maximum number of frames recorded. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">The start frame of waveform playback cannot be greater than the end frame of waveform playback (:FUNCtion:WREPlay:FEND). </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You can only set the start frame of waveform playback when a waveform is currently recorded. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You cannot set the start frame of waveform playback during the waveform recording or playback process. </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WREPlay:FSTart 5    /*Set the start frame of waveform playback to 5*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WREPlay:FSTart?    /*The query returns 5*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrep_fend"></a>:FUNCtion:WREPlay:FEND</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_fend"></a>:FUNCtion:WREPlay:FEND &lt;end&gt;</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_fend2"></a>:FUNCtion:WREPlay:FEND? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the end frame of waveform playback.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;end&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Integer </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">1 to the maximum number of frames recorded </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The maximum number of frames recorded </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Use the :FUNCtion:WRECord:FEND command to set the maximum number of frames recorded. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">The end frame of waveform playback cannot be lower than the start frame of waveform playback (:FUNCtion:WREPlay:FSTart). </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You can only set the end frame of waveform playback when a waveform is currently recorded. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You cannot set the end frame of waveform playback during the waveform recording or playback process.</li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 56.43mm; margin-bottom: 0.04mm; text-indent: -56.43mm;">:FUNCtion:WREPlay:FEND 4096    /*Set the end frame of waveform playback to 4096*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WREPlay:FEND?       /*The query returns 4096*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrep_fmax"></a>:FUNCtion:WREPlay:FMAX?</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_fmax"></a>:FUNCtion:WREPlay:FMAX? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Query theb maximum number of frames can be played, namely the maximum number of frames recorded. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p>Use the :FUNCtion:WRECord:FEND command to set the maximum number of frames recorded. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer. </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrep_fint"></a>:FUNCtion:WREPlay:FINTerval</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 23.74mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_fint"></a>:FUNCtion:WREPlay:FINTerval &lt;interval&gt;</p>
+					<p class="Normal" style="margin-right: 23.74mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_fint2"></a>:FUNCtion:WREPlay:FINTerval? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the time interval between frames in waveform playback. The default unit is s.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;interval&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Real </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">100ns to 10s </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">100ns </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You can only set the time interval of waveform playback when a waveform is currently recorded.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You cannot set the time interval of waveform playback during the waveform recording or playback process.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the current time interval in scientific notation.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WREPlay:FINTerval 0.001    /*Set the time interval to 1ms*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WREPlay:FINTerval?         /*The query returns 1.000000e-03*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrep_mode"></a>:FUNCtion:WREPlay:MODE</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_mode"></a>:FUNCtion:WREPlay:MODE &lt;mode&gt;</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_mode2"></a>:FUNCtion:WREPlay:MODE? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the waveform playback mode.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;mode&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{REPeat|SINGle} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">SINGle </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">REPeat: cycle playback. Play from the start frame to the end frame and then repeat until you stop it manually.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">SINGle: single playback. Play from the start frame to the end frame and then stop.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You can only set the waveform playback mode when a waveform is currently recorded.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You cannot set the waveform playback mode during the waveform recording or playback process.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns REP or SING. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WREPlay:MODE REPeat    /*Set the waveform playback mode to cycle*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WREPlay:MODE?          /*The query returns REP*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrep_dir"></a>:FUNCtion:WREPlay:DIRection</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_dir"></a>:FUNCtion:WREPlay:DIRection &lt;dir&gt;</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_dir2"></a>:FUNCtion:WREPlay:DIRection? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the waveform playback direction.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;dir&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{FORWard|BACKward} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">FORWard </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">FORWard: positive direction. Play from the start frame to the end frame.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">BACKward: negative direction. Play from the end frame to the start frame.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You can only set the waveform playback direction when a waveform is currently recorded.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You cannot set the waveform playback direction during the waveform recording or playback process.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns FORW or BACK. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 72.3mm; margin-bottom: 0; text-indent: -72.3mm;">:FUNCtion:WREPlay:DIRection FORWard    /*Set the waveform playback direction to forward*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WREPlay:DIRection?            /*The query returns FORW*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrep_oper"></a>:FUNCtion:WREPlay:OPERate</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 22.49mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_oper"></a>:FUNCtion:WREPlay:OPERate &lt;opt&gt;</p>
+					<p class="Normal" style="margin-right: 22.49mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_oper2"></a>:FUNCtion:WREPlay:OPERate? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Start, pause or stop the waveform playback, or query the status of the waveform playback.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;opt&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 28%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">{PLAY|PAUSe|STOP} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">STOP </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">This command is only valid when waveform has already been recorded.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns PLAY, PAUS or STOP. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WREPlay:OPERate PLAY    /*Start the waveform playback*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WREPlay:OPERate?       /*The query returns PLAY if the playback is in                                        progress and returns STOP if the playback                                          finishes*/ </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WRECord:OPERate </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="func_wrep_fcur"></a>:FUNCtion:WREPlay:FCURrent</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_fcur"></a>:FUNCtion:WREPlay:FCURrent &lt;cur&gt;</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_func_wrep_fcur2"></a>:FUNCtion:WREPlay:FCURrent? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the current frame in waveform playback.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 32%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 26%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">&lt;cur&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">Integer </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 32%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">1 to the maximum number of frames recorded </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 26%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">The maximum number of frames recorded </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Use the :FUNCtion:WRECord:FEND command to set the maximum number of frames recorded. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You can only set the current frame of waveform playback when a waveform is currently recorded. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You cannot set the current frame of waveform playback during the waveform recording or playback process. </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 61.72mm; margin-bottom: 0; text-indent: -61.72mm;">:FUNCtion:WREPlay:FCURrent 300    /*Set the current frame in waveform playback to 300*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:FUNCtion:WREPlay:FCURrent?       /*The query returns 300*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p>&#160;</p>
+	</body>
+</html>

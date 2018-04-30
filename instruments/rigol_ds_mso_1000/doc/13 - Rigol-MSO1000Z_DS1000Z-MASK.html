@@ -1,0 +1,841 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<title></title>
+		<style type="text/css">
+			/* Reset */
+			ol, ul { margin: 0; padding: 0; }
+			li { list-style-position: outside; }
+			
+			/* Paragraphs and texts */
+			.Heading_1 { margin-top: 4.23mm; margin-bottom: 2.12mm; font-family: "Arial"; font-size: 14.0pt; font-weight: bold; color: #0066cc; }
+			.Heading_2 { margin-left: 7.62mm; margin-top: 4.5mm; margin-bottom: 2.5mm; text-indent: -7.62mm; font-family: "Arial"; font-size: 12.0pt; font-weight: bold; font-style: italic; color: #0066cc; }
+			.List_1 { text-align: left; margin-left: 10mm; margin-right: 1.99mm; text-indent: -6mm; }
+			.List_1_End { text-align: left; margin-left: 10mm; margin-right: 1.99mm; margin-bottom: 3mm; text-indent: -6mm; }
+			.List_1_Start { text-align: left; margin-left: 10mm; margin-right: 1.99mm; margin-top: 3mm; text-indent: -6mm; }
+			.Normal { text-align: left; margin-bottom: 0.09mm; text-indent: 0.16mm; color: #000000; }
+			p { text-align: justify; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; text-indent: 0; background: transparent; font-family: "Tahoma"; font-size: 10.0pt; font-weight: normal; font-style: normal; }
+			li { text-align: justify; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; text-indent: 0; background: transparent; font-family: "Tahoma"; font-size: 10.0pt; font-weight: normal; font-style: normal; }
+			.Table_Heading { text-align: center; font-weight: bold; }
+			.table_body_left { text-align: right; font-weight: bold; color: #0000cc; }
+			.Default_Paragraph_Font { font-family: "Arial"; font-size: 12.0pt; font-weight: normal; font-style: normal; background: transparent; }
+			
+			/* Footnotes & endnotes */
+			#webpub_footnotes_divider { clear: both; margin-top: 2em; width: 25%; border-top: 1px solid black; }
+			#webpub_footnotes { font-size: 80%; text-align: justify; }
+			#webpub_footnotes td.label { text-align: right; vertical-align: top; }
+			#webpub_footnotes td.content { }
+			a.webpub_footnote { font-size: 80%; vertical-align: super; }
+			#webpub_endnotes_divider { clear: both; margin-top: 2em; width: 25%; border-top: 3px double black; }
+			#webpub_endnotes { font-size: 80%; text-align: justify; }
+			#webpub_endnotes td.label { text-align: right; vertical-align: top; }
+			#webpub_endnotes td.content { }
+			a.webpub_endnote { font-size: 80%; vertical-align: super; }
+			
+		</style>
+	</head>
+	<body>
+		<p class="Heading_1"><a name="_scpi_subsys_mask"></a>:MASK Commands </p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">&#160;</p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">The :MASK commands are used to set and query the pass/fail test parameters.  </p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">&#160;</p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">Command List: </p>
+		<ul>
+			<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;"><a href="#mask_enab"><span style="text-decoration: underline;">:MASK:ENABle</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#mask_sour"><span style="text-decoration: underline;">:MASK:SOURce</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#mask_oper"><span style="text-decoration: underline;">:MASK:OPERate</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#mask_mdis"><span style="text-decoration: underline;">:MASK:MDISplay</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#mask_sso"><span style="text-decoration: underline;">:MASK:SOOutput</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#mask_outp"><span style="text-decoration: underline;">:MASK:OUTPut</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#mask_x"><span style="text-decoration: underline;">:MASK:X</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#mask_y"><span style="text-decoration: underline;">:MASK:Y</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#mask_cre"><span style="text-decoration: underline;">:MASK:CREate</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#mask_pass"><span style="text-decoration: underline;">:MASK:PASSed?</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#mask_fail"><span style="text-decoration: underline;">:MASK:FAILed?</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#mask_tot"><span style="text-decoration: underline;">:MASK:TOTal?</span></a></li>
+			<li class="List_1_End" style="text-indent: 0; list-style-type: disc;"><a href="#mask_res"><span style="text-decoration: underline;">:MASK:RESet </span></a></li>
+		</ul>
+		<p class="Heading_2"><a name="mask_enab"></a>:MASK:ENABle</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 58.33mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_enab"></a>:MASK:ENABle &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 58.33mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_enab2"></a>:MASK:ENABle? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Enable or disable the pass/fail test or query the status of the past/fail test.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0|OFF </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-right: 1.09mm; margin-bottom: 0; text-indent: 0;">The pass/fail test is invalid in the following conditions: the horizontal timebase is XY or ROLL, in the slow sweep mode (namely when the horizontal timebase is YT, the horizontal timebase is set to 200ms/div or slower) as well as during waveform record. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:ENABle ON    /*Enable the pass/fail test*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:ENABle?      /*The query returns 1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="mask_sour"></a>:MASK:SOURce</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 4.9mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_sour"></a>:MASK:SOURce &lt;source&gt;</p>
+					<p class="Normal" style="margin-right: 4.9mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_sour2"></a>:MASK:SOURce? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the source of the pass/fail test.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 43%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 17%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;source&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 43%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{CHANnel1|CHANnel2|CHANnel3|CHANnel4} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 17%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p>Only channels enabled can be selected as the source. You can sent the :CHANnel&lt;n&gt;:DISPlay command to enable the desired channel. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns CHAN1, CHAN2, CHAN3 or CHAN4.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">:MASK:SOURce CHANnel2    /*Set the source of the pass/fail test to CH2*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:SOURce?            /*The query returns CHAN2*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="mask_oper"></a>:MASK:OPERate</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 44.45mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_oper"></a>:MASK:OPERate &lt;oper&gt;</p>
+					<p class="Normal" style="margin-right: 44.45mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_oper2"></a>:MASK:OPERate? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Run or stop the pass/fail test, or query the status of the pass/fail test. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;oper&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{RUN|STOP} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">STOP </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p>Before executing this command, you need to send the :MASK:ENABle command to enable the pass/fail test. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns RUN or STOP.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:OPERate RUN    /*Run the pass/fail test*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:OPERate?       /*The query returns RUN*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="mask_mdis"></a>:MASK:MDISplay</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 71.4mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_mdis"></a>:MASK:MDISplay &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 71.4mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_mdis2"></a>:MASK:MDISplay? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Enable or disable the statistic information when the pass/fail test is enabled, or query the status of the statistic information.<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;"> </span></p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0|OFF </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Before executing this command, you need to send the :MASK:ENABle command to enable the pass/fail test. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">When the statistic information is on, the test results as shown in the figure below will be displayed at the upper right corner of the screen.</li>
+					</ul>
+					<p>&#160;</p>
+					<div style="position: relative; left: 0; top: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;">
+						<img src="images/13 - Rigol-MSO1000Z_DS1000Z-MASK-Picture 27620.jpg" alt="Picture 27620" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; width: 37.34mm; height: 15.36mm;"/>
+					</div>
+					<p class="List_1">&#160;</p>
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You can sent the :MASK:PASSed?, :MASK:FAILed? and :MASK:TOTal? commands to query the test results. </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:MDISplay ON    /*Enable the statistic information*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:MDISplay?      /*The query returns 1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="mask_sso"></a>:MASK:SOOutput </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 60.66mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_sso"></a>:MASK:SOOutput &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 60.66mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_sso2"></a>:MASK:SOOutput? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Turn the “Stop on Fail” function on or off, or query the status of the “Stop on Fail” function.<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;"> </span></p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">0|OFF </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">ON: when failed waveforms are detected, the oscilloscope will stop the test and enter the “STOP” state. At this point, the results of the test remain the same on the screen (if the display is turned on) and the <span style="font-weight: bold;">[Trigger Out]</span> connector (if enabled) at the rear panel outputs a single pulse. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">OFF: the oscilloscope will continue with the test even though failed waveforms are detected. The test results on the screen will update continuously and the <span style="font-weight: bold;">[Trigger Out]</span> connector at the rear panel outputs a pulse each time a failed waveform is detected. </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:SOOutput ON    /*Turn the “Stop on Fail” function on*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:SOOutput?      /*The query returns 1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="mask_outp"></a>:MASK:OUTPut</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 73.38mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_outp"></a>:MASK:OUTPut &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 73.38mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_outp2"></a>:MASK:OUTPut? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Enable or disable the sound prompt when failed waveforms are detected, or query the status of the sound prompt.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0|OFF </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">OFF: when failed waveforms are detected, there are display and output but the beeper does not sound. <span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">ON: when failed waveforms are detected, there are display and output and the beeper sounds (not related to the on/off state of the sound). <span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:OUTPut ON    /*Enable the sound prompt*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:OUTPut?      /*The query returns 1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="mask_x"></a>:MASK:X</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 94.44mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_x"></a>:MASK:X &lt;x&gt;</p>
+					<p class="Normal" style="margin-right: 94.44mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_x2"></a>:MASK:X? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Set or query the horizontal adjustment parameter in the pass/fail test mask. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 42%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;x&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Real </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 42%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0.02 to 4, the step is 0.02 within the range </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0.24 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">The query returns the horizontal adjustment parameter in scientific notation.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:X 0.28   /*Set the horizontal adjustment parameter to 0.28div*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:X?      /*The query returns 2.800000e-01*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="mask_y"></a>:MASK:Y</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 84.88mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_y"></a>:MASK:Y &lt;y&gt;</p>
+					<p class="Normal" style="margin-right: 84.88mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_y2"></a>:MASK:Y? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Set or query the vertical adjustment parameter in the pass/fail test mask. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 46%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 17%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">&lt;y&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">Real </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 46%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0.04 to 5.12, the step is 0.04 within the range </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 17%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">0.48 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">The query returns the vertical adjustment parameter in scientific notation.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:Y 0.36   /*Set the vertical adjustment parameter to 0.36div*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:Y?      /*The query returns 3.600000e-01*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="mask_cre"></a>:MASK:CREate</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_cre"></a>:MASK:CREate </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Create the pass/fail test mask using the current horizontal adjustment parameter and vertical adjustment parameter. </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p>This command is valid only when the pass/fail test is enabled (:MASK:ENABle) and is not in the run state (:MASK:OPERate).</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:X </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:Y </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="mask_pass"></a>:MASK:PASSed?</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 0.83mm; margin-bottom: 1.96mm; text-indent: 0;"><a name="_scpi_mask_pass"></a>:MASK:PASSed?</p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-right: 0.83mm; margin-bottom: 1.99mm; text-indent: 0;">Query the number of passed frames in the pass/fail test.</p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return Format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">The query returns an integer.</p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="mask_fail"></a>:MASK:FAILed?</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 0.83mm; margin-bottom: 1.96mm; text-indent: 0;"><a name="_scpi_mask_fail"></a>:MASK:FAILed?</p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-right: 0.83mm; margin-bottom: 1.96mm; text-indent: 0;">Query the number of failed frames in the pass/fail test. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return Format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer.</p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="mask_tot"></a>:MASK:TOTal?</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 0.83mm; margin-bottom: 1.96mm; text-indent: 0;"><a name="_scpi_mask_tot"></a>:MASK:TOTal?</p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-right: 0.83mm; margin-bottom: 1.99mm; text-indent: 0;">Query the total number of frames in the pass/fail test.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return Format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer.</p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="mask_res"></a>:MASK:RESet</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_mask_res"></a>:MASK:RESet </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Reset the numbers of passed frames and failed frames as well as the total number of frames in the pass/fail test to 0. </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:PASSed? </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:FAILed? </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MASK:TOTal? </p>
+				</td>
+			</tr>
+		</table>
+		<p>&#160;</p>
+	</body>
+</html>

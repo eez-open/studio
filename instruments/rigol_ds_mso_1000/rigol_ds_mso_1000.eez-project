@@ -1,0 +1,3473 @@
+{
+  "settings": {
+    "general": {
+      "scpiDocFolder": "doc"
+    },
+    "build": {
+      "configurations": [
+        {
+          "name": "DS1000Z",
+          "description": "The Rigol DS1000Z Oscilloscopes feature 4 channels and professional measurement functions at value pricing, making them attractive for educational and private use. All devices are equipped with the same well constructed and intuitive operational menu providing extensive functions as found in bigger and higher priced models.\nAll models of the DS1000Z series are equipped with 4 channels, a sample rate of 1 GSa/s, a storage size of 12 Mpts and a 7” (17,8 cm) TFT color display, as well as professional measurement and mathematical functions.\nYou can choose between 2 ranges of bandwidth: 70 and 100 MHz.\n\nExtendibility\nSerial decoding (RS232, I²C, SPI), advanced trigger options (Windows, Nth Edge, Video / HDTV, Delay, TimeOut, Duration und USB) and recording features can be added per software code. Additionally, the storage size can be upgraded from 12 Mpts to 24 Mpts by using a software code too.",
+          "screenOrientation": "landscape",
+          "properties": "{\n  \"connection\": {\n    \"ethernet\": {\n      \"port\": 5555\n      }\n  },\n  \"channels\": [\n    { \"color\": \"#FBFB00\", \"colorInverse\": \"#AEAE00\" },\n    { \"color\": \"#03FFFF\", \"colorInverse\": \"#00B5B5\" },\n    { \"color\": \"#F000F0\", \"colorInverse\": \"#A300A3\" },\n    { \"color\": \"#007FFF\", \"colorInverse\": \"#0059B3\" }\n  ]\n}\n"
+        },
+        {
+          "name": "DS1000Z-S",
+          "description": "The Rigol DS1000Z Oscilloscopes feature 4 channels and professional measurement functions at value pricing, making them attractive for educational and private use. All devices are equipped with the same well constructed and intuitive operational menu providing extensive functions as found in bigger and higher priced models.\nAll models of the DS1000Z series are equipped with 4 channels, a sample rate of 1 GSa/s, a storage size of 12 Mpts and a 7” (17,8 cm) TFT color display, as well as professional measurement and mathematical functions.\nYou can choose between 2 ranges of bandwidth: 70 and 100 MHz. In addition to that, the “S”-models are equipped with a built-in 2 channel waveform generator at 25 MHz (200 MSa/s). Rigol alternatively offers the MSO1000Z series with an additional built-in 16 channel logic analyzer.\n\nExtendibility\nSerial decoding (RS232, I²C, SPI), advanced trigger options (Windows, Nth Edge, Video / HDTV, Delay, TimeOut, Duration und USB) and recording features can be added per software code. Additionally, the storage size can be upgraded from 12 Mpts to 24 Mpts by using a software code too.",
+          "screenOrientation": "landscape",
+          "properties": "{\n  \"connection\": {\n    \"ethernet\": {\n      \"port\": 5555\n      }\n  },\n  \"channels\": [\n    { \"color\": \"#FBFB00\", \"colorInverse\": \"#AEAE00\" },\n    { \"color\": \"#03FFFF\", \"colorInverse\": \"#00B5B5\" },\n    { \"color\": \"#F000F0\", \"colorInverse\": \"#A300A3\" },\n    { \"color\": \"#007FFF\", \"colorInverse\": \"#0059B3\" }\n  ]\n}"
+        },
+        {
+          "name": "MSO1000Z",
+          "description": "The Rigol MSO1000Z Oscilloscopes feature 4 channels and professional measurement functions at value pricing, making them attractive for educational and private use. All devices are equipped with the same well constructed and intuitive operational menu providing extensive functions as found in bigger and higher priced models.\nAll models of the MSO1000Z series are equipped with 4 channels, a sample rate of 1 GSa/s, a storage size of 12 Mpts and a 7” (17,8 cm) TFT color display, as well as professional measurement, mathematical functions and an additional built-in 16 channel logic analyzer.\nYou can choose between 2 ranges of bandwidth: 70 and 100 MHz.\n\nExtendibility\nSerial decoding (RS232, I²C, SPI), advanced trigger options (Windows, Nth Edge, Video / HDTV, Delay, TimeOut, Duration und USB) and recording features can be added per software code. Additionally, the storage size can be upgraded from 12 Mpts to 24 Mpts by using a software code too.",
+          "screenOrientation": "landscape",
+          "properties": "{\n  \"connection\": {\n    \"ethernet\": {\n      \"port\": 5555\n      }\n  },\n  \"channels\": [\n    { \"color\": \"#FBFB00\", \"colorInverse\": \"#AEAE00\" },\n    { \"color\": \"#03FFFF\", \"colorInverse\": \"#00B5B5\" },\n    { \"color\": \"#F000F0\", \"colorInverse\": \"#A300A3\" },\n    { \"color\": \"#007FFF\", \"colorInverse\": \"#0059B3\" }\n  ]\n}"
+        },
+        {
+          "name": "MSO1000Z-S",
+          "description": "The Rigol MSO1000Z Oscilloscopes feature 4 channels and professional measurement functions at value pricing, making them attractive for educational and private use. All devices are equipped with the same well constructed and intuitive operational menu providing extensive functions as found in bigger and higher priced models.\nAll models of the MSO1000Z series are equipped with 4 channels, a sample rate of 1 GSa/s, a storage size of 12 Mpts and a 7” (17,8 cm) TFT color display, as well as professional measurement, mathematical functions and an additional built-in 16 channel logic analyzer.\nYou can choose between 2 ranges of bandwidth: 70 and 100 MHz. In addition to that, the “S”-models are equipped with a built-in 2 channel waveform generator at 25 MHz (200 MSa/s). Rigol alternatively offers the DS1000Z series without the additional built-in 16 channel logic analyzer.\n\nExtendibility\nSerial decoding (RS232, I²C, SPI), advanced trigger options (Windows, Nth Edge, Video / HDTV, Delay, TimeOut, Duration und USB) and recording features can be added per software code. Additionally, the storage size can be upgraded from 12 Mpts to 24 Mpts by using a software code too.",
+          "screenOrientation": "landscape",
+          "properties": "{\n  \"connection\": {\n    \"ethernet\": {\n      \"port\": 5555\n      }\n  },\n  \"channels\": [\n    { \"color\": \"#FBFB00\", \"colorInverse\": \"#AEAE00\" },\n    { \"color\": \"#03FFFF\", \"colorInverse\": \"#00B5B5\" },\n    { \"color\": \"#F000F0\", \"colorInverse\": \"#A300A3\" },\n    { \"color\": \"#007FFF\", \"colorInverse\": \"#0059B3\" }\n  ]\n}"
+        }
+      ],
+      "files": [],
+      "destinationFolder": "."
+    }
+  },
+  "extensionDefinitions": [
+    {
+      "name": "DS1054Z",
+      "description": "High quality 4 channel oscilloscope with 50 MHz bandwidth, 1 GSa/s and 12 Mpts memory depth and 17.8 cm LCD display (800×480 pixel).",
+      "buildConfiguration": "DS1000Z",
+      "image": "doc/images/DS1054Z.jpg",
+      "extensionName": "rigol_ds1054z",
+      "idn": "RIGOL TECHNOLOGIES,DS1054Z",
+      "idfName": "Rigol DS1054Z",
+      "idfShortName": "DS1054Z",
+      "idfFirmwareVersion": "(unknown)",
+      "idfGuid": "73283a37-5104-4dbf-a0da-1501ec9792b1",
+      "idfRevisionNumber": "0",
+      "idfDescription": "50 MHz Digital Oscilloscope",
+      "idfSupportedModels": "DS1054Z",
+      "idfRevisionComments": "No comment",
+      "idfAuthor": "Envox",
+      "sdlFriendlyName": "RIGOL DS1054Z"
+    },
+    {
+      "name": "DS1074Z",
+      "description": "High quality 4 channel oscilloscope with 70 MHz bandwidth, 1 GSa/s and 12 Mpts memory depth and 17.8 cm LCD display (800×480 pixel).",
+      "doNotBuild": false,
+      "buildConfiguration": "DS1000Z",
+      "image": "doc/images/DS1074Z.jpg",
+      "extensionName": "rigol_ds1074z",
+      "idn": "RIGOL TECHNOLOGIES,DS1074Z",
+      "properties": "",
+      "idfName": "Rigol DS1074Z",
+      "idfShortName": "DS1074Z",
+      "idfFirmwareVersion": "00.04.04.SP3",
+      "idfGuid": "0fbc639b-56f4-46c1-e1f2-a9492c9dabfd",
+      "idfRevisionNumber": "0",
+      "idfDescription": "70 MHz Digital Oscilloscope",
+      "idfSupportedModels": "DS1074Z",
+      "idfRevisionComments": "No comment",
+      "idfAuthor": "Envox",
+      "sdlFriendlyName": "RIGOL DS1074Z"
+    },
+    {
+      "name": "DS1074Z-S",
+      "description": "High quality 4 channel oscilloscope with 70 MHz bandwidth + 2 channel waveform generator with 25 MHz bandwidth, 1 GSa/s and 12 Mpts memory depth and 17.8 cm LCD display (800×480 pixel).",
+      "buildConfiguration": "DS1000Z-S",
+      "image": "doc/images/DS1074Z.jpg",
+      "extensionName": "rigol_ds1074zs",
+      "idn": "RIGOL TECHNOLOGIES,DS1074ZS",
+      "idfName": "Rigol DS1074Z-S",
+      "idfShortName": "DS1074Z-S",
+      "idfFirmwareVersion": "00.04.04.SP3",
+      "idfGuid": "5a2a6772-38c7-4399-afa5-5d97551b67cb",
+      "idfRevisionNumber": "0",
+      "idfDescription": "70 MHz Digital Oscilloscope with 2 channel waveform generator",
+      "idfSupportedModels": "DS1074Z-S",
+      "idfRevisionComments": "No comment",
+      "idfAuthor": "Envox",
+      "sdlFriendlyName": "RIGOL DS1074Z-S"
+    },
+    {
+      "name": "DS1104Z",
+      "description": "High quality 4 channel oscilloscope with 100 MHz bandwidth, 1 GSa/s and 12 Mpts memory depth and 17.8 cm LCD display (800×480 pixel).",
+      "buildConfiguration": "DS1000Z",
+      "image": "doc/images/DS1104Z.jpg",
+      "extensionName": "rigol_ds1104z",
+      "idn": "RIGOL TECHNOLOGIES,DS1104Z",
+      "properties": "",
+      "idfName": "Rigol DS1104Z",
+      "idfShortName": "DS1104Z",
+      "idfFirmwareVersion": "(unknown)",
+      "idfGuid": "4bee241e-25f1-4162-96ef-c19ba845289c",
+      "idfRevisionNumber": "0",
+      "idfDescription": "100 MHz Digital Oscilloscope",
+      "idfSupportedModels": "DS1104Z",
+      "idfRevisionComments": "No comment",
+      "idfAuthor": "Envox",
+      "sdlFriendlyName": "RIGOL DS1104Z"
+    },
+    {
+      "name": "DS1104Z-S",
+      "description": "High quality 4 channel oscilloscope with 100 MHz bandwidth + 2 channel waveform generator with 25 MHz bandwidth, 1 GSa/s and 12 Mpts memory depth and 17.8 cm LCD display (800×480 pixel).",
+      "buildConfiguration": "DS1000Z",
+      "image": "doc/images/DS1104Z.jpg",
+      "extensionName": "rigol_ds1104zs",
+      "idn": "RIGOL TECHNOLOGIES,DS1104ZS",
+      "idfName": "Rigol DS1104Z-S",
+      "idfShortName": "DS1104Z-S",
+      "idfFirmwareVersion": "(unknown)",
+      "idfGuid": "e1abc68d-9a4e-4c28-e2e7-e9df057df685",
+      "idfRevisionNumber": "0",
+      "idfDescription": "100 MHz Digital Oscilloscope with 2 channel waveform generator",
+      "idfSupportedModels": "DS1104Z-S",
+      "idfRevisionComments": "No comment",
+      "idfAuthor": "Envox",
+      "sdlFriendlyName": "RIGOL DS1104Z-S"
+    },
+    {
+      "name": "MSO1074Z",
+      "description": "High quality 4 channel oscilloscope with 70 MHz bandwidth, 1 GSa/s and 12 Mpts memory depth, with integrated 16 channel logic analyzer and 17.8 cm LCD display (800×480 pixel).",
+      "buildConfiguration": "MSO1000Z",
+      "image": "doc/images/MSO1074Z.jpg",
+      "extensionName": "rigol_mso1074z",
+      "idn": "RIGOL TECHNOLOGIES,MSO1074Z",
+      "properties": "",
+      "idfName": "Rigol MSO1074Z",
+      "idfShortName": "MSO1074Z",
+      "idfFirmwareVersion": "00.04.04.SP3",
+      "idfGuid": "eec9c096-456f-4a02-ae7c-8c2b678f636a",
+      "idfRevisionNumber": "0",
+      "idfDescription": "70 MHz Mixed Signal Oscilloscope",
+      "idfSupportedModels": "MSO1074Z",
+      "idfRevisionComments": "No comment",
+      "idfAuthor": "Envox",
+      "sdlFriendlyName": "RIGOL MSO1074Z"
+    },
+    {
+      "name": "MSO1074Z-S",
+      "description": "High quality 4 channel oscilloscope with 70 MHz bandwidth + 2 channel waveform generator with 25 MHz bandwidth, 1 GSa/s and 12 Mpts memory depth, with integrated 16 channel logic analyzer and 17.8 cm LCD display (800×480 pixel).",
+      "buildConfiguration": "MSO1000Z-S",
+      "image": "doc/images/MSO1074Z-S.jpg",
+      "extensionName": "rigol_mso1074zs",
+      "idn": "RIGOL TECHNOLOGIES,MSO1074ZS",
+      "properties": "",
+      "idfName": "Rigol MSO1074Z-S",
+      "idfShortName": "MSO1074Z-S",
+      "idfFirmwareVersion": "00.04.04.SP3",
+      "idfGuid": "bb241780-e757-4591-f4e3-74ee63debd8d",
+      "idfRevisionNumber": "0",
+      "idfDescription": "70 MHz Mixed Signal Oscilloscope with 2 channel waveform generator",
+      "idfSupportedModels": "MSO1074Z-S",
+      "idfRevisionComments": "No comment",
+      "idfAuthor": "Envox",
+      "sdlFriendlyName": "RIGOL MSO1074Z-S"
+    },
+    {
+      "name": "MSO1104Z",
+      "description": "High quality 4 channel oscilloscope with 100 MHz bandwidth, 1 GSa/s and 12 Mpts memory depth, with integrated 16 channel logic analyzer and 17.8 cm LCD display (800×480 pixel).",
+      "buildConfiguration": "MSO1000Z",
+      "image": "doc/images/MSO1104Z.jpg",
+      "extensionName": "rigol_mso1104z",
+      "idn": "RIGOL TECHNOLOGIES,MSO1104Z",
+      "idfName": "Rigol MSO1104Z",
+      "idfShortName": "MSO1104Z",
+      "idfFirmwareVersion": "(unknown)",
+      "idfGuid": "02cad256-c58c-490d-83e5-00cb73e96299",
+      "idfRevisionNumber": "0",
+      "idfDescription": "100 MHz Mixed Signal Oscilloscope",
+      "idfSupportedModels": "MSO1104Z",
+      "idfRevisionComments": "No comment",
+      "idfAuthor": "Envox",
+      "sdlFriendlyName": "RIGOL MSO1104Z"
+    },
+    {
+      "name": "MSO1104Z-S",
+      "description": "High quality 4 channel oscilloscope with 100 MHz bandwidth + 2 channel waveform generator with 25 MHz bandwidth, 1 GSa/s and 12 Mpts memory depth, with integrated 16 channel logic analyzer and 17.8 cm LCD display (800×480 pixel).",
+      "buildConfiguration": "MSO1000Z-S",
+      "image": "doc/images/MSO1104Z-S.jpg",
+      "extensionName": "rigol_mso1104zs",
+      "idn": "RIGOL TECHNOLOGIES,MSO1104ZS",
+      "idfName": "Rigol MSO1104Z-S",
+      "idfShortName": "MSO1104Z-S",
+      "idfFirmwareVersion": "(unknown)",
+      "idfGuid": "1bf8c89d-c100-41d3-c2b3-3e7dfc30976b",
+      "idfRevisionNumber": "0",
+      "idfDescription": "100 MHz Mixed Signal Oscilloscope with 2 channel waveform generator",
+      "idfSupportedModels": "MSO1104Z-S",
+      "idfRevisionComments": "No comment",
+      "idfAuthor": "Envox",
+      "sdlFriendlyName": "RIGOL MSO1104Z-S"
+    }
+  ],
+  "scpi": {
+    "subsystems": [
+      {
+        "name": "Screen commands",
+        "helpLink": "01 - Rigol-MSO1000Z_DS1000Z-Screen commands.html",
+        "commands": [
+          {
+            "name": ":AUToscale",
+            "helpLink": "01 - Rigol-MSO1000Z_DS1000Z-Screen commands.html#_scpi_screen_aut"
+          },
+          {
+            "name": ":CLEar",
+            "helpLink": "01 - Rigol-MSO1000Z_DS1000Z-Screen commands.html#_scpi_screen_cle"
+          },
+          {
+            "name": ":RUN",
+            "helpLink": "01 - Rigol-MSO1000Z_DS1000Z-Screen commands.html#_scpi_screen_run"
+          },
+          {
+            "name": ":SINGle",
+            "helpLink": "01 - Rigol-MSO1000Z_DS1000Z-Screen commands.html#_scpi_screen_single"
+          },
+          {
+            "name": ":STOP",
+            "helpLink": "01 - Rigol-MSO1000Z_DS1000Z-Screen commands.html#_scpi_screen_stop"
+          },
+          {
+            "name": ":TFORce",
+            "helpLink": "01 - Rigol-MSO1000Z_DS1000Z-Screen commands.html#_scpi_screen_tfor"
+          }
+        ]
+      },
+      {
+        "name": ":ACQuire Commands",
+        "helpLink": "02 - Rigol-MSO1000Z_DS1000Z-ACQuire.html",
+        "commands": [
+          {
+            "name": ":ACQuire:AVERages",
+            "helpLink": "02 - Rigol-MSO1000Z_DS1000Z-ACQuire.html#acq_aver"
+          },
+          {
+            "name": ":ACQuire:AVERages?",
+            "helpLink": "02 - Rigol-MSO1000Z_DS1000Z-ACQuire.html#acq_aver"
+          },
+          {
+            "name": ":ACQuire:MDEPth",
+            "helpLink": "02 - Rigol-MSO1000Z_DS1000Z-ACQuire.html#acq_mdep"
+          },
+          {
+            "name": ":ACQuire:MDEPth?",
+            "helpLink": "02 - Rigol-MSO1000Z_DS1000Z-ACQuire.html#acq_mdep"
+          },
+          {
+            "name": ":ACQuire:SRATe?",
+            "helpLink": "02 - Rigol-MSO1000Z_DS1000Z-ACQuire.html#acq_srat"
+          },
+          {
+            "name": ":ACQuire:TYPE",
+            "helpLink": "02 - Rigol-MSO1000Z_DS1000Z-ACQuire.html#acq_type"
+          },
+          {
+            "name": ":ACQuire:TYPE?",
+            "helpLink": "02 - Rigol-MSO1000Z_DS1000Z-ACQuire.html#acq_type"
+          }
+        ]
+      },
+      {
+        "name": ":CALibrate Commands",
+        "helpLink": "03 - Rigol-MSO1000Z_DS1000Z-CALibrate.html",
+        "commands": [
+          {
+            "name": ":CALibrate:QUIT",
+            "helpLink": "03 - Rigol-MSO1000Z_DS1000Z-CALibrate.html#cal_quit"
+          },
+          {
+            "name": ":CALibrate:STARt",
+            "helpLink": "03 - Rigol-MSO1000Z_DS1000Z-CALibrate.html#cal_star"
+          }
+        ]
+      },
+      {
+        "name": ":CHANnel<n> Commands",
+        "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html",
+        "commands": [
+          {
+            "name": ":CHANnel<n>:BWLimit",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_bwl"
+          },
+          {
+            "name": ":CHANnel<n>:BWLimit?",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_bwl"
+          },
+          {
+            "name": ":CHANnel<n>:COUPling",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_coup"
+          },
+          {
+            "name": ":CHANnel<n>:COUPling?",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_coup"
+          },
+          {
+            "name": ":CHANnel<n>:DISPlay",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_disp"
+          },
+          {
+            "name": ":CHANnel<n>:DISPlay?",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_disp"
+          },
+          {
+            "name": ":CHANnel<n>:INVert",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_inv"
+          },
+          {
+            "name": ":CHANnel<n>:INVert?",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_inv"
+          },
+          {
+            "name": ":CHANnel<n>:OFFSet",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_offs"
+          },
+          {
+            "name": ":CHANnel<n>:OFFSet?",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_offs"
+          },
+          {
+            "name": ":CHANnel<n>:PROBe",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_prob"
+          },
+          {
+            "name": ":CHANnel<n>:PROBe?",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_prob"
+          },
+          {
+            "name": ":CHANnel<n>:RANGe",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_rang"
+          },
+          {
+            "name": ":CHANnel<n>:RANGe?",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_rang"
+          },
+          {
+            "name": ":CHANnel<n>:SCALe",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_scal"
+          },
+          {
+            "name": ":CHANnel<n>:SCALe?",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_scal"
+          },
+          {
+            "name": ":CHANnel<n>:TCAL",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_tcal"
+          },
+          {
+            "name": ":CHANnel<n>:TCAL?",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_tcal"
+          },
+          {
+            "name": ":CHANnel<n>:UNITs",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_unit"
+          },
+          {
+            "name": ":CHANnel<n>:UNITs?",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_unit"
+          },
+          {
+            "name": ":CHANnel<n>:VERNier",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_vern"
+          },
+          {
+            "name": ":CHANnel<n>:VERNier?",
+            "helpLink": "04 - Rigol-MSO1000Z_DS1000Z-CHANnel.html#chan_vern"
+          }
+        ]
+      },
+      {
+        "name": ":CURSor Commands",
+        "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html",
+        "commands": [
+          {
+            "name": ":CURSor:AUTO:AX?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_auto_ax"
+          },
+          {
+            "name": ":CURSor:AUTO:AXValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_auto_axv"
+          },
+          {
+            "name": ":CURSor:AUTO:AY?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_auto_ay"
+          },
+          {
+            "name": ":CURSor:AUTO:AYValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_auto_ayv"
+          },
+          {
+            "name": ":CURSor:AUTO:BX?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_auto_bx"
+          },
+          {
+            "name": ":CURSor:AUTO:BXValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_auto_bxv"
+          },
+          {
+            "name": ":CURSor:AUTO:BY?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_auto_by"
+          },
+          {
+            "name": ":CURSor:AUTO:BYValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_auto_byv"
+          },
+          {
+            "name": ":CURSor:AUTO:ITEM",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_auto_item"
+          },
+          {
+            "name": ":CURSor:AUTO:ITEM?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_auto_item"
+          },
+          {
+            "name": ":CURSor:MANual:AX",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_ax"
+          },
+          {
+            "name": ":CURSor:MANual:AX?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_ax"
+          },
+          {
+            "name": ":CURSor:MANual:AXValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_axv"
+          },
+          {
+            "name": ":CURSor:MANual:AY",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_ay"
+          },
+          {
+            "name": ":CURSor:MANual:AY?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_ay"
+          },
+          {
+            "name": ":CURSor:MANual:AYValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_ayv"
+          },
+          {
+            "name": ":CURSor:MANual:BX",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_bx"
+          },
+          {
+            "name": ":CURSor:MANual:BX?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_bx"
+          },
+          {
+            "name": ":CURSor:MANual:BXValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_bxv"
+          },
+          {
+            "name": ":CURSor:MANual:BY",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_by"
+          },
+          {
+            "name": ":CURSor:MANual:BY?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_by"
+          },
+          {
+            "name": ":CURSor:MANual:BYValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_byv"
+          },
+          {
+            "name": ":CURSor:MANual:IXDELta?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_ixdel"
+          },
+          {
+            "name": ":CURSor:MANual:SOURce",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_sour"
+          },
+          {
+            "name": ":CURSor:MANual:SOURce?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_sour"
+          },
+          {
+            "name": ":CURSor:MANual:TUNit",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_tun"
+          },
+          {
+            "name": ":CURSor:MANual:TUNit?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_tun"
+          },
+          {
+            "name": ":CURSor:MANual:TYPE",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_type"
+          },
+          {
+            "name": ":CURSor:MANual:TYPE?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_type"
+          },
+          {
+            "name": ":CURSor:MANual:VUNit",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_vun"
+          },
+          {
+            "name": ":CURSor:MANual:VUNit?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_vun"
+          },
+          {
+            "name": ":CURSor:MANual:XDELta?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_xdel"
+          },
+          {
+            "name": ":CURSor:MANual:YDELta?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_man_ydel"
+          },
+          {
+            "name": ":CURSor:MODE",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_mode"
+          },
+          {
+            "name": ":CURSor:MODE?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_mode"
+          },
+          {
+            "name": ":CURSor:TRACk:AX",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_ax"
+          },
+          {
+            "name": ":CURSor:TRACk:AX?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_ax"
+          },
+          {
+            "name": ":CURSor:TRACk:AXValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_axv"
+          },
+          {
+            "name": ":CURSor:TRACk:AY?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_ay"
+          },
+          {
+            "name": ":CURSor:TRACk:AYValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_ayv"
+          },
+          {
+            "name": ":CURSor:TRACk:BX",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_bx"
+          },
+          {
+            "name": ":CURSor:TRACk:BX?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_bx"
+          },
+          {
+            "name": ":CURSor:TRACk:BXValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_bxv"
+          },
+          {
+            "name": ":CURSor:TRACk:BY?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_by"
+          },
+          {
+            "name": ":CURSor:TRACk:BYValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_byv"
+          },
+          {
+            "name": ":CURSor:TRACk:IXDELTA?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_ixdelta"
+          },
+          {
+            "name": ":CURSor:TRACk:SOURce1",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_sour1"
+          },
+          {
+            "name": ":CURSor:TRACk:SOURce1?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_sour1"
+          },
+          {
+            "name": ":CURSor:TRACk:SOURce2",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_sour2"
+          },
+          {
+            "name": ":CURSor:TRACk:SOURce2?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_sour2"
+          },
+          {
+            "name": ":CURSor:TRACk:XDELta?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_xdel"
+          },
+          {
+            "name": ":CURSor:TRACk:YDELta?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_trac_ydel"
+          },
+          {
+            "name": ":CURSor:XY:AX",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_xy_ax"
+          },
+          {
+            "name": ":CURSor:XY:AX?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_xy_ax"
+          },
+          {
+            "name": ":CURSor:XY:AXValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_xy_axv"
+          },
+          {
+            "name": ":CURSor:XY:AY",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_xy_ay"
+          },
+          {
+            "name": ":CURSor:XY:AY?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_xy_ay"
+          },
+          {
+            "name": ":CURSor:XY:AYValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_xy_ayv"
+          },
+          {
+            "name": ":CURSor:XY:BX",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_xy_bx"
+          },
+          {
+            "name": ":CURSor:XY:BX?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_xy_bx"
+          },
+          {
+            "name": ":CURSor:XY:BXValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_xy_bxv"
+          },
+          {
+            "name": ":CURSor:XY:BY",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_xy_by"
+          },
+          {
+            "name": ":CURSor:XY:BY?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_xy_by"
+          },
+          {
+            "name": ":CURSor:XY:BYValue?",
+            "helpLink": "05 - Rigol-MSO1000Z_DS1000Z-CURSor.html#curs_xy_byv"
+          }
+        ]
+      },
+      {
+        "name": ":DECoder Commands ",
+        "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html",
+        "commands": [
+          {
+            "name": ":DECoder<n>:CONFig:ENDian",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_conf_end"
+          },
+          {
+            "name": ":DECoder<n>:CONFig:ENDian?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_conf_end"
+          },
+          {
+            "name": ":DECoder<n>:CONFig:FORMat",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_conf_form"
+          },
+          {
+            "name": ":DECoder<n>:CONFig:FORMat?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_conf_form"
+          },
+          {
+            "name": ":DECoder<n>:CONFig:LABel",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_conf_lab"
+          },
+          {
+            "name": ":DECoder<n>:CONFig:LABel?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_conf_lab"
+          },
+          {
+            "name": ":DECoder<n>:CONFig:LINE",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_conf_line"
+          },
+          {
+            "name": ":DECoder<n>:CONFig:LINE?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_conf_line"
+          },
+          {
+            "name": ":DECoder<n>:CONFig:SRATe?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_conf_srat"
+          },
+          {
+            "name": ":DECoder<n>:CONFig:WIDth",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_conf_wid"
+          },
+          {
+            "name": ":DECoder<n>:CONFig:WIDth?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_conf_wid"
+          },
+          {
+            "name": ":DECoder<n>:DISPlay",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_disp"
+          },
+          {
+            "name": ":DECoder<n>:DISPlay?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_disp"
+          },
+          {
+            "name": ":DECoder<n>:FORMat",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_form"
+          },
+          {
+            "name": ":DECoder<n>:FORMat?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_form"
+          },
+          {
+            "name": ":DECoder<n>:IIC:ADDRess",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_iic_addr"
+          },
+          {
+            "name": ":DECoder<n>:IIC:ADDRess?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_iic_addr"
+          },
+          {
+            "name": ":DECoder<n>:IIC:CLK",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_iic_clk"
+          },
+          {
+            "name": ":DECoder<n>:IIC:CLK?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_iic_clk"
+          },
+          {
+            "name": ":DECoder<n>:IIC:DATA",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_iic_data"
+          },
+          {
+            "name": ":DECoder<n>:IIC:DATA?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_iic_data"
+          },
+          {
+            "name": ":DECoder<n>:MODE",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_mode"
+          },
+          {
+            "name": ":DECoder<n>:MODE?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_mode"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:BITX",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_bitx"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:BITX?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_bitx"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:CCOMpensation",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_ccom"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:CCOMpensation?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_ccom"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:CLK",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_clk"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:CLK?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_clk"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:EDGE",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_edge"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:EDGE?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_edge"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:NREJect",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_nrej"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:NREJect?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_nrej"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:NRTime",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_nrt"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:NRTime?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_nrt"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:PLOT",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_plot"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:PLOT?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_plot"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:POLarity",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_pol"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:POLarity?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_pol"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:SOURce",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_sour"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:SOURce?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_sour"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:WIDTh",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_widt"
+          },
+          {
+            "name": ":DECoder<n>:PARallel:WIDTh?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_par_widt"
+          },
+          {
+            "name": ":DECoder<n>:POSition",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_pos"
+          },
+          {
+            "name": ":DECoder<n>:POSition?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_pos"
+          },
+          {
+            "name": ":DECoder<n>:SPI:CLK",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_clk"
+          },
+          {
+            "name": ":DECoder<n>:SPI:CLK?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_clk"
+          },
+          {
+            "name": ":DECoder<n>:SPI:CS",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_cs"
+          },
+          {
+            "name": ":DECoder<n>:SPI:CS?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_cs"
+          },
+          {
+            "name": ":DECoder<n>:SPI:EDGE",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_edge"
+          },
+          {
+            "name": ":DECoder<n>:SPI:EDGE?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_edge"
+          },
+          {
+            "name": ":DECoder<n>:SPI:ENDian",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_end"
+          },
+          {
+            "name": ":DECoder<n>:SPI:ENDian?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_end"
+          },
+          {
+            "name": ":DECoder<n>:SPI:MISO",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_miso"
+          },
+          {
+            "name": ":DECoder<n>:SPI:MISO?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_miso"
+          },
+          {
+            "name": ":DECoder<n>:SPI:MODE",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_mode"
+          },
+          {
+            "name": ":DECoder<n>:SPI:MODE?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_mode"
+          },
+          {
+            "name": ":DECoder<n>:SPI:MOSI",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_mosi"
+          },
+          {
+            "name": ":DECoder<n>:SPI:MOSI?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_mosi"
+          },
+          {
+            "name": ":DECoder<n>:SPI:POLarity",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_pol"
+          },
+          {
+            "name": ":DECoder<n>:SPI:POLarity?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_pol"
+          },
+          {
+            "name": ":DECoder<n>:SPI:SELect",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_sel"
+          },
+          {
+            "name": ":DECoder<n>:SPI:SELect?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_sel"
+          },
+          {
+            "name": ":DECoder<n>:SPI:TIMeout",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_tim"
+          },
+          {
+            "name": ":DECoder<n>:SPI:TIMeout?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_tim"
+          },
+          {
+            "name": ":DECoder<n>:SPI:WIDTh",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_widt"
+          },
+          {
+            "name": ":DECoder<n>:SPI:WIDTh?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_spi_widt"
+          },
+          {
+            "name": ":DECoder<n>:THREshold:AUTO",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_thre_auto"
+          },
+          {
+            "name": ":DECoder<n>:THREshold:AUTO?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_thre_auto"
+          },
+          {
+            "name": ":DECoder<n>:THREshold:CHANnel1",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_thre_chan4"
+          },
+          {
+            "name": ":DECoder<n>:THREshold:CHANnel1?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_thre_chan4"
+          },
+          {
+            "name": ":DECoder<n>:THREshold:CHANnel2",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_thre_chan4"
+          },
+          {
+            "name": ":DECoder<n>:THREshold:CHANnel2?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_thre_chan4"
+          },
+          {
+            "name": ":DECoder<n>:THREshold:CHANnel3",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_thre_chan4"
+          },
+          {
+            "name": ":DECoder<n>:THREshold:CHANnel3?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_thre_chan4"
+          },
+          {
+            "name": ":DECoder<n>:THREshold:CHANnel4",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_thre_chan4"
+          },
+          {
+            "name": ":DECoder<n>:THREshold:CHANnel4?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_thre_chan4"
+          },
+          {
+            "name": ":DECoder<n>:UART:BAUD",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_baud"
+          },
+          {
+            "name": ":DECoder<n>:UART:BAUD?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_baud"
+          },
+          {
+            "name": ":DECoder<n>:UART:ENDian",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_end"
+          },
+          {
+            "name": ":DECoder<n>:UART:ENDian?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_end"
+          },
+          {
+            "name": ":DECoder<n>:UART:PARity",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_par"
+          },
+          {
+            "name": ":DECoder<n>:UART:PARity?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_par"
+          },
+          {
+            "name": ":DECoder<n>:UART:POLarity",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_pol"
+          },
+          {
+            "name": ":DECoder<n>:UART:POLarity?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_pol"
+          },
+          {
+            "name": ":DECoder<n>:UART:RX",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_rx"
+          },
+          {
+            "name": ":DECoder<n>:UART:RX?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_rx"
+          },
+          {
+            "name": ":DECoder<n>:UART:STOP",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_stop"
+          },
+          {
+            "name": ":DECoder<n>:UART:STOP?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_stop"
+          },
+          {
+            "name": ":DECoder<n>:UART:TX",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_tx"
+          },
+          {
+            "name": ":DECoder<n>:UART:TX?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_tx"
+          },
+          {
+            "name": ":DECoder<n>:UART:WIDTh",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_widt"
+          },
+          {
+            "name": ":DECoder<n>:UART:WIDTh?",
+            "helpLink": "06 - Rigol-MSO1000Z_DS1000Z-DECoder.html#dec_uart_widt"
+          }
+        ]
+      },
+      {
+        "name": ":DISPlay Commands ",
+        "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html",
+        "commands": [
+          {
+            "name": ":DISPlay:CLEar",
+            "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html#displ_cle"
+          },
+          {
+            "name": ":DISPlay:DATA?",
+            "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html#disp_data"
+          },
+          {
+            "name": ":DISPlay:GBRightness",
+            "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html#disp_gbr"
+          },
+          {
+            "name": ":DISPlay:GBRightness?",
+            "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html#disp_gbr"
+          },
+          {
+            "name": ":DISPlay:GRADing:TIME",
+            "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html#disp_grad_time"
+          },
+          {
+            "name": ":DISPlay:GRADing:TIME?",
+            "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html#disp_grad_time"
+          },
+          {
+            "name": ":DISPlay:GRID",
+            "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html#disp_grid"
+          },
+          {
+            "name": ":DISPlay:GRID?",
+            "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html#disp_grid"
+          },
+          {
+            "name": ":DISPlay:TYPE",
+            "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html#disp_type"
+          },
+          {
+            "name": ":DISPlay:TYPE?",
+            "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html#disp_type"
+          },
+          {
+            "name": ":DISPlay:WBRightness",
+            "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html#disp_wbr"
+          },
+          {
+            "name": ":DISPlay:WBRightness?",
+            "helpLink": "07 - Rigol-MSO1000Z_DS1000Z-DISPlay.html#disp_wbr"
+          }
+        ]
+      },
+      {
+        "name": ":ETABle Commands ",
+        "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html",
+        "commands": [
+          {
+            "name": ":ETABle<n>:COLumn",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_col"
+          },
+          {
+            "name": ":ETABle<n>:COLumn?",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_col"
+          },
+          {
+            "name": ":ETABle<n>:DATA?",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_data"
+          },
+          {
+            "name": ":ETABle<n>:DISP",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_disp"
+          },
+          {
+            "name": ":ETABle<n>:DISP?",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_disp"
+          },
+          {
+            "name": ":ETABle<n>:FORMat",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_form"
+          },
+          {
+            "name": ":ETABle<n>:FORMat?",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_form"
+          },
+          {
+            "name": ":ETABle<n>:ROW",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_row"
+          },
+          {
+            "name": ":ETABle<n>:ROW?",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_row"
+          },
+          {
+            "name": ":ETABle<n>:SORT",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_sort"
+          },
+          {
+            "name": ":ETABle<n>:SORT?",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_sort"
+          },
+          {
+            "name": ":ETABle<n>:VIEW",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_view"
+          },
+          {
+            "name": ":ETABle<n>:VIEW?",
+            "helpLink": "08 - Rigol-MSO1000Z_DS1000Z-ETABle.html#etab_view"
+          }
+        ]
+      },
+      {
+        "name": ":FUNCtion Commands (Option) ",
+        "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html",
+        "commands": [
+          {
+            "name": ":FUNCtion:WRECord:ENABle",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrec_enab"
+          },
+          {
+            "name": ":FUNCtion:WRECord:ENABle?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrec_enab"
+          },
+          {
+            "name": ":FUNCtion:WRECord:FEND",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrec_fend"
+          },
+          {
+            "name": ":FUNCtion:WRECord:FEND?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrec_fend"
+          },
+          {
+            "name": ":FUNCtion:WRECord:FINTerval",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrec_fint"
+          },
+          {
+            "name": ":FUNCtion:WRECord:FINTerval?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrec_fint"
+          },
+          {
+            "name": ":FUNCtion:WRECord:FMAX?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrec_fmax"
+          },
+          {
+            "name": ":FUNCtion:WRECord:OPERate",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrec_oper"
+          },
+          {
+            "name": ":FUNCtion:WRECord:OPERate?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrec_oper"
+          },
+          {
+            "name": ":FUNCtion:WRECord:PROMpt",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrec_prom"
+          },
+          {
+            "name": ":FUNCtion:WRECord:PROMpt?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrec_prom"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:DIRection",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_dir"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:DIRection?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_dir"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:FCURrent",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_fcur"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:FCURrent?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_fcur"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:FEND",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_fend"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:FEND?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_fend"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:FINTerval",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_fint"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:FINTerval?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_fint"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:FMAX?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_fmax"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:FSTart",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_fst"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:FSTart?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_fst"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:MODE",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_mode"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:MODE?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_mode"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:OPERate",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_oper"
+          },
+          {
+            "name": ":FUNCtion:WREPlay:OPERate?",
+            "helpLink": "09 - Rigol-MSO1000Z_DS1000Z-FUNCtion.html#func_wrep_oper"
+          }
+        ]
+      },
+      {
+        "name": "IEEE488.2 Common Commands ",
+        "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html",
+        "commands": [
+          {
+            "name": "*CLS",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee488_cls"
+          },
+          {
+            "name": "*ESE",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee488_ese"
+          },
+          {
+            "name": "*ESE?",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee488_ese"
+          },
+          {
+            "name": "*ESR?",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee_esr"
+          },
+          {
+            "name": "*IDN?",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee488_idn"
+          },
+          {
+            "name": "*OPC",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee488_opc"
+          },
+          {
+            "name": "*OPC?",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee488_opc"
+          },
+          {
+            "name": "*RST",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee488_rst"
+          },
+          {
+            "name": "*SRE",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee488_sre"
+          },
+          {
+            "name": "*SRE?",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee488_sre"
+          },
+          {
+            "name": "*STB?",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee488_stb"
+          },
+          {
+            "name": "*TST?",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee488_tst"
+          },
+          {
+            "name": "*WAI",
+            "helpLink": "10 - Rigol-MSO1000Z_DS1000Z-IEEE488.html#ieee488_wai"
+          }
+        ]
+      },
+      {
+        "name": ":LA Commands (Only for MSO1000Z/MSO1000Z-S) ",
+        "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html",
+        "commands": [
+          {
+            "name": ":LA:ACTive",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_active",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:ACTive?",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_active",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:AUTosort",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_aut",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:DIGital<n>:DISPlay",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_dig_disp",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:DIGital<n>:DISPlay?",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_dig_disp",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:DIGital<n>:LABel",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_dig_lab",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:DIGital<n>:LABel?",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_dig_lab",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:DIGital<n>:POSition",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_dig_pos",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:DIGital<n>:POSition?",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_dig_pos",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:DISPlay",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_disp",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:DISPlay?",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_disp",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:POD<n>:DISPlay",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_pod_disp",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:POD<n>:DISPlay?",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_pod_disp",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:POD<n>:THReshold",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_pod_thr",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:POD<n>:THReshold?",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_pod_thr",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:SIZE",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_size",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:SIZE?",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_size",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:STATe",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_stat",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:STATe?",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_stat",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:TCALibrate",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_tcal",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": ":LA:TCALibrate?",
+            "helpLink": "11 - Rigol-MSO1000Z_DS1000Z-LA.html#la_tcal",
+            "usedIn": [
+              "MSO1000Z",
+              "MSO1000Z-S"
+            ]
+          }
+        ]
+      },
+      {
+        "name": ":MATH Commands ",
+        "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html",
+        "commands": [
+          {
+            "name": ":MATH:DISPlay",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_disp"
+          },
+          {
+            "name": ":MATH:DISPlay?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_disp"
+          },
+          {
+            "name": ":MATH:FFT:HCENter",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_fft_hcen"
+          },
+          {
+            "name": ":MATH:FFT:HCENter?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_fft_hcen"
+          },
+          {
+            "name": ":MATH:FFT:HSCale",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_fft_hsc"
+          },
+          {
+            "name": ":MATH:FFT:HSCale (1)",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_fft_hsc"
+          },
+          {
+            "name": ":MATH:FFT:SPLit",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_fft_spl"
+          },
+          {
+            "name": ":MATH:FFT:SPLit?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_fft_spl"
+          },
+          {
+            "name": ":MATH:FFT:UNIT",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_fft_unit"
+          },
+          {
+            "name": ":MATH:FFT:UNIT?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_fft_unit"
+          },
+          {
+            "name": ":MATH:FFT:WINDow",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_fft_wind"
+          },
+          {
+            "name": ":MATH:FFT:WINDow?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_fft_wind"
+          },
+          {
+            "name": ":MATH:INVert",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_inv"
+          },
+          {
+            "name": ":MATH:INVert?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_inv"
+          },
+          {
+            "name": ":MATH:LSOUrce1",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_lsou1"
+          },
+          {
+            "name": ":MATH:LSOUrce1?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_lsou1"
+          },
+          {
+            "name": ":MATH:LSOUrce2",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_lsou2"
+          },
+          {
+            "name": ":MATH:LSOUrce2?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_lsou2"
+          },
+          {
+            "name": ":MATH:OFFSet",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_offs"
+          },
+          {
+            "name": ":MATH:OFFSet?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_offs"
+          },
+          {
+            "name": ":MATH:OPERator",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_oper"
+          },
+          {
+            "name": ":MATH:OPERator?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_oper"
+          },
+          {
+            "name": ":MATH:OPTion:ASCale",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_asc"
+          },
+          {
+            "name": ":MATH:OPTion:ASCale?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_asc"
+          },
+          {
+            "name": ":MATH:OPTion:DIStance",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_dis"
+          },
+          {
+            "name": ":MATH:OPTion:DIStance?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_dis"
+          },
+          {
+            "name": ":MATH:OPTion:END",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_end"
+          },
+          {
+            "name": ":MATH:OPTion:END?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_end"
+          },
+          {
+            "name": ":MATH:OPTion:FX:OPERator",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_fx_oper"
+          },
+          {
+            "name": ":MATH:OPTion:FX:OPERator?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_fx_oper"
+          },
+          {
+            "name": ":MATH:OPTion:FX:SOURce1",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_fx_sour1"
+          },
+          {
+            "name": ":MATH:OPTion:FX:SOURce1?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_fx_sour1"
+          },
+          {
+            "name": ":MATH:OPTion:FX:SOURce2",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_fx_sour2"
+          },
+          {
+            "name": ":MATH:OPTion:FX:SOURce2?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_fx_sour2"
+          },
+          {
+            "name": ":MATH:OPTion:INVert",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_inv"
+          },
+          {
+            "name": ":MATH:OPTion:INVert?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_inv"
+          },
+          {
+            "name": ":MATH:OPTion:SENSitivity",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_sens"
+          },
+          {
+            "name": ":MATH:OPTion:SENSitivity?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_sens"
+          },
+          {
+            "name": ":MATH:OPTion:STARt",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_star"
+          },
+          {
+            "name": ":MATH:OPTion:STARt?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_star"
+          },
+          {
+            "name": ":MATH:OPTion:THReshold1",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_thr1"
+          },
+          {
+            "name": ":MATH:OPTion:THReshold1?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_thr1"
+          },
+          {
+            "name": ":MATH:OPTion:THReshold2",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_thr2"
+          },
+          {
+            "name": ":MATH:OPTion:THReshold2?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_opt_thr2"
+          },
+          {
+            "name": ":MATH:RESet",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_res"
+          },
+          {
+            "name": ":MATH:SCALe",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_scal"
+          },
+          {
+            "name": ":MATH:SCALe?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_scal"
+          },
+          {
+            "name": ":MATH:SOURce1",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_sour1"
+          },
+          {
+            "name": ":MATH:SOURce1?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_sour1"
+          },
+          {
+            "name": ":MATH:SOURce2",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_sour2"
+          },
+          {
+            "name": ":MATH:SOURce2?",
+            "helpLink": "12 - Rigol-MSO1000Z_DS1000Z-MATH.html#math_sour2"
+          }
+        ]
+      },
+      {
+        "name": ":MASK Commands ",
+        "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html",
+        "commands": [
+          {
+            "name": ":MASK:CREate",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_cre"
+          },
+          {
+            "name": ":MASK:ENABle",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_enab"
+          },
+          {
+            "name": ":MASK:ENABle?",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_enab"
+          },
+          {
+            "name": ":MASK:FAILed?",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_fail"
+          },
+          {
+            "name": ":MASK:MDISplay",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_mdis"
+          },
+          {
+            "name": ":MASK:MDISplay?",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_mdis"
+          },
+          {
+            "name": ":MASK:OPERate",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_oper"
+          },
+          {
+            "name": ":MASK:OPERate?",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_oper"
+          },
+          {
+            "name": ":MASK:OUTPut",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_outp"
+          },
+          {
+            "name": ":MASK:OUTPut?",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_outp"
+          },
+          {
+            "name": ":MASK:PASSed?",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_pass"
+          },
+          {
+            "name": ":MASK:RESet",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_res"
+          },
+          {
+            "name": ":MASK:SOOutput",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_sso"
+          },
+          {
+            "name": ":MASK:SOOutput?",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_sso"
+          },
+          {
+            "name": ":MASK:SOURce",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_sour"
+          },
+          {
+            "name": ":MASK:SOURce?",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_sour"
+          },
+          {
+            "name": ":MASK:TOTal?",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_tot"
+          },
+          {
+            "name": ":MASK:X",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_x"
+          },
+          {
+            "name": ":MASK:X?",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_x"
+          },
+          {
+            "name": ":MASK:Y",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_y"
+          },
+          {
+            "name": ":MASK:Y?",
+            "helpLink": "13 - Rigol-MSO1000Z_DS1000Z-MASK.html#mask_y"
+          }
+        ]
+      },
+      {
+        "name": ":MEASure Commands ",
+        "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html",
+        "commands": [
+          {
+            "name": ":MEASure:ADISplay",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_adis"
+          },
+          {
+            "name": ":MEASure:ADISplay?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_adis"
+          },
+          {
+            "name": ":MEASure:AMSource",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_ams"
+          },
+          {
+            "name": ":MEASure:AMSource?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_ams"
+          },
+          {
+            "name": ":MEASure:CLEar",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_cle"
+          },
+          {
+            "name": ":MEASure:COUNter:SOURce",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_cont_sour"
+          },
+          {
+            "name": ":MEASure:COUNter:SOURce?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_cont_sour"
+          },
+          {
+            "name": ":MEASure:COUNter:VALue?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_coun_val"
+          },
+          {
+            "name": ":MEASure:ITEM",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_item"
+          },
+          {
+            "name": ":MEASure:ITEM?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_item"
+          },
+          {
+            "name": ":MEASure:RECover",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_rec"
+          },
+          {
+            "name": ":MEASure:SETup:DSA",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_dsa"
+          },
+          {
+            "name": ":MEASure:SETup:DSA?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_dsa"
+          },
+          {
+            "name": ":MEASure:SETup:DSB",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_dsb"
+          },
+          {
+            "name": ":MEASure:SETup:DSB?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_dsb"
+          },
+          {
+            "name": ":MEASure:SETup:MAX",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_max"
+          },
+          {
+            "name": ":MEASure:SETup:MAX?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_max"
+          },
+          {
+            "name": ":MEASure:SETup:MID",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_mid"
+          },
+          {
+            "name": ":MEASure:SETup:MID?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_mid"
+          },
+          {
+            "name": ":MEASure:SETup:MIN",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_min"
+          },
+          {
+            "name": ":MEASure:SETup:MIN?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_min"
+          },
+          {
+            "name": ":MEASure:SETup:PSA",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_psa"
+          },
+          {
+            "name": ":MEASure:SETup:PSA?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_psa"
+          },
+          {
+            "name": ":MEASure:SETup:PSB",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_psb"
+          },
+          {
+            "name": ":MEASure:SETup:PSB?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_set_psb"
+          },
+          {
+            "name": ":MEASure:SOURce",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_sour"
+          },
+          {
+            "name": ":MEASure:SOURce?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_sour"
+          },
+          {
+            "name": ":MEASure:STATistic:DISPlay",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_stat_disp"
+          },
+          {
+            "name": ":MEASure:STATistic:DISPlay?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_stat_disp"
+          },
+          {
+            "name": ":MEASure:STATistic:ITEM",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_stat_item"
+          },
+          {
+            "name": ":MEASure:STATistic:ITEM?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_stat_item"
+          },
+          {
+            "name": ":MEASure:STATistic:MODE",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_stat_mode"
+          },
+          {
+            "name": ":MEASure:STATistic:MODE?",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_stat_mode"
+          },
+          {
+            "name": ":MEASure:STATistic:RESet",
+            "helpLink": "14 - Rigol-MSO1000Z_DS1000Z-MEASure.html#meas_stat_res"
+          }
+        ]
+      },
+      {
+        "name": ":REFerence Commands ",
+        "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html",
+        "commands": [
+          {
+            "name": ":REFerence:DISPlay",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_disp"
+          },
+          {
+            "name": ":REFerence:DISPlay?",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_disp"
+          },
+          {
+            "name": ":REFerence<n>:COLor",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_col"
+          },
+          {
+            "name": ":REFerence<n>:COLor?",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_col"
+          },
+          {
+            "name": ":REFerence<n>:CURRent",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_curr"
+          },
+          {
+            "name": ":REFerence<n>:ENABle",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_enab"
+          },
+          {
+            "name": ":REFerence<n>:ENABle?",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_enab"
+          },
+          {
+            "name": ":REFerence<n>:RESet",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_res"
+          },
+          {
+            "name": ":REFerence<n>:SAVe",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_sav"
+          },
+          {
+            "name": ":REFerence<n>:SOURce",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_sour"
+          },
+          {
+            "name": ":REFerence<n>:SOURce?",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_sour"
+          },
+          {
+            "name": ":REFerence<n>:VOFFset",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_voff"
+          },
+          {
+            "name": ":REFerence<n>:VOFFset?",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_voff"
+          },
+          {
+            "name": ":REFerence<n>:VSCale",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_vsc"
+          },
+          {
+            "name": ":REFerence<n>:VSCale?",
+            "helpLink": "15 - Rigol-MSO1000Z_DS1000Z-REFerence.html#ref_vsc"
+          }
+        ]
+      },
+      {
+        "name": ":SOURce Commands (Only for MSO1000Z-S/DS1000Z-S) ",
+        "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html",
+        "commands": [
+          {
+            "name": "[:SOURce[<n>]]:APPLy:NOISe",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_appl_user",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:APPLy:PULSe",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_appl_user",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:APPLy:RAMP",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_appl_user",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:APPLy:SINusoid",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_appl_user",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:APPLy:SQUare",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_appl_user",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:APPLy:USER",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_appl_user",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:APPLy?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_appl",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:FREQuency[:FIXed]",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_freq_fix",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:FREQuency[:FIXed]?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_freq_fix",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:FUNCtion:RAMP:SYMMetry",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_func_ramp_symm",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:FUNCtion:RAMP:SYMMetry (1)",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_func_ramp_symm",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:FUNCtion[:SHAPe]",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_func_shap",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:FUNCtion[:SHAPe]?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_func_shap",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:AM:INTernal:FREQuency",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_fm_int",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:AM:INTernal:FREQuency?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_fm_int",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:AM:INTernal:FUNCtion",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_fm_int_func",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:AM:INTernal:FUNCtion?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_fm_int_func",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:AM:INTernal:FUNCtion? (1)",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_fm_int_func",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:AM[:DEPTh]",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_am",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:AM[:DEPTh]?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_am",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:FM:INTernal:FREQuency",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_fm_int",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:FM:INTernal:FREQuency?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_fm_int",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:FM:INTernal:FUNCtion?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_fm_int_func",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:FM[:DEVIation]",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_fm",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:FM[:DEVIation]?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_fm",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:TYPe",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_typ",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD:TYPe?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod_typ",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD[:STATe]",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:MOD[:STATe]?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_mod",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:OUTPut[<n>]:IMPedance",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_outp_imp",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:OUTPut[<n>]:IMPedance?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_outp_imp",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:OUTPut[<n>][:STATe]",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_outp",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:OUTPut[<n>][:STATe]?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_outp",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:PHASe:INITiate",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_phas_init",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:PHASe[:ADJust]",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_phas_adj",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:PHASe[:ADJust]?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_phas_adj",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:PULSe:DCYCle",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_puls_cycl",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:PULSe:DCYCle?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_puls_cycl",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:VOLTage[:LEVel]",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_volt_offs",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:VOLTage[:LEVel] (1)",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_volt_offs",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:VOLTage[:LEVel][:IMMediate][:AMPLitude]",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_volt",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:SOURce[<n>]]:VOLTage[:LEVel][:IMMediate][:AMPLitude]?",
+            "helpLink": "16 - Rigol-MSO1000Z_DS1000Z-SOURce.html#sour_volt",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          }
+        ]
+      },
+      {
+        "name": ":SYSTem Commands ",
+        "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html",
+        "commands": [
+          {
+            "name": ":SYSTem:AUToscale",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_aut"
+          },
+          {
+            "name": ":SYSTem:AUToscale?",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_aut"
+          },
+          {
+            "name": ":SYSTem:BEEPer",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_beep"
+          },
+          {
+            "name": ":SYSTem:BEEPer?",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_beep"
+          },
+          {
+            "name": ":SYSTem:ERRor[:NEXT]?",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_err"
+          },
+          {
+            "name": ":SYSTem:GPIB",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_gpib"
+          },
+          {
+            "name": ":SYSTem:GPIB?",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_gpib"
+          },
+          {
+            "name": ":SYSTem:LANGuage",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_lang"
+          },
+          {
+            "name": ":SYSTem:LANGuage?",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_lang"
+          },
+          {
+            "name": ":SYSTem:LOCKed",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_lock"
+          },
+          {
+            "name": ":SYSTem:LOCKed?",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_lock"
+          },
+          {
+            "name": ":SYSTem:OPTion:INSTall",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_opt_inst"
+          },
+          {
+            "name": ":SYSTem:OPTion:UNINSTall",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_opt_uninst"
+          },
+          {
+            "name": ":SYSTem:PON",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_pon"
+          },
+          {
+            "name": ":SYSTem:PON?",
+            "helpLink": "17 - Rigol-MSO1000Z_DS1000Z-SYSTem.html#syst_pon"
+          }
+        ]
+      },
+      {
+        "name": ":TRACe Commands (Only for MSO1000Z-S/DS1000Z-S)",
+        "helpLink": "18 - Rigol-MSO1000Z_DS1000Z-TRACe.html",
+        "commands": [
+          {
+            "name": "[:TRACe[<n>]]:DATA",
+            "helpLink": "18 - Rigol-MSO1000Z_DS1000Z-TRACe.html#trac_data",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:TRACe[<n>]]:DATA:DAC",
+            "helpLink": "18 - Rigol-MSO1000Z_DS1000Z-TRACe.html#trac_data_dac",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:TRACe[<n>]]:DATA:DAC16",
+            "helpLink": "18 - Rigol-MSO1000Z_DS1000Z-TRACe.html#trac_data_dac16",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:TRACe[<n>]]:DATA:LOAD?",
+            "helpLink": "18 - Rigol-MSO1000Z_DS1000Z-TRACe.html#trac_data_load",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:TRACe[<n>]]:DATA:POINts",
+            "helpLink": "18 - Rigol-MSO1000Z_DS1000Z-TRACe.html#trac_data_poin",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:TRACe[<n>]]:DATA:POINts:INTerpolate",
+            "helpLink": "18 - Rigol-MSO1000Z_DS1000Z-TRACe.html#trac_data_poin_int",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:TRACe[<n>]]:DATA:POINts:INTerpolate (1)",
+            "helpLink": "18 - Rigol-MSO1000Z_DS1000Z-TRACe.html#trac_data_poin_int",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:TRACe[<n>]]:DATA:POINts?",
+            "helpLink": "18 - Rigol-MSO1000Z_DS1000Z-TRACe.html#trac_data_poin",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:TRACe[<n>]]:DATA:VALue",
+            "helpLink": "18 - Rigol-MSO1000Z_DS1000Z-TRACe.html#trac_data_val",
+            "usedIn": [
+              "DS1000Z-S",
+              "MSO1000Z-S"
+            ]
+          },
+          {
+            "name": "[:TRACe[<n>]]:DATA:VALue?",
+            "helpLink": "18 - Rigol-MSO1000Z_DS1000Z-TRACe.html#trac_data_val",
+            "usedIn": [
+              "MSO1000Z-S",
+              "DS1000Z-S"
+            ]
+          }
+        ]
+      },
+      {
+        "name": ":TIMebase Commands ",
+        "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html",
+        "commands": [
+          {
+            "name": ":TIMebase:DELay:ENABle",
+            "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html#tim_del_enab"
+          },
+          {
+            "name": ":TIMebase:DELay:ENABle?",
+            "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html#tim_del_enab"
+          },
+          {
+            "name": ":TIMebase:DELay:OFFSet",
+            "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html#tim_del_offs"
+          },
+          {
+            "name": ":TIMebase:DELay:OFFSet?",
+            "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html#tim_del_offs"
+          },
+          {
+            "name": ":TIMebase:DELay:SCALe",
+            "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html#tim_del_scal"
+          },
+          {
+            "name": ":TIMebase:DELay:SCALe?",
+            "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html#tim_del_scal"
+          },
+          {
+            "name": ":TIMebase:MODE",
+            "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html#tim_mode"
+          },
+          {
+            "name": ":TIMebase:MODE?",
+            "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html#tim_mode"
+          },
+          {
+            "name": ":TIMebase[:MAIN]:OFFSet",
+            "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html#tim_offs"
+          },
+          {
+            "name": ":TIMebase[:MAIN]:OFFSet?",
+            "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html#tim_offs"
+          },
+          {
+            "name": ":TIMebase[:MAIN]:SCALe",
+            "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html#tim_scal"
+          },
+          {
+            "name": ":TIMebase[:MAIN]:SCALe?",
+            "helpLink": "19 - Rigol-MSO1000Z_DS1000Z-TIMebase.html#tim_scal"
+          }
+        ]
+      },
+      {
+        "name": ":TRIGger Commands",
+        "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html",
+        "commands": [
+          {
+            "name": ":TRIGger:COUPling",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_coup"
+          },
+          {
+            "name": ":TRIGger:COUPling?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_coup"
+          },
+          {
+            "name": ":TRIGger:DELay:SA",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_sa"
+          },
+          {
+            "name": ":TRIGger:DELay:SA?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_sa"
+          },
+          {
+            "name": ":TRIGger:DELay:SB",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_sb"
+          },
+          {
+            "name": ":TRIGger:DELay:SB?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_sb"
+          },
+          {
+            "name": ":TRIGger:DELay:SLOPA",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_slopa"
+          },
+          {
+            "name": ":TRIGger:DELay:SLOPA?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_slopa"
+          },
+          {
+            "name": ":TRIGger:DELay:SLOPB",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_slopb"
+          },
+          {
+            "name": ":TRIGger:DELay:SLOPB?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_slopb"
+          },
+          {
+            "name": ":TRIGger:DELay:TLOWer",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_tlow"
+          },
+          {
+            "name": ":TRIGger:DELay:TLOWer?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_tlow"
+          },
+          {
+            "name": ":TRIGger:DELay:TUPPer",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_tupp"
+          },
+          {
+            "name": ":TRIGger:DELay:TUPPer?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_tupp"
+          },
+          {
+            "name": ":TRIGger:DELay:TYPe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_typ"
+          },
+          {
+            "name": ":TRIGger:DELay:TYPe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_del_typ"
+          },
+          {
+            "name": ":TRIGger:DURATion:SOURce",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_durat_sour"
+          },
+          {
+            "name": ":TRIGger:DURATion:SOURce?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_durat_sour"
+          },
+          {
+            "name": ":TRIGger:DURATion:TLOWer",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_durat_tlow"
+          },
+          {
+            "name": ":TRIGger:DURATion:TLOWer?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_durat_tlow"
+          },
+          {
+            "name": ":TRIGger:DURATion:TUPPer",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_durat_tupp"
+          },
+          {
+            "name": ":TRIGger:DURATion:TUPPer?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_durat_tupp"
+          },
+          {
+            "name": ":TRIGger:DURATion:TYPe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_durat_typ"
+          },
+          {
+            "name": ":TRIGger:DURATion:TYPe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_durat_typ"
+          },
+          {
+            "name": ":TRIGger:DURATion:WHEN",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_durat_when"
+          },
+          {
+            "name": ":TRIGger:DURATion:WHEN?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_durat_when"
+          },
+          {
+            "name": ":TRIGger:EDGe:LEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_edg_lev"
+          },
+          {
+            "name": ":TRIGger:EDGe:LEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_edg_lev"
+          },
+          {
+            "name": ":TRIGger:EDGe:SLOPe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_edg_slop"
+          },
+          {
+            "name": ":TRIGger:EDGe:SLOPe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_edg_slop"
+          },
+          {
+            "name": ":TRIGger:EDGe:SOURce",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_edg_sour"
+          },
+          {
+            "name": ":TRIGger:EDGe:SOURce?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_edg_sour"
+          },
+          {
+            "name": ":TRIGger:HOLDoff",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_hold"
+          },
+          {
+            "name": ":TRIGger:HOLDoff?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_hold"
+          },
+          {
+            "name": ":TRIGger:IIC:ADDRess",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_addr"
+          },
+          {
+            "name": ":TRIGger:IIC:ADDRess?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_addr"
+          },
+          {
+            "name": ":TRIGger:IIC:AWIDth",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_awid"
+          },
+          {
+            "name": ":TRIGger:IIC:AWIDth?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_awid"
+          },
+          {
+            "name": ":TRIGger:IIC:CLEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_clev"
+          },
+          {
+            "name": ":TRIGger:IIC:CLEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_clev"
+          },
+          {
+            "name": ":TRIGger:IIC:DATA",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_data"
+          },
+          {
+            "name": ":TRIGger:IIC:DATA?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_data"
+          },
+          {
+            "name": ":TRIGger:IIC:DIRection",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_dir"
+          },
+          {
+            "name": ":TRIGger:IIC:DIRection?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_dir"
+          },
+          {
+            "name": ":TRIGger:IIC:DLEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_dlev"
+          },
+          {
+            "name": ":TRIGger:IIC:DLEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_dlev"
+          },
+          {
+            "name": ":TRIGger:IIC:SCL",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_scl"
+          },
+          {
+            "name": ":TRIGger:IIC:SCL?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_scl"
+          },
+          {
+            "name": ":TRIGger:IIC:SDA",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_sda"
+          },
+          {
+            "name": ":TRIGger:IIC:SDA?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_sda"
+          },
+          {
+            "name": ":TRIGger:IIC:WHEN",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_when"
+          },
+          {
+            "name": ":TRIGger:IIC:WHEN?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_iic_when"
+          },
+          {
+            "name": ":TRIGger:MODE",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_mode"
+          },
+          {
+            "name": ":TRIGger:MODE?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_mode"
+          },
+          {
+            "name": ":TRIGger:NEDGe:EDGE",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_nedg_edge"
+          },
+          {
+            "name": ":TRIGger:NEDGe:EDGE?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_nedg_edge"
+          },
+          {
+            "name": ":TRIGger:NEDGe:IDLE",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_nedg_idle"
+          },
+          {
+            "name": ":TRIGger:NEDGe:IDLE?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_nedg_idle"
+          },
+          {
+            "name": ":TRIGger:NEDGe:LEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_nedg_lev"
+          },
+          {
+            "name": ":TRIGger:NEDGe:LEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_nedg_lev"
+          },
+          {
+            "name": ":TRIGger:NEDGe:SLOPe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_nedg_slop"
+          },
+          {
+            "name": ":TRIGger:NEDGe:SLOPe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_nedg_slop"
+          },
+          {
+            "name": ":TRIGger:NEDGe:SOURce",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_nedg_sour"
+          },
+          {
+            "name": ":TRIGger:NEDGe:SOURce?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_nedg_sour"
+          },
+          {
+            "name": ":TRIGger:NREJect",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_nrej"
+          },
+          {
+            "name": ":TRIGger:NREJect?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_nrej"
+          },
+          {
+            "name": ":TRIGger:PATTern:LEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_patt_lev"
+          },
+          {
+            "name": ":TRIGger:PATTern:LEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_patt_lev"
+          },
+          {
+            "name": ":TRIGger:PATTern:PATTern",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_patt_patt"
+          },
+          {
+            "name": ":TRIGger:PATTern:PATTern?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_patt_patt"
+          },
+          {
+            "name": ":TRIGger:PULSe:LEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_puls_lev"
+          },
+          {
+            "name": ":TRIGger:PULSe:LEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_puls_lev"
+          },
+          {
+            "name": ":TRIGger:PULSe:LWIDth",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_puls_lwid"
+          },
+          {
+            "name": ":TRIGger:PULSe:LWIDth?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_puls_lwid"
+          },
+          {
+            "name": ":TRIGger:PULSe:SOURce",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_puls_sour"
+          },
+          {
+            "name": ":TRIGger:PULSe:SOURce?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_puls_sour"
+          },
+          {
+            "name": ":TRIGger:PULSe:UWIDth",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_puls_uwid"
+          },
+          {
+            "name": ":TRIGger:PULSe:UWIDth?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_puls_uwid"
+          },
+          {
+            "name": ":TRIGger:PULSe:WHEN",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_puls_when"
+          },
+          {
+            "name": ":TRIGger:PULSe:WHEN?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_puls_when"
+          },
+          {
+            "name": ":TRIGger:PULSe:WIDTh",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_puls_widt"
+          },
+          {
+            "name": ":TRIGger:PULSe:WIDTh?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_puls_widt"
+          },
+          {
+            "name": ":TRIGger:RS232:BAUD",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_baud"
+          },
+          {
+            "name": ":TRIGger:RS232:BAUD?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_baud"
+          },
+          {
+            "name": ":TRIGger:RS232:BUSer?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_bus"
+          },
+          {
+            "name": ":TRIGger:RS232:DATA",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_data"
+          },
+          {
+            "name": ":TRIGger:RS232:DATA?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_data"
+          },
+          {
+            "name": ":TRIGger:RS232:LEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_lev"
+          },
+          {
+            "name": ":TRIGger:RS232:LEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_lev"
+          },
+          {
+            "name": ":TRIGger:RS232:PARity",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_par"
+          },
+          {
+            "name": ":TRIGger:RS232:PARity?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_par"
+          },
+          {
+            "name": ":TRIGger:RS232:SOURce",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_sour"
+          },
+          {
+            "name": ":TRIGger:RS232:SOURce?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_sour"
+          },
+          {
+            "name": ":TRIGger:RS232:STOP",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_stop"
+          },
+          {
+            "name": ":TRIGger:RS232:STOP?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_stop"
+          },
+          {
+            "name": ":TRIGger:RS232:WHEN",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_when"
+          },
+          {
+            "name": ":TRIGger:RS232:WHEN?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_when"
+          },
+          {
+            "name": ":TRIGger:RS232:WIDTh",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_widt"
+          },
+          {
+            "name": ":TRIGger:RS232:WIDTh?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_rs232_widt"
+          },
+          {
+            "name": ":TRIGger:RUNT:ALEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_alev"
+          },
+          {
+            "name": ":TRIGger:RUNT:ALEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_alev"
+          },
+          {
+            "name": ":TRIGger:RUNT:BLEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_blev"
+          },
+          {
+            "name": ":TRIGger:RUNT:BLEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_blev"
+          },
+          {
+            "name": ":TRIGger:RUNT:POLarity",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_pol"
+          },
+          {
+            "name": ":TRIGger:RUNT:POLarity?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_pol"
+          },
+          {
+            "name": ":TRIGger:RUNT:SOURce",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_sour"
+          },
+          {
+            "name": ":TRIGger:RUNT:SOURce?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_sour"
+          },
+          {
+            "name": ":TRIGger:RUNT:WHEN",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_when"
+          },
+          {
+            "name": ":TRIGger:RUNT:WHEN?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_when"
+          },
+          {
+            "name": ":TRIGger:RUNT:WLOWer",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_wlow"
+          },
+          {
+            "name": ":TRIGger:RUNT:WLOWer?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_wlow"
+          },
+          {
+            "name": ":TRIGger:RUNT:WUPPer",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_wupp"
+          },
+          {
+            "name": ":TRIGger:RUNT:WUPPer?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_runt_wupp"
+          },
+          {
+            "name": ":TRIGger:SHOLd:CSrc",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_cs"
+          },
+          {
+            "name": ":TRIGger:SHOLd:CSrc?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_cs"
+          },
+          {
+            "name": ":TRIGger:SHOLd:DSrc",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_ds"
+          },
+          {
+            "name": ":TRIGger:SHOLd:DSrc?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_ds"
+          },
+          {
+            "name": ":TRIGger:SHOLd:HTIMe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_htim"
+          },
+          {
+            "name": ":TRIGger:SHOLd:HTIMe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_htim"
+          },
+          {
+            "name": ":TRIGger:SHOLd:PATTern",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_patt"
+          },
+          {
+            "name": ":TRIGger:SHOLd:PATTern?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_patt"
+          },
+          {
+            "name": ":TRIGger:SHOLd:SLOPe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_slop"
+          },
+          {
+            "name": ":TRIGger:SHOLd:SLOPe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_slop"
+          },
+          {
+            "name": ":TRIGger:SHOLd:STIMe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_stim"
+          },
+          {
+            "name": ":TRIGger:SHOLd:STIMe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_stim"
+          },
+          {
+            "name": ":TRIGger:SHOLd:TYPe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_typ"
+          },
+          {
+            "name": ":TRIGger:SHOLd:TYPe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_shol_typ"
+          },
+          {
+            "name": ":TRIGger:SLOPe:ALEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_alev"
+          },
+          {
+            "name": ":TRIGger:SLOPe:ALEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_alev"
+          },
+          {
+            "name": ":TRIGger:SLOPe:BLEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_blev"
+          },
+          {
+            "name": ":TRIGger:SLOPe:BLEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_blev"
+          },
+          {
+            "name": ":TRIGger:SLOPe:SOURce",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_sour"
+          },
+          {
+            "name": ":TRIGger:SLOPe:SOURce?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_sour"
+          },
+          {
+            "name": ":TRIGger:SLOPe:TIME",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_time"
+          },
+          {
+            "name": ":TRIGger:SLOPe:TIME?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_time"
+          },
+          {
+            "name": ":TRIGger:SLOPe:TLOWer",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_tlow"
+          },
+          {
+            "name": ":TRIGger:SLOPe:TLOWer?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_tlow"
+          },
+          {
+            "name": ":TRIGger:SLOPe:TUPPer",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_tupp"
+          },
+          {
+            "name": ":TRIGger:SLOPe:TUPPer?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_tupp"
+          },
+          {
+            "name": ":TRIGger:SLOPe:WHEN",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_when"
+          },
+          {
+            "name": ":TRIGger:SLOPe:WHEN?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_when"
+          },
+          {
+            "name": ":TRIGger:SLOPe:WINDow",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_wind"
+          },
+          {
+            "name": ":TRIGger:SLOPe:WINDow?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_slop_wind"
+          },
+          {
+            "name": ":TRIGger:SPI:CLEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_clev"
+          },
+          {
+            "name": ":TRIGger:SPI:CLEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_clev"
+          },
+          {
+            "name": ":TRIGger:SPI:CS",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_cs"
+          },
+          {
+            "name": ":TRIGger:SPI:CS?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_cs"
+          },
+          {
+            "name": ":TRIGger:SPI:DATA",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_data"
+          },
+          {
+            "name": ":TRIGger:SPI:DATA?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_data"
+          },
+          {
+            "name": ":TRIGger:SPI:DLEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_dlev"
+          },
+          {
+            "name": ":TRIGger:SPI:DLEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_dlev"
+          },
+          {
+            "name": ":TRIGger:SPI:MODE",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_mode"
+          },
+          {
+            "name": ":TRIGger:SPI:MODE?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_mode"
+          },
+          {
+            "name": ":TRIGger:SPI:SCL",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_scl"
+          },
+          {
+            "name": ":TRIGger:SPI:SCL?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_scl"
+          },
+          {
+            "name": ":TRIGger:SPI:SDA",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_sda"
+          },
+          {
+            "name": ":TRIGger:SPI:SDA?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_sda"
+          },
+          {
+            "name": ":TRIGger:SPI:SLEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_slev"
+          },
+          {
+            "name": ":TRIGger:SPI:SLEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_slev"
+          },
+          {
+            "name": ":TRIGger:SPI:SLOPe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_slop"
+          },
+          {
+            "name": ":TRIGger:SPI:SLOPe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_slop"
+          },
+          {
+            "name": ":TRIGger:SPI:TIMeout",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_tim"
+          },
+          {
+            "name": ":TRIGger:SPI:TIMeout?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_tim"
+          },
+          {
+            "name": ":TRIGger:SPI:WHEN",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_when"
+          },
+          {
+            "name": ":TRIGger:SPI:WHEN?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_when"
+          },
+          {
+            "name": ":TRIGger:SPI:WIDTh",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_widt"
+          },
+          {
+            "name": ":TRIGger:SPI:WIDTh?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_spi_widt"
+          },
+          {
+            "name": ":TRIGger:STATus?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_stat"
+          },
+          {
+            "name": ":TRIGger:SWEep",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_swe"
+          },
+          {
+            "name": ":TRIGger:SWEep?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_swe"
+          },
+          {
+            "name": ":TRIGger:TIMeout:SLOPe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_tim_slop"
+          },
+          {
+            "name": ":TRIGger:TIMeout:SLOPe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_tim_slop"
+          },
+          {
+            "name": ":TRIGger:TIMeout:SOURce",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_tim_sour"
+          },
+          {
+            "name": ":TRIGger:TIMeout:SOURce?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_tim_sour"
+          },
+          {
+            "name": ":TRIGger:TIMeout:TIMe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_tim_tim"
+          },
+          {
+            "name": ":TRIGger:TIMeout:TIMe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_tim_tim"
+          },
+          {
+            "name": ":TRIGger:VIDeo:LEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_vid_lev"
+          },
+          {
+            "name": ":TRIGger:VIDeo:LEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_vid_lev"
+          },
+          {
+            "name": ":TRIGger:VIDeo:LINE",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_vid_line"
+          },
+          {
+            "name": ":TRIGger:VIDeo:LINE?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_vid_line"
+          },
+          {
+            "name": ":TRIGger:VIDeo:MODE",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_vid_mode"
+          },
+          {
+            "name": ":TRIGger:VIDeo:MODE?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_vid_mode"
+          },
+          {
+            "name": ":TRIGger:VIDeo:POLarity",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_vid_pol"
+          },
+          {
+            "name": ":TRIGger:VIDeo:POLarity?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_vid_pol"
+          },
+          {
+            "name": ":TRIGger:VIDeo:SOURce",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_vid_sour"
+          },
+          {
+            "name": ":TRIGger:VIDeo:SOURce?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_vid_sour"
+          },
+          {
+            "name": ":TRIGger:VIDeo:STANdard",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_vid_stan"
+          },
+          {
+            "name": ":TRIGger:VIDeo:STANdard?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_vid_stan"
+          },
+          {
+            "name": ":TRIGger:WINDows:ALEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_wind_alev"
+          },
+          {
+            "name": ":TRIGger:WINDows:ALEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_wind_alev"
+          },
+          {
+            "name": ":TRIGger:WINDows:BLEVel",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_wind_blev"
+          },
+          {
+            "name": ":TRIGger:WINDows:BLEVel?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_wind_blev"
+          },
+          {
+            "name": ":TRIGger:WINDows:POSition",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_wind_pos"
+          },
+          {
+            "name": ":TRIGger:WINDows:POSition?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_wind_pos"
+          },
+          {
+            "name": ":TRIGger:WINDows:SLOPe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_wind_slop"
+          },
+          {
+            "name": ":TRIGger:WINDows:SLOPe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_wind_slop"
+          },
+          {
+            "name": ":TRIGger:WINDows:SOURce",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_wind_sour"
+          },
+          {
+            "name": ":TRIGger:WINDows:SOURce?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_wind_sour"
+          },
+          {
+            "name": ":TRIGger:WINDows:TIMe",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_wind_tim"
+          },
+          {
+            "name": ":TRIGger:WINDows:TIMe?",
+            "helpLink": "20 - Rigol-MSO1000Z_DS1000Z-TRIGger.html#trig_wind_tim"
+          }
+        ]
+      },
+      {
+        "name": ":WAVeform Commands ",
+        "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html",
+        "commands": [
+          {
+            "name": ":WAVeform:DATA?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_data"
+          },
+          {
+            "name": ":WAVeform:FORMat",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_form"
+          },
+          {
+            "name": ":WAVeform:FORMat?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_form"
+          },
+          {
+            "name": ":WAVeform:MODE",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_mode"
+          },
+          {
+            "name": ":WAVeform:MODE?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_mode"
+          },
+          {
+            "name": ":WAVeform:PREamble?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_pre"
+          },
+          {
+            "name": ":WAVeform:SOURce",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_sour"
+          },
+          {
+            "name": ":WAVeform:SOURce?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_sour"
+          },
+          {
+            "name": ":WAVeform:STARt",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_star"
+          },
+          {
+            "name": ":WAVeform:STARt?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_star"
+          },
+          {
+            "name": ":WAVeform:STOP",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_stop"
+          },
+          {
+            "name": ":WAVeform:STOP?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_stop"
+          },
+          {
+            "name": ":WAVeform:XINCrement?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_xinc"
+          },
+          {
+            "name": ":WAVeform:XORigin?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_xor"
+          },
+          {
+            "name": ":WAVeform:XREFerence?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_xref"
+          },
+          {
+            "name": ":WAVeform:YINCrement?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_yinc"
+          },
+          {
+            "name": ":WAVeform:YORigin?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_yor"
+          },
+          {
+            "name": ":WAVeform:YREFerence?",
+            "helpLink": "21 - Rigol-MSO1000Z_DS1000Z-WAVeform.html#wav_yref"
+          }
+        ]
+      }
+    ]
+  },
+  "shortcuts": {
+    "shortcuts": [
+      {
+        "id": "3f30a216-b77a-42f5-bcba-ecb1cbb84924",
+        "name": "Waveform data",
+        "action": {
+          "type": "javascript",
+          "data": "// Preamble:\n// <format>,<type>,<points>,<count>,<xincrement>,<xorigin>,<xreference>,<yincrem ent>,<yorigin>,<yreference>\n// Wherein,\n// <format>: 0 (BYTE), 1 (WORD) or 2 (ASC).\n// <type>: 0 (NORMal), 1 (MAXimum) or 2 (RAW).\n// <points>: an integer between 1 and 12000000.\n// <count>: the number of averages in the average sample mode and 1 in other modes.\n// <xincrement>: the time difference between two neighboring points in the X direction.\n// <xorigin>: the start time of the waveform data in the X direction.\n// <xreference>: the reference time of the data point in the X direction.\n// <yincrement>: the waveform increment in the Y direction.\n// <yorigin>: the vertical offset relative to the \"Vertical Reference Position\" in the Y direction.\n// <yreference>: the vertical reference position in the Y direction.\n\nconst CHUNK_MAX_POINTS = 1000000;\nconst NUM_CHANNELS = instrument.properties.channels.length;\n\nconnection.acquire();\n\nvar displayedChannels = [];\n\nfor (var iChannel = 1; iChannel <= NUM_CHANNELS; ++iChannel) {\n    var displayed = await connection.query(`CHANnel${iChannel}:DISPlay?`);\n    if (displayed) {\n        displayedChannels.push(iChannel);\n    }\n}\n\nif (displayedChannels.length > 0) {\n    connection.command(\"ACQuire:MDEPth auto\");\n    connection.command(\"WAVeform:MODE raw\");\n    connection.command(\"STOP\");\n    connection.command(\"WAVeform:FORMat byte\");\n    \n    var samplingRate = await connection.query(\"ACQuire:SRATe?\");\n    var timeScale = await connection.query(\"TIMebase:SCALe?\");\n    \n    var chunk_points = Math.floor(CHUNK_MAX_POINTS / displayedChannels.length);\n\n    for (var iDisplayedChannel = 0; iDisplayedChannel < displayedChannels.length; ++iDisplayedChannel) {\n        var iChannel = displayedChannels[iDisplayedChannel];\n\n        connection.command(`WAVeform:SOURce chan${iChannel}`);\n    \n        var channelScale = await connection.query(`CHANnel${iChannel}:SCALe?`);\n        var channelOffset = await connection.query(`CHANnel${iChannel}:OFFSet?`);\n        \n        var unit = await connection.query(`CHANnel${iChannel}:UNITs?`);\n        var color = instrument.properties.channels[iChannel - 1].color;\n        var colorInverse = instrument.properties.channels[iChannel - 1].colorInverse;\n        var label = `Channel ${iChannel}`;\n\n        var preamble = await connection.query(\"WAVeform:PREamble?\");\n        var preambleArray = preamble.split(',');\n        \n        var numPoints = parseInt(preambleArray[2]);\n        \n        var yinc = parseFloat(preambleArray[7]);\n        var yor = parseFloat(preambleArray[8]);\n        var yref = parseFloat(preambleArray[9]);\n        \n        var offset = -(yor + yref) * yinc;\n        var scale = yinc;\n        \n        var description = `Channel: ${iChannel}, Sampling rate: ${samplingRate}, Preamble: ${preamble}`;\n        notify.info(description);\n        \n        var data = [];\n\n        var numChunks = Math.ceil(numPoints / chunk_points);\n        for (var iChunk = 0; iChunk < numChunks; ++iChunk) {\n            notify.info(`Reading waveform data ${iChunk + 1} of ${numChunks}`);\n            var i = iChunk * chunk_points;\n            connection.command(`WAVeform:STARt ${i + 1}`);\n            connection.command(`WAVeform:STOP ${Math.min(i + chunk_points, numPoints)}`);\n            var waveform = await connection.query(\"WAVeform:DATA?\"); \n            data.push(waveform.data);\n            waveform.deleteLog();\n        }\n\n        session.addChart({\n            description,\n            data,\n            samplingRate,\n            offset,\n            scale,\n            format: 2,\n            unit,\n            color,\n            colorInverse,\n            label,\n            viewOptions: {\n                axesLines: {\n                    type: \"fixed\",\n                    majorSubdivision: {\n                        horizontal: 12,\n                        vertical: 8\n                    },\n                    minorSubdivision: {\n                        horizontal: 5,\n                        vertical: 5\n                    }\n                }\n            },\n            horizontalScale: timeScale,\n            verticalScale: channelScale\n        });\n    }\n}\n\nconnection.release();\n"
+        },
+        "keybinding": "f3",
+        "showInToolbar": true,
+        "toolbarButtonPosition": 2,
+        "toolbarButtonColor": "#7BC3D4",
+        "requiresConfirmation": true
+      },
+      {
+        "id": "5c0286bf-de91-4953-92db-9ceb46fc5b08",
+        "name": "Screenshot",
+        "action": {
+          "type": "scpi-commands",
+          "data": "STOP\nDISP:DATA?"
+        },
+        "keybinding": "f2",
+        "showInToolbar": true,
+        "toolbarButtonPosition": 1,
+        "toolbarButtonColor": "#7BC3D4",
+        "requiresConfirmation": false,
+        "selected": true
+      },
+      {
+        "id": "a8bf8f4a-dc9d-4672-d6a9-40615e68102a",
+        "name": "Run",
+        "action": {
+          "type": "scpi-commands",
+          "data": "RUN"
+        },
+        "keybinding": "f4",
+        "showInToolbar": true,
+        "toolbarButtonPosition": 3,
+        "toolbarButtonColor": "#78C36A",
+        "requiresConfirmation": false
+      },
+      {
+        "id": "226f24ca-173a-4771-a858-b966f6f26279",
+        "name": "Stop",
+        "action": {
+          "type": "scpi-commands",
+          "data": "STOP"
+        },
+        "keybinding": "f5",
+        "showInToolbar": true,
+        "toolbarButtonPosition": 4,
+        "toolbarButtonColor": "#E665A0",
+        "requiresConfirmation": false
+      }
+    ]
+  }
+}

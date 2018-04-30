@@ -1,0 +1,7 @@
+{
+    "name": "eez-studio-shortcuts",
+    "version": "0.0.1",
+    "eez-studio": {
+        "main": "shortcuts-extension.js"
+    }
+}

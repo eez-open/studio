@@ -1,0 +1,168 @@
+import * as React from "react";
+import { action } from "mobx";
+import { observer } from "mobx-react";
+import * as classNames from "classnames";
+
+import {
+    formatDate,
+    getDayOfWeek,
+    getFirstDayOfWeek,
+    getDayOfWeekName,
+    getWeekNumber
+} from "shared/util";
+
+import { historyCalendar } from "instrument/window/history";
+
+@observer
+export class Day extends React.Component<{ day: Date }> {
+    render() {
+        const day = this.props.day;
+
+        const activityCount = historyCalendar.getActivityCount(day);
+
+        let activityLevel;
+
+        let activityInfo;
+        if (activityCount > 0) {
+            activityInfo = `${activityCount} log items`;
+            if (activityCount < 25) {
+                activityLevel = 1;
+            } else if (activityCount < 75) {
+                activityLevel = 2;
+            } else if (activityCount < 200) {
+                activityLevel = 3;
+            } else {
+                activityLevel = 4;
+            }
+        } else {
+            activityInfo = "No activity";
+            activityLevel = 0;
+        }
+
+        let className = classNames(`activity-level-${activityLevel}`, {
+            selected: historyCalendar.isSelectedDay(day)
+        });
+
+        const tooltip = `${activityInfo} on ${formatDate(day)}`;
+
+        return (
+            <div
+                className={className}
+                title={tooltip}
+                onClick={action(() => {
+                    if (historyCalendar.getActivityCount(day) > 0) {
+                        historyCalendar.selectDay(day);
+                    }
+                })}
+            >
+                <div>{day.getDate().toString()}</div>
+            </div>
+        );
+    }
+}
+
+export class DayOfWeek extends React.Component<{ dayOfWeek: number }> {
+    render() {
+        return <div>{getDayOfWeekName(this.props.dayOfWeek).slice(0, 2)}</div>;
+    }
+}
+
+@observer
+export class Month extends React.Component<{ month: Date }> {
+    element: HTMLElement | null;
+
+    componentDidMount() {
+        if (this.element && historyCalendar.isSelectedMonth(this.props.month)) {
+            this.element.scrollIntoView({ block: "end" });
+        }
+    }
+
+    componentDidUpdate() {
+        if (this.element && historyCalendar.isSelectedMonth(this.props.month)) {
+            this.element.scrollIntoView({ block: "nearest", behavior: "auto" });
+        }
+    }
+
+    renderDays() {
+        const days = [];
+
+        const month = this.props.month;
+
+        // 1st row contains day of week names
+        for (let i = 0; i < 7; ++i) {
+            days.push(<DayOfWeek key={"dow" + i} dayOfWeek={(getFirstDayOfWeek() + i) % 7} />);
+        }
+
+        // 8th column of the 1st row is empty (8th column contains week number)
+        days.push(<div key={"dow7"} />);
+
+        let start = -getDayOfWeek(month);
+
+        for (let row = 0; row < 6; ++row) {
+            for (let col = 0; col < 7; ++col) {
+                const i = start + row * 7 + col;
+                const day = new Date(month);
+                day.setDate(day.getDate() + i);
+
+                if (day.getMonth() === month.getMonth()) {
+                    days.push(<Day key={i} day={day} />);
+                } else {
+                    if (day.getMonth() != month.getMonth() && day > month && col === 0) {
+                        return days;
+                    }
+                    // empty cell
+                    days.push(<div key={i} />);
+                }
+            }
+
+            // week number
+            const i = start + row * 7;
+            const day = new Date(month);
+            day.setDate(day.getDate() + i);
+            days.push(
+                <div key={"w" + row} className="WeekNumber">
+                    {getWeekNumber(day)}.
+                </div>
+            );
+        }
+
+        return days;
+    }
+
+    render() {
+        const month = this.props.month;
+
+        let className = classNames({
+            selected: historyCalendar.isSelectedMonth(month)
+        });
+
+        return (
+            <div className={className} ref={ref => (this.element = ref)}>
+                <div>{formatDate(month, "YYYY MMMM")}</div>
+                <div>{this.renderDays()}</div>
+            </div>
+        );
+    }
+}
+
+@observer
+export class Calendar extends React.Component {
+    render() {
+        var months = [];
+
+        var startMonth = new Date(historyCalendar.minDate);
+        startMonth.setDate(1);
+
+        var endMonth = new Date(historyCalendar.maxDate);
+        endMonth.setDate(1);
+
+        var month = new Date(startMonth);
+        while (month <= endMonth) {
+            months.push(<Month key={month.toString()} month={new Date(month)} />);
+
+            month.setMonth(month.getMonth() + 1);
+        }
+
+        return <div className="EezStudio_HistoryCalendar">{months}</div>;
+    }
+}

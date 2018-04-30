@@ -1,0 +1,572 @@
+@import "vars.less";
+@import "quill.less";
+@import "transitions.less";
+
+* {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.modal * {
+    user-select: auto;
+    -webkit-user-select: auto;
+}
+
+html {
+    font-size: 14px;
+}
+
+body {
+    overflow: hidden;
+}
+
+input.error,
+input.error:focus {
+    border-color: red;
+}
+
+input[type="color"] {
+    height: 38px;
+    padding: 0.1875rem 0.375rem;
+}
+
+.EezStudio_App {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-top: 1px solid @border-color;
+}
+
+.EezStudio_Container {
+    position: relative;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.EezStudio_Navigation {
+    height: 100%;
+    margin: 0;
+    background-color: @panel-header-color;
+    border-right: 1px solid @border-color;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.EezStudio_Navigation ul {
+    padding: 7px;
+    margin-bottom: 0;
+}
+
+.EezStudio_Navigation ul:nth-child(1) {
+    .EezStudio_NavigationItem {
+        width: 24px;
+        margin-bottom: 7px;
+    }
+}
+
+.EezStudio_Navigation ul:nth-child(2) {
+    .EezStudio_NavigationItem {
+        margin-top: 7px;
+    }
+}
+
+.EezStudio_NavigationItem {
+    &.EezStudio_Selected {
+        a {
+            color: @selection-background-color;
+        }
+    }
+
+    &:not(.EezStudio_Selected) {
+        a {
+            color: #999;
+        }
+
+        a:hover {
+            color: #333;
+        }
+    }
+}
+
+.EezStudio_ListContainer {
+    max-height: 240px;
+    overflow: auto;
+    border: 1px solid @border-color;
+}
+
+.EezStudio_List {
+    padding: 5px;
+
+    > div.EezStudio_Selected {
+        background-color: @non-focused-selection-background-color;
+        color: @non-focused-selection-color;
+    }
+}
+
+.EezStudio_List_Selectable {
+    > div {
+        cursor: pointer;
+    }
+}
+
+.EezStudio_ListContainer:focus > .EezStudio_List_Selectable,
+.EezStudio_List_Selectable:focus {
+    > div:hover {
+        background-color: @hover-background-color;
+        color: @hover-color;
+    }
+
+    > div.EezStudio_Focused {
+        background-color: @focus-background-color;
+        color: @focus-color;
+    }
+
+    > div.EezStudio_Selected {
+        background-color: @selection-background-color;
+        color: @selection-color;
+    }
+}
+
+.EezStudio_ListItem {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+
+    & > div:nth-child(1) {
+        flex-grow: 0;
+        flex-shrink: 0;
+        padding-right: 10px;
+        align-self: center;
+    }
+
+    & > div:nth-child(2) {
+        flex-grow: 1;
+        align-self: center;
+    }
+
+    & > div:nth-child(3) {
+        flex-grow: 0;
+        flex-shrink: 0;
+        padding-left: 10px;
+        align-self: center;
+    }
+}
+
+.EezStudio_Tree {
+    padding: 5px;
+    border: 2px dashed transparent;
+
+    .EezStudio_TreeRowEnclosure {
+        .EezStudio_TreeRow {
+            &.EezStudio_Selected {
+                background-color: @non-focused-selection-background-color;
+                color: @non-focused-selection-color;
+            }
+        }
+    }
+
+    &:focus {
+        .EezStudio_TreeRowEnclosure {
+            .EezStudio_TreeRow {
+                &:hover {
+                    background-color: @hover-background-color;
+                    color: @hover-color;
+                }
+
+                &.EezStudio_Focused {
+                    background-color: @focus-background-color;
+                    color: @focus-color;
+                }
+
+                &.EezStudio_Selected {
+                    background-color: @selection-background-color;
+                    color: @selection-color;
+                }
+            }
+        }
+    }
+
+    .EezStudio_TreeRow {
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .EezStudio_TreeRowLabel {
+        display: inline-block;
+        margin-left: 18px;
+    }
+
+    .EezStudio_TreeRowTriangle {
+        display: inline-block;
+        height: 18px;
+        color: #333;
+
+        transition: transform 0.2s;
+        transform-origin: 50% 50%;
+
+        &.EezStudio_Expanded {
+            transform: translate(5px, 3px) rotate(90deg);
+        }
+    }
+
+    .EezStudio_TreeRowTriangle:hover {
+        color: #666;
+    }
+}
+
+.EezStudio_NotFoundObject {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: red;
+}
+
+.EezStudio_Panel_Title {
+    font-weight: bold;
+}
+
+.EezStudio_Loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #666;
+    border-radius: 50%;
+    margin: auto;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.EezStudio_PropertyList {
+    width: 100%;
+
+    td {
+        border: none;
+    }
+
+    td:first-child {
+        white-space: nowrap;
+    }
+
+    td:not(:first-child) {
+        width: 100%;
+    }
+
+    td:first-child {
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    td:first-child {
+        padding-right: 10px;
+    }
+
+    tr.advanced {
+        display: none;
+    }
+
+    &.showAdvanced tr.advanced {
+        display: table-row;
+    }
+
+    td.PropertyName,
+    td.StaticPropertyValue {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+.EezStudio_RichTextProperty {
+    &.ql-container {
+        height: 200px;
+    }
+}
+
+.EezStudio_StaticRichTextProperty {
+    &.ql-container.ql-snow {
+        border: none;
+    }
+}
+
+.EezStudio_Toolbar {
+    display: flex;
+    align-items: center;
+
+    & > button,
+    & > select,
+    & > div {
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+
+    & > button:last-child,
+    & > div:last-child {
+        margin-right: 0;
+    }
+
+    select,
+    .dropdown {
+        display: inline-block;
+        width: auto;
+    }
+}
+
+.EezStudio_IconAction:hover,
+.EezStudio_TextAction:hover {
+    color: @actionHoverColor;
+}
+
+.EezStudio_IconAction:disabled,
+.EezStudio_TextAction:disabled {
+    color: @actionDisabledColor;
+}
+
+.EezStudio_IconAction {
+    color: @actionTextColor;
+    background: transparent;
+    border: none;
+
+    padding: 0;
+}
+
+.EezStudio_TextAction {
+    color: @actionTextColor;
+    background: transparent;
+    border: none;
+}
+
+.EezStudio_SelectedAction {
+    background-color: @actionTextColor;
+    color: white;
+    &:hover {
+        color: #ddd;
+    }
+}
+
+.EezStudio_Ballon {
+    background-color: #ffffa5;
+    padding: 0 10px 5px 10px;
+    border-radius: 12px;
+}
+
+.EezStudio_BallonDecoration {
+    box-sizing: border-box;
+    margin-left: 20px;
+    border-width: 0 0 20px 30px;
+    border-style: solid;
+    border-color: transparent #ffffa5;
+}
+
+.EezStudio_HeaderWithBody {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.EezStudio_HeaderWithBody_Vertical {
+    flex-direction: column;
+}
+
+.EezStudio_HeaderWithBody_Horizontal {
+    flex-direction: row;
+}
+
+.EezStudio_Header {
+    flex-shrink: 0;
+    flex-grow: 0;
+    position: relative;
+}
+
+.EezStudio_PanelHeader {
+    padding: 10px;
+    border-bottom: 1px solid @border-color;
+    background-color: @panel-header-color;
+}
+
+.EezStudio_ToolbarHeader {
+    &:extend(.EezStudio_PanelHeader);
+    justify-content: flex-end;
+}
+
+.EezStudio_Body {
+    flex-grow: 1;
+    overflow: auto;
+    position: relative;
+}
+
+.EezStudio_Keybinding_Part {
+    display: inline-block;
+    padding: 1px 6px;
+    background-color: #666;
+    color: white;
+    border-radius: 2px;
+    text-transform: capitalize;
+    font-size: 90%;
+}
+
+.EezStudio_NoWrap {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.EezStudio_Table {
+    cursor: default;
+
+    tbody > tr.selected {
+        background-color: @non-focused-selection-background-color;
+        color: @non-focused-selection-color;
+    }
+
+    .EezStudio_Toolbar {
+        visibility: hidden;
+    }
+
+    > tbody > tr:hover {
+        .EezStudio_Toolbar {
+            visibility: visible;
+        }
+    }
+
+    > tbody > tr.selected {
+        .EezStudio_Toolbar {
+            visibility: visible;
+        }
+
+        .EezStudio_Action {
+            color: white;
+        }
+
+        .EezStudio_Action:hover {
+            color: #aaa;
+        }
+    }
+
+    &:focus {
+        > tbody > tr:hover {
+            background-color: @hover-background-color;
+            color: @hover-color;
+        }
+
+        > tbody > tr.selected {
+            background-color: @selection-background-color;
+            color: @selection-color;
+        }
+    }
+
+    th,
+    td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+.EezStudio_Splitter {
+    background-color: @panel-header-color;
+
+    border-color: @border-color;
+
+    &.EezStudio_Splitter_Horizontal {
+        background-image: url(../../shared/_images/splitter_horizontal_thumb.png);
+    }
+
+    &.EezStudio_Splitter_Vertical {
+        background-image: url(../../shared/_images/splitter_vertical_thumb.png);
+    }
+
+    background-repeat: no-repeat;
+    background-position: center center;
+
+    &:hover {
+        background-color: @border-color;
+    }
+}
+
+.EezStudio_ZoomRectangle {
+    fill: @selection-background-color;
+    fill-opacity: 0.5;
+}
+
+.EezStudio_HistoryTable {
+    * {
+        user-select: auto;
+        -webkit-user-select: auto;
+    }
+
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+
+    &.selectable {
+        tr {
+            cursor: pointer;
+        }
+    }
+
+    > table {
+        margin-bottom: 0;
+
+        > tbody {
+            > tr {
+                > td {
+                    padding: 5px;
+                    border-right: 1px solid #dee2e6;
+                }
+
+                > td:last-child {
+                    border-right: none;
+                }
+            }
+
+            > tr:last-child {
+                > td {
+                    border-bottom: 1px solid #dee2e6;
+                }
+            }
+
+            > tr.selected {
+                background-color: @selection-background-color;
+
+                td.dateColumn,
+                td.contentColumn .plain-text {
+                    color: @selection-color;
+                }
+            }
+        }
+
+        .dateColumn {
+            white-space: nowrap;
+        }
+
+        .nameColumn {
+            white-space: nowrap;
+        }
+
+        .contentColumn {
+            width: 100%;
+        }
+    }
+}
+
+.popover {
+    pointer-events: none;
+}

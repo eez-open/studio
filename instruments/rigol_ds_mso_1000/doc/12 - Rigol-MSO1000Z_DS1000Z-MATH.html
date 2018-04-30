@@ -1,0 +1,2247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<title></title>
+		<style type="text/css">
+			/* Reset */
+			ol, ul { margin: 0; padding: 0; }
+			li { list-style-position: outside; }
+			
+			/* Paragraphs and texts */
+			.Heading_1 { margin-top: 4.23mm; margin-bottom: 2.12mm; font-family: "Arial"; font-size: 14.0pt; font-weight: bold; color: #0066cc; }
+			.Heading_2 { margin-left: 7.62mm; margin-top: 4.5mm; margin-bottom: 2.5mm; text-indent: -7.62mm; font-family: "Arial"; font-size: 12.0pt; font-weight: bold; font-style: italic; color: #0066cc; }
+			.List_1 { text-align: left; margin-left: 10mm; margin-right: 1.99mm; text-indent: -6mm; }
+			.List_1_Cont_ { text-align: left; margin-left: 10mm; margin-right: 1.99mm; }
+			.List_1_End { text-align: left; margin-left: 10mm; margin-right: 1.99mm; margin-bottom: 3mm; text-indent: -6mm; }
+			.List_1_Start { text-align: left; margin-left: 10mm; margin-right: 1.99mm; margin-top: 3mm; text-indent: -6mm; }
+			.Normal { text-align: left; margin-bottom: 0.09mm; text-indent: 0.16mm; color: #000000; }
+			p { text-align: justify; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; text-indent: 0; background: transparent; font-family: "Tahoma"; font-size: 10.0pt; font-weight: normal; font-style: normal; }
+			li { text-align: justify; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; text-indent: 0; background: transparent; font-family: "Tahoma"; font-size: 10.0pt; font-weight: normal; font-style: normal; }
+			.Table_Heading { text-align: center; font-weight: bold; }
+			.table_body_left { text-align: right; font-weight: bold; color: #0000cc; }
+			.Default_Paragraph_Font { font-family: "Arial"; font-size: 12.0pt; font-weight: normal; font-style: normal; background: transparent; }
+			
+			/* Footnotes & endnotes */
+			#webpub_footnotes_divider { clear: both; margin-top: 2em; width: 25%; border-top: 1px solid black; }
+			#webpub_footnotes { font-size: 80%; text-align: justify; }
+			#webpub_footnotes td.label { text-align: right; vertical-align: top; }
+			#webpub_footnotes td.content { }
+			a.webpub_footnote { font-size: 80%; vertical-align: super; }
+			#webpub_endnotes_divider { clear: both; margin-top: 2em; width: 25%; border-top: 3px double black; }
+			#webpub_endnotes { font-size: 80%; text-align: justify; }
+			#webpub_endnotes td.label { text-align: right; vertical-align: top; }
+			#webpub_endnotes td.content { }
+			a.webpub_endnote { font-size: 80%; vertical-align: super; }
+			
+		</style>
+	</head>
+	<body>
+		<p class="Heading_1"><a name="_scpi_subsys_math"></a>:MATH Commands </p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">The :MATH commands are used to set the operations between the waveforms of multiple channels. </p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">&#160;</p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">Note:  </p>
+		<ul>
+			<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">The operations include the following types. </li>
+		</ul>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">&#160;</p>
+		<p class="List_1_Cont_"><span style="font-weight: bold;">Analog Operations</span> </p>
+		<p class="List_1_Cont_">Algebraic Operations: A+B, A-B, A×B, A/B Spectrum Operation: FFT </p>
+		<p class="List_1_Cont_">Functional Operations: intg, diff, sqrt, lg, ln, exp, abs </p>
+		<p class="List_1_Cont_">&#160;</p>
+		<p class="List_1_Cont_" style="font-weight: bold;">Logic Operations  </p>
+		<p class="List_1_Cont_">A&amp;&amp;B, A||B, A^B, !A </p>
+		<p class="List_1_Cont_">&#160;</p>
+		<p class="List_1_Cont_" style="font-weight: bold;">Compound Operations </p>
+		<p class="List_1_Cont_">Combination of two operations (inner and outer) </p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">&#160;</p>
+		<ul>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;">For logic operations, the waveform data to be operated is compared with the preset threshold and is converted to 0 or 1. Thus, the result will also be 0 or 1. </li>
+			<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">For a relatively complicated operation, you can split it into inner and outer layer operations (namely compound operation) according to your need. The inner layer operation (fx) can only be algebraic operation and the outer layer operation can only be algebraic operation or functional operation.  </li>
+		</ul>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">&#160;</p>
+		<p class="List_1_Cont_">When the outer layer operation is algeriac operation, at least one of source A and source B of the outer layer operation should be set to FX. </p>
+		<p class="List_1_Cont_">When the outer layer operation is functional operation, the source of the outer layer operation can only be set to FX. </p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">&#160;</p>
+		<p class="List_1_Cont_"><span style="font-weight: bold;">Note</span>: For the inner layer operation (fx), you can send the :MATH:OPTion:FX:SOURce1, :MATH:OPTion:FX:SOURce2 and :MATH:OPTion:FX:OPERator commands to set the sources and operator of the inner layer operation. For the outer layer operation, you can send the :MATH:SOURce1, :MATH:SOURce2 and :MATH:OPERatorcommands to set the sources and operator of the outer layer operation.  </p>
+		<p class="List_1_Cont_">&#160;</p>
+		<ul>
+			<li class="List_1_End" style="text-indent: 0; list-style-type: disc;">For operations which need only a single source, only the :MATH:SOURce1 or :MATH:LSOUrce1 command will be used for setting the source. </li>
+		</ul>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">Command List: </p>
+		<ul>
+			<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;"><a href="#math_disp"><span style="text-decoration: underline;">:MATH:DISPlay</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_oper"><span style="text-decoration: underline;">:MATH:OPERator</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_sour1"><span style="text-decoration: underline;">:MATH:SOURce1</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_sour2"><span style="text-decoration: underline;">:MATH:SOURce2</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_lsou1"><span style="text-decoration: underline;">:MATH:LSOUrce1</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_lsou2"><span style="text-decoration: underline;">:MATH:LSOUrce2</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_scal"><span style="text-decoration: underline;">:MATH:SCALe</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_offs"><span style="text-decoration: underline;">:MATH:OFFSet</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_inv"><span style="text-decoration: underline;">:MATH:INVert</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_res"><span style="text-decoration: underline;">:MATH:RESet</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_fft_wind"><span style="text-decoration: underline;">:MATH:FFT:WINDow</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_fft_spl"><span style="text-decoration: underline;">:MATH:FFT:SPLit</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_fft_unit"><span style="text-decoration: underline;">:MATH:FFT:UNIT</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_fft_hsc"><span style="text-decoration: underline;">:MATH:FFT:HSCale</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_fft_hcen"><span style="text-decoration: underline;">:MATH:FFT:HCENter</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_opt_star"><span style="text-decoration: underline;">:MATH:OPTion:STARt</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_opt_end"><span style="text-decoration: underline;">:MATH:OPTion:END</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_opt_inv"><span style="text-decoration: underline;">:MATH:OPTion:INVert</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_opt_sens"><span style="text-decoration: underline;">:MATH:OPTion:SENSitivity</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_opt_dis"><span style="text-decoration: underline;">:MATH:OPTion:DIStance</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_opt_asc"><span style="text-decoration: underline;">:MATH:OPTion:ASCale</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_opt_thr1"><span style="text-decoration: underline;">:MATH:OPTion:THReshold1</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_opt_thr2"><span style="text-decoration: underline;">:MATH:OPTion:THReshold2</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_opt_fx_sour1"><span style="text-decoration: underline;">:MATH:OPTion:FX:SOURce1</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#math_opt_fx_sour2"><span style="text-decoration: underline;">:MATH:OPTion:FX:SOURce2</span></a></li>
+			<li class="List_1_End" style="text-indent: 0; list-style-type: disc;"><a href="#math_opt_fx_oper"><span style="text-decoration: underline;">:MATH:OPTion:FX:OPERator</span></a></li>
+		</ul>
+		<p class="Heading_2"><a name="math_disp"></a>:MATH:DISPlay </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 19.97mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_disp"></a>:MATH:DISPlay &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 19.97mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_disp2"></a>:MATH:DISPlay?</p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Enable or disable the math operation function or query the math operation status.</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0|OFF </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p style="margin-right: 0.83mm;">:MATH:DISPlay ON    /*Enable the math operation function*/ </p>
+					<p class="Normal" style="margin-right: 0.83mm; margin-bottom: 0; text-indent: 0;">:MATH:DISPlay?      /*The query returns 1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_oper"></a>:MATH:OPERator</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 10.07mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_oper"></a>:MATH:OPERator &lt;opt&gt;</p>
+					<p class="Normal" style="margin-right: 10.07mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_oper2"></a>:MATH:OPERator? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the operator of the math operation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;opt&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{ADD|SUBTract|MULTiply|DIVision|AND|OR|XOR|</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">NOT|FFT|INTG|DIFF|SQRT|LOG|LN|EXP|ABS} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">ADD </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p>When the parameter in :MATH:SOURce1 and/or :MATH:SOURce2 is FX, this command is used to set the operator of the outer layer operation of compound operation. The range of &lt;opt&gt; is {ADD|SUBTract|MULTiply|DIVision|INTG|DIFF|SQRT|LOG|LN|EXP|ABS}. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns ADD, SUBT, MULT, DIV, AND, OR, XOR, NOT, FFT, INTG, DIFF, SQRT, LOG, LN, EXP or ABS.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPERator INTG    /*Set the operator of the math operation to integration*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPERator?        /*The query returns INTG*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_sour1"></a>:MATH:SOURce1</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 66.62mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_sour1"></a>:MATH:SOURce1 &lt;src&gt;</p>
+					<p class="Normal" style="margin-right: 66.62mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_sour12"></a>:MATH:SOURce1? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Set or query the source or source A of analog operation/the outer layer operation of compound operation.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;src&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{CHANnel1|CHANnel2|CHANnel3|CHANnel4|FX} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">For algebraic operations, this command is used to set source A. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">For spectrum operation, only this command is used to set the source. The range of &lt;src&gt; is {CHANnel1|CHANnel2|CHANnel3|CHANnel4}. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">For functional operations, only this command is used to set the source. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">For compound operations, this command is used to set source A of the outer layer operation when the outer layer operation is algeriac operation and the range of &lt;src&gt; is {CHANnel1|CHANnel2|CHANnel3|CHANnel4}; this command is used to set the source of the outer layer operation when the outer layer operation is functional operation and &lt;src&gt; can only be FX. </li>
+					</ul>
+					<p class="List_1_Cont_"><span style="font-weight: bold;">Note</span>: When the outer layer operation of compound operation is algebraic operation, at least one of source A and source B of the outer layer operation should be set to FX. </p>
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">When “FX” is selected, you can send the :MATH:OPTion:FX:SOURce1, :MATH:OPTion:FX:SOURce2 and :MATH:OPTion:FX:OPERator commands to set the sources and operator of the inner layer operation. </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns CHAN1, CHAN2, CHAN3, CHAN4 or FX.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:SOURce1 CHANnel3    /*Set the source or source A of analog operation/the outer layer operation of compound operation to CH3*/ :MATH:SOURce1?            /*The query returns CHAN3*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_sour2"></a>:MATH:SOURce2</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 62.21mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_sour2"></a>:MATH:SOURce2 &lt;src&gt;</p>
+					<p class="Normal" style="margin-right: 62.21mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_sour22"></a>:MATH:SOURce2? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Set or query source B of analog operation/the outer layer operation of compound operation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;src&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{CHANnel1|CHANnel2|CHANnel3|CHANnel4|FX} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">This command is only applicable to analog operations those require two sources (algebraic operations) and compound operations of which the outer layer operations are algebraic operations.  </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">When the outlayer operation of compound operation is algebraic operation, this command is used to set source B of the outer layer operation.  </li>
+					</ul>
+					<p class="List_1_Cont_"><span style="font-weight: bold;">Note</span>: When the outer layer operation of compound operation is algebraic operation, at least one of source A and source B of the outer layer operation should be set to FX. </p>
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">When “FX” is selected, you can send the :MATH:OPTion:FX:SOURce1, :MATH:OPTion:FX:SOURce2 and :MATH:OPTion:FX:OPERator commands to set the sources and operator of the inner layer operation. </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns CHAN1, CHAN2, CHAN3, CHAN4 or FX.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:SOURce2 CHANnel3    /*Set source B of analog operation/the outer layer operation of compound operation to CH3*/ :MATH:SOURce2?            /*The query returns CHAN3*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_lsou1"></a>:MATH:LSOUrce1</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_lsou1"></a>:MATH:LSOUrce1 &lt;src&gt;</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_lsou12"></a>:MATH:LSOUrce1? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query source A of logic operation.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;src&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{D0|D1|D2|D3|D4|D5|D6|D7|D8| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">D9|D10|D11|D12|D13|D14|D15| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1|CHANnel2|CHANnel3|CHANnel4} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">D0 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The logic operations include A&amp;&amp;B, A||B, A^B and !A.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, CHAN1, CHAN2, CHAN3 or CHAN4. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:LSOUrce1 D3    /*Set source A of logic operation to D3*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:LSOUrce1?      /*The query returns D3*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_lsou2"></a>:MATH:LSOUrce2 </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_lsou2"></a>:MATH:LSOUrce2 &lt;src&gt;</p>
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_lsou22"></a>:MATH:LSOUrce2? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">Set or query source B of logic operation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;src&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{D0|D1|D2|D3|D4|D5|D6|D7|D8| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">D9|D10|D11|D12|D13|D14|D15| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1|CHANnel2|CHANnel3|CHANnel4} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">D1 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="Normal" style="margin-left: 7.43mm; margin-bottom: 2.2mm; text-indent: 0;">The logic operations include A&amp;&amp;B, A||B, A^B and !A. </li>
+						<li class="Normal" style="margin-left: 7.43mm; margin-bottom: 0; text-indent: 0;">This command is only applicable to logic operations that require two signal sources and is used to set source B. </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0.02mm;">The query returns D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, CHAN1, CHAN2, CHAN3 or CHAN4. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">:MATH:LSOUrce2 D4    /*Set source B of logic operation to D4*/ </p>
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">:MATH:LSOUrce2?      /*The query returns D4*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_scal"></a>:MATH:SCALe </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 78.39mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_scal"></a>:MATH:SCALe &lt;scale&gt;</p>
+					<p class="Normal" style="margin-right: 78.39mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_scal2"></a>:MATH:SCALe? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Set or query the vertical scale of the operation result. The unit depends on the operator currently selected and the unit of the source. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;scale&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Real </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The max range is from 1p to 5T (in 1-2-5 step) </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">1.00V </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-left: 1.78mm; margin-right: 1.11mm; margin-bottom: 0; text-indent: -1.78mm;">The range of the vertical scale is related to the operator currently selected and the vertical scale of the source channel. For the integration (intg) and differential (diff) operations, it is also related to the current horizontal timebase. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the vertical scale of the operation result in scientific notation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:SCALe 2    /*Set the vertical scale to 2V*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:SCALe?     /*The query returns 2.000000e+00*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:CHANnel&lt;n&gt;:SCALe </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:CHANnel&lt;n&gt;:UNITs </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPERator </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:TIMebase[:MAIN]:SCALe </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_offs"></a>:MATH:OFFSet</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 78.69mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_offs"></a>:MATH:OFFSet &lt;offs&gt;</p>
+					<p class="Normal" style="margin-right: 78.69mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_offs2"></a>:MATH:OFFSet? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Set or query the vertical offset of the operation result. The unit depends on the operator currently selected and the unit of the source. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;offs&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Real </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Related to the vertical scale of the operation result. </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Range: -1000*MathVerticalScale to  </p>
+					<p class="Normal" style="margin-right: 21.36mm; margin-bottom: 0; text-indent: 0;">       1000*MathVerticalScale Step: MathVerticalScale/50 </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0.00V </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p>MathVerticalScale is the vertical scale of the operation result and can be set by the :MATH:SCALe command.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">The query returns the vertical offset of the operation result in scientific notation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OFFSet 8   /*Set the vertical offset to 8V*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OFFSet?   /*The query returns 8.000000e+00*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPERator </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:CHANnel&lt;n&gt;:UNITs </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_inv"></a>:MATH:INVert </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 80.63mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_inv"></a>:MATH:INVert &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 80.63mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_inv2"></a>:MATH:INVert? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Enable or disable the inverted display mode of the operation result, or query the inverted display mode status of the operation result.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0|OFF </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">This command is invalid for the FFT operation.  </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">This command has the same function as the :MATH:OPTion:INVert command.  </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:INVert ON    /*Enable the inverted display mode*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:INVert?      /*The query returns 1*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPERator </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_res"></a>:MATH:RESet</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 0.83mm; margin-bottom: 1.98mm; text-indent: 0;"><a name="_scpi_math_res"></a>:MATH:RESet </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Sending this command, the instrument adjusts the vertical scale of the operation result to the most proper value according to the current operator and the horizontal timebase of the source.</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPERator </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Commands :MATH:SCALe </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:TIMebase[:MAIN]:SCALe </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_fft_wind"></a>:MATH:FFT:WINDow </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 7.36mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_fft_wind"></a>:MATH:FFT:WINDow &lt;wnd&gt;</p>
+					<p class="Normal" style="margin-right: 7.36mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_fft_wind2"></a>:MATH:FFT:WINDow? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the window function of the FFT operation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;wnd&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">{RECTangle|BLACkman|HANNing|HAMMing| </p>
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">FLATtop|TRIangle} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">RECTangle </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Spectral leakage can be considerably decreased when a window function is used.<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;"> </span><span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Different window functions are applicable to measure different waveforms. You need to select the window function according to waveform to be measured and its characteristics.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns RECT, BLAC, HANN, HAMM, FLAT or TRI.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 58.21mm; margin-bottom: 0; text-indent: -58.21mm;">:MATH:FFT:WINDow BLACkman    /*Set the window function of the FFT operation to blackman*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:FFT:WINDow?            /* The query returns BLACK*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPERator</p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_fft_spl"></a>:MATH:FFT:SPLit</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 69.99mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_fft_spl"></a>:MATH:FFT:SPLit &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 69.99mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_fft_spl2"></a>:MATH:FFT:SPLit? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Enable or disable the half-screen display mode of the FFT operation, or query the status of the half display mode of the FFT operation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">1|ON  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Enable the half-screen display mode: the source channel and the FFT operation results are displayed separately. The time domain and frequency domain signals are displayed clearly.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Disable the half-screen display mode (full-screen display mode): the source channel and the FFT operation results are displayed in the same window to view the frequency spectrum more clearly and to perform more precise measurement.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:FFT:SPLit OFF    /*Disable the half-screen display mode*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:FFT:SPLit?       /*The query returns 0*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_fft_unit"></a>:MATH:FFT:UNIT </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 23.48mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_fft_unit"></a>:MATH:FFT:UNIT &lt;unit&gt;</p>
+					<p class="Normal" style="margin-right: 23.48mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_fft_unit2"></a>:MATH:FFT:UNIT? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the vertical unit of the FFT operation result.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;unit&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{VRMS|DB} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">DB </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns VRMS or DB.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">:MATH:FFT:UNIT VRMS    /*Set the vertical unit of the FFT operation result to Vrms*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:FFT:UNIT?        /*The query returns VRMS*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPERator </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&#160;</p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_fft_hsc"></a>:MATH:FFT:HSCale</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 80.63mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_fft_hsc"></a>:MATH:FFT:HSCale &lt;hsc&gt; <a name="_scpi_math_fft_hsc2"></a>:MATH:FFT:HSCale? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the horizontal scale of the FFT operation result. The default unit is Hz</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">&lt;hsc&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Real </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Refer to Explanation </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">5MHz </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">&lt;hsc&gt; can be set to 1/20, 1/40, 1/100 and 1/200 of the current screen sample rate (current screen sample rate=100/current horizontal timebase).  </li>
+					</ul>
+					<p class="List_1_Cont_">For example, if the horizontal timebase of the instrument is 1μs, the current screen sample rate is 100/1μs=100MHz. Thus, the horizontal scale can be set to 5MHz, 2.5MHz, 1MHz or 500kHz.  </p>
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You can view the detailed information of the frequency spectrum by reducing the horizontal scale.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the horizontal scale in scientific notation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:FFT:HSCale 500000   /*Set the horizontal scale to 500kHz*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:FFT:HSCale?         /*The query returns 5.000000e+05*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPERator </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:TIMebase[:MAIN]:SCALe </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_fft_hcen"></a>:MATH:FFT:HCENter</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 53.78mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_fft_hcen"></a>:MATH:FFT:HCENter &lt;cent&gt;</p>
+					<p class="Normal" style="margin-right: 53.78mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_fft_hcen2"></a>:MATH:FFT:HCENter? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Set or query the center frequency of the FFT operation result, namely the frequency relative to the horizontal center of the screen. The default unit is Hz.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;cent&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Real </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0 to (current screen sample rate×2/5) </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">5MHz </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Current screen sample rate = 100/current horizontal timebase.</li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Step = horizontal scale of the FFT operation result/50.  </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the current center frequency in scientific notation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">:MATH:FFT:HCENter 10000000   /*Set the center frequency to 10MHz*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:FFT:HCENter?           /*The query returns 1.000000e+07*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPERator </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:FFT:HSCale </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:TIMebase[:MAIN]:SCALe </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_opt_star"></a>:MATH:OPTion:STARt</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 17.44mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_star"></a>:MATH:OPTion:STARt &lt;sta&gt;</p>
+					<p class="Normal" style="margin-right: 17.44mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_star2"></a>:MATH:OPTion:STARt? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the start point of the waveform math operation.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;sta&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Integer </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0 to (End point currently set-1) </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">This command is invalid for the FFT operation. Sending this command will modify the start points of all the operations (except FFT). </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">The source selected is equally divided into 1200 parts horizontally, in which the leftmost is 0 and the rightmost is 1199.  </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:STARt 50    /*Set the waveform start point to 50*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:STARt?      /*The query returns 50*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:END </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_opt_end"></a>:MATH:OPTion:END</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 18.45mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_end"></a>:MATH:OPTion:END &lt;end&gt;</p>
+					<p class="Normal" style="margin-right: 18.45mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_end2"></a>:MATH:OPTion:END? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the end point of the waveform math operation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;end&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">(Start point currently set+1) to 1199 </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">1199 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">This command is invalid for the FFT operation. Sending this command will modify the end points of all the operations (except FFT). </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">The source selected is equally divided into 1200 parts horizontally, in which the leftmost is 0 and the rightmost is 1199.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:END 200    /*Set the waveform end point to 200*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:END?       /*The query returns 200*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:STARt </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_opt_inv"></a>:MATH:OPTion:INVert</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 55.74mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_inv"></a>:MATH:OPTion:INVert &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 55.74mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_inv2"></a>:MATH:OPTion:INVert? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Enable or disable the inverted display mode of the operation result, or query the inverted display mode status of the operation result. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">0|OFF </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">This command is invalid for the FFT operation. Sending this command will modify the inverted display mode status of all the operations (except FFT). </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">This command has the same function as the :MATH:INVert command.  </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:INVert ON    /*Enable the inverted display mode*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:INVert?      /*The query returns 1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_opt_sens"></a>:MATH:OPTion:SENSitivity</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 35.63mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_sens"></a>:MATH:OPTion:SENSitivity &lt;sens&gt;</p>
+					<p class="Normal" style="margin-right: 35.63mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_sens2"></a>:MATH:OPTion:SENSitivity? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the sensitivity of the logic operation. The default unit is div (namely the current vertical scale). </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;sens&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Real </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0 to 0.96div, the step is 0.08div </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">This command is only applicable to logic operations (A&amp;&amp;B, A||B, A^B and !A).  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the sensitivity in scientific notation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:SENSitivity 0.24   /*Set the sensitivity to 0.24div*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:SENSitivity?      /*The query returns 2.400000e-01*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:CHANnel&lt;n&gt;:SCALe </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPERator </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_opt_dis"></a>:MATH:OPTion:DIStance</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left"><span class="Default_Paragraph_Font">Syntax </span></p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 24.92mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_dis"></a>:MATH:OPTion:DIStance &lt;dist&gt;</p>
+					<p class="Normal" style="margin-right: 24.92mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_dis2"></a>:MATH:OPTion:DIStance? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left"><span class="Default_Paragraph_Font">Description </span></p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the smoothing window width of differential operation (diff).  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left"><span class="Default_Paragraph_Font">Parameter </span></p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;dist&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Integer </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">3 to 201 </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">3 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">This command is only applicable to differential operation (diff).<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer between 3 and 201.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">:MATH:OPTion:DIStance 25    /*Set the smoothing window width to 25*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:DIStance?      /*The query returns 25*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPERator </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_opt_asc"></a>:MATH:OPTion:ASCale</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 47.77mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_asc"></a>:MATH:OPTion:ASCale &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 47.77mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_asc2"></a>:MATH:OPTion:ASCale? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Enable or disable the auto scale setting of the operation result or query the status of the auto scale setting. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0|OFF </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">When the auto scale is enabled, the instrument will automatically calculate the vertical scale range according to the current operator, the vertical scale and the horizontal timebase. If the current scale is out of the range, it will adjust the vertical scale to the best value automatically.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Sending this command will modify the auto scale status of all the operation results.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:ASCale ON    /*Enable the auto scale setting */ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:ASCale?      /*The query returns 1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_opt_thr1"></a>:MATH:OPTion:THReshold1</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 33.69mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_thr1"></a>:MATH:OPTion:THReshold1 &lt;thre&gt;</p>
+					<p class="Normal" style="margin-right: 33.69mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_thr12"></a>:MATH:OPTion:THReshold1? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the threshold level of source A in logic operations. The default unit is V.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;thre&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Real </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">(-4*Vertical Scale – Vertical Offset) to (4*Vertical Scale – Vertical Offset) </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0.00V </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">This command is only applicable to A&amp;&amp;B, A||B, A^B and !A logic operations of which source A is an analog channel. <span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Vertical Scale refers to the vertical scale of source A</li>
+					</ul>
+					<p class="List_1_Cont_">Vertical Offset refers to the vertical offset of source A </p>
+					<p class="List_1_Cont_">The step is Vertical Scale/25<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the threshold level in scientific notation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:THReshold1 0.8   /*Set the threshold level to 800mV*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:THReshold1?     /*The query returns 8.000000e-01*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:CHANnel&lt;n&gt;:SCALe </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:CHANnel&lt;n&gt;:OFFSet </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:LSOUrce1 </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_opt_thr2"></a>:MATH:OPTion:THReshold2</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 33.64mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_thr2"></a>:MATH:OPTion:THReshold2 &lt;thre&gt;</p>
+					<p class="Normal" style="margin-right: 33.64mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_thr22"></a>:MATH:OPTion:THReshold2? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the threshold level of source B in logic operations. The default unit is V.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;thre&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Real </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-right: 0.72mm; margin-bottom: 0; text-indent: 0;">(-4*Vertical Scale–Vertical Offset) to (4*Vertical Scale–Vertical Offset) </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">0.00V </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">This command is only applicable to A&amp;&amp;B, A||B and A^B logic operations of which source B is an analog channel. <span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Vertical Scale refers to the vertical scale of source B</li>
+					</ul>
+					<p class="List_1_Cont_">Vertical Offset refers to the vertical offset of source B </p>
+					<p class="List_1_Cont_">The step is Vertical Scale/25<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the threshold level in scientific notation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:THReshold2 0.5    /*Set the threshold level to 0.5V*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:THReshold2?      /*The query returns 5.000000e-01*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:CHANnel&lt;n&gt;:SCALe </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:CHANnel&lt;n&gt;:OFFSet </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:LSOUrce2 </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_opt_fx_sour1"></a>:MATH:OPTion:FX:SOURce1</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 16.19mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_fx_sour1"></a>:MATH:OPTion:FX:SOURce1 &lt;src&gt;</p>
+					<p class="Normal" style="margin-right: 16.19mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_fx_sour12"></a>:MATH:OPTion:FX:SOURce1? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query source A of the inner layer operation of compound operation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;src&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{CHANnel1|CHANnel2|CHANnel3|CHANnel4} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns CHAN1, CHAN2, CHAN3 or CHAN4. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 68.79mm; margin-bottom: 0; text-indent: -68.79mm;">:MATH:OPTion:FX:SOURce1 CHANnel1    /*Set source A of the inner layer operation of compound operation to CH1*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:FX:SOURce1?            /*The query returns CHAN1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_opt_fx_sour2"></a>:MATH:OPTion:FX:SOURce2</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 16.16mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_fx_sour2"></a>:MATH:OPTion:FX:SOURce2 &lt;src&gt;</p>
+					<p class="Normal" style="margin-right: 16.16mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_fx_sour22"></a>:MATH:OPTion:FX:SOURce2? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query source B of the inner layer operation of compound operation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;src&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{CHANnel1|CHANnel2|CHANnel3|CHANnel4} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns CHAN1, CHAN2, CHAN3 or CHAN4. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 68.79mm; margin-bottom: 0; text-indent: -68.79mm;">:MATH:OPTion:FX:SOURce2 CHANnel1    /*Set source B of the inner layer operation of compound operation to CH1*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:FX:SOURce2?            /*The query returns CHAN1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="math_opt_fx_oper"></a>:MATH:OPTion:FX:OPERator</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 21.78mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_fx_oper"></a>:MATH:OPTion:FX:OPERator &lt;op&gt;</p>
+					<p class="Normal" style="margin-right: 21.78mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_math_opt_fx_oper2"></a>:MATH:OPTion:FX:OPERator? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the operator of the inner layer operation of compound operation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;op&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 11%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{ADD|SUBTract|MULTiply|DIVision} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">ADD </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns ADD, SUBT, MULT or DIV. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MATH:OPTion:FX:OPERator ADD    /*Set the operator of the inner layer operation of compound operation to addition*/ :MATH:OPTion:FX:OPERator?       /*The query returns ADD*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p>&#160;</p>
+	</body>
+</html>

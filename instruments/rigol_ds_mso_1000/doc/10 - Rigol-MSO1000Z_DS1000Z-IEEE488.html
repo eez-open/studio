@@ -1,0 +1,451 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<title></title>
+		<style type="text/css">
+			/* Reset */
+			ol, ul { margin: 0; padding: 0; }
+			li { list-style-position: outside; }
+			
+			/* Paragraphs and texts */
+			.Heading_1 { margin-top: 4.23mm; margin-bottom: 2.12mm; font-family: "Arial"; font-size: 14.0pt; font-weight: bold; color: #0066cc; }
+			.Heading_2 { margin-left: 7.62mm; margin-top: 4.5mm; margin-bottom: 2.5mm; text-indent: -7.62mm; font-family: "Arial"; font-size: 12.0pt; font-weight: bold; font-style: italic; color: #0066cc; }
+			.List_1 { text-align: left; margin-left: 10mm; margin-right: 1.99mm; text-indent: -6mm; }
+			.List_1_End { text-align: left; margin-left: 10mm; margin-right: 1.99mm; margin-bottom: 3mm; text-indent: -6mm; }
+			.List_1_Start { text-align: left; margin-left: 10mm; margin-right: 1.99mm; margin-top: 3mm; text-indent: -6mm; }
+			.Normal { text-align: left; margin-bottom: 0.09mm; text-indent: 0.16mm; color: #000000; }
+			p { text-align: justify; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; text-indent: 0; background: transparent; font-family: "Tahoma"; font-size: 10.0pt; font-weight: normal; font-style: normal; }
+			li { text-align: justify; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; text-indent: 0; background: transparent; font-family: "Tahoma"; font-size: 10.0pt; font-weight: normal; font-style: normal; }
+			.Table_Heading { text-align: center; font-weight: bold; }
+			.table_body_left { text-align: right; margin-right: 3mm; font-weight: bold; color: #0000cc; }
+			.Default_Paragraph_Font { font-family: "Arial"; font-size: 12.0pt; font-weight: normal; font-style: normal; background: transparent; }
+			
+			/* Footnotes & endnotes */
+			#webpub_footnotes_divider { clear: both; margin-top: 2em; width: 25%; border-top: 1px solid black; }
+			#webpub_footnotes { font-size: 80%; text-align: justify; }
+			#webpub_footnotes td.label { text-align: right; vertical-align: top; }
+			#webpub_footnotes td.content { }
+			a.webpub_footnote { font-size: 80%; vertical-align: super; }
+			#webpub_endnotes_divider { clear: both; margin-top: 2em; width: 25%; border-top: 3px double black; }
+			#webpub_endnotes { font-size: 80%; text-align: justify; }
+			#webpub_endnotes td.label { text-align: right; vertical-align: top; }
+			#webpub_endnotes td.content { }
+			a.webpub_endnote { font-size: 80%; vertical-align: super; }
+			
+		</style>
+	</head>
+	<body>
+		<p class="Heading_1"><a name="_scpi_subsys_ieee488"></a>IEEE488.2 Common Commands </p>
+		<p>&#160;</p>
+		<p>The IEEE 488.2 standard defines some common commands used for querying the basic information of the instrument or executing the basic operations. These commands usually start with &quot;*&quot; and the keyword of the command is usually 3-character long.  </p>
+		<p>&#160;</p>
+		<p style="font-weight: bold;">Command List: </p>
+		<ul>
+			<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;"><a href="#ieee488_cls"><span style="text-decoration: underline;">*CLS</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#ieee488_ese"><span style="text-decoration: underline;">*ESE</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#ieee_esr"><span style="text-decoration: underline;">*ESR?</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#ieee488_idn"><span style="text-decoration: underline;">*IDN?</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#ieee488_opc"><span style="text-decoration: underline;">*OPC</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#ieee488_rst"><span style="text-decoration: underline;">*RST</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#ieee488_sre"><span style="text-decoration: underline;">*SRE</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#ieee488_stb"><span style="text-decoration: underline;">*STB?</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#ieee488_tst"><span style="text-decoration: underline;">*TST?</span></a></li>
+			<li class="List_1_End" style="text-indent: 0; list-style-type: disc;"><a href="#ieee488_wai"><span style="text-decoration: underline;">*WAI</span></a></li>
+		</ul>
+		<p class="Heading_2"><a name="ieee488_cls"></a>*CLS</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_ieee488_cls"></a>*CLS </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Clear all the event registers and clear the error queue. </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="ieee488_ese"></a>*ESE</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_ieee488_ese"></a>*ESE &lt;value&gt;</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_ieee488_ese2"></a>*ESE?</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the enable register for the standard event status register set.</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 39%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 17%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 15%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;value&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Integer </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 39%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Refer to Explanation </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 17%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0 </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The bit 1 and bit 6 of the standard event status register are not used and are always treated as 0; therefore, the range of &lt;value&gt; are the decimal numbers corresponding to the binary numbers X0XXXX0X (X is 1 or 0). </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">The query returns an integer which equals the sum of the weights of all the bits that have already been set in the register. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">*ESE 16    /*Enable the bit 4 (16 in decimal) of the standard event status register*/ *ESE?     /*The query returns 16*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="ieee_esr"></a>*ESR? </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_ieee_esr"></a>*ESR? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Query and clear the event register for the standard event status register.  </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The bit 1 and bit 6 of the standard event status register are not used and are always treated as 0. The range of the return value are the decimal numbers corresponding to the binary numbers X0XXXX0X (X is 1 or 0).<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer which equals the sum of the weights of all the bits in the register.  </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="ieee488_idn"></a>*IDN?</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_ieee488_idn"></a>*IDN? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Query the ID string of the instrument. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the ID string of the instrument, such as  </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">RIGOL TECHNOLOGIES,MSO1104Z,DS1ZA160801111,00.04.01. </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="ieee488_opc"></a>*OPC</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 1.78mm; text-indent: 0;"><a name="_scpi_ieee488_opc"></a>*OPC </p>
+					<p class="Normal" style="margin-bottom: 1.78mm; text-indent: 0;"><a name="_scpi_ieee488_opc2"></a>*OPC? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-right: 1.09mm; margin-bottom: 0; text-indent: 0;">The *OPC command is used to set the Operation Complete bit (bit 0) in the standard event status register to 1 after the current operation is finished. The *OPC? command is used to query whether the current operation is finished. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 if the current operation is finished; otherwise, returns 0.  </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="ieee488_rst"></a>*RST</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_ieee488_rst"></a>*RST </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Restore the instrument to the default state. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 39%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 17%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="ieee488_sre"></a>*SRE</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 103.42mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_ieee488_sre"></a>*SRE &lt;value&gt;</p>
+					<p class="Normal" style="margin-right: 103.42mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_ieee488_sre2"></a>*SRE? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Set or query<span class="Default_Paragraph_Font" style="font-size: 10.5pt;"> </span>the enable register for the status byte register set. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 39%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 17%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 15%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;value&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 12%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">Integer </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 39%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0 to 255 </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 17%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0 </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-right: 1.13mm; margin-bottom: 0; text-indent: 0;">The bit 0 and bit 1 of the status byte register are not used and are always treated as 0, therefore, the range of &lt;value&gt; are the decimal numbers corresponding to the binary numbers XXXXXX00 (X is 1 or 0). <span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer which equals the sum of the weights of all the bits that have already been set in the register. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">*SRE 16    /*Enable the bit 4 (16 in decimal) of the status byte register*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">*SRE?     /*The query returns 16*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="ieee488_stb"></a>*STB?</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 0.85mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_ieee488_stb"></a>*STB? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 0.85mm; margin-bottom: 0; text-indent: 0;">Query the event register for the status byte register. The value of the status byte register is set to 0 after this command is executed. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 0.85mm; margin-bottom: 0; text-indent: 0;">The bit 0 and bit 1 of the status byte register are not used and are always treated as 0. The query returns the decimal numbers corresponding to the binary numbers X0XXXX0X (X is 1 or 0).<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 0.85mm; margin-bottom: 0; text-indent: 0;">The query returns an integer which equals the sum of the weights of all the bits in the register.  </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="ieee488_tst"></a>*TST?</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_ieee488_tst"></a>*TST? </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Perform a self-test and then return the self-test results. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns<span class="Default_Paragraph_Font" style="font-size: 10.5pt;"> </span>a decimal integer.<span class="Default_Paragraph_Font"> </span></p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="ieee488_wai"></a>*WAI</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 0.85mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_ieee488_wai"></a>*WAI </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 0.85mm; margin-bottom: 0; text-indent: 0;">Wait for the operation to finish. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 0.85mm; margin-bottom: 0; text-indent: 0;">The subsequent command can only be carried out after the current command has been executed. </p>
+				</td>
+			</tr>
+		</table>
+		<p>&#160;</p>
+	</body>
+</html>

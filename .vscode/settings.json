@@ -1,0 +1,23 @@
+{
+    "files.exclude": {
+        ".git": true,
+        ".DS_Store": true,
+        "eezstudio-win32-x64": true,
+        "eezstudio-linux-x64": true,
+        "node_modules": true,
+        "libs": true,
+        "src/**/*.js": true,
+        "src/**/*.js.map": true,
+        "src/home/_stylesheets/main.css": true,
+        "src/instrument/_stylesheets/window.css": true,
+        "src/instrument/_stylesheets/instrument.css": true,
+        "src/project-editor/_stylesheets/main.css": true,
+        "src/extensions-manager/*.js": true,
+        "src/extensions-manager/*.js.map": true,
+        "instruments": true
+    },
+    "search.exclude": {},
+    "editor.formatOnSave": true,
+    "typescript.reportStyleChecksAsWarnings": false,
+    "typescript.autoImportSuggestions.enabled": false
+}

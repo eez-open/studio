@@ -1,0 +1,1154 @@
+@import "../../shared/_stylesheets/styles.less";
+@import "../../shortcuts/_stylesheets/shortcuts.less";
+
+body {
+    font-family: "Segoe UI", sans-serif;
+    margin: 0;
+    overflow: hidden;
+}
+
+a {
+    cursor: pointer;
+}
+
+#content {
+    border: 1px solid @border-color;
+}
+
+.error {
+    color: red;
+}
+
+.warning {
+    color: orange;
+}
+
+.btn:active {
+    box-shadow: none;
+    -webkit-box-shadow: none;
+}
+
+.EezStudio_ProjectEditor_center-content {
+    display: flex;
+    justify-content: center; /* align horizontal */
+    align-items: center; /* align vertical */
+}
+
+input[type="color"] {
+    height: 38px;
+}
+
+.btn-toolbar > button,
+.btn-toolbar > .btn-group {
+    margin-right: 5px;
+}
+
+.btn-group > button {
+    margin-right: 2px !important;
+}
+
+/*------------------------------------------------------------------------------
+
+MISC
+
+*/
+
+.EezStudio_ProjectEditor_center-block {
+    display: block;
+    margin: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+/*------------------------------------------------------------------------------
+
+TOOLBAR
+
+*/
+
+.EezStudio_ProjectEditor_toolbar {
+    padding: 5px;
+    background-color: @panel-header-color;
+
+    .btn-group:not(:last-child) {
+        margin-right: 5px;
+    }
+}
+
+.EezStudio_ProjectEditor_btn {
+    font-size: 0;
+    padding: 6px;
+}
+
+.EezStudio_ProjectEditor_toolbar select {
+    height: 36px;
+}
+
+/*------------------------------------------------------------------------------
+
+STATUSBAR
+
+*/
+
+.EezStudio_ProjectEditor_status-bar {
+    background-color: @panel-header-color;
+}
+
+.EezStudio_ProjectEditor_status-bar__item {
+    display: inline-block;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+/*------------------------------------------------------------------------------
+
+LOADER
+
+*/
+
+.loader-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader,
+.loader:before,
+.loader:after {
+    background: #454545;
+    -webkit-animation: load1 1s infinite ease-in-out;
+    animation: load1 1s infinite ease-in-out;
+    width: 1em;
+    height: 4em;
+}
+.loader:before,
+.loader:after {
+    position: absolute;
+    top: 0;
+    content: "";
+}
+.loader:before {
+    left: -1.5em;
+    -webkit-animation-delay: -0.32s;
+    animation-delay: -0.32s;
+}
+.loader {
+    color: #454545;
+    text-indent: -9999em;
+    position: relative;
+    font-size: 11px;
+    -webkit-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-animation-delay: -0.16s;
+    animation-delay: -0.16s;
+}
+.loader:after {
+    left: 1.5em;
+}
+@-webkit-keyframes load1 {
+    0%,
+    80%,
+    100% {
+        box-shadow: 0 0;
+        height: 4em;
+    }
+    40% {
+        box-shadow: 0 -2em;
+        height: 5em;
+    }
+}
+@keyframes load1 {
+    0%,
+    80%,
+    100% {
+        box-shadow: 0 0;
+        height: 4em;
+    }
+    40% {
+        box-shadow: 0 -2em;
+        height: 5em;
+    }
+}
+
+/*------------------------------------------------------------------------------
+
+LAYOUT
+
+*/
+
+.layout {
+    visibility: hidden;
+    position: absolute;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.layoutCenter {
+    &:extend(.layout);
+}
+
+.layoutTop {
+    &:extend(.layout);
+    border-bottom: 1px solid @border-color;
+}
+
+.layoutLeft {
+    &:extend(.layout);
+    border-right: 1px solid @border-color;
+}
+
+.layoutRight {
+    &:extend(.layout);
+    border-left: 1px solid @border-color;
+}
+
+.layoutBottom {
+    &:extend(.layout);
+    border-top: 1px solid @border-color;
+}
+
+.layoutSplitHorizontal {
+    &:extend(.layout);
+    border-right: 1px solid @border-color;
+    &.lastLayoutSplit {
+        border-right: 0;
+    }
+}
+
+.layoutSplitVertical {
+    &:extend(.layout);
+    border-bottom: 1px solid @border-color;
+    &.lastLayoutSplit {
+        border-bottom: 0;
+    }
+}
+
+.horizontalSplitter {
+    position: absolute;
+    box-sizing: border-box;
+    width: 4px;
+    cursor: ew-resize;
+}
+
+.verticalSplitter {
+    position: absolute;
+    box-sizing: border-box;
+    height: 4px;
+    cursor: ns-resize;
+}
+
+.layoutDetached {
+    z-index: 1000;
+    -webkit-box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.5);
+    -moz-box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.5);
+}
+
+.layoutInner {
+    position: relative;
+}
+
+/*------------------------------------------------------------------------------
+
+PANEL
+
+*/
+
+.EezStudio_ProjectEditor_Panel:hover {
+    .quick-help-icon {
+        visibility: visible;
+    }
+}
+
+.EezStudio_ProjectEditor_PanelHeader {
+    padding: 3px;
+    background-color: @panel-header-color;
+    height: 38px;
+    display: flex;
+    flex-direction: row;
+
+    .quick-help-icon {
+        visibility: hidden;
+        padding-top: 5px;
+        padding-left: 5px;
+        cursor: pointer;
+
+        span {
+            font-size: 16px;
+        }
+    }
+
+    .btn-toolbar {
+        flex-wrap: nowrap;
+    }
+}
+
+.EezStudio_ProjectEditor_PanelTitle {
+    flex-grow: 1;
+    margin-top: 5px;
+    margin-left: 5px;
+    font-weight: 600;
+    color: @dark-text-color;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.EezStudio_ProjectEditor_PanelBody {
+    .quick-help {
+        background-color: @quick-help-background-color;
+    }
+}
+
+.quick-help-edit-link {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.quick-help-content {
+    padding: 10px;
+}
+
+/*------------------------------------------------------------------------------
+
+NAVIGATION
+
+*/
+
+.EezStudio_ProjectEditor_navigation-menu {
+    background-color: @panel-header-color;
+    height: 100%;
+}
+
+.EezStudio_ProjectEditor_navigation-menu__item {
+    display: block;
+    cursor: pointer;
+    padding: 4px;
+    background-color: @panel-header-color;
+    color: #999;
+    border: 0;
+}
+
+.EezStudio_ProjectEditor_navigation-menu__item:hover:not(.EezStudio_ProjectEditor_navigation-menu__item--selected) {
+    color: #333;
+}
+
+.EezStudio_ProjectEditor_navigation-menu__item--selected {
+    color: @selection-background-color;
+}
+
+/*------------------------------------------------------------------------------
+*/
+
+.EezStudio_ProjectEditor_drop-mark {
+    position: absolute;
+    font-size: 18px;
+    margin-top: -11px;
+    margin-left: -13px;
+    color: @drop-place-color;
+    -webkit-filter: drop-shadow(0px 0px 1px @drop-place-color);
+    filter: drop-shadow(0px 0px 1px @drop-place-color);
+    pointer-events: none;
+    text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+}
+
+.EezStudio_ProjectEditor_drop-placeholder {
+    margin: 1px;
+    border: 1px dotted @drop-place-color;
+    height: 10px;
+}
+
+.EezStudio_ProjectEditor_drop-placeholder.drop-target {
+    background-color: @drop-place-color;
+}
+
+/*------------------------------------------------------------------------------
+
+LIST
+
+*/
+
+.EezStudio_ProjectEditor_list {
+    padding: 5px;
+    border: 2px dashed transparent;
+    overflow: auto;
+}
+
+.EezStudio_ProjectEditor_list:not(.drag-source) {
+    .EezStudio_ProjectEditor_list-item:not(.drag-source) {
+        &.selected {
+            background-color: @non-focused-selection-background-color;
+            color: @non-focused-selection-color;
+        }
+    }
+
+    &:focus {
+        .EezStudio_ProjectEditor_list-item:not(.drag-source) {
+            &:hover {
+                background-color: @hover-background-color;
+                color: @hover-color;
+            }
+
+            &.focused {
+                background-color: @focus-background-color;
+                color: @focus-color;
+            }
+
+            &.selected {
+                background-color: @selection-background-color;
+                color: @selection-color;
+            }
+        }
+    }
+}
+
+.EezStudio_ProjectEditor_list-item {
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.EezStudio_ProjectEditor_list-item.drag-source {
+    background-color: @drag-source-background-color;
+    color: @drag-source-color;
+}
+
+.EezStudio_ProjectEditor_list-item.drop-target {
+    background-color: @drop-place-color;
+}
+
+/*------------------------------------------------------------------------------
+
+TREE
+
+*/
+
+.EezStudio_ProjectEditor_tree {
+    padding: 5px;
+    border: 2px dashed transparent;
+}
+
+.EezStudio_ProjectEditor_tree:not(.drag-source) {
+    .EezStudio_ProjectEditor_tree-row-enclosure:not(.drag-source) {
+        .EezStudio_ProjectEditor_tree-row {
+            &.selected {
+                background-color: @non-focused-selection-background-color;
+                color: @non-focused-selection-color;
+            }
+        }
+    }
+
+    &:focus {
+        .EezStudio_ProjectEditor_tree-row-enclosure:not(.drag-source) {
+            .EezStudio_ProjectEditor_tree-row {
+                &:hover {
+                    background-color: @hover-background-color;
+                    color: @hover-color;
+                }
+
+                &.focused {
+                    background-color: @focus-background-color;
+                    color: @focus-color;
+                }
+
+                &.selected {
+                    background-color: @selection-background-color;
+                    color: @selection-color;
+                }
+            }
+        }
+    }
+}
+
+.EezStudio_ProjectEditor_tree-row {
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.EezStudio_ProjectEditor_tree-row-enclosure {
+    &.drag-source {
+        background-color: @drag-source-background-color;
+        color: @drag-source-color;
+    }
+}
+
+.EezStudio_ProjectEditor_tree-row-label {
+    display: inline-block;
+    margin-left: 13px;
+}
+
+.EezStudio_ProjectEditor_tree-row-triangle {
+    color: #333;
+}
+
+.EezStudio_ProjectEditor_tree-row-triangle:hover {
+    color: #666;
+}
+
+/*------------------------------------------------------------------------------
+
+PROPERTY GRID
+
+*/
+
+.EezStudio_ProjectEditor_PropertyGrid {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding: 5px;
+    overflow: auto;
+
+    & > table {
+        width: 100%;
+
+        tr.marked {
+            background-color: #ffccd4;
+        }
+
+        td {
+            padding: 5px;
+            vertical-align: middle;
+        }
+
+        td:first-child {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: baseline;
+            transform: translateY(8px);
+        }
+
+        td:nth-child(2) {
+            width: 100%;
+        }
+
+        td > input[type="checkbox"] {
+            height: 20px;
+            margin-top: 7px;
+        }
+    }
+}
+
+.EezStudio_ProjectEditor_property-menu {
+    padding: 6px;
+    width: 20px;
+    height: 20px;
+
+    &:hover {
+        background-color: #eee;
+    }
+
+    & > div {
+        width: 8px;
+        height: 8px;
+        border: 1px solid #666;
+    }
+
+    &.default > div {
+        background-color: #fff;
+    }
+
+    &.modified > div {
+        background-color: #666;
+    }
+
+    &.inherited > div {
+        background-color: #00d;
+    }
+}
+
+.EezStudio_ProjectEditor_PropertyGrid_ConfigurationReferencesPropertyValue {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.EezStudio_ProjectEditor_PropertyGrid_ConfigurationReferencesPropertyValue_Configurations {
+    padding-left: 1.25rem;
+}
+
+/*------------------------------------------------------------------------------
+
+FONT EDITOR
+
+*/
+
+.EezStudio_ProjectEditor_font-editor-glyphs-filter {
+    padding: 5px;
+    background-color: @panel-header-color;
+}
+
+.EezStudio_ProjectEditor_font-editor-glyphs-filter input {
+    height: 28px;
+}
+
+.EezStudio_ProjectEditor_font-editor-glyphs-filter input {
+    width: 100%;
+}
+
+.EezStudio_ProjectEditor_font-editor-glyphs-content {
+    overflow: auto;
+}
+
+.EezStudio_ProjectEditor_font-editor-glyphs ul {
+    padding: 5px;
+}
+
+.EezStudio_ProjectEditor_font-editor-glyphs li {
+    display: inline-block;
+    margin: 5px;
+    border: 2px solid #eee;
+    padding: 5px;
+    background-color: white;
+    cursor: pointer;
+}
+
+.EezStudio_ProjectEditor_font-editor-glyphs li.selected {
+    border: 2px solid @selection-background-color;
+}
+
+.EezStudio_ProjectEditor_font-editor-glyphs li > div {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.EezStudio_ProjectEditor_font-editor-glyphs li > div > img {
+    flex: 1;
+}
+
+.EezStudio_ProjectEditor_font-editor-glyphs li > div > div {
+    font-size: 80%;
+    font-family: monospace;
+}
+
+.EezStudio_ProjectEditor_font-editor-glyph {
+    flex: 1;
+    overflow: auto;
+}
+
+.EezStudio_ProjectEditor_glyph-select-field-glyphs-container {
+    position: relative;
+    height: 300px;
+    border: 1px solid @border-color;
+    box-sizing: content-box;
+}
+
+/*------------------------------------------------------------------------------
+
+PAGE EDITOR WIDGET PALETTE
+
+*/
+
+.EezStudio_ProjectEditor_widget-palette {
+    overflow: auto;
+}
+
+.EezStudio_ProjectEditor_widget-palette-widget {
+    cursor: -webkit-grab;
+    border: 2px solid transparent;
+    padding-left: 20px;
+}
+
+.EezStudio_ProjectEditor_widget-palette-widget:hover {
+    background-color: @hover-background-color;
+    color: @hover-color;
+}
+
+.EezStudio_ProjectEditor_widget-palette-widget.selected {
+    background-color: @selection-background-color;
+    color: @selection-color;
+}
+
+.EezStudio_ProjectEditor_widget-palette-widget.dragging {
+    background-color: @drag-source-background-color;
+    color: @drag-source-color;
+}
+
+/*------------------------------------------------------------------------------
+
+ITEM PATH
+
+*/
+
+.EezStudio_ProjectEditor_item-path span:not(:first-child) {
+    &::before {
+        content: " / ";
+    }
+}
+
+/*------------------------------------------------------------------------------
+
+OUTPUT WINDOW
+
+*/
+
+.EezStudio_ProjectEditor_outputs > div.layoutTop {
+    border-bottom: none;
+}
+
+.EezStudio_ProjectEditor_output-messages {
+    width: 100%;
+}
+
+.EezStudio_ProjectEditor_output-messages td:nth-child(2) {
+    padding-left: 20px;
+    width: 100%;
+}
+
+.EezStudio_ProjectEditor_output-messages__item {
+    cursor: pointer;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &.selected {
+        background-color: @non-focused-selection-background-color;
+        color: @non-focused-selection-color;
+    }
+}
+
+.EezStudio_ProjectEditor_outputs {
+    &:focus {
+        .EezStudio_ProjectEditor_output-messages__item {
+            &:hover {
+                background-color: @hover-background-color;
+                color: @hover-color;
+            }
+
+            &.selected {
+                background-color: @selection-background-color;
+                color: @selection-color;
+                * {
+                    background-color: @selection-background-color;
+                    color: @selection-color;
+                }
+            }
+        }
+    }
+}
+
+.check-ok {
+    color: green;
+}
+
+/*------------------------------------------------------------------------------
+
+PROJECT SETTINGS EDITOR
+
+*/
+
+.EezStudio_ProjectEditor_settings-editor {
+    padding: 10px;
+    overflow: auto;
+}
+
+.EezStudio_ProjectEditor_settings-editor .EezStudio_ProjectEditor_PropertyGrid {
+    position: static;
+}
+
+.EezStudio_ProjectEditor_settings-editor .EezStudio_ProjectEditor_PropertyGrid {
+    overflow: visible;
+}
+
+.EezStudio_ProjectEditor_settings-editor-project-feature {
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.EezStudio_ProjectEditor_settings-editor-project-feature h4 {
+    margin: 0;
+    border-bottom: 1px solid @border-color;
+}
+
+.extension-card-author {
+    margin-top: 5px;
+    font-size: 120%;
+}
+
+/*------------------------------------------------------------------------------
+
+STORYBOARD EDITOR PAGE PALETTE
+
+*/
+
+.EezStudio_ProjectEditor_page-palette {
+    overflow: auto;
+}
+
+.EezStudio_ProjectEditor_page-palette-page {
+    cursor: -webkit-grab;
+    border: 2px solid transparent;
+}
+
+.EezStudio_ProjectEditor_page-palette-page:hover {
+    background-color: @hover-background-color;
+    color: @hover-color;
+}
+
+.EezStudio_ProjectEditor_page-palette-page.selected {
+    background-color: @selection-background-color;
+    color: @selection-color;
+}
+
+.EezStudio_ProjectEditor_page-palette-page.dragging {
+    background-color: @drag-source-background-color;
+    color: @drag-source-color;
+}
+
+/*------------------------------------------------------------------------------
+
+DEBUG PANEL
+
+*/
+
+.EezStudio_ProjectEditor_debug {
+    background-color: #333;
+    border-color: 1px solid #999;
+    color: white;
+}
+
+.EezStudio_ProjectEditor_debug__vars {
+    width: 100%;
+}
+
+.EezStudio_ProjectEditor_debug__vars td:nth-child(2) {
+    padding-left: 10px;
+    text-align: right;
+}
+
+/*------------------------------------------------------------------------------
+
+EDITORS
+
+*/
+
+#EezStudio_ProjectEditor_editors {
+    & > div.layoutTop {
+        border-bottom: none;
+    }
+}
+
+/*------------------------------------------------------------------------------
+
+TABS VIEW
+
+*/
+
+.EezStudio_ProjectEditor_tabs-view {
+    background-color: @panel-header-color;
+    list-style: none;
+    height: 38px;
+    border-bottom: 1px solid @border-color;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.EezStudio_ProjectEditor_tabs-view::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.EezStudio_ProjectEditor_tabs-view:hover::-webkit-scrollbar {
+    height: 2px;
+}
+
+.EezStudio_ProjectEditor_tabs-view:hover::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.EezStudio_ProjectEditor_tabs-view:hover::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+}
+
+.EezStudio_ProjectEditor_tabs-view > li {
+    display: inline-block;
+    font-style: italic;
+    height: 35px;
+    border-right: 1px solid @border-color;
+    padding-top: 7px;
+    padding-left: 10px;
+    padding-right: 10px;
+    cursor: pointer;
+}
+
+.EezStudio_ProjectEditor_tabs-view > li.active {
+    background-color: white;
+    font-weight: bold;
+    border-bottom: none;
+    height: 36px;
+}
+
+.EezStudio_ProjectEditor_tabs-view > li.permanent {
+    font-style: normal;
+}
+
+.EezStudio_ProjectEditor_tabs-view > li > i {
+    visibility: hidden;
+    position: relative;
+    font-size: 14px;
+    padding-left: 6px;
+}
+
+.EezStudio_ProjectEditor_tabs-view > li.active > i,
+.EezStudio_ProjectEditor_tabs-view > li:hover > i {
+    visibility: visible;
+}
+
+.EezStudio_ProjectEditor_tabs-view > li > i:hover {
+    color: red;
+}
+
+/*------------------------------------------------------------------------------
+
+SCPI Terminal
+
+*/
+
+.EezStudio_ProjectEditor_scpi-terminal-editor .EezStudio_ProjectEditor_Panel .float-right,
+.EezStudio_ProjectEditor_scpi-script-editor .EezStudio_ProjectEditor_Panel .float-right {
+    padding-top: 7px;
+}
+
+.EezStudio_ProjectEditor_scpi-terminal-connection {
+    margin: 5px;
+
+    .col-sm-2 {
+        padding: 0;
+        padding-right: 5px;
+    }
+
+    .form-group {
+        margin: 0;
+    }
+
+    select {
+        margin: 0;
+    }
+
+    input {
+        margin: 0;
+    }
+}
+
+@keyframes flickerAnimation {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.EezStudio_ProjectEditor_scpi-terminal-connecting,
+.EezStudio_ProjectEditor_scpi-terminal-disconnecting {
+    margin: 5px;
+    span {
+        font-weight: bold;
+        animation: flickerAnimation 1s infinite;
+        margin-right: 20px;
+    }
+}
+
+.EezStudio_ProjectEditor_scpi-terminal-disconnecting {
+    height: 34px;
+    padding-top: 5px;
+}
+
+.EezStudio_ProjectEditor_scpi-terminal-connected {
+    margin: 5px;
+    span {
+        color: green;
+        margin-right: 20px;
+        font-weight: bold;
+    }
+}
+
+.EezStudio_ProjectEditor_scpi-terminal-error {
+    float: left;
+    margin: 5px;
+    color: red;
+    font-weight: bold;
+}
+
+.terminal,
+.cmd,
+.command,
+.terminal .terminal-output div div,
+.cmd .prompt,
+.command .prompt {
+    font-size: 16px !important;
+    line-height: 20px !important;
+}
+
+.ace_scpi_comment {
+    color: #999;
+    font-style: italic;
+}
+
+.ace_scpi_prompt {
+    color: purple;
+}
+
+.ace_scpi_command {
+    color: blue;
+    font-weight: bold;
+}
+
+.ace_scpi_error_result {
+    color: red;
+}
+
+.ace_scpi_success_result {
+    color: green;
+}
+
+.ace_scpi_regexp {
+    color: lightcoral;
+}
+
+.scpi-script-current-line-marker {
+    position: absolute;
+    background: rgba(0, 200, 0, 0.5);
+    z-index: 20;
+}
+
+.scpi-script-error-line-marker {
+    position: absolute;
+    background: rgba(200, 0, 0, 0.5);
+    z-index: 20;
+}
+
+.scpi-interpreter-output-container {
+    padding: 10px;
+}
+
+.scpi-interpreter-output {
+    background: rgba(200, 0, 0, 0.5);
+    color: white;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    margin-bottom: 5px;
+}
+
+/*------------------------------------------------------------------------------
+
+Project metrics dialog
+
+*/
+
+#EezStudio_ProjectEditor_project-metrics {
+    .table {
+        margin-bottom: 0;
+
+        & > tbody > tr {
+            & > td {
+                border-top: 0;
+                border-bottom: 1px solid #eaeaea;
+            }
+
+            & > td .td-indent {
+                padding-left: 40px;
+            }
+
+            &:last-child > td {
+                border-bottom: 0;
+            }
+        }
+
+        & > tbody > tr > td:nth-child(2) {
+            text-align: right;
+        }
+    }
+
+    .form-group {
+        margin-bottom: 0;
+    }
+}
+
+/*------------------------------------------------------------------------------
+
+Import SCPI doc
+
+*/
+
+.EezStudio_ProjectEditor_ImportScpiDoc {
+    * {
+        user-select: auto;
+        -webkit-user-select: auto;
+    }
+
+    .EezStudio_ProjectEditor_ImportScpiDoc_TablesDiv {
+        padding-top: 15px;
+    }
+
+    table {
+        margin-bottom: 0;
+        width: 100%;
+        border: 1px solid #ddd;
+    }
+
+    thead {
+        display: block;
+        width: 100%;
+    }
+
+    th {
+        background-color: #eee;
+        height: 32px;
+        padding-top: 4px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    thead,
+    tbody,
+    tr,
+    td,
+    th {
+        display: block;
+    }
+
+    tbody {
+        display: block;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    tr {
+        clear: both;
+    }
+
+    tbody {
+        td {
+            float: left;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
+    thead {
+        th {
+            float: left;
+        }
+    }
+}

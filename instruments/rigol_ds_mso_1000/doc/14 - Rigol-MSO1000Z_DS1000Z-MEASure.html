@@ -1,0 +1,1962 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<title></title>
+		<style type="text/css">
+			/* Reset */
+			ol, ul { margin: 0; padding: 0; }
+			li { list-style-position: outside; }
+			
+			/* Paragraphs and texts */
+			.Heading_1 { margin-top: 4.23mm; margin-bottom: 2.12mm; font-family: "Arial"; font-size: 14.0pt; font-weight: bold; color: #0066cc; }
+			.Heading_2 { margin-left: 7.62mm; margin-top: 4.5mm; margin-bottom: 2.5mm; text-indent: -7.62mm; font-family: "Arial"; font-size: 12.0pt; font-weight: bold; font-style: italic; color: #0066cc; }
+			.List_1 { text-align: left; margin-left: 10mm; margin-right: 1.99mm; text-indent: -6mm; }
+			.List_1_Cont_ { text-align: left; margin-left: 10mm; margin-right: 1.99mm; }
+			.List_1_End { text-align: left; margin-left: 10mm; margin-right: 1.99mm; margin-bottom: 3mm; text-indent: -6mm; }
+			.List_1_Start { text-align: left; margin-left: 10mm; margin-right: 1.99mm; margin-top: 3mm; text-indent: -6mm; }
+			.Normal { text-align: left; margin-bottom: 0.09mm; text-indent: 0.16mm; color: #000000; }
+			p { text-align: justify; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; text-indent: 0; background: transparent; font-family: "Tahoma"; font-size: 10.0pt; font-weight: normal; font-style: normal; }
+			li { text-align: justify; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; text-indent: 0; background: transparent; font-family: "Tahoma"; font-size: 10.0pt; font-weight: normal; font-style: normal; }
+			.Table_Heading { text-align: center; font-weight: bold; }
+			.table_body_left { text-align: right; font-weight: bold; color: #0000cc; }
+			.Default_Paragraph_Font { font-family: "Arial"; font-size: 12.0pt; font-weight: normal; font-style: normal; background: transparent; }
+			
+			/* Footnotes & endnotes */
+			#webpub_footnotes_divider { clear: both; margin-top: 2em; width: 25%; border-top: 1px solid black; }
+			#webpub_footnotes { font-size: 80%; text-align: justify; }
+			#webpub_footnotes td.label { text-align: right; vertical-align: top; }
+			#webpub_footnotes td.content { }
+			a.webpub_footnote { font-size: 80%; vertical-align: super; }
+			#webpub_endnotes_divider { clear: both; margin-top: 2em; width: 25%; border-top: 3px double black; }
+			#webpub_endnotes { font-size: 80%; text-align: justify; }
+			#webpub_endnotes td.label { text-align: right; vertical-align: top; }
+			#webpub_endnotes td.content { }
+			a.webpub_endnote { font-size: 80%; vertical-align: super; }
+			
+		</style>
+	</head>
+	<body>
+		<p class="Heading_1"><a name="_scpi_subsys_meas"></a>:MEASure Commands </p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">MSO1000Z/DS1000Z supports the auto measurement of the following 33 waveform parameters and provides the statistic function for the measurement results. In additional, you can use the frequency counter to make more precise frequency measurement. The :MEASure commands are used to set and query the measurement parameters.  </p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">&#160;</p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">1. Time Parameters </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">Period: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">Defined as the time between the threshold middle points of two consecutive, like-polarity edges. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">Frequency: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">Defined as the reciprocal of period. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">Rise Time: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">The time for the signal amplitude to rise from the lower limit to the upper limit of the threshod. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">Fall Time: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">The time for the signal amplitude to fall from the upper limit to the lower limit of the threshod. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">+ Width: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">The time difference between the threshold middle point of a rising edge to that of the next falling edge of the pulse. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">- Width: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">The time difference between the threshold middle point of a falling edge to that of the next rising edge of the pulse. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">+ Duty: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">The ratio of the positive pulse width to the period.</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">- Duty: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">The ratio of the negative pulse width to the period.</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">tVmax: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">The time corresponding to the waveform maximum value (Vmax).</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">tVmin: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-right: 0.83mm; text-indent: 0;">The time corresponding to the waveform minimum value (Vmin). </p>
+				</td>
+			</tr>
+		</table>
+		<p>&#160;</p>
+		<div style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;">
+			<img src="images/14 - Rigol-MSO1000Z_DS1000Z-MEASure-measure1.png" alt="measure1.jpg" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; width: 170mm; height: 84.31mm;"/>
+		</div>
+		<p>&#160;</p>
+		<p class="Normal" style="margin-right: 0.83mm; text-indent: 0; font-weight: bold;">2. Delay and Phase</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Delay 1→2</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="text-align: justify; margin-right: 1.16mm; margin-bottom: 0; text-indent: 0;">The time difference between the rising edges of source 1 and source 2. Negative delay indicates that the selected rising edge of source 1 occurred after the selected rising edge of source 2. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Delay 1→2</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="text-align: justify; margin-right: 1.08mm; margin-bottom: 0; text-indent: 0;">The time difference between the falling edges of source 1 and source 2. Negative delay indicates that the selected falling edge of source 1 occurred after the selected falling edge of source 2. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Phase 1→2</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Phase difference calculated according to <span style="font-weight: bold;">“Delay 1→2”</span> and the period of source 1, expressed in degree. The calculation formula is as shown below. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Phase 1→2</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Phase difference calculated according to <span style="font-weight: bold;">“Delay 1→2”</span> and the period of source 1, expressed in degree. The calculation formula is as shown below. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<div style="position: relative; left: 0; top: 0.64mm; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;">
+						<img src="images/14 - Rigol-MSO1000Z_DS1000Z-MEASure-measure_phase.png" alt="measure_phase.jpg" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; width: 50.99mm; height: 15.88mm;"/>
+					</div>
+					<p>Wherein, <span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-size: 11.5pt; font-style: italic;">Phase</span> denotes “Phase 1<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;">→</span>2” or “Phase 1<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;">→</span>2”, <span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-style: italic;">Delay</span> denotes “Delay 1<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;">→</span>2” or </p>
+					<p>“Delay 1<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;">→</span>2” and <span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-size: 11.5pt; font-style: italic;">Period</span><span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-size: 11.5pt;">1</span> denotes the period of source 1. </p>
+				</td>
+			</tr>
+		</table>
+		<p style="margin-right: 0.83mm;">&#160;</p>
+		<div style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;">
+			<img src="images/14 - Rigol-MSO1000Z_DS1000Z-MEASure-measure2.png" alt="measure2.jpg" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; width: 170mm; height: 70.11mm;"/>
+		</div>
+		<p>&#160;</p>
+		<p style="margin-right: 0.83mm; font-weight: bold;">3. Voltage Parameters</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Vmax: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The voltage value from the highest point of the waveform to the GND.<span class="Default_Paragraph_Font" style="font-weight: bold;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Vmin: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The voltage value from the lowest point of the waveform to the GND.<span class="Default_Paragraph_Font" style="font-weight: bold;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Vpp:</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The voltage value from the highest point to the lowest point of the waveform.<span class="Default_Paragraph_Font" style="font-weight: bold;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Vtop: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The voltage value from the flat top of the waveform to the GND.<span class="Default_Paragraph_Font" style="font-weight: bold;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Vbase:</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The voltage value from the flat base of the waveform to the GND.<span class="Default_Paragraph_Font" style="font-weight: bold;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Vamp: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The voltage value from the top of the waveform to the base of the waveform.<span class="Default_Paragraph_Font" style="font-weight: bold;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Vupper: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The actual voltage value corresponding to the threshold maximum value. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Vmid:</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The actual voltage value corresponding to the threshold middle value. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Vlower: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The actual voltage value corresponding to the threshold minimum value. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-left: 0.92mm; margin-right: 0.72mm; margin-bottom: 0; text-indent: -0.92mm; font-weight: bold;">Vavg: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-left: 0.92mm; margin-right: 0.72mm; margin-bottom: 0; text-indent: -0.92mm;">The arithmetic average value on the whole waveform or on the gating area. </p>
+					<p class="Normal" style="margin-left: 0.92mm; margin-right: 0.72mm; margin-bottom: 0; text-indent: -0.92mm;">&#160;</p>
+					<div style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;">
+						<img src="images/14 - Rigol-MSO1000Z_DS1000Z-MEASure-measure_avg.png" alt="measure_avg.jpg" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; width: 35mm; height: 14.39mm;"/>
+					</div>
+					<p class="Normal" style="margin-left: 0.92mm; margin-right: 0.72mm; margin-bottom: 0; text-indent: -0.92mm;">&#160;</p>
+					<p class="Normal" style="margin-left: 0.92mm; margin-right: 0.72mm; margin-bottom: 0; text-indent: -0.92mm;">, wherein, <span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-size: 11.5pt; font-style: italic;">x</span><span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-style: italic; vertical-align: sub;">i </span>is the <span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-size: 11.5pt; font-style: italic;">ith</span> point being measured, <span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-size: 11.5pt; font-style: italic;">n </span>is the number of <span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-size: 11.5pt; font-style: italic;">n</span></p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">points being measured.<span class="Default_Paragraph_Font" style="font-weight: bold;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0; font-weight: bold;">Vrms: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">The root mean square value on the whole waveform or the gating area.<span class="Default_Paragraph_Font" style="font-weight: bold;"> </span>The calculation formula is as follows.<span class="Default_Paragraph_Font" style="font-weight: bold;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0; font-weight: bold;">Overshoot: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">The ratio of the difference between the maximum value and top value of the waveform to the amplitude value.<span class="Default_Paragraph_Font" style="font-weight: bold;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0; font-weight: bold;">Preshoot:</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">The ratio of the difference between the minimum value and base value of the waveform to the amplitude value.<span class="Default_Paragraph_Font" style="font-weight: bold;"> </span></p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0; font-weight: bold;">Per.Vrms:</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The root mean square value within a period. The calculation formula is as follows.</p>
+					<div style="position: relative; left: 0.93mm; top: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;">
+						<img src="images/14 - Rigol-MSO1000Z_DS1000Z-MEASure-measure_rms.png" alt="measure_rms.jpg" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; width: 35mm; height: 23.25mm;"/>
+					</div>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">, where, xi is the ith point being measured, n is the number of</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">points being measured.</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p style="font-weight: bold;">Variance:</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p>The average of the sum of the squares for the difference between the amplitude value of each waveform point and the waveform average value on the whole waveform or on the gating area. The variance reflects the fluctuation degree of the waveform. <span class="Default_Paragraph_Font" style="font-weight: bold;"> </span></p>
+					<p>&#160;</p>
+					<p>&#160;</p>
+					<div style="position: relative; left: 0; top: 0.23mm; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;">
+						<img src="images/14 - Rigol-MSO1000Z_DS1000Z-MEASure-measure_var.png" alt="measure_var.jpg" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; width: 79.99mm; height: 22.19mm;"/>
+					</div>
+					<p>&#160;</p>
+					<p>Wherein, <span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-style: italic;">Vamp </span><span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;;">(</span><span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-style: italic;">i</span><span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;;">) </span>is the amplitude of the ith poin, <span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-style: italic;">Average </span>is the waveform average value, <span class="Default_Paragraph_Font" style="font-family: &quot;Times New Roman&quot;; font-size: 11.5pt; font-style: italic;">n </span>is the number of points being measured.<span class="Default_Paragraph_Font" style="font-size: 10.5pt;"> </span></p>
+				</td>
+			</tr>
+		</table>
+		<p style="margin-right: 0.83mm;">&#160;</p>
+		<div style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;">
+			<img src="images/14 - Rigol-MSO1000Z_DS1000Z-MEASure-measure3.png" alt="measure3.jpg" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; width: 150mm; height: 73.57mm;"/>
+		</div>
+		<p>&#160;</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p style="font-weight: bold;">+Rate: </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Divide the difference of the upper value and lower value on the rising edge by the corresponding time. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p style="font-weight: bold;">-Rate: </p>
+					<p style="font-weight: bold;">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Divide the difference of the lower value and upper value on the falling edge by the corresponding time. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p style="font-weight: bold;">Area: </p>
+					<p style="font-weight: bold;">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="text-align: justify; margin-right: 1.15mm; margin-bottom: 0; text-indent: 0;">The area of the whole waveform within the screen and the unit is voltage-second. The area measured above the zero reference (namely the vertical offset) is positive and the area measured below the zero reference is negative. The area measured is the algebraic sum of the area of the whole waveform within the screen. </p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 14%;">
+					<p style="font-weight: bold;">Period Area:</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 86%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The area of the first period of the waveform on the screen and the unit is voltage-second. The area above the zero reference (namely the vertical offset) is positive and the area below the zero reference is negative. The area measured is the algebraic sum of the area of the waveform within the whole period. Note that when the waveform on the screen is less than a period, the period area measured is 0.<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;"> </span></p>
+				</td>
+			</tr>
+		</table>
+		<p style="margin-right: 0.83mm;">&#160;</p>
+		<p style="margin-right: 0.83mm; font-weight: bold;">Command List: </p>
+		<ul>
+			<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;"><a href="#meas_sour"><span style="text-decoration: underline;">:MEASure:SOURce</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;">:<a href="#meas_coun_sour"><span style="text-decoration: underline;">MEASure:COUNter:SOURce</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_coun_val"><span style="text-decoration: underline;">:MEASure:COUNter:VALue?</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_cle"><span style="text-decoration: underline;">:MEASure:CLEar</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_rec"><span style="text-decoration: underline;">:MEASure:RECover</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_adis"><span style="text-decoration: underline;">:MEASure:ADISplay</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_ams"><span style="text-decoration: underline;">:MEASure:AMSource</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_set_max"><span style="text-decoration: underline;">:MEASure:SETup:MAX</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_set_mid"><span style="text-decoration: underline;">:MEASure:SETup:MID</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_set_min"><span style="text-decoration: underline;">:MEASure:SETup:MIN</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_set_psa"><span style="text-decoration: underline;">:MEASure:SETup:PSA</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_set_psb"><span style="text-decoration: underline;">:MEASure:SETup:PSB</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_set_dsa"><span style="text-decoration: underline;">:MEASure:SETup:DSA</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_set_dsb"><span style="text-decoration: underline;">:MEASure:SETup:DSB</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_stat_disp"><span style="text-decoration: underline;">:MEASure:STATistic:DISPlay</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_stat_mode"><span style="text-decoration: underline;">:MEASure:STATistic:MODE</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_stat_res"><span style="text-decoration: underline;">:MEASure:STATistic:RESet</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#meas_stat_item"><span style="text-decoration: underline;">:MEASure:STATistic:ITEM</span></a></li>
+			<li class="List_1_End" style="text-indent: 0; list-style-type: disc;"><a href="#meas_item"><span style="text-decoration: underline;">:MEASure:ITEM</span></a></li>
+		</ul>
+		<p class="Heading_2"><a name="meas_sour"></a>:MEASure:SOURce</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 29.28mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_sour"></a>:MEASure:SOURce &lt;sour&gt;</p>
+					<p class="Normal" style="margin-right: 29.28mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_sour2"></a>:MEASure:SOURce? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the source of the current measurement parameter.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;sour&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{D0|D1|D2|D3|D4|D5|D6|D7|D8| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">D9|D10|D11|D12|D13|D14|D15| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1|CHANnel2|CHANnel3|CHANnel4|MATH} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Analog channels CH1 to CH4 can be selected no matter wether they are currently turned on. Note: When any of channels D0 to D7 is turned on, CH4 cannot be selected; when any of channels D8 to D15 is selected, CH3 cannnot be selected.  </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">For digital channels D0 to D15, only channels currently turned on can be selected. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">This command is used to set the source for the measurement parameters (except delay and phase). The delay and phase measurements requires two sources which can be set by the :MEASure:SETup:DSA and :MEASure:SETup:DSB, :MEASure:SETup:PSA and :MEASure:SETup:PSB commands respectively.  </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, CHAN1, CHAN2, CHAN3, CHAN4 or MATH.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SOURce CHANnel2    /*Set the parameter measurement source to CH2*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SOURce?             /*The query returns CHAN2*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:ITEM </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_coun_sour"></a><a name="meas_cont_sour"></a>:MEASure:COUNter:SOURce</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 29.93mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_coun_sour"></a>:MEASure:COUNter:SOURce &lt;sour&gt;</p>
+					<p class="Normal" style="margin-right: 29.93mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_coun_sour2"></a>:MEASure:COUNter:SOURce? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the source of the frequency counter, or disable the frequency counter.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">&lt;sour&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{D0|D1|D2|D3|D4|D5|D6|D7|D8| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">D9|D10|D11|D12|D13|D14|D15| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1|CHANnel2|CHANnel3|CHANnel4|OFF} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">OFF </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Analog channels CH1 to CH4 can be selected no matter wether they are currently turned on. Note: When any of channels D0 to D7 is turned on, CH4 cannot be selected; when any of channels D8 to D15 is selected, CH3 cannnot be selected.  </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">For digital channels D0 to D15, only channels currently turned on can be selected. </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, CHAN1, CHAN2, CHAN3, CHAN4 or OFF.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 68.79mm; margin-bottom: 0.04mm; text-indent: -68.79mm;">:MEASure:COUNter:SOURce CHANnel2    /*Set the source of the frequency counter to CH2*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:COUNter:SOURce?            /*The query returns CHAN2*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:COUNter:VALue? </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_coun_val"></a>:MEASure:COUNter:VALue?</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_coun_val"></a>:MEASure:COUNter:VALue? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Query the measurement result of the frequency counter. The default unit is Hz.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the measurement result in scientific notation. If the frequency counter is disabled, 0.0000000e+00 will be returned.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:COUNter:VALue?   /*The query returns 1.000004e+03*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:COUNter:SOURce </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_cle"></a>:MEASure:CLEar</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_cle"></a>:MEASure:CLEar &lt;item&gt; </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Clear one or all of the last five measurement items enabled.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;item&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{ITEM1|ITEM2|ITEM3|ITEM4|ITEM5|ALL} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">-- </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You can use the :MEASure:ITEM command to enable the desired parameters of the 33 waveform parameters. Note that the last five parameters are determined according to the order in which you turned them on and they will not change as you delete one or more measurement items. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You can send the :MEASure:RECover command to recover the item(s) when a certain item or all the items are cleared.  </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:CLEar ITEM1    /*Clear ITEM1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_rec"></a>:MEASure:RECover</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_rec"></a>:MEASure:RECover &lt;item&gt; </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Recover the measurement item which has been cleared. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">&lt;item&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-left: 0.04mm; margin-bottom: 0; text-indent: 0;">{ITEM1|ITEM2|ITEM3|ITEM4|ITEM5|ALL} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">-- </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You can use the :MEASure:ITEM command to enable the desired parameters of the 33 waveform parameters. Note that the last five parameters are determined according to the order in which you turned them on and they will not change as you delete one or more measurement items.  </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">You can send the :MEASure:CLEar command to clear the items again after one or all of the measurement items are recovered. </li>
+					</ul>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_adis"></a>:MEASure:ADISplay</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 44.36mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_adis"></a>:MEASure:ADISplay &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 44.36mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_adis2"></a>:MEASure:ADISplay? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Enable or disable the all measurement function, or query the status of the all measurement function.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">0|OFF </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">The all measurement function can measure the following 29 parameters of the source at the same time:  </li>
+					</ul>
+					<p class="List_1_Cont_">Voltage Parameters: Vmax, Vmin, Vpp, Vtop, Vbase, Vamp, Vupper, Vmid, Vlower, </p>
+					<p class="List_1_Cont_">Vavg, Vrms, Overshoot, Preshoot, Period Vrms and Variance </p>
+					<p class="List_1_Cont_">Time Parameters: Period, Frequency, Rise Time, Fall Time, + Width, - Width, + Duty,  </p>
+					<p class="List_1_Cont_">- Duty, tVmax and tVmin </p>
+					<p class="List_1_Cont_">Other Parameters: +Rate, -Rate, Area and Period Area.  </p>
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">The all measurement function can measure CH1, CH2, CH3, CH4 and the MATH channel at the same time. You can send the :MEASure:AMSource command to set the source of the all measurement function.  </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:ADISplay ON    /*Enable the all measurement function*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:ADISplay?      /*The query returns 1*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_ams"></a>:MEASure:AMSource</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_ams"></a>:MEASure:AMSource &lt;src&gt;[,&lt;src&gt;[,&lt;src&gt;[,&lt;src&gt;]]]</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_ams2"></a>:MEASure:AMSource? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the source(s) of the all measurement function. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;src&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{CHANnel1|CHANnel2|CHANnel3|CHANnel4|MATH} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns CHAN1, CHAN2, CHAN3, CHAN4 or MATH. Multiple sources are separated by commas. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-left: 74.08mm; margin-bottom: 0; text-indent: -74.08mm;">:MEASure:AMSource CHANnel1,CHANnel3    /*Set the sources of the all measurement function to CH1 and CH3*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:AMSource?                      /*The query returns CHAN1,CHAN3*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_set_max"></a>:MEASure:SETup:MAX</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 53.52mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_max"></a>:MEASure:SETup:MAX &lt;value&gt;</p>
+					<p class="Normal" style="margin-right: 53.52mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_max2"></a>:MEASure:SETup:MAX? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the upper limit of the threshold (expressed in the percentage of amplitude) in time, delay and phase measurements. <span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;"> </span></p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;value&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Integer </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">7 to 95 </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">90 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">The upper limit, middle point and lower limit of the threshold (expressed in the percentage of amplitude) are used to define the time, delay and phase parameters. Setting these values will affect the measurement results of the time, delay and phase parameters.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Setting the upper limit lower than the middle point will automatically reduce the middle point to keep it lower than the upper limit. <span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer between 7 and 95.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:MAX 95    /*Set the upper limit of the threshold to 95%*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:MAX?      /*The query returns 95*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:MID</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:MIN </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:ITEM </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_set_mid"></a>:MEASure:SETup:MID</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 54.4mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_mid"></a>:MEASure:SETup:MID &lt;value&gt;</p>
+					<p class="Normal" style="margin-right: 54.4mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_mid2"></a>:MEASure:SETup:MID? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the middle point of the threshold (expressed in the percentage of amplitude) in time, delay and phase measurements. <span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;"> </span></p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;value&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Integer </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">6 to 94 </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">50 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">The upper limit, middle point and lower limit of the threshold (expressed in the percentage of amplitude) are used to define the time, delay and phase parameters. Setting these values will affect the measurement results of the time, delay and phase parameters.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">The middle point must be lower than the upper limit and greater than the lower limit.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer between 6 and 94.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:MID 89    /*Set the middle point of the threshold to 89%*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:MID?      /*The query returns 89*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:MAX </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:MIN </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:ITEM </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_set_min"></a>:MEASure:SETup:MIN</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 54.49mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_min"></a>:MEASure:SETup:MIN &lt;value</p>
+					<p class="Normal" style="margin-right: 54.49mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_min2"></a>:MEASure:SETup:MIN? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query the lower limit of the threshold (expressed in the percentage of amplitude) in time, delay and phase measurements. <span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;"> </span></p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;value&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Integer </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">5 to 93 </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">10 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">The upper limit, middle point and lower limit of the threshold (expressed in the percentage of amplitude) are used to define the time, delay and phase parameters. Setting these values will affect the measurement results of the time, delay and phase parameters.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Setting the lower limit greater than the middle point will automatically increase the middle point to keep it greater than the lower limit.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns an integer between 5 and 93.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:MIN 53    /*Set the lower limit of the threshold to 53%*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:MIN?      /*The query returns 53*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:MAX </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:MID </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:ITEM </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_set_psa"></a>:MEASure:SETup:PSA</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 33.41mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_psa"></a>:MEASure:SETup:PSA &lt;source&gt;</p>
+					<p class="Normal" style="margin-right: 33.41mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_psa2"></a>:MEASure:SETup:PSA? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query source A of Phase 1<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;">→</span>2 and Phase 1<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;">→</span>2 measurements.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;source&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{D0|D1|D2|D3|D4|D5|D6|D7|D8| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">D9|D10|D11|D12|D13|D14|D15| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1|CHANnel2|CHANnel3|CHANnel4} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, CHAN1, CHAN2, CHAN3 or CHAN4.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:PSA CHANnel1    /*Set source A of phase measurement to CH1*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:PSA?             /*The query returns CHAN1*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:ITEM </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_set_psb"></a>:MEASure:SETup:PSB</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 31.61mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_psb"></a>:MEASure:SETup:PSB &lt;source&gt;</p>
+					<p class="Normal" style="margin-right: 31.61mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_psb2"></a>:MEASure:SETup:PSB? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Set or query source B of Phase 1<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;">→</span>2	 and Phase 1<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;">→</span>2	 measurements. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;source&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{D0|D1|D2|D3|D4|D5|D6|D7|D8| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">D9|D10|D11|D12|D13|D14|D15| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1|CHANnel2|CHANnel3|CHANnel4} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel2 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, CHAN1, CHAN2, CHAN3 or CHAN4.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:PSB CHANnel2    /*Set source B of phase measurement to CH2*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:PSB?             /*The query returns CHAN2*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:ITEM </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_set_dsa"></a>:MEASure:SETup:DSA</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 29.62mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_dsa"></a>:MEASure:SETup:DSA &lt;source&gt;</p>
+					<p class="Normal" style="margin-right: 29.62mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_dsa2"></a>:MEASure:SETup:DSA? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Set or query source A of Delay 1<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;">→</span>2 and Delay 1<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;">→</span>2	 measurements. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">&lt;source&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">{D0|D1|D2|D3|D4|D5|D6|D7|D8| </p>
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">D9|D10|D11|D12|D13|D14|D15| </p>
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">CHANnel1|CHANnel2|CHANnel3|CHANnel4} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">CHANnel1 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, CHAN1, CHAN2, CHAN3 or CHAN4.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:DSA CHANnel1    /*Set source A of delay measurement to CH1*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:DSA?             /*The query returns CHAN1*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:ITEM </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_set_dsb"></a>:MEASure:SETup:DSB</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 29.58mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_dsb"></a>:MEASure:SETup:DSB &lt;source&gt;</p>
+					<p class="Normal" style="margin-right: 29.58mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_set_dsb2"></a>:MEASure:SETup:DSB? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Set or query source B of Delay 1<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;">→</span>2 and Delay 1<span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;">→</span>2 measurements. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">&lt;source&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 9%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 49%;">
+					<p class="Normal" style="margin-left: 0.04mm; margin-bottom: 0; text-indent: 0;">{D0|D1|D2|D3|D4|D5|D6|D7|D8| </p>
+					<p class="Normal" style="margin-left: 0.04mm; margin-bottom: 0; text-indent: 0;">D9|D10|D11|D12|D13|D14|D15| </p>
+					<p class="Normal" style="margin-left: 0.04mm; margin-bottom: 0; text-indent: 0;">CHANnel1|CHANnel2|CHANnel3|CHANnel4} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">CHANnel2 </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, CHAN1, CHAN2, CHAN3 or CHAN4.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:DSB CHANnel2    /*Set source B of delay measurement to CH2*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:SETup:DSB?            /*The query returns CHAN2*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related command</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:ITEM </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_stat_disp"></a>:MEASure:STATistic:DISPlay</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 28.58mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_stat_disp"></a>:MEASure:STATistic:DISPlay &lt;bool&gt;</p>
+					<p class="Normal" style="margin-right: 28.58mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_stat_disp2"></a>:MEASure:STATistic:DISPlay? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Enable or disable the statistic function, or query the status of the statistic function.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">&lt;bool&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Bool </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-left: 0.04mm; margin-bottom: 0; text-indent: 0;">{{1|ON}|{0|OFF}} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">0|OFF </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">When the statistic function is enabled, the oscilloscope makes statistic and displays the statistic results of at most 5 measurement items that are turned on last.<span class="Default_Paragraph_Font" style="color: #0000ff;"> </span></p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns 1 or 0.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:DISPlay ON    /*Enable the statistic function*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:DISPlay?      /*The query returns 1*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:MODE </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:RESet </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:ITEM </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:ITEM </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_stat_mode"></a>:MEASure:STATistic:MODE</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_stat_mode"></a>:MEASure:STATistic:MODE &lt;mode&gt;</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_meas_stat_mode2"></a>:MEASure:STATistic:MODE? </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Set or query the statistic mode. <span class="Default_Paragraph_Font" style="font-family: &quot;SimSun&quot;;"> </span></p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 29%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">&lt;mode&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 13%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 29%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{DIFFerence|EXTRemum} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">EXTRemum </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">DIFFerence: select the difference mode. The statistic results contain the current value, average value, standard deviation and counts.  </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">EXTRemum: select the extremum mode. The statistic results contain the current value, average value, minimum and maximum. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">Sending the :MEASure:STATistic:DISPlay command can enable the statistic function. When the statistic function is enabled, the oscilloscope makes statistic and displays the statistic results of at most 5 measurement items that are turned on last. </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns DIFF or EXTR.  </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:MODE DIFFerence    /*Select the difference mode*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:MODE?              /*The query returns DIFF*/ </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Related commands</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:RESet </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:ITEM </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_stat_res"></a>:MEASure:STATistic:RESet</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-right: 0.83mm; margin-bottom: 1.99mm; text-indent: 0;"><a name="_scpi_meas_stat_res"></a>:MEASure:STATistic:RESet </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-right: 0.83mm; margin-bottom: 1.96mm; text-indent: 0;">Clear the history data and make statistic again.</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left"><span class="Default_Paragraph_Font">Related commands </span></p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:DISPlay </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Commands :MEASure:STATistic:MODE </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:ITEM </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_stat_item"></a>:MEASure:STATistic:ITEM</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p><a name="_scpi_meas_stat_item"></a>:MEASure:STATistic:ITEM &lt;item&gt;[,&lt;src&gt;[,&lt;src&gt;]]</p>
+					<p><a name="_scpi_meas_stat_item2"></a>:MEASure:STATistic:ITEM? &lt;type&gt;,&lt;item&gt;[,&lt;src&gt;[,&lt;src&gt;]]  </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">Enable the statistic function of any waveform parameter of the specified source, or query the statistic result of any waveform parameter of the specified source. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 43%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;item&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 43%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{VMAX|VMIN|VPP|VTOP|VBASe|VAMP|VAVG| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">VRMS|OVERshoot|PREShoot|MARea|MPARea| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">PERiod|FREQuency|RTIMe|FTIMe|PWIDth| </p>
+					<p class="Normal" style="margin-bottom: 0.04mm; text-indent: 0;">NWIDth|PDUTy|NDUTy|RDELay|FDELay| RPHase|FPHase|TVMAX|TVMIN|PSLEWrate| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">NSLEWrate|VUPper|VMID|VLOWer|VARIance| PVRMS } </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">-- </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;src&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 43%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Refer to Explanation</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 2.82mm; text-indent: 0;">&#160;</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;type&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 43%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{MAXimum|MINimum|CURRent|AVERages| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">DEViation} </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-left: 0.02mm; margin-bottom: 0; text-indent: 0;">-- </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">[,&lt;src&gt;[,&lt;src&gt;]] sets the source of the parameter to be measured. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">When &lt;item&gt; is PERiod, FREQuency, PWIDth, NWIDth, PDUTy, NDUTy, RDELay, FDELay, RPHase or FPHase, the range of &lt;src&gt; is {D0|D1|D2|D3|D4|D5|D6|D7|D8|D9|D10|D11|D12|D13|D14|D15|CHANnel1|CHAN nel2|CHANnel3|CHANnel4|MATH}. When &lt;item&gt; is any of other measurement parameters, the range of &lt;src&gt; is {CHANnel1|CHANnel2|CHANnel3|CHANnel4|MATH}. </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">If the parameter to be measured only needs a single source (such as VMAX, VMIN, VPP, VTOP, VBASe, VAMP, VAVG, VRMS, OVERshoot, MARea, MPARea, PREShoot, PERiod, FREQuency, RTIMe, FTIMe, PWIDth, NWIDth, PDUTy, NDUTy, TVMAX, TVMIN, PSLEWrate, NSLEWrate, VUPper, VMID, VLOWer, VARIance and PVRMS), you only need to set a single source. If [,&lt;src&gt;[,&lt;src&gt;]] is omitted, the source is the one selected by the :MEASure:SOURce command by default.  </li>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">If the parameter to be measured needs two sources (such as RDELay, FDELay, RPHase and FPHase), the command needs to include two sources; otherwise, the command is invalid. If [,&lt;src&gt;[,&lt;src&gt;]] is omitted, the sources are the ones selected by the :MEASure:SETup:DSA and :MEASure:SETup:DSB or :MEASure:SETup:PSA and :MEASure:SETup:PSB commands by default.  </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the statistic result in scientific notation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:ITEM VPP,CHANnel2   /*Enable the Vpp statistic function of CH2*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:STATistic:ITEM? MAXimum,VPP   /*The query returns 9.120000e-01*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="meas_item"></a>:MEASure:ITEM </p>
+		<table style="border-collapse: collapse; background: transparent; width: 170mm;">
+			<tr style="height: 5.42mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Syntax</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p><a name="_scpi_meas_item"></a>:MEASure:ITEM &lt;item&gt;[,&lt;src&gt;[,&lt;src&gt;]] </p>
+					<p><a name="_scpi_meas_item2"></a>:MEASure:ITEM? &lt;item&gt;[,&lt;src&gt;[,&lt;src&gt;]] </p>
+				</td>
+			</tr>
+			<tr style="height: 1.99mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Description</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Measure any waveform parameter of the specified source, or query the measurement result of any waveform parameter of the specified source. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Parameter</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Name</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Table_Heading">Type</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 43%;">
+					<p class="Table_Heading">Range</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Table_Heading">Default</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;item&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 43%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">{VMAX|VMIN|VPP|VTOP|VBASe|VAMP|VAVG| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">VRMS|OVERshoot|PREShoot|MARea|MPARea| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">PERiod|FREQuency|RTIMe|FTIMe|PWIDth| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">NWIDth|PDUTy|NDUTy|RDELay|FDELay| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">RPHase|FPHase|TVMAX|TVMIN|PSLEWrate| </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">NSLEWrate|VUPper|VMID|VLOWer|VARIance| PVRMS } </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">-- </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">&#160;</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&lt;src&gt; </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 10%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Discrete </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 43%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Refer to Explanation </p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 21%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">&#160;</p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Explanation</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-right: 1.09mm; margin-bottom: 0; text-indent: 0;">[,&lt;src&gt;[,&lt;src&gt;]] sets the source of the parameter to be measured.  </p>
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">When &lt;item&gt; is PERiod, FREQuency, PWIDth, NWIDth, PDUTy, NDUTy, RDELay, FDELay, RPHase or FPHase, the range of &lt;src&gt; is {D0|D1|D2|D3|D4|D5|D6|D7|D8|D9|D10|D11|D12|D13|D14|D15|CHANnel1|CHAN nel2|CHANnel3|CHANnel4|MATH}. </li>
+					</ul>
+					<p class="List_1_Cont_">When &lt;item&gt; is any of other measurement parameters, the range of &lt;src&gt; is {CHANnel1|CHANnel2|CHANnel3|CHANnel4|MATH}. </p>
+					<ul>
+						<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;">If the parameter to be measured only needs a single source (such as VMAX, VMIN, VPP, VTOP, VBASe, VAMP, VAVG, VRMS, OVERshoot, MARea, MPARea, PREShoot, PERiod, FREQuency, RTIMe, FTIMe, PWIDth, NWIDth, PDUTy, NDUTy, TVMAX, TVMIN, PSLEWrate, NSLEWrate, VUPper, VMID, VLOWer, VARIance and PVRMS), you only need to set a single source. If [,&lt;src&gt;[,&lt;src&gt;]] is omitted, the source is the one selected by the :MEASure:SOURce command by default.  </li>
+						<li class="List_1_Start" style="margin-right: 0; margin-top: 0; text-indent: 0; list-style-type: disc;">If the parameter to be measured needs two sources (such as RDELay, FDELay, RPHase and FPHase), the command needs to include two sources; otherwise, the command is invalid. If [,&lt;src&gt;[,&lt;src&gt;]] is omitted, the sources are the ones selected by the :MEASure:SETup:DSA and :MEASure:SETup:DSB or :MEASure:SETup:PSA and :MEASure:SETup:PSB commands by default.  </li>
+					</ul>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Return format</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the measurement result in scientific notation. </p>
+				</td>
+			</tr>
+			<tr style="height: 3.21mm; background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 16%;">
+					<p class="table_body_left">Example</p>
+				</td>
+				<td colspan="4" style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 84%;">
+					<p class="Normal" style="text-align: justify; margin-bottom: 0; text-indent: 0;">:MEASure:ITEM OVERshoot,CHANnel2   /*Enable the overshoot measurement of CH2*/ </p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">:MEASure:ITEM? OVERshoot,CHANnel2   /*The query returns 8.888889e-03*/ </p>
+				</td>
+			</tr>
+		</table>
+		<p>&#160;</p>
+	</body>
+</html>

@@ -1,0 +1,124 @@
+.EezStudio_Designer {
+    position: relative;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.EezStudio_DesignerProperties {
+    height: 100%;
+    background-color: @panel-header-color;
+}
+
+.EezStudio_PageCanvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    overflow: hidden;
+}
+
+.EezStudio_Canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.EezStudio_Toolbox {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: @panel-header-color;
+    pointer-events: all;
+}
+
+.EezStudio_Tool {
+    white-space: nowrap;
+    overflow: hidden;
+
+    .EezStudio_Selected {
+        background-color: @selection-background-color;
+        color: @selection-color;
+    }
+}
+
+.EezStudio_Selection {
+    position: absolute;
+    left: 0;
+    top: 0;
+    cursor: move;
+
+    .EezStudio_Selection_SelectedObject {
+        pointer-events: none;
+        border: 2px solid @selection-background-color;
+    }
+
+    .EezStudio_Selection_BoundingRect {
+        border: 2px solid @selection-background-color;
+    }
+
+    .EezStudio_SelectionRubberBend {
+        position: absolute;
+        background-color: @selection-background-color;
+        opacity: 0.5;
+    }
+
+    .EezStudio_Selection_Handle {
+        position: absolute;
+    }
+
+    .EezStudio_Selection_Handle.Side {
+        background-color: rgba(0, 0, 255, 0.1);
+    }
+
+    .EezStudio_Selection_Handle.Corner {
+        background-color: rgba(0, 0, 255, 0.3);
+    }
+
+    .EezStudio_Selection_Handle.TopLeft {
+        cursor: nw-resize;
+    }
+
+    .EezStudio_Selection_Handle.Top {
+        cursor: n-resize;
+    }
+
+    .EezStudio_Selection_Handle.TopRight {
+        cursor: ne-resize;
+    }
+
+    .EezStudio_Selection_Handle.Left {
+        cursor: w-resize;
+    }
+
+    .EezStudio_Selection_Handle.Right {
+        cursor: e-resize;
+    }
+
+    .EezStudio_Selection_Handle.BottomLeft {
+        cursor: sw-resize;
+    }
+
+    .EezStudio_Selection_Handle.Bottom {
+        cursor: s-resize;
+    }
+
+    .EezStudio_Selection_Handle.BottomRight {
+        cursor: se-resize;
+    }
+}
+
+.EezStudio_Workbench_Designer_Properties {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: all;
+}

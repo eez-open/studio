@@ -1,0 +1,11 @@
+	You must attempt to send the modified documentation by email to any of the developers who have provided their email address in the list below. This is a good faith obligation - if the email fails, you need do nothing more and may go on with your distribution.
+
+	If you wish to be notified of modifications that others may make, include your email address in this file.
+
+-----BEGINING OF THE MAILING LIST-----
+
+Name	-	email
+------------
+Envox d.o.o.	-	eez@envox.hr
+
+-----END OF THE MAILING LIST-----

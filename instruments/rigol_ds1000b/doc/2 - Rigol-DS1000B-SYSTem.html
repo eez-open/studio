@@ -1,0 +1,936 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<title></title>
+		<style type="text/css">
+			/* Reset */
+			ol, ul { margin: 0; padding: 0; }
+			li { list-style-position: outside; }
+			
+			/* Paragraphs and texts */
+			.Heading_1 { margin-top: 4.23mm; margin-bottom: 2.12mm; font-family: "Arial"; font-size: 14.0pt; font-weight: bold; color: #0066cc; }
+			.Heading_2 { margin-left: 7.62mm; margin-top: 4.5mm; margin-bottom: 2.5mm; text-indent: -7.62mm; font-family: "Arial"; font-size: 12.0pt; font-weight: bold; font-style: italic; color: #0066cc; }
+			.List_1 { text-align: left; margin-left: 10mm; margin-right: 1.99mm; text-indent: -6mm; }
+			.List_1_End { text-align: left; margin-left: 10mm; margin-right: 1.99mm; margin-bottom: 3mm; text-indent: -6mm; }
+			.List_1_Start { text-align: left; margin-left: 10mm; margin-right: 1.99mm; margin-top: 3mm; text-indent: -6mm; }
+			.Normal { text-align: left; margin-bottom: 0.09mm; text-indent: 0.16mm; color: #000000; }
+			p { text-align: justify; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; text-indent: 0; background: transparent; font-family: "Tahoma"; font-size: 10.0pt; font-weight: normal; font-style: normal; }
+			li { text-align: justify; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; text-indent: 0; background: transparent; font-family: "Tahoma"; font-size: 10.0pt; font-weight: normal; font-style: normal; }
+			.Table_Heading { text-align: center; font-weight: bold; }
+			.table_body_left { text-align: right; margin-right: 3mm; font-weight: bold; color: #0000cc; }
+			
+			/* Footnotes & endnotes */
+			#webpub_footnotes_divider { clear: both; margin-top: 2em; width: 25%; border-top: 1px solid black; }
+			#webpub_footnotes { font-size: 80%; text-align: justify; }
+			#webpub_footnotes td.label { text-align: right; vertical-align: top; }
+			#webpub_footnotes td.content { }
+			a.webpub_footnote { font-size: 80%; vertical-align: super; }
+			#webpub_endnotes_divider { clear: both; margin-top: 2em; width: 25%; border-top: 3px double black; }
+			#webpub_endnotes { font-size: 80%; text-align: justify; }
+			#webpub_endnotes td.label { text-align: right; vertical-align: top; }
+			#webpub_endnotes td.content { }
+			a.webpub_endnote { font-size: 80%; vertical-align: super; }
+			
+		</style>
+	</head>
+	<body>
+		<p class="Heading_1"><a name="_scpi_subsys_syst"></a>SYSTem Commands </p>
+		<p>&#160;</p>
+		<p>SYSTem Commands are used for the basic operations of an oscilloscope: RUN/STOP control, operation of the error queue and system setup data. SYSTem Commands include:</p>
+		<ul>
+			<li class="List_1_Start" style="text-indent: 0; list-style-type: disc;"><a href="#syst_run"><span style="text-decoration: underline;">:RUN</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#syst_stop"><span style="text-decoration: underline;">:STOP</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#syst_auto"><span style="text-decoration: underline;">:AUTO</span></a></li>
+			<li class="List_1" style="text-indent: 0; list-style-type: disc;"><a href="#syst_err"><span style="text-decoration: underline;">:SYSTem:ERRor</span></a></li>
+			<li class="List_1_End" style="text-indent: 0; list-style-type: disc;"><a href="#syst_set"><span style="text-decoration: underline;">:SYSTem:SETup</span></a></li>
+		</ul>
+		<p>We will give detailed introductions for each command in the following parts.</p>
+		<p class="Heading_2"><a name="syst_run"></a>:RUN</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 23%;">
+					<p class="table_body_left">Command format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 77%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_syst_run"></a>:RUN</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 23%;">
+					<p class="table_body_left">Function</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 77%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Execute this command, the oscilloscope will start waveform sampling working.</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">To stop working, execute <span style="font-weight: bold;">:STOP</span> command again.</p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="syst_stop"></a>:STOP</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 23%;">
+					<p class="table_body_left">Command format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 77%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;"><a name="_scpi_syst_stop"></a>:STOP</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 23%;">
+					<p class="table_body_left">Function</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 77%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">Execute this command, the oscilloscope will stop waveform sampling working.</p>
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">To restart working, execute <span style="font-weight: bold;">:RUN</span> command again.</p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="syst_auto"></a>:AUTO</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 23%;">
+					<p class="table_body_left">Command format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 77%;">
+					<p class="Normal" style="margin-right: 103.42mm; margin-bottom: 0; text-indent: 0;"><a name="_scpi_syst_auto"></a>:AUTO</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 23%;">
+					<p class="table_body_left">Function</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 77%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The command makes the oscilloscope tests all input waveforms and set the waveforms automatically to get the optimum conditions to display.</p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="syst_err"></a>:SYSTem:ERRor</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 23%;">
+					<p class="table_body_left">Command format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 77%;">
+					<p><a name="_scpi_syst_err"></a>:SYSTem:ERRor</p>
+					<p><a name="_scpi_syst_err2"></a>:SYSTem:ERRor?</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 23%;">
+					<p class="table_body_left">Function</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 77%;">
+					<p class="Normal" style="text-align: justify; margin-right: 1.09mm; margin-bottom: 0; text-indent: 0;">The command clears the queue of error information.</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 23%;">
+					<p class="table_body_left">Returned format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 77%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the last error, such as “Undefined header”. If there is no error, return “0, No error”.</p>
+				</td>
+			</tr>
+		</table>
+		<p>&#160;</p>
+		<p style="font-weight: bold;">System Error Code</p>
+		<p>Up to 10 errors can be recorded in the system error queue. If not enough, the system will adopt FIFO manner to cover the original error record.</p>
+		<p>&#160;</p>
+		<p>The SYST:ERR? Command is used to read the first error code in the form of “error code, error description”, so as to reduce the error number of error queue. For instance, if no error appears, the system will return: 0, No error.</p>
+		<p>&#160;</p>
+		<p>Besides, the :SYST:ERR Command is able to clear error queue.</p>
+		<p>&#160;</p>
+		<table style="border-collapse: collapse; background: transparent; width: 147.9mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p class="Table_Heading">Error Code</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p class="Table_Heading">Mnemonic Symbol</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 1px solid #000000; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p class="Table_Heading">Error Description</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">0</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_NONE</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> No error</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">1</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_SAME_SETTING</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Same setting</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">2</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_INVALID_INPUT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Invalid input</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">3</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_LIMIT_SETTING</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Setting limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">4</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_CH_OFFSET_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Channel offset limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">5</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_CH_SCALE_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Channel scale limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">6</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_CH_PROBE_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Channel probe limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">7</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_CH_FILTER_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Channel filter limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">8</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_TIME_OFFSET_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Timebase offset limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">9</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_TIME_SCALE_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Timebase scale limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">10</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_TIME_DELAYED_OFFSET_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Timebase of timedelay offset limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">11</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_TIME_DELAYED_SCALE_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Timebase of timedelay scale limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">12</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_TRIG_LEVEL_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Trigger level limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">13</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_MATH_VERT_OFFSET_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Math vertical offset limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">14</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_MATH_VERT_SCALE_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Math vertical scale limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">15</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_FFT_VERT_SCALE_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> FFT vertical offset limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">16</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_FFT_VERT_OFFSET_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> FFT vertical offset limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">17</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_FFT_HORIZ_SCALE_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> FFT horizontal scale limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">18</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_FFT_HORIZ_OFFSET_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> FFT horizontal offset limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">19</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_CUR_A_X_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> CursorA X-Axial limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">20</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_CUR_B_X_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> CursorB X-Axial limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">21</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_CUR_A_Y_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> CursorA Y-Axial limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">22</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_CUR_B_Y_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> CursorB Y-Axial limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">23</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_HOLDOFF_TIME_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Holdoff time limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">24</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_INTENSITY_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Intensity limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">25</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_PULSE_WIDTH_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Pulse width limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">26</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_VIDEO_LINE_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Video line limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">27</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_REC_INTERVAL_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Record interval limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">28</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_REC_END_FRAME_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Record end frame limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">29</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_PLAY_INTERVAL_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Play interval limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">30</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_PLAY_START_FRAME_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Play start frame limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">31</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_PLAY_CUR_FRAME_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Play current frame limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">32</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_PLAY_END_FRAME_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Play end frame limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">33</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_STOARAGE_START_FRAME_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Storage start frame limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">34</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_STOARGE_END_FRAME_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Storage end frame limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">35</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_REF_VERT_OFFSET_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Ref vertical offset limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">36</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_REF_VERT_SCALE_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Ref vertical scale limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">37</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_PF_MASK_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Passfail mask limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">38</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_SAMPLING_RATE_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Sampling rate limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">39</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_GRID_INTENSITY_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Grid intensity limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">40</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_TRIG_SENSITIVITY_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Trigger sensitivity limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">41</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_TRIG_SLOPE_TIME_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Trigger slop time limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">42</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_MEM_DEPTH_LIMIT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Memory depth limit</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">43</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_FUNCTION_NOT_AVAILABLE</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Function not available</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">44</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_LOCATION_EMPTY</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Location empty</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">45</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_MEAS_ALREADY_SELECTED</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Measure already selected</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">46</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_NO_SIGNAL_FOUND</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> No signal found</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">47</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_WAVEFORM_RECORD_FINISHED</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Waveform record finished</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">48</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_FILE_UTILITY_FAIL</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> File utility fail</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">49</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_CHANNEL_INVALID</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Channel invalid</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">50</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_AUTO_KEY_LIMITED</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Auto key limited</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">51</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_NOT_ENOUGH_MEMORY</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Not enough memory</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">52</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_WAVE_SAVE_FAILED</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Waveform save failed</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">53</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_WAVE_LOAD_FAILED</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Waveform load failed</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">54</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_FILE_IS_COVERED</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> File is covered</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">55</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_FILTER_IS_CLOSED</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Filter is closed</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">56</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_WAVE_TYPE_NONE</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> No signal detected</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">57</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_WAVE_TYPE_DC</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> DC signal detected</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">58</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_WAVE_TYPE_SINE</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Sine signal detected</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">59</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_WAVE_TYPE_RAMP</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Triangle signal detected</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">60</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_WAVE_TYPE_RECT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Square signal detected</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">61</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_WAVE_TYPE_UNKNOWN</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Unknown signal detected</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">62</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> CMD_ERR</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Error header</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">63</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> CMD_NOT_PARSE</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Undefined header</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">64</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_PF_OUTPUT</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> PassFail Out</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">65</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_MISSING_HW</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p> Missing Hardware</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">66</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_OUT_OF_RANGE Out of range</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p>&#160;</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 15%;">
+					<p style="text-align: center;">67</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 0; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 44%;">
+					<p> ERR_CANNOT_EXECURE Can’t execute</p>
+				</td>
+				<td style="border-left: 1px solid #000000; border-right: 1px solid #000000; border-top: 0; border-bottom: 1px solid #000000; vertical-align: top; background: transparent; width: 41%;">
+					<p>&#160;</p>
+				</td>
+			</tr>
+		</table>
+		<p class="Heading_2"><a name="syst_set"></a>:SYSTem:SETup</p>
+		<table style="border-collapse: collapse; background: transparent; width: 170.13mm;">
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 23%;">
+					<p class="table_body_left">Command format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 77%;">
+					<p><a name="_scpi_syst_set"></a>:SYSTem:SETup &lt;setup_data&gt;</p>
+					<p><a name="_scpi_syst_set2"></a>:SYSTem:SETup?</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 23%;">
+					<p class="table_body_left">Function</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 77%;">
+					<p class="Normal" style="text-align: justify; margin-right: 1.09mm; margin-bottom: 0; text-indent: 0;">The command downloads the system setup data. &lt;setup data&gt; is a binary data that meets IEEE 488.2 # format.</p>
+				</td>
+			</tr>
+			<tr style="background: transparent;">
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 23%;">
+					<p class="table_body_left">Returned format</p>
+				</td>
+				<td style="border-left: 0; border-right: 0; border-top: 0; border-bottom: 0; vertical-align: top; background: transparent; width: 77%;">
+					<p class="Normal" style="margin-bottom: 0; text-indent: 0;">The query returns the value of system setup data.</p>
+				</td>
+			</tr>
+		</table>
+		<p>&#160;</p>
+	</body>
+</html>

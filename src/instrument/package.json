@@ -1,0 +1,7 @@
+{
+    "name": "eez-studio-instrument-extension",
+    "version": "0.0.1",
+    "eez-studio": {
+        "main": "instrument-extension.js"
+    }
+}

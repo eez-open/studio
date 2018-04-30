@@ -1,0 +1,7 @@
+{
+    "name": "eez-studio-home",
+    "version": "0.0.1",
+    "eez-studio": {
+        "main": "home-extension.js"
+    }
+}
