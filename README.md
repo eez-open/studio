@@ -37,7 +37,7 @@ The EEZ Studio is an open source cross-platform modular visual tool aimed to add
 * Dynamic environment where multiple instruments and other "widgets" can be placed and easily accessed
 * **Session oriented interaction with each SCPI instrument**
 * Support for serial (via USB) and TCP/IP communication
-* Direct import of ESP generated IDFs and **Keysight’s Offline Command Expert command_ sets**
+* Direct import of ESP generated IDFs and **Keysight’s Offline Command Expert command** sets
 * **Built-in instrument extensions for Rigol 1000 series of DSO/MSO**
 * History of all activities with search/content filtering
 * Quick navigation via calendar ("heatmap") or sessions list view
