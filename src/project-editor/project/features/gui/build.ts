@@ -118,7 +118,7 @@ function buildGuiFontsDef(project: ProjectProperties) {
 
         let fontItemData = `const uint8_t ${fontItemDataName}[${
             data.length
-        }] PROGMEM = {${projectBuild.dumpData(data)}};`;
+        }] = {${projectBuild.dumpData(data)}};`;
         if (font.screenOrientation != "all") {
             let orientation = font.screenOrientation.toUpperCase();
             fontItemData = `#if DISPLAY_ORIENTATION == DISPLAY_ORIENTATION_${orientation}\n${fontItemData}\n#endif`;
@@ -163,7 +163,7 @@ function buildGuiBitmapsDecl(project: ProjectProperties) {
     return `struct Bitmap {
             uint16_t w;
             uint16_t h;
-            const uint8_t *pixels PROGMEM;
+            const uint8_t *pixels;
         };
 
         extern Bitmap bitmaps[];`.replace(/\n        /g, "\n");
@@ -209,7 +209,7 @@ function buildGuiBitmapsDef(project: ProjectProperties) {
                 bitmapsPixelData.push(
                     `const uint8_t ${bitmapPixelDataName}[${
                         bitmap.pixels.length
-                    }] PROGMEM = {${projectBuild.dumpData(bitmap.pixels)}};`
+                    }] = {${projectBuild.dumpData(bitmap.pixels)}};`
                 );
                 bitmapsArray.push(
                     `${projectBuild.TAB}{ ${bitmap.width}, ${
@@ -534,7 +534,7 @@ function buildGuiStylesDef(project: ProjectProperties) {
 
     return `// STYLES DEFINITION\nconst uint8_t styles[${
         data.length
-    }] PROGMEM = {${projectBuild.dumpData(data)}};`;
+    }] = {${projectBuild.dumpData(data)}};`;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1235,7 +1235,7 @@ function buildGuiDocumentDef(project: ProjectProperties, screenOrientation: stri
 
     return `// DOCUMENT DEFINITION\nconst uint8_t document[${
         data.length
-    }] PROGMEM = {${projectBuild.dumpData(data)}};`;
+    }] = {${projectBuild.dumpData(data)}};`;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
