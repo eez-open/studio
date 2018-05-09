@@ -1,7 +1,5 @@
 import { observable, extendObservable } from "mobx";
 
-import { _each } from "shared/algorithm";
-
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 import { loadObject, objectToJson, ProjectStore } from "project-editor/core/store";
 import { PropertyMetaData, registerMetaData, EezObject } from "project-editor/core/metaData";
@@ -315,69 +313,6 @@ export function getNewProject(): ProjectProperties {
     ) as ProjectProperties;
 }
 
-function migration(project: ProjectProperties) {
-    if (!project.extensionDefinitions) {
-        if (project.idf) {
-            project.extensionDefinitions = project.idf;
-            delete project.idf;
-        } else if (
-            project.settings &&
-            project.settings.build &&
-            project.settings.build.configurations
-        ) {
-            var extensionDefinitions: any[] = [];
-
-            _each(project.settings.build.configurations, configuration => {
-                if (configuration.moduleName) {
-                    extensionDefinitions.push({
-                        name: configuration.name,
-                        description: configuration.description,
-                        image: configuration.image,
-                        extensionName: configuration.moduleName,
-                        idn: configuration.idn,
-
-                        properties: JSON.stringify(
-                            {
-                                ethernetPort: configuration.ethernetPort,
-                                numChannels: configuration.numChannels,
-                                maxVoltage: configuration.maxVoltage,
-                                maxCurrent: configuration.maxCurrent
-                            },
-                            undefined,
-                            2
-                        ),
-
-                        idfName: configuration.idfName,
-                        idfShortName: configuration.idfShortName,
-                        idfFirmwareVersion: configuration.idfFirmwareVersion,
-                        idfGuid: configuration.idfGuid,
-                        idfRevisionNumber: configuration.idfRevisionNumber,
-                        idfDescription: configuration.idfDescription,
-                        idfSupportedModels: configuration.idfSupportedModels,
-                        idfRevisionComments: configuration.idfRevisionComments,
-                        idfAuthor: configuration.idfAuthor,
-
-                        sdlFriendlyName: configuration.sdlFriendlyName
-                    });
-                }
-            });
-
-            if (extensionDefinitions.length > 0) {
-                project.extensionDefinitions = extensionDefinitions;
-            }
-        }
-    }
-
-    project.extensionDefinitions.forEach((extensionDefinition: any) => {
-        if (extensionDefinition.moduleName) {
-            extensionDefinition.extensionName = extensionDefinition.moduleName;
-            delete extensionDefinition.moduleName;
-        }
-    });
-
-    return project;
-}
-
 export async function load(filePath: string) {
     return new Promise<ProjectProperties>((resolve, reject) => {
         fs.readFile(filePath, "utf8", (err: any, data: string) => {
@@ -386,11 +321,9 @@ export async function load(filePath: string) {
             } else {
                 let projectJs = JSON.parse(data);
 
-                let projectJsAfterMigration = migration(projectJs);
-
                 let project = loadObject(
                     undefined,
-                    projectJsAfterMigration,
+                    projectJs,
                     projectMetaData
                 ) as ProjectProperties;
 
