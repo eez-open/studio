@@ -173,6 +173,13 @@ function buildGuiBitmapsDef(project: ProjectProperties) {
     return new Promise<string>((resolve, reject) => {
         let gui = project["gui"] as GuiProperties;
 
+        if (gui.bitmaps.length === 0) {
+            resolve(`Bitmap bitmaps[] = {
+    { 0, 0, NULL }
+};`);
+            return;
+        }
+
         let getBitmapDataPromises: Promise<BitmapData>[] = [];
         for (let i = 0; i < gui.bitmaps.length; ++i) {
             getBitmapDataPromises.push(getBitmapData(gui.bitmaps[i]));
@@ -532,9 +539,9 @@ function buildGuiStylesDef(project: ProjectProperties) {
         // OutputSectionsStore.write(output.Section.OUTPUT, output.Type.ERROR, `"!!!" detected in data, not possible to fix (Arduino Mega bootloader bug).`, project);
     }
 
-    return `// STYLES DEFINITION\nconst uint8_t styles[${
-        data.length
-    }] = {${projectBuild.dumpData(data)}};`;
+    return `// STYLES DEFINITION\nconst uint8_t styles[${data.length}] = {${projectBuild.dumpData(
+        data
+    )}};`;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

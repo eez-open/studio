@@ -50,7 +50,7 @@ function buildActionsFuncsDef(project: ProjectProperties) {
 }
 
 function buildActionsArrayDecl(project: ProjectProperties) {
-    return "typedef void (*ACTION)();\n\nextern ACTION actions[];";
+    return "extern ActionExecFunc g_actionExecFunctions[];";
 }
 
 function buildActionsArrayDef(project: ProjectProperties) {
@@ -65,7 +65,9 @@ function buildActionsArrayDef(project: ProjectProperties) {
             )}`
     );
 
-    return `ACTION actions[] = {\n${projectBuild.TAB}0,\n${actions.join(",\n")}\n};`;
+    return `ActionExecFunc g_actionExecFunctions[] = {\n${projectBuild.TAB}0,\n${actions.join(
+        ",\n"
+    )}\n};`;
 }
 
 export function build(project: ProjectProperties): Promise<BuildResult> {

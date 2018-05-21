@@ -299,8 +299,8 @@ function loadFontUsingOpentypeJS(
                             }
 
                             glyphProperties.glyphBitmap = {
-                                width: glyph.width,
-                                height: glyph.height,
+                                width: glyphProperties.width,
+                                height: glyphProperties.height,
                                 pixelArray: pixelArray
                             };
                         } else {
