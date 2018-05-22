@@ -9,10 +9,11 @@ import { Splitter } from "shared/ui/splitter";
 
 import { findObjectByActivityLogEntry } from "shared/extensions/extensions";
 
-import { appStore, setSearchViewSection } from "instrument/window/app-store";
+import { appStore, toggleFiltersVisible, setSearchViewSection } from "instrument/window/app-store";
 
 import { historySearch, SearchResult } from "instrument/window/history";
 
+import { Filters } from "instrument/window/terminal/filters";
 import { SessionList } from "instrument/window/terminal/session-list";
 import { Calendar } from "instrument/window/terminal/calendar";
 
@@ -96,6 +97,13 @@ export class Search extends React.Component {
     }
 
     @action.bound
+    toggleFilters(event: any) {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleFiltersVisible();
+    }
+
+    @action.bound
     viewCalendar(event: React.MouseEvent<HTMLElement>) {
         event.preventDefault();
         event.stopPropagation();
@@ -137,7 +145,19 @@ export class Search extends React.Component {
 
         return (
             <VerticalHeaderWithBody className="EezStudio_HistorySearch">
-                <Header>{input}</Header>
+                <Header>
+                    {input}
+                    {
+                        <a href="#" onClick={this.toggleFilters}>
+                            <i className="material-icons">
+                                {appStore.filtersVisible
+                                    ? "keyboard_arrow_up"
+                                    : "keyboard_arrow_down"}
+                            </i>{" "}
+                            {appStore.filtersVisible ? "Hide Filters" : "Show Filters"}
+                        </a>
+                    }
+                </Header>
                 <Body>
                     <Splitter
                         type="vertical"
@@ -147,6 +167,7 @@ export class Search extends React.Component {
                         {searchResultsVisible && <SearchResults />}
                         <VerticalHeaderWithBody className="EezStudio_HistorySearch_Sections">
                             <Header>
+                                {appStore.filtersVisible && <Filters />}
                                 <ul className="nav nav-tabs">
                                     <li className="nav-item">
                                         <a

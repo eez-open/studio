@@ -24,6 +24,7 @@ export interface IHistoryItem {
     type: string;
     message: string;
     data: string;
+    deleted: boolean;
     selected: boolean;
 }
 
@@ -37,6 +38,7 @@ export class HistoryItem implements IHistoryItem {
     @observable message: string;
     _data: any;
     @observable selected: boolean;
+    deleted: boolean;
 
     constructor(activityLogEntry: IActivityLogEntry) {
         this.id = activityLogEntry.id;
@@ -50,6 +52,7 @@ export class HistoryItem implements IHistoryItem {
         this.type = activityLogEntry.type;
         this.message = activityLogEntry.message;
         this._data = activityLogEntry.data;
+        this.deleted = activityLogEntry.deleted;
     }
 
     deleteLog() {

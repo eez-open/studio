@@ -167,6 +167,7 @@ export interface IActivityLogEntry {
     type: string;
     message: string;
     data: any;
+    deleted: boolean;
 }
 
 export function log(activityLogEntry: Partial<IActivityLogEntry>, options: IStoreOperationOptions) {
@@ -191,6 +192,13 @@ export function logDelete(
     options: IStoreOperationOptions
 ) {
     activityLogStore.deleteObject(activityLogEntry, options);
+}
+
+export function logUndelete(
+    activityLogEntry: Partial<IActivityLogEntry>,
+    options: IStoreOperationOptions
+) {
+    activityLogStore.undeleteObject(activityLogEntry, options);
 }
 
 export function loadData(id: string) {

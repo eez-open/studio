@@ -171,7 +171,12 @@ export function error(message: string, detail: string | undefined) {
     });
 }
 
-export function confirm(message: string, detail: string | undefined, callback: () => void) {
+export function confirm(
+    message: string,
+    detail: string | undefined,
+    callback: () => void,
+    cancelCallback?: () => void
+) {
     EEZStudio.electron.remote.dialog.showMessageBox(
         EEZStudio.electron.remote.getCurrentWindow(),
         {
@@ -186,6 +191,8 @@ export function confirm(message: string, detail: string | undefined, callback: (
         function(buttonIndex) {
             if (buttonIndex == 0) {
                 callback();
+            } else if (cancelCallback) {
+                cancelCallback();
             }
         }
     );

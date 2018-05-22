@@ -15,11 +15,11 @@ import { appStore } from "instrument/window/app-store";
 
 @observer
 class EditSessionNameDialog extends React.Component<
-{
-    name: string;
-    callback: (name: string) => void;
-},
-{}
+    {
+        name: string;
+        callback: (name: string) => void;
+    },
+    {}
 > {
     constructor(props: any) {
         super(props);
@@ -71,7 +71,7 @@ export class SessionListItem extends React.Component<{ session: ISession }, {}> 
         connectionParameters?: any;
         sessionName: string | undefined;
     } {
-        let message = this.props.session.historyItem.message;
+        let message = this.props.session.activityLogEntry.message;
         if (!message) {
             return {
                 sessionName: undefined
@@ -140,7 +140,7 @@ export class SessionListItem extends React.Component<{ session: ISession }, {}> 
                 onClick={this.onClick}
                 onDoubleClick={this.handleEditSessionName}
             >
-                <td>{formatDateTimeLong(this.props.session.historyItem.date)} </td>
+                <td>{formatDateTimeLong(this.props.session.activityLogEntry.date)} </td>
                 <td>{this.message.sessionName}</td>
                 <td>
                     <IconAction

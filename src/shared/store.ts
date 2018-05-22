@@ -7,7 +7,7 @@ import { _each, _extend, _keys, _map, _pickBy } from "shared/algorithm";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type StoreOperation = "create" | "restore" | "read" | "update" | "delete";
+export type StoreOperation = "create" | "restore" | "read" | "update" | "delete";
 
 interface IStoreObjectsCollection<T> {
     createObject(object: T, op: StoreOperation, options?: IStoreOperationOptions): void;
@@ -686,7 +686,7 @@ export function createStore({
                         }
                     } else if (params.op === "restore") {
                         if (deletedOption !== "only") {
-                            createObject(params.object);
+                            createObject(findById(params.object.id));
                         } else {
                             deleteObject(params.object);
                         }

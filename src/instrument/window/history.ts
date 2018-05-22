@@ -1,4 +1,4 @@
-import { observable, computed, runInAction, action } from "mobx";
+import { observable, computed, runInAction, action, reaction } from "mobx";
 import { bind } from "bind-decorator";
 
 import { formatDate } from "shared/util";
@@ -8,6 +8,7 @@ import {
     activityLogStore,
     IActivityLogFilterSpecification
 } from "shared/activity-log";
+import { StoreOperation } from "shared/store";
 import { scheduleTask, Priority } from "shared/scheduler";
 
 import * as notification from "shared/ui/notification";
@@ -76,42 +77,223 @@ export function getHistoryItemById(id: string) {
     return undefined;
 }
 
-function pushActivityLogEntry(activityLogEntry: IActivityLogEntry) {
-    if (historyItemMap.get(activityLogEntry.id)) {
-        return;
+function filterActivityLogEntry(activityLogEntry: IActivityLogEntry) {
+    if (appStore.filters.deleted) {
+        if (!activityLogEntry.deleted) {
+            return false;
+        }
+    } else {
+        if (activityLogEntry.deleted) {
+            return false;
+        }
     }
 
-    const historyItem = createHistoryItem(activityLogEntry);
+    if (appStore.filters.connectsAndDisconnects) {
+        if (
+            [
+                "instrument/created",
+                "instrument/connected",
+                "instrument/connect-failed",
+                "instrument/disconnected"
+            ].indexOf(activityLogEntry.type) !== -1
+        ) {
+            return true;
+        }
+    }
 
-    historyItemMap.set(historyItem.id, historyItem);
+    if (appStore.filters.scpi) {
+        if (["instrument/request", "instrument/answer"].indexOf(activityLogEntry.type) !== -1) {
+            return true;
+        }
+    }
 
+    if (appStore.filters.files) {
+        if (activityLogEntry.type === "instrument/file") {
+            return true;
+        }
+    }
+
+    if (appStore.filters.charts) {
+        if (activityLogEntry.type === "instrument/chart") {
+            return true;
+        }
+    }
+
+    if (appStore.filters.lists) {
+        if (activityLogEntry.type === "instrument/list") {
+            return true;
+        }
+    }
+
+    if (appStore.filters.notes) {
+        if (activityLogEntry.type === "activity-log/note") {
+            return true;
+        }
+    }
+
+    if (appStore.filters.launchedScripts) {
+        if (activityLogEntry.type === "instrument/script") {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function getFilter() {
+    const filters: string[] = [];
+
+    if (appStore.filters.deleted) {
+        filters.push("deleted");
+    } else {
+        filters.push("NOT deleted");
+    }
+
+    const types: string[] = [];
+
+    if (appStore.filters.connectsAndDisconnects) {
+        types.push(
+            "instrument/created",
+            "instrument/connected",
+            "instrument/connect-failed",
+            "instrument/disconnected"
+        );
+    }
+
+    if (appStore.filters.scpi) {
+        types.push("instrument/request", "instrument/answer");
+    }
+
+    if (appStore.filters.files) {
+        types.push("instrument/file");
+    }
+
+    if (appStore.filters.charts) {
+        types.push("instrument/chart");
+    }
+
+    if (appStore.filters.lists) {
+        types.push("instrument/list");
+    }
+
+    if (appStore.filters.notes) {
+        types.push("activity-log/note");
+    }
+
+    if (appStore.filters.launchedScripts) {
+        types.push("instrument/script");
+    }
+
+    if (types.length > 0) {
+        filters.push("(" + types.map(type => `type == "${type}"`).join(" OR ") + ")");
+    } else {
+        filters.push("0");
+    }
+
+    return "AND " + filters.join(" AND ");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function pushActivityLogEntry(activityLogEntry: IActivityLogEntry, op: StoreOperation) {
     if (activityLogEntry.type === "instrument/connected") {
-        historySessions.sessions.push({
+        let i;
+        for (i = 0; i < historySessions.sessions.length; ++i) {
+            if (activityLogEntry.date < historySessions.sessions[i].activityLogEntry.date) {
+                break;
+            }
+        }
+        historySessions.sessions.splice(i, 0, {
             selected: false,
-            id: historyItem.id,
-            historyItem
+            id: activityLogEntry.id,
+            activityLogEntry
         });
     }
 
+    if (!filterActivityLogEntry(activityLogEntry)) {
+        removeHistoryItemFromBlocks(activityLogEntry);
+        return;
+    }
+
+    // add to map of all history items
+    if (historyItemMap.get(activityLogEntry.id)) {
+        return;
+    }
+    const historyItem = createHistoryItem(activityLogEntry);
+    historyItemMap.set(historyItem.id, historyItem);
+
+    // increment day counter in calandar
     let day = new Date(
         historyItem.date.getFullYear(),
         historyItem.date.getMonth(),
         historyItem.date.getDate()
     );
-
     historyCalendar.incrementCounter(day);
 
-    if (historyNavigator.hasNewer) {
-        historyCalendar.showRecent();
-    } else {
-        if (historyItemBlocks[historyItemBlocks.length - 1].length < CONF_BLOCK_SIZE) {
-            historyItemBlocks[historyItemBlocks.length - 1].push(historyItem);
-        } else {
-            historyItemBlocks.push([historyItem]);
+    if (op === "restore") {
+        // this item was restored from undo buffer,
+        // find the block (according to datetime) to which it should be added
+        let i;
+        for (i = 0; i < historyItemBlocks.length; ++i) {
+            const historyItemBlock = historyItemBlocks[i];
+            if (
+                historyItemBlock.length > 0 &&
+                (historyItem.date < historyItemBlock[0].date ||
+                    (historyItem.date === historyItemBlock[0].date &&
+                        historyItem.id < historyItemBlock[0].id))
+            ) {
+                break;
+            }
         }
-    }
 
-    moveToBottomOfConnectionHistory();
+        if (i == 0) {
+            // add at the beginning
+            if (historyItemBlocks.length === 0) {
+                historyItemBlocks.push([historyItem]);
+            } else {
+                historyItemBlocks[0].unshift(historyItem);
+            }
+        } else {
+            // add inside existing block
+            const historyItemBlock = historyItemBlocks[i - 1];
+            let j;
+            for (j = 0; j < historyItemBlock.length; ++j) {
+                if (
+                    historyItemBlock.length > 0 &&
+                    (historyItem.date < historyItemBlock[j].date ||
+                        (historyItem.date === historyItemBlock[j].date &&
+                            historyItem.id < historyItemBlock[j].id))
+                ) {
+                    break;
+                }
+            }
+
+            if (j == 0) {
+                // add to the front of the block
+                historyItemBlock.unshift(historyItem);
+            } else if (j == historyItemBlock.length) {
+                // add to the back of the block
+                historyItemBlock.push(historyItem);
+            } else {
+                // add inside block
+                historyItemBlock.splice(j, 0, historyItem);
+            }
+        }
+    } else {
+        // This is a new history item,
+        // add it to the bottom of history list (last block) ...
+        if (historyNavigator.hasNewer) {
+            historyCalendar.showRecent();
+        } else {
+            if (historyItemBlocks[historyItemBlocks.length - 1].length < CONF_BLOCK_SIZE) {
+                historyItemBlocks[historyItemBlocks.length - 1].push(historyItem);
+            } else {
+                historyItemBlocks.push([historyItem]);
+            }
+        }
+        // ... and scroll to the bottom of history list.
+        moveToBottomOfConnectionHistory();
+    }
 }
 
 function updateHistoryItem(activityLogEntry: IActivityLogEntry) {
@@ -143,6 +325,18 @@ function updateHistoryItem(activityLogEntry: IActivityLogEntry) {
 }
 
 function removeHistoryItem(activityLogEntry: IActivityLogEntry) {
+    // remove sesssion if found in historySessions list
+    for (let i = 0; i < historySessions.sessions.length; ++i) {
+        if (historySessions.sessions[i].id === activityLogEntry.id) {
+            historySessions.sessions.splice(i, 1);
+            break;
+        }
+    }
+
+    removeHistoryItemFromBlocks(activityLogEntry);
+}
+
+function removeHistoryItemFromBlocks(activityLogEntry: IActivityLogEntry) {
     const foundItem = findHistoryItemById(activityLogEntry.id);
     if (foundItem) {
         foundItem.block.splice(foundItem.index, 1);
@@ -189,7 +383,12 @@ class HistoryCalendar {
     @observable counters = new Map<string, number>();
     @observable showFirstHistoryItemAsSelectedDay: boolean = false;
 
+    @action
     load() {
+        this.minDate = new Date();
+        this.maxDate = new Date();
+        this.counters = new Map<string, number>();
+
         try {
             const rows = db
                 .prepare(
@@ -202,7 +401,7 @@ class HistoryCalendar {
                         FROM
                             activityLog
                         WHERE
-                            oid=?
+                            oid=? ${getFilter()}
                     )
                     GROUP BY
                         date
@@ -244,7 +443,7 @@ class HistoryCalendar {
                             FROM
                                 activityLog
                             WHERE
-                                oid=? AND date >= ?
+                                oid=? AND date >= ? ${getFilter()}
                             ORDER BY
                                 date
                         )
@@ -267,7 +466,7 @@ class HistoryCalendar {
                     FROM
                         activityLog
                     WHERE
-                        oid=?
+                        oid=? ${getFilter()}
                     ORDER BY
                         date DESC
                     LIMIT ?`
@@ -360,6 +559,11 @@ class HistorySearch {
     searchLoopTimeout: any;
     @observable selectedSearchResult: SearchResult | undefined;
 
+    update() {
+        this.search("");
+    }
+
+    @action
     search(searchText: string) {
         this.stopSearch();
 
@@ -407,7 +611,7 @@ class HistorySearch {
                 WHERE
                     oid=? AND
                     date > ? AND
-                    message LIKE ?
+                    message LIKE ? ${getFilter()}
                 ORDER BY
                     date
                 LIMIT
@@ -479,7 +683,7 @@ class HistorySearch {
                                 id,
                                 ${activityLogStore.nonTransientAndNonLazyProperties}
                             FROM (
-                                SELECT * FROM activityLog WHERE oid=? ORDER BY date
+                                SELECT * FROM activityLog WHERE oid=? ${getFilter()} ORDER BY date
                             )
                             WHERE
                                 date >= ?
@@ -493,7 +697,7 @@ class HistorySearch {
                                 id,
                                 ${activityLogStore.nonTransientAndNonLazyProperties}
                             FROM (
-                                SELECT * FROM activityLog WHERE oid=? ORDER BY date DESC
+                                SELECT * FROM activityLog WHERE oid=? ${getFilter()} ORDER BY date DESC
                             )
                             WHERE
                                 date < ?
@@ -541,7 +745,7 @@ class HistoryNavigator {
                     FROM
                         activityLog
                     WHERE
-                        oid=? AND date < ?`
+                        oid=? AND date < ? ${getFilter()}`
                 )
                 .get(appStore.instrument!.id, firstHistoryItem.date.getTime());
 
@@ -559,7 +763,7 @@ class HistoryNavigator {
                     FROM
                         activityLog
                     WHERE
-                        oid=? AND date > ?`
+                        oid=? AND date > ? ${getFilter()}`
                 )
                 .get(appStore.instrument!.id, lastHistoryItem.date.getTime());
 
@@ -605,7 +809,7 @@ class HistoryNavigator {
                             FROM
                                 activityLog
                             WHERE
-                                oid=? AND date < ?
+                                oid=? AND date < ? ${getFilter()}
                             ORDER BY
                                 date DESC
                         )
@@ -639,7 +843,7 @@ class HistoryNavigator {
                             FROM
                                 activityLog
                             WHERE
-                                oid=? AND date > ?
+                                oid=? AND date > ? ${getFilter()}
                             ORDER BY
                                 date
                         )
@@ -660,10 +864,29 @@ export const historyNavigator = new HistoryNavigator();
 
 ////////////////////////////////////////////////////////////////////////////////
 
+let reactionTimeout: any;
+
+reaction(
+    () => getFilter(),
+    filter => {
+        if (reactionTimeout) {
+            clearTimeout(reactionTimeout);
+        }
+        reactionTimeout = setTimeout(() => {
+            reactionTimeout = undefined;
+            historyCalendar.load();
+            historyCalendar.update();
+            historySearch.update();
+        }, 10);
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export interface ISession {
     selected: boolean;
     id: string;
-    historyItem: IHistoryItem;
+    activityLogEntry: IActivityLogEntry;
 }
 
 class HistorySessions {
@@ -683,10 +906,10 @@ class HistorySessions {
                     oid=? AND type = "instrument/connected"`
             )
             .all(appStore.instrument!.id);
-        this.sessions = rowsToHistoryItems(rows).map(historyItem => ({
+        this.sessions = rowsToHistoryItems(rows).map(activityLogEntry => ({
             selected: false,
-            id: historyItem.id,
-            historyItem
+            id: activityLogEntry.id,
+            activityLogEntry
         }));
     }
 
@@ -713,7 +936,7 @@ class HistorySessions {
                             FROM
                                 activityLog
                             WHERE
-                                oid=? AND date >= ?
+                                oid=? AND date >= ? ${getFilter()}
                             ORDER BY
                                 date
                         )
@@ -721,7 +944,7 @@ class HistorySessions {
                 )
                 .all(
                     appStore.instrument!.id,
-                    selectedSession.historyItem.date.getTime(),
+                    selectedSession.activityLogEntry.date.getTime(),
                     CONF_BLOCK_SIZE
                 );
 
@@ -739,8 +962,8 @@ export const historySessions = new HistorySessions();
 scheduleTask("Watch activity log", Priority.Middle, () => {
     activityLogStore.watch(
         {
-            createObject(object: any) {
-                runInAction(() => pushActivityLogEntry(object));
+            createObject(object: any, op: StoreOperation) {
+                runInAction(() => pushActivityLogEntry(object, op));
             },
             updateObject(changes: any) {
                 updateHistoryItem(changes);

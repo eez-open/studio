@@ -213,10 +213,13 @@
 
 .EezStudio_HistoryItemContainer {
     margin-bottom: 5px;
-    padding: 2px;
-    border: 2px solid transparent;
-    &.selected {
-        border: 2px solid @selection-background-color;
+
+    & > input {
+        float: left;
+        margin-top: 3px;
+        margin-right: 5px;
+        width: 15px;
+        height: 15px;
     }
 }
 
@@ -237,18 +240,6 @@
     .EezStudio_HistoryItemText * {
         user-select: auto;
         -webkit-user-select: auto;
-    }
-
-    .EezStudio_HistoryItem_Checkbox {
-        padding: 10px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        input {
-            width: 18px;
-            height: 18px;
-        }
     }
 
     &.EezStudio_HistoryItem_Request {
@@ -591,6 +582,13 @@
 .EezStudio_HistorySearch {
     & > .EezStudio_Header {
         border-bottom: 1px solid @border-color;
+
+        display: flex;
+
+        a {
+            padding: 0 4px;
+            white-space: nowrap;
+        }
     }
 }
 
@@ -604,6 +602,12 @@
     & > .EezStudio_Body {
         padding: 0;
     }
+}
+
+.EezStudio_HistroyFilters {
+    border-bottom: 1px solid @border-color;
+    margin-bottom: 5px;
+    padding: 10px;
 }
 
 .EezStudio_HistoryCalendar {

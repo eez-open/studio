@@ -323,7 +323,12 @@ export class Terminal extends React.Component<{ instrument: InstrumentObject }, 
                                                         appStore.selectHistoryItemsSpecification
                                                             .okButtonTitle
                                                     }
-                                                    className="btn-primary"
+                                                    className={
+                                                        appStore.selectHistoryItemsSpecification
+                                                            .alertDanger
+                                                            ? "btn-danger"
+                                                            : "btn-primary"
+                                                    }
                                                     onClick={this.onSelectHistoryItemsOk}
                                                 />
                                             )}

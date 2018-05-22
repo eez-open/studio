@@ -11,7 +11,7 @@ import { ListContainer, List, IListNode } from "shared/ui/list";
 
 @observer
 export class PropertyEnclosure extends React.Component<
-    { advanced: boolean; errors?: string[] },
+    { advanced: boolean; errors?: string[]; style?: React.CSSProperties },
     {}
 > {
     render() {
@@ -20,7 +20,7 @@ export class PropertyEnclosure extends React.Component<
         });
 
         let result = (
-            <tr key="property" className={className}>
+            <tr key="property" className={className} style={this.props.style}>
                 {this.props.children}
             </tr>
         );
@@ -436,12 +436,13 @@ export class BooleanProperty extends React.Component<
         value: boolean;
         onChange: (value: boolean) => void;
         advanced?: boolean;
+        style?: React.CSSProperties;
     },
     {}
 > {
     render() {
         return (
-            <PropertyEnclosure advanced={this.props.advanced || false}>
+            <PropertyEnclosure advanced={this.props.advanced || false} style={this.props.style}>
                 <td colSpan={2}>
                     <div className="form-check">
                         <label className="form-check-label">

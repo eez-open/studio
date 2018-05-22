@@ -5,7 +5,9 @@ import { bind } from "bind-decorator";
 
 import { readBinaryFile } from "shared/util";
 import { beginTransaction, commitTransaction } from "shared/store";
-import { log } from "shared/activity-log";
+import { log, logDelete, logUndelete } from "shared/activity-log";
+
+import { confirm } from "shared/ui/dialog";
 import { IconAction } from "shared/ui/action";
 
 import { InstrumentObject } from "instrument/instrument-object";
@@ -17,6 +19,104 @@ import { detectFileType } from "instrument/connection/file-type";
 
 @observer
 export class TerminalToolbarButtons extends React.Component<{ instrument: InstrumentObject }, {}> {
+    @bind
+    deleteHistoryItems() {
+        selectHistoryItems({
+            historyItemType: "all",
+            message: "Select one or more history items",
+            alertDanger: true,
+            okButtonText: "Delete",
+            okButtonTitle: "Delete",
+            onOk: () => {
+                beginTransaction("Delete history items");
+
+                keys(appStore.selectedHistoryItems).forEach(id => {
+                    logDelete(
+                        {
+                            oid: this.props.instrument.id,
+                            id
+                        },
+                        {
+                            undoable: true
+                        }
+                    );
+                });
+
+                commitTransaction();
+
+                selectHistoryItems(undefined);
+            }
+        });
+    }
+
+    @bind
+    restoreHistoryItems() {
+        selectHistoryItems({
+            historyItemType: "all",
+            message: "Select one or more history items",
+            okButtonText: "Restore",
+            okButtonTitle: "Restore",
+            onOk: () => {
+                beginTransaction("Restore history items");
+
+                keys(appStore.selectedHistoryItems).forEach(id => {
+                    logUndelete(
+                        {
+                            oid: this.props.instrument.id,
+                            id
+                        },
+                        {
+                            undoable: true
+                        }
+                    );
+                });
+
+                commitTransaction();
+
+                selectHistoryItems(undefined);
+            }
+        });
+    }
+
+    @bind
+    purgeHistoryItems() {
+        selectHistoryItems({
+            historyItemType: "all",
+            message: "Select one or more history items",
+            alertDanger: true,
+            okButtonText: "Purge",
+            okButtonTitle: "Purge",
+            onOk: () => {
+                confirm(
+                    "Are you sure?",
+                    "This will permanently delete selected history items.",
+                    () => {
+                        beginTransaction("Purge history items");
+
+                        keys(appStore.selectedHistoryItems).forEach(id => {
+                            logDelete(
+                                {
+                                    oid: this.props.instrument.id,
+                                    id
+                                },
+                                {
+                                    undoable: false
+                                }
+                            );
+                        });
+
+                        commitTransaction();
+
+                        selectHistoryItems(undefined);
+                    },
+                    () => {
+                        selectHistoryItems(undefined);
+                    }
+                );
+            }
+        });
+    }
+
     @bind
     addNote() {
         showAddNoteDialog(note => {
@@ -34,46 +134,6 @@ export class TerminalToolbarButtons extends React.Component<{ instrument: Instru
             commitTransaction();
         });
     }
-
-    // @bind
-    // addBigList() {
-    //     const N = 1200000;
-    //     const data = Buffer.allocUnsafe(N * 4);
-    //     let u = 20;
-    //     for (let i = 0; i < N; ++i) {
-    //         u += (Math.random() - 0.5) * 2;
-    //         if (u < 0) {
-    //             u = 0;
-    //         }
-    //         if (u > 40) {
-    //             u = 40;
-    //         }
-    //         data.writeFloatLE(u, i * 4);
-    //     }
-
-    //     beginTransaction("Add big list");
-    //     log(
-    //         {
-    //             oid: appStore.instrument.id,
-    //             type: "instrument/file",
-    //             message: JSON.stringify({
-    //                 direction: "upload",
-    //                 state: "success",
-    //                 fileType: {
-    //                     ext: "raw",
-    //                     mime: "application/eez-binary-list"
-    //                 },
-    //                 dataLength: data.length
-    //             }),
-    //             data: data as any
-    //         },
-    //         {
-    //             undoable: true
-    //         }
-    //     );
-    //     commitTransaction();
-
-    // }
 
     @bind
     attachFile() {
@@ -169,14 +229,33 @@ export class TerminalToolbarButtons extends React.Component<{ instrument: Instru
                 />
             );
 
-            // actions.push(
-            //     <IconAction
-            //         key="addBigList"
-            //         icon="material:timeline"
-            //         title="Add big list"
-            //         onClick={this.addBigList}
-            //     />
-            // );
+            if (appStore.filters.deleted) {
+                actions.push(
+                    <IconAction
+                        key="restore"
+                        icon="material:restore"
+                        title="Restore one or more deleted history items"
+                        style={{ marginLeft: 20 }}
+                        onClick={this.restoreHistoryItems}
+                    />,
+                    <IconAction
+                        key="purge"
+                        icon="material:delete_forever"
+                        title="Purge one or more deleted history items"
+                        onClick={this.purgeHistoryItems}
+                    />
+                );
+            } else {
+                actions.push(
+                    <IconAction
+                        key="delete"
+                        icon="material:delete"
+                        title="Delete one or more history items"
+                        style={{ marginLeft: 20 }}
+                        onClick={this.deleteHistoryItems}
+                    />
+                );
+            }
         }
 
         actions.push(

@@ -503,8 +503,6 @@ export class FileHistoryItemComponent extends React.Component<
     }
 
     render() {
-        let showCheckbox = false;
-
         let body;
         if (
             !this.props.historyItem.state ||
@@ -579,12 +577,6 @@ export class FileHistoryItemComponent extends React.Component<
                         this.props.historyItem instanceof DlogWaveform
                     ) {
                         preview = <ChartPreview data={this.props.historyItem} />;
-                        if (
-                            appStore.selectHistoryItemsSpecification &&
-                            appStore.selectHistoryItemsSpecification.historyItemType === "chart"
-                        ) {
-                            showCheckbox = true;
-                        }
                     }
                 }
 
@@ -657,8 +649,8 @@ export class FileHistoryItemComponent extends React.Component<
                         {this.props.historyItem.description}
                     </div>
                     {preview}
-                    {!showCheckbox && actions}
-                    {!showCheckbox && note}
+                    {actions}
+                    {note}
                 </div>
             );
         } else {
@@ -671,31 +663,15 @@ export class FileHistoryItemComponent extends React.Component<
                     ref={ref => (this.element = ref)}
                     className="EezStudio_HistoryItem EezStudio_HistoryItem_File"
                 >
-                    {!showCheckbox && (
-                        <Icon
-                            className="mr-3"
-                            icon={
-                                this.props.historyItem.direction === "download"
-                                    ? "material:file_upload"
-                                    : "material:file_download"
-                            }
-                            size={48}
-                        />
-                    )}
-                    {showCheckbox && (
-                        <div className="EezStudio_HistoryItem_Checkbox">
-                            <input
-                                type="checkbox"
-                                checked={isHistoryItemSelected(this.props.historyItem.id)}
-                                onChange={event =>
-                                    selectHistoryItem(
-                                        this.props.historyItem.id,
-                                        event.target.checked
-                                    )
-                                }
-                            />
-                        </div>
-                    )}
+                    <Icon
+                        className="mr-3"
+                        icon={
+                            this.props.historyItem.direction === "download"
+                                ? "material:file_upload"
+                                : "material:file_download"
+                        }
+                        size={48}
+                    />
                     <div>
                         <p>
                             <small className="EezStudio_HistoryItemDate text-muted">
@@ -969,17 +945,21 @@ function getTime(date: Date | string | number) {
 @observer
 export class HistoryItems extends React.Component<{ historyItems: IHistoryItem[] }> {
     render() {
-        let lastAnswerHistoryItem: IHistoryItem | undefined;
+        let answerHistoryItems: IHistoryItem[] = [];
         let historyItemElements: JSX.Element[] = [];
 
         function historyItemsPush(historyItem: IHistoryItem, element: JSX.Element) {
-            if (historyItem.type !== "instrument/created") {
-                if (appStore.selectHistoryItemsSpecification) {
-                    if (appStore.selectHistoryItemsSpecification.historyItemType === "chart") {
-                        if (!(historyItem instanceof Waveform)) {
-                            element = <div />;
-                        }
+            let showCheckbox = false;
+
+            if (appStore.selectHistoryItemsSpecification) {
+                if (appStore.selectHistoryItemsSpecification.historyItemType === "chart") {
+                    if (historyItem instanceof Waveform) {
+                        showCheckbox = true;
+                    } else {
+                        element = <div />;
                     }
+                } else {
+                    showCheckbox = true;
                 }
             }
 
@@ -991,37 +971,56 @@ export class HistoryItems extends React.Component<{ historyItems: IHistoryItem[]
                 }
             );
 
+            let ids: string[];
+            if (showCheckbox) {
+                if (historyItem.type === "instrument/answer") {
+                    ids = answerHistoryItems.map(historyItem => historyItem.id);
+                } else {
+                    ids = [historyItem.id];
+                }
+            }
+
             historyItemElements.push(
                 <div key={historyItem.id} className={className}>
+                    {showCheckbox && (
+                        <input
+                            type="checkbox"
+                            checked={isHistoryItemSelected(historyItem.id)}
+                            onChange={event => {
+                                ids.forEach(id => selectHistoryItem(id, event.target.checked));
+                            }}
+                        />
+                    )}
                     {element}
                 </div>
             );
         }
 
         function flushAnswer() {
-            if (lastAnswerHistoryItem) {
-                if (lastAnswerHistoryItem.message.trim().length > 0) {
-                    historyItemsPush(
-                        lastAnswerHistoryItem,
-                        <AnswerHistoryItem historyItem={lastAnswerHistoryItem} />
-                    );
+            if (answerHistoryItems.length > 0) {
+                const historyItem = { ...answerHistoryItems[0] };
+
+                for (let i = 1; i < answerHistoryItems.length; ++i) {
+                    historyItem.message += answerHistoryItems[i].message;
                 }
-                lastAnswerHistoryItem = undefined;
+
+                if (historyItem.message.trim().length > 0) {
+                    historyItemsPush(historyItem, <AnswerHistoryItem historyItem={historyItem} />);
+                }
+                answerHistoryItems = [];
             }
         }
 
         this.props.historyItems.forEach(historyItem => {
             if (historyItem.type === "instrument/answer") {
                 if (
-                    lastAnswerHistoryItem &&
-                    getTime(historyItem.date) - getTime(lastAnswerHistoryItem.date) <
+                    answerHistoryItems.length > 0 &&
+                    getTime(historyItem.date) - getTime(answerHistoryItems[0].date) >=
                         CONF_COMBINE_IF_BELOW_MS
                 ) {
-                    lastAnswerHistoryItem.message += historyItem.message;
-                } else {
                     flushAnswer();
-                    lastAnswerHistoryItem = { ...historyItem };
                 }
+                answerHistoryItems.push(historyItem);
             } else {
                 flushAnswer();
 
@@ -1085,6 +1084,14 @@ export class History extends React.Component<{}, {}> {
     componentDidMount() {
         this.autoScroll();
         this.div.addEventListener("scroll", this.onScroll);
+    }
+
+    componentDidUpdate() {
+        // make sure scroll bar is recalculated after render
+        $(this.div).css("overflow", "hidden");
+        setTimeout(() => {
+            $(this.div).css("overflow", "auto");
+        }, 1);
     }
 
     componentWillUnmount() {
@@ -1157,6 +1164,10 @@ export class History extends React.Component<{}, {}> {
     }
 
     render() {
+        let className = classNames("EezStudio_History", {
+            EezStudio_HistoryItemContainer_WithSelectableItems: !!appStore.selectHistoryItemsSpecification
+        });
+
         return (
             <div
                 ref={(ref: any) => {
@@ -1165,7 +1176,7 @@ export class History extends React.Component<{}, {}> {
                         this.div = div.parentElement;
                     }
                 }}
-                className="EezStudio_History"
+                className={className}
             >
                 {historyNavigator.hasOlder && (
                     <button
