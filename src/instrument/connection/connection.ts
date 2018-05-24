@@ -6,7 +6,6 @@ import { registerSource, unregisterSource, sendMessage, watch } from "shared/not
 import { isRenderer } from "shared/util";
 
 import { InstrumentObject } from "instrument/instrument-object";
-import { CONF_COMBINE_IF_BELOW_MS } from "instrument/conf";
 import { EthernetInterface } from "instrument/connection/interfaces/ethernet";
 import { SerialInterface } from "instrument/connection/interfaces/serial";
 import {
@@ -15,15 +14,15 @@ import {
     ConnectionErrorCode,
     ConnectionParameters
 } from "instrument/connection/interface";
-import { FileUpload } from "instrument/connection/file-upload";
-import { IFileDownloadInstructions, FileDownload } from "instrument/connection/file-download";
+import { FileDownload } from "instrument/connection/file-download";
+import { IFileUploadInstructions, FileUpload } from "instrument/connection/file-upload";
 import { parseScpiValue } from "instrument/scpi";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_HOUSEKEEPING_INTERVAL = 100;
-
 const CONF_IDN_EXPECTED_TIMEOUT = 1000;
+const CONF_COMBINE_IF_BELOW_MS = 250;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,7 +70,7 @@ abstract class ConnectionBase {
     abstract disconnect(): void;
     abstract destroy(): void;
     abstract send(command: string): void;
-    abstract download(instructions: IFileDownloadInstructions): void;
+    abstract upload(instructions: IFileUploadInstructions): void;
     abstract abortLongOperation(): void;
 
     abstract acquire(callbackWindowId: number, traceEnabled: boolean): string | null;
@@ -240,7 +239,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     }
 
     logAnswer(data: string) {
-        if (this.traceEnabled) {
+        if (this.traceEnabled && data.trim().length > 0) {
             log(
                 {
                     oid: this.instrument.id,
@@ -321,7 +320,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         if (this.longOperation) {
             this.longOperation.onData(data);
         } else if (this.data === undefined && data.startsWith("#")) {
-            this.longOperation = new FileUpload(this, data);
+            this.longOperation = new FileDownload(this, data);
         }
 
         if (this.longOperation) {
@@ -381,8 +380,8 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         if (!options || !options.longOperation) {
             if (this.longOperation) {
                 if (
-                    this.longOperation instanceof FileUpload ||
-                    this.longOperation instanceof FileDownload
+                    this.longOperation instanceof FileDownload ||
+                    this.longOperation instanceof FileUpload
                 ) {
                     this.logAnswer("**ERROR: file transfer in progress\n");
                 } else {
@@ -425,8 +424,8 @@ export class Connection extends ConnectionBase implements CommunicationInterface
 
         if (this.longOperation) {
             if (
-                this.longOperation instanceof FileUpload ||
-                this.longOperation instanceof FileDownload
+                this.longOperation instanceof FileDownload ||
+                this.longOperation instanceof FileUpload
             ) {
                 throw "file transfer in progress";
             } else {
@@ -437,9 +436,9 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         this.longOperation = createLongOperation();
     }
 
-    download(instructions: IFileDownloadInstructions) {
+    upload(instructions: IFileUploadInstructions) {
         try {
-            this.startLongOperation(() => new FileDownload(this, instructions));
+            this.startLongOperation(() => new FileUpload(this, instructions));
         } catch (err) {
             this.logAnswer(`**ERROR: ${err}\n`);
         }
@@ -572,8 +571,8 @@ export class IpcConnection extends ConnectionBase {
         });
     }
 
-    download(instructions: IFileDownloadInstructions) {
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/download", {
+    upload(instructions: IFileUploadInstructions) {
+        EEZStudio.electron.ipcRenderer.send("instrument/connection/upload", {
             instrumentId: this.instrument.id,
             instructions
         });
@@ -656,17 +655,17 @@ export function setupIpcServer() {
         }
     });
 
-    ipcMain.on("instrument/connection/download", function(
+    ipcMain.on("instrument/connection/upload", function(
         event: any,
         arg: {
             instrumentId: string;
-            instructions: IFileDownloadInstructions;
+            instructions: IFileUploadInstructions;
         }
     ) {
         let connection = connections.get(arg.instrumentId);
         if (connection) {
-            connection.instrument.setLastFileDownloadInstructions(arg.instructions);
-            connection.download(arg.instructions);
+            connection.instrument.setLastFileUploadInstructions(arg.instructions);
+            connection.upload(arg.instructions);
         }
     });
 

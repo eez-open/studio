@@ -170,7 +170,7 @@ ipcMain.on("closeWindow", function(event: any, params: any) {
 ipcMain.on("getWindowArgs", (event: any) => {
     var window = findWindowByWebContents(event.sender);
     if (window) {
-        event.returnValue = window.args;
+        event.returnValue = window.args || null;
     } else {
         event.returnValue = undefined;
     }

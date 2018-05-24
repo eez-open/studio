@@ -9,7 +9,7 @@ import { Splitter } from "shared/ui/splitter";
 
 import { findObjectByActivityLogEntry } from "shared/extensions/extensions";
 
-import { appStore, toggleFiltersVisible, setSearchViewSection } from "instrument/window/app-store";
+import { appStore } from "instrument/window/app-store";
 
 import { historySearch, SearchResult } from "instrument/window/history";
 
@@ -100,21 +100,21 @@ export class Search extends React.Component {
     toggleFilters(event: any) {
         event.preventDefault();
         event.stopPropagation();
-        toggleFiltersVisible();
+        appStore.toggleFiltersVisible();
     }
 
     @action.bound
     viewCalendar(event: React.MouseEvent<HTMLElement>) {
         event.preventDefault();
         event.stopPropagation();
-        setSearchViewSection("calendar");
+        appStore.setSearchViewSection("calendar");
     }
 
     @action.bound
     viewSessions(event: React.MouseEvent<HTMLElement>) {
         event.preventDefault();
         event.stopPropagation();
-        setSearchViewSection("sessions");
+        appStore.setSearchViewSection("sessions");
     }
 
     render() {
@@ -147,7 +147,7 @@ export class Search extends React.Component {
             <VerticalHeaderWithBody className="EezStudio_HistorySearch">
                 <Header>
                     {input}
-                    {
+                    {!appStore.filters.deleted && (
                         <a href="#" onClick={this.toggleFilters}>
                             <i className="material-icons">
                                 {appStore.filtersVisible
@@ -156,7 +156,7 @@ export class Search extends React.Component {
                             </i>{" "}
                             {appStore.filtersVisible ? "Hide Filters" : "Show Filters"}
                         </a>
-                    }
+                    )}
                 </Header>
                 <Body>
                     <Splitter

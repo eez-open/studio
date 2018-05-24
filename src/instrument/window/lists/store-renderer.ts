@@ -1,7 +1,7 @@
 import { observable, action, runInAction, values } from "mobx";
 
 import { capitalize } from "shared/string";
-import { IUnit, VOLTAGE_UNIT, CURRENT_UNIT } from "shared/units";
+import { IUnit, VOLTAGE_UNIT, CURRENT_UNIT, POWER_UNIT } from "shared/units";
 import { scheduleTask, Priority } from "shared/scheduler";
 
 import {
@@ -18,8 +18,92 @@ import { appStore } from "instrument/window/app-store";
 import { undoManager } from "instrument/window/undo";
 
 import { instrumentListStore } from "instrument/window/lists/store";
-import { getMaxVoltage, getMaxCurrent } from "instrument/window/lists/lists";
 import { ChartsDisplayOption } from "instrument/window/lists/charts-view-options";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const CONF_MAX_VOLTAGE = 40;
+const CONF_MAX_CURRENT = 5;
+
+function getFirstChannel() {
+    return appStore.instrument && appStore.instrument.getFirstChannel();
+}
+
+export function getMaxVoltage(): number {
+    let maxVoltage;
+    const channel = getFirstChannel();
+    if (channel) {
+        maxVoltage = channel.maxVoltage;
+    }
+    return maxVoltage || CONF_MAX_VOLTAGE;
+}
+
+export function getMaxCurrent(): number {
+    let maxCurrent;
+    const channel = getFirstChannel();
+    if (channel) {
+        maxCurrent = channel.maxCurrent;
+    }
+    return maxCurrent || CONF_MAX_CURRENT;
+}
+
+export function getMaxPower(): number {
+    let maxPower;
+    const channel = getFirstChannel();
+    if (channel) {
+        maxPower = channel.maxPower;
+    }
+    return maxPower || CONF_MAX_VOLTAGE * CONF_MAX_CURRENT;
+}
+
+export function getPowerLimitErrorMessage() {
+    return `Power limit of ${POWER_UNIT.formatValue(
+        getMaxPower(),
+        Math.max(
+            appStore.instrument!.getDigits(VOLTAGE_UNIT),
+            appStore.instrument!.getDigits(CURRENT_UNIT)
+        )
+    )} exceeded`;
+}
+
+export function checkVoltage(voltage: number) {
+    const channel = getFirstChannel();
+    if (channel) {
+        const maxVoltage = channel.maxVoltage;
+        if (maxVoltage !== undefined) {
+            if (voltage > maxVoltage) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+export function checkCurrent(current: number) {
+    const channel = getFirstChannel();
+    if (channel) {
+        const maxCurrent = channel.maxCurrent;
+        if (maxCurrent !== undefined) {
+            if (current > maxCurrent) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+export function checkPower(power: number) {
+    const channel = getFirstChannel();
+    if (channel) {
+        const maxPower = channel.maxPower;
+        if (maxPower !== undefined) {
+            if (power > maxPower) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

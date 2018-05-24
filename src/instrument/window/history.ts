@@ -6,20 +6,21 @@ import { db } from "shared/db";
 import {
     IActivityLogEntry,
     activityLogStore,
-    IActivityLogFilterSpecification
+    IActivityLogFilterSpecification,
+    logDelete,
+    logUndelete
 } from "shared/activity-log";
-import { StoreOperation } from "shared/store";
+import { StoreOperation, beginTransaction, commitTransaction } from "shared/store";
 import { scheduleTask, Priority } from "shared/scheduler";
+
+import { confirm } from "shared/ui/dialog";
 
 import * as notification from "shared/ui/notification";
 
 import { appStore } from "instrument/window/app-store";
 
-import {
-    IHistoryItem,
-    createHistoryItem,
-    updateHistoryItemClass
-} from "instrument/window/history-item";
+import { IHistoryItem } from "instrument/window/history-item";
+import { createHistoryItem, updateHistoryItemClass } from "instrument/window/history-item-factory";
 
 import {
     moveToTopOfConnectionHistory,
@@ -79,9 +80,7 @@ export function getHistoryItemById(id: string) {
 
 function filterActivityLogEntry(activityLogEntry: IActivityLogEntry) {
     if (appStore.filters.deleted) {
-        if (!activityLogEntry.deleted) {
-            return false;
-        }
+        return activityLogEntry.deleted;
     } else {
         if (activityLogEntry.deleted) {
             return false;
@@ -107,8 +106,20 @@ function filterActivityLogEntry(activityLogEntry: IActivityLogEntry) {
         }
     }
 
-    if (appStore.filters.files) {
-        if (activityLogEntry.type === "instrument/file") {
+    if (appStore.filters.downloadedFiles) {
+        if (activityLogEntry.type === "instrument/file-download") {
+            return true;
+        }
+    }
+
+    if (appStore.filters.uploadedFiles) {
+        if (activityLogEntry.type === "instrument/file-upload") {
+            return true;
+        }
+    }
+
+    if (appStore.filters.attachedFiles) {
+        if (activityLogEntry.type === "instrument/file-attachment") {
             return true;
         }
     }
@@ -147,47 +158,55 @@ function getFilter() {
         filters.push("deleted");
     } else {
         filters.push("NOT deleted");
-    }
 
-    const types: string[] = [];
+        const types: string[] = [];
 
-    if (appStore.filters.connectsAndDisconnects) {
-        types.push(
-            "instrument/created",
-            "instrument/connected",
-            "instrument/connect-failed",
-            "instrument/disconnected"
-        );
-    }
+        if (appStore.filters.connectsAndDisconnects) {
+            types.push(
+                "instrument/created",
+                "instrument/connected",
+                "instrument/connect-failed",
+                "instrument/disconnected"
+            );
+        }
 
-    if (appStore.filters.scpi) {
-        types.push("instrument/request", "instrument/answer");
-    }
+        if (appStore.filters.scpi) {
+            types.push("instrument/request", "instrument/answer");
+        }
 
-    if (appStore.filters.files) {
-        types.push("instrument/file");
-    }
+        if (appStore.filters.downloadedFiles) {
+            types.push("instrument/file-download");
+        }
 
-    if (appStore.filters.charts) {
-        types.push("instrument/chart");
-    }
+        if (appStore.filters.uploadedFiles) {
+            types.push("instrument/file-upload");
+        }
 
-    if (appStore.filters.lists) {
-        types.push("instrument/list");
-    }
+        if (appStore.filters.attachedFiles) {
+            types.push("instrument/file-attachment");
+        }
 
-    if (appStore.filters.notes) {
-        types.push("activity-log/note");
-    }
+        if (appStore.filters.charts) {
+            types.push("instrument/chart");
+        }
 
-    if (appStore.filters.launchedScripts) {
-        types.push("instrument/script");
-    }
+        if (appStore.filters.lists) {
+            types.push("instrument/list");
+        }
 
-    if (types.length > 0) {
-        filters.push("(" + types.map(type => `type == "${type}"`).join(" OR ") + ")");
-    } else {
-        filters.push("0");
+        if (appStore.filters.notes) {
+            types.push("activity-log/note");
+        }
+
+        if (appStore.filters.launchedScripts) {
+            types.push("instrument/script");
+        }
+
+        if (types.length > 0) {
+            filters.push("(" + types.map(type => `type == "${type}"`).join(" OR ") + ")");
+        } else {
+            filters.push("0");
+        }
     }
 
     return "AND " + filters.join(" AND ");
@@ -598,7 +617,7 @@ class HistorySearch {
 
         //     OR
 
-        //     (type = "instrument/file" AND json_extract(message, '$.note') LIKE ?)
+        //     ((type = "instrument/file-download" || type = "instrument/file-upload" || type = "instrument/file-attachment") AND json_extract(message, '$.note') LIKE ?)
         // )
 
         const rows = db
@@ -735,6 +754,80 @@ class HistoryNavigator {
     @observable hasOlder = false;
     @observable hasNewer = false;
 
+    @observable _selectedHistoryItems: IHistoryItem[] = [];
+
+    @observable deletedCount: number = 0;
+
+    @computed
+    get selectedHistoryItems() {
+        return appStore.selectHistoryItemsSpecification ? [] : this._selectedHistoryItems;
+    }
+
+    @action
+    selectHistoryItems(historyItems: IHistoryItem[]) {
+        this._selectedHistoryItems.forEach(historyItem => (historyItem.selected = false));
+        this._selectedHistoryItems = historyItems;
+        this._selectedHistoryItems.forEach(historyItem => (historyItem.selected = true));
+    }
+
+    @action.bound
+    deleteHistoryItems() {
+        if (historyNavigator.selectedHistoryItems.length > 0) {
+            beginTransaction("Delete history items");
+
+            historyNavigator.selectedHistoryItems.forEach(historyItem =>
+                logDelete(historyItem, {
+                    undoable: true
+                })
+            );
+
+            commitTransaction();
+
+            historyNavigator.selectHistoryItems([]);
+            historyNavigator.updateDeletedCount();
+        }
+    }
+
+    @action.bound
+    restoreHistoryItems() {
+        if (historyNavigator.selectedHistoryItems.length > 0) {
+            beginTransaction("Restore history items");
+
+            historyNavigator.selectedHistoryItems.forEach(historyItem =>
+                logUndelete(historyItem, {
+                    undoable: true
+                })
+            );
+
+            commitTransaction();
+
+            historyNavigator.selectHistoryItems([]);
+            historyNavigator.updateDeletedCount();
+        }
+    }
+
+    @action.bound
+    purgeHistoryItems() {
+        if (historyNavigator.selectedHistoryItems.length > 0) {
+            confirm("Are you sure?", "This will permanently delete selected history items.", () => {
+                if (historyNavigator.selectedHistoryItems.length > 0) {
+                    beginTransaction("Purge history items");
+
+                    historyNavigator.selectedHistoryItems.forEach(historyItem =>
+                        logDelete(historyItem, {
+                            undoable: false
+                        })
+                    );
+
+                    commitTransaction();
+
+                    historyNavigator.selectHistoryItems([]);
+                    historyNavigator.updateDeletedCount();
+                }
+            });
+        }
+    }
+
     update() {
         const firstHistoryItem = this.firstHistoryItem;
         if (firstHistoryItem) {
@@ -771,6 +864,26 @@ class HistoryNavigator {
         } else {
             this.hasNewer = false;
         }
+
+        this.selectHistoryItems([]);
+
+        this.updateDeletedCount();
+    }
+
+    @action
+    updateDeletedCount() {
+        const result = db
+            .prepare(
+                `SELECT
+                    count(*) AS count
+                FROM
+                    activityLog
+                WHERE
+                    oid=? AND deleted`
+            )
+            .get(appStore.instrument!.id);
+
+        this.deletedCount = result ? result.count : 0;
     }
 
     get firstHistoryItem() {

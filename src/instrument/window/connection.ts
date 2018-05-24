@@ -3,7 +3,7 @@ import { bind } from "bind-decorator";
 import { InstrumentObject } from "instrument/instrument-object";
 import { ConnectionParameters } from "instrument/connection/interface";
 
-import { createHistoryItem } from "instrument/window/history-item";
+import { createHistoryItem } from "instrument/window/history-item-factory";
 import { showConnectionDialog } from "instrument/window/connection-dialog";
 
 ////////////////////////////////////////////////////////////////////////////////

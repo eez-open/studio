@@ -38,7 +38,7 @@ export abstract class FileTransfer {
     testAbortFlag() {
         if (!this.isDone() && this.abortFlag) {
             this.clearTimeout();
-            if (this.state === "download-error") {
+            if (this.state === "upload-error") {
                 this.state = "error";
             } else {
                 this.state = "abort";
@@ -63,7 +63,7 @@ export abstract class FileTransfer {
 
             this.dataTimeoutId = setTimeout(() => {
                 this.dataTimeoutId = undefined;
-                if (this.state === "download-error") {
+                if (this.state === "upload-error") {
                     this.state = "error";
                 } else {
                     this.state = "timeout";

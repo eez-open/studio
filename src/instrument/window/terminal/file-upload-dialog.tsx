@@ -20,13 +20,13 @@ import {
     FileInputProperty
 } from "shared/ui/properties";
 
-import { IFileDownloadInstructions } from "instrument/connection/file-download";
+import { IFileUploadInstructions } from "instrument/connection/file-upload";
 
 @observer
-class FileDownloadDialog extends React.Component<
+class FileUploadDialog extends React.Component<
     {
-        instructions: IFileDownloadInstructions;
-        callback: (instructions: IFileDownloadInstructions) => void;
+        instructions: IFileUploadInstructions;
+        callback: (instructions: IFileUploadInstructions) => void;
     },
     {}
 > {
@@ -38,7 +38,7 @@ class FileDownloadDialog extends React.Component<
         this.instructions = { ...this.props.instructions };
     }
 
-    @observable instructions: IFileDownloadInstructions;
+    @observable instructions: IFileUploadInstructions;
     @observable destinationFileNameChanged = false;
 
     validator = makeValidator({
@@ -47,7 +47,7 @@ class FileDownloadDialog extends React.Component<
             async () => {
                 if (
                     this.instructions.sourceFilePath &&
-                    !await fileExists(this.instructions.sourceFilePath)
+                    !(await fileExists(this.instructions.sourceFilePath))
                 ) {
                     return "File not found.";
                 }
@@ -92,7 +92,7 @@ class FileDownloadDialog extends React.Component<
     });
 
     async handleSubmit() {
-        if (!await this.validator.checkValidity(this.instructions)) {
+        if (!(await this.validator.checkValidity(this.instructions))) {
             return false;
         }
         this.props.callback(this.instructions);
@@ -224,9 +224,9 @@ class FileDownloadDialog extends React.Component<
     }
 }
 
-export function showFileDownloadDialog(
-    instructions: IFileDownloadInstructions,
-    callback: (instructions: IFileDownloadInstructions) => void
+export function showFileUploadDialog(
+    instructions: IFileUploadInstructions,
+    callback: (instructions: IFileUploadInstructions) => void
 ) {
-    showDialog(<FileDownloadDialog instructions={instructions} callback={callback} />);
+    showDialog(<FileUploadDialog instructions={instructions} callback={callback} />);
 }

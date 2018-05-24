@@ -49,7 +49,7 @@ import {
     getMaxCurrent,
     checkPower,
     getPowerLimitErrorMessage
-} from "instrument/window/lists/lists";
+} from "instrument/window/lists/store-renderer";
 import {
     displayOption,
     ChartsDisplayOption,

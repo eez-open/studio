@@ -1,4 +1,4 @@
-import { observable, action, reaction } from "mobx";
+import { computed, observable, action, reaction } from "mobx";
 
 import { scheduleTask, Priority } from "shared/scheduler";
 import { InstrumentObject, instruments } from "instrument/instrument-object";
@@ -16,105 +16,125 @@ interface SelectHistoryItemsSpecification {
     onOk(): void;
 }
 
-interface Filters {
-    connectsAndDisconnects: boolean;
-    scpi: boolean;
-    files: boolean;
-    charts: boolean;
-    lists: boolean;
-    notes: boolean;
-    launchedScripts: boolean;
-    deleted: boolean;
+class Filters {
+    @observable connectsAndDisconnects: boolean = true;
+    @observable scpi: boolean = true;
+    @observable downloadedFiles: boolean = true;
+    @observable uploadedFiles: boolean = true;
+    @observable attachedFiles: boolean = true;
+    @observable charts: boolean = true;
+    @observable lists: boolean = true;
+    @observable notes: boolean = true;
+    @observable launchedScripts: boolean = true;
+    @observable deleted: boolean = false;
 }
 
-export const appStore: {
-    instrument: InstrumentObject | undefined;
-    helpVisible: boolean;
-    searchVisible: boolean;
-    filtersVisible: boolean;
-    filters: Filters;
-    searchViewSection: "calendar" | "sessions";
-    selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
-    selectedHistoryItems: Map<string, boolean>;
-} = observable({
-    instrument: undefined,
-    helpVisible: localStorage.getItem("instrument/window/help-visible") === "1" || false,
-    searchVisible: localStorage.getItem("instrument/window/search-visible") === "1" || true,
-    filtersVisible: localStorage.getItem("instrument/window/filters-visible") === "1" || true,
-    filters: getFiltersFromLocalStorage(),
-    searchViewSection:
-        (localStorage.getItem("instrument/window/search/view-section") as any) || "calendar",
-    selectHistoryItemsSpecification: undefined,
-    selectedHistoryItems: new Map<string, boolean>()
-});
+class AppStore {
+    @observable instrument: InstrumentObject | undefined = undefined;
 
-function getFiltersFromLocalStorage(): Filters {
-    let filtersJSON = localStorage.getItem("instrument/window/filters");
-    if (filtersJSON) {
-        try {
-            return JSON.parse(filtersJSON);
-        } catch (err) {
-            console.error("getFiltersFromLocalStorage", err);
+    @observable
+    _helpVisible: boolean = localStorage.getItem("instrument/window/help-visible") === "1" || false;
+
+    @observable
+    searchVisible: boolean = localStorage.getItem("instrument/window/search-visible") === "1" ||
+    true;
+
+    @observable
+    _filtersVisible: boolean = localStorage.getItem("instrument/window/filters-visible") === "1" ||
+    true;
+
+    static getFiltersFromLocalStorage(): Filters {
+        const filters = new Filters();
+
+        let filtersJSON = localStorage.getItem("instrument/window/filters");
+        if (filtersJSON) {
+            try {
+                Object.assign(filters, JSON.parse(filtersJSON));
+                filters.deleted = false;
+            } catch (err) {
+                console.error("getFiltersFromLocalStorage", err);
+            }
+        }
+
+        return filters;
+    }
+
+    @observable filters: Filters = AppStore.getFiltersFromLocalStorage();
+
+    @observable
+    searchViewSection: "calendar" | "sessions" = (localStorage.getItem(
+        "instrument/window/search/view-section"
+    ) as any) || "calendar";
+
+    @observable
+    selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined = undefined;
+
+    @observable selectedHistoryItems: Map<string, boolean> = new Map<string, boolean>();
+
+    constructor() {
+        reaction(
+            () => JSON.stringify(this.filters),
+            filters => {
+                localStorage.setItem("instrument/window/filters", filters);
+            }
+        );
+    }
+
+    @computed
+    get helpVisible() {
+        return this._helpVisible && !this.filters.deleted;
+    }
+
+    @action
+    toggleHelpVisible() {
+        this._helpVisible = !this._helpVisible;
+        localStorage.setItem("instrument/window/help-visible", this._helpVisible ? "1" : "0");
+    }
+
+    @action
+    toggleSearchVisible() {
+        this.searchVisible = !this.searchVisible;
+        localStorage.setItem("instrument/window/search-visible", this.searchVisible ? "1" : "0");
+    }
+
+    @computed
+    get filtersVisible() {
+        return this._filtersVisible && !this.filters.deleted;
+    }
+
+    @action
+    toggleFiltersVisible() {
+        this._filtersVisible = !this._filtersVisible;
+        localStorage.setItem("instrument/window/filters-visible", this._filtersVisible ? "1" : "0");
+    }
+
+    @action
+    setSearchViewSection(value: "calendar" | "sessions") {
+        this.searchViewSection = value;
+        localStorage.setItem("instrument/window/search/view-section", value);
+    }
+
+    @action
+    selectHistoryItems(specification: SelectHistoryItemsSpecification | undefined) {
+        this.selectHistoryItemsSpecification = specification;
+        this.selectedHistoryItems.clear();
+    }
+
+    isHistoryItemSelected(id: string) {
+        return this.selectedHistoryItems.has(id);
+    }
+
+    @action
+    selectHistoryItem(id: string, selected: boolean) {
+        if (selected) {
+            this.selectedHistoryItems.set(id, true);
+        } else {
+            this.selectedHistoryItems.delete(id);
         }
     }
-
-    return {
-        connectsAndDisconnects: true,
-        scpi: true,
-        files: true,
-        charts: true,
-        lists: true,
-        notes: true,
-        launchedScripts: true,
-        deleted: false
-    };
 }
 
-reaction(
-    () => JSON.stringify(appStore.filters),
-    filters => {
-        localStorage.setItem("instrument/window/filters", filters);
-    }
-);
-
-export const toggleHelpVisible = action(() => {
-    appStore.helpVisible = !appStore.helpVisible;
-    localStorage.setItem("instrument/window/help-visible", appStore.helpVisible ? "1" : "0");
-});
-
-export const toggleSearchVisible = action(() => {
-    appStore.searchVisible = !appStore.searchVisible;
-    localStorage.setItem("instrument/window/search-visible", appStore.searchVisible ? "1" : "0");
-});
-
-export const toggleFiltersVisible = action(() => {
-    appStore.filtersVisible = !appStore.filtersVisible;
-    localStorage.setItem("instrument/window/filters-visible", appStore.filtersVisible ? "1" : "0");
-});
-
-export const setSearchViewSection = action((value: "calendar" | "sessions") => {
-    appStore.searchViewSection = value;
-    localStorage.setItem("instrument/window/search/view-section", value);
-});
-
-export const selectHistoryItems = action(
-    (specification: SelectHistoryItemsSpecification | undefined) => {
-        appStore.selectHistoryItemsSpecification = specification;
-        appStore.selectedHistoryItems.clear();
-    }
-);
-
-export function isHistoryItemSelected(id: string) {
-    return appStore.selectedHistoryItems.has(id);
-}
-
-export const selectHistoryItem = action((id: string, selected: boolean) => {
-    if (selected) {
-        appStore.selectedHistoryItems.set(id, true);
-    } else {
-        appStore.selectedHistoryItems.delete(id);
-    }
-});
+export const appStore = new AppStore();
 
 ////////////////////////////////////////////////////////////////////////////////
 

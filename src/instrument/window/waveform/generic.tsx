@@ -28,7 +28,9 @@ import {
     IViewOptionsAxesLinesType
 } from "shared/ui/chart";
 
-import { FileHistoryItem } from "instrument/window/history-item";
+import { ChartPreview } from "instrument/window/chart-preview";
+
+import { FileHistoryItem } from "instrument/window/history-items/file";
 import { checkMime } from "instrument/connection/file-type";
 
 import { initValuesAccesor, WaveformFormat } from "instrument/window/waveform/buffer";
@@ -585,6 +587,10 @@ export class Waveform extends FileHistoryItem {
 
     get yAxisDefaultSubdivisionScale() {
         return this.yAxisDefaultSubdivisionOffsetAndScale.scale;
+    }
+
+    get previewElement() {
+        return <ChartPreview data={this} />;
     }
 }
 

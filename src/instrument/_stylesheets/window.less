@@ -211,7 +211,7 @@
     align-items: left;
 }
 
-.EezStudio_HistoryItemContainer {
+.EezStudio_HistoryItemEnclosure {
     margin-bottom: 5px;
 
     & > input {
@@ -221,12 +221,19 @@
         width: 15px;
         height: 15px;
     }
+
+    border: 2px solid transparent;
+    padding: 1px;
+
+    &.selected {
+        border: 2px solid @selection-background-color;
+    }
 }
 
 .EezStudio_HistoryItem {
     border-radius: 8px;
     padding: 0px 10px;
-    overflow: auto;
+    overflow: visible;
 
     p {
         margin-bottom: 0;

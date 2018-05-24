@@ -49,7 +49,7 @@ import {
     getMaxCurrent,
     checkPower,
     getPowerLimitErrorMessage
-} from "instrument/window/lists/lists";
+} from "instrument/window/lists/store-renderer";
 import {
     displayOption,
     ChartsDisplayOption,
@@ -219,9 +219,9 @@ export class EnvelopeList extends BaseList {
             } else {
                 voltageN.push(
                     voltage[iVoltage - 1].value +
-                    (timeN[i] - voltage[iVoltage - 1].time) /
-                    (voltage[iVoltage].time - voltage[iVoltage - 1].time) *
-                    (voltage[iVoltage].value - voltage[iVoltage - 1].value)
+                        (timeN[i] - voltage[iVoltage - 1].time) /
+                            (voltage[iVoltage].time - voltage[iVoltage - 1].time) *
+                            (voltage[iVoltage].value - voltage[iVoltage - 1].value)
                 );
             }
 
@@ -233,9 +233,9 @@ export class EnvelopeList extends BaseList {
             } else {
                 currentN.push(
                     current[iCurrent - 1].value +
-                    (timeN[i] - current[iCurrent - 1].time) /
-                    (current[iCurrent].time - current[iCurrent - 1].time) *
-                    (current[iCurrent].value - current[iCurrent - 1].value)
+                        (timeN[i] - current[iCurrent - 1].time) /
+                            (current[iCurrent].time - current[iCurrent - 1].time) *
+                            (current[iCurrent].value - current[iCurrent - 1].value)
                 );
             }
         }
@@ -246,14 +246,14 @@ export class EnvelopeList extends BaseList {
                     voltageN[i] =
                         voltageN[i - 1] +
                         (duration - timeN[i - 1]) /
-                        (timeN[i] - timeN[i - 1]) *
-                        (voltageN[i] - voltageN[i - 1]);
+                            (timeN[i] - timeN[i - 1]) *
+                            (voltageN[i] - voltageN[i - 1]);
 
                     currentN[i] =
                         currentN[i - 1] +
                         (duration - timeN[i - 1]) /
-                        (timeN[i] - timeN[i - 1]) *
-                        (currentN[i] - currentN[i - 1]);
+                            (timeN[i] - timeN[i - 1]) *
+                            (currentN[i] - currentN[i - 1]);
 
                     timeN[i] = duration;
                 }
@@ -364,23 +364,23 @@ class EnveloperListTimeAxisModel extends ListAxisModel {
 
 @observer
 class EditEnvelopeValue extends React.Component<
-{
-    list: EnvelopeList;
-    time: number | undefined;
-    minTime: number;
-    maxTime: number;
-    timeUnit: IUnit;
-    value: number;
-    minValue: number;
-    maxValue: number;
-    valueUnit: IUnit;
-    onTimeChange: (time: number) => void;
-    onValueChange: (value: number) => void;
-    onClose: () => void;
-    onSave: () => void;
-    onRemove: (() => void) | undefined;
-},
-{}
+    {
+        list: EnvelopeList;
+        time: number | undefined;
+        minTime: number;
+        maxTime: number;
+        timeUnit: IUnit;
+        value: number;
+        minValue: number;
+        maxValue: number;
+        valueUnit: IUnit;
+        onTimeChange: (time: number) => void;
+        onValueChange: (value: number) => void;
+        onClose: () => void;
+        onSave: () => void;
+        onRemove: (() => void) | undefined;
+    },
+    {}
 > {
     constructor(props: any) {
         super(props);
@@ -1066,18 +1066,18 @@ export class EnvelopeLineController extends LineController {
 
 @observer
 class EnvelopeLine extends React.Component<
-{
-    chartLeft: number;
-    chartBottom: number;
-    from: IEnvelopePoint;
-    to: IEnvelopePoint;
-    xFrom: number;
-    xScale: number;
-    yFrom: number;
-    yScale: number;
-    axisModel: IAxisModel;
-},
-{}
+    {
+        chartLeft: number;
+        chartBottom: number;
+        from: IEnvelopePoint;
+        to: IEnvelopePoint;
+        xFrom: number;
+        xScale: number;
+        yFrom: number;
+        yScale: number;
+        axisModel: IAxisModel;
+    },
+    {}
 > {
     render() {
         const {
@@ -1105,10 +1105,10 @@ class EnvelopeLine extends React.Component<
 
 @observer
 class EnvelopeLines extends React.Component<
-{
-    envelopeLineController: EnvelopeLineController;
-},
-{}
+    {
+        envelopeLineController: EnvelopeLineController;
+    },
+    {}
 > {
     render() {
         const envelopeLineController = this.props.envelopeLineController;
@@ -1141,19 +1141,19 @@ class EnvelopeLines extends React.Component<
 
 @observer
 class EnvelopeValue extends React.Component<
-{
-    index: number;
-    value: IEnvelopePoint;
-    chartLeft: number;
-    chartBottom: number;
-    xFrom: number;
-    xScale: number;
-    yFrom: number;
-    yScale: number;
-    radius: number;
-    axisModel: IAxisModel;
-},
-{}
+    {
+        index: number;
+        value: IEnvelopePoint;
+        chartLeft: number;
+        chartBottom: number;
+        xFrom: number;
+        xScale: number;
+        yFrom: number;
+        yScale: number;
+        radius: number;
+        axisModel: IAxisModel;
+    },
+    {}
 > {
     render() {
         const {
@@ -1183,10 +1183,10 @@ class EnvelopeValue extends React.Component<
 
 @observer
 class EnvelopeValues extends React.Component<
-{
-    envelopeLineController: EnvelopeLineController;
-},
-{}
+    {
+        envelopeLineController: EnvelopeLineController;
+    },
+    {}
 > {
     render() {
         const envelopeLineController = this.props.envelopeLineController;
@@ -1223,11 +1223,11 @@ class EnvelopeValues extends React.Component<
 
 @observer
 export class EnvelopeLineView extends React.Component<
-{
-    envelopeLineController: EnvelopeLineController;
-    clipId: string;
-},
-{}
+    {
+        envelopeLineController: EnvelopeLineController;
+        clipId: string;
+    },
+    {}
 > {
     render() {
         return (
@@ -1325,7 +1325,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                     });
                 }
             })
-            .catch(() => { });
+            .catch(() => {});
     }
 
     get canClearAllPoints() {
@@ -1514,7 +1514,7 @@ class EnvelopeChartController extends ChartController {
             let x =
                 Math.round(
                     this.chartsController.chartLeft +
-                    Math.max(this.xAxisController.valueToPx(data.duration), 0)
+                        Math.max(this.xAxisController.valueToPx(data.duration), 0)
                 ) + 0.5;
             if (x < this.chartsController.chartRight) {
                 let width = this.xAxisController.valueToPx(invalidRegion);

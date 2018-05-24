@@ -25,20 +25,41 @@ export class Filters extends React.Component {
                         onChange={action((value: boolean) => (appStore.filters.scpi = value))}
                     />
                     <BooleanProperty
-                        name="Files"
-                        value={appStore.filters.files}
-                        onChange={action((value: boolean) => (appStore.filters.files = value))}
+                        name="Downloaded files"
+                        value={appStore.filters.downloadedFiles}
+                        onChange={action(
+                            (value: boolean) => (appStore.filters.downloadedFiles = value)
+                        )}
+                    />
+                    <BooleanProperty
+                        name="Uploaded files"
+                        value={appStore.filters.uploadedFiles}
+                        onChange={action(
+                            (value: boolean) => (appStore.filters.uploadedFiles = value)
+                        )}
+                    />
+                    <BooleanProperty
+                        name="Attached files"
+                        value={appStore.filters.attachedFiles}
+                        onChange={action(
+                            (value: boolean) => (appStore.filters.attachedFiles = value)
+                        )}
                     />
                     <BooleanProperty
                         name="Charts"
                         value={appStore.filters.charts}
                         onChange={action((value: boolean) => (appStore.filters.charts = value))}
                     />
-                    <BooleanProperty
-                        name="Lists"
-                        value={appStore.filters.lists}
-                        onChange={action((value: boolean) => (appStore.filters.lists = value))}
-                    />
+                    {appStore.instrument &&
+                        appStore.instrument.getListsProperty() && (
+                            <BooleanProperty
+                                name="Lists"
+                                value={appStore.filters.lists}
+                                onChange={action(
+                                    (value: boolean) => (appStore.filters.lists = value)
+                                )}
+                            />
+                        )}
                     <BooleanProperty
                         name="Notes"
                         value={appStore.filters.notes}
@@ -50,12 +71,6 @@ export class Filters extends React.Component {
                         onChange={action(
                             (value: boolean) => (appStore.filters.launchedScripts = value)
                         )}
-                    />
-                    <BooleanProperty
-                        name="Deleted items"
-                        value={appStore.filters.deleted}
-                        onChange={action((value: boolean) => (appStore.filters.deleted = value))}
-                        style={{ borderTop: "1px solid #e7eaec" }}
                     />
                 </PropertyList>
             </div>

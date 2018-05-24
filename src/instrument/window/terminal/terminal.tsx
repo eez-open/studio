@@ -10,7 +10,7 @@ import { InstrumentObject } from "instrument/instrument-object";
 
 import { ISession } from "instrument/window/history";
 import { IHistoryItem } from "instrument/window/history-item";
-import { appStore, toggleHelpVisible, selectHistoryItems } from "instrument/window/app-store";
+import { appStore } from "instrument/window/app-store";
 
 import { ShortcutsToolbar } from "instrument/window/terminal/toolbar";
 
@@ -18,7 +18,7 @@ import { executeShortcut } from "instrument/window/script";
 import { History } from "instrument/window/terminal/connection-history";
 import { Search } from "instrument/window/terminal/search";
 import { CommandsBrowser } from "instrument/window/terminal/commands-browser";
-import { showFileDownloadDialog } from "instrument/window/terminal/file-download-dialog";
+import { showFileUploadDialog } from "instrument/window/terminal/file-upload-dialog";
 import { TerminalToolbarButtons } from "instrument/window/terminal/terminal-toolbar-buttons";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +114,7 @@ class Input extends React.Component<
     }
 
     handleHelpClick() {
-        toggleHelpVisible();
+        appStore.toggleHelpVisible();
     }
 
     handleChange(event: any) {
@@ -230,7 +230,7 @@ class Input extends React.Component<
                             icon="material:file_upload"
                             onClick={this.props.handleSendFileClick}
                             enabled={this.props.instrument.connection.isConnected}
-                            title="Send file"
+                            title="Upload file"
                         />
                     </div>
                 )}
@@ -266,20 +266,20 @@ export class Terminal extends React.Component<{ instrument: InstrumentObject }, 
     }
 
     onSelectHistoryItemsCancel() {
-        selectHistoryItems(undefined);
+        appStore.selectHistoryItems(undefined);
     }
 
     render() {
         let handleSendFileClick;
         if (this.props.instrument.getFileDownloadProperty()) {
-            const fileDownloadInstructions =
-                this.props.instrument.lastFileDownloadInstructions ||
-                this.props.instrument.defaultFileDownloadInstructions;
+            const fileUploadInstructions =
+                this.props.instrument.lastFileUploadInstructions ||
+                this.props.instrument.defaultFileUploadInstructions;
 
-            if (fileDownloadInstructions) {
+            if (fileUploadInstructions) {
                 handleSendFileClick = () => {
-                    showFileDownloadDialog(fileDownloadInstructions, instructions => {
-                        this.props.instrument.connection.download(instructions);
+                    showFileUploadDialog(fileUploadInstructions, instructions => {
+                        this.props.instrument.connection.upload(instructions);
                     });
                 };
             }
@@ -348,19 +348,23 @@ export class Terminal extends React.Component<{ instrument: InstrumentObject }, 
                             {appStore.searchVisible && <Search />}
                         </Splitter>
                     </div>
-                    <Input
-                        instrument={this.props.instrument}
-                        sendCommand={() => {
-                            this.props.instrument.connection.send(terminalState.command);
-                            terminalState.command = "";
-                        }}
-                        handleSendFileClick={handleSendFileClick}
-                    />
-                    <ShortcutsToolbar
-                        executeShortcut={shortcut => {
-                            executeShortcut(this.props.instrument, shortcut);
-                        }}
-                    />
+                    {!appStore.filters.deleted && (
+                        <Input
+                            instrument={this.props.instrument}
+                            sendCommand={() => {
+                                this.props.instrument.connection.send(terminalState.command);
+                                terminalState.command = "";
+                            }}
+                            handleSendFileClick={handleSendFileClick}
+                        />
+                    )}
+                    {!appStore.filters.deleted && (
+                        <ShortcutsToolbar
+                            executeShortcut={shortcut => {
+                                executeShortcut(this.props.instrument, shortcut);
+                            }}
+                        />
+                    )}
                 </div>
 
                 {appStore.helpVisible && <CommandsBrowser host={terminalState} />}

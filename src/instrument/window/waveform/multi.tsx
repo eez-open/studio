@@ -2,8 +2,9 @@ import * as React from "react";
 import { observable, computed, action, reaction, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
+import * as VisibilitySensor from "react-visibility-sensor";
 
-import { objectEqual, objectClone } from "shared/util";
+import { objectEqual, objectClone, formatDateTimeLong } from "shared/util";
 import { beginTransaction, commitTransaction } from "shared/store";
 import { logUpdate, IActivityLogEntry } from "shared/activity-log";
 
@@ -13,9 +14,11 @@ import { TextInputProperty, ColorInputProperty } from "shared/ui/properties";
 import { PropertyList, SelectFromListProperty } from "shared/ui/properties";
 import { IListNode, ListItem } from "shared/ui/list";
 import { ChartMode, ChartsController, IAxisModel } from "shared/ui/chart";
+import { Icon } from "shared/ui/icon";
 
 import { getHistoryItemById } from "instrument/window/history";
 import { HistoryItem } from "instrument/window/history-item";
+import { ChartPreview } from "instrument/window/chart-preview";
 
 import {
     Waveform,
@@ -50,6 +53,39 @@ class MultiWaveformChartsController extends ChartsController {
         viewOptions: ViewOptions
     ) {
         super(mode, xAxisModel, viewOptions);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class ChartHistoryItemComponent extends React.Component<
+    {
+        historyItem: MultiWaveform;
+    },
+    {}
+> {
+    @action.bound
+    onVisibilityChange(isVisible: boolean) {
+        this.props.historyItem.isVisible = isVisible;
+    }
+
+    render() {
+        return (
+            <VisibilitySensor partialVisibility={true} onChange={this.onVisibilityChange}>
+                <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Chart">
+                    <Icon className="mr-3" icon={"material:insert_chart"} size={48} />
+                    <div>
+                        <p>
+                            <small className="EezStudio_HistoryItemDate text-muted">
+                                {formatDateTimeLong(this.props.historyItem.date)}
+                            </small>
+                        </p>
+                        <ChartPreview data={this.props.historyItem} />
+                    </div>
+                </div>
+            </VisibilitySensor>
+        );
     }
 }
 
@@ -198,6 +234,10 @@ export class MultiWaveform extends HistoryItem {
 
     get xAxisDefaultSubdivisionScale() {
         return this.linkedWaveforms[0].waveform.xAxisDefaultSubdivisionScale;
+    }
+
+    get listItemElement(): JSX.Element | null {
+        return <ChartHistoryItemComponent historyItem={this} />;
     }
 }
 

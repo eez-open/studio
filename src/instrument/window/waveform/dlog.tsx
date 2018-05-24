@@ -16,7 +16,9 @@ import {
     LineController
 } from "shared/ui/chart";
 
-import { FileHistoryItem } from "instrument/window/history-item";
+import { ChartPreview } from "instrument/window/chart-preview";
+
+import { FileHistoryItem } from "instrument/window/history-items/file";
 
 import { MIME_EEZ_DLOG, checkMime } from "instrument/connection/file-type";
 
@@ -422,5 +424,9 @@ export class DlogWaveform extends FileHistoryItem {
 
     get yAxisDefaultSubdivisionScale(): number | undefined {
         return undefined;
+    }
+
+    get previewElement() {
+        return <ChartPreview data={this} />;
     }
 }

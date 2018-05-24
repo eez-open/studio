@@ -25,11 +25,11 @@ import { IInstrumentExtensionProperties } from "instrument/instrument-extension"
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/import";
 import { IInstrumentProperties } from "instrument/export";
 
-import { createHistoryItem } from "instrument/window/history-item";
+import { createHistoryItem } from "instrument/window/history-item-factory";
 import { IConnection } from "instrument/connection/connection";
 import { createConnection } from "instrument/connection/connection";
 import { ConnectionErrorCode, ConnectionParameters } from "instrument/connection/interface";
-import { IFileDownloadInstructions } from "instrument/connection/file-download";
+import { IFileUploadInstructions } from "instrument/connection/file-upload";
 
 import * as UiPropertiesModule from "shared/ui/properties";
 
@@ -55,7 +55,7 @@ export interface IInstrumentObjectProps {
     idn?: string;
     lastConnection?: ConnectionParameters;
     autoConnect: boolean;
-    lastFileDownloadInstructions?: IFileDownloadInstructions;
+    lastFileUploadInstructions?: IFileUploadInstructions;
     selectedShortcutGroups: string[];
 }
 
@@ -80,7 +80,7 @@ export class InstrumentObject {
         }
         this.autoConnect = props.autoConnect;
 
-        this.lastFileDownloadInstructions = props.lastFileDownloadInstructions;
+        this.lastFileUploadInstructions = props.lastFileUploadInstructions;
 
         this.selectedShortcutGroups = props.selectedShortcutGroups;
 
@@ -98,7 +98,7 @@ export class InstrumentObject {
     @observable idn: string | undefined;
     @observable lastConnection: ConnectionParameters | undefined;
     @observable autoConnect: boolean;
-    @observable lastFileDownloadInstructions: IFileDownloadInstructions | undefined;
+    @observable lastFileUploadInstructions: IFileUploadInstructions | undefined;
     @observable selectedShortcutGroups: string[];
 
     connection: IConnection;
@@ -315,21 +315,21 @@ export class InstrumentObject {
         return this.properties ? this.properties.fileDownload : undefined;
     }
 
-    get defaultFileDownloadInstructions() {
-        const fileDownload = this.getFileDownloadProperty();
-        if (fileDownload) {
+    get defaultFileUploadInstructions() {
+        const instructions = this.getFileDownloadProperty();
+        if (instructions) {
             return {
                 sourceFilePath: "",
                 destinationFileName: "",
                 destinationFolderPath: "/",
                 shortFileName:
-                    fileDownload.shortFileName !== undefined ? fileDownload.shortFileName : true,
-                startCommandTemplate: fileDownload.startCommand || "",
-                fileSizeCommandTemplate: fileDownload.fileSizeCommand || "",
-                sendChunkCommandTemplate: fileDownload.sendChunkCommand || "",
-                finishCommandTemplate: fileDownload.finishCommand || "",
-                abortCommandTemplate: fileDownload.abortCommand || "",
-                chunkSize: fileDownload.chunkSize || 1024
+                    instructions.shortFileName !== undefined ? instructions.shortFileName : true,
+                startCommandTemplate: instructions.startCommand || "",
+                fileSizeCommandTemplate: instructions.fileSizeCommand || "",
+                sendChunkCommandTemplate: instructions.sendChunkCommand || "",
+                finishCommandTemplate: instructions.finishCommand || "",
+                abortCommandTemplate: instructions.abortCommand || "",
+                chunkSize: instructions.chunkSize || 1024
             };
         } else {
             return undefined;
@@ -588,12 +588,12 @@ export class InstrumentObject {
     }
 
     @action
-    setLastFileDownloadInstructions(fileDownloadInstructions: IFileDownloadInstructions) {
-        if (!objectEqual(fileDownloadInstructions, this.lastFileDownloadInstructions)) {
-            beginTransaction("Change instrument download settings");
+    setLastFileUploadInstructions(fileUploadInstructions: IFileUploadInstructions) {
+        if (!objectEqual(fileUploadInstructions, this.lastFileUploadInstructions)) {
+            beginTransaction("Change instrument upload settings");
             store.updateObject({
                 id: this.id,
-                lastFileDownloadInstructions: toJS(fileDownloadInstructions)
+                lastFileUploadInstructions: toJS(fileUploadInstructions)
             });
             commitTransaction();
         }
@@ -698,7 +698,24 @@ export const store = createStore({
             SELECT ROWID, deleted, instrumentExtensionId, label, idn, lastConnection, autoConnect, lastFileDownloadInstructions, selectedShortcutGroups FROM "instrument";
         DROP TABLE "instrument";
         ALTER TABLE "instrument-new" RENAME TO "instrument";
-        UPDATE "instrument/version" SET version = 3;`
+        UPDATE "instrument/version" SET version = 3;`,
+
+        // version 4
+        `CREATE TABLE "instrument-new"(
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+            deleted INTEGER NOT NULL,
+            instrumentExtensionId TEXT NOT NULL,
+            label TEXT,
+            idn TEXT,
+            lastConnection TEXT,
+            autoConnect INTEGER,
+            lastFileUploadInstructions TEXT,
+            selectedShortcutGroups TEXT);
+        INSERT INTO "instrument-new"(id, deleted, instrumentExtensionId, label, idn, lastConnection, autoConnect, lastFileUploadInstructions, selectedShortcutGroups)
+            SELECT id, deleted, instrumentExtensionId, label, idn, lastConnection, autoConnect, lastFileDownloadInstructions, selectedShortcutGroups FROM "instrument";
+        DROP TABLE "instrument";
+        ALTER TABLE "instrument-new" RENAME TO "instrument";
+        UPDATE "instrument/version" SET version = 4;`
     ],
     properties: {
         id: types.id,
@@ -708,7 +725,7 @@ export const store = createStore({
         idn: types.string,
         lastConnection: types.object,
         autoConnect: types.boolean,
-        lastFileDownloadInstructions: types.object,
+        lastFileUploadInstructions: types.object,
         selectedShortcutGroups: types.object
     },
     create(props: IInstrumentObjectProps) {

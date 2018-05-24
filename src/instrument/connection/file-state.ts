@@ -1,17 +1,16 @@
 export type FileStateState =
     | "init"
-    | "download-filesize"
-    | "download-start"
+    | "upload-filesize"
+    | "upload-start"
     | "progress"
-    | "download-error"
-    | "download-finish"
+    | "upload-error"
+    | "upload-finish"
     | "success"
     | "abort"
     | "timeout"
     | "error";
 
 export interface FileState {
-    direction: "upload" | "download";
     state: FileStateState;
     sourceFilePath: string;
     destinationFilePath: string;

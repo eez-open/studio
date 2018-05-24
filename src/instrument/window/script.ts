@@ -15,7 +15,7 @@ import { run as runJavaScript } from "shared/script-engines/javascript";
 import { InstrumentObject } from "instrument/instrument-object";
 
 import { getConnection } from "instrument/window/connection";
-import { IScriptHistoryItemMessage } from "instrument/window/history-item";
+import { IScriptHistoryItemMessage } from "instrument/window/history-items/script";
 
 import { showScriptError } from "instrument/window/scripts";
 
@@ -121,7 +121,6 @@ class JavaScriptSession {
         verticalScale: number;
     }) {
         const message: any = {
-            direction: "upload",
             state: "success",
             fileType: { mime: "application/eez-raw" },
             description: config.description,
@@ -166,7 +165,7 @@ class JavaScriptSession {
         log(
             {
                 oid: this.instrument.id,
-                type: "instrument/file",
+                type: "instrument/file-download",
                 message: JSON.stringify(message),
                 data
             },

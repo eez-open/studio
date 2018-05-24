@@ -130,7 +130,7 @@ export function isCSV(data: string | Buffer) {
 
 export function checkMime(message: string, list: string[]) {
     const fileState: FileState = JSON.parse(message);
-    if (fileState.state !== "success" && fileState.state !== "download-finish") {
+    if (fileState.state !== "success" && fileState.state !== "upload-finish") {
         return false;
     }
 

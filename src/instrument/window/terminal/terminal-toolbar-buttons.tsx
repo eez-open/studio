@@ -1,122 +1,24 @@
 import * as React from "react";
-import { keys } from "mobx";
+import { keys, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { readBinaryFile } from "shared/util";
 import { beginTransaction, commitTransaction } from "shared/store";
-import { log, logDelete, logUndelete } from "shared/activity-log";
+import { log } from "shared/activity-log";
 
-import { confirm } from "shared/ui/dialog";
-import { IconAction } from "shared/ui/action";
+import { IconAction, ButtonAction } from "shared/ui/action";
 
 import { InstrumentObject } from "instrument/instrument-object";
 
-import { appStore, toggleSearchVisible, selectHistoryItems } from "instrument/window/app-store";
+import { appStore } from "instrument/window/app-store";
+import { historyNavigator } from "instrument/window/history";
 
 import { showAddNoteDialog } from "instrument/window/terminal/note-dialog";
 import { detectFileType } from "instrument/connection/file-type";
 
 @observer
 export class TerminalToolbarButtons extends React.Component<{ instrument: InstrumentObject }, {}> {
-    @bind
-    deleteHistoryItems() {
-        selectHistoryItems({
-            historyItemType: "all",
-            message: "Select one or more history items",
-            alertDanger: true,
-            okButtonText: "Delete",
-            okButtonTitle: "Delete",
-            onOk: () => {
-                beginTransaction("Delete history items");
-
-                keys(appStore.selectedHistoryItems).forEach(id => {
-                    logDelete(
-                        {
-                            oid: this.props.instrument.id,
-                            id
-                        },
-                        {
-                            undoable: true
-                        }
-                    );
-                });
-
-                commitTransaction();
-
-                selectHistoryItems(undefined);
-            }
-        });
-    }
-
-    @bind
-    restoreHistoryItems() {
-        selectHistoryItems({
-            historyItemType: "all",
-            message: "Select one or more history items",
-            okButtonText: "Restore",
-            okButtonTitle: "Restore",
-            onOk: () => {
-                beginTransaction("Restore history items");
-
-                keys(appStore.selectedHistoryItems).forEach(id => {
-                    logUndelete(
-                        {
-                            oid: this.props.instrument.id,
-                            id
-                        },
-                        {
-                            undoable: true
-                        }
-                    );
-                });
-
-                commitTransaction();
-
-                selectHistoryItems(undefined);
-            }
-        });
-    }
-
-    @bind
-    purgeHistoryItems() {
-        selectHistoryItems({
-            historyItemType: "all",
-            message: "Select one or more history items",
-            alertDanger: true,
-            okButtonText: "Purge",
-            okButtonTitle: "Purge",
-            onOk: () => {
-                confirm(
-                    "Are you sure?",
-                    "This will permanently delete selected history items.",
-                    () => {
-                        beginTransaction("Purge history items");
-
-                        keys(appStore.selectedHistoryItems).forEach(id => {
-                            logDelete(
-                                {
-                                    oid: this.props.instrument.id,
-                                    id
-                                },
-                                {
-                                    undoable: false
-                                }
-                            );
-                        });
-
-                        commitTransaction();
-
-                        selectHistoryItems(undefined);
-                    },
-                    () => {
-                        selectHistoryItems(undefined);
-                    }
-                );
-            }
-        });
-    }
-
     @bind
     addNote() {
         showAddNoteDialog(note => {
@@ -151,9 +53,8 @@ export class TerminalToolbarButtons extends React.Component<{ instrument: Instru
                         log(
                             {
                                 oid: this.props.instrument.id,
-                                type: "instrument/file",
+                                type: "instrument/file-attachment",
                                 message: JSON.stringify({
-                                    direction: "upload",
                                     sourceFilePath: filePath,
                                     state: "success",
                                     fileType: detectFileType(data, filePath),
@@ -174,7 +75,7 @@ export class TerminalToolbarButtons extends React.Component<{ instrument: Instru
 
     @bind
     addChart() {
-        selectHistoryItems({
+        appStore.selectHistoryItems({
             historyItemType: "chart",
             message: "Select one or more waveform data items",
             okButtonText: "Add Chart",
@@ -186,7 +87,7 @@ export class TerminalToolbarButtons extends React.Component<{ instrument: Instru
                     }))
                 };
 
-                selectHistoryItems(undefined);
+                appStore.selectHistoryItems(undefined);
 
                 beginTransaction("Add chart");
                 log(
@@ -208,66 +109,106 @@ export class TerminalToolbarButtons extends React.Component<{ instrument: Instru
         let actions = [];
 
         if (appStore.selectHistoryItemsSpecification === undefined) {
-            actions.push(
-                <IconAction
-                    key="addNote"
-                    icon="material:comment"
-                    title="Add note"
-                    onClick={this.addNote}
-                />,
-                <IconAction
-                    key="addFile"
-                    icon="material:attach_file"
-                    title="Attach file"
-                    onClick={this.attachFile}
-                />,
-                <IconAction
-                    key="addChart"
-                    icon="material:insert_chart"
-                    title="Add chart"
-                    onClick={this.addChart}
-                />
-            );
-
-            if (appStore.filters.deleted) {
+            if (!appStore.filters.deleted) {
                 actions.push(
                     <IconAction
-                        key="restore"
-                        icon="material:restore"
-                        title="Restore one or more deleted history items"
-                        style={{ marginLeft: 20 }}
-                        onClick={this.restoreHistoryItems}
+                        key="addNote"
+                        icon="material:comment"
+                        title="Add note"
+                        onClick={this.addNote}
                     />,
                     <IconAction
-                        key="purge"
-                        icon="material:delete_forever"
-                        title="Purge one or more deleted history items"
-                        onClick={this.purgeHistoryItems}
-                    />
-                );
-            } else {
-                actions.push(
+                        key="addFile"
+                        icon="material:attach_file"
+                        title="Attach file"
+                        onClick={this.attachFile}
+                    />,
                     <IconAction
-                        key="delete"
-                        icon="material:delete"
-                        title="Delete one or more history items"
-                        style={{ marginLeft: 20 }}
-                        onClick={this.deleteHistoryItems}
+                        key="addChart"
+                        icon="material:insert_chart"
+                        title="Add chart"
+                        onClick={this.addChart}
                     />
                 );
             }
+
+            if (historyNavigator.selectedHistoryItems.length > 0) {
+                if (appStore.filters.deleted) {
+                    actions.push(
+                        <IconAction
+                            key="restore"
+                            icon="material:restore"
+                            title="Restore selected history items"
+                            style={{ marginLeft: 20 }}
+                            onClick={historyNavigator.restoreHistoryItems}
+                        />,
+                        <IconAction
+                            key="purge"
+                            icon="material:delete_forever"
+                            title="Purge selected history items"
+                            onClick={historyNavigator.purgeHistoryItems}
+                        />
+                    );
+                } else {
+                    actions.push(
+                        <IconAction
+                            key="delete"
+                            icon="material:delete"
+                            title="Delete selected history items"
+                            style={{ marginLeft: 20 }}
+                            onClick={historyNavigator.deleteHistoryItems}
+                        />
+                    );
+                }
+            }
+
+            if (historyNavigator.deletedCount > 0) {
+                const style =
+                    historyNavigator.selectedHistoryItems.length === 0
+                        ? { marginLeft: 20 }
+                        : undefined;
+
+                if (appStore.filters.deleted) {
+                    actions.push(
+                        <ButtonAction
+                            key="deletedItems"
+                            icon="material:arrow_back"
+                            text="Back"
+                            title={"Go back to the terminal"}
+                            onClick={action(
+                                () => (appStore.filters.deleted = !appStore.filters.deleted)
+                            )}
+                            style={style}
+                        />
+                    );
+                } else {
+                    actions.push(
+                        <ButtonAction
+                            key="deletedItems"
+                            text={`Deleted Items (${historyNavigator.deletedCount})`}
+                            title="Show deleted items"
+                            onClick={action(
+                                () => (appStore.filters.deleted = !appStore.filters.deleted)
+                            )}
+                            style={style}
+                        />
+                    );
+                }
+            }
         }
 
-        actions.push(
-            <IconAction
-                style={{ marginLeft: 20 }}
-                key="search"
-                icon="material:search"
-                title="Search, Calendar, Sessions, Filter"
-                onClick={toggleSearchVisible}
-                selected={appStore.searchVisible}
-            />
-        );
+        if (!appStore.filters.deleted) {
+            actions.push(
+                <IconAction
+                    style={{ marginLeft: 20 }}
+                    key="search"
+                    icon="material:search"
+                    title="Search, Calendar, Sessions, Filter"
+                    onClick={appStore.toggleSearchVisible}
+                    selected={appStore.searchVisible}
+                />
+            );
+        }
 
         return actions;
     }

@@ -50,7 +50,31 @@ export const activityLogStore = createStore({
         ALTER TABLE activityLog2 RENAME TO activityLog;
         CREATE INDEX activityLog_date ON activityLog(date, deleted);
         CREATE INDEX activityLog_oidAndDate ON activityLog(oid, date, deleted);
-        UPDATE activityLogVersion SET version = 3;`
+        UPDATE activityLogVersion SET version = 3;`,
+
+        // version 4
+        `UPDATE activityLog SET type = 'instrument/file-attachment' WHERE type == "instrument/file"
+            AND json_extract(message, '$.direction') = 'upload'
+            AND json_extract(message, '$.sourceFilePath') IS NOT NULL;
+
+        UPDATE activityLog SET type = 'instrument/file-download' WHERE type = 'instrument/file'
+            AND json_extract(message, '$.direction') = 'upload';
+
+        UPDATE activityLog SET type = 'instrument/file-upload' WHERE type = 'instrument/file';
+
+        UPDATE activityLog SET message == json_replace(message, '$.state', 'upload-filesize') WHERE
+            type = "instrument/file-upload" AND json_extract(message, '$.state') = 'download-filesize';
+
+        UPDATE activityLog SET message == json_replace(message, '$.state', 'upload-start') WHERE
+            type = "instrument/file-upload" AND json_extract(message, '$.state') = 'download-start';
+
+        UPDATE activityLog SET message == json_replace(message, '$.state', 'upload-error') WHERE
+            type = "instrument/file-upload" AND json_extract(message, '$.state') = 'download-error';
+
+        UPDATE activityLog SET message == json_replace(message, '$.state', 'upload-finish') WHERE
+            type = "instrument/file-upload" AND json_extract(message, '$.state') = 'download-finish';
+
+        UPDATE activityLogVersion SET version = 4;`
     ],
 
     properties: {
