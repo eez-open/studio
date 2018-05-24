@@ -215,6 +215,8 @@ function getFilter() {
 ////////////////////////////////////////////////////////////////////////////////
 
 function pushActivityLogEntry(activityLogEntry: IActivityLogEntry, op: StoreOperation) {
+    historyNavigator.updateDeletedCount();
+
     if (activityLogEntry.type === "instrument/connected") {
         let i;
         for (i = 0; i < historySessions.sessions.length; ++i) {
@@ -344,6 +346,8 @@ function updateHistoryItem(activityLogEntry: IActivityLogEntry) {
 }
 
 function removeHistoryItem(activityLogEntry: IActivityLogEntry) {
+    historyNavigator.updateDeletedCount();
+
     // remove sesssion if found in historySessions list
     for (let i = 0; i < historySessions.sessions.length; ++i) {
         if (historySessions.sessions[i].id === activityLogEntry.id) {
@@ -757,6 +761,7 @@ class HistoryNavigator {
     @observable _selectedHistoryItems: IHistoryItem[] = [];
 
     @observable deletedCount: number = 0;
+    updateDeletedCountTimer: any;
 
     @computed
     get selectedHistoryItems() {
@@ -784,7 +789,6 @@ class HistoryNavigator {
             commitTransaction();
 
             historyNavigator.selectHistoryItems([]);
-            historyNavigator.updateDeletedCount();
         }
     }
 
@@ -802,7 +806,6 @@ class HistoryNavigator {
             commitTransaction();
 
             historyNavigator.selectHistoryItems([]);
-            historyNavigator.updateDeletedCount();
         }
     }
 
@@ -822,7 +825,6 @@ class HistoryNavigator {
                     commitTransaction();
 
                     historyNavigator.selectHistoryItems([]);
-                    historyNavigator.updateDeletedCount();
                 }
             });
         }
@@ -870,20 +872,34 @@ class HistoryNavigator {
         this.updateDeletedCount();
     }
 
-    @action
     updateDeletedCount() {
-        const result = db
-            .prepare(
-                `SELECT
+        if (this.updateDeletedCountTimer) {
+            clearTimeout(this.updateDeletedCountTimer);
+        }
+
+        this.updateDeletedCountTimer = setTimeout(
+            action(() => {
+                this.updateDeletedCountTimer = undefined;
+
+                const result = db
+                    .prepare(
+                        `SELECT
                     count(*) AS count
                 FROM
                     activityLog
                 WHERE
                     oid=? AND deleted`
-            )
-            .get(appStore.instrument!.id);
+                    )
+                    .get(appStore.instrument!.id);
 
-        this.deletedCount = result ? result.count : 0;
+                this.deletedCount = result ? result.count : 0;
+
+                if (this.deletedCount == 0 && appStore.filters.deleted) {
+                    appStore.filters.deleted = false;
+                }
+            }),
+            100
+        );
     }
 
     get firstHistoryItem() {
