@@ -10,7 +10,12 @@ import {
     logDelete,
     logUndelete
 } from "shared/activity-log";
-import { StoreOperation, beginTransaction, commitTransaction } from "shared/store";
+import {
+    StoreOperation,
+    IStoreOperationOptions,
+    beginTransaction,
+    commitTransaction
+} from "shared/store";
 import { scheduleTask, Priority } from "shared/scheduler";
 
 import { confirm } from "shared/ui/dialog";
@@ -35,376 +40,13 @@ const CONF_BLOCK_SIZE = 100;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const historyItemMap = new Map<string, IHistoryItem>();
-export const historyItemBlocks = observable<IHistoryItem[]>([]);
-
-////////////////////////////////////////////////////////////////////////////////
-
-function findHistoryItemById(id: string) {
-    for (let i = 0; i < historyItemBlocks.length; ++i) {
-        const historyItems = historyItemBlocks[i];
-        for (let j = 0; j < historyItems.length; ++j) {
-            let historyItem = historyItems[j];
-            if (historyItem.id === id) {
-                return { block: historyItems, blockIndex: i, index: j };
-            }
-        }
-    }
-
-    return undefined;
-}
-
-export function getHistoryItemById(id: string) {
-    const historyItem = historyItemMap.get(id);
-    if (historyItem) {
-        return historyItem;
-    }
-
-    const row = db
-        .prepare(
-            `SELECT id, ${
-                activityLogStore.nonTransientAndNonLazyProperties
-            } FROM activityLog WHERE id=?`
-        )
-        .get(id);
-
-    if (row) {
-        const activityLogEntry = activityLogStore.dbRowToObject(row);
-        const historyItem = createHistoryItem(activityLogEntry);
-        historyItemMap.set(historyItem.id, historyItem);
-        return historyItem;
-    }
-
-    return undefined;
-}
-
-function filterActivityLogEntry(activityLogEntry: IActivityLogEntry) {
-    if (appStore.filters.deleted) {
-        return activityLogEntry.deleted;
-    } else {
-        if (activityLogEntry.deleted) {
-            return false;
-        }
-    }
-
-    if (appStore.filters.connectsAndDisconnects) {
-        if (
-            [
-                "instrument/created",
-                "instrument/connected",
-                "instrument/connect-failed",
-                "instrument/disconnected"
-            ].indexOf(activityLogEntry.type) !== -1
-        ) {
-            return true;
-        }
-    }
-
-    if (appStore.filters.scpi) {
-        if (["instrument/request", "instrument/answer"].indexOf(activityLogEntry.type) !== -1) {
-            return true;
-        }
-    }
-
-    if (appStore.filters.downloadedFiles) {
-        if (activityLogEntry.type === "instrument/file-download") {
-            return true;
-        }
-    }
-
-    if (appStore.filters.uploadedFiles) {
-        if (activityLogEntry.type === "instrument/file-upload") {
-            return true;
-        }
-    }
-
-    if (appStore.filters.attachedFiles) {
-        if (activityLogEntry.type === "instrument/file-attachment") {
-            return true;
-        }
-    }
-
-    if (appStore.filters.charts) {
-        if (activityLogEntry.type === "instrument/chart") {
-            return true;
-        }
-    }
-
-    if (appStore.filters.lists) {
-        if (activityLogEntry.type === "instrument/list") {
-            return true;
-        }
-    }
-
-    if (appStore.filters.notes) {
-        if (activityLogEntry.type === "activity-log/note") {
-            return true;
-        }
-    }
-
-    if (appStore.filters.launchedScripts) {
-        if (activityLogEntry.type === "instrument/script") {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-function getFilter() {
-    const filters: string[] = [];
-
-    if (appStore.filters.deleted) {
-        filters.push("deleted");
-    } else {
-        filters.push("NOT deleted");
-
-        const types: string[] = [];
-
-        if (appStore.filters.connectsAndDisconnects) {
-            types.push(
-                "instrument/created",
-                "instrument/connected",
-                "instrument/connect-failed",
-                "instrument/disconnected"
-            );
-        }
-
-        if (appStore.filters.scpi) {
-            types.push("instrument/request", "instrument/answer");
-        }
-
-        if (appStore.filters.downloadedFiles) {
-            types.push("instrument/file-download");
-        }
-
-        if (appStore.filters.uploadedFiles) {
-            types.push("instrument/file-upload");
-        }
-
-        if (appStore.filters.attachedFiles) {
-            types.push("instrument/file-attachment");
-        }
-
-        if (appStore.filters.charts) {
-            types.push("instrument/chart");
-        }
-
-        if (appStore.filters.lists) {
-            types.push("instrument/list");
-        }
-
-        if (appStore.filters.notes) {
-            types.push("activity-log/note");
-        }
-
-        if (appStore.filters.launchedScripts) {
-            types.push("instrument/script");
-        }
-
-        if (types.length > 0) {
-            filters.push("(" + types.map(type => `type == "${type}"`).join(" OR ") + ")");
-        } else {
-            filters.push("0");
-        }
-    }
-
-    return "AND " + filters.join(" AND ");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function pushActivityLogEntry(activityLogEntry: IActivityLogEntry, op: StoreOperation) {
-    historyNavigator.updateDeletedCount();
-
-    if (activityLogEntry.type === "instrument/connected") {
-        let i;
-        for (i = 0; i < historySessions.sessions.length; ++i) {
-            if (activityLogEntry.date < historySessions.sessions[i].activityLogEntry.date) {
-                break;
-            }
-        }
-        historySessions.sessions.splice(i, 0, {
-            selected: false,
-            id: activityLogEntry.id,
-            activityLogEntry
-        });
-    }
-
-    if (!filterActivityLogEntry(activityLogEntry)) {
-        removeHistoryItemFromBlocks(activityLogEntry);
-        return;
-    }
-
-    // add to map of all history items
-    if (historyItemMap.get(activityLogEntry.id)) {
-        return;
-    }
-    const historyItem = createHistoryItem(activityLogEntry);
-    historyItemMap.set(historyItem.id, historyItem);
-
-    // increment day counter in calandar
-    let day = new Date(
-        historyItem.date.getFullYear(),
-        historyItem.date.getMonth(),
-        historyItem.date.getDate()
-    );
-    historyCalendar.incrementCounter(day);
-
-    if (op === "restore") {
-        // this item was restored from undo buffer,
-        // find the block (according to datetime) to which it should be added
-        let i;
-        for (i = 0; i < historyItemBlocks.length; ++i) {
-            const historyItemBlock = historyItemBlocks[i];
-            if (
-                historyItemBlock.length > 0 &&
-                (historyItem.date < historyItemBlock[0].date ||
-                    (historyItem.date === historyItemBlock[0].date &&
-                        historyItem.id < historyItemBlock[0].id))
-            ) {
-                break;
-            }
-        }
-
-        if (i == 0) {
-            // add at the beginning
-            if (historyItemBlocks.length === 0) {
-                historyItemBlocks.push([historyItem]);
-            } else {
-                historyItemBlocks[0].unshift(historyItem);
-            }
-        } else {
-            // add inside existing block
-            const historyItemBlock = historyItemBlocks[i - 1];
-            let j;
-            for (j = 0; j < historyItemBlock.length; ++j) {
-                if (
-                    historyItemBlock.length > 0 &&
-                    (historyItem.date < historyItemBlock[j].date ||
-                        (historyItem.date === historyItemBlock[j].date &&
-                            historyItem.id < historyItemBlock[j].id))
-                ) {
-                    break;
-                }
-            }
-
-            if (j == 0) {
-                // add to the front of the block
-                historyItemBlock.unshift(historyItem);
-            } else if (j == historyItemBlock.length) {
-                // add to the back of the block
-                historyItemBlock.push(historyItem);
-            } else {
-                // add inside block
-                historyItemBlock.splice(j, 0, historyItem);
-            }
-        }
-    } else {
-        // This is a new history item,
-        // add it to the bottom of history list (last block) ...
-        if (historyNavigator.hasNewer) {
-            historyCalendar.showRecent();
-        } else {
-            if (historyItemBlocks[historyItemBlocks.length - 1].length < CONF_BLOCK_SIZE) {
-                historyItemBlocks[historyItemBlocks.length - 1].push(historyItem);
-            } else {
-                historyItemBlocks.push([historyItem]);
-            }
-        }
-        // ... and scroll to the bottom of history list.
-        moveToBottomOfConnectionHistory();
-    }
-}
-
-function updateHistoryItem(activityLogEntry: IActivityLogEntry) {
-    let historyItem;
-
-    const foundItem = findHistoryItemById(activityLogEntry.id);
-    if (foundItem) {
-        historyItem = foundItem.block[foundItem.index];
-    } else {
-        historyItem = historyItemMap.get(activityLogEntry.id);
-    }
-
-    if (!historyItem) {
-        console.warn("history item not found");
-        return;
-    }
-
-    if (activityLogEntry.message !== undefined) {
-        historyItem.message = activityLogEntry.message;
-    }
-
-    const updatedHistoryItem = updateHistoryItemClass(historyItem);
-    if (updatedHistoryItem !== historyItem) {
-        if (foundItem) {
-            foundItem.block[foundItem.index] = updatedHistoryItem;
-        }
-        historyItemMap.set(updatedHistoryItem.id, updatedHistoryItem);
-    }
-}
-
-function removeHistoryItem(activityLogEntry: IActivityLogEntry) {
-    historyNavigator.updateDeletedCount();
-
-    // remove sesssion if found in historySessions list
-    for (let i = 0; i < historySessions.sessions.length; ++i) {
-        if (historySessions.sessions[i].id === activityLogEntry.id) {
-            historySessions.sessions.splice(i, 1);
-            break;
-        }
-    }
-
-    removeHistoryItemFromBlocks(activityLogEntry);
-}
-
-function removeHistoryItemFromBlocks(activityLogEntry: IActivityLogEntry) {
-    const foundItem = findHistoryItemById(activityLogEntry.id);
-    if (foundItem) {
-        foundItem.block.splice(foundItem.index, 1);
-        if (foundItem.block.length === 0) {
-            historyItemBlocks.splice(foundItem.blockIndex, 1);
-        }
-    }
-
-    if (historyItemMap.get(activityLogEntry.id)) {
-        historyItemMap.delete(activityLogEntry.id);
-    } else {
-        console.warn("history item not found");
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function rowsToHistoryItems(rows: any[]) {
-    const historyItems: IHistoryItem[] = [];
-    rows.forEach(row => {
-        let historyItem = historyItemMap.get(row.id.toString());
-        if (!historyItem) {
-            const activityLogEntry = activityLogStore.dbRowToObject(row);
-            historyItem = createHistoryItem(activityLogEntry);
-            historyItemMap.set(historyItem.id, historyItem);
-        }
-        historyItems.push(historyItem);
-    });
-    return historyItems;
-}
-
-function displayRows(rows: any[]) {
-    runInAction(() => {
-        historyItemBlocks.replace([rowsToHistoryItems(rows)]);
-        historyNavigator.update();
-    });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 class HistoryCalendar {
     @observable minDate: Date;
     @observable maxDate: Date;
     @observable counters = new Map<string, number>();
     @observable showFirstHistoryItemAsSelectedDay: boolean = false;
+
+    constructor(public history: History) {}
 
     @action
     load() {
@@ -424,7 +66,7 @@ class HistoryCalendar {
                         FROM
                             activityLog
                         WHERE
-                            oid=? ${getFilter()}
+                            oid=? ${this.history.getFilter()}
                     )
                     GROUP BY
                         date
@@ -434,7 +76,7 @@ class HistoryCalendar {
                 .all(appStore.instrument!.id);
 
             if (rows.length > 0) {
-                rows.forEach(row => this.counters.set(row.date, row.count));
+                rows.forEach(row => this.counters.set(row.date, row.count.toNumber()));
                 this.minDate = new Date(rows[0].date + " 00:00:00");
                 this.maxDate = new Date();
             } else {
@@ -466,7 +108,7 @@ class HistoryCalendar {
                             FROM
                                 activityLog
                             WHERE
-                                oid=? AND date >= ? ${getFilter()}
+                                oid=? AND date >= ? ${this.history.getFilter()}
                             ORDER BY
                                 date
                         )
@@ -474,7 +116,7 @@ class HistoryCalendar {
                 )
                 .all(appStore.instrument!.id, selectedDay.getTime(), CONF_BLOCK_SIZE);
 
-            displayRows(rows);
+            this.history.displayRows(rows);
 
             moveToTopOfConnectionHistory();
         } else {
@@ -489,7 +131,7 @@ class HistoryCalendar {
                     FROM
                         activityLog
                     WHERE
-                        oid=? ${getFilter()}
+                        oid=? ${this.history.getFilter()}
                     ORDER BY
                         date DESC
                     LIMIT ?`
@@ -498,7 +140,7 @@ class HistoryCalendar {
 
             rows.reverse();
 
-            displayRows(rows);
+            this.history.displayRows(rows);
 
             moveToBottomOfConnectionHistory();
         }
@@ -507,14 +149,20 @@ class HistoryCalendar {
     @computed
     get selectedDay() {
         if (this.showFirstHistoryItemAsSelectedDay) {
-            return historyNavigator.firstHistoryItem && historyNavigator.firstHistoryItem.date;
+            return (
+                this.history.navigator.firstHistoryItem &&
+                this.history.navigator.firstHistoryItem.date
+            );
         } else {
-            return historyNavigator.lastHistoryItem && historyNavigator.lastHistoryItem.date;
+            return (
+                this.history.navigator.lastHistoryItem &&
+                this.history.navigator.lastHistoryItem.date
+            );
         }
     }
 
     isSelectedDay(day: Date) {
-        if (historySearch.selectedSearchResult) {
+        if (this.history.search.selectedSearchResult) {
             return false;
         }
         let selectedDay = this.selectedDay;
@@ -527,7 +175,7 @@ class HistoryCalendar {
     }
 
     isSelectedMonth(month: Date) {
-        if (historySearch.selectedSearchResult) {
+        if (this.history.search.selectedSearchResult) {
             return false;
         }
         let selectedDay = this.selectedDay;
@@ -540,7 +188,7 @@ class HistoryCalendar {
 
     @action
     showRecent() {
-        historySearch.selectSearchResult(undefined);
+        this.history.search.selectSearchResult(undefined);
         this.update();
     }
 
@@ -550,7 +198,7 @@ class HistoryCalendar {
             this.maxDate = day;
         }
 
-        historySearch.selectSearchResult(undefined);
+        this.history.search.selectSearchResult(undefined);
         this.update(day);
     }
 
@@ -559,9 +207,13 @@ class HistoryCalendar {
         const key = formatDate(day, "YYYY-MM-DD");
         this.counters.set(key, (this.counters.get(key) || 0) + 1);
     }
-}
 
-export const historyCalendar = new HistoryCalendar();
+    @action
+    decrementCounter(day: Date) {
+        const key = formatDate(day, "YYYY-MM-DD");
+        this.counters.set(key, (this.counters.get(key) || 0) - 1);
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -571,8 +223,6 @@ export class SearchResult {
     @observable selected = false;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 class HistorySearch {
     @observable searchActive: boolean = false;
     @observable searchResults: SearchResult[] = [];
@@ -581,6 +231,8 @@ class HistorySearch {
     searchLastLogDate: any;
     searchLoopTimeout: any;
     @observable selectedSearchResult: SearchResult | undefined;
+
+    constructor(public history: History) {}
 
     update() {
         this.search("");
@@ -634,7 +286,7 @@ class HistorySearch {
                 WHERE
                     oid=? AND
                     date > ? AND
-                    message LIKE ? ${getFilter()}
+                    message LIKE ? ${this.history.getFilter()}
                 ORDER BY
                     date
                 LIMIT
@@ -687,7 +339,7 @@ class HistorySearch {
         if (this.selectedSearchResult) {
             this.selectedSearchResult.selected = false;
 
-            const historyItem = historyItemMap.get(this.selectedSearchResult.logEntry.id);
+            const historyItem = this.history.map.get(this.selectedSearchResult.logEntry.id);
             if (historyItem) {
                 historyItem.selected = false;
             }
@@ -706,7 +358,7 @@ class HistorySearch {
                                 id,
                                 ${activityLogStore.nonTransientAndNonLazyProperties}
                             FROM (
-                                SELECT * FROM activityLog WHERE oid=? ${getFilter()} ORDER BY date
+                                SELECT * FROM activityLog WHERE oid=? ${this.history.getFilter()} ORDER BY date
                             )
                             WHERE
                                 date >= ?
@@ -720,7 +372,7 @@ class HistorySearch {
                                 id,
                                 ${activityLogStore.nonTransientAndNonLazyProperties}
                             FROM (
-                                SELECT * FROM activityLog WHERE oid=? ${getFilter()} ORDER BY date DESC
+                                SELECT * FROM activityLog WHERE oid=? ${this.history.getFilter()} ORDER BY date DESC
                             )
                             WHERE
                                 date < ?
@@ -737,9 +389,9 @@ class HistorySearch {
                     CONF_BLOCK_SIZE / 2
                 );
 
-            displayRows(rows);
+            this.history.displayRows(rows);
 
-            const historyItem = historyItemMap.get(searchResult.logEntry.id);
+            const historyItem = this.history.map.get(searchResult.logEntry.id);
             if (historyItem) {
                 historyItem.selected = true;
                 selectHistoryItem(historyItem);
@@ -750,85 +402,13 @@ class HistorySearch {
     }
 }
 
-export const historySearch = new HistorySearch();
-
-///
+////////////////////////////////////////////////////////////////////////////////
 
 class HistoryNavigator {
     @observable hasOlder = false;
     @observable hasNewer = false;
 
-    @observable _selectedHistoryItems: IHistoryItem[] = [];
-
-    @observable deletedCount: number = 0;
-    updateDeletedCountTimer: any;
-
-    @computed
-    get selectedHistoryItems() {
-        return appStore.selectHistoryItemsSpecification ? [] : this._selectedHistoryItems;
-    }
-
-    @action
-    selectHistoryItems(historyItems: IHistoryItem[]) {
-        this._selectedHistoryItems.forEach(historyItem => (historyItem.selected = false));
-        this._selectedHistoryItems = historyItems;
-        this._selectedHistoryItems.forEach(historyItem => (historyItem.selected = true));
-    }
-
-    @action.bound
-    deleteHistoryItems() {
-        if (historyNavigator.selectedHistoryItems.length > 0) {
-            beginTransaction("Delete history items");
-
-            historyNavigator.selectedHistoryItems.forEach(historyItem =>
-                logDelete(historyItem, {
-                    undoable: true
-                })
-            );
-
-            commitTransaction();
-
-            historyNavigator.selectHistoryItems([]);
-        }
-    }
-
-    @action.bound
-    restoreHistoryItems() {
-        if (historyNavigator.selectedHistoryItems.length > 0) {
-            beginTransaction("Restore history items");
-
-            historyNavigator.selectedHistoryItems.forEach(historyItem =>
-                logUndelete(historyItem, {
-                    undoable: true
-                })
-            );
-
-            commitTransaction();
-
-            historyNavigator.selectHistoryItems([]);
-        }
-    }
-
-    @action.bound
-    purgeHistoryItems() {
-        if (historyNavigator.selectedHistoryItems.length > 0) {
-            confirm("Are you sure?", "This will permanently delete selected history items.", () => {
-                if (historyNavigator.selectedHistoryItems.length > 0) {
-                    beginTransaction("Purge history items");
-
-                    historyNavigator.selectedHistoryItems.forEach(historyItem =>
-                        logDelete(historyItem, {
-                            undoable: false
-                        })
-                    );
-
-                    commitTransaction();
-
-                    historyNavigator.selectHistoryItems([]);
-                }
-            });
-        }
-    }
+    constructor(public history: History) {}
 
     update() {
         const firstHistoryItem = this.firstHistoryItem;
@@ -840,11 +420,11 @@ class HistoryNavigator {
                     FROM
                         activityLog
                     WHERE
-                        oid=? AND date < ? ${getFilter()}`
+                        oid=? AND date < ? ${this.history.getFilter()}`
                 )
                 .get(appStore.instrument!.id, firstHistoryItem.date.getTime());
 
-            this.hasOlder = result && result.count > 0;
+            this.hasOlder = result && result.count.toNumber() > 0;
         } else {
             this.hasOlder = false;
         }
@@ -858,53 +438,21 @@ class HistoryNavigator {
                     FROM
                         activityLog
                     WHERE
-                        oid=? AND date > ? ${getFilter()}`
+                        oid=? AND date > ? ${this.history.getFilter()}`
                 )
                 .get(appStore.instrument!.id, lastHistoryItem.date.getTime());
 
-            this.hasNewer = result && result.count > 0;
+            this.hasNewer = result && result.count.toNumber() > 0;
         } else {
             this.hasNewer = false;
         }
 
-        this.selectHistoryItems([]);
-
-        this.updateDeletedCount();
-    }
-
-    updateDeletedCount() {
-        if (this.updateDeletedCountTimer) {
-            clearTimeout(this.updateDeletedCountTimer);
-        }
-
-        this.updateDeletedCountTimer = setTimeout(
-            action(() => {
-                this.updateDeletedCountTimer = undefined;
-
-                const result = db
-                    .prepare(
-                        `SELECT
-                    count(*) AS count
-                FROM
-                    activityLog
-                WHERE
-                    oid=? AND deleted`
-                    )
-                    .get(appStore.instrument!.id);
-
-                this.deletedCount = result ? result.count : 0;
-
-                if (this.deletedCount == 0 && appStore.filters.deleted) {
-                    appStore.filters.deleted = false;
-                }
-            }),
-            100
-        );
+        this.history.selection.selectItems([]);
     }
 
     get firstHistoryItem() {
-        if (historyItemBlocks.length > 0) {
-            const firstBlock = historyItemBlocks[0];
+        if (this.history.blocks.length > 0) {
+            const firstBlock = this.history.blocks[0];
             if (firstBlock.length > 0) {
                 return firstBlock[0];
             }
@@ -913,8 +461,8 @@ class HistoryNavigator {
     }
 
     get lastHistoryItem() {
-        if (historyItemBlocks.length > 0) {
-            const lastBlock = historyItemBlocks[historyItemBlocks.length - 1];
+        if (this.history.blocks.length > 0) {
+            const lastBlock = this.history.blocks[this.history.blocks.length - 1];
             if (lastBlock.length > 0) {
                 return lastBlock[lastBlock.length - 1];
             }
@@ -938,7 +486,7 @@ class HistoryNavigator {
                             FROM
                                 activityLog
                             WHERE
-                                oid=? AND date < ? ${getFilter()}
+                                oid=? AND date < ? ${this.history.getFilter()}
                             ORDER BY
                                 date DESC
                         )
@@ -949,8 +497,8 @@ class HistoryNavigator {
             rows.reverse();
 
             if (rows.length > 0) {
-                historyCalendar.showFirstHistoryItemAsSelectedDay = true;
-                historyItemBlocks.splice(0, 0, rowsToHistoryItems(rows));
+                this.history.calendar.showFirstHistoryItemAsSelectedDay = true;
+                this.history.blocks.splice(0, 0, this.history.rowsToHistoryItems(rows));
                 this.update();
             }
         }
@@ -972,7 +520,7 @@ class HistoryNavigator {
                             FROM
                                 activityLog
                             WHERE
-                                oid=? AND date > ? ${getFilter()}
+                                oid=? AND date > ? ${this.history.getFilter()}
                             ORDER BY
                                 date
                         )
@@ -981,34 +529,13 @@ class HistoryNavigator {
                 .all(appStore.instrument!.id, lastHistoryItem.date.getTime(), CONF_BLOCK_SIZE);
 
             if (rows.length > 0) {
-                historyCalendar.showFirstHistoryItemAsSelectedDay = false;
-                historyItemBlocks.push(rowsToHistoryItems(rows));
+                this.history.calendar.showFirstHistoryItemAsSelectedDay = false;
+                this.history.blocks.push(this.history.rowsToHistoryItems(rows));
                 this.update();
             }
         }
     }
 }
-
-export const historyNavigator = new HistoryNavigator();
-
-////////////////////////////////////////////////////////////////////////////////
-
-let reactionTimeout: any;
-
-reaction(
-    () => getFilter(),
-    filter => {
-        if (reactionTimeout) {
-            clearTimeout(reactionTimeout);
-        }
-        reactionTimeout = setTimeout(() => {
-            reactionTimeout = undefined;
-            historyCalendar.load();
-            historyCalendar.update();
-            historySearch.update();
-        }, 10);
-    }
-);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1021,6 +548,8 @@ export interface ISession {
 class HistorySessions {
     @observable sessions: ISession[] = [];
     @observable selectedSession: ISession | undefined;
+
+    constructor(public history: History) {}
 
     @action
     load() {
@@ -1035,7 +564,7 @@ class HistorySessions {
                     oid=? AND type = "instrument/connected"`
             )
             .all(appStore.instrument!.id);
-        this.sessions = rowsToHistoryItems(rows).map(activityLogEntry => ({
+        this.sessions = this.history.rowsToHistoryItems(rows).map(activityLogEntry => ({
             selected: false,
             id: activityLogEntry.id,
             activityLogEntry
@@ -1065,7 +594,7 @@ class HistorySessions {
                             FROM
                                 activityLog
                             WHERE
-                                oid=? AND date >= ? ${getFilter()}
+                                oid=? AND date >= ? ${this.history.getFilter()}
                             ORDER BY
                                 date
                         )
@@ -1077,57 +606,720 @@ class HistorySessions {
                     CONF_BLOCK_SIZE
                 );
 
-            displayRows(rows);
+            this.history.displayRows(rows);
 
             moveToTopOfConnectionHistory();
         }
     }
-}
 
-export const historySessions = new HistorySessions();
+    onActivityLogEntryCreated(activityLogEntry: IActivityLogEntry) {
+        if (activityLogEntry.type === "instrument/connected") {
+            let i;
+            for (i = 0; i < this.sessions.length; ++i) {
+                if (activityLogEntry.id === this.sessions[i].activityLogEntry.id) {
+                    return;
+                }
+                if (activityLogEntry.date < this.sessions[i].activityLogEntry.date) {
+                    break;
+                }
+            }
+            this.sessions.splice(i, 0, {
+                selected: false,
+                id: activityLogEntry.id,
+                activityLogEntry
+            });
+        }
+    }
+
+    onActivityLogEntryRemoved(activityLogEntry: IActivityLogEntry) {
+        if (activityLogEntry.type === "instrument/connected") {
+            for (let i = 0; i < this.sessions.length; ++i) {
+                if (this.sessions[i].id === activityLogEntry.id) {
+                    this.sessions.splice(i, 1);
+                    break;
+                }
+            }
+        }
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-scheduleTask("Watch activity log", Priority.Middle, () => {
-    activityLogStore.watch(
-        {
-            createObject(object: any, op: StoreOperation) {
-                runInAction(() => pushActivityLogEntry(object, op));
-            },
-            updateObject(changes: any) {
-                updateHistoryItem(changes);
-            },
-            deleteObject(object: any) {
-                runInAction(() => removeHistoryItem(object));
+class HistorySelection {
+    @observable _items: IHistoryItem[] = [];
+
+    constructor(public history: History) {}
+
+    @computed
+    get items() {
+        return appStore.selectHistoryItemsSpecification ? [] : this._items;
+    }
+
+    @action
+    selectItems(historyItems: IHistoryItem[]) {
+        this._items.forEach(historyItem => (historyItem.selected = false));
+        this._items = historyItems;
+        this._items.forEach(historyItem => (historyItem.selected = true));
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class FilterStats {
+    @observable connectsAndDisconnects = 0;
+    @observable scpi = 0;
+    @observable downloadedFiles = 0;
+    @observable uploadedFiles = 0;
+    @observable attachedFiles = 0;
+    @observable charts = 0;
+    @observable lists = 0;
+    @observable notes = 0;
+    @observable launchedScripts = 0;
+
+    constructor() {
+        scheduleTask(
+            "Get filter stats",
+            Priority.Lowest,
+            action(() => {
+                const rows = db
+                    .prepare(
+                        `SELECT
+                            type, count(*) AS count
+                        FROM
+                            activityLog
+                        WHERE
+                            oid=? AND NOT deleted
+                        GROUP BY
+                            type`
+                    )
+                    .all(appStore.instrument!.id);
+
+                rows.forEach(row => {
+                    this.add(row.type, row.count.toNumber());
+                });
+            })
+        );
+    }
+
+    add(type: string, amount: number) {
+        if (
+            [
+                "instrument/created",
+                "instrument/restored",
+                "instrument/connected",
+                "instrument/connect-failed",
+                "instrument/disconnected"
+            ].indexOf(type) !== -1
+        ) {
+            this.connectsAndDisconnects += amount;
+        } else if (["instrument/request", "instrument/answer"].indexOf(type) !== -1) {
+            this.scpi += amount;
+        } else if (type === "instrument/file-download") {
+            this.downloadedFiles += amount;
+        } else if (type === "instrument/file-upload") {
+            this.uploadedFiles += amount;
+        } else if (type === "instrument/file-attachment") {
+            this.attachedFiles += amount;
+        } else if (type === "instrument/chart") {
+            this.charts += amount;
+        } else if (type === "instrument/list") {
+            this.lists += amount;
+        } else if (type === "activity-log/note") {
+            this.notes += amount;
+        } else if (type === "instrument/script") {
+            this.launchedScripts += amount;
+        }
+    }
+
+    onActivityLogEntryCreated(activityLogEntry: IActivityLogEntry) {
+        this.add(activityLogEntry.type, 1);
+    }
+
+    onActivityLogEntryRemoved(activityLogEntry: IActivityLogEntry) {
+        this.add(activityLogEntry.type, -11);
+    }
+}
+
+export class History {
+    map = new Map<string, IHistoryItem>();
+    @observable blocks: IHistoryItem[][] = [];
+
+    calendar = new HistoryCalendar(this);
+    search = new HistorySearch(this);
+    navigator = new HistoryNavigator(this);
+    sessions = new HistorySessions(this);
+    selection = new HistorySelection(this);
+
+    filterStats: FilterStats;
+
+    reactionTimeout: any;
+
+    constructor(public isDeletedItemsHistory: boolean = false) {
+        scheduleTask(
+            "Watch activity log",
+            isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
+            () => {
+                activityLogStore.watch(
+                    {
+                        createObject: (
+                            object: any,
+                            op: StoreOperation,
+                            options: IStoreOperationOptions
+                        ) => {
+                            this.onCreateActivityLogEntry(object, op, options);
+                        },
+                        updateObject: (
+                            changes: any,
+                            op: StoreOperation,
+                            options: IStoreOperationOptions
+                        ) => {
+                            this.onUpdateActivityLogEntry(changes, op, options);
+                        },
+                        deleteObject: (
+                            object: any,
+                            op: StoreOperation,
+                            options: IStoreOperationOptions
+                        ) => {
+                            this.onDeleteActivityLogEntry(object, op, options);
+                        }
+                    },
+                    {
+                        skipInitialQuery: true,
+                        oid: appStore.instrument!.id
+                    } as IActivityLogFilterSpecification
+                );
             }
-        },
-        {
-            skipInitialQuery: true,
-            oid: appStore.instrument!.id
-        } as IActivityLogFilterSpecification
-    );
-});
+        );
 
-scheduleTask(
-    "Show most recent log items",
-    Priority.Middle,
-    action(() => {
-        historyCalendar.update();
-    })
-);
+        scheduleTask(
+            "Show most recent log items",
+            isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
+            action(() => {
+                this.calendar.update();
+            })
+        );
 
-scheduleTask(
-    "Load calendar",
-    Priority.Low,
-    action(() => {
-        historyCalendar.load();
-    })
-);
+        scheduleTask(
+            "Load calendar",
+            isDeletedItemsHistory ? Priority.Lowest : Priority.Low,
+            action(() => {
+                this.calendar.load();
+            })
+        );
 
-scheduleTask(
-    "Load sessions ",
-    Priority.Low,
-    action(() => {
-        historySessions.load();
-    })
-);
+        if (!isDeletedItemsHistory) {
+            scheduleTask(
+                "Load sessions",
+                Priority.Low,
+                action(() => {
+                    this.sessions.load();
+                })
+            );
+        }
+
+        reaction(
+            () => this.getFilter(),
+            filter => {
+                if (this.reactionTimeout) {
+                    clearTimeout(this.reactionTimeout);
+                }
+                this.reactionTimeout = setTimeout(() => {
+                    this.reactionTimeout = undefined;
+                    this.calendar.load();
+                    this.calendar.update();
+                    this.search.update();
+                }, 10);
+            }
+        );
+
+        if (!isDeletedItemsHistory) {
+            this.filterStats = new FilterStats();
+        }
+    }
+
+    findHistoryItemById(id: string) {
+        for (let i = 0; i < this.blocks.length; ++i) {
+            const historyItems = this.blocks[i];
+            for (let j = 0; j < historyItems.length; ++j) {
+                let historyItem = historyItems[j];
+                if (historyItem.id === id) {
+                    return { block: historyItems, blockIndex: i, index: j };
+                }
+            }
+        }
+
+        return undefined;
+    }
+
+    getHistoryItemById(id: string) {
+        const historyItem = this.map.get(id);
+        if (historyItem) {
+            return historyItem;
+        }
+
+        const activityLogEntry = activityLogStore.findById(id);
+        if (activityLogEntry) {
+            const historyItem = createHistoryItem(activityLogEntry);
+            this.map.set(historyItem.id, historyItem);
+            return historyItem;
+        }
+
+        return undefined;
+    }
+
+    filterActivityLogEntry(activityLogEntry: IActivityLogEntry) {
+        if (activityLogEntry.deleted) {
+            return false;
+        }
+
+        if (appStore.filters.connectsAndDisconnects) {
+            if (
+                [
+                    "instrument/created",
+                    "instrument/restored",
+                    "instrument/connected",
+                    "instrument/connect-failed",
+                    "instrument/disconnected"
+                ].indexOf(activityLogEntry.type) !== -1
+            ) {
+                return true;
+            }
+        }
+
+        if (appStore.filters.scpi) {
+            if (["instrument/request", "instrument/answer"].indexOf(activityLogEntry.type) !== -1) {
+                return true;
+            }
+        }
+
+        if (appStore.filters.downloadedFiles) {
+            if (activityLogEntry.type === "instrument/file-download") {
+                return true;
+            }
+        }
+
+        if (appStore.filters.uploadedFiles) {
+            if (activityLogEntry.type === "instrument/file-upload") {
+                return true;
+            }
+        }
+
+        if (appStore.filters.attachedFiles) {
+            if (activityLogEntry.type === "instrument/file-attachment") {
+                return true;
+            }
+        }
+
+        if (appStore.filters.charts) {
+            if (activityLogEntry.type === "instrument/chart") {
+                return true;
+            }
+        }
+
+        if (appStore.filters.lists) {
+            if (activityLogEntry.type === "instrument/list") {
+                return true;
+            }
+        }
+
+        if (appStore.filters.notes) {
+            if (activityLogEntry.type === "activity-log/note") {
+                return true;
+            }
+        }
+
+        if (appStore.filters.launchedScripts) {
+            if (activityLogEntry.type === "instrument/script") {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    getFilter() {
+        const filters: string[] = [];
+
+        filters.push("NOT deleted");
+
+        const types: string[] = [];
+
+        if (appStore.filters.connectsAndDisconnects) {
+            types.push(
+                "instrument/created",
+                "instrument/restored",
+                "instrument/connected",
+                "instrument/connect-failed",
+                "instrument/disconnected"
+            );
+        }
+
+        if (appStore.filters.scpi) {
+            types.push("instrument/request", "instrument/answer");
+        }
+
+        if (appStore.filters.downloadedFiles) {
+            types.push("instrument/file-download");
+        }
+
+        if (appStore.filters.uploadedFiles) {
+            types.push("instrument/file-upload");
+        }
+
+        if (appStore.filters.attachedFiles) {
+            types.push("instrument/file-attachment");
+        }
+
+        if (appStore.filters.charts) {
+            types.push("instrument/chart");
+        }
+
+        if (appStore.filters.lists) {
+            types.push("instrument/list");
+        }
+
+        if (appStore.filters.notes) {
+            types.push("activity-log/note");
+        }
+
+        if (appStore.filters.launchedScripts) {
+            types.push("instrument/script");
+        }
+
+        if (types.length > 0) {
+            filters.push("(" + types.map(type => `type == "${type}"`).join(" OR ") + ")");
+        } else {
+            filters.push("0");
+        }
+
+        return "AND " + filters.join(" AND ");
+    }
+
+    addActivityLogEntryToBlocks(activityLogEntry: IActivityLogEntry) {
+        const historyItem = createHistoryItem(activityLogEntry);
+        this.map.set(historyItem.id, historyItem);
+
+        // increment day counter in calandar
+        let day = new Date(
+            historyItem.date.getFullYear(),
+            historyItem.date.getMonth(),
+            historyItem.date.getDate()
+        );
+        this.calendar.incrementCounter(day);
+
+        // find the block (according to datetime) to which it should be added
+        let i;
+        for (i = 0; i < this.blocks.length; ++i) {
+            const historyItemBlock = this.blocks[i];
+            if (
+                historyItemBlock.length > 0 &&
+                (historyItem.date < historyItemBlock[0].date ||
+                    (historyItem.date === historyItemBlock[0].date &&
+                        historyItem.id < historyItemBlock[0].id))
+            ) {
+                break;
+            }
+        }
+
+        if (i == 0) {
+            // add at the beginning
+            if (this.blocks.length === 0) {
+                this.blocks.push([historyItem]);
+            } else {
+                this.blocks[0].unshift(historyItem);
+            }
+        } else {
+            // add inside existing block
+            const historyItemBlock = this.blocks[i - 1];
+            let j;
+            for (j = 0; j < historyItemBlock.length; ++j) {
+                if (
+                    historyItemBlock.length > 0 &&
+                    (historyItem.date < historyItemBlock[j].date ||
+                        (historyItem.date === historyItemBlock[j].date &&
+                            historyItem.id < historyItemBlock[j].id))
+                ) {
+                    break;
+                }
+            }
+
+            if (j == 0) {
+                // add to the front of the block
+                historyItemBlock.unshift(historyItem);
+            } else if (j == historyItemBlock.length) {
+                // add to the back of the block
+                historyItemBlock.push(historyItem);
+            } else {
+                // add inside block
+                historyItemBlock.splice(j, 0, historyItem);
+            }
+        }
+    }
+
+    removeActivityLogEntryFromBlocks(activityLogEntry: IActivityLogEntry) {
+        const foundItem = this.findHistoryItemById(activityLogEntry.id);
+        if (foundItem) {
+            const historyItem = foundItem.block[foundItem.index];
+
+            foundItem.block.splice(foundItem.index, 1);
+            if (foundItem.block.length === 0) {
+                this.blocks.splice(foundItem.blockIndex, 1);
+            }
+
+            // decrement day counter in calandar
+            let day = new Date(
+                historyItem.date.getFullYear(),
+                historyItem.date.getMonth(),
+                historyItem.date.getDate()
+            );
+            this.calendar.decrementCounter(day);
+        }
+
+        if (this.map.get(activityLogEntry.id)) {
+            this.map.delete(activityLogEntry.id);
+        } else {
+            if (!this.isDeletedItemsHistory) {
+                console.warn("history item not found");
+            }
+        }
+    }
+
+    rowsToHistoryItems(rows: any[]) {
+        const historyItems: IHistoryItem[] = [];
+        rows.forEach(row => {
+            let historyItem = this.map.get(row.id.toString());
+            if (!historyItem) {
+                const activityLogEntry = activityLogStore.dbRowToObject(row);
+                historyItem = createHistoryItem(activityLogEntry);
+                this.map.set(historyItem.id, historyItem);
+            }
+            historyItems.push(historyItem);
+        });
+        return historyItems;
+    }
+
+    @action
+    displayRows(rows: any[]) {
+        this.blocks = [this.rowsToHistoryItems(rows)];
+        this.navigator.update();
+    }
+
+    @action
+    onCreateActivityLogEntry(
+        activityLogEntry: IActivityLogEntry,
+        op: StoreOperation,
+        options: IStoreOperationOptions
+    ) {
+        if (this.map.get(activityLogEntry.id)) {
+            return;
+        }
+
+        this.sessions.onActivityLogEntryCreated(activityLogEntry);
+
+        this.filterStats.onActivityLogEntryCreated(activityLogEntry);
+
+        if (op === "restore") {
+            // this item was restored from undo buffer,
+            this.addActivityLogEntryToBlocks(activityLogEntry);
+        } else {
+            // This is a new history item,
+            // add it to the bottom of history list (last block) ...
+            if (this.navigator.hasNewer) {
+                this.calendar.showRecent();
+            } else {
+                this.addActivityLogEntryToBlocks(activityLogEntry);
+            }
+            // ... and scroll to the bottom of history list.
+            moveToBottomOfConnectionHistory();
+        }
+    }
+
+    @action
+    onUpdateActivityLogEntry(
+        activityLogEntry: IActivityLogEntry,
+        op: StoreOperation,
+        options: IStoreOperationOptions
+    ) {
+        let historyItem;
+
+        const foundItem = this.findHistoryItemById(activityLogEntry.id);
+        if (foundItem) {
+            historyItem = foundItem.block[foundItem.index];
+        } else {
+            historyItem = this.map.get(activityLogEntry.id);
+        }
+
+        if (!historyItem) {
+            if (!this.isDeletedItemsHistory) {
+                console.warn("history item not found");
+            }
+            return;
+        }
+
+        if (activityLogEntry.message !== undefined) {
+            historyItem.message = activityLogEntry.message;
+        }
+
+        const updatedHistoryItem = updateHistoryItemClass(historyItem);
+        if (updatedHistoryItem !== historyItem) {
+            if (foundItem) {
+                foundItem.block[foundItem.index] = updatedHistoryItem;
+            }
+            this.map.set(updatedHistoryItem.id, updatedHistoryItem);
+        }
+    }
+
+    @action
+    onDeleteActivityLogEntry(
+        activityLogEntry: IActivityLogEntry,
+        op: StoreOperation,
+        options: IStoreOperationOptions
+    ) {
+        this.sessions.onActivityLogEntryRemoved(activityLogEntry);
+        this.filterStats.onActivityLogEntryRemoved(activityLogEntry);
+        this.removeActivityLogEntryFromBlocks(activityLogEntry);
+    }
+
+    @action.bound
+    deleteSelectedHistoryItems() {
+        if (this.selection.items.length > 0) {
+            beginTransaction("Delete history items");
+
+            this.selection.items.forEach(historyItem =>
+                logDelete(
+                    {
+                        oid: appStore.instrument!.id,
+                        id: historyItem.id
+                    },
+                    {
+                        undoable: true
+                    }
+                )
+            );
+
+            commitTransaction();
+
+            this.selection.selectItems([]);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class DeletedItemsHistory extends History {
+    @observable deletedCount: number = 0;
+
+    constructor() {
+        super(true);
+
+        scheduleTask(
+            "Get deleted history items count",
+            Priority.Lowest,
+            action(() => {
+                const result = db
+                    .prepare(
+                        `SELECT
+                            count(*) AS count
+                        FROM
+                            activityLog
+                        WHERE
+                            oid=? AND deleted`
+                    )
+                    .get(appStore.instrument!.id);
+
+                this.deletedCount = result ? result.count : 0;
+            })
+        );
+    }
+
+    filterActivityLogEntry(activityLogEntry: IActivityLogEntry) {
+        return activityLogEntry.deleted;
+    }
+
+    getFilter() {
+        return "AND deleted";
+    }
+
+    @action
+    onCreateActivityLogEntry(
+        activityLogEntry: IActivityLogEntry,
+        op: StoreOperation,
+        options: IStoreOperationOptions
+    ) {
+        this.removeActivityLogEntryFromBlocks(activityLogEntry);
+        --this.deletedCount;
+    }
+
+    @action
+    onDeleteActivityLogEntry(
+        activityLogEntry: IActivityLogEntry,
+        op: StoreOperation,
+        options: IStoreOperationOptions
+    ) {
+        if (options.deletePermanently) {
+            this.removeActivityLogEntryFromBlocks(activityLogEntry);
+            --this.deletedCount;
+        } else {
+            // we need all properties here since only id is guaranteed from store notification when deleting object
+            activityLogEntry = activityLogStore.findById(activityLogEntry.id);
+
+            this.addActivityLogEntryToBlocks(activityLogEntry);
+            ++this.deletedCount;
+        }
+    }
+
+    @action.bound
+    restoreSelectedHistoryItems() {
+        if (this.selection.items.length > 0) {
+            beginTransaction("Restore history items");
+
+            this.selection.items.forEach(historyItem =>
+                logUndelete(
+                    {
+                        oid: appStore.instrument!.id,
+                        id: historyItem.id
+                    },
+                    {
+                        undoable: true
+                    }
+                )
+            );
+
+            commitTransaction();
+
+            this.selection.selectItems([]);
+        }
+    }
+
+    @action.bound
+    deleteSelectedHistoryItems() {
+        if (this.selection.items.length > 0) {
+            confirm("Are you sure?", "This will permanently delete selected history items.", () => {
+                if (this.selection.items.length > 0) {
+                    beginTransaction("Purge history items");
+
+                    this.selection.items.forEach(historyItem =>
+                        logDelete(
+                            {
+                                oid: appStore.instrument!.id,
+                                id: historyItem.id
+                            },
+                            {
+                                deletePermanently: true
+                            }
+                        )
+                    );
+
+                    commitTransaction();
+
+                    this.selection.selectItems([]);
+                }
+            });
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const history = new History();
+export const deletedItemsHistory = new DeletedItemsHistory();

@@ -11,14 +11,17 @@ import { findObjectByActivityLogEntry } from "shared/extensions/extensions";
 
 import { appStore } from "instrument/window/app-store";
 
-import { historySearch, SearchResult } from "instrument/window/history";
+import { History, SearchResult } from "instrument/window/history";
 
 import { Filters } from "instrument/window/terminal/filters";
 import { SessionList } from "instrument/window/terminal/session-list";
 import { Calendar } from "instrument/window/terminal/calendar";
 
 @observer
-export class SearchResultComponent extends React.Component<{ searchResult: SearchResult }> {
+export class SearchResultComponent extends React.Component<{
+    history: History;
+    searchResult: SearchResult;
+}> {
     render() {
         const logEntry = this.props.searchResult.logEntry;
         const { date, type, message } = logEntry;
@@ -46,7 +49,9 @@ export class SearchResultComponent extends React.Component<{ searchResult: Searc
         return (
             <tr
                 className={className}
-                onClick={() => historySearch.selectSearchResult(this.props.searchResult)}
+                onClick={() =>
+                    this.props.history.search.selectSearchResult(this.props.searchResult)
+                }
             >
                 <td className="dateColumn">{formatDateTimeLong(date)}</td>
                 <td className="contentColumn">{content}</td>
@@ -56,13 +61,13 @@ export class SearchResultComponent extends React.Component<{ searchResult: Searc
 }
 
 @observer
-export class SearchResults extends React.Component {
+export class SearchResults extends React.Component<{ history: History }> {
     render() {
         let info;
 
-        if (historySearch.searchResults.length > 0) {
-            info = `${historySearch.searchResults.length} log items found`;
-        } else if (!historySearch.searchInProgress) {
+        if (this.props.history.search.searchResults.length > 0) {
+            info = `${this.props.history.search.searchResults.length} log items found`;
+        } else if (!this.props.history.search.searchInProgress) {
             info = `No log item found.`;
         }
 
@@ -72,9 +77,10 @@ export class SearchResults extends React.Component {
                 <Body className="EezStudio_HistoryTable selectable">
                     <table className="table">
                         <tbody>
-                            {historySearch.searchResults.map(searchResult => (
+                            {this.props.history.search.searchResults.map(searchResult => (
                                 <SearchResultComponent
                                     key={searchResult.logEntry.id}
+                                    history={this.props.history}
                                     searchResult={searchResult}
                                 />
                             ))}
@@ -87,13 +93,15 @@ export class SearchResults extends React.Component {
 }
 
 @observer
-export class Search extends React.Component {
+export class Search extends React.Component<{
+    history: History;
+}> {
     @observable searchText: string = "";
 
     @action.bound
     onSearchChange(event: any) {
         this.searchText = $(event.target).val() as string;
-        historySearch.search(this.searchText);
+        this.props.history.search.search(this.searchText);
     }
 
     @action.bound
@@ -133,7 +141,7 @@ export class Search extends React.Component {
             />
         );
 
-        let searchResultsVisible = historySearch.searchActive;
+        let searchResultsVisible = this.props.history.search.searchActive;
 
         let calendarNavLinkClassName = classNames("nav-link", {
             active: appStore.searchViewSection === "calendar"
@@ -143,11 +151,53 @@ export class Search extends React.Component {
             active: appStore.searchViewSection === "sessions"
         });
 
+        const calendar = <Calendar history={this.props.history} />;
+
+        let body;
+        if (!this.props.history.isDeletedItemsHistory) {
+            body = (
+                <VerticalHeaderWithBody className="EezStudio_HistorySearch_Sections">
+                    <Header>
+                        {!this.props.history.isDeletedItemsHistory &&
+                            appStore.filtersVisible && <Filters />}
+                        <ul className="nav nav-tabs">
+                            <li className="nav-item">
+                                <a
+                                    className={calendarNavLinkClassName}
+                                    href="#"
+                                    onClick={this.viewCalendar}
+                                >
+                                    Calendar
+                                </a>
+                            </li>
+                            <li className="nav-item">
+                                <a
+                                    className={sessionsNavLinkClassName}
+                                    href="#"
+                                    onClick={this.viewSessions}
+                                >
+                                    Sessions List
+                                </a>
+                            </li>
+                        </ul>
+                    </Header>
+                    <Body key="calendar" visible={appStore.searchViewSection === "calendar"}>
+                        {calendar}
+                    </Body>
+                    <Body key="sessions" visible={appStore.searchViewSection === "sessions"}>
+                        <SessionList history={this.props.history} />
+                    </Body>
+                </VerticalHeaderWithBody>
+            );
+        } else {
+            body = calendar;
+        }
+
         return (
             <VerticalHeaderWithBody className="EezStudio_HistorySearch">
                 <Header>
                     {input}
-                    {!appStore.filters.deleted && (
+                    {!this.props.history.isDeletedItemsHistory && (
                         <a href="#" onClick={this.toggleFilters}>
                             <i className="material-icons">
                                 {appStore.filtersVisible
@@ -164,44 +214,8 @@ export class Search extends React.Component {
                         sizes={searchResultsVisible ? "50%|50%" : "100$"}
                         persistId="instrument/window/history-search/splitter"
                     >
-                        {searchResultsVisible && <SearchResults />}
-                        <VerticalHeaderWithBody className="EezStudio_HistorySearch_Sections">
-                            <Header>
-                                {appStore.filtersVisible && <Filters />}
-                                <ul className="nav nav-tabs">
-                                    <li className="nav-item">
-                                        <a
-                                            className={calendarNavLinkClassName}
-                                            href="#"
-                                            onClick={this.viewCalendar}
-                                        >
-                                            Calendar
-                                        </a>
-                                    </li>
-                                    <li className="nav-item">
-                                        <a
-                                            className={sessionsNavLinkClassName}
-                                            href="#"
-                                            onClick={this.viewSessions}
-                                        >
-                                            Sessions List
-                                        </a>
-                                    </li>
-                                </ul>
-                            </Header>
-                            <Body
-                                key="calendar"
-                                visible={appStore.searchViewSection === "calendar"}
-                            >
-                                <Calendar />
-                            </Body>
-                            <Body
-                                key="sessions"
-                                visible={appStore.searchViewSection === "sessions"}
-                            >
-                                <SessionList />
-                            </Body>
-                        </VerticalHeaderWithBody>
+                        {searchResultsVisible && <SearchResults history={this.props.history} />}
+                        {body}
                     </Splitter>
                 </Body>
             </VerticalHeaderWithBody>

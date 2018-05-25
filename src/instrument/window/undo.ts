@@ -194,10 +194,16 @@ export class UndoManager {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 export const undoManager = new UndoManager();
 
+////////////////////////////////////////////////////////////////////////////////
+
 EEZStudio.electron.ipcRenderer.on("undo", undoManager.undo);
+
 EEZStudio.electron.ipcRenderer.on("redo", undoManager.redo);
+
 EEZStudio.electron.ipcRenderer.on("save", () => {
     if (undoManager.modified) {
         undoManager.commit();

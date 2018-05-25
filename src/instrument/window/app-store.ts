@@ -1,4 +1,4 @@
-import { computed, observable, action, reaction } from "mobx";
+import { observable, action, reaction } from "mobx";
 
 import { scheduleTask, Priority } from "shared/scheduler";
 import { InstrumentObject, instruments } from "instrument/instrument-object";
@@ -16,7 +16,7 @@ interface SelectHistoryItemsSpecification {
     onOk(): void;
 }
 
-class Filters {
+export class Filters {
     @observable connectsAndDisconnects: boolean = true;
     @observable scpi: boolean = true;
     @observable downloadedFiles: boolean = true;
@@ -26,21 +26,20 @@ class Filters {
     @observable lists: boolean = true;
     @observable notes: boolean = true;
     @observable launchedScripts: boolean = true;
-    @observable deleted: boolean = false;
 }
 
 class AppStore {
     @observable instrument: InstrumentObject | undefined = undefined;
 
     @observable
-    _helpVisible: boolean = localStorage.getItem("instrument/window/help-visible") === "1" || false;
+    helpVisible: boolean = localStorage.getItem("instrument/window/help-visible") === "1" || false;
 
     @observable
     searchVisible: boolean = localStorage.getItem("instrument/window/search-visible") === "1" ||
     true;
 
     @observable
-    _filtersVisible: boolean = localStorage.getItem("instrument/window/filters-visible") === "1" ||
+    filtersVisible: boolean = localStorage.getItem("instrument/window/filters-visible") === "1" ||
     true;
 
     static getFiltersFromLocalStorage(): Filters {
@@ -50,7 +49,6 @@ class AppStore {
         if (filtersJSON) {
             try {
                 Object.assign(filters, JSON.parse(filtersJSON));
-                filters.deleted = false;
             } catch (err) {
                 console.error("getFiltersFromLocalStorage", err);
             }
@@ -80,15 +78,10 @@ class AppStore {
         );
     }
 
-    @computed
-    get helpVisible() {
-        return this._helpVisible && !this.filters.deleted;
-    }
-
     @action
     toggleHelpVisible() {
-        this._helpVisible = !this._helpVisible;
-        localStorage.setItem("instrument/window/help-visible", this._helpVisible ? "1" : "0");
+        this.helpVisible = !this.helpVisible;
+        localStorage.setItem("instrument/window/help-visible", this.helpVisible ? "1" : "0");
     }
 
     @action
@@ -97,15 +90,10 @@ class AppStore {
         localStorage.setItem("instrument/window/search-visible", this.searchVisible ? "1" : "0");
     }
 
-    @computed
-    get filtersVisible() {
-        return this._filtersVisible && !this.filters.deleted;
-    }
-
     @action
     toggleFiltersVisible() {
-        this._filtersVisible = !this._filtersVisible;
-        localStorage.setItem("instrument/window/filters-visible", this._filtersVisible ? "1" : "0");
+        this.filtersVisible = !this.filtersVisible;
+        localStorage.setItem("instrument/window/filters-visible", this.filtersVisible ? "1" : "0");
     }
 
     @action

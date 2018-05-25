@@ -20,7 +20,10 @@ import * as ScriptHistoryItemModule from "instrument/window/history-items/script
 ////////////////////////////////////////////////////////////////////////////////
 
 export function createHistoryItem(activityLogEntry: IActivityLogEntry) {
-    if (activityLogEntry.type === "instrument/created") {
+    if (
+        activityLogEntry.type === "instrument/created" ||
+        activityLogEntry.type === "instrument/restored"
+    ) {
         const {
             CreatedHistoryItem
         } = require("instrument/window/history-items/created") as typeof CreatedHistoryItemModule;

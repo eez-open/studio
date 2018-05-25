@@ -10,7 +10,7 @@ import { Dialog, showDialog } from "shared/ui/dialog";
 import { PropertyList, TextInputProperty } from "shared/ui/properties";
 import { logUpdate } from "shared/activity-log";
 
-import { historySessions, ISession } from "instrument/window/history";
+import { History, ISession } from "instrument/window/history";
 import { appStore } from "instrument/window/app-store";
 
 @observer
@@ -58,7 +58,7 @@ export function showEditSessionNameDialog(name: string, callback: (name: string)
 }
 
 @observer
-export class SessionListItem extends React.Component<{ session: ISession }, {}> {
+export class SessionListItem extends React.Component<{ history: History; session: ISession }, {}> {
     constructor(props: any) {
         super(props);
         this.handleEditSessionName = this.handleEditSessionName.bind(this);
@@ -126,7 +126,7 @@ export class SessionListItem extends React.Component<{ session: ISession }, {}> 
     }
 
     onClick() {
-        historySessions.selectSession(this.props.session);
+        this.props.history.sessions.selectSession(this.props.session);
     }
 
     render() {
@@ -162,14 +162,18 @@ export class SessionListItem extends React.Component<{ session: ISession }, {}> 
 }
 
 @observer
-export class SessionList extends React.Component<{}, {}> {
+export class SessionList extends React.Component<{ history: History }> {
     render() {
         return (
             <div className="EezStudio_SessionList">
                 <table>
                     <tbody>
-                        {historySessions.sessions.map(session => (
-                            <SessionListItem key={session.id} session={session} />
+                        {this.props.history.sessions.sessions.map(session => (
+                            <SessionListItem
+                                key={session.id}
+                                history={this.props.history}
+                                session={session}
+                            />
                         ))}
                     </tbody>
                 </table>

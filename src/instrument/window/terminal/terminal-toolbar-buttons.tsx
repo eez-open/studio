@@ -11,8 +11,9 @@ import { IconAction, ButtonAction } from "shared/ui/action";
 
 import { InstrumentObject } from "instrument/instrument-object";
 
+import { navigationStore, deletedHistoryItemsNavigationItem } from "instrument/window/app";
 import { appStore } from "instrument/window/app-store";
-import { historyNavigator } from "instrument/window/history";
+import { history, deletedItemsHistory } from "instrument/window/history";
 
 import { showAddNoteDialog } from "instrument/window/terminal/note-dialog";
 import { detectFileType } from "instrument/connection/file-type";
@@ -109,106 +110,67 @@ export class TerminalToolbarButtons extends React.Component<{ instrument: Instru
         let actions = [];
 
         if (appStore.selectHistoryItemsSpecification === undefined) {
-            if (!appStore.filters.deleted) {
+            actions.push(
+                <IconAction
+                    key="addNote"
+                    icon="material:comment"
+                    title="Add note"
+                    onClick={this.addNote}
+                />,
+                <IconAction
+                    key="addFile"
+                    icon="material:attach_file"
+                    title="Attach file"
+                    onClick={this.attachFile}
+                />,
+                <IconAction
+                    key="addChart"
+                    icon="material:insert_chart"
+                    title="Add chart"
+                    onClick={this.addChart}
+                />
+            );
+
+            if (history.selection.items.length > 0) {
                 actions.push(
                     <IconAction
-                        key="addNote"
-                        icon="material:comment"
-                        title="Add note"
-                        onClick={this.addNote}
-                    />,
-                    <IconAction
-                        key="addFile"
-                        icon="material:attach_file"
-                        title="Attach file"
-                        onClick={this.attachFile}
-                    />,
-                    <IconAction
-                        key="addChart"
-                        icon="material:insert_chart"
-                        title="Add chart"
-                        onClick={this.addChart}
+                        key="delete"
+                        icon="material:delete"
+                        title="Delete selected history items"
+                        style={{ marginLeft: 20 }}
+                        onClick={history.deleteSelectedHistoryItems}
                     />
                 );
             }
 
-            if (historyNavigator.selectedHistoryItems.length > 0) {
-                if (appStore.filters.deleted) {
-                    actions.push(
-                        <IconAction
-                            key="restore"
-                            icon="material:restore"
-                            title="Restore selected history items"
-                            style={{ marginLeft: 20 }}
-                            onClick={historyNavigator.restoreHistoryItems}
-                        />,
-                        <IconAction
-                            key="purge"
-                            icon="material:delete_forever"
-                            title="Purge selected history items"
-                            onClick={historyNavigator.purgeHistoryItems}
-                        />
-                    );
-                } else {
-                    actions.push(
-                        <IconAction
-                            key="delete"
-                            icon="material:delete"
-                            title="Delete selected history items"
-                            style={{ marginLeft: 20 }}
-                            onClick={historyNavigator.deleteHistoryItems}
-                        />
-                    );
-                }
-            }
+            if (deletedItemsHistory.deletedCount > 0) {
+                const style = history.selection.items.length === 0 ? { marginLeft: 20 } : undefined;
 
-            if (historyNavigator.deletedCount > 0) {
-                const style =
-                    historyNavigator.selectedHistoryItems.length === 0
-                        ? { marginLeft: 20 }
-                        : undefined;
-
-                if (appStore.filters.deleted) {
-                    actions.push(
-                        <ButtonAction
-                            key="deletedItems"
-                            icon="material:arrow_back"
-                            text="Back"
-                            title={"Go back to the terminal"}
-                            onClick={action(
-                                () => (appStore.filters.deleted = !appStore.filters.deleted)
-                            )}
-                            style={style}
-                        />
-                    );
-                } else {
-                    actions.push(
-                        <ButtonAction
-                            key="deletedItems"
-                            text={`Deleted Items (${historyNavigator.deletedCount})`}
-                            title="Show deleted items"
-                            onClick={action(
-                                () => (appStore.filters.deleted = !appStore.filters.deleted)
-                            )}
-                            style={style}
-                        />
-                    );
-                }
+                actions.push(
+                    <ButtonAction
+                        key="deletedItems"
+                        text={`Deleted Items (${deletedItemsHistory.deletedCount})`}
+                        title="Show deleted items"
+                        onClick={action(
+                            () =>
+                                (navigationStore.mainNavigationSelectedItem = deletedHistoryItemsNavigationItem)
+                        )}
+                        style={style}
+                    />
+                );
             }
         }
 
-        if (!appStore.filters.deleted) {
-            actions.push(
-                <IconAction
-                    style={{ marginLeft: 20 }}
-                    key="search"
-                    icon="material:search"
-                    title="Search, Calendar, Sessions, Filter"
-                    onClick={appStore.toggleSearchVisible}
-                    selected={appStore.searchVisible}
-                />
-            );
-        }
+        actions.push(
+            <IconAction
+                style={{ marginLeft: 20 }}
+                key="search"
+                icon="material:search"
+                title="Search, Calendar, Sessions, Filter"
+                onClick={() => appStore.toggleSearchVisible()}
+                selected={appStore.searchVisible}
+            />
+        );
 
         return actions;
     }

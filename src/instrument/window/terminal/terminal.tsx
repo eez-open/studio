@@ -8,14 +8,14 @@ import { IconAction, ButtonAction } from "shared/ui/action";
 
 import { InstrumentObject } from "instrument/instrument-object";
 
-import { ISession } from "instrument/window/history";
-import { IHistoryItem } from "instrument/window/history-item";
 import { appStore } from "instrument/window/app-store";
+import { history, ISession } from "instrument/window/history";
+import { IHistoryItem } from "instrument/window/history-item";
 
 import { ShortcutsToolbar } from "instrument/window/terminal/toolbar";
 
 import { executeShortcut } from "instrument/window/script";
-import { History } from "instrument/window/terminal/connection-history";
+import { ConnectionHistory } from "instrument/window/terminal/connection-history";
 import { Search } from "instrument/window/terminal/search";
 import { CommandsBrowser } from "instrument/window/terminal/commands-browser";
 import { showFileUploadDialog } from "instrument/window/terminal/file-upload-dialog";
@@ -241,7 +241,7 @@ class Input extends React.Component<
 
 @observer
 export class Terminal extends React.Component<{ instrument: InstrumentObject }, {}> {
-    static history: History | null;
+    static history: ConnectionHistory | null;
 
     static moveToTopOfConnectionHistory() {
         if (Terminal.history) {
@@ -304,7 +304,7 @@ export class Terminal extends React.Component<{ instrument: InstrumentObject }, 
                                     : undefined
                             }
                         >
-                            <div className="EezStudio_History_Container">
+                            <div className="EezStudio_History_Container" tabIndex={0}>
                                 {appStore.selectHistoryItemsSpecification && (
                                     <div className="EezStudio_History_Header EezStudio_SlideInDownTransition">
                                         <div>
@@ -342,29 +342,28 @@ export class Terminal extends React.Component<{ instrument: InstrumentObject }, 
                                     </div>
                                 )}
                                 <div className="EezStudio_History_Body">
-                                    <History ref={ref => (Terminal.history = ref)} />
+                                    <ConnectionHistory
+                                        ref={ref => (Terminal.history = ref)}
+                                        history={history}
+                                    />
                                 </div>
                             </div>
-                            {appStore.searchVisible && <Search />}
+                            {appStore.searchVisible && <Search history={history} />}
                         </Splitter>
                     </div>
-                    {!appStore.filters.deleted && (
-                        <Input
-                            instrument={this.props.instrument}
-                            sendCommand={() => {
-                                this.props.instrument.connection.send(terminalState.command);
-                                terminalState.command = "";
-                            }}
-                            handleSendFileClick={handleSendFileClick}
-                        />
-                    )}
-                    {!appStore.filters.deleted && (
-                        <ShortcutsToolbar
-                            executeShortcut={shortcut => {
-                                executeShortcut(this.props.instrument, shortcut);
-                            }}
-                        />
-                    )}
+                    <Input
+                        instrument={this.props.instrument}
+                        sendCommand={() => {
+                            this.props.instrument.connection.send(terminalState.command);
+                            terminalState.command = "";
+                        }}
+                        handleSendFileClick={handleSendFileClick}
+                    />
+                    <ShortcutsToolbar
+                        executeShortcut={shortcut => {
+                            executeShortcut(this.props.instrument, shortcut);
+                        }}
+                    />
                 </div>
 
                 {appStore.helpVisible && <CommandsBrowser host={terminalState} />}
@@ -377,7 +376,7 @@ export function render(instrument: InstrumentObject) {
     return <Terminal instrument={instrument} />;
 }
 
-export function toolbarButtonsRender(instrument: InstrumentObject) {
+export function renderToolbarButtons(instrument: InstrumentObject) {
     return <TerminalToolbarButtons instrument={instrument} />;
 }
 

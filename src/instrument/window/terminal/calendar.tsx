@@ -11,14 +11,14 @@ import {
     getWeekNumber
 } from "shared/util";
 
-import { historyCalendar } from "instrument/window/history";
+import { History } from "instrument/window/history";
 
 @observer
-export class Day extends React.Component<{ day: Date }> {
+export class Day extends React.Component<{ history: History; day: Date }> {
     render() {
         const day = this.props.day;
 
-        const activityCount = historyCalendar.getActivityCount(day);
+        const activityCount = this.props.history.calendar.getActivityCount(day);
 
         let activityLevel;
 
@@ -40,7 +40,7 @@ export class Day extends React.Component<{ day: Date }> {
         }
 
         let className = classNames(`activity-level-${activityLevel}`, {
-            selected: historyCalendar.isSelectedDay(day)
+            selected: this.props.history.calendar.isSelectedDay(day)
         });
 
         const tooltip = `${activityInfo} on ${formatDate(day)}`;
@@ -50,8 +50,8 @@ export class Day extends React.Component<{ day: Date }> {
                 className={className}
                 title={tooltip}
                 onClick={action(() => {
-                    if (historyCalendar.getActivityCount(day) > 0) {
-                        historyCalendar.selectDay(day);
+                    if (this.props.history.calendar.getActivityCount(day) > 0) {
+                        this.props.history.calendar.selectDay(day);
                     }
                 })}
             >
@@ -68,17 +68,17 @@ export class DayOfWeek extends React.Component<{ dayOfWeek: number }> {
 }
 
 @observer
-export class Month extends React.Component<{ month: Date }> {
+export class Month extends React.Component<{ history: History; month: Date }> {
     element: HTMLElement | null;
 
     componentDidMount() {
-        if (this.element && historyCalendar.isSelectedMonth(this.props.month)) {
+        if (this.element && this.props.history.calendar.isSelectedMonth(this.props.month)) {
             this.element.scrollIntoView({ block: "end" });
         }
     }
 
     componentDidUpdate() {
-        if (this.element && historyCalendar.isSelectedMonth(this.props.month)) {
+        if (this.element && this.props.history.calendar.isSelectedMonth(this.props.month)) {
             this.element.scrollIntoView({ block: "nearest", behavior: "auto" });
         }
     }
@@ -105,7 +105,7 @@ export class Month extends React.Component<{ month: Date }> {
                 day.setDate(day.getDate() + i);
 
                 if (day.getMonth() === month.getMonth()) {
-                    days.push(<Day key={i} day={day} />);
+                    days.push(<Day key={i} history={this.props.history} day={day} />);
                 } else {
                     if (day.getMonth() != month.getMonth() && day > month && col === 0) {
                         return days;
@@ -133,7 +133,7 @@ export class Month extends React.Component<{ month: Date }> {
         const month = this.props.month;
 
         let className = classNames({
-            selected: historyCalendar.isSelectedMonth(month)
+            selected: this.props.history.calendar.isSelectedMonth(month)
         });
 
         return (
@@ -146,19 +146,25 @@ export class Month extends React.Component<{ month: Date }> {
 }
 
 @observer
-export class Calendar extends React.Component {
+export class Calendar extends React.Component<{ history: History }> {
     render() {
         var months = [];
 
-        var startMonth = new Date(historyCalendar.minDate);
+        var startMonth = new Date(this.props.history.calendar.minDate);
         startMonth.setDate(1);
 
-        var endMonth = new Date(historyCalendar.maxDate);
+        var endMonth = new Date(this.props.history.calendar.maxDate);
         endMonth.setDate(1);
 
         var month = new Date(startMonth);
         while (month <= endMonth) {
-            months.push(<Month key={month.toString()} month={new Date(month)} />);
+            months.push(
+                <Month
+                    key={month.toString()}
+                    history={this.props.history}
+                    month={new Date(month)}
+                />
+            );
 
             month.setMonth(month.getMonth() + 1);
         }

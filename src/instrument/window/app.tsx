@@ -10,7 +10,10 @@ import { appStore } from "instrument/window/app-store";
 import { AppBar } from "instrument/window/app-bar";
 import { undoManager } from "instrument/window/undo";
 
+import * as HistoryModule from "instrument/window/history";
+
 import * as TerminalModule from "instrument/window/terminal/terminal";
+import * as DeletedHistoryItemsModule from "instrument/window/terminal/deleted-history-items";
 import * as ScriptsModule from "instrument/window/scripts";
 import * as ShortcutsModule from "instrument/window/shortcuts";
 import * as ListsModule from "instrument/window/lists/lists";
@@ -19,7 +22,7 @@ export interface IInstrumentWindowNavigationItem extends IRootNavigationItem {
     renderToolbarButtons: () => JSX.Element;
 }
 
-const terminalNavigationItem: IInstrumentWindowNavigationItem = {
+export const terminalNavigationItem: IInstrumentWindowNavigationItem = {
     id: "terminal",
     icon: "material:navigate_next",
     title: "Terminal",
@@ -29,9 +32,28 @@ const terminalNavigationItem: IInstrumentWindowNavigationItem = {
     },
     renderToolbarButtons: () => {
         const {
-            toolbarButtonsRender
+            renderToolbarButtons
         } = require("instrument/window/terminal/terminal") as typeof TerminalModule;
-        return appStore.instrument ? toolbarButtonsRender(appStore.instrument) : <div />;
+        return appStore.instrument ? renderToolbarButtons(appStore.instrument) : <div />;
+    }
+};
+
+export const deletedHistoryItemsNavigationItem: IInstrumentWindowNavigationItem = {
+    id: "deletedHistoryItems",
+    position: "hidden",
+    icon: "",
+    title: "",
+    renderContent: () => {
+        const {
+            render
+        } = require("instrument/window/terminal/deleted-history-items") as typeof DeletedHistoryItemsModule;
+        return render();
+    },
+    renderToolbarButtons: () => {
+        const {
+            renderToolbarButtons
+        } = require("instrument/window/terminal/deleted-history-items") as typeof DeletedHistoryItemsModule;
+        return renderToolbarButtons();
     }
 };
 
@@ -86,6 +108,7 @@ const listsNavigationItem: IInstrumentWindowNavigationItem = {
 export const navigationItems = computed(() => {
     let navigationItems = [
         terminalNavigationItem,
+        deletedHistoryItemsNavigationItem,
         scriptsNavigationItem,
         shortcutsAndGroupsNavigationItem
     ];
@@ -212,3 +235,17 @@ export class App extends React.Component<{}, {}> {
         );
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+EEZStudio.electron.ipcRenderer.on("delete", () => {
+    if ($(document.activeElement).hasClass("EezStudio_History_Container")) {
+        const { history } = require("instrument/window/history") as typeof HistoryModule;
+        history.deleteSelectedHistoryItems();
+    } else if ($(document.activeElement).hasClass("EezStudio_DeletedHistory_Container")) {
+        const {
+            deletedItemsHistory
+        } = require("instrument/window/history") as typeof HistoryModule;
+        deletedItemsHistory.deleteSelectedHistoryItems();
+    }
+});

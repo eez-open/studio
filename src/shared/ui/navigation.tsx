@@ -39,7 +39,7 @@ export class NavigationItem extends React.Component<
         return (
             <li className={className}>
                 <a href="#" title={this.props.item.title} onClick={this.handleClick}>
-                    <Icon icon={this.props.item.icon} />
+                    <Icon icon={this.props.item.icon!} />
                 </a>
             </li>
         );

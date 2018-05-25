@@ -10,13 +10,16 @@ import { Icon } from "shared/ui/icon";
 import { Waveform } from "instrument/window/waveform/generic";
 
 import { appStore } from "instrument/window/app-store";
-import { historyItemBlocks, historyNavigator } from "instrument/window/history";
+import { History, deletedItemsHistory } from "instrument/window/history";
 import { IHistoryItem } from "instrument/window/history-item";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class HistoryItems extends React.Component<{ historyItems: IHistoryItem[] }> {
+export class HistoryItems extends React.Component<{
+    history: History;
+    historyItems: IHistoryItem[];
+}> {
     render() {
         return this.props.historyItems.map(historyItem => {
             let element = historyItem.listItemElement;
@@ -49,12 +52,54 @@ export class HistoryItems extends React.Component<{ historyItems: IHistoryItem[]
                     className={className}
                     onClick={event => {
                         let historyItems = [historyItem];
-                        if (event.ctrlKey) {
+                        if (event.ctrlKey || event.shiftKey) {
                             historyItems = historyItems.concat(
-                                ...historyNavigator.selectedHistoryItems
+                                ...this.props.history.selection.items
                             );
                         }
-                        historyNavigator.selectHistoryItems(historyItems);
+                        this.props.history.selection.selectItems(historyItems);
+                    }}
+                    onContextMenu={event => {
+                        let historyItems = [historyItem];
+                        if (event.ctrlKey || event.shiftKey) {
+                            historyItems = historyItems.concat(
+                                ...this.props.history.selection.items
+                            );
+                        }
+                        this.props.history.selection.selectItems(historyItems);
+
+                        const { Menu, MenuItem } = EEZStudio.electron.remote;
+                        const menu = new Menu();
+
+                        if (this.props.history === deletedItemsHistory) {
+                            menu.append(
+                                new MenuItem({
+                                    label: "Restore",
+                                    click: () => {
+                                        deletedItemsHistory.restoreSelectedHistoryItems();
+                                    }
+                                })
+                            );
+                            menu.append(
+                                new MenuItem({
+                                    label: "Purge",
+                                    click: () => {
+                                        deletedItemsHistory.deleteSelectedHistoryItems();
+                                    }
+                                })
+                            );
+                        } else {
+                            menu.append(
+                                new MenuItem({
+                                    label: "Delete",
+                                    click: () => {
+                                        this.props.history.deleteSelectedHistoryItems();
+                                    }
+                                })
+                            );
+                        }
+
+                        menu.popup({});
                     }}
                 >
                     {showCheckbox && (
@@ -74,7 +119,9 @@ export class HistoryItems extends React.Component<{ historyItems: IHistoryItem[]
 }
 
 @observer
-export class History extends React.Component<{}, {}> {
+export class ConnectionHistory extends React.Component<{
+    history: History;
+}> {
     animationFrameRequestId: any;
     div: Element;
     fromBottom: number | undefined;
@@ -162,25 +209,6 @@ export class History extends React.Component<{}, {}> {
         this.lastClientHeight = this.div.clientHeight;
     }
 
-    @bind
-    onDelete() {
-        if (appStore.filters.deleted) {
-            historyNavigator.purgeHistoryItems();
-        } else {
-            historyNavigator.deleteHistoryItems();
-        }
-    }
-
-    @bind
-    onFocus() {
-        EEZStudio.electron.ipcRenderer.on("delete", this.onDelete);
-    }
-
-    @bind
-    onBlur() {
-        EEZStudio.electron.ipcRenderer.removeListener("delete", this.onDelete);
-    }
-
     render() {
         return (
             <div
@@ -193,14 +221,11 @@ export class History extends React.Component<{}, {}> {
                 className={"EezStudio_History"}
                 onClick={event => {
                     if ($(event.target).closest(".EezStudio_HistoryItemEnclosure").length === 0) {
-                        historyNavigator.selectHistoryItems([]);
+                        this.props.history.selection.selectItems([]);
                     }
                 }}
-                onFocus={this.onFocus}
-                onBlur={this.onBlur}
-                tabIndex={0}
             >
-                {historyNavigator.hasOlder && (
+                {this.props.history.navigator.hasOlder && (
                     <button
                         className="btn btn-secondary"
                         style={{ marginBottom: 20 }}
@@ -210,7 +235,7 @@ export class History extends React.Component<{}, {}> {
 
                             const scrollHeight = this.div.scrollHeight;
 
-                            historyNavigator.loadOlder();
+                            this.props.history.navigator.loadOlder();
 
                             window.requestAnimationFrame(() => {
                                 this.div.scrollTop = this.div.scrollHeight - scrollHeight;
@@ -220,16 +245,22 @@ export class History extends React.Component<{}, {}> {
                         <Icon icon="material:expand_less" /> More
                     </button>
                 )}
-                {historyItemBlocks.map(historyItems => {
+                {this.props.history.blocks.map(historyItems => {
                     if (historyItems.length === 0) {
                         return null;
                     }
-                    return <HistoryItems key={historyItems[0].id} historyItems={historyItems} />;
+                    return (
+                        <HistoryItems
+                            key={historyItems[0].id}
+                            history={this.props.history}
+                            historyItems={historyItems}
+                        />
+                    );
                 })}
-                {historyNavigator.hasNewer && (
+                {this.props.history.navigator.hasNewer && (
                     <button
                         className="btn btn-secondary"
-                        onClick={historyNavigator.loadNewer}
+                        onClick={this.props.history.navigator.loadNewer}
                         style={{ marginTop: 15 }}
                     >
                         <Icon icon="material:expand_more" /> More

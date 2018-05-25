@@ -16,7 +16,7 @@ import { IListNode, ListItem } from "shared/ui/list";
 import { ChartMode, ChartsController, IAxisModel } from "shared/ui/chart";
 import { Icon } from "shared/ui/icon";
 
-import { getHistoryItemById } from "instrument/window/history";
+import { history } from "instrument/window/history";
 import { HistoryItem } from "instrument/window/history-item";
 import { ChartPreview } from "instrument/window/chart-preview";
 
@@ -143,14 +143,16 @@ export class MultiWaveform extends HistoryItem {
 
     @computed
     get linkedWaveforms() {
-        return this.waveformLinks.map(waveformLink => {
-            const waveform = getHistoryItemById(waveformLink.id)! as Waveform;
-            return {
-                waveformLink,
-                waveform,
-                yAxisModel: new WaveformAxisModel(waveform, waveformLink)
-            };
-        });
+        return this.waveformLinks
+            .map(waveformLink => {
+                const waveform = history.getHistoryItemById(waveformLink.id)! as Waveform;
+                return {
+                    waveformLink,
+                    waveform,
+                    yAxisModel: new WaveformAxisModel(waveform, waveformLink)
+                };
+            })
+            .filter(waveformLink => !!waveformLink.waveform);
     }
 
     @computed
