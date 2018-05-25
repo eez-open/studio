@@ -676,7 +676,7 @@ class FilterStats {
     @observable notes = 0;
     @observable launchedScripts = 0;
 
-    constructor() {
+    constructor(public history: History) {
         scheduleTask(
             "Get filter stats",
             Priority.Lowest,
@@ -731,12 +731,12 @@ class FilterStats {
         }
     }
 
-    onActivityLogEntryCreated(activityLogEntry: IActivityLogEntry) {
-        this.add(activityLogEntry.type, 1);
+    onHistoryItemCreated(historyItem: IHistoryItem) {
+        this.add(historyItem.type, 1);
     }
 
-    onActivityLogEntryRemoved(activityLogEntry: IActivityLogEntry) {
-        this.add(activityLogEntry.type, -11);
+    onHistoryItemRemoved(historyItem: IHistoryItem) {
+        this.add(historyItem.type, -1);
     }
 }
 
@@ -833,7 +833,7 @@ export class History {
         );
 
         if (!isDeletedItemsHistory) {
-            this.filterStats = new FilterStats();
+            this.filterStats = new FilterStats(this);
         }
     }
 
@@ -999,6 +999,8 @@ export class History {
         const historyItem = createHistoryItem(activityLogEntry);
         this.map.set(historyItem.id, historyItem);
 
+        this.filterStats.onHistoryItemCreated(historyItem);
+
         // increment day counter in calandar
         let day = new Date(
             historyItem.date.getFullYear(),
@@ -1066,6 +1068,8 @@ export class History {
                 this.blocks.splice(foundItem.blockIndex, 1);
             }
 
+            this.filterStats.onHistoryItemRemoved(historyItem);
+
             // decrement day counter in calandar
             let day = new Date(
                 historyItem.date.getFullYear(),
@@ -1115,8 +1119,6 @@ export class History {
         }
 
         this.sessions.onActivityLogEntryCreated(activityLogEntry);
-
-        this.filterStats.onActivityLogEntryCreated(activityLogEntry);
 
         if (op === "restore") {
             // this item was restored from undo buffer,
@@ -1176,7 +1178,6 @@ export class History {
         options: IStoreOperationOptions
     ) {
         this.sessions.onActivityLogEntryRemoved(activityLogEntry);
-        this.filterStats.onActivityLogEntryRemoved(activityLogEntry);
         this.removeActivityLogEntryFromBlocks(activityLogEntry);
     }
 
