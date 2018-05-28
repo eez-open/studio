@@ -202,7 +202,11 @@ export function deleteWorkbenchObject(object: WorkbenchObject) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class HomeTab implements ITab {
+interface IHomeTab extends ITab {
+    editor: JSX.Element;
+}
+
+class HomeTab implements IHomeTab {
     constructor(public tabs: Tabs) {}
 
     permanent: boolean = true;
@@ -224,7 +228,7 @@ class HomeTab implements ITab {
     }
 }
 
-class ObjectEditorTab implements ITab {
+class ObjectEditorTab implements IHomeTab {
     constructor(
         public tabs: Tabs,
         public objectType: string,
@@ -277,8 +281,8 @@ class ObjectEditorTab implements ITab {
 }
 
 class Tabs {
-    @observable tabs: ITab[] = [new HomeTab(this)];
-    @observable activeTab: ITab;
+    @observable tabs: IHomeTab[] = [new HomeTab(this)];
+    @observable activeTab: IHomeTab;
 
     constructor() {
         this.tabs[0].makeActive();
@@ -313,7 +317,7 @@ class Tabs {
     }
 
     @action
-    removeTab(tab: ITab) {
+    removeTab(tab: IHomeTab) {
         const tabIndex = this.tabs.indexOf(tab);
         if (tabIndex !== -1) {
             const tab = this.tabs[tabIndex];
@@ -329,7 +333,7 @@ class Tabs {
     }
 
     @action
-    makeActive(tab: ITab) {
+    makeActive(tab: IHomeTab) {
         if (this.activeTab) {
             this.activeTab.active = false;
         }
