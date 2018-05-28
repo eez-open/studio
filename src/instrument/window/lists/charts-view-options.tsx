@@ -5,6 +5,7 @@ import { observer } from "mobx-react";
 import { ChartsController } from "shared/ui/chart";
 
 import { ChartViewOptions, chartViewOptionsVisible } from "instrument/window/chart-view-options";
+
 import { EnvelopeChartsController } from "instrument/window/lists/envelope";
 
 ////////////////////////////////////////////////////////////////////////////////

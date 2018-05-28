@@ -45,38 +45,35 @@ export class OutputSection {
     @computed
     get title(): string | JSX.Element {
         if (this.id == Section.CHECKS) {
-            let parts: JSX.Element[] = [];
+            return (
+                <React.Fragment>
+                    <span className="title">{this.name}</span>
 
-            parts.push(<span key="name">{this.name}</span>);
+                    {this.numErrors > 0 && (
+                        <React.Fragment>
+                            <span>&nbsp;</span>
+                            <Icon icon="material:error" className="error" />
+                            <span>{this.numErrors}</span>
+                        </React.Fragment>
+                    )}
 
-            if (this.numErrors > 0 || this.numWarnings > 0) {
-                if (this.numErrors > 0) {
-                    parts.push(
-                        <span key="errors">
-                            {" "}
-                            <Icon icon="material:error" className="error" /> {this.numErrors}
-                        </span>
-                    );
-                }
+                    {this.numWarnings > 0 && (
+                        <React.Fragment>
+                            <span>&nbsp;</span>
+                            <Icon icon="material:warning" className="warning" />
+                            <span>{this.numWarnings}</span>
+                        </React.Fragment>
+                    )}
 
-                if (this.numWarnings > 0) {
-                    parts.push(
-                        <span key="warnings">
-                            {" "}
-                            <Icon icon="material:warning" className="warning" /> {this.numWarnings}
-                        </span>
-                    );
-                }
-            } else {
-                parts.push(
-                    <span key="ok">
-                        {" "}
-                        <Icon icon="material:check" className="info" />
-                    </span>
-                );
-            }
-
-            return <span>{parts}</span>;
+                    {this.numErrors === 0 &&
+                        this.numWarnings === 0 && (
+                            <React.Fragment>
+                                <span>&nbsp;</span>
+                                <Icon icon="material:check" className="info" />
+                            </React.Fragment>
+                        )}
+                </React.Fragment>
+            );
         }
 
         return this.name;

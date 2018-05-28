@@ -236,11 +236,11 @@ export class SendListOperation extends ListOperation {
 
     get digits() {
         if (this.state === "dwell") {
-            return this.connection.instrument.getListsDwellDigitsProperty();
+            return this.connection.instrument.listsDwellDigitsProperty;
         } else if (this.state === "voltage") {
-            return this.connection.instrument.getListsVoltageDigitsProperty();
+            return this.connection.instrument.listsVoltageDigitsProperty;
         } else {
-            return this.connection.instrument.getListsCurrentDigitsProperty();
+            return this.connection.instrument.listsCurrentDigitsProperty;
         }
     }
 

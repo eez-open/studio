@@ -376,12 +376,16 @@ export function getObject(type: string, oid: string): IObject {
     if (!object) {
         object = {
             id: oid,
+            name: "",
             content: null,
             activityLogEntryInfo(logEntry: IActivityLogEntry) {
                 return null;
             },
             details: null,
             resizable: false,
+            getEditor() {
+                return null;
+            },
             open() {}
         };
     }

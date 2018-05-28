@@ -1,5 +1,6 @@
 import * as React from "react";
 import { observer } from "mobx-react";
+import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import {
@@ -24,6 +25,7 @@ export class AppRootComponent extends React.Component<
         selectedItem: IRootNavigationItem;
         navigationItems: IRootNavigationItem[];
         onSelectionChange?: (selectedItem: IRootNavigationItem) => void;
+        className?: string;
     },
     {}
 > {
@@ -55,8 +57,10 @@ export class AppRootComponent extends React.Component<
         //     devTools = <DevTools />;
         // }
 
+        let className = classNames("EezStudio_App", this.props.className);
+
         return (
-            <div className="EezStudio_App">
+            <div className={className}>
                 <VerticalHeaderWithBody>
                     <Header>{this.props.appBar}</Header>
                     <Body>

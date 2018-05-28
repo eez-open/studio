@@ -1,14 +1,22 @@
-import { observable, computed, action } from "mobx";
+import * as React from "react";
+import { observable, computed, action, runInAction } from "mobx";
 
 import { isRenderer } from "shared/util";
 import { createStore, types, createStoreObjectsCollection } from "shared/store";
 import { Rect } from "shared/geometry";
 import { IActivityLogEntry } from "shared/activity-log";
+
 import { getObject } from "shared/extensions/extensions";
-import { IObject, IActivityLogEntryInfo } from "shared/extensions/extension";
+import { IObject, IEditor, IActivityLogEntryInfo } from "shared/extensions/extension";
+
 import { IBaseObject } from "shared/model/base-object";
 
+import { Icon } from "shared/ui/icon";
+import { ITab } from "shared/ui/tabs";
+
 import { instrumentStore } from "instrument/instrument-object";
+
+import { HomeComponent } from "home/home-component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,6 +46,10 @@ export class WorkbenchObject {
     @computed
     get implementation() {
         return getObject(this.type, this.oid);
+    }
+
+    get name() {
+        return this.implementation.name;
     }
 
     @computed
@@ -71,8 +83,22 @@ export class WorkbenchObject {
         this.selected = !this.selected;
     }
 
+    getEditor() {
+        return this.implementation.getEditor();
+    }
+
     open() {
-        this.implementation.open();
+        const tab = tabs.findObjectTab(this.type, this.implementation.id);
+        if (tab) {
+            tabs.makeActive(tab);
+        } else {
+            const editor = this.getEditor();
+            if (editor !== null) {
+                tabs.addObjectTab(this.type, this.implementation, editor);
+            } else {
+                this.implementation.open();
+            }
+        }
     }
 
     @action
@@ -173,3 +199,158 @@ export function deleteWorkbenchObject(object: WorkbenchObject) {
     }
     store.deleteObject(object);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+class HomeTab implements ITab {
+    constructor(public tabs: Tabs) {}
+
+    permanent: boolean = true;
+    @observable active: boolean = false;
+
+    id = "home";
+    title = (
+        <React.Fragment>
+            <Icon icon="material: home" />
+            <span>Home</span>
+        </React.Fragment>
+    );
+
+    editor = <HomeComponent />;
+
+    @action
+    makeActive(): void {
+        this.tabs.makeActive(this);
+    }
+}
+
+class ObjectEditorTab implements ITab {
+    constructor(
+        public tabs: Tabs,
+        public objectType: string,
+        public object: IObject,
+        public objectEditor: IEditor
+    ) {
+        this.objectEditor.onCreate();
+    }
+
+    permanent: boolean = true;
+    @observable _active: boolean = false;
+
+    get active() {
+        return this._active;
+    }
+
+    set active(value: boolean) {
+        if (value !== this._active) {
+            runInAction(() => (this._active = value));
+
+            if (this._active) {
+                this.objectEditor.onActivate();
+            } else {
+                this.objectEditor.onDeactivate();
+            }
+        }
+    }
+
+    get id() {
+        return this.object.id;
+    }
+
+    get title() {
+        return this.object.name;
+    }
+
+    get editor() {
+        return this.objectEditor.editor;
+    }
+
+    @action
+    makeActive(): void {
+        this.tabs.makeActive(this);
+    }
+
+    close() {
+        this.tabs.removeTab(this);
+        this.objectEditor.onTerminate();
+    }
+}
+
+class Tabs {
+    @observable tabs: ITab[] = [new HomeTab(this)];
+    @observable activeTab: ITab;
+
+    constructor() {
+        this.tabs[0].makeActive();
+    }
+
+    findObjectTab(objectType: string, objectId: string) {
+        for (let tabIndex = 0; tabIndex < this.tabs.length; ++tabIndex) {
+            const tab = this.tabs[tabIndex];
+            if (
+                tab instanceof ObjectEditorTab &&
+                tab.objectType === objectType &&
+                tab.id === objectId
+            ) {
+                return tab;
+            }
+        }
+        return null;
+    }
+
+    @action
+    addObjectTab(objectType: string, object: IObject, editor: IEditor) {
+        for (let tabIndex = 0; tabIndex < this.tabs.length; ++tabIndex) {
+            if (this.tabs[tabIndex].id === object.id) {
+                this.makeActive(this.tabs[tabIndex]);
+                return;
+            }
+        }
+
+        const tab = new ObjectEditorTab(this, objectType, object, editor);
+        this.tabs.push(tab);
+        this.makeActive(tab);
+    }
+
+    @action
+    removeTab(tab: ITab) {
+        const tabIndex = this.tabs.indexOf(tab);
+        if (tabIndex !== -1) {
+            const tab = this.tabs[tabIndex];
+            this.tabs.splice(tabIndex, 1);
+            if (tab.active) {
+                if (tabIndex === this.tabs.length) {
+                    this.makeActive(this.tabs[tabIndex - 1]);
+                } else {
+                    this.makeActive(this.tabs[tabIndex]);
+                }
+            }
+        }
+    }
+
+    @action
+    makeActive(tab: ITab) {
+        if (this.activeTab) {
+            this.activeTab.active = false;
+        }
+        this.activeTab = tab;
+        if (this.activeTab) {
+            this.activeTab.active = true;
+        }
+    }
+}
+
+export const tabs = new Tabs();
+
+////////////////////////////////////////////////////////////////////////////////
+
+window.onmessage = message => {
+    if (message.data.type === "open-tab-or-window") {
+        const tab = tabs.findObjectTab(message.data.object.type, message.data.object.id);
+        if (tab) {
+            tabs.makeActive(tab);
+        } else {
+            EEZStudio.electron.ipcRenderer.send("openWindow", message.data.openWindowArgs);
+        }
+    }
+};

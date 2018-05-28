@@ -11,14 +11,16 @@ import { List } from "shared/ui/list";
 import { ButtonAction } from "shared/ui/action";
 import { CodeEditor } from "shared/ui/code-editor";
 
-import { navigationStore, scriptsNavigationItem } from "instrument/window/app";
-import { appStore } from "instrument/window/app-store";
-import { shortcutsStore } from "instrument/window/shortcuts";
 import { IShortcut } from "shortcuts/interfaces";
-import { Terminal } from "instrument/window/terminal/terminal";
+
+import { AppStore } from "instrument/window/app-store";
 import { IModel, undoManager } from "instrument/window/undo";
 
-class ScriptsModel implements IModel {
+import { Terminal } from "instrument/window/terminal/terminal";
+
+export class ScriptsModel implements IModel {
+    constructor(private appStore: AppStore) {}
+
     @observable _newActionCode: string | undefined;
     get newActionCode() {
         return this._newActionCode;
@@ -41,8 +43,8 @@ class ScriptsModel implements IModel {
 
     @computed
     get selectedScript() {
-        return values(shortcutsStore.shortcuts).find(
-            script => script.id === navigationStore.selectedScriptId
+        return values(this.appStore.shortcutsStore.shortcuts).find(
+            script => script.id === this.appStore.navigationStore.selectedScriptId
         );
     }
 
@@ -58,7 +60,7 @@ class ScriptsModel implements IModel {
     @action.bound
     commit() {
         if (this.selectedScript) {
-            shortcutsStore.updateShortcut({
+            this.appStore.shortcutsStore.updateShortcut({
                 id: this.selectedScript.id,
                 action: Object.assign({}, toJS(this.selectedScript.action), {
                     data: this.newActionCode
@@ -106,13 +108,13 @@ class ScriptsModel implements IModel {
     }
 }
 
-export const scriptsModel = new ScriptsModel();
-
 @observer
-export class ScriptView extends React.Component<{}, {}> {
+export class ScriptView extends React.Component<{ appStore: AppStore }, {}> {
     static codeEditor: CodeEditor | null;
 
     render() {
+        const scriptsModel = this.props.appStore.scriptsModel;
+
         let codeEditor;
 
         if (scriptsModel.selectedScript) {
@@ -148,21 +150,19 @@ export class ScriptView extends React.Component<{}, {}> {
 }
 
 @observer
-class MasterView extends React.Component<
-{
+class MasterView extends React.Component<{
+    appStore: AppStore;
     selectedScript: IShortcut | undefined;
     selectScript: (script: IShortcut) => void;
-},
-{}
-> {
+}> {
     @computed
     get sortedLists() {
-        return Array.from(shortcutsStore.shortcuts.values())
+        return Array.from(this.props.appStore.shortcutsStore.shortcuts.values())
             .sort((a, b) => stringCompare(a.name, b.name))
             .map(script => ({
                 id: script.id,
                 data: script,
-                selected: scriptsModel.selectedScript === script
+                selected: this.props.appStore.scriptsModel.selectedScript === script
             }));
     }
 
@@ -178,8 +178,12 @@ class MasterView extends React.Component<
 }
 
 @observer
-export class ScriptsEditor extends React.Component<{}, {}> {
+export class ScriptsEditor extends React.Component<{ appStore: AppStore }> {
     render() {
+        const appStore = this.props.appStore;
+        const scriptsModel = this.props.appStore.scriptsModel;
+        const navigationStore = this.props.appStore.navigationStore;
+
         return (
             <Splitter
                 type="horizontal"
@@ -193,27 +197,30 @@ export class ScriptsEditor extends React.Component<{}, {}> {
                         persistId="instrument/lists/splitter"
                     >
                         <MasterView
+                            appStore={appStore}
                             selectedScript={scriptsModel.selectedScript}
                             selectScript={action(
                                 (script: IShortcut) =>
                                     (navigationStore.selectedScriptId = script.id)
                             )}
                         />
-                        <ScriptView />
+                        <ScriptView appStore={appStore} />
                     </Splitter>
                 </Container>
 
-                {scriptsModel.terminalVisible && appStore.instrument && <Terminal instrument={appStore.instrument} />}
+                {scriptsModel.terminalVisible &&
+                    appStore.instrument && <Terminal appStore={appStore} />}
             </Splitter>
         );
     }
 }
 
-export function render() {
-    return <ScriptsEditor />;
+export function render(appStore: AppStore) {
+    return <ScriptsEditor appStore={appStore} />;
 }
 
-export function toolbarButtonsRender() {
+export function toolbarButtonsRender(appStore: AppStore) {
+    const scriptsModel = appStore.scriptsModel;
     return (
         <React.Fragment>
             {scriptsModel.modified && (
@@ -239,20 +246,23 @@ export function toolbarButtonsRender() {
 
 export const showScriptError = action(
     (
+        appStore: AppStore,
         shortcut: IShortcut,
         errorMessage: string,
         errorLineNumber: number | undefined,
         errorColumnNumber: number | undefined
     ) => {
-        navigationStore.mainNavigationSelectedItem = scriptsNavigationItem;
-        navigationStore.selectedScriptId = shortcut.id;
-        scriptsModel.errorMessage = errorMessage;
-        scriptsModel.errorLineNumber = errorLineNumber;
-        scriptsModel.errorColumnNumber = errorColumnNumber;
+        appStore.navigationStore.navigateToScripts();
+        appStore.navigationStore.selectedScriptId = shortcut.id;
+        appStore.scriptsModel.errorMessage = errorMessage;
+        appStore.scriptsModel.errorLineNumber = errorLineNumber;
+        appStore.scriptsModel.errorColumnNumber = errorColumnNumber;
     }
 );
 
-export function insertScpiCommandIntoCode(scpiCommand: string) {
+export function insertScpiCommandIntoCode(appStore: AppStore, scpiCommand: string) {
+    const scriptsModel = appStore.scriptsModel;
+
     if (!ScriptView.codeEditor || !scriptsModel.selectedScript) {
         return;
     }
@@ -270,7 +280,9 @@ export function insertScpiCommandIntoCode(scpiCommand: string) {
     ScriptView.codeEditor.insertText(text);
 }
 
-export function insertScpiQueryIntoCode(scpiQuery: string) {
+export function insertScpiQueryIntoCode(appStore: AppStore, scpiQuery: string) {
+    const scriptsModel = appStore.scriptsModel;
+
     if (!ScriptView.codeEditor || !scriptsModel.selectedScript) {
         return;
     }

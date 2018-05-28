@@ -2,22 +2,23 @@ import { format } from "shared/units";
 import { IActivityLogEntry, log, logUpdate, logDelete } from "shared/activity-log";
 
 import * as NotificationModule from "shared/ui/notification";
-
-import { validators } from "shared/model/validation";
-
-import { IShortcut } from "shortcuts/interfaces";
 import { confirm, info } from "shared/ui/dialog";
 import { showGenericDialog } from "shared/ui/generic-dialog";
+
+import { validators } from "shared/model/validation";
 
 import { run as runScpi } from "shared/script-engines/scpi";
 import { run as runJavaScript } from "shared/script-engines/javascript";
 
+import { IShortcut } from "shortcuts/interfaces";
+
 import { InstrumentObject } from "instrument/instrument-object";
 
+import { AppStore } from "instrument/window/app-store";
 import { getConnection } from "instrument/window/connection";
-import { IScriptHistoryItemMessage } from "instrument/window/history-items/script";
-
 import { showScriptError } from "instrument/window/scripts";
+
+import { IScriptHistoryItemMessage } from "instrument/window/history/items/script";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -287,7 +288,7 @@ function prepareModules(instrument: InstrumentObject, shortcut: IShortcut) {
     }
 }
 
-function doExecuteShortcut(instrument: InstrumentObject, shortcut: IShortcut) {
+function doExecuteShortcut(appStore: AppStore, shortcut: IShortcut) {
     let run;
 
     if (shortcut.action.type === "scpi-commands") {
@@ -296,7 +297,7 @@ function doExecuteShortcut(instrument: InstrumentObject, shortcut: IShortcut) {
         run = runJavaScript;
     }
 
-    const modules = prepareModules(instrument, shortcut);
+    const modules = prepareModules(appStore.instrument!, shortcut);
 
     run(shortcut.action.data, modules)
         .then(() => {
@@ -316,22 +317,22 @@ function doExecuteShortcut(instrument: InstrumentObject, shortcut: IShortcut) {
             modules.session._scriptDone = true;
 
             if (shortcut.action.type === "javascript") {
-                showScriptError(shortcut, err.message, lineNumber, columnNumber);
+                showScriptError(appStore, shortcut, err.message, lineNumber, columnNumber);
             }
         });
 }
 
-export function executeShortcut(instrument: InstrumentObject, shortcut: IShortcut) {
-    if (!getConnection(instrument).isConnected) {
+export function executeShortcut(appStore: AppStore, shortcut: IShortcut) {
+    if (!getConnection(appStore.instrument!).isConnected) {
         info("Not connected to the instrument.", undefined);
         return;
     }
 
     if (shortcut.requiresConfirmation) {
         confirm(`Do you want to execute "${shortcut.name}" shortcut?`, undefined, () =>
-            doExecuteShortcut(instrument, shortcut)
+            doExecuteShortcut(appStore, shortcut)
         );
     } else {
-        doExecuteShortcut(instrument, shortcut);
+        doExecuteShortcut(appStore, shortcut);
     }
 }

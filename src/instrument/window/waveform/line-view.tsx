@@ -6,6 +6,7 @@ import { bind } from "bind-decorator";
 import { ILineController, globalViewOptions } from "shared/ui/chart";
 
 import { renderAlgorithm } from "instrument/window/chart-view-options";
+
 import {
     IWaveform,
     IWaveformRenderJobSpecification,

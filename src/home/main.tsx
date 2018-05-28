@@ -27,7 +27,7 @@ EEZStudio.electron.ipcRenderer.on(
 
 async function main() {
     const { App } = await import("home/app");
-    ReactDOM.render(<App />, document.getElementById("content"));
+    ReactDOM.render(<App />, document.getElementById("EezStudio_Content"));
 
     const { loadExtensions } = await import("shared/extensions/extensions");
     loadExtensions();

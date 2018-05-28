@@ -7,8 +7,9 @@ import { ChartsController, ChartController, globalViewOptions } from "shared/ui/
 import { Checkbox, Radio } from "shared/ui/properties";
 import { CONF_BORDER_COLOR } from "shared/ui/box";
 
-import { WaveformRenderAlgorithm } from "instrument/window/waveform/render";
 import { EnvelopeChartsController } from "instrument/window/lists/envelope";
+
+import { WaveformRenderAlgorithm } from "instrument/window/waveform/render";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +39,7 @@ autorun(() => {
 const globalViewOptionsJSON = localStorage.getItem("instrument/window/waveform/globalViewOptions");
 if (globalViewOptionsJSON) {
     const globakViewOptionsJS = JSON.parse(globalViewOptionsJSON);
-    Object.assign(globalViewOptions, globakViewOptionsJS);
+    runInAction(() => Object.assign(globalViewOptions, globakViewOptionsJS));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

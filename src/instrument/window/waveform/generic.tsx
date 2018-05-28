@@ -28,10 +28,12 @@ import {
     IViewOptionsAxesLinesType
 } from "shared/ui/chart";
 
+import { checkMime } from "instrument/connection/file-type";
+
+import { AppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
-import { FileHistoryItem } from "instrument/window/history-items/file";
-import { checkMime } from "instrument/connection/file-type";
+import { FileHistoryItem } from "instrument/window/history/items/file";
 
 import { initValuesAccesor, WaveformFormat } from "instrument/window/waveform/buffer";
 import { IWaveformLink } from "instrument/window/waveform/multi";
@@ -263,8 +265,8 @@ export class WaveformChartsController extends ChartsController {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Waveform extends FileHistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem, appStore: AppStore) {
+        super(activityLogEntry, appStore);
 
         when(
             () => this.transferSucceeded && this.isVisible,

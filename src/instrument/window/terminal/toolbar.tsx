@@ -3,12 +3,13 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 
 import { capitalize } from "shared/string";
+
 import { Toolbar } from "shared/ui/toolbar";
 import { ButtonAction } from "shared/ui/action";
 
 import { IShortcut } from "shortcuts/interfaces";
 
-import { instrumentShortcuts } from "instrument/window/shortcuts";
+import { AppStore } from "instrument/window/app-store";
 
 @observer
 export class ShortcutButton extends React.Component<
@@ -46,13 +47,16 @@ export class ShortcutButton extends React.Component<
 @observer
 export class ShortcutsToolbar extends React.Component<
     {
+        appStore: AppStore;
         executeShortcut: (shortcut: IShortcut) => void;
     },
     {}
 > {
     @computed
     get shortcuts() {
-        return Array.from(instrumentShortcuts.get().values()).sort((s1, s2) => {
+        return Array.from(
+            this.props.appStore.shortcutsStore.instrumentShortcuts.get().values()
+        ).sort((s1, s2) => {
             if (s1.toolbarButtonPosition < s2.toolbarButtonPosition) {
                 return -1;
             }

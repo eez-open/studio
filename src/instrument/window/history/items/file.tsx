@@ -30,11 +30,11 @@ import * as UiBalloonModule from "shared/ui/balloon";
 
 import { FileState } from "instrument/connection/file-state";
 
-import { appStore } from "instrument/window/app-store";
+import { AppStore } from "instrument/window/app-store";
 
-import { showAddNoteDialog, showEditNoteDialog } from "instrument/window/terminal/note-dialog";
+import { showAddNoteDialog, showEditNoteDialog } from "instrument/window/note-dialog";
 
-import { HistoryItem } from "instrument/window/history-item";
+import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -81,6 +81,7 @@ class ImagePreview extends React.Component<
 @observer
 export class FileHistoryItemComponent extends React.Component<
     {
+        appStore: AppStore;
         historyItem: FileHistoryItem;
     },
     {}
@@ -94,7 +95,7 @@ export class FileHistoryItemComponent extends React.Component<
 
     @bind
     onAbortFileTransfer() {
-        appStore.instrument!.connection.abortLongOperation();
+        this.props.appStore.instrument!.connection.abortLongOperation();
     }
 
     @bind
@@ -369,8 +370,8 @@ export class FileHistoryItemComponent extends React.Component<
 }
 
 export class FileHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry, appStore?: AppStore) {
+        super(activityLogEntry, appStore);
     }
 
     get info() {
@@ -401,7 +402,7 @@ export class FileHistoryItem extends HistoryItem {
     }
 
     get listItemElement(): JSX.Element | null {
-        return <FileHistoryItemComponent historyItem={this} />;
+        return <FileHistoryItemComponent appStore={this.appStore!} historyItem={this} />;
     }
 
     get previewElement(): JSX.Element | null {
@@ -444,7 +445,7 @@ export class FileHistoryItem extends HistoryItem {
         logUpdate(
             {
                 id: this.id,
-                oid: appStore.instrument!.id,
+                oid: this.appStore!.instrument!.id,
                 message: JSON.stringify(fileState)
             },
             {

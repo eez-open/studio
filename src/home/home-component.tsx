@@ -1,13 +1,8 @@
 import * as React from "react";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
-//import { DragDropContext } from "react-dnd";
-//import HTML5Backend from "react-dnd-html5-backend";
 
-import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
-import { TabsView } from "shared/ui/tabs";
-
-import { tabs } from "home/store";
+import { AppRootComponent } from "shared/ui/app";
 
 import * as DesignerModule from "home/designer/designer";
 import * as HistoryModule from "home/history/history";
@@ -69,7 +64,7 @@ const navigationItems = [
 ];
 
 @observer
-class AppComponent extends React.Component<{}, {}> {
+export class HomeComponent extends React.Component<{}, {}> {
     @observable.ref selectedItem = navigationItems[0];
 
     @action.bound
@@ -85,15 +80,11 @@ class AppComponent extends React.Component<{}, {}> {
 
     render() {
         return (
-            <VerticalHeaderWithBody className="EezStudio_AppRootComponent">
-                <Header>
-                    <TabsView tabs={tabs.tabs} />
-                </Header>
-                <Body>{tabs.activeTab.editor}</Body>
-            </VerticalHeaderWithBody>
+            <AppRootComponent
+                navigationItems={navigationItems}
+                selectedItem={this.selectedItem}
+                onSelectionChange={this.selectItem}
+            />
         );
     }
 }
-
-//export const App = DragDropContext(HTML5Backend)(AppComponent);
-export const App = AppComponent;

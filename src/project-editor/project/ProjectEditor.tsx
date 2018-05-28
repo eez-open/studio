@@ -5,6 +5,8 @@ import { observer } from "mobx-react";
 //import DevTools from 'mobx-react-devtools';
 //import { isDev } from 'shared/util';
 
+import { TabsView } from "shared/ui/tabs";
+
 import {
     UndoManager,
     ProjectStore,
@@ -24,7 +26,6 @@ import { IconAction } from "shared/ui/action";
 import { Panel } from "project-editor/components/Panel";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Output } from "project-editor/components/Output";
-import { TabsView } from "project-editor/components/Tab";
 import * as Layout from "project-editor/components/Layout";
 
 import { MenuNavigation } from "project-editor/project/MenuNavigation";
@@ -35,10 +36,10 @@ import { Notification } from "project-editor/project/Notification";
 
 @observer
 class Toolbar extends React.Component<
-{},
-{
-    searchPattern: string;
-}
+    {},
+    {
+        searchPattern: string;
+    }
 > {
     constructor(props: {}) {
         super(props);
@@ -253,11 +254,11 @@ class Content extends React.Component<{}, {}> {
 
 @observer
 class StatusBarItem extends React.Component<
-{
-    body: JSX.Element | string;
-    onClick: () => void;
-},
-{}
+    {
+        body: JSX.Element | string;
+        onClick: () => void;
+    },
+    {}
 > {
     render() {
         return (

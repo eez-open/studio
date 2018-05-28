@@ -7,12 +7,13 @@ import { IActivityLogEntry } from "shared/activity-log";
 
 import { getConnectionParametersInfo } from "instrument/window/connection";
 
-import { HistoryItem } from "instrument/window/history-item";
+import { AppStore } from "instrument/window/app-store";
+import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class ConnectedHistoryItemComponent extends React.Component<
+export class ConnectFailedHistoryItemComponent extends React.Component<
     {
         historyItem: HistoryItem;
     },
@@ -21,7 +22,7 @@ export class ConnectedHistoryItemComponent extends React.Component<
     @computed
     get message(): {
         connectionParameters?: any;
-        sessionName?: string;
+        error?: string;
     } {
         if (!this.props.historyItem.message) {
             return {};
@@ -30,27 +31,24 @@ export class ConnectedHistoryItemComponent extends React.Component<
         try {
             return JSON.parse(this.props.historyItem.message);
         } catch (err) {
-            return {
-                sessionName: this.props.historyItem.message
-            };
+            return {};
         }
     }
 
     render() {
         return (
-            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Connected">
+            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Disconnected">
                 <p>
                     <small className="EezStudio_HistoryItemDate text-muted">
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
-                    <span>
-                        CONNECTED{this.message.connectionParameters
+                    <span className="text-danger">
+                        CONNECT{this.message.connectionParameters
                             ? " to " +
                               getConnectionParametersInfo(this.message.connectionParameters)
-                            : ""}
-                    </span>
-                    <span className="EezStudio_HistoryItem_SessionName">
-                        {this.message.sessionName}
+                            : " "}{" "}
+                        failed
+                        {this.message.error && ": " + this.message.error}
                     </span>
                 </p>
             </div>
@@ -58,12 +56,12 @@ export class ConnectedHistoryItemComponent extends React.Component<
     }
 }
 
-export class ConnectedHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
+export class ConnectFailedHistoryItem extends HistoryItem {
+    constructor(activityLogEntry: IActivityLogEntry, appStore?: AppStore) {
+        super(activityLogEntry, appStore);
     }
 
     get listItemElement(): JSX.Element | null {
-        return <ConnectedHistoryItemComponent historyItem={this} />;
+        return <ConnectFailedHistoryItemComponent historyItem={this} />;
     }
 }

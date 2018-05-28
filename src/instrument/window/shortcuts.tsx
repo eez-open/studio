@@ -14,41 +14,53 @@ import {
 import { groups, addGroup, updateGroup, deleteGroup } from "shortcuts/groups-store";
 import { bindShortcuts } from "shortcuts/mousetrap";
 
-import { appStore } from "instrument/window/app-store";
 import {
     changeGroupNameInInstruments,
     deleteGroupInInstruments
 } from "instrument/instrument-object";
 
+import { AppStore } from "instrument/window/app-store";
 import * as ScriptModule from "instrument/window/script";
+
+////////////////////////////////////////////////////////////////////////////////
 
 export const shortcutsOrGroups = observable.box<boolean>(true);
 
-export const instrumentShortcuts = computed(() => {
-    let shortcutsMap = new Map<string, IShortcut>();
-
-    const instrument = appStore.instrument;
-    if (instrument) {
-        values(shortcuts)
-            .filter(
-                shortcut =>
-                    shortcut.groupName ===
-                        SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX + instrument.id ||
-                    (instrument.extension &&
-                        shortcut.groupName ===
-                            SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + instrument.extension.id) ||
-                    instrument.selectedShortcutGroups.indexOf(shortcut.groupName) !== -1
-            )
-            .forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
+export class ShortcutsStore {
+    constructor(public appStore: AppStore) {
+        bindShortcuts(this.instrumentShortcuts, (shortcut: IShortcut) => {
+            const { executeShortcut } = require("instrument/window/script") as typeof ScriptModule;
+            if (appStore.instrument) {
+                executeShortcut(this.appStore, shortcut);
+            }
+        });
     }
 
-    return observable.map(shortcutsMap);
-});
+    instrumentShortcuts = computed(() => {
+        let shortcutsMap = new Map<string, IShortcut>();
 
-class ShortcutsStore {
+        const instrument = this.appStore.instrument;
+        if (instrument) {
+            values(shortcuts)
+                .filter(
+                    shortcut =>
+                        shortcut.groupName ===
+                            SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX + instrument.id ||
+                        (instrument.extension &&
+                            shortcut.groupName ===
+                                SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX +
+                                    instrument.extension.id) ||
+                        instrument.selectedShortcutGroups.indexOf(shortcut.groupName) !== -1
+                )
+                .forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
+        }
+
+        return observable.map(shortcutsMap);
+    });
+
     @computed
     get shortcuts() {
-        return instrumentShortcuts.get();
+        return this.instrumentShortcuts.get();
     }
 
     addShortcut(shortcut: Partial<IShortcut>) {
@@ -58,11 +70,11 @@ class ShortcutsStore {
                 !shortcut.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX) &&
                 !shortcut.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX)
             ) {
-                appStore.instrument!.addShortcutGroupToInstrument(shortcut.groupName);
+                this.appStore.instrument!.addShortcutGroupToInstrument(shortcut.groupName);
             }
         } else {
             shortcut = Object.assign({}, shortcut, {
-                groupName: SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX + appStore.instrument!.id
+                groupName: SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX + this.appStore.instrument!.id
             });
         }
         let id = addShortcut(shortcut);
@@ -77,11 +89,11 @@ class ShortcutsStore {
                 !shortcut.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX) &&
                 !shortcut.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX)
             ) {
-                appStore.instrument!.addShortcutGroupToInstrument(shortcut.groupName);
+                this.appStore.instrument!.addShortcutGroupToInstrument(shortcut.groupName);
             }
         } else {
             shortcut = Object.assign({}, shortcut, {
-                groupName: SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX + appStore.instrument!.id
+                groupName: SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX + this.appStore.instrument!.id
             });
         }
         updateShortcut(shortcut);
@@ -95,12 +107,16 @@ class ShortcutsStore {
     }
 }
 
-export const shortcutsStore = new ShortcutsStore();
+export class GroupsStore {
+    constructor(public appStore: AppStore) {}
 
-const groupsStore = {
-    groups,
+    get groups() {
+        return groups;
+    }
 
-    addGroup,
+    get addGroup() {
+        return addGroup;
+    }
 
     updateGroup(changes: Partial<IGroup>) {
         if (changes.name) {
@@ -111,52 +127,48 @@ const groupsStore = {
         }
 
         updateGroup(changes);
-    },
+    }
 
     deleteGroup(group: Partial<IGroup>) {
         deleteGroupInInstruments(group.name!);
         deleteGroup(group);
-    },
+    }
 
     isGroupEnabled(group: IGroup) {
-        return appStore.instrument!.selectedShortcutGroups.indexOf(group.name) !== -1;
-    },
+        return this.appStore.instrument!.selectedShortcutGroups.indexOf(group.name) !== -1;
+    }
 
     enableGroup(group: IGroup, enable: boolean): void {
         if (enable) {
             beginTransaction("Add shortcut group to instrument");
-            appStore.instrument!.addShortcutGroupToInstrument(group.name);
+            this.appStore.instrument!.addShortcutGroupToInstrument(group.name);
         } else {
             beginTransaction("Remove shortcut group from instrument");
-            appStore.instrument!.removeShortcutGroupFromInstrument(group.name);
+            this.appStore.instrument!.removeShortcutGroupFromInstrument(group.name);
         }
         commitTransaction();
     }
-};
+}
 
-export function render() {
+export function render(appStore: AppStore) {
     return shortcutsOrGroups.get() ? (
-        <Shortcuts shortcutsStore={shortcutsStore} groupsStore={groupsStore} />
+        <Shortcuts shortcutsStore={appStore.shortcutsStore} groupsStore={appStore.groupsStore} />
     ) : (
-        <Groups shortcutsStore={shortcutsStore} groupsStore={groupsStore} />
+        <Groups shortcutsStore={appStore.shortcutsStore} groupsStore={appStore.groupsStore} />
     );
 }
 
-export function toolbarButtonsRender() {
+export function toolbarButtonsRender(appStore: AppStore) {
     return shortcutsOrGroups.get() ? (
         <ShortcutsToolbarButtons
             shortcutsOrGroups={shortcutsOrGroups}
-            shortcutsStore={shortcutsStore}
-            groupsStore={groupsStore}
+            shortcutsStore={appStore.shortcutsStore}
+            groupsStore={appStore.groupsStore}
         />
     ) : (
-        <GroupsToolbarButtons shortcutsOrGroups={shortcutsOrGroups} groupsStore={groupsStore} />
+        <GroupsToolbarButtons
+            shortcutsOrGroups={shortcutsOrGroups}
+            groupsStore={appStore.groupsStore}
+        />
     );
 }
-
-bindShortcuts(instrumentShortcuts, (shortcut: IShortcut) => {
-    const { executeShortcut } = require("instrument/window/script") as typeof ScriptModule;
-    if (appStore.instrument) {
-        executeShortcut(appStore.instrument, shortcut);
-    }
-});

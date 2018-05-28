@@ -5,13 +5,13 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { objectClone } from "shared/util";
+
 import {
     PropertyList,
     TextInputProperty,
     NumberInputProperty,
     SelectProperty
 } from "shared/ui/properties";
-
 import { Dialog, showDialog } from "shared/ui/dialog";
 
 import { ConnectionParameters } from "instrument/connection/interface";

@@ -6,12 +6,35 @@ import * as classNames from "classnames";
 import { Toolbar } from "shared/ui/toolbar";
 import { IconAction } from "shared/ui/action";
 import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
-import { ChartsView, globalViewOptions } from "shared/ui/chart";
+import { ChartsView, globalViewOptions, ChartsController, ChartMode } from "shared/ui/chart";
 
-import { createChartsController, ChartData } from "instrument/window/chart-factory";
+import { ChartsDisplayOption } from "instrument/window/lists/charts-view-options";
+import { TableList } from "instrument/window/lists/table";
+import { EnvelopeList } from "instrument/window/lists/envelope";
+
 import { Waveform } from "instrument/window/waveform/generic";
 import { MultiWaveform } from "instrument/window/waveform/multi";
 import { DlogWaveform } from "instrument/window/waveform/dlog";
+
+////////////////////////////////////////////////////////////////////////////////
+
+export type ChartData = EnvelopeList | TableList | Waveform | MultiWaveform | DlogWaveform;
+
+export function createChartsController(
+    chartData: ChartData,
+    displayOption: ChartsDisplayOption,
+    mode: ChartMode
+): ChartsController {
+    if (
+        chartData instanceof Waveform ||
+        chartData instanceof MultiWaveform ||
+        chartData instanceof DlogWaveform
+    ) {
+        return chartData.createChartsController(mode);
+    }
+
+    return chartData.createChartsController(displayOption, mode);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

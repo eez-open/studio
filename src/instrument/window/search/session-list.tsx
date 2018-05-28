@@ -5,13 +5,15 @@ import * as classNames from "classnames";
 
 import { formatDateTimeLong } from "shared/util";
 import { beginTransaction, commitTransaction } from "shared/store";
+import { logUpdate } from "shared/activity-log";
+
 import { IconAction } from "shared/ui/action";
 import { Dialog, showDialog } from "shared/ui/dialog";
 import { PropertyList, TextInputProperty } from "shared/ui/properties";
-import { logUpdate } from "shared/activity-log";
 
-import { History, ISession } from "instrument/window/history";
-import { appStore } from "instrument/window/app-store";
+import { AppStore } from "instrument/window/app-store";
+
+import { History, ISession } from "instrument/window/history/history";
 
 @observer
 class EditSessionNameDialog extends React.Component<
@@ -58,7 +60,10 @@ export function showEditSessionNameDialog(name: string, callback: (name: string)
 }
 
 @observer
-export class SessionListItem extends React.Component<{ history: History; session: ISession }, {}> {
+export class SessionListItem extends React.Component<
+    { appStore: AppStore; history: History; session: ISession },
+    {}
+> {
     constructor(props: any) {
         super(props);
         this.handleEditSessionName = this.handleEditSessionName.bind(this);
@@ -96,7 +101,7 @@ export class SessionListItem extends React.Component<{ history: History; session
             logUpdate(
                 {
                     id: this.props.session.id,
-                    oid: appStore.instrument!.id,
+                    oid: this.props.appStore.instrument!.id,
                     message: JSON.stringify(message)
                 },
                 {
@@ -115,7 +120,7 @@ export class SessionListItem extends React.Component<{ history: History; session
         logUpdate(
             {
                 id: this.props.session.id,
-                oid: appStore.instrument!.id,
+                oid: this.props.appStore.instrument!.id,
                 message: JSON.stringify(message)
             },
             {
@@ -162,7 +167,7 @@ export class SessionListItem extends React.Component<{ history: History; session
 }
 
 @observer
-export class SessionList extends React.Component<{ history: History }> {
+export class SessionList extends React.Component<{ appStore: AppStore; history: History }> {
     render() {
         return (
             <div className="EezStudio_SessionList">
@@ -170,6 +175,7 @@ export class SessionList extends React.Component<{ history: History }> {
                     <tbody>
                         {this.props.history.sessions.sessions.map(session => (
                             <SessionListItem
+                                appStore={this.props.appStore}
                                 key={session.id}
                                 history={this.props.history}
                                 session={session}

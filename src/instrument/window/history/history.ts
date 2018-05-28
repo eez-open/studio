@@ -19,19 +19,20 @@ import {
 import { scheduleTask, Priority } from "shared/scheduler";
 
 import { confirm } from "shared/ui/dialog";
-
 import * as notification from "shared/ui/notification";
 
-import { appStore } from "instrument/window/app-store";
+import { AppStore } from "instrument/window/app-store";
 
-import { IHistoryItem } from "instrument/window/history-item";
-import { createHistoryItem, updateHistoryItemClass } from "instrument/window/history-item-factory";
+import { FilterStats } from "instrument/window/search/filters";
 
 import {
     moveToTopOfConnectionHistory,
     moveToBottomOfConnectionHistory,
     selectHistoryItem
 } from "instrument/window/terminal/terminal";
+
+import { IHistoryItem } from "instrument/window/history/item";
+import { createHistoryItem, updateHistoryItemClass } from "instrument/window/history/item-factory";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,7 +74,7 @@ class HistoryCalendar {
                     ORDER BY
                         date`
                 )
-                .all(appStore.instrument!.id);
+                .all(this.history.appStore.instrument!.id);
 
             if (rows.length > 0) {
                 rows.forEach(row => this.counters.set(row.date, row.count.toNumber()));
@@ -114,7 +115,7 @@ class HistoryCalendar {
                         )
                     LIMIT ?`
                 )
-                .all(appStore.instrument!.id, selectedDay.getTime(), CONF_BLOCK_SIZE);
+                .all(this.history.appStore.instrument!.id, selectedDay.getTime(), CONF_BLOCK_SIZE);
 
             this.history.displayRows(rows);
 
@@ -136,7 +137,7 @@ class HistoryCalendar {
                         date DESC
                     LIMIT ?`
                 )
-                .all(appStore.instrument!.id, CONF_BLOCK_SIZE);
+                .all(this.history.appStore.instrument!.id, CONF_BLOCK_SIZE);
 
             rows.reverse();
 
@@ -293,7 +294,7 @@ class HistorySearch {
                     ?`
             )
             .all(
-                appStore.instrument!.id,
+                this.history.appStore.instrument!.id,
                 this.searchLastLogDate.getTime(),
                 "%" + this.searchText + "%",
                 CONF_SINGLE_SEARCH_LIMIT
@@ -381,10 +382,10 @@ class HistorySearch {
                     ) ORDER BY date`
                 )
                 .all(
-                    appStore.instrument!.id,
+                    this.history.appStore.instrument!.id,
                     searchResult.logEntry.date.getTime(),
                     CONF_BLOCK_SIZE / 2,
-                    appStore.instrument!.id,
+                    this.history.appStore.instrument!.id,
                     searchResult.logEntry.date.getTime(),
                     CONF_BLOCK_SIZE / 2
                 );
@@ -422,7 +423,7 @@ class HistoryNavigator {
                     WHERE
                         oid=? AND date < ? ${this.history.getFilter()}`
                 )
-                .get(appStore.instrument!.id, firstHistoryItem.date.getTime());
+                .get(this.history.appStore.instrument!.id, firstHistoryItem.date.getTime());
 
             this.hasOlder = result && result.count.toNumber() > 0;
         } else {
@@ -440,7 +441,7 @@ class HistoryNavigator {
                     WHERE
                         oid=? AND date > ? ${this.history.getFilter()}`
                 )
-                .get(appStore.instrument!.id, lastHistoryItem.date.getTime());
+                .get(this.history.appStore.instrument!.id, lastHistoryItem.date.getTime());
 
             this.hasNewer = result && result.count.toNumber() > 0;
         } else {
@@ -492,7 +493,11 @@ class HistoryNavigator {
                         )
                     LIMIT ?`
                 )
-                .all(appStore.instrument!.id, firstHistoryItem.date.getTime(), CONF_BLOCK_SIZE);
+                .all(
+                    this.history.appStore.instrument!.id,
+                    firstHistoryItem.date.getTime(),
+                    CONF_BLOCK_SIZE
+                );
 
             rows.reverse();
 
@@ -526,7 +531,11 @@ class HistoryNavigator {
                         )
                     LIMIT ?`
                 )
-                .all(appStore.instrument!.id, lastHistoryItem.date.getTime(), CONF_BLOCK_SIZE);
+                .all(
+                    this.history.appStore.instrument!.id,
+                    lastHistoryItem.date.getTime(),
+                    CONF_BLOCK_SIZE
+                );
 
             if (rows.length > 0) {
                 this.history.calendar.showFirstHistoryItemAsSelectedDay = false;
@@ -563,7 +572,7 @@ class HistorySessions {
                 WHERE
                     oid=? AND type = "instrument/connected"`
             )
-            .all(appStore.instrument!.id);
+            .all(this.history.appStore.instrument!.id);
         this.sessions = this.history.rowsToHistoryItems(rows).map(activityLogEntry => ({
             selected: false,
             id: activityLogEntry.id,
@@ -601,7 +610,7 @@ class HistorySessions {
                     LIMIT ?`
                 )
                 .all(
-                    appStore.instrument!.id,
+                    this.history.appStore.instrument!.id,
                     selectedSession.activityLogEntry.date.getTime(),
                     CONF_BLOCK_SIZE
                 );
@@ -652,7 +661,7 @@ class HistorySelection {
 
     @computed
     get items() {
-        return appStore.selectHistoryItemsSpecification ? [] : this._items;
+        return this.history.appStore.selectHistoryItemsSpecification ? [] : this._items;
     }
 
     @action
@@ -665,81 +674,6 @@ class HistorySelection {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class FilterStats {
-    @observable connectsAndDisconnects = 0;
-    @observable scpi = 0;
-    @observable downloadedFiles = 0;
-    @observable uploadedFiles = 0;
-    @observable attachedFiles = 0;
-    @observable charts = 0;
-    @observable lists = 0;
-    @observable notes = 0;
-    @observable launchedScripts = 0;
-
-    constructor(public history: History) {
-        scheduleTask(
-            "Get filter stats",
-            Priority.Lowest,
-            action(() => {
-                const rows = db
-                    .prepare(
-                        `SELECT
-                            type, count(*) AS count
-                        FROM
-                            activityLog
-                        WHERE
-                            oid=? AND NOT deleted
-                        GROUP BY
-                            type`
-                    )
-                    .all(appStore.instrument!.id);
-
-                rows.forEach(row => {
-                    this.add(row.type, row.count.toNumber());
-                });
-            })
-        );
-    }
-
-    add(type: string, amount: number) {
-        if (
-            [
-                "instrument/created",
-                "instrument/restored",
-                "instrument/connected",
-                "instrument/connect-failed",
-                "instrument/disconnected"
-            ].indexOf(type) !== -1
-        ) {
-            this.connectsAndDisconnects += amount;
-        } else if (["instrument/request", "instrument/answer"].indexOf(type) !== -1) {
-            this.scpi += amount;
-        } else if (type === "instrument/file-download") {
-            this.downloadedFiles += amount;
-        } else if (type === "instrument/file-upload") {
-            this.uploadedFiles += amount;
-        } else if (type === "instrument/file-attachment") {
-            this.attachedFiles += amount;
-        } else if (type === "instrument/chart") {
-            this.charts += amount;
-        } else if (type === "instrument/list") {
-            this.lists += amount;
-        } else if (type === "activity-log/note") {
-            this.notes += amount;
-        } else if (type === "instrument/script") {
-            this.launchedScripts += amount;
-        }
-    }
-
-    onHistoryItemCreated(historyItem: IHistoryItem) {
-        this.add(historyItem.type, 1);
-    }
-
-    onHistoryItemRemoved(historyItem: IHistoryItem) {
-        this.add(historyItem.type, -1);
-    }
-}
-
 export class History {
     map = new Map<string, IHistoryItem>();
     @observable blocks: IHistoryItem[][] = [];
@@ -750,11 +684,11 @@ export class History {
     sessions = new HistorySessions(this);
     selection = new HistorySelection(this);
 
-    filterStats: FilterStats;
+    filterStats: FilterStats = new FilterStats(this);
 
     reactionTimeout: any;
 
-    constructor(public isDeletedItemsHistory: boolean = false) {
+    constructor(public appStore: AppStore, public isDeletedItemsHistory: boolean = false) {
         scheduleTask(
             "Watch activity log",
             isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
@@ -831,10 +765,6 @@ export class History {
                 }, 10);
             }
         );
-
-        if (!isDeletedItemsHistory) {
-            this.filterStats = new FilterStats(this);
-        }
     }
 
     findHistoryItemById(id: string) {
@@ -859,7 +789,7 @@ export class History {
 
         const activityLogEntry = activityLogStore.findById(id);
         if (activityLogEntry) {
-            const historyItem = createHistoryItem(activityLogEntry);
+            const historyItem = createHistoryItem(activityLogEntry, this.appStore);
             this.map.set(historyItem.id, historyItem);
             return historyItem;
         }
@@ -872,131 +802,15 @@ export class History {
             return false;
         }
 
-        if (appStore.filters.connectsAndDisconnects) {
-            if (
-                [
-                    "instrument/created",
-                    "instrument/restored",
-                    "instrument/connected",
-                    "instrument/connect-failed",
-                    "instrument/disconnected"
-                ].indexOf(activityLogEntry.type) !== -1
-            ) {
-                return true;
-            }
-        }
-
-        if (appStore.filters.scpi) {
-            if (["instrument/request", "instrument/answer"].indexOf(activityLogEntry.type) !== -1) {
-                return true;
-            }
-        }
-
-        if (appStore.filters.downloadedFiles) {
-            if (activityLogEntry.type === "instrument/file-download") {
-                return true;
-            }
-        }
-
-        if (appStore.filters.uploadedFiles) {
-            if (activityLogEntry.type === "instrument/file-upload") {
-                return true;
-            }
-        }
-
-        if (appStore.filters.attachedFiles) {
-            if (activityLogEntry.type === "instrument/file-attachment") {
-                return true;
-            }
-        }
-
-        if (appStore.filters.charts) {
-            if (activityLogEntry.type === "instrument/chart") {
-                return true;
-            }
-        }
-
-        if (appStore.filters.lists) {
-            if (activityLogEntry.type === "instrument/list") {
-                return true;
-            }
-        }
-
-        if (appStore.filters.notes) {
-            if (activityLogEntry.type === "activity-log/note") {
-                return true;
-            }
-        }
-
-        if (appStore.filters.launchedScripts) {
-            if (activityLogEntry.type === "instrument/script") {
-                return true;
-            }
-        }
-
-        return false;
+        return this.appStore.filters.filterActivityLogEntry(activityLogEntry);
     }
 
     getFilter() {
-        const filters: string[] = [];
-
-        filters.push("NOT deleted");
-
-        const types: string[] = [];
-
-        if (appStore.filters.connectsAndDisconnects) {
-            types.push(
-                "instrument/created",
-                "instrument/restored",
-                "instrument/connected",
-                "instrument/connect-failed",
-                "instrument/disconnected"
-            );
-        }
-
-        if (appStore.filters.scpi) {
-            types.push("instrument/request", "instrument/answer");
-        }
-
-        if (appStore.filters.downloadedFiles) {
-            types.push("instrument/file-download");
-        }
-
-        if (appStore.filters.uploadedFiles) {
-            types.push("instrument/file-upload");
-        }
-
-        if (appStore.filters.attachedFiles) {
-            types.push("instrument/file-attachment");
-        }
-
-        if (appStore.filters.charts) {
-            types.push("instrument/chart");
-        }
-
-        if (appStore.filters.lists) {
-            types.push("instrument/list");
-        }
-
-        if (appStore.filters.notes) {
-            types.push("activity-log/note");
-        }
-
-        if (appStore.filters.launchedScripts) {
-            types.push("instrument/script");
-        }
-
-        if (types.length > 0) {
-            filters.push("(" + types.map(type => `type == "${type}"`).join(" OR ") + ")");
-        } else {
-            filters.push("0");
-        }
-
-        return "AND " + filters.join(" AND ");
+        return "AND NOT deleted AND " + this.appStore.filters.getFilter();
     }
 
     addActivityLogEntryToBlocks(activityLogEntry: IActivityLogEntry) {
-        const historyItem = createHistoryItem(activityLogEntry);
+        const historyItem = createHistoryItem(activityLogEntry, this.appStore);
         this.map.set(historyItem.id, historyItem);
 
         this.filterStats.onHistoryItemCreated(historyItem);
@@ -1094,7 +908,7 @@ export class History {
             let historyItem = this.map.get(row.id.toString());
             if (!historyItem) {
                 const activityLogEntry = activityLogStore.dbRowToObject(row);
-                historyItem = createHistoryItem(activityLogEntry);
+                historyItem = createHistoryItem(activityLogEntry, this.appStore);
                 this.map.set(historyItem.id, historyItem);
             }
             historyItems.push(historyItem);
@@ -1162,7 +976,7 @@ export class History {
             historyItem.message = activityLogEntry.message;
         }
 
-        const updatedHistoryItem = updateHistoryItemClass(historyItem);
+        const updatedHistoryItem = updateHistoryItemClass(historyItem, this.appStore);
         if (updatedHistoryItem !== historyItem) {
             if (foundItem) {
                 foundItem.block[foundItem.index] = updatedHistoryItem;
@@ -1189,7 +1003,7 @@ export class History {
             this.selection.items.forEach(historyItem =>
                 logDelete(
                     {
-                        oid: appStore.instrument!.id,
+                        oid: this.appStore.instrument!.id,
                         id: historyItem.id
                     },
                     {
@@ -1207,11 +1021,11 @@ export class History {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class DeletedItemsHistory extends History {
+export class DeletedItemsHistory extends History {
     @observable deletedCount: number = 0;
 
-    constructor() {
-        super(true);
+    constructor(public appStore: AppStore) {
+        super(appStore, true);
 
         scheduleTask(
             "Get deleted history items count",
@@ -1277,7 +1091,7 @@ class DeletedItemsHistory extends History {
             this.selection.items.forEach(historyItem =>
                 logUndelete(
                     {
-                        oid: appStore.instrument!.id,
+                        oid: this.appStore.instrument!.id,
                         id: historyItem.id
                     },
                     {
@@ -1302,7 +1116,7 @@ class DeletedItemsHistory extends History {
                     this.selection.items.forEach(historyItem =>
                         logDelete(
                             {
-                                oid: appStore.instrument!.id,
+                                oid: this.appStore.instrument!.id,
                                 id: historyItem.id
                             },
                             {
@@ -1319,8 +1133,3 @@ class DeletedItemsHistory extends History {
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const history = new History();
-export const deletedItemsHistory = new DeletedItemsHistory();

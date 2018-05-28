@@ -6,17 +6,16 @@ import { Splitter } from "shared/ui/splitter";
 import { Toolbar } from "shared/ui/toolbar";
 import { IconAction, ButtonAction } from "shared/ui/action";
 
-import { InstrumentObject } from "instrument/instrument-object";
+import { AppStore } from "instrument/window/app-store";
+import { executeShortcut } from "instrument/window/script";
 
-import { appStore } from "instrument/window/app-store";
-import { history, ISession } from "instrument/window/history";
-import { IHistoryItem } from "instrument/window/history-item";
+import { ISession } from "instrument/window/history/history";
+import { IHistoryItem } from "instrument/window/history/item";
+import { HistoryListComponent } from "instrument/window/history/list-component";
+
+import { Search } from "instrument/window/search/search";
 
 import { ShortcutsToolbar } from "instrument/window/terminal/toolbar";
-
-import { executeShortcut } from "instrument/window/script";
-import { ConnectionHistory } from "instrument/window/terminal/connection-history";
-import { Search } from "instrument/window/terminal/search";
 import { CommandsBrowser } from "instrument/window/terminal/commands-browser";
 import { showFileUploadDialog } from "instrument/window/terminal/file-upload-dialog";
 import { TerminalToolbarButtons } from "instrument/window/terminal/terminal-toolbar-buttons";
@@ -67,7 +66,7 @@ const terminalState = new TerminalState();
 @observer
 class Input extends React.Component<
     {
-        instrument: InstrumentObject;
+        appStore: AppStore;
         sendCommand: () => void;
         handleSendFileClick: (() => void) | undefined;
     },
@@ -81,7 +80,7 @@ class Input extends React.Component<
         super(props);
 
         const commandsHistoryJSON = window.localStorage.getItem(
-            `instrument/${this.props.instrument.id}/window/terminal/commands-history`
+            `instrument/${this.props.appStore.instrument!.id}/window/terminal/commands-history`
         );
         if (commandsHistoryJSON) {
             try {
@@ -114,7 +113,7 @@ class Input extends React.Component<
     }
 
     handleHelpClick() {
-        appStore.toggleHelpVisible();
+        this.props.appStore.toggleHelpVisible();
     }
 
     handleChange(event: any) {
@@ -128,7 +127,7 @@ class Input extends React.Component<
                 this.commandsHistory.splice(0, 1);
             }
             window.localStorage.setItem(
-                `instrument/${this.props.instrument.id}/window/terminal/commands-history`,
+                `instrument/${this.props.appStore.instrument!.id}/window/terminal/commands-history`,
                 JSON.stringify(this.commandsHistory)
             );
 
@@ -213,14 +212,14 @@ class Input extends React.Component<
                         onKeyDown={this.handleKeyDown}
                         value={terminalState.command}
                         onChange={this.handleChange}
-                        disabled={!this.props.instrument.connection.isConnected}
+                        disabled={!this.props.appStore.instrument!.connection.isConnected}
                     />
                 </div>
                 <div>
                     <IconAction
                         icon="material:play_arrow"
                         onClick={this.handleSendCommandClick}
-                        enabled={this.props.instrument.connection.isConnected}
+                        enabled={this.props.appStore.instrument!.connection.isConnected}
                         title="Run command"
                     />
                 </div>
@@ -229,7 +228,7 @@ class Input extends React.Component<
                         <IconAction
                             icon="material:file_upload"
                             onClick={this.props.handleSendFileClick}
-                            enabled={this.props.instrument.connection.isConnected}
+                            enabled={this.props.appStore.instrument!.connection.isConnected}
                             title="Upload file"
                         />
                     </div>
@@ -240,8 +239,8 @@ class Input extends React.Component<
 }
 
 @observer
-export class Terminal extends React.Component<{ instrument: InstrumentObject }, {}> {
-    static history: ConnectionHistory | null;
+export class Terminal extends React.Component<{ appStore: AppStore }, {}> {
+    static history: HistoryListComponent | null;
 
     static moveToTopOfConnectionHistory() {
         if (Terminal.history) {
@@ -262,24 +261,26 @@ export class Terminal extends React.Component<{ instrument: InstrumentObject }, 
     }
 
     onSelectHistoryItemsOk() {
-        appStore.selectHistoryItemsSpecification!.onOk();
+        this.props.appStore.selectHistoryItemsSpecification!.onOk();
     }
 
     onSelectHistoryItemsCancel() {
-        appStore.selectHistoryItems(undefined);
+        this.props.appStore.selectHistoryItems(undefined);
     }
 
     render() {
+        const { appStore } = this.props;
+        const instrument = appStore.instrument!;
+
         let handleSendFileClick;
-        if (this.props.instrument.getFileDownloadProperty()) {
+        if (this.props.appStore.instrument!.getFileDownloadProperty()) {
             const fileUploadInstructions =
-                this.props.instrument.lastFileUploadInstructions ||
-                this.props.instrument.defaultFileUploadInstructions;
+                instrument.lastFileUploadInstructions || instrument.defaultFileUploadInstructions;
 
             if (fileUploadInstructions) {
                 handleSendFileClick = () => {
                     showFileUploadDialog(fileUploadInstructions, instructions => {
-                        this.props.instrument.connection.upload(instructions);
+                        instrument.connection.upload(instructions);
                     });
                 };
             }
@@ -342,42 +343,51 @@ export class Terminal extends React.Component<{ instrument: InstrumentObject }, 
                                     </div>
                                 )}
                                 <div className="EezStudio_History_Body">
-                                    <ConnectionHistory
+                                    <HistoryListComponent
+                                        appStore={this.props.appStore}
                                         ref={ref => (Terminal.history = ref)}
-                                        history={history}
+                                        history={this.props.appStore.history}
                                     />
                                 </div>
                             </div>
-                            {appStore.searchVisible && <Search history={history} />}
+                            {appStore.searchVisible && (
+                                <Search
+                                    appStore={this.props.appStore}
+                                    history={this.props.appStore.history}
+                                />
+                            )}
                         </Splitter>
                     </div>
                     <Input
-                        instrument={this.props.instrument}
+                        appStore={appStore}
                         sendCommand={() => {
-                            this.props.instrument.connection.send(terminalState.command);
+                            instrument.connection.send(terminalState.command);
                             terminalState.command = "";
                         }}
                         handleSendFileClick={handleSendFileClick}
                     />
                     <ShortcutsToolbar
+                        appStore={appStore}
                         executeShortcut={shortcut => {
-                            executeShortcut(this.props.instrument, shortcut);
+                            executeShortcut(this.props.appStore, shortcut);
                         }}
                     />
                 </div>
 
-                {appStore.helpVisible && <CommandsBrowser host={terminalState} />}
+                {appStore.helpVisible && (
+                    <CommandsBrowser appStore={this.props.appStore} host={terminalState} />
+                )}
             </Splitter>
         );
     }
 }
 
-export function render(instrument: InstrumentObject) {
-    return <Terminal instrument={instrument} />;
+export function render(appStore: AppStore) {
+    return <Terminal appStore={appStore} />;
 }
 
-export function renderToolbarButtons(instrument: InstrumentObject) {
-    return <TerminalToolbarButtons instrument={instrument} />;
+export function renderToolbarButtons(appStore: AppStore) {
+    return <TerminalToolbarButtons appStore={appStore} />;
 }
 
 export function moveToTopOfConnectionHistory() {

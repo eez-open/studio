@@ -3,7 +3,7 @@ import { IWaveformRenderJobSpecification } from "instrument/window/waveform/rend
 const NUM_WORKERS = 10;
 const workers: Worker[] = [];
 for (let i = 0; i < NUM_WORKERS; ++i) {
-    workers[i] = new Worker("./window/waveform/worker.js");
+    workers[i] = new Worker("../instrument/window/waveform/worker.js");
 }
 let nextWorkerIndex = 0;
 let nextCanvasId = 0;

@@ -34,14 +34,9 @@ import { ButtonAction, DropdownButtonAction, DropdownItem } from "shared/ui/acti
 import { showGenericDialog } from "shared/ui/generic-dialog";
 
 import { undoManager } from "instrument/window/undo";
-import { appStore } from "instrument/window/app-store";
-import { instrumentListStore } from "instrument/window/lists/store";
-import {
-    BaseList,
-    BaseListData,
-    ListAxisModel,
-    instrumentLists
-} from "instrument/window/lists/store-renderer";
+import { AppStore } from "instrument/window/app-store";
+
+import { BaseList, BaseListData, ListAxisModel } from "instrument/window/lists/store-renderer";
 import {
     checkVoltage,
     getMaxVoltage,
@@ -103,8 +98,8 @@ export class TableListData extends BaseListData {
 export class TableList extends BaseList {
     @observable data: TableListData;
 
-    constructor(props: any) {
-        super(props);
+    constructor(props: any, appStore: AppStore) {
+        super(props, appStore);
         this.type = "table";
         this.data = new TableListData(this, props.data);
     }
@@ -116,7 +111,7 @@ export class TableList extends BaseList {
 
     @computed
     get isMaxPointsReached() {
-        return this.numPoints >= appStore.instrument!.getListsMaxPointsProperty();
+        return this.numPoints >= this.appStore.instrument!.listsMaxPointsProperty;
     }
 
     getMaxTime() {
@@ -158,7 +153,7 @@ const selectedCell = observable<{
 ////////////////////////////////////////////////////////////////////////////////
 
 class TableListTimeAxisModel extends ListAxisModel {
-    constructor(private list: TableList) {
+    constructor(public list: TableList) {
         super(list, TIME_UNIT);
     }
 
@@ -277,7 +272,7 @@ function executeCommand(list: TableList, modificator: (data: TableListData) => v
         modificator(newData);
     });
 
-    undoManager.addCommand("Edit table list", instrumentListStore, list, {
+    undoManager.addCommand("Edit table list", list.appStore.instrumentListStore, list, {
         execute: action(() => {
             list.data.applyChanges(newData);
         }),
@@ -298,7 +293,7 @@ function cellKeyFromUnit(unit: IUnit): CellKey {
 
 @observer
 class TableChartsHeader extends React.Component<{ chartsController: ChartsController }, {}> {
-    get tableList() {
+    get list() {
         return (this.props.chartsController as TableChartsController).list;
     }
 
@@ -312,7 +307,7 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique(this.tableList, values(instrumentLists))
+                            validators.unique(this.list, values(this.list.appStore.instrumentLists))
                         ]
                     },
                     {
@@ -323,12 +318,12 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
             },
 
             values: {
-                name: this.tableList.name,
-                description: this.tableList.description
+                name: this.list.name,
+                description: this.list.description
             }
         })
             .then(result => {
-                const list = this.tableList;
+                const list = this.list;
 
                 const oldName = list.name;
                 const oldDescription = list.description;
@@ -337,16 +332,21 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
                 const newDescription = result.values.description;
 
                 if (oldName !== newName || oldDescription !== newDescription) {
-                    undoManager.addCommand("Edit envelope list", instrumentListStore, list, {
-                        execute: action(() => {
-                            list.name = newName;
-                            list.description = newDescription;
-                        }),
-                        undo: action(() => {
-                            list.name = oldName;
-                            list.description = oldDescription;
-                        })
-                    });
+                    undoManager.addCommand(
+                        "Edit envelope list",
+                        this.list.appStore.instrumentListStore,
+                        list,
+                        {
+                            execute: action(() => {
+                                list.name = newName;
+                                list.description = newDescription;
+                            }),
+                            undo: action(() => {
+                                list.name = oldName;
+                                list.description = oldDescription;
+                            })
+                        }
+                    );
                 }
             })
             .catch(() => {});
@@ -553,42 +553,46 @@ export class Table extends React.Component<
             if (key === "voltage" || key === "current") {
                 let power;
                 if (key === "voltage") {
-                    if (!checkVoltage(numValue)) {
+                    if (!checkVoltage(numValue, this.props.list.appStore)) {
                         $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
                         this.props.setError(
-                            `Allowed range: 0 - ${unit.formatValue(getMaxVoltage())}`
+                            `Allowed range: 0 - ${unit.formatValue(
+                                getMaxVoltage(this.props.list.appStore)
+                            )}`
                         );
                         return;
                     }
                     power = numValue * this.props.list.data.current[index];
                 } else {
-                    if (!checkCurrent(numValue)) {
+                    if (!checkCurrent(numValue, this.props.list.appStore)) {
                         $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
                         this.props.setError(
-                            `Allowed range: 0 - ${unit.formatValue(getMaxCurrent())}`
+                            `Allowed range: 0 - ${unit.formatValue(
+                                getMaxCurrent(this.props.list.appStore)
+                            )}`
                         );
                         return;
                     }
                     power = numValue * this.props.list.data.voltage[index];
                 }
 
-                if (!checkPower(power)) {
+                if (!checkPower(power, this.props.list.appStore)) {
                     $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-                    this.props.setError(getPowerLimitErrorMessage());
+                    this.props.setError(getPowerLimitErrorMessage(this.props.list.appStore));
                     return;
                 }
             } else {
-                const minDwell = appStore.instrument!.getListsMinDwellProperty();
-                const maxDwell = appStore.instrument!.getListsMaxDwellProperty();
+                const minDwell = this.props.list.appStore.instrument!.listsMinDwellProperty;
+                const maxDwell = this.props.list.appStore.instrument!.listsMaxDwellProperty;
                 if (numValue < minDwell || numValue > maxDwell) {
                     $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
                     this.props.setError(
                         `Allowed range: ${TIME_UNIT_NO_CUSTOM_FORMAT.formatValue(
                             minDwell,
-                            appStore.instrument!.getDigits(TIME_UNIT)
+                            this.props.list.appStore.instrument!.getDigits(TIME_UNIT)
                         )} - ${TIME_UNIT_NO_CUSTOM_FORMAT.formatValue(
                             maxDwell,
-                            appStore.instrument!.getDigits(TIME_UNIT)
+                            this.props.list.appStore.instrument!.getDigits(TIME_UNIT)
                         )}`
                     );
                     return;

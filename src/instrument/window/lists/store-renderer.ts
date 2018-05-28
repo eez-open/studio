@@ -2,7 +2,6 @@ import { observable, action, runInAction, values } from "mobx";
 
 import { capitalize } from "shared/string";
 import { IUnit, VOLTAGE_UNIT, CURRENT_UNIT, POWER_UNIT } from "shared/units";
-import { scheduleTask, Priority } from "shared/scheduler";
 
 import {
     ChartsController,
@@ -14,10 +13,9 @@ import {
     ChartMode
 } from "shared/ui/chart";
 
-import { appStore } from "instrument/window/app-store";
+import { AppStore } from "instrument/window/app-store";
 import { undoManager } from "instrument/window/undo";
 
-import { instrumentListStore } from "instrument/window/lists/store";
 import { ChartsDisplayOption } from "instrument/window/lists/charts-view-options";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,40 +23,40 @@ import { ChartsDisplayOption } from "instrument/window/lists/charts-view-options
 const CONF_MAX_VOLTAGE = 40;
 const CONF_MAX_CURRENT = 5;
 
-function getFirstChannel() {
-    return appStore.instrument && appStore.instrument.getFirstChannel();
+function getFirstChannel(appStore: AppStore) {
+    return appStore.instrument && appStore.instrument.firstChannel;
 }
 
-export function getMaxVoltage(): number {
+export function getMaxVoltage(appStore: AppStore): number {
     let maxVoltage;
-    const channel = getFirstChannel();
+    const channel = getFirstChannel(appStore);
     if (channel) {
         maxVoltage = channel.maxVoltage;
     }
     return maxVoltage || CONF_MAX_VOLTAGE;
 }
 
-export function getMaxCurrent(): number {
+export function getMaxCurrent(appStore: AppStore): number {
     let maxCurrent;
-    const channel = getFirstChannel();
+    const channel = getFirstChannel(appStore);
     if (channel) {
         maxCurrent = channel.maxCurrent;
     }
     return maxCurrent || CONF_MAX_CURRENT;
 }
 
-export function getMaxPower(): number {
+export function getMaxPower(appStore: AppStore): number {
     let maxPower;
-    const channel = getFirstChannel();
+    const channel = getFirstChannel(appStore);
     if (channel) {
         maxPower = channel.maxPower;
     }
     return maxPower || CONF_MAX_VOLTAGE * CONF_MAX_CURRENT;
 }
 
-export function getPowerLimitErrorMessage() {
+export function getPowerLimitErrorMessage(appStore: AppStore) {
     return `Power limit of ${POWER_UNIT.formatValue(
-        getMaxPower(),
+        getMaxPower(appStore),
         Math.max(
             appStore.instrument!.getDigits(VOLTAGE_UNIT),
             appStore.instrument!.getDigits(CURRENT_UNIT)
@@ -66,8 +64,8 @@ export function getPowerLimitErrorMessage() {
     )} exceeded`;
 }
 
-export function checkVoltage(voltage: number) {
-    const channel = getFirstChannel();
+export function checkVoltage(voltage: number, appStore: AppStore) {
+    const channel = getFirstChannel(appStore);
     if (channel) {
         const maxVoltage = channel.maxVoltage;
         if (maxVoltage !== undefined) {
@@ -79,8 +77,8 @@ export function checkVoltage(voltage: number) {
     return true;
 }
 
-export function checkCurrent(current: number) {
-    const channel = getFirstChannel();
+export function checkCurrent(current: number, appStore: AppStore) {
+    const channel = getFirstChannel(appStore);
     if (channel) {
         const maxCurrent = channel.maxCurrent;
         if (maxCurrent !== undefined) {
@@ -92,8 +90,8 @@ export function checkCurrent(current: number) {
     return true;
 }
 
-export function checkPower(power: number) {
-    const channel = getFirstChannel();
+export function checkPower(power: number, appStore: AppStore) {
+    const channel = getFirstChannel(appStore);
     if (channel) {
         const maxPower = channel.maxPower;
         if (maxPower !== undefined) {
@@ -154,122 +152,172 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesType(newType: IViewOptionsAxesLinesType) {
         const oldType = this.axesLines.type;
-        undoManager.addCommand(`Edit ${this.list.type} list`, instrumentListStore, this.list, {
-            execute: action(() => {
-                this.axesLines.type = newType;
-            }),
-            undo: action(() => {
-                this.axesLines.type = oldType;
-            })
-        });
+        undoManager.addCommand(
+            `Edit ${this.list.type} list`,
+            this.list.appStore.instrumentListStore,
+            this.list,
+            {
+                execute: action(() => {
+                    this.axesLines.type = newType;
+                }),
+                undo: action(() => {
+                    this.axesLines.type = oldType;
+                })
+            }
+        );
     }
 
     setAxesLinesMajorSubdivisionHorizontal(newValue: number) {
         const oldValue = this.axesLines.majorSubdivision.horizontal;
-        undoManager.addCommand(`Edit ${this.list.type} list`, instrumentListStore, this.list, {
-            execute: action(() => {
-                this.axesLines.majorSubdivision.horizontal = newValue;
-            }),
-            undo: action(() => {
-                this.axesLines.majorSubdivision.horizontal = oldValue;
-            })
-        });
+        undoManager.addCommand(
+            `Edit ${this.list.type} list`,
+            this.list.appStore.instrumentListStore,
+            this.list,
+            {
+                execute: action(() => {
+                    this.axesLines.majorSubdivision.horizontal = newValue;
+                }),
+                undo: action(() => {
+                    this.axesLines.majorSubdivision.horizontal = oldValue;
+                })
+            }
+        );
     }
 
     setAxesLinesMajorSubdivisionVertical(newValue: number) {
         const oldValue = this.axesLines.majorSubdivision.vertical;
-        undoManager.addCommand(`Edit ${this.list.type} list`, instrumentListStore, this.list, {
-            execute: action(() => {
-                this.axesLines.majorSubdivision.vertical = newValue;
-            }),
-            undo: action(() => {
-                this.axesLines.majorSubdivision.vertical = oldValue;
-            })
-        });
+        undoManager.addCommand(
+            `Edit ${this.list.type} list`,
+            this.list.appStore.instrumentListStore,
+            this.list,
+            {
+                execute: action(() => {
+                    this.axesLines.majorSubdivision.vertical = newValue;
+                }),
+                undo: action(() => {
+                    this.axesLines.majorSubdivision.vertical = oldValue;
+                })
+            }
+        );
     }
 
     setAxesLinesMinorSubdivisionHorizontal(newValue: number) {
         const oldValue = this.axesLines.minorSubdivision.horizontal;
-        undoManager.addCommand(`Edit ${this.list.type} list`, instrumentListStore, this.list, {
-            execute: action(() => {
-                this.axesLines.minorSubdivision.horizontal = newValue;
-            }),
-            undo: action(() => {
-                this.axesLines.minorSubdivision.horizontal = oldValue;
-            })
-        });
+        undoManager.addCommand(
+            `Edit ${this.list.type} list`,
+            this.list.appStore.instrumentListStore,
+            this.list,
+            {
+                execute: action(() => {
+                    this.axesLines.minorSubdivision.horizontal = newValue;
+                }),
+                undo: action(() => {
+                    this.axesLines.minorSubdivision.horizontal = oldValue;
+                })
+            }
+        );
     }
 
     setAxesLinesMinorSubdivisionVertical(newValue: number) {
         const oldValue = this.axesLines.minorSubdivision.vertical;
-        undoManager.addCommand(`Edit ${this.list.type} list`, instrumentListStore, this.list, {
-            execute: action(() => {
-                this.axesLines.minorSubdivision.vertical = newValue;
-            }),
-            undo: action(() => {
-                this.axesLines.minorSubdivision.vertical = oldValue;
-            })
-        });
+        undoManager.addCommand(
+            `Edit ${this.list.type} list`,
+            this.list.appStore.instrumentListStore,
+            this.list,
+            {
+                execute: action(() => {
+                    this.axesLines.minorSubdivision.vertical = newValue;
+                }),
+                undo: action(() => {
+                    this.axesLines.minorSubdivision.vertical = oldValue;
+                })
+            }
+        );
     }
 
     setAxesLinesStepsX(newValue: number[]) {
         const oldValue = this.axesLines.steps.x;
-        undoManager.addCommand(`Edit ${this.list.type} list`, instrumentListStore, this.list, {
-            execute: action(() => {
-                this.axesLines.steps.x = newValue;
-            }),
-            undo: action(() => {
-                this.axesLines.steps.x = oldValue;
-            })
-        });
+        undoManager.addCommand(
+            `Edit ${this.list.type} list`,
+            this.list.appStore.instrumentListStore,
+            this.list,
+            {
+                execute: action(() => {
+                    this.axesLines.steps.x = newValue;
+                }),
+                undo: action(() => {
+                    this.axesLines.steps.x = oldValue;
+                })
+            }
+        );
     }
 
     setAxesLinesStepsY(index: number, newValue: number[]): void {
         const oldValue = this.axesLines.steps.y[index];
-        undoManager.addCommand(`Edit ${this.list.type} list`, instrumentListStore, this.list, {
-            execute: action(() => {
-                this.axesLines.steps.y[index] = newValue;
-            }),
-            undo: action(() => {
-                this.axesLines.steps.y[index] = oldValue;
-            })
-        });
+        undoManager.addCommand(
+            `Edit ${this.list.type} list`,
+            this.list.appStore.instrumentListStore,
+            this.list,
+            {
+                execute: action(() => {
+                    this.axesLines.steps.y[index] = newValue;
+                }),
+                undo: action(() => {
+                    this.axesLines.steps.y[index] = oldValue;
+                })
+            }
+        );
     }
 
     setAxesLinesSnapToGrid(newValue: boolean): void {
         const oldValue = this.axesLines.snapToGrid;
-        undoManager.addCommand(`Edit ${this.list.type} list`, instrumentListStore, this.list, {
-            execute: action(() => {
-                this.axesLines.snapToGrid = newValue;
-            }),
-            undo: action(() => {
-                this.axesLines.snapToGrid = oldValue;
-            })
-        });
+        undoManager.addCommand(
+            `Edit ${this.list.type} list`,
+            this.list.appStore.instrumentListStore,
+            this.list,
+            {
+                execute: action(() => {
+                    this.axesLines.snapToGrid = newValue;
+                }),
+                undo: action(() => {
+                    this.axesLines.snapToGrid = oldValue;
+                })
+            }
+        );
     }
 
     setShowAxisLabels(newValue: boolean) {
         const oldValue = this.showAxisLabels;
-        undoManager.addCommand(`Edit ${this.list.type} list`, instrumentListStore, this.list, {
-            execute: action(() => {
-                this.showAxisLabels = newValue;
-            }),
-            undo: action(() => {
-                this.showAxisLabels = oldValue;
-            })
-        });
+        undoManager.addCommand(
+            `Edit ${this.list.type} list`,
+            this.list.appStore.instrumentListStore,
+            this.list,
+            {
+                execute: action(() => {
+                    this.showAxisLabels = newValue;
+                }),
+                undo: action(() => {
+                    this.showAxisLabels = oldValue;
+                })
+            }
+        );
     }
 
     setShowZoomButtons(newValue: boolean) {
         const oldValue = this.showZoomButtons;
-        undoManager.addCommand(`Edit ${this.list.type} list`, instrumentListStore, this.list, {
-            execute: action(() => {
-                this.showZoomButtons = newValue;
-            }),
-            undo: action(() => {
-                this.showZoomButtons = oldValue;
-            })
-        });
+        undoManager.addCommand(
+            `Edit ${this.list.type} list`,
+            this.list.appStore.instrumentListStore,
+            this.list,
+            {
+                execute: action(() => {
+                    this.showZoomButtons = newValue;
+                }),
+                undo: action(() => {
+                    this.showZoomButtons = oldValue;
+                })
+            }
+        );
     }
 }
 
@@ -280,9 +328,9 @@ export class ListAxisModel implements IAxisModel {
     //       Find a way no to save.
     unit: IUnit;
 
-    constructor(list: BaseList, unit: IUnit) {
+    constructor(public list: BaseList, unit: IUnit) {
         this.unit = unit.clone();
-        this.unit.precision = appStore.instrument!.getDigits(unit);
+        this.unit.precision = list.appStore.instrument!.getDigits(unit);
 
         const props = list.props.data[this.unit.name + "AxisModel"];
 
@@ -314,7 +362,9 @@ export class ListAxisModel implements IAxisModel {
     }
 
     get maxValue(): number {
-        return this.unit.name === "voltage" ? getMaxVoltage() : getMaxCurrent();
+        return this.unit.name === "voltage"
+            ? getMaxVoltage(this.list.appStore)
+            : getMaxCurrent(this.list.appStore);
     }
 
     get defaultFrom() {
@@ -411,7 +461,7 @@ export abstract class BaseList {
     type: string;
     abstract data: BaseListData;
 
-    constructor(public props: any) {
+    constructor(public props: any, public appStore: AppStore) {
         this.id = props.id;
         this.name = props.name;
         this.description = props.description;
@@ -445,10 +495,10 @@ export abstract class BaseList {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const instrumentLists = observable.map<string, BaseList>();
+export function createInstrumentLists(appStore: AppStore) {
+    const instrumentLists = observable.map<string, BaseList>();
 
-scheduleTask("Load lists", Priority.Lowest, () => {
-    instrumentListStore.watch({
+    appStore.instrumentListStore.watch({
         createObject(object: any) {
             runInAction(() => instrumentLists.set(object.id, object));
         },
@@ -468,10 +518,15 @@ scheduleTask("Load lists", Priority.Lowest, () => {
             });
         }
     });
-});
 
-export function findListIdByName(listName: string) {
-    const list = values(instrumentLists).find(list => list.name === listName);
+    return instrumentLists;
+}
+
+export function findListIdByName(listName: string, appStore: AppStore) {
+    if (!appStore.instrumentLists) {
+        return undefined;
+    }
+    const list = values(appStore.instrumentLists).find(list => list.name === listName);
     if (list) {
         return list.id;
     }

@@ -7,16 +7,18 @@ import { bind } from "bind-decorator";
 
 import { Icon } from "shared/ui/icon";
 
+import { AppStore } from "instrument/window/app-store";
+
 import { Waveform } from "instrument/window/waveform/generic";
 
-import { appStore } from "instrument/window/app-store";
-import { History, deletedItemsHistory } from "instrument/window/history";
-import { IHistoryItem } from "instrument/window/history-item";
+import { History } from "instrument/window/history/history";
+import { IHistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class HistoryItems extends React.Component<{
+    appStore: AppStore;
     history: History;
     historyItems: IHistoryItem[];
 }> {
@@ -26,8 +28,10 @@ export class HistoryItems extends React.Component<{
 
             let showCheckbox = false;
 
-            if (appStore.selectHistoryItemsSpecification) {
-                if (appStore.selectHistoryItemsSpecification.historyItemType === "chart") {
+            if (this.props.appStore.selectHistoryItemsSpecification) {
+                if (
+                    this.props.appStore.selectHistoryItemsSpecification.historyItemType === "chart"
+                ) {
                     if (historyItem instanceof Waveform) {
                         showCheckbox = true;
                     } else {
@@ -42,7 +46,8 @@ export class HistoryItems extends React.Component<{
                 `EezStudio_HistoryItemEnclosure`,
                 `EezStudio_HistoryItem_${historyItem.id}`,
                 {
-                    selected: !appStore.selectHistoryItemsSpecification && historyItem.selected
+                    selected:
+                        !this.props.appStore.selectHistoryItemsSpecification && historyItem.selected
                 }
             );
 
@@ -71,12 +76,12 @@ export class HistoryItems extends React.Component<{
                         const { Menu, MenuItem } = EEZStudio.electron.remote;
                         const menu = new Menu();
 
-                        if (this.props.history === deletedItemsHistory) {
+                        if (this.props.history === this.props.appStore.deletedItemsHistory) {
                             menu.append(
                                 new MenuItem({
                                     label: "Restore",
                                     click: () => {
-                                        deletedItemsHistory.restoreSelectedHistoryItems();
+                                        this.props.appStore.deletedItemsHistory.restoreSelectedHistoryItems();
                                     }
                                 })
                             );
@@ -84,7 +89,7 @@ export class HistoryItems extends React.Component<{
                                 new MenuItem({
                                     label: "Purge",
                                     click: () => {
-                                        deletedItemsHistory.deleteSelectedHistoryItems();
+                                        this.props.appStore.deletedItemsHistory.deleteSelectedHistoryItems();
                                     }
                                 })
                             );
@@ -105,9 +110,12 @@ export class HistoryItems extends React.Component<{
                     {showCheckbox && (
                         <input
                             type="checkbox"
-                            checked={appStore.isHistoryItemSelected(historyItem.id)}
+                            checked={this.props.appStore.isHistoryItemSelected(historyItem.id)}
                             onChange={event => {
-                                appStore.selectHistoryItem(historyItem.id, event.target.checked);
+                                this.props.appStore.selectHistoryItem(
+                                    historyItem.id,
+                                    event.target.checked
+                                );
                             }}
                         />
                     )}
@@ -119,7 +127,8 @@ export class HistoryItems extends React.Component<{
 }
 
 @observer
-export class ConnectionHistory extends React.Component<{
+export class HistoryListComponent extends React.Component<{
+    appStore: AppStore;
     history: History;
 }> {
     animationFrameRequestId: any;
@@ -251,6 +260,7 @@ export class ConnectionHistory extends React.Component<{
                     }
                     return (
                         <HistoryItems
+                            appStore={this.props.appStore}
                             key={historyItems[0].id}
                             history={this.props.history}
                             historyItems={historyItems}

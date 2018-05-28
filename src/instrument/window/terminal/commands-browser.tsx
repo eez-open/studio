@@ -10,14 +10,11 @@ import { Splitter } from "shared/ui/splitter";
 import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
 
 import { ICommandSyntax, makeItShort, matchCommand } from "instrument/commands-tree";
-import { commandsTree } from "instrument/window/terminal/commands-tree";
 
-import { navigationStore, scriptsNavigationItem } from "instrument/window/app";
-import {
-    insertScpiCommandIntoCode,
-    insertScpiQueryIntoCode,
-    scriptsModel
-} from "instrument/window/scripts";
+import { AppStore } from "instrument/window/app-store";
+import { insertScpiCommandIntoCode, insertScpiQueryIntoCode } from "instrument/window/scripts";
+
+import { commandsTree } from "instrument/window/terminal/commands-tree";
 
 export interface ICommandNode extends ITreeNode {
     commandSyntax?: ICommandSyntax;
@@ -27,6 +24,7 @@ export interface ICommandNode extends ITreeNode {
 @observer
 export class CommandSyntax extends React.Component<
     {
+        appStore: AppStore;
         commandSyntax: ICommandSyntax;
         copyCommand: (command: ICommandSyntax) => void;
     },
@@ -40,9 +38,9 @@ export class CommandSyntax extends React.Component<
     @bind
     copyToScript() {
         if (this.props.commandSyntax.name.endsWith("?")) {
-            insertScpiQueryIntoCode(this.props.commandSyntax.name);
+            insertScpiQueryIntoCode(this.props.appStore, this.props.commandSyntax.name);
         } else {
-            insertScpiCommandIntoCode(this.props.commandSyntax.name);
+            insertScpiCommandIntoCode(this.props.appStore, this.props.commandSyntax.name);
         }
     }
 
@@ -54,8 +52,9 @@ export class CommandSyntax extends React.Component<
                     <button className="btn btn-sm" onClick={this.copy}>
                         Copy
                     </button>
-                    {navigationStore.mainNavigationSelectedItem === scriptsNavigationItem &&
-                        scriptsModel.selectedScript && (
+                    {this.props.appStore.navigationStore.mainNavigationSelectedItem ===
+                        this.props.appStore.navigationStore.scriptsNavigationItem &&
+                        this.props.appStore.scriptsModel.selectedScript && (
                             <button className="btn btn-sm ml-1" onClick={this.copyToScript}>
                                 Copy to script
                             </button>
@@ -69,6 +68,7 @@ export class CommandSyntax extends React.Component<
 @observer
 export class CommandsBrowser extends React.Component<
     {
+        appStore: AppStore;
         host: {
             command: string;
         };
@@ -172,12 +172,14 @@ export class CommandsBrowser extends React.Component<
                         <tbody>
                             {this.selectedNode.commandSyntax && (
                                 <CommandSyntax
+                                    appStore={this.props.appStore}
                                     commandSyntax={this.selectedNode.commandSyntax}
                                     copyCommand={this.copyCommand}
                                 />
                             )}
                             {this.selectedNode.querySyntax && (
                                 <CommandSyntax
+                                    appStore={this.props.appStore}
                                     commandSyntax={this.selectedNode.querySyntax}
                                     copyCommand={this.copyCommand}
                                 />

@@ -9,16 +9,20 @@ import { beginTransaction, commitTransaction } from "shared/store";
 import { logUpdate, IActivityLogEntry } from "shared/activity-log";
 
 import { Dialog, showDialog } from "shared/ui/dialog";
-import { TextInputProperty, ColorInputProperty } from "shared/ui/properties";
-
-import { PropertyList, SelectFromListProperty } from "shared/ui/properties";
+import {
+    TextInputProperty,
+    ColorInputProperty,
+    PropertyList,
+    SelectFromListProperty
+} from "shared/ui/properties";
 import { IListNode, ListItem } from "shared/ui/list";
 import { ChartMode, ChartsController, IAxisModel } from "shared/ui/chart";
 import { Icon } from "shared/ui/icon";
 
-import { history } from "instrument/window/history";
-import { HistoryItem } from "instrument/window/history-item";
+import { AppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
+
+import { HistoryItem } from "instrument/window/history/item";
 
 import {
     Waveform,
@@ -98,8 +102,8 @@ interface ILinkedWaveform {
 }
 
 export class MultiWaveform extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry, appStore: AppStore) {
+        super(activityLogEntry, appStore);
 
         // save viewOptions when changed
         reaction(
@@ -145,7 +149,9 @@ export class MultiWaveform extends HistoryItem {
     get linkedWaveforms() {
         return this.waveformLinks
             .map(waveformLink => {
-                const waveform = history.getHistoryItemById(waveformLink.id)! as Waveform;
+                const waveform = this.appStore!.history.getHistoryItemById(
+                    waveformLink.id
+                )! as Waveform;
                 return {
                     waveformLink,
                     waveform,

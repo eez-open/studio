@@ -150,14 +150,19 @@ class Connection extends React.Component<{
 }
 
 export class InstrumentDetails extends React.Component<{ instrument: InstrumentObject }, {}> {
+    @bind
+    onOpen() {
+        this.props.instrument.open();
+    }
+
     render() {
         let { instrument } = this.props;
         return (
             <Panels>
                 <Panel title="Actions">
                     <div className="text-center">
-                        <button className="btn btn-primary" onClick={() => instrument.open()}>
-                            Open SCPI Terminal
+                        <button className="btn btn-primary" onClick={this.onOpen}>
+                            Open
                         </button>
                     </div>
                 </Panel>

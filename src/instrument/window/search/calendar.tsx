@@ -11,7 +11,7 @@ import {
     getWeekNumber
 } from "shared/util";
 
-import { History } from "instrument/window/history";
+import { History } from "instrument/window/history/history";
 
 @observer
 export class Day extends React.Component<{ history: History; day: Date }> {

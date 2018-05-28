@@ -8,12 +8,23 @@ export interface IActivityLogEntryInfo {
     content: JSX.Element | string;
 }
 
+export interface IEditor {
+    editor: JSX.Element;
+
+    onCreate(): void;
+    onActivate(): void;
+    onDeactivate(): void;
+    onTerminate(): void;
+}
+
 export interface IObject {
     id: string;
+    name: string;
     content: JSX.Element | null;
     activityLogEntryInfo(logEntry: IActivityLogEntry): IActivityLogEntryInfo | null;
     details: JSX.Element | null;
     resizable: boolean;
+    getEditor(): IEditor | null;
     open(): void;
     afterDelete?(): void;
 }

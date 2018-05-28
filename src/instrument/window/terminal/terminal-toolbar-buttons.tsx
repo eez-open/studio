@@ -1,5 +1,5 @@
 import * as React from "react";
-import { keys, action } from "mobx";
+import { keys } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -9,24 +9,20 @@ import { log } from "shared/activity-log";
 
 import { IconAction, ButtonAction } from "shared/ui/action";
 
-import { InstrumentObject } from "instrument/instrument-object";
+import { AppStore } from "instrument/window/app-store";
+import { showAddNoteDialog } from "instrument/window/note-dialog";
 
-import { navigationStore, deletedHistoryItemsNavigationItem } from "instrument/window/app";
-import { appStore } from "instrument/window/app-store";
-import { history, deletedItemsHistory } from "instrument/window/history";
-
-import { showAddNoteDialog } from "instrument/window/terminal/note-dialog";
 import { detectFileType } from "instrument/connection/file-type";
 
 @observer
-export class TerminalToolbarButtons extends React.Component<{ instrument: InstrumentObject }, {}> {
+export class TerminalToolbarButtons extends React.Component<{ appStore: AppStore }, {}> {
     @bind
     addNote() {
         showAddNoteDialog(note => {
             beginTransaction("Add note");
             log(
                 {
-                    oid: this.props.instrument.id,
+                    oid: this.props.appStore.instrument!.id,
                     type: "activity-log/note",
                     message: note
                 },
@@ -53,7 +49,7 @@ export class TerminalToolbarButtons extends React.Component<{ instrument: Instru
                         beginTransaction("Attach file");
                         log(
                             {
-                                oid: this.props.instrument.id,
+                                oid: this.props.appStore.instrument!.id,
                                 type: "instrument/file-attachment",
                                 message: JSON.stringify({
                                     sourceFilePath: filePath,
@@ -76,24 +72,24 @@ export class TerminalToolbarButtons extends React.Component<{ instrument: Instru
 
     @bind
     addChart() {
-        appStore.selectHistoryItems({
+        this.props.appStore.selectHistoryItems({
             historyItemType: "chart",
             message: "Select one or more waveform data items",
             okButtonText: "Add Chart",
             okButtonTitle: "Add chart",
             onOk: () => {
                 const multiWaveformDefinition = {
-                    waveformLinks: keys(appStore.selectedHistoryItems).map(id => ({
+                    waveformLinks: keys(this.props.appStore.selectedHistoryItems).map(id => ({
                         id
                     }))
                 };
 
-                appStore.selectHistoryItems(undefined);
+                this.props.appStore.selectHistoryItems(undefined);
 
                 beginTransaction("Add chart");
                 log(
                     {
-                        oid: this.props.instrument.id,
+                        oid: this.props.appStore.instrument!.id,
                         type: "instrument/chart",
                         message: JSON.stringify(multiWaveformDefinition)
                     },
@@ -107,6 +103,8 @@ export class TerminalToolbarButtons extends React.Component<{ instrument: Instru
     }
 
     render() {
+        const { appStore } = this.props;
+
         let actions = [];
 
         if (appStore.selectHistoryItemsSpecification === undefined) {
@@ -131,30 +129,28 @@ export class TerminalToolbarButtons extends React.Component<{ instrument: Instru
                 />
             );
 
-            if (history.selection.items.length > 0) {
+            if (appStore.history.selection.items.length > 0) {
                 actions.push(
                     <IconAction
                         key="delete"
                         icon="material:delete"
                         title="Delete selected history items"
                         style={{ marginLeft: 20 }}
-                        onClick={history.deleteSelectedHistoryItems}
+                        onClick={appStore.history.deleteSelectedHistoryItems}
                     />
                 );
             }
 
-            if (deletedItemsHistory.deletedCount > 0) {
-                const style = history.selection.items.length === 0 ? { marginLeft: 20 } : undefined;
+            if (appStore.deletedItemsHistory.deletedCount > 0) {
+                const style =
+                    appStore.history.selection.items.length === 0 ? { marginLeft: 20 } : undefined;
 
                 actions.push(
                     <ButtonAction
                         key="deletedItems"
-                        text={`Deleted Items (${deletedItemsHistory.deletedCount})`}
+                        text={`Deleted Items (${appStore.deletedItemsHistory.deletedCount})`}
                         title="Show deleted items"
-                        onClick={action(
-                            () =>
-                                (navigationStore.mainNavigationSelectedItem = deletedHistoryItemsNavigationItem)
-                        )}
+                        onClick={appStore.navigationStore.navigateToDeletedHistoryItems}
                         style={style}
                     />
                 );

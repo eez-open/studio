@@ -5,7 +5,8 @@ import { observer } from "mobx-react";
 import { formatDateTimeLong } from "shared/util";
 import { IActivityLogEntry } from "shared/activity-log";
 
-import { HistoryItem } from "instrument/window/history-item";
+import { AppStore } from "instrument/window/app-store";
+import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,8 +62,8 @@ export class AnswerHistoryItemComponent extends React.Component<
 }
 
 export class AnswerHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry, appStore?: AppStore) {
+        super(activityLogEntry, appStore);
     }
 
     get listItemElement(): JSX.Element | null {

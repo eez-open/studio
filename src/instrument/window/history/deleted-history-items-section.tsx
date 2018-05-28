@@ -1,38 +1,37 @@
 import * as React from "react";
-import { action, reaction } from "mobx";
+import { reaction } from "mobx";
 import { observer } from "mobx-react";
 
 import { Splitter } from "shared/ui/splitter";
 import { IconAction, ButtonAction } from "shared/ui/action";
 
-import { navigationStore, terminalNavigationItem } from "instrument/window/app";
-import { appStore } from "instrument/window/app-store";
-import { deletedItemsHistory } from "instrument/window/history";
+import { AppStore } from "instrument/window/app-store";
 
-import { ConnectionHistory } from "instrument/window/terminal/connection-history";
-import { Search } from "instrument/window/terminal/search";
+import { Search } from "instrument/window/search/search";
+
+import { HistoryListComponent } from "instrument/window/history/list-component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class DeletedHistoryItemsToolbarButtons extends React.Component {
+export class DeletedHistoryItemsToolbarButtons extends React.Component<{ appStore: AppStore }> {
     render() {
         let actions = [];
 
-        if (deletedItemsHistory.selection.items.length > 0) {
+        if (this.props.appStore.deletedItemsHistory.selection.items.length > 0) {
             actions.push(
                 <IconAction
                     key="restore"
                     icon="material:restore"
                     title="Restore selected history items"
                     style={{ marginLeft: 20 }}
-                    onClick={deletedItemsHistory.restoreSelectedHistoryItems}
+                    onClick={this.props.appStore.deletedItemsHistory.restoreSelectedHistoryItems}
                 />,
                 <IconAction
                     key="purge"
                     icon="material:delete_forever"
                     title="Purge selected history items"
-                    onClick={deletedItemsHistory.deleteSelectedHistoryItems}
+                    onClick={this.props.appStore.deletedItemsHistory.deleteSelectedHistoryItems}
                 />
             );
         }
@@ -43,9 +42,7 @@ export class DeletedHistoryItemsToolbarButtons extends React.Component {
                 icon="material:arrow_back"
                 text="Back"
                 title={"Go back to the terminal"}
-                onClick={action(
-                    () => (navigationStore.mainNavigationSelectedItem = terminalNavigationItem)
-                )}
+                onClick={this.props.appStore.navigationStore.navigateToTerminal}
             />
         );
 
@@ -55,8 +52,8 @@ export class DeletedHistoryItemsToolbarButtons extends React.Component {
                 key="search"
                 icon="material:search"
                 title="Search, Calendar, Sessions, Filter"
-                onClick={() => appStore.toggleSearchVisible()}
-                selected={appStore.searchVisible}
+                onClick={() => this.props.appStore.toggleSearchVisible()}
+                selected={this.props.appStore.searchVisible}
             />
         );
 
@@ -67,15 +64,15 @@ export class DeletedHistoryItemsToolbarButtons extends React.Component {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class DeletedHistoryItems extends React.Component<{}, {}> {
+export class DeletedHistoryItemsSection extends React.Component<{ appStore: AppStore }, {}> {
     reactionDisposer: any;
 
     componentDidMount() {
         this.reactionDisposer = reaction(
-            () => deletedItemsHistory.deletedCount,
+            () => this.props.appStore.deletedItemsHistory.deletedCount,
             deletedCount => {
                 if (deletedCount === 0) {
-                    navigationStore.mainNavigationSelectedItem = terminalNavigationItem;
+                    this.props.appStore.navigationStore.navigateToTerminal();
                 }
             }
         );
@@ -89,17 +86,25 @@ export class DeletedHistoryItems extends React.Component<{}, {}> {
         return (
             <Splitter
                 type="horizontal"
-                sizes={appStore.searchVisible ? "100%|240px" : "100%"}
+                sizes={this.props.appStore.searchVisible ? "100%|240px" : "100%"}
                 persistId={
-                    appStore.searchVisible
+                    this.props.appStore.searchVisible
                         ? "instrument/window/deleted-history-items/splitter"
                         : undefined
                 }
             >
                 <div className="EezStudio_DeletedHistory_Container" tabIndex={0}>
-                    <ConnectionHistory history={deletedItemsHistory} />
+                    <HistoryListComponent
+                        appStore={this.props.appStore}
+                        history={this.props.appStore.deletedItemsHistory}
+                    />
                 </div>
-                {appStore.searchVisible && <Search history={deletedItemsHistory} />}
+                {this.props.appStore.searchVisible && (
+                    <Search
+                        appStore={this.props.appStore}
+                        history={this.props.appStore.deletedItemsHistory}
+                    />
+                )}
             </Splitter>
         );
     }
@@ -107,10 +112,10 @@ export class DeletedHistoryItems extends React.Component<{}, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function render() {
-    return <DeletedHistoryItems />;
+export function render(appStore: AppStore) {
+    return <DeletedHistoryItemsSection appStore={appStore} />;
 }
 
-export function renderToolbarButtons() {
-    return <DeletedHistoryItemsToolbarButtons />;
+export function renderToolbarButtons(appStore: AppStore) {
+    return <DeletedHistoryItemsToolbarButtons appStore={appStore} />;
 }

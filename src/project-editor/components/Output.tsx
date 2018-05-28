@@ -3,11 +3,11 @@ import { observer } from "mobx-react";
 import * as React from "react";
 
 import { Icon } from "shared/ui/icon";
+import { TabsView } from "shared/ui/tabs";
 
 import { UIStateStore, OutputSectionsStore, NavigationStore } from "project-editor/core/store";
 import { Message as OutputMessage, Type as MessageType } from "project-editor/core/output";
 
-import { TabsView } from "project-editor/components/Tab";
 import { ObjectPath } from "project-editor/components/ObjectPath";
 
 const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 100;

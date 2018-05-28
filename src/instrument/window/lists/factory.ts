@@ -1,5 +1,7 @@
 import { IListType, BaseListData } from "instrument/window/lists/store-renderer";
 
+import { AppStore } from "instrument/window/app-store";
+
 import { createEmptyTableListData, TableList, TableListData } from "instrument/window/lists/table";
 import { createEmptyEnvelopeListData, EnvelopeList } from "instrument/window/lists/envelope";
 
@@ -7,29 +9,33 @@ import { createEmptyEnvelopeListData, EnvelopeList } from "instrument/window/lis
 
 export function createEmptyListData(
     type: IListType,
-    props: { duration: number; numSamples: number }
+    props: { duration: number; numSamples: number },
+    appStore: AppStore
 ): BaseListData {
     if (type === "table") {
         return createEmptyTableListData();
     } else {
-        return createEmptyEnvelopeListData(props);
+        return createEmptyEnvelopeListData(props, appStore);
     }
 }
 
-export function createTableListFromData(data: TableListData) {
-    return new TableList({
-        id: "",
-        name: "",
-        description: "",
-        type: "table",
-        data: data
-    });
+export function createTableListFromData(data: TableListData, appStore: AppStore) {
+    return new TableList(
+        {
+            id: "",
+            name: "",
+            description: "",
+            type: "table",
+            data: data
+        },
+        appStore
+    );
 }
 
-export function createListObject(props: any) {
+export function createListObject(props: any, appStore: AppStore) {
     if (props.type === "table") {
-        return new TableList(props);
+        return new TableList(props, appStore);
     } else {
-        return new EnvelopeList(props);
+        return new EnvelopeList(props, appStore);
     }
 }

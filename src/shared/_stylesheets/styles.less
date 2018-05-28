@@ -30,13 +30,16 @@ input[type="color"] {
     padding: 0.1875rem 0.375rem;
 }
 
+#EezStudio_Content > div:first-child {
+    border-top: 1px solid @border-color;
+}
+
 .EezStudio_App {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    border-top: 1px solid @border-color;
 }
 
 .EezStudio_Container {
@@ -574,4 +577,88 @@ input[type="color"] {
 
 .popover {
     pointer-events: none;
+}
+
+/*------------------------------------------------------------------------------
+
+TABS VIEW
+
+*/
+
+.EezStudio_TabsView {
+    display: flex;
+    background-color: @panel-header-color;
+    height: 38px;
+    border-bottom: 1px solid @border-color;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    &::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+    }
+
+    &:hover {
+        &::-webkit-scrollbar {
+            height: 2px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: @scroll-track-color;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: @scroll-thumb-color;
+        }
+    }
+
+    & > div {
+        height: 38px;
+        border-right: 1px solid @border-color;
+        padding-left: 10px;
+        padding-right: 10px;
+        cursor: pointer;
+        font-style: italic;
+
+        &.permanent {
+            font-style: normal;
+        }
+
+        &.active {
+            background-color: white;
+            font-weight: bold;
+            border-bottom: 3px solid @selection-background-color;
+        }
+
+        & > div {
+            display: flex;
+            align-items: center;
+            height: 38px;
+
+            & > span.title {
+                max-width: 200px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            & > i.close {
+                visibility: hidden;
+                position: relative;
+                font-size: 14px;
+                padding-left: 6px;
+
+                &:hover {
+                    color: red;
+                }
+            }
+        }
+
+        &.active > div > i.close,
+        &:hover > div > i.close {
+            visibility: visible;
+        }
+    }
 }

@@ -25,13 +25,17 @@ import { IInstrumentExtensionProperties } from "instrument/instrument-extension"
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/import";
 import { IInstrumentProperties } from "instrument/export";
 
-import { createHistoryItem } from "instrument/window/history-item-factory";
+import { createHistoryItem } from "instrument/window/history/item-factory";
 import { IConnection } from "instrument/connection/connection";
 import { createConnection } from "instrument/connection/connection";
 import { ConnectionErrorCode, ConnectionParameters } from "instrument/connection/interface";
 import { IFileUploadInstructions } from "instrument/connection/file-upload";
 
 import * as UiPropertiesModule from "shared/ui/properties";
+
+import * as AppStoreModule from "instrument/window/app-store";
+
+////////////////////////////////////////////////////////////////////////////////
 
 const CONF_LISTS_MAX_POINTS = 256;
 const CONF_LISTS_MIN_DWELL = 0.0001;
@@ -147,6 +151,7 @@ export class InstrumentObject {
         return this._extension;
     }
 
+    @computed
     get properties(): IInstrumentProperties | undefined {
         if (!this.extension) {
             return undefined;
@@ -154,64 +159,73 @@ export class InstrumentObject {
         return (this.extension.properties as IInstrumentExtensionProperties).properties;
     }
 
-    getChannelsProperty() {
+    @computed
+    get channelsProperty() {
         return this.properties ? this.properties.channels : undefined;
     }
 
-    getFirstChannel() {
-        const channels = this.getChannelsProperty();
+    @computed
+    get firstChannel() {
+        const channels = this.channelsProperty;
         if (channels && channels.length > 0) {
             return channels[0];
         }
         return undefined;
     }
 
-    getListsProperty() {
+    @computed
+    get listsProperty() {
         return this.properties ? this.properties.lists : undefined;
     }
 
-    getListsMaxPointsProperty(): number {
-        const lists = this.getListsProperty();
+    @computed
+    get listsMaxPointsProperty(): number {
+        const lists = this.listsProperty;
         if (lists && typeof lists.maxPoints === "number") {
             return lists.maxPoints!;
         }
         return CONF_LISTS_MAX_POINTS;
     }
 
-    getListsMinDwellProperty(): number {
-        const lists = this.getListsProperty();
+    @computed
+    get listsMinDwellProperty(): number {
+        const lists = this.listsProperty;
         if (lists && typeof lists.minDwell === "number") {
             return lists.minDwell;
         }
         return CONF_LISTS_MIN_DWELL;
     }
 
-    getListsMaxDwellProperty(): number {
-        const lists = this.getListsProperty();
+    @computed
+    get listsMaxDwellProperty(): number {
+        const lists = this.listsProperty;
         if (lists && typeof lists.maxDwell === "number") {
             return lists.maxDwell;
         }
         return CONF_LISTS_MAX_DWELL;
     }
 
-    getListsDwellDigitsProperty(): number {
-        const lists = this.getListsProperty();
+    @computed
+    get listsDwellDigitsProperty(): number {
+        const lists = this.listsProperty;
         if (lists && typeof lists.dwellDigits === "number") {
             return lists.dwellDigits;
         }
         return CONF_LISTS_DWELL_DIGITS;
     }
 
-    getListsVoltageDigitsProperty(): number {
-        const lists = this.getListsProperty();
+    @computed
+    get listsVoltageDigitsProperty(): number {
+        const lists = this.listsProperty;
         if (lists && typeof lists.voltageDigits === "number") {
             return lists.voltageDigits;
         }
         return CONF_LISTS_VOLTAGE_DIGITS;
     }
 
-    getListsCurrentDigitsProperty(): number {
-        const lists = this.getListsProperty();
+    @computed
+    get listsCurrentDigitsProperty(): number {
+        const lists = this.listsProperty;
         if (lists && typeof lists.currentDigits === "number") {
             return lists.currentDigits;
         }
@@ -220,11 +234,11 @@ export class InstrumentObject {
 
     getDigits(unit: IUnit) {
         if (unit.name === "time") {
-            return this.getListsDwellDigitsProperty();
+            return this.listsDwellDigitsProperty;
         } else if (unit.name === "voltage") {
-            return this.getListsVoltageDigitsProperty();
+            return this.listsVoltageDigitsProperty;
         } else {
-            return this.getListsCurrentDigitsProperty();
+            return this.listsCurrentDigitsProperty;
         }
     }
 
@@ -544,11 +558,28 @@ export class InstrumentObject {
         }
     }
 
+    getEditor() {
+        const { AppStore } = require("instrument/window/app-store") as typeof AppStoreModule;
+        return new AppStore(this.id);
+    }
+
     open() {
-        EEZStudio.electron.ipcRenderer.send("openWindow", {
-            url: "instrument/index.html?" + this.id,
-            args: this.id
-        });
+        window.postMessage(
+            {
+                type: "open-tab-or-window",
+
+                object: {
+                    id: this.id,
+                    type: "instrument"
+                },
+
+                openWindowArgs: {
+                    url: "instrument/index.html?" + this.id,
+                    args: this.id
+                }
+            },
+            "*"
+        );
     }
 
     @action
@@ -732,6 +763,8 @@ export const store = createStore({
         return new InstrumentObject(props);
     }
 });
+
+////////////////////////////////////////////////////////////////////////////////
 
 export const instrumentStore = store;
 

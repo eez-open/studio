@@ -4,12 +4,13 @@ import { observer } from "mobx-react";
 import { formatDateTimeLong } from "shared/util";
 import { IActivityLogEntry } from "shared/activity-log";
 
-import { HistoryItem } from "instrument/window/history-item";
+import { AppStore } from "instrument/window/app-store";
+import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class RequestHistoryItemComponent extends React.Component<
+export class CreatedHistoryItemComponent extends React.Component<
     {
         historyItem: HistoryItem;
     },
@@ -17,24 +18,24 @@ export class RequestHistoryItemComponent extends React.Component<
 > {
     render() {
         return (
-            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Request">
+            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Created">
                 <p>
                     <small className="EezStudio_HistoryItemDate text-muted">
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
+                    <span>Instrument created!</span>
                 </p>
-                <pre>{this.props.historyItem.message}</pre>
             </div>
         );
     }
 }
 
-export class RequestHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
+export class CreatedHistoryItem extends HistoryItem {
+    constructor(activityLogEntry: IActivityLogEntry, appStore?: AppStore) {
+        super(activityLogEntry, appStore);
     }
 
     get listItemElement(): JSX.Element | null {
-        return <RequestHistoryItemComponent historyItem={this} />;
+        return <CreatedHistoryItemComponent historyItem={this} />;
     }
 }

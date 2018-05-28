@@ -9,13 +9,13 @@ import { Splitter } from "shared/ui/splitter";
 
 import { findObjectByActivityLogEntry } from "shared/extensions/extensions";
 
-import { appStore } from "instrument/window/app-store";
+import { AppStore } from "instrument/window/app-store";
 
-import { History, SearchResult } from "instrument/window/history";
+import { History, SearchResult } from "instrument/window/history/history";
 
-import { Filters } from "instrument/window/terminal/filters";
-import { SessionList } from "instrument/window/terminal/session-list";
-import { Calendar } from "instrument/window/terminal/calendar";
+import { FiltersComponent } from "instrument/window/search/filters";
+import { SessionList } from "instrument/window/search/session-list";
+import { Calendar } from "instrument/window/search/calendar";
 
 @observer
 export class SearchResultComponent extends React.Component<{
@@ -94,6 +94,7 @@ export class SearchResults extends React.Component<{ history: History }> {
 
 @observer
 export class Search extends React.Component<{
+    appStore: AppStore;
     history: History;
 }> {
     @observable searchText: string = "";
@@ -108,21 +109,21 @@ export class Search extends React.Component<{
     toggleFilters(event: any) {
         event.preventDefault();
         event.stopPropagation();
-        appStore.toggleFiltersVisible();
+        this.props.appStore.toggleFiltersVisible();
     }
 
     @action.bound
     viewCalendar(event: React.MouseEvent<HTMLElement>) {
         event.preventDefault();
         event.stopPropagation();
-        appStore.setSearchViewSection("calendar");
+        this.props.appStore.setSearchViewSection("calendar");
     }
 
     @action.bound
     viewSessions(event: React.MouseEvent<HTMLElement>) {
         event.preventDefault();
         event.stopPropagation();
-        appStore.setSearchViewSection("sessions");
+        this.props.appStore.setSearchViewSection("sessions");
     }
 
     render() {
@@ -144,11 +145,11 @@ export class Search extends React.Component<{
         let searchResultsVisible = this.props.history.search.searchActive;
 
         let calendarNavLinkClassName = classNames("nav-link", {
-            active: appStore.searchViewSection === "calendar"
+            active: this.props.appStore.searchViewSection === "calendar"
         });
 
         let sessionsNavLinkClassName = classNames("nav-link", {
-            active: appStore.searchViewSection === "sessions"
+            active: this.props.appStore.searchViewSection === "sessions"
         });
 
         const calendar = <Calendar history={this.props.history} />;
@@ -159,7 +160,9 @@ export class Search extends React.Component<{
                 <VerticalHeaderWithBody className="EezStudio_HistorySearch_Sections">
                     <Header>
                         {!this.props.history.isDeletedItemsHistory &&
-                            appStore.filtersVisible && <Filters />}
+                            this.props.appStore.filtersVisible && (
+                                <FiltersComponent appStore={this.props.appStore} />
+                            )}
                         <ul className="nav nav-tabs">
                             <li className="nav-item">
                                 <a
@@ -181,11 +184,17 @@ export class Search extends React.Component<{
                             </li>
                         </ul>
                     </Header>
-                    <Body key="calendar" visible={appStore.searchViewSection === "calendar"}>
+                    <Body
+                        key="calendar"
+                        visible={this.props.appStore.searchViewSection === "calendar"}
+                    >
                         {calendar}
                     </Body>
-                    <Body key="sessions" visible={appStore.searchViewSection === "sessions"}>
-                        <SessionList history={this.props.history} />
+                    <Body
+                        key="sessions"
+                        visible={this.props.appStore.searchViewSection === "sessions"}
+                    >
+                        <SessionList appStore={this.props.appStore} history={this.props.history} />
                     </Body>
                 </VerticalHeaderWithBody>
             );
@@ -200,11 +209,11 @@ export class Search extends React.Component<{
                     {!this.props.history.isDeletedItemsHistory && (
                         <a href="#" onClick={this.toggleFilters}>
                             <i className="material-icons">
-                                {appStore.filtersVisible
+                                {this.props.appStore.filtersVisible
                                     ? "keyboard_arrow_up"
                                     : "keyboard_arrow_down"}
                             </i>{" "}
-                            {appStore.filtersVisible ? "Hide Filters" : "Show Filters"}
+                            {this.props.appStore.filtersVisible ? "Hide Filters" : "Show Filters"}
                         </a>
                     )}
                 </Header>

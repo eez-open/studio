@@ -16,9 +16,10 @@ import {
     LineController
 } from "shared/ui/chart";
 
+import { AppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
-import { FileHistoryItem } from "instrument/window/history-items/file";
+import { FileHistoryItem } from "instrument/window/history/items/file";
 
 import { MIME_EEZ_DLOG, checkMime } from "instrument/connection/file-type";
 
@@ -208,8 +209,8 @@ interface IChannel {
 }
 
 export class DlogWaveform extends FileHistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem, appStore: AppStore) {
+        super(activityLogEntry, appStore);
         if (activityLogEntry instanceof FileHistoryItem) {
             this.isVisible = activityLogEntry.isVisible;
         }

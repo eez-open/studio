@@ -1,17 +1,26 @@
 /// <reference path="./globals.d.ts"/>
-import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { configure } from "mobx";
 
+import * as AppStoreModule from "instrument/window/app-store";
 import { undoManager } from "instrument/window/undo";
+
+////////////////////////////////////////////////////////////////////////////////
 
 configure({ enforceActions: true });
 
 import { loadPreinstalledExtension } from "shared/extensions/extensions";
 
 loadPreinstalledExtension("instrument").then(() => {
-    const { App } = require("instrument/window/app");
-    ReactDOM.render(<App />, document.getElementById("content"));
+    const { AppStore } = require("instrument/window/app-store") as typeof AppStoreModule;
+
+    const instrumentId = EEZStudio.electron.ipcRenderer.sendSync("getWindowArgs");
+
+    const appStore = new AppStore(instrumentId);
+    appStore.onCreate();
+    appStore.onActivate();
+
+    ReactDOM.render(appStore.editor, document.getElementById("EezStudio_Content"));
 });
 
 EEZStudio.electron.ipcRenderer.on("beforeClose", () => {

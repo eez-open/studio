@@ -32,18 +32,11 @@ import { Toolbar } from "shared/ui/toolbar";
 import { ButtonAction, DropdownButtonAction, DropdownItem } from "shared/ui/action";
 import { showGenericDialog } from "shared/ui/generic-dialog";
 
-import { appStore } from "instrument/window/app-store";
+import { AppStore } from "instrument/window/app-store";
 import { undoManager } from "instrument/window/undo";
-
 import { showSampledData } from "instrument/window/chart-view-options";
 
-import { instrumentListStore } from "instrument/window/lists/store";
-import {
-    BaseList,
-    BaseListData,
-    ListAxisModel,
-    instrumentLists
-} from "instrument/window/lists/store-renderer";
+import { BaseList, BaseListData, ListAxisModel } from "instrument/window/lists/store-renderer";
 import {
     getMaxVoltage,
     getMaxCurrent,
@@ -67,9 +60,9 @@ const CONF_ENVELOPE_POINT_RADIUS = CONF_CURSOR_RADIUS;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getDefaultEnvelopeListData() {
-    const voltage = getMaxVoltage() / 2;
-    const current = getMaxCurrent() / 2;
+function getDefaultEnvelopeListData(appStore: AppStore) {
+    const voltage = getMaxVoltage(appStore) / 2;
+    const current = getMaxCurrent(appStore) / 2;
     return {
         voltage: [{ time: 0, value: voltage }, { time: 1, value: voltage }],
         current: [{ time: 0, value: current }, { time: 1, value: current }],
@@ -78,8 +71,11 @@ function getDefaultEnvelopeListData() {
     };
 }
 
-export function createEmptyEnvelopeListData(props: { duration: number; numSamples: number }) {
-    const envelopeListData = objectClone(getDefaultEnvelopeListData());
+export function createEmptyEnvelopeListData(
+    props: { duration: number; numSamples: number },
+    appStore: AppStore
+) {
+    const envelopeListData = objectClone(getDefaultEnvelopeListData(appStore));
     envelopeListData.duration = props.duration;
     envelopeListData.numSamples = props.numSamples;
     envelopeListData.voltage[1].time = props.duration;
@@ -102,7 +98,7 @@ export class EnvelopeListData extends BaseListData {
     constructor(list: BaseList, props: any) {
         super(list, props);
 
-        const defaultEnvelopeListData = getDefaultEnvelopeListData();
+        const defaultEnvelopeListData = getDefaultEnvelopeListData(list.appStore);
 
         this.duration = props.duration || defaultEnvelopeListData.duration;
         this.numSamples = props.numSamples || defaultEnvelopeListData.numSamples;
@@ -137,8 +133,8 @@ export class EnvelopeListData extends BaseListData {
 export class EnvelopeList extends BaseList {
     @observable data: EnvelopeListData;
 
-    constructor(props: any) {
-        super(props);
+    constructor(props: any, appStore: AppStore) {
+        super(props, appStore);
         this.type = "envelope";
         this.data = new EnvelopeListData(this, props.data);
     }
@@ -193,8 +189,8 @@ export class EnvelopeList extends BaseList {
         }
 
         let timeTemp = [0];
-        const minDwell = appStore.instrument!.getListsMinDwellProperty();
-        const maxDwell = appStore.instrument!.getListsMaxDwellProperty();
+        const minDwell = this.appStore.instrument!.listsMinDwellProperty;
+        const maxDwell = this.appStore.instrument!.listsMaxDwellProperty;
         for (let i = 1; i < timeN.length; ++i) {
             let dt = timeN[i] - timeTemp[timeTemp.length - 1];
             while (dt > maxDwell) {
@@ -335,8 +331,8 @@ export class EnvelopeList extends BaseList {
     get powerLimitError() {
         for (let i = 0; i < this.tableListData.dwell.length; ++i) {
             let power = this.tableListData.voltage[i] * this.tableListData.current[i];
-            if (!checkPower(power)) {
-                return getPowerLimitErrorMessage();
+            if (!checkPower(power, this.appStore)) {
+                return getPowerLimitErrorMessage(this.appStore);
             }
         }
         return undefined;
@@ -346,7 +342,7 @@ export class EnvelopeList extends BaseList {
 ////////////////////////////////////////////////////////////////////////////////
 
 class EnveloperListTimeAxisModel extends ListAxisModel {
-    constructor(private list: EnvelopeList) {
+    constructor(public list: EnvelopeList) {
         super(list, TIME_UNIT);
     }
 
@@ -638,18 +634,23 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         ) {
             // join this point with previous point
             const removedPoint = this.values[index - 1];
-            undoManager.addCommand("Edit envelope list", instrumentListStore, this.list, {
-                execute: action(() => {
-                    this.values.splice(index - 1, 1);
-                    this.values[index - 1].time = newTime;
-                    this.values[index - 1].value = newValue;
-                }),
-                undo: action(() => {
-                    this.values.splice(index - 1, 0, removedPoint);
-                    this.values[index].time = oldTime;
-                    this.values[index].value = oldValue;
-                })
-            });
+            undoManager.addCommand(
+                "Edit envelope list",
+                this.list.appStore.instrumentListStore,
+                this.list,
+                {
+                    execute: action(() => {
+                        this.values.splice(index - 1, 1);
+                        this.values[index - 1].time = newTime;
+                        this.values[index - 1].value = newValue;
+                    }),
+                    undo: action(() => {
+                        this.values.splice(index - 1, 0, removedPoint);
+                        this.values[index].time = oldTime;
+                        this.values[index].value = oldValue;
+                    })
+                }
+            );
         } else if (
             index + 1 < this.values.length &&
             this.values[index + 1].time === newTime &&
@@ -657,18 +658,23 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         ) {
             // join this point with next point
             const removedPoint = this.values[index + 1];
-            undoManager.addCommand("Edit envelope list", instrumentListStore, this.list, {
-                execute: action(() => {
-                    this.values.splice(index + 1, 1);
-                    this.values[index].time = newTime;
-                    this.values[index].value = newValue;
-                }),
-                undo: action(() => {
-                    this.values.splice(index + 1, 0, removedPoint);
-                    this.values[index].time = oldTime;
-                    this.values[index].value = oldValue;
-                })
-            });
+            undoManager.addCommand(
+                "Edit envelope list",
+                this.list.appStore.instrumentListStore,
+                this.list,
+                {
+                    execute: action(() => {
+                        this.values.splice(index + 1, 1);
+                        this.values[index].time = newTime;
+                        this.values[index].value = newValue;
+                    }),
+                    undo: action(() => {
+                        this.values.splice(index + 1, 0, removedPoint);
+                        this.values[index].time = oldTime;
+                        this.values[index].value = oldValue;
+                    })
+                }
+            );
         } else if (
             index - 2 >= 0 &&
             this.values[index - 2].time === newTime &&
@@ -677,18 +683,23 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             // remove previous point and join this point with one before previous point
             const removedPoint1 = this.values[index - 2];
             const removedPoint2 = this.values[index - 1];
-            undoManager.addCommand("Edit envelope list", instrumentListStore, this.list, {
-                execute: action(() => {
-                    this.values.splice(index - 2, 2);
-                    this.values[index - 2].time = newTime;
-                    this.values[index - 2].value = newValue;
-                }),
-                undo: action(() => {
-                    this.values.splice(index - 2, 0, removedPoint1, removedPoint2);
-                    this.values[index].time = oldTime;
-                    this.values[index].value = oldValue;
-                })
-            });
+            undoManager.addCommand(
+                "Edit envelope list",
+                this.list.appStore.instrumentListStore,
+                this.list,
+                {
+                    execute: action(() => {
+                        this.values.splice(index - 2, 2);
+                        this.values[index - 2].time = newTime;
+                        this.values[index - 2].value = newValue;
+                    }),
+                    undo: action(() => {
+                        this.values.splice(index - 2, 0, removedPoint1, removedPoint2);
+                        this.values[index].time = oldTime;
+                        this.values[index].value = oldValue;
+                    })
+                }
+            );
         } else if (
             index + 2 < this.values.length &&
             this.values[index + 2].time === newTime &&
@@ -697,60 +708,80 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             // remove next point and join this point with one after next point
             const removedPoint1 = this.values[index + 1];
             const removedPoint2 = this.values[index + 2];
-            undoManager.addCommand("Edit envelope list", instrumentListStore, this.list, {
-                execute: action(() => {
-                    this.values.splice(index + 1, 2);
-                    this.values[index].time = newTime;
-                    this.values[index].value = newValue;
-                }),
-                undo: action(() => {
-                    this.values.splice(index + 1, 0, removedPoint1, removedPoint2);
-                    this.values[index].time = oldTime;
-                    this.values[index].value = oldValue;
-                })
-            });
+            undoManager.addCommand(
+                "Edit envelope list",
+                this.list.appStore.instrumentListStore,
+                this.list,
+                {
+                    execute: action(() => {
+                        this.values.splice(index + 1, 2);
+                        this.values[index].time = newTime;
+                        this.values[index].value = newValue;
+                    }),
+                    undo: action(() => {
+                        this.values.splice(index + 1, 0, removedPoint1, removedPoint2);
+                        this.values[index].time = oldTime;
+                        this.values[index].value = oldValue;
+                    })
+                }
+            );
         } else if (index - 2 >= 0 && this.values[index - 2].time === newTime) {
             // remove previous point
             const removedPoint = this.values[index - 1];
-            undoManager.addCommand("Edit envelope list", instrumentListStore, this.list, {
-                execute: action(() => {
-                    this.values.splice(index - 1, 1);
-                    this.values[index - 1].time = newTime;
-                    this.values[index - 1].value = newValue;
-                }),
-                undo: action(() => {
-                    this.values.splice(index - 1, 0, removedPoint);
-                    this.values[index].time = oldTime;
-                    this.values[index].value = oldValue;
-                })
-            });
+            undoManager.addCommand(
+                "Edit envelope list",
+                this.list.appStore.instrumentListStore,
+                this.list,
+                {
+                    execute: action(() => {
+                        this.values.splice(index - 1, 1);
+                        this.values[index - 1].time = newTime;
+                        this.values[index - 1].value = newValue;
+                    }),
+                    undo: action(() => {
+                        this.values.splice(index - 1, 0, removedPoint);
+                        this.values[index].time = oldTime;
+                        this.values[index].value = oldValue;
+                    })
+                }
+            );
         } else if (index + 2 < this.values.length && this.values[index + 2].time === newTime) {
             // remove next point
             const removedPoint = this.values[index + 1];
-            undoManager.addCommand("Edit envelope list", instrumentListStore, this.list, {
-                execute: action(() => {
-                    this.values.splice(index + 1, 1);
-                    this.values[index].time = newTime;
-                    this.values[index].value = newValue;
-                }),
-                undo: action(() => {
-                    this.values.splice(index + 1, 0, removedPoint);
-                    this.values[index].time = oldTime;
-                    this.values[index].value = oldValue;
-                })
-            });
+            undoManager.addCommand(
+                "Edit envelope list",
+                this.list.appStore.instrumentListStore,
+                this.list,
+                {
+                    execute: action(() => {
+                        this.values.splice(index + 1, 1);
+                        this.values[index].time = newTime;
+                        this.values[index].value = newValue;
+                    }),
+                    undo: action(() => {
+                        this.values.splice(index + 1, 0, removedPoint);
+                        this.values[index].time = oldTime;
+                        this.values[index].value = oldValue;
+                    })
+                }
+            );
         } else {
             // just change this point
-            undoManager.addCommand("Edit envelope list", instrumentListStore, this.list, {
-                execute: action(() => {
-                    this.values[index].time = newTime;
-                    this.values[index].value = newValue;
-                }),
-                undo: action(() => {
-                    this.values[index].time = oldTime;
-                    this.values[index].value = oldValue;
-                })
-            });
+            undoManager.addCommand(
+                "Edit envelope list",
+                this.list.appStore.instrumentListStore,
+                this.list,
+                {
+                    execute: action(() => {
+                        this.values[index].time = newTime;
+                        this.values[index].value = newValue;
+                    }),
+                    undo: action(() => {
+                        this.values[index].time = oldTime;
+                        this.values[index].value = oldValue;
+                    })
+                }
+            );
         }
     }
 
@@ -799,15 +830,20 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
 
                     const value = values[this.valueIndex];
 
-                    undoManager.addCommand("Edit envelope list", instrumentListStore, this.list, {
-                        execute: action(() => {
-                            values.splice(this.valueIndex, 1);
-                        }),
+                    undoManager.addCommand(
+                        "Edit envelope list",
+                        this.list.appStore.instrumentListStore,
+                        this.list,
+                        {
+                            execute: action(() => {
+                                values.splice(this.valueIndex, 1);
+                            }),
 
-                        undo: action(() => {
-                            values.splice(this.valueIndex, 0, value);
-                        })
-                    });
+                            undo: action(() => {
+                                values.splice(this.valueIndex, 0, value);
+                            })
+                        }
+                    );
                 };
             }
         }
@@ -985,23 +1021,33 @@ export class EnvelopeLineController extends LineController {
         if (valueIndex - 2 >= 0 && this.values[valueIndex - 2].time === value.time) {
             --valueIndex;
             const oldValue = this.values[valueIndex];
-            undoManager.addCommand("Edit envelope list", instrumentListStore, this.list, {
-                execute: action(() => {
-                    this.values[valueIndex] = value;
-                }),
-                undo: action(() => {
-                    this.values[valueIndex] = oldValue;
-                })
-            });
+            undoManager.addCommand(
+                "Edit envelope list",
+                this.list.appStore.instrumentListStore,
+                this.list,
+                {
+                    execute: action(() => {
+                        this.values[valueIndex] = value;
+                    }),
+                    undo: action(() => {
+                        this.values[valueIndex] = oldValue;
+                    })
+                }
+            );
         } else {
-            undoManager.addCommand("Edit envelope list", instrumentListStore, this.list, {
-                execute: action(() => {
-                    this.values.splice(valueIndex, 0, value);
-                }),
-                undo: action(() => {
-                    this.values.splice(valueIndex, 1);
-                })
-            });
+            undoManager.addCommand(
+                "Edit envelope list",
+                this.list.appStore.instrumentListStore,
+                this.list,
+                {
+                    execute: action(() => {
+                        this.values.splice(valueIndex, 0, value);
+                    }),
+                    undo: action(() => {
+                        this.values.splice(valueIndex, 1);
+                    })
+                }
+            );
         }
 
         const mouseHandler = new DragEnvelopePointMouseHandler(chartView, valueIndex, this);
@@ -1243,7 +1289,7 @@ export class EnvelopeLineView extends React.Component<
 
 @observer
 class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsController }, {}> {
-    get envelopeList() {
+    get list() {
         return (this.props.chartsController as EnvelopeChartsController).list;
     }
 
@@ -1257,7 +1303,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique(this.envelopeList, values(instrumentLists))
+                            validators.unique(this.list, values(this.list.appStore.instrumentLists))
                         ]
                     },
                     {
@@ -1276,7 +1322,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                         validators: [
                             validators.rangeInclusive(
                                 1,
-                                appStore.instrument!.getListsMaxPointsProperty()
+                                this.list.appStore.instrument!.listsMaxPointsProperty
                             )
                         ]
                     }
@@ -1284,14 +1330,14 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
             },
 
             values: {
-                name: this.envelopeList.name,
-                description: this.envelopeList.description,
-                duration: this.envelopeList.data.duration,
-                numSamples: this.envelopeList.data.numSamples
+                name: this.list.name,
+                description: this.list.description,
+                duration: this.list.data.duration,
+                numSamples: this.list.data.numSamples
             }
         })
             .then(result => {
-                const list = this.envelopeList;
+                const list = this.list;
 
                 const oldName = list.name;
                 const oldDescription = list.description;
@@ -1309,20 +1355,25 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                     oldDuration !== newDuration ||
                     oldNumSamples !== newNumSamples
                 ) {
-                    undoManager.addCommand("Edit envelope list", instrumentListStore, list, {
-                        execute: action(() => {
-                            list.name = newName;
-                            list.description = newDescription;
-                            list.data.duration = newDuration;
-                            list.data.numSamples = newNumSamples;
-                        }),
-                        undo: action(() => {
-                            list.name = oldName;
-                            list.description = oldDescription;
-                            list.data.duration = oldDuration;
-                            list.data.numSamples = oldNumSamples;
-                        })
-                    });
+                    undoManager.addCommand(
+                        "Edit envelope list",
+                        this.list.appStore.instrumentListStore,
+                        list,
+                        {
+                            execute: action(() => {
+                                list.name = newName;
+                                list.description = newDescription;
+                                list.data.duration = newDuration;
+                                list.data.numSamples = newNumSamples;
+                            }),
+                            undo: action(() => {
+                                list.name = oldName;
+                                list.description = oldDescription;
+                                list.data.duration = oldDuration;
+                                list.data.numSamples = oldNumSamples;
+                            })
+                        }
+                    );
                 }
             })
             .catch(() => {});
@@ -1335,83 +1386,98 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
     @action.bound
     clearAllPoints() {
         if (this.canClearAllPoints) {
-            const oldVoltage = this.envelopeList.data.voltage;
-            const oldCurrent = this.envelopeList.data.current;
+            const oldVoltage = this.list.data.voltage;
+            const oldCurrent = this.list.data.current;
 
-            const defaultEnvelopeListData = getDefaultEnvelopeListData();
+            const defaultEnvelopeListData = getDefaultEnvelopeListData(this.list.appStore);
 
             const newVoltage = objectClone(defaultEnvelopeListData.voltage);
-            newVoltage[1].time = this.envelopeList.data.duration;
+            newVoltage[1].time = this.list.data.duration;
 
             const newCurrent = objectClone(defaultEnvelopeListData.current);
-            newCurrent[1].time = this.envelopeList.data.duration;
+            newCurrent[1].time = this.list.data.duration;
 
-            undoManager.addCommand("Edit envelope list", instrumentListStore, this.envelopeList, {
-                execute: action(() => {
-                    this.envelopeList.data.voltage = newVoltage;
-                    this.envelopeList.data.current = newCurrent;
-                }),
-                undo: action(() => {
-                    this.envelopeList.data.voltage = oldVoltage;
-                    this.envelopeList.data.current = oldCurrent;
-                })
-            });
+            undoManager.addCommand(
+                "Edit envelope list",
+                this.list.appStore.instrumentListStore,
+                this.list,
+                {
+                    execute: action(() => {
+                        this.list.data.voltage = newVoltage;
+                        this.list.data.current = newCurrent;
+                    }),
+                    undo: action(() => {
+                        this.list.data.voltage = oldVoltage;
+                        this.list.data.current = oldCurrent;
+                    })
+                }
+            );
         }
     }
 
     get canClearAllVoltagePoints() {
         return (
-            this.envelopeList.data.voltage.length > 2 ||
-            this.envelopeList.data.voltage[1].time !== this.envelopeList.data.duration
+            this.list.data.voltage.length > 2 ||
+            this.list.data.voltage[1].time !== this.list.data.duration
         );
     }
 
     @action.bound
     clearAllVoltagePoints() {
         if (this.canClearAllVoltagePoints) {
-            const oldVoltage = this.envelopeList.data.voltage;
+            const oldVoltage = this.list.data.voltage;
 
-            const defaultEnvelopeListData = getDefaultEnvelopeListData();
+            const defaultEnvelopeListData = getDefaultEnvelopeListData(this.list.appStore);
 
             const newVoltage = defaultEnvelopeListData.voltage.slice();
-            newVoltage[1].time = this.envelopeList.data.duration;
+            newVoltage[1].time = this.list.data.duration;
 
-            undoManager.addCommand("Edit envelope list", instrumentListStore, this.envelopeList, {
-                execute: action(() => {
-                    this.envelopeList.data.voltage = newVoltage;
-                }),
-                undo: action(() => {
-                    this.envelopeList.data.voltage = oldVoltage;
-                })
-            });
+            undoManager.addCommand(
+                "Edit envelope list",
+                this.list.appStore.instrumentListStore,
+                this.list,
+                {
+                    execute: action(() => {
+                        this.list.data.voltage = newVoltage;
+                    }),
+                    undo: action(() => {
+                        this.list.data.voltage = oldVoltage;
+                    })
+                }
+            );
         }
     }
 
     get canClearAllCurrentPoints() {
         return (
-            this.envelopeList.data.current.length > 2 ||
-            this.envelopeList.data.current[1].time !== this.envelopeList.data.duration
+            this.list.data.current.length > 2 ||
+            this.list.data.current[1].time !== this.list.data.duration
         );
     }
 
     @action.bound
     clearAllCurrentPoints() {
         if (this.canClearAllCurrentPoints) {
-            const oldCurrent = this.envelopeList.data.current;
+            const oldCurrent = this.list.data.current;
 
-            const defaultEnvelopeListData = getDefaultEnvelopeListData();
+            const defaultEnvelopeListData = getDefaultEnvelopeListData(this.list.appStore);
 
             const newCurrent = defaultEnvelopeListData.current.slice();
-            newCurrent[1].time = this.envelopeList.data.duration;
+            newCurrent[1].time = this.list.data.duration;
 
-            undoManager.addCommand("Edit envelope list", instrumentListStore, this.envelopeList, {
-                execute: action(() => {
-                    this.envelopeList.data.current = newCurrent;
-                }),
-                undo: action(() => {
-                    this.envelopeList.data.current = oldCurrent;
-                })
-            });
+            undoManager.addCommand(
+                "Edit envelope list",
+                this.list.appStore.instrumentListStore,
+                this.list,
+                {
+                    execute: action(() => {
+                        this.list.data.current = newCurrent;
+                    }),
+                    undo: action(() => {
+                        this.list.data.current = oldCurrent;
+                    })
+                }
+            );
         }
     }
 
