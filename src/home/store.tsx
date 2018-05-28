@@ -348,13 +348,15 @@ export const tabs = new Tabs();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-window.onmessage = message => {
-    if (message.data.type === "open-tab-or-window") {
-        const tab = tabs.findObjectTab(message.data.object.type, message.data.object.id);
-        if (tab) {
-            tabs.makeActive(tab);
-        } else {
-            EEZStudio.electron.ipcRenderer.send("openWindow", message.data.openWindowArgs);
+if (isRenderer()) {
+    window.onmessage = message => {
+        if (message.data.type === "open-tab-or-window") {
+            const tab = tabs.findObjectTab(message.data.object.type, message.data.object.id);
+            if (tab) {
+                tabs.makeActive(tab);
+            } else {
+                EEZStudio.electron.ipcRenderer.send("openWindow", message.data.openWindowArgs);
+            }
         }
-    }
-};
+    };
+}

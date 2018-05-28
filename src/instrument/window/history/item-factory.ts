@@ -76,7 +76,7 @@ export function createHistoryItem(
     }
 
     if (activityLogEntry.type.startsWith("instrument/file")) {
-        if (EEZStudio.windowType === "instrument") {
+        if (appStore) {
             const {
                 isWaveform,
                 Waveform
