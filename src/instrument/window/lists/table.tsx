@@ -110,7 +110,7 @@ export class TableList extends BaseList {
 
     @computed
     get isMaxPointsReached() {
-        return this.numPoints >= this.appStore.instrument!.listsMaxPointsProperty;
+        return this.numPoints >= this.$eez_noser_appStore.instrument!.listsMaxPointsProperty;
     }
 
     getMaxTime() {
@@ -152,8 +152,8 @@ const selectedCell = observable<{
 ////////////////////////////////////////////////////////////////////////////////
 
 class TableListTimeAxisModel extends ListAxisModel {
-    constructor(public list: TableList) {
-        super(list, TIME_UNIT);
+    constructor(public $eez_noser_list: TableList) {
+        super($eez_noser_list, TIME_UNIT);
     }
 
     get minValue() {
@@ -162,7 +162,7 @@ class TableListTimeAxisModel extends ListAxisModel {
 
     @computed
     get maxValue() {
-        return this.list.getMaxTime();
+        return this.$eez_noser_list.getMaxTime();
     }
 }
 
@@ -271,9 +271,9 @@ function executeCommand(list: TableList, modificator: (data: TableListData) => v
         modificator(newData);
     });
 
-    list.appStore.undoManager.addCommand(
+    list.$eez_noser_appStore.undoManager.addCommand(
         "Edit table list",
-        list.appStore.instrumentListStore,
+        list.$eez_noser_appStore.instrumentListStore,
         list,
         {
             execute: action(() => {
@@ -311,7 +311,10 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique(this.list, values(this.list.appStore.instrumentLists))
+                            validators.unique(
+                                this.list,
+                                values(this.list.$eez_noser_appStore.instrumentLists)
+                            )
                         ]
                     },
                     {
@@ -336,9 +339,9 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
                 const newDescription = result.values.description;
 
                 if (oldName !== newName || oldDescription !== newDescription) {
-                    list.appStore.undoManager.addCommand(
+                    list.$eez_noser_appStore.undoManager.addCommand(
                         "Edit envelope list",
-                        this.list.appStore.instrumentListStore,
+                        this.list.$eez_noser_appStore.instrumentListStore,
                         list,
                         {
                             execute: action(() => {
@@ -557,22 +560,22 @@ export class Table extends React.Component<
             if (key === "voltage" || key === "current") {
                 let power;
                 if (key === "voltage") {
-                    if (!checkVoltage(numValue, this.props.list.appStore)) {
+                    if (!checkVoltage(numValue, this.props.list.$eez_noser_appStore)) {
                         $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
                         this.props.setError(
                             `Allowed range: 0 - ${unit.formatValue(
-                                getMaxVoltage(this.props.list.appStore)
+                                getMaxVoltage(this.props.list.$eez_noser_appStore)
                             )}`
                         );
                         return;
                     }
                     power = numValue * this.props.list.data.current[index];
                 } else {
-                    if (!checkCurrent(numValue, this.props.list.appStore)) {
+                    if (!checkCurrent(numValue, this.props.list.$eez_noser_appStore)) {
                         $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
                         this.props.setError(
                             `Allowed range: 0 - ${unit.formatValue(
-                                getMaxCurrent(this.props.list.appStore)
+                                getMaxCurrent(this.props.list.$eez_noser_appStore)
                             )}`
                         );
                         return;
@@ -580,23 +583,27 @@ export class Table extends React.Component<
                     power = numValue * this.props.list.data.voltage[index];
                 }
 
-                if (!checkPower(power, this.props.list.appStore)) {
+                if (!checkPower(power, this.props.list.$eez_noser_appStore)) {
                     $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-                    this.props.setError(getPowerLimitErrorMessage(this.props.list.appStore));
+                    this.props.setError(
+                        getPowerLimitErrorMessage(this.props.list.$eez_noser_appStore)
+                    );
                     return;
                 }
             } else {
-                const minDwell = this.props.list.appStore.instrument!.listsMinDwellProperty;
-                const maxDwell = this.props.list.appStore.instrument!.listsMaxDwellProperty;
+                const minDwell = this.props.list.$eez_noser_appStore.instrument!
+                    .listsMinDwellProperty;
+                const maxDwell = this.props.list.$eez_noser_appStore.instrument!
+                    .listsMaxDwellProperty;
                 if (numValue < minDwell || numValue > maxDwell) {
                     $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
                     this.props.setError(
                         `Allowed range: ${TIME_UNIT_NO_CUSTOM_FORMAT.formatValue(
                             minDwell,
-                            this.props.list.appStore.instrument!.getDigits(TIME_UNIT)
+                            this.props.list.$eez_noser_appStore.instrument!.getDigits(TIME_UNIT)
                         )} - ${TIME_UNIT_NO_CUSTOM_FORMAT.formatValue(
                             maxDwell,
-                            this.props.list.appStore.instrument!.getDigits(TIME_UNIT)
+                            this.props.list.$eez_noser_appStore.instrument!.getDigits(TIME_UNIT)
                         )}`
                     );
                     return;

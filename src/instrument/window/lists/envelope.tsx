@@ -97,7 +97,7 @@ export class EnvelopeListData extends BaseListData {
     constructor(list: BaseList, props: any) {
         super(list, props);
 
-        const defaultEnvelopeListData = getDefaultEnvelopeListData(list.appStore);
+        const defaultEnvelopeListData = getDefaultEnvelopeListData(list.$eez_noser_appStore);
 
         this.duration = props.duration || defaultEnvelopeListData.duration;
         this.numSamples = props.numSamples || defaultEnvelopeListData.numSamples;
@@ -188,8 +188,8 @@ export class EnvelopeList extends BaseList {
         }
 
         let timeTemp = [0];
-        const minDwell = this.appStore.instrument!.listsMinDwellProperty;
-        const maxDwell = this.appStore.instrument!.listsMaxDwellProperty;
+        const minDwell = this.$eez_noser_appStore.instrument!.listsMinDwellProperty;
+        const maxDwell = this.$eez_noser_appStore.instrument!.listsMaxDwellProperty;
         for (let i = 1; i < timeN.length; ++i) {
             let dt = timeN[i] - timeTemp[timeTemp.length - 1];
             while (dt > maxDwell) {
@@ -330,8 +330,8 @@ export class EnvelopeList extends BaseList {
     get powerLimitError() {
         for (let i = 0; i < this.tableListData.dwell.length; ++i) {
             let power = this.tableListData.voltage[i] * this.tableListData.current[i];
-            if (!checkPower(power, this.appStore)) {
-                return getPowerLimitErrorMessage(this.appStore);
+            if (!checkPower(power, this.$eez_noser_appStore)) {
+                return getPowerLimitErrorMessage(this.$eez_noser_appStore);
             }
         }
         return undefined;
@@ -341,8 +341,8 @@ export class EnvelopeList extends BaseList {
 ////////////////////////////////////////////////////////////////////////////////
 
 class EnveloperListTimeAxisModel extends ListAxisModel {
-    constructor(public list: EnvelopeList) {
-        super(list, TIME_UNIT);
+    constructor(public $eez_noser_list: EnvelopeList) {
+        super($eez_noser_list, TIME_UNIT);
     }
 
     get minValue(): number {
@@ -351,7 +351,7 @@ class EnveloperListTimeAxisModel extends ListAxisModel {
 
     @computed
     get maxValue(): number {
-        return this.list.getMaxTime();
+        return this.$eez_noser_list.getMaxTime();
     }
 }
 
@@ -633,9 +633,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         ) {
             // join this point with previous point
             const removedPoint = this.values[index - 1];
-            this.list.appStore.undoManager.addCommand(
+            this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
-                this.list.appStore.instrumentListStore,
+                this.list.$eez_noser_appStore.instrumentListStore,
                 this.list,
                 {
                     execute: action(() => {
@@ -657,9 +657,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         ) {
             // join this point with next point
             const removedPoint = this.values[index + 1];
-            this.list.appStore.undoManager.addCommand(
+            this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
-                this.list.appStore.instrumentListStore,
+                this.list.$eez_noser_appStore.instrumentListStore,
                 this.list,
                 {
                     execute: action(() => {
@@ -682,9 +682,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             // remove previous point and join this point with one before previous point
             const removedPoint1 = this.values[index - 2];
             const removedPoint2 = this.values[index - 1];
-            this.list.appStore.undoManager.addCommand(
+            this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
-                this.list.appStore.instrumentListStore,
+                this.list.$eez_noser_appStore.instrumentListStore,
                 this.list,
                 {
                     execute: action(() => {
@@ -707,9 +707,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             // remove next point and join this point with one after next point
             const removedPoint1 = this.values[index + 1];
             const removedPoint2 = this.values[index + 2];
-            this.list.appStore.undoManager.addCommand(
+            this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
-                this.list.appStore.instrumentListStore,
+                this.list.$eez_noser_appStore.instrumentListStore,
                 this.list,
                 {
                     execute: action(() => {
@@ -727,9 +727,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         } else if (index - 2 >= 0 && this.values[index - 2].time === newTime) {
             // remove previous point
             const removedPoint = this.values[index - 1];
-            this.list.appStore.undoManager.addCommand(
+            this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
-                this.list.appStore.instrumentListStore,
+                this.list.$eez_noser_appStore.instrumentListStore,
                 this.list,
                 {
                     execute: action(() => {
@@ -747,9 +747,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         } else if (index + 2 < this.values.length && this.values[index + 2].time === newTime) {
             // remove next point
             const removedPoint = this.values[index + 1];
-            this.list.appStore.undoManager.addCommand(
+            this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
-                this.list.appStore.instrumentListStore,
+                this.list.$eez_noser_appStore.instrumentListStore,
                 this.list,
                 {
                     execute: action(() => {
@@ -766,9 +766,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             );
         } else {
             // just change this point
-            this.list.appStore.undoManager.addCommand(
+            this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
-                this.list.appStore.instrumentListStore,
+                this.list.$eez_noser_appStore.instrumentListStore,
                 this.list,
                 {
                     execute: action(() => {
@@ -829,9 +829,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
 
                     const value = values[this.valueIndex];
 
-                    this.list.appStore.undoManager.addCommand(
+                    this.list.$eez_noser_appStore.undoManager.addCommand(
                         "Edit envelope list",
-                        this.list.appStore.instrumentListStore,
+                        this.list.$eez_noser_appStore.instrumentListStore,
                         this.list,
                         {
                             execute: action(() => {
@@ -1020,9 +1020,9 @@ export class EnvelopeLineController extends LineController {
         if (valueIndex - 2 >= 0 && this.values[valueIndex - 2].time === value.time) {
             --valueIndex;
             const oldValue = this.values[valueIndex];
-            this.list.appStore.undoManager.addCommand(
+            this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
-                this.list.appStore.instrumentListStore,
+                this.list.$eez_noser_appStore.instrumentListStore,
                 this.list,
                 {
                     execute: action(() => {
@@ -1034,9 +1034,9 @@ export class EnvelopeLineController extends LineController {
                 }
             );
         } else {
-            this.list.appStore.undoManager.addCommand(
+            this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
-                this.list.appStore.instrumentListStore,
+                this.list.$eez_noser_appStore.instrumentListStore,
                 this.list,
                 {
                     execute: action(() => {
@@ -1302,7 +1302,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique(this.list, values(this.list.appStore.instrumentLists))
+                            validators.unique(this.list, values(this.list.$eez_noser_appStore.instrumentLists))
                         ]
                     },
                     {
@@ -1321,7 +1321,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                         validators: [
                             validators.rangeInclusive(
                                 1,
-                                this.list.appStore.instrument!.listsMaxPointsProperty
+                                this.list.$eez_noser_appStore.instrument!.listsMaxPointsProperty
                             )
                         ]
                     }
@@ -1354,9 +1354,9 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                     oldDuration !== newDuration ||
                     oldNumSamples !== newNumSamples
                 ) {
-                    this.list.appStore.undoManager.addCommand(
+                    this.list.$eez_noser_appStore.undoManager.addCommand(
                         "Edit envelope list",
-                        this.list.appStore.instrumentListStore,
+                        this.list.$eez_noser_appStore.instrumentListStore,
                         list,
                         {
                             execute: action(() => {
@@ -1388,7 +1388,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
             const oldVoltage = this.list.data.voltage;
             const oldCurrent = this.list.data.current;
 
-            const defaultEnvelopeListData = getDefaultEnvelopeListData(this.list.appStore);
+            const defaultEnvelopeListData = getDefaultEnvelopeListData(this.list.$eez_noser_appStore);
 
             const newVoltage = objectClone(defaultEnvelopeListData.voltage);
             newVoltage[1].time = this.list.data.duration;
@@ -1396,9 +1396,9 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
             const newCurrent = objectClone(defaultEnvelopeListData.current);
             newCurrent[1].time = this.list.data.duration;
 
-            this.list.appStore.undoManager.addCommand(
+            this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
-                this.list.appStore.instrumentListStore,
+                this.list.$eez_noser_appStore.instrumentListStore,
                 this.list,
                 {
                     execute: action(() => {
@@ -1426,14 +1426,14 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
         if (this.canClearAllVoltagePoints) {
             const oldVoltage = this.list.data.voltage;
 
-            const defaultEnvelopeListData = getDefaultEnvelopeListData(this.list.appStore);
+            const defaultEnvelopeListData = getDefaultEnvelopeListData(this.list.$eez_noser_appStore);
 
             const newVoltage = defaultEnvelopeListData.voltage.slice();
             newVoltage[1].time = this.list.data.duration;
 
-            this.list.appStore.undoManager.addCommand(
+            this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
-                this.list.appStore.instrumentListStore,
+                this.list.$eez_noser_appStore.instrumentListStore,
                 this.list,
                 {
                     execute: action(() => {
@@ -1459,14 +1459,14 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
         if (this.canClearAllCurrentPoints) {
             const oldCurrent = this.list.data.current;
 
-            const defaultEnvelopeListData = getDefaultEnvelopeListData(this.list.appStore);
+            const defaultEnvelopeListData = getDefaultEnvelopeListData(this.list.$eez_noser_appStore);
 
             const newCurrent = defaultEnvelopeListData.current.slice();
             newCurrent[1].time = this.list.data.duration;
 
-            this.list.appStore.undoManager.addCommand(
+            this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
-                this.list.appStore.instrumentListStore,
+                this.list.$eez_noser_appStore.instrumentListStore,
                 this.list,
                 {
                     execute: action(() => {

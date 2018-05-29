@@ -15,7 +15,11 @@ import { IInstrumentProperties } from "instrument/export";
 
 import * as ConnectionModule from "instrument/connection/connection";
 
-import "instrument/window/lists/store";
+import { createInstrumentListStore } from "instrument/window/lists/store";
+
+if (!isRenderer()) {
+    createInstrumentListStore(null);
+}
 
 export interface IInstrumentExtensionProperties extends IExtensionProperties {
     properties: IInstrumentProperties;

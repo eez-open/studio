@@ -1,6 +1,6 @@
-import { observable, action, runInAction, toJS, autorun } from "mobx";
+import { observable, action, runInAction, autorun } from "mobx";
 
-import { confirmSave } from "shared/util";
+import { confirmSave, objectClone } from "shared/util";
 import { IStore, beginTransaction, commitTransaction } from "shared/store";
 
 interface ICommand {
@@ -72,7 +72,7 @@ export class UndoManager {
     commit() {
         if (this.dbObject) {
             beginTransaction(this.transactionLabel);
-            this.store.updateObject(toJS(this.object));
+            this.store.updateObject(objectClone(this.object));
             commitTransaction();
 
             this.dbObject = false;

@@ -1,11 +1,10 @@
-import { isRenderer } from "shared/util";
 import { createStore, types } from "shared/store";
 
 import { AppStore } from "instrument/window/app-store";
 
 import * as ListsFactoryModule from "instrument/window/lists/factory";
 
-export function createInstrumentListStore(appStore: AppStore) {
+export function createInstrumentListStore(appStore: AppStore | null) {
     return createStore({
         storeName: "instrument/list",
         versionTables: ["instrument/list/version"],
@@ -52,7 +51,7 @@ export function createInstrumentListStore(appStore: AppStore) {
             data: types.object
         },
         create: (props: any) => {
-            if (isRenderer) {
+            if (appStore) {
                 const {
                     createListObject
                 } = require("instrument/window/lists/factory") as typeof ListsFactoryModule;

@@ -127,7 +127,7 @@ class ListViewOptions implements IViewOptions {
 
     @observable showZoomButtons: boolean = true;
 
-    constructor(private list: BaseList, props: any) {
+    constructor(private $eez_noser_list: BaseList, props: any) {
         if (props) {
             this.axesLines = props.axesLines;
             this.showAxisLabels = props.showAxisLabels;
@@ -151,10 +151,10 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesType(newType: IViewOptionsAxesLinesType) {
         const oldType = this.axesLines.type;
-        this.list.appStore.undoManager.addCommand(
-            `Edit ${this.list.type} list`,
-            this.list.appStore.instrumentListStore,
-            this.list,
+        this.$eez_noser_list.$eez_noser_appStore.undoManager.addCommand(
+            `Edit ${this.$eez_noser_list.type} list`,
+            this.$eez_noser_list.$eez_noser_appStore.instrumentListStore,
+            this.$eez_noser_list,
             {
                 execute: action(() => {
                     this.axesLines.type = newType;
@@ -168,10 +168,10 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesMajorSubdivisionHorizontal(newValue: number) {
         const oldValue = this.axesLines.majorSubdivision.horizontal;
-        this.list.appStore.undoManager.addCommand(
-            `Edit ${this.list.type} list`,
-            this.list.appStore.instrumentListStore,
-            this.list,
+        this.$eez_noser_list.$eez_noser_appStore.undoManager.addCommand(
+            `Edit ${this.$eez_noser_list.type} list`,
+            this.$eez_noser_list.$eez_noser_appStore.instrumentListStore,
+            this.$eez_noser_list,
             {
                 execute: action(() => {
                     this.axesLines.majorSubdivision.horizontal = newValue;
@@ -185,10 +185,10 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesMajorSubdivisionVertical(newValue: number) {
         const oldValue = this.axesLines.majorSubdivision.vertical;
-        this.list.appStore.undoManager.addCommand(
-            `Edit ${this.list.type} list`,
-            this.list.appStore.instrumentListStore,
-            this.list,
+        this.$eez_noser_list.$eez_noser_appStore.undoManager.addCommand(
+            `Edit ${this.$eez_noser_list.type} list`,
+            this.$eez_noser_list.$eez_noser_appStore.instrumentListStore,
+            this.$eez_noser_list,
             {
                 execute: action(() => {
                     this.axesLines.majorSubdivision.vertical = newValue;
@@ -202,10 +202,10 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesMinorSubdivisionHorizontal(newValue: number) {
         const oldValue = this.axesLines.minorSubdivision.horizontal;
-        this.list.appStore.undoManager.addCommand(
-            `Edit ${this.list.type} list`,
-            this.list.appStore.instrumentListStore,
-            this.list,
+        this.$eez_noser_list.$eez_noser_appStore.undoManager.addCommand(
+            `Edit ${this.$eez_noser_list.type} list`,
+            this.$eez_noser_list.$eez_noser_appStore.instrumentListStore,
+            this.$eez_noser_list,
             {
                 execute: action(() => {
                     this.axesLines.minorSubdivision.horizontal = newValue;
@@ -219,10 +219,10 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesMinorSubdivisionVertical(newValue: number) {
         const oldValue = this.axesLines.minorSubdivision.vertical;
-        this.list.appStore.undoManager.addCommand(
-            `Edit ${this.list.type} list`,
-            this.list.appStore.instrumentListStore,
-            this.list,
+        this.$eez_noser_list.$eez_noser_appStore.undoManager.addCommand(
+            `Edit ${this.$eez_noser_list.type} list`,
+            this.$eez_noser_list.$eez_noser_appStore.instrumentListStore,
+            this.$eez_noser_list,
             {
                 execute: action(() => {
                     this.axesLines.minorSubdivision.vertical = newValue;
@@ -236,10 +236,10 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesStepsX(newValue: number[]) {
         const oldValue = this.axesLines.steps.x;
-        this.list.appStore.undoManager.addCommand(
-            `Edit ${this.list.type} list`,
-            this.list.appStore.instrumentListStore,
-            this.list,
+        this.$eez_noser_list.$eez_noser_appStore.undoManager.addCommand(
+            `Edit ${this.$eez_noser_list.type} list`,
+            this.$eez_noser_list.$eez_noser_appStore.instrumentListStore,
+            this.$eez_noser_list,
             {
                 execute: action(() => {
                     this.axesLines.steps.x = newValue;
@@ -253,10 +253,10 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesStepsY(index: number, newValue: number[]): void {
         const oldValue = this.axesLines.steps.y[index];
-        this.list.appStore.undoManager.addCommand(
-            `Edit ${this.list.type} list`,
-            this.list.appStore.instrumentListStore,
-            this.list,
+        this.$eez_noser_list.$eez_noser_appStore.undoManager.addCommand(
+            `Edit ${this.$eez_noser_list.type} list`,
+            this.$eez_noser_list.$eez_noser_appStore.instrumentListStore,
+            this.$eez_noser_list,
             {
                 execute: action(() => {
                     this.axesLines.steps.y[index] = newValue;
@@ -270,10 +270,10 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesSnapToGrid(newValue: boolean): void {
         const oldValue = this.axesLines.snapToGrid;
-        this.list.appStore.undoManager.addCommand(
-            `Edit ${this.list.type} list`,
-            this.list.appStore.instrumentListStore,
-            this.list,
+        this.$eez_noser_list.$eez_noser_appStore.undoManager.addCommand(
+            `Edit ${this.$eez_noser_list.type} list`,
+            this.$eez_noser_list.$eez_noser_appStore.instrumentListStore,
+            this.$eez_noser_list,
             {
                 execute: action(() => {
                     this.axesLines.snapToGrid = newValue;
@@ -287,10 +287,10 @@ class ListViewOptions implements IViewOptions {
 
     setShowAxisLabels(newValue: boolean) {
         const oldValue = this.showAxisLabels;
-        this.list.appStore.undoManager.addCommand(
-            `Edit ${this.list.type} list`,
-            this.list.appStore.instrumentListStore,
-            this.list,
+        this.$eez_noser_list.$eez_noser_appStore.undoManager.addCommand(
+            `Edit ${this.$eez_noser_list.type} list`,
+            this.$eez_noser_list.$eez_noser_appStore.instrumentListStore,
+            this.$eez_noser_list,
             {
                 execute: action(() => {
                     this.showAxisLabels = newValue;
@@ -304,10 +304,10 @@ class ListViewOptions implements IViewOptions {
 
     setShowZoomButtons(newValue: boolean) {
         const oldValue = this.showZoomButtons;
-        this.list.appStore.undoManager.addCommand(
-            `Edit ${this.list.type} list`,
-            this.list.appStore.instrumentListStore,
-            this.list,
+        this.$eez_noser_list.$eez_noser_appStore.undoManager.addCommand(
+            `Edit ${this.$eez_noser_list.type} list`,
+            this.$eez_noser_list.$eez_noser_appStore.instrumentListStore,
+            this.$eez_noser_list,
             {
                 execute: action(() => {
                     this.showZoomButtons = newValue;
@@ -327,11 +327,11 @@ export class ListAxisModel implements IAxisModel {
     //       Find a way no to save.
     unit: IUnit;
 
-    constructor(public list: BaseList, unit: IUnit) {
+    constructor(public $eez_noser_list: BaseList, unit: IUnit) {
         this.unit = unit.clone();
-        this.unit.precision = list.appStore.instrument!.getDigits(unit);
+        this.unit.precision = $eez_noser_list.$eez_noser_appStore.instrument!.getDigits(unit);
 
-        const props = list.props.data[this.unit.name + "AxisModel"];
+        const props = $eez_noser_list.props.data[this.unit.name + "AxisModel"];
 
         this.dynamic = (props && props.dynamic) || {
             zoomMode: "default",
@@ -362,8 +362,8 @@ export class ListAxisModel implements IAxisModel {
 
     get maxValue(): number {
         return this.unit.name === "voltage"
-            ? getMaxVoltage(this.list.appStore)
-            : getMaxCurrent(this.list.appStore);
+            ? getMaxVoltage(this.$eez_noser_list.$eez_noser_appStore)
+            : getMaxCurrent(this.$eez_noser_list.$eez_noser_appStore);
     }
 
     get defaultFrom() {
@@ -460,7 +460,7 @@ export abstract class BaseList {
     type: string;
     abstract data: BaseListData;
 
-    constructor(public props: any, public appStore: AppStore) {
+    constructor(public props: any, public $eez_noser_appStore: AppStore) {
         this.id = props.id;
         this.name = props.name;
         this.description = props.description;

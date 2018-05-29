@@ -504,7 +504,10 @@ export async function getTempFilePath() {
 export function objectClone<T>(a: T) {
     const { toJS } = require("mobx") as typeof MobXModule;
     return JSON.parse(
-        JSON.stringify(toJS(a), (key: string, value: any) => (key === "$eez" ? undefined : value))
+        JSON.stringify(
+            toJS(a),
+            (key: string, value: any) => (key.startsWith("$") ? undefined : value)
+        )
     );
 }
 
