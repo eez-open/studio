@@ -11,6 +11,8 @@ import {
     BooleanProperty
 } from "shared/ui/properties";
 import { AlertDanger } from "shared/ui/alert";
+import { Toolbar } from "shared/ui/toolbar";
+import { ButtonAction } from "shared/ui/action";
 
 import { ConnectionProperties } from "instrument/window/connection-dialog";
 import { InstrumentObject } from "instrument/instrument-object";
@@ -151,8 +153,27 @@ class Connection extends React.Component<{
 
 export class InstrumentDetails extends React.Component<{ instrument: InstrumentObject }, {}> {
     @bind
-    onOpen() {
-        this.props.instrument.open();
+    onOpenInTab() {
+        this.props.instrument.openEditor("tab");
+    }
+
+    @bind
+    onOpenInWindow() {
+        this.props.instrument.openEditor("window");
+    }
+
+    @bind
+    onDelete() {
+        window.postMessage(
+            {
+                type: "delete-object",
+                object: {
+                    id: this.props.instrument.id,
+                    type: "instrument"
+                }
+            },
+            "*"
+        );
     }
 
     render() {
@@ -160,11 +181,26 @@ export class InstrumentDetails extends React.Component<{ instrument: InstrumentO
         return (
             <Panels>
                 <Panel title="Actions">
-                    <div className="text-center">
-                        <button className="btn btn-primary" onClick={this.onOpen}>
-                            Open
-                        </button>
-                    </div>
+                    <Toolbar>
+                        <ButtonAction
+                            text="Open in Tab"
+                            title="Open instrument in new tab"
+                            className="btn btn-default"
+                            onClick={this.onOpenInTab}
+                        />
+                        <ButtonAction
+                            text="Open in Window"
+                            title="Open instrument in new window"
+                            className="btn btn-default"
+                            onClick={this.onOpenInWindow}
+                        />
+                        <ButtonAction
+                            text="Delete"
+                            title="Delete instrument"
+                            className="btn btn-danger"
+                            onClick={this.onDelete}
+                        />
+                    </Toolbar>
                 </Panel>
 
                 <Panel title="Properties">

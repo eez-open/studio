@@ -16,6 +16,16 @@ export class CreatedHistoryItemComponent extends React.Component<
     },
     {}
 > {
+    get type() {
+        if (this.props.historyItem.type === "instrument/restored") {
+            return "restored";
+        }
+        if (this.props.historyItem.type === "instrument/deleted") {
+            return "deleted";
+        }
+        return "created";
+    }
+
     render() {
         return (
             <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Created">
@@ -23,7 +33,7 @@ export class CreatedHistoryItemComponent extends React.Component<
                     <small className="EezStudio_HistoryItemDate text-muted">
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
-                    <span>Instrument created!</span>
+                    <span>Instrument {this.type}!</span>
                 </p>
             </div>
         );

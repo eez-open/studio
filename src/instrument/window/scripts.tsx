@@ -14,7 +14,7 @@ import { CodeEditor } from "shared/ui/code-editor";
 import { IShortcut } from "shortcuts/interfaces";
 
 import { AppStore } from "instrument/window/app-store";
-import { IModel, undoManager } from "instrument/window/undo";
+import { IModel } from "instrument/window/undo";
 
 import { Terminal } from "instrument/window/terminal/terminal";
 
@@ -30,9 +30,9 @@ export class ScriptsModel implements IModel {
             this._newActionCode = value;
         });
         if (this.modified) {
-            undoManager.model = this;
+            this.appStore.undoManager.model = this;
         } else {
-            undoManager.model = undefined;
+            this.appStore.undoManager.model = undefined;
         }
     }
 
@@ -87,30 +87,42 @@ export class ScriptsModel implements IModel {
         this.terminalVisible = !this.terminalVisible;
     }
 
+    get codeEditor() {
+        return this.appStore.scriptView && this.appStore.scriptView.codeEditor;
+    }
+
     get canUndo() {
-        return ScriptView.codeEditor ? ScriptView.codeEditor.canUndo : false;
+        return this.codeEditor ? this.codeEditor.canUndo : false;
     }
 
     undo() {
-        if (ScriptView.codeEditor) {
-            ScriptView.codeEditor.undo();
+        if (this.codeEditor) {
+            this.codeEditor.undo();
         }
     }
 
     get canRedo() {
-        return ScriptView.codeEditor ? ScriptView.codeEditor.canRedo : false;
+        return this.codeEditor ? this.codeEditor.canRedo : false;
     }
 
     redo() {
-        if (ScriptView.codeEditor) {
-            ScriptView.codeEditor.redo();
+        if (this.codeEditor) {
+            this.codeEditor.redo();
         }
     }
 }
 
 @observer
 export class ScriptView extends React.Component<{ appStore: AppStore }, {}> {
-    static codeEditor: CodeEditor | null;
+    codeEditor: CodeEditor | null;
+
+    componentDidMount() {
+        this.props.appStore.scriptView = this;
+    }
+
+    componentWillUnmount() {
+        this.props.appStore.scriptView = null;
+    }
 
     render() {
         const scriptsModel = this.props.appStore.scriptsModel;
@@ -120,7 +132,7 @@ export class ScriptView extends React.Component<{ appStore: AppStore }, {}> {
         if (scriptsModel.selectedScript) {
             codeEditor = (
                 <CodeEditor
-                    ref={ref => (ScriptView.codeEditor = ref)}
+                    ref={ref => (this.codeEditor = ref)}
                     value={scriptsModel.selectedScript.action.data}
                     onChange={(value: string) => {
                         scriptsModel.newActionCode = value;
@@ -263,7 +275,9 @@ export const showScriptError = action(
 export function insertScpiCommandIntoCode(appStore: AppStore, scpiCommand: string) {
     const scriptsModel = appStore.scriptsModel;
 
-    if (!ScriptView.codeEditor || !scriptsModel.selectedScript) {
+    const codeEditor = appStore.scriptView && appStore.scriptView.codeEditor;
+
+    if (!codeEditor || !scriptsModel.selectedScript) {
         return;
     }
 
@@ -277,13 +291,15 @@ export function insertScpiCommandIntoCode(appStore: AppStore, scpiCommand: strin
         return;
     }
 
-    ScriptView.codeEditor.insertText(text);
+    codeEditor.insertText(text);
 }
 
 export function insertScpiQueryIntoCode(appStore: AppStore, scpiQuery: string) {
     const scriptsModel = appStore.scriptsModel;
 
-    if (!ScriptView.codeEditor || !scriptsModel.selectedScript) {
+    const codeEditor = appStore.scriptView && appStore.scriptView.codeEditor;
+
+    if (!codeEditor || !scriptsModel.selectedScript) {
         return;
     }
 
@@ -297,5 +313,5 @@ export function insertScpiQueryIntoCode(appStore: AppStore, scpiQuery: string) {
         return;
     }
 
-    ScriptView.codeEditor.insertText(text);
+    codeEditor.insertText(text);
 }

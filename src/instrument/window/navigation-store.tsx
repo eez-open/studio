@@ -4,7 +4,6 @@ import { observable, computed, action } from "mobx";
 import { IRootNavigationItem } from "shared/ui/app";
 
 import { AppStore } from "instrument/window/app-store";
-import { undoManager } from "instrument/window/undo";
 import * as ScriptsModule from "instrument/window/scripts";
 import * as ShortcutsModule from "instrument/window/shortcuts";
 
@@ -141,7 +140,7 @@ export class NavigationStore {
     }
 
     set mainNavigationSelectedItem(value: IInstrumentWindowNavigationItem) {
-        undoManager.confirmSave(
+        this.appStore.undoManager.confirmSave(
             action(() => {
                 this._mainNavigationSelectedItem = value;
             })
@@ -171,7 +170,7 @@ export class NavigationStore {
     }
 
     set selectedListId(value: string | undefined) {
-        undoManager.confirmSave(
+        this.appStore.undoManager.confirmSave(
             action(() => {
                 if (this._mainNavigationSelectedItem !== this.listsNavigationItem) {
                     // First switch to lists section ...
@@ -201,7 +200,7 @@ export class NavigationStore {
     }
 
     set selectedScriptId(value: string | undefined) {
-        undoManager.confirmSave(
+        this.appStore.undoManager.confirmSave(
             action(() => {
                 this._mainNavigationSelectedItem = this.scriptsNavigationItem;
                 this._selectedScriptId = value;

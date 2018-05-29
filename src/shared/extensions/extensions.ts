@@ -382,11 +382,8 @@ export function getObject(type: string, oid: string): IObject {
                 return null;
             },
             details: null,
-            resizable: false,
-            getEditor() {
-                return null;
-            },
-            open() {}
+            isResizable: false,
+            isEditable: false
         };
     }
 

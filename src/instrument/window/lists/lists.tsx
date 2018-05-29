@@ -28,7 +28,6 @@ import { InstrumentObject } from "instrument/instrument-object";
 import { getList, sendList } from "instrument/connection/list-operations";
 
 import { AppStore } from "instrument/window/app-store";
-import { undoManager } from "instrument/window/undo";
 
 import { BaseList, ITableListData } from "instrument/window/lists/store-renderer";
 import { createEmptyListData, createTableListFromData } from "instrument/window/lists/factory";
@@ -538,13 +537,13 @@ export class ListsButtons extends React.Component<{ appStore: AppStore }, {}> {
     render() {
         return (
             <React.Fragment>
-                {undoManager.modified && (
+                {this.props.appStore.undoManager.modified && (
                     <ButtonAction
                         text="Save"
                         icon="material:save"
                         className="btn-secondary"
                         title="Save changes"
-                        onClick={undoManager.commit}
+                        onClick={this.props.appStore.undoManager.commit}
                     />
                 )}
                 <ButtonAction

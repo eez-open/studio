@@ -89,7 +89,7 @@ class AppComponent extends React.Component<{}, {}> {
                 <Header>
                     <TabsView tabs={tabs.tabs} />
                 </Header>
-                <Body>{tabs.activeTab.editor}</Body>
+                <Body>{tabs.activeTab.render()}</Body>
             </VerticalHeaderWithBody>
         );
     }

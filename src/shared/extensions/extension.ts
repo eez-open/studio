@@ -9,12 +9,12 @@ export interface IActivityLogEntryInfo {
 }
 
 export interface IEditor {
-    editor: JSX.Element;
-
     onCreate(): void;
     onActivate(): void;
     onDeactivate(): void;
     onTerminate(): void;
+
+    render(): JSX.Element;
 }
 
 export interface IObject {
@@ -23,9 +23,14 @@ export interface IObject {
     content: JSX.Element | null;
     activityLogEntryInfo(logEntry: IActivityLogEntry): IActivityLogEntryInfo | null;
     details: JSX.Element | null;
-    resizable: boolean;
-    getEditor(): IEditor | null;
-    open(): void;
+    isResizable: boolean;
+    isEditable: boolean;
+    getEditor?(): IEditor;
+    getEditorWindowArgs?(): {
+        url: string;
+        args: any;
+    };
+    openEditor?(target: "tab" | "window" | "default"): void;
     afterDelete?(): void;
 }
 

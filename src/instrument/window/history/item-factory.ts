@@ -25,6 +25,7 @@ export function createHistoryItem(
 ): HistoryItem {
     if (
         activityLogEntry.type === "instrument/created" ||
+        activityLogEntry.type === "instrument/deleted" ||
         activityLogEntry.type === "instrument/restored"
     ) {
         const {

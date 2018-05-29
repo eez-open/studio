@@ -14,8 +14,6 @@ import { ICommandSyntax, makeItShort, matchCommand } from "instrument/commands-t
 import { AppStore } from "instrument/window/app-store";
 import { insertScpiCommandIntoCode, insertScpiQueryIntoCode } from "instrument/window/scripts";
 
-import { commandsTree } from "instrument/window/terminal/commands-tree";
-
 export interface ICommandNode extends ITreeNode {
     commandSyntax?: ICommandSyntax;
     querySyntax?: ICommandSyntax;
@@ -106,7 +104,7 @@ export class CommandsBrowser extends React.Component<
             node.children.forEach(visitCommandNode);
         }
 
-        visitCommandNode(commandsTree);
+        visitCommandNode(this.props.appStore.commandsTree);
 
         return foundNodes;
     }
@@ -153,7 +151,7 @@ export class CommandsBrowser extends React.Component<
         } else {
             leftSideBody = (
                 <Tree
-                    rootNode={commandsTree}
+                    rootNode={this.props.appStore.commandsTree}
                     selectNode={this.selectNode}
                     showOnlyChildren={true}
                 />

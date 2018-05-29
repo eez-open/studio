@@ -2,8 +2,7 @@
 import * as ReactDOM from "react-dom";
 import { configure } from "mobx";
 
-import * as AppStoreModule from "instrument/window/app-store";
-import { undoManager } from "instrument/window/undo";
+import { instruments } from "instrument/instrument-object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -12,21 +11,19 @@ configure({ enforceActions: true });
 import { loadPreinstalledExtension } from "shared/extensions/extensions";
 
 loadPreinstalledExtension("instrument").then(() => {
-    const { AppStore } = require("instrument/window/app-store") as typeof AppStoreModule;
-
     const instrumentId = EEZStudio.electron.ipcRenderer.sendSync("getWindowArgs");
 
-    const appStore = new AppStore(instrumentId);
-    appStore.onCreate();
-    appStore.onActivate();
+    const instrument = instruments.get(instrumentId);
 
-    ReactDOM.render(appStore.editor, document.getElementById("EezStudio_Content"));
-});
+    if (instrument) {
+        const instrumentEditor = instrument.getEditor();
+        instrumentEditor.onCreate();
+        instrumentEditor.onActivate();
 
-EEZStudio.electron.ipcRenderer.on("beforeClose", () => {
-    undoManager.confirmSave(() => {
-        EEZStudio.electron.ipcRenderer.send("readyToClose");
-    });
+        ReactDOM.render(instrumentEditor.render(), document.getElementById("EezStudio_Content"));
+    } else {
+        console.error("instrument not found");
+    }
 });
 
 EEZStudio.electron.ipcRenderer.on("reload", () => {

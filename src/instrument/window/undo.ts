@@ -28,14 +28,20 @@ export class UndoManager {
 
     @observable.shallow _model: IModel | undefined;
 
+    autorunDisposer: any;
+
     constructor() {
-        autorun(() => {
+        this.autorunDisposer = autorun(() => {
             EEZStudio.electron.ipcRenderer.send("windowSetState", {
                 modified: this.modified,
                 undo: this.canUndo,
                 redo: this.canRedo
             });
         });
+    }
+
+    onTerminate() {
+        this.autorunDisposer();
     }
 
     confirmSave(callback: () => void) {
@@ -193,19 +199,3 @@ export class UndoManager {
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const undoManager = new UndoManager();
-
-////////////////////////////////////////////////////////////////////////////////
-
-EEZStudio.electron.ipcRenderer.on("undo", undoManager.undo);
-
-EEZStudio.electron.ipcRenderer.on("redo", undoManager.redo);
-
-EEZStudio.electron.ipcRenderer.on("save", () => {
-    if (undoManager.modified) {
-        undoManager.commit();
-    }
-});

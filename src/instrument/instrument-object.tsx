@@ -107,7 +107,7 @@ export class InstrumentObject {
 
     connection: IConnection;
 
-    resizable: false;
+    isResizable: false;
 
     _creationDate: Date | null | undefined;
 
@@ -552,31 +552,33 @@ export class InstrumentObject {
             );
 
             const { closeWindow } = require("main/window") as typeof MainWindowModule;
-            closeWindow({
-                url: "instrument/index.html?" + this.id
-            });
+            closeWindow(this.getEditorWindowArgs());
         }
     }
+
+    isEditable = true;
 
     getEditor() {
         const { AppStore } = require("instrument/window/app-store") as typeof AppStoreModule;
         return new AppStore(this.id);
     }
 
-    open() {
+    getEditorWindowArgs() {
+        return {
+            url: "instrument/index.html?" + this.id,
+            args: this.id
+        };
+    }
+
+    openEditor(target: "tab" | "window" | "default") {
         window.postMessage(
             {
-                type: "open-tab-or-window",
-
+                type: "open-object-editor",
                 object: {
                     id: this.id,
                     type: "instrument"
                 },
-
-                openWindowArgs: {
-                    url: "instrument/index.html?" + this.id,
-                    args: this.id
-                }
+                target
             },
             "*"
         );

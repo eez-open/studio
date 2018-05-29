@@ -2,7 +2,13 @@ import * as React from "react";
 import { observable, computed, action, runInAction } from "mobx";
 
 import { isRenderer } from "shared/util";
-import { createStore, types, createStoreObjectsCollection } from "shared/store";
+import {
+    createStore,
+    types,
+    createStoreObjectsCollection,
+    beginTransaction,
+    commitTransaction
+} from "shared/store";
 import { Rect } from "shared/geometry";
 import { IActivityLogEntry } from "shared/activity-log";
 
@@ -74,8 +80,8 @@ export class WorkbenchObject {
         return this.implementation.details;
     }
 
-    get resizable() {
-        return this.implementation.resizable;
+    get isResizable() {
+        return this.implementation.isResizable;
     }
 
     @action
@@ -83,21 +89,49 @@ export class WorkbenchObject {
         this.selected = !this.selected;
     }
 
-    getEditor() {
-        return this.implementation.getEditor();
+    get isEditable() {
+        return this.implementation.isEditable;
     }
 
-    open() {
-        const tab = tabs.findObjectTab(this.type, this.implementation.id);
-        if (tab) {
-            tabs.makeActive(tab);
-        } else {
-            const editor = this.getEditor();
-            if (editor !== null) {
-                tabs.addObjectTab(this.type, this.implementation, editor);
-            } else {
-                this.implementation.open();
+    getEditor() {
+        return this.implementation.getEditor!();
+    }
+
+    getEditorWindowArgs() {
+        return this.implementation.getEditorWindowArgs!();
+    }
+
+    openEditor(target: "tab" | "window" | "default") {
+        if (target === "default") {
+            if (
+                EEZStudio.electron.ipcRenderer.sendSync("focusWindow", this.getEditorWindowArgs())
+            ) {
+                return;
             }
+            target = "tab";
+        }
+
+        if (target === "tab") {
+            const tab = tabs.findObjectTab(this.type, this.implementation.id);
+            if (tab) {
+                // tab already exists
+                tabs.makeActive(tab);
+            } else {
+                // close window if open
+                EEZStudio.electron.ipcRenderer.send("closeWindow", this.getEditorWindowArgs());
+
+                // open tab
+                tabs.addObjectTab(this.type, this.implementation, this.getEditor());
+            }
+        } else {
+            // close tab if open
+            const tab = tabs.findObjectTab(this.type, this.implementation.id);
+            if (tab) {
+                tabs.removeTab(tab);
+            }
+
+            // open window
+            EEZStudio.electron.ipcRenderer.send("openWindow", this.getEditorWindowArgs());
         }
     }
 
@@ -203,7 +237,7 @@ export function deleteWorkbenchObject(object: WorkbenchObject) {
 ////////////////////////////////////////////////////////////////////////////////
 
 interface IHomeTab extends ITab {
-    editor: JSX.Element;
+    render(): JSX.Element;
 }
 
 class HomeTab implements IHomeTab {
@@ -222,10 +256,16 @@ class HomeTab implements IHomeTab {
 
     editor = <HomeComponent />;
 
+    render() {
+        return this.editor;
+    }
+
     @action
     makeActive(): void {
         this.tabs.makeActive(this);
     }
+
+    trt() {}
 }
 
 class ObjectEditorTab implements IHomeTab {
@@ -265,13 +305,17 @@ class ObjectEditorTab implements IHomeTab {
         return this.object.name;
     }
 
-    get editor() {
-        return this.objectEditor.editor;
+    render() {
+        return this.objectEditor.render();
     }
 
     @action
     makeActive(): void {
         this.tabs.makeActive(this);
+    }
+
+    openInWindow() {
+        this.object.openEditor!("window");
     }
 
     close() {
@@ -350,12 +394,21 @@ export const tabs = new Tabs();
 
 if (isRenderer()) {
     window.onmessage = message => {
-        if (message.data.type === "open-tab-or-window") {
-            const tab = tabs.findObjectTab(message.data.object.type, message.data.object.id);
-            if (tab) {
-                tabs.makeActive(tab);
-            } else {
-                EEZStudio.electron.ipcRenderer.send("openWindow", message.data.openWindowArgs);
+        for (let key of workbenchObjects.keys()) {
+            const workbenchObject = workbenchObjects.get(key);
+            if (
+                workbenchObject &&
+                workbenchObject.type === message.data.object.type &&
+                workbenchObject.oid === message.data.object.id
+            ) {
+                if (message.data.type === "open-object-editor") {
+                    workbenchObject.openEditor(message.data.target);
+                } else if (message.data.type === "delete-object") {
+                    beginTransaction("Delete workbench item");
+                    deleteWorkbenchObject(workbenchObject);
+                    commitTransaction();
+                }
+                return;
             }
         }
     };

@@ -25,12 +25,6 @@ import { AppStore } from "instrument/window/app-store";
 
 import { FilterStats } from "instrument/window/search/filters";
 
-import {
-    moveToTopOfConnectionHistory,
-    moveToBottomOfConnectionHistory,
-    selectHistoryItem
-} from "instrument/window/terminal/terminal";
-
 import { IHistoryItem } from "instrument/window/history/item";
 import { createHistoryItem, updateHistoryItemClass } from "instrument/window/history/item-factory";
 
@@ -119,7 +113,7 @@ class HistoryCalendar {
 
             this.history.displayRows(rows);
 
-            moveToTopOfConnectionHistory();
+            this.history.appStore.moveToTopOfConnectionHistory();
         } else {
             this.showFirstHistoryItemAsSelectedDay = false;
 
@@ -143,7 +137,7 @@ class HistoryCalendar {
 
             this.history.displayRows(rows);
 
-            moveToBottomOfConnectionHistory();
+            this.history.appStore.moveToBottomOfConnectionHistory();
         }
     }
 
@@ -395,7 +389,7 @@ class HistorySearch {
             const historyItem = this.history.map.get(searchResult.logEntry.id);
             if (historyItem) {
                 historyItem.selected = true;
-                selectHistoryItem(historyItem);
+                this.history.appStore.showHistoryItem(historyItem);
             } else {
                 console.warn("History item not found", searchResult);
             }
@@ -617,7 +611,7 @@ class HistorySessions {
 
             this.history.displayRows(rows);
 
-            moveToTopOfConnectionHistory();
+            this.history.appStore.moveToTopOfConnectionHistory();
         }
     }
 
@@ -687,6 +681,7 @@ export class History {
     filterStats: FilterStats = new FilterStats(this);
 
     reactionTimeout: any;
+    reactionDisposer: any;
 
     constructor(public appStore: AppStore, public isDeletedItemsHistory: boolean = false) {
         scheduleTask(
@@ -751,7 +746,7 @@ export class History {
             );
         }
 
-        reaction(
+        this.reactionDisposer = reaction(
             () => this.getFilter(),
             filter => {
                 if (this.reactionTimeout) {
@@ -765,6 +760,10 @@ export class History {
                 }, 10);
             }
         );
+    }
+
+    onTerminate() {
+        this.reactionDisposer();
     }
 
     findHistoryItemById(id: string) {
@@ -946,7 +945,7 @@ export class History {
                 this.addActivityLogEntryToBlocks(activityLogEntry);
             }
             // ... and scroll to the bottom of history list.
-            moveToBottomOfConnectionHistory();
+            this.appStore.moveToBottomOfConnectionHistory();
         }
     }
 

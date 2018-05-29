@@ -497,7 +497,10 @@ class DndPage extends React.Component<PageProps, {}> {
                 ) {
                     // double click
                     if (this.props.page.selectedObjects.length === 1) {
-                        this.props.page.selectedObjects[0].open();
+                        const object = this.props.page.selectedObjects[0];
+                        if (object.isEditable) {
+                            object.openEditor!("default");
+                        }
                     } else if (this.props.page.selectedObjects.length === 0) {
                         this.transform.scale = 1;
                         this.transform.translate = {

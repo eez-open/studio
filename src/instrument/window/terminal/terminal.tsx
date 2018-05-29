@@ -240,23 +240,23 @@ class Input extends React.Component<
 
 @observer
 export class Terminal extends React.Component<{ appStore: AppStore }, {}> {
-    static history: HistoryListComponent | null;
+    history: HistoryListComponent | null;
 
-    static moveToTopOfConnectionHistory() {
-        if (Terminal.history) {
-            Terminal.history.moveToTop();
+    moveToTopOfConnectionHistory() {
+        if (this.history) {
+            this.history.moveToTop();
         }
     }
 
-    static moveToBottomOfConnectionHistory() {
-        if (Terminal.history) {
-            Terminal.history.moveToBottom();
+    moveToBottomOfConnectionHistory() {
+        if (this.history) {
+            this.history.moveToBottom();
         }
     }
 
-    static selectHistoryItem(historyItem: IHistoryItem) {
-        if (Terminal.history) {
-            Terminal.history.selectHistoryItem(historyItem);
+    showHistoryItem(historyItem: IHistoryItem) {
+        if (this.history) {
+            this.history.showHistoryItem(historyItem);
         }
     }
 
@@ -266,6 +266,14 @@ export class Terminal extends React.Component<{ appStore: AppStore }, {}> {
 
     onSelectHistoryItemsCancel() {
         this.props.appStore.selectHistoryItems(undefined);
+    }
+
+    componentDidMount() {
+        this.props.appStore.terminal = this;
+    }
+
+    componentWillUnmount() {
+        this.props.appStore.terminal = null;
     }
 
     render() {
@@ -345,7 +353,7 @@ export class Terminal extends React.Component<{ appStore: AppStore }, {}> {
                                 <div className="EezStudio_History_Body">
                                     <HistoryListComponent
                                         appStore={this.props.appStore}
-                                        ref={ref => (Terminal.history = ref)}
+                                        ref={ref => (this.history = ref)}
                                         history={this.props.appStore.history}
                                     />
                                 </div>
@@ -388,16 +396,4 @@ export function render(appStore: AppStore) {
 
 export function renderToolbarButtons(appStore: AppStore) {
     return <TerminalToolbarButtons appStore={appStore} />;
-}
-
-export function moveToTopOfConnectionHistory() {
-    Terminal.moveToTopOfConnectionHistory();
-}
-
-export function moveToBottomOfConnectionHistory() {
-    Terminal.moveToBottomOfConnectionHistory();
-}
-
-export function selectHistoryItem(historyItem: IHistoryItem) {
-    Terminal.selectHistoryItem(historyItem);
 }

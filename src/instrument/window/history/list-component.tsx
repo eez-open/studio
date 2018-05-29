@@ -166,7 +166,7 @@ export class HistoryListComponent extends React.Component<{
     }
 
     @action
-    selectHistoryItem(historyItem: IHistoryItem) {
+    showHistoryItem(historyItem: IHistoryItem) {
         setTimeout(() => {
             const element = $(this.div).find(`.EezStudio_HistoryItem_${historyItem.id}`)[0];
             if (element) {

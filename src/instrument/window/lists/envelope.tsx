@@ -33,7 +33,6 @@ import { ButtonAction, DropdownButtonAction, DropdownItem } from "shared/ui/acti
 import { showGenericDialog } from "shared/ui/generic-dialog";
 
 import { AppStore } from "instrument/window/app-store";
-import { undoManager } from "instrument/window/undo";
 import { showSampledData } from "instrument/window/chart-view-options";
 
 import { BaseList, BaseListData, ListAxisModel } from "instrument/window/lists/store-renderer";
@@ -634,7 +633,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         ) {
             // join this point with previous point
             const removedPoint = this.values[index - 1];
-            undoManager.addCommand(
+            this.list.appStore.undoManager.addCommand(
                 "Edit envelope list",
                 this.list.appStore.instrumentListStore,
                 this.list,
@@ -658,7 +657,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         ) {
             // join this point with next point
             const removedPoint = this.values[index + 1];
-            undoManager.addCommand(
+            this.list.appStore.undoManager.addCommand(
                 "Edit envelope list",
                 this.list.appStore.instrumentListStore,
                 this.list,
@@ -683,7 +682,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             // remove previous point and join this point with one before previous point
             const removedPoint1 = this.values[index - 2];
             const removedPoint2 = this.values[index - 1];
-            undoManager.addCommand(
+            this.list.appStore.undoManager.addCommand(
                 "Edit envelope list",
                 this.list.appStore.instrumentListStore,
                 this.list,
@@ -708,7 +707,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             // remove next point and join this point with one after next point
             const removedPoint1 = this.values[index + 1];
             const removedPoint2 = this.values[index + 2];
-            undoManager.addCommand(
+            this.list.appStore.undoManager.addCommand(
                 "Edit envelope list",
                 this.list.appStore.instrumentListStore,
                 this.list,
@@ -728,7 +727,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         } else if (index - 2 >= 0 && this.values[index - 2].time === newTime) {
             // remove previous point
             const removedPoint = this.values[index - 1];
-            undoManager.addCommand(
+            this.list.appStore.undoManager.addCommand(
                 "Edit envelope list",
                 this.list.appStore.instrumentListStore,
                 this.list,
@@ -748,7 +747,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         } else if (index + 2 < this.values.length && this.values[index + 2].time === newTime) {
             // remove next point
             const removedPoint = this.values[index + 1];
-            undoManager.addCommand(
+            this.list.appStore.undoManager.addCommand(
                 "Edit envelope list",
                 this.list.appStore.instrumentListStore,
                 this.list,
@@ -767,7 +766,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             );
         } else {
             // just change this point
-            undoManager.addCommand(
+            this.list.appStore.undoManager.addCommand(
                 "Edit envelope list",
                 this.list.appStore.instrumentListStore,
                 this.list,
@@ -830,7 +829,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
 
                     const value = values[this.valueIndex];
 
-                    undoManager.addCommand(
+                    this.list.appStore.undoManager.addCommand(
                         "Edit envelope list",
                         this.list.appStore.instrumentListStore,
                         this.list,
@@ -1021,7 +1020,7 @@ export class EnvelopeLineController extends LineController {
         if (valueIndex - 2 >= 0 && this.values[valueIndex - 2].time === value.time) {
             --valueIndex;
             const oldValue = this.values[valueIndex];
-            undoManager.addCommand(
+            this.list.appStore.undoManager.addCommand(
                 "Edit envelope list",
                 this.list.appStore.instrumentListStore,
                 this.list,
@@ -1035,7 +1034,7 @@ export class EnvelopeLineController extends LineController {
                 }
             );
         } else {
-            undoManager.addCommand(
+            this.list.appStore.undoManager.addCommand(
                 "Edit envelope list",
                 this.list.appStore.instrumentListStore,
                 this.list,
@@ -1355,7 +1354,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                     oldDuration !== newDuration ||
                     oldNumSamples !== newNumSamples
                 ) {
-                    undoManager.addCommand(
+                    this.list.appStore.undoManager.addCommand(
                         "Edit envelope list",
                         this.list.appStore.instrumentListStore,
                         list,
@@ -1397,7 +1396,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
             const newCurrent = objectClone(defaultEnvelopeListData.current);
             newCurrent[1].time = this.list.data.duration;
 
-            undoManager.addCommand(
+            this.list.appStore.undoManager.addCommand(
                 "Edit envelope list",
                 this.list.appStore.instrumentListStore,
                 this.list,
@@ -1432,7 +1431,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
             const newVoltage = defaultEnvelopeListData.voltage.slice();
             newVoltage[1].time = this.list.data.duration;
 
-            undoManager.addCommand(
+            this.list.appStore.undoManager.addCommand(
                 "Edit envelope list",
                 this.list.appStore.instrumentListStore,
                 this.list,
@@ -1465,7 +1464,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
             const newCurrent = defaultEnvelopeListData.current.slice();
             newCurrent[1].time = this.list.data.duration;
 
-            undoManager.addCommand(
+            this.list.appStore.undoManager.addCommand(
                 "Edit envelope list",
                 this.list.appStore.instrumentListStore,
                 this.list,

@@ -14,15 +14,18 @@ import { InstrumentObject, instruments } from "instrument/instrument-object";
 
 import { App } from "instrument/window/app";
 import { NavigationStore } from "instrument/window/navigation-store";
-import { ScriptsModel } from "instrument/window/scripts";
+import { ScriptsModel, ScriptView } from "instrument/window/scripts";
 import * as ScriptModule from "instrument/window/script";
 import { ShortcutsStore, GroupsStore } from "instrument/window/shortcuts";
+import { UndoManager } from "instrument/window/undo";
 
 import { History, DeletedItemsHistory } from "instrument/window/history/history";
+import { IHistoryItem } from "instrument/window/history/item";
 
 import { Filters } from "instrument/window/search/filters";
 
-import { loadCommandsTree } from "instrument/window/terminal/commands-tree";
+import { Terminal } from "instrument/window/terminal/terminal";
+import { CommandsTree } from "instrument/window/terminal/commands-tree";
 
 import { createInstrumentListStore } from "instrument/window/lists/store";
 import { BaseList, createInstrumentLists } from "instrument/window/lists/store-renderer";
@@ -56,13 +59,24 @@ export class AppStore implements IEditor {
     shortcutsStore = new ShortcutsStore(this);
     groupsStore = new GroupsStore(this);
 
+    commandsTree = new CommandsTree();
+
     history = new History(this);
     deletedItemsHistory = new DeletedItemsHistory(this);
+
+    undoManager = new UndoManager();
 
     instrumentListStore: IStore;
     instrumentLists: ObservableMap<string, BaseList>;
 
-    editor: JSX.Element;
+    editor: JSX.Element | null = null;
+
+    terminal: Terminal | null = null;
+
+    scriptView: ScriptView | null = null;
+
+    autorunDisposer: any;
+    reactionDisposer: any;
 
     constructor(private instrumentId: string) {}
 
@@ -96,7 +110,7 @@ export class AppStore implements IEditor {
                     ) as any) || "calendar";
 
                 scheduleTask("Load commands tree", Priority.Low, () => {
-                    loadCommandsTree(this.instrument!.instrumentExtensionId);
+                    this.commandsTree.load(this.instrument!.instrumentExtensionId);
                 });
 
                 bindShortcuts(this.shortcutsStore.instrumentShortcuts, (shortcut: IShortcut) => {
@@ -109,7 +123,7 @@ export class AppStore implements IEditor {
                 // @todo
                 // this is autorun because instrument extension is loaded asynchronously,
                 // so getListsProperty would eventually become true
-                autorun(() => {
+                this.autorunDisposer = autorun(() => {
                     if (this.instrument!.listsProperty) {
                         this.instrumentListStore = createInstrumentListStore(this);
                         this.instrumentLists = createInstrumentLists(this);
@@ -118,26 +132,65 @@ export class AppStore implements IEditor {
             })
         );
 
-        reaction(
+        this.reactionDisposer = reaction(
             () => JSON.stringify(this.filters),
             filters => {
                 localStorage.setItem(`instrument/${this.instrument!.id}/window/filters`, filters);
             }
         );
 
-        this.editor = <App appStore={this} />;
+        EEZStudio.electron.ipcRenderer.on("beforeClose", this.onBeforeClose);
     }
 
     onActivate() {
+        EEZStudio.electron.ipcRenderer.on("undo", this.undoManager.undo);
+        EEZStudio.electron.ipcRenderer.on("redo", this.undoManager.redo);
+        EEZStudio.electron.ipcRenderer.on("save", this.onSave);
         EEZStudio.electron.ipcRenderer.on("delete", this.onDeleteShortcut);
     }
 
     onDeactivate() {
+        EEZStudio.electron.ipcRenderer.removeListener("undo", this.undoManager.undo);
+        EEZStudio.electron.ipcRenderer.removeListener("redo", this.undoManager.redo);
+        EEZStudio.electron.ipcRenderer.removeListener("save", this.onSave);
         EEZStudio.electron.ipcRenderer.removeListener("delete", this.onDeleteShortcut);
     }
 
     onTerminate() {
         console.error("TODO");
+        EEZStudio.electron.ipcRenderer.removeListener("beforeClose", this.onBeforeClose);
+        this.editor = null;
+        this.terminal = null;
+        this.scriptView = null;
+        if (this.autorunDisposer) {
+            this.autorunDisposer();
+        }
+        if (this.reactionDisposer) {
+            this.reactionDisposer();
+        }
+        this.undoManager.onTerminate();
+        this.history.onTerminate();
+    }
+
+    render() {
+        if (!this.editor) {
+            this.editor = <App appStore={this} />;
+        }
+        return this.editor;
+    }
+
+    @bind
+    onSave() {
+        if (this.undoManager.modified) {
+            this.undoManager.commit();
+        }
+    }
+
+    @bind
+    onBeforeClose() {
+        this.undoManager.confirmSave(() => {
+            EEZStudio.electron.ipcRenderer.send("readyToClose");
+        });
     }
 
     @bind
@@ -213,6 +266,24 @@ export class AppStore implements IEditor {
             this.selectedHistoryItems.set(id, true);
         } else {
             this.selectedHistoryItems.delete(id);
+        }
+    }
+
+    moveToTopOfConnectionHistory() {
+        if (this.terminal) {
+            this.terminal.moveToTopOfConnectionHistory();
+        }
+    }
+
+    moveToBottomOfConnectionHistory() {
+        if (this.terminal) {
+            this.terminal.moveToBottomOfConnectionHistory();
+        }
+    }
+
+    showHistoryItem(historyItem: IHistoryItem) {
+        if (this.terminal) {
+            this.terminal.showHistoryItem(historyItem);
         }
     }
 }

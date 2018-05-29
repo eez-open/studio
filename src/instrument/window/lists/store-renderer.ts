@@ -14,7 +14,6 @@ import {
 } from "shared/ui/chart";
 
 import { AppStore } from "instrument/window/app-store";
-import { undoManager } from "instrument/window/undo";
 
 import { ChartsDisplayOption } from "instrument/window/lists/charts-view-options";
 
@@ -152,7 +151,7 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesType(newType: IViewOptionsAxesLinesType) {
         const oldType = this.axesLines.type;
-        undoManager.addCommand(
+        this.list.appStore.undoManager.addCommand(
             `Edit ${this.list.type} list`,
             this.list.appStore.instrumentListStore,
             this.list,
@@ -169,7 +168,7 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesMajorSubdivisionHorizontal(newValue: number) {
         const oldValue = this.axesLines.majorSubdivision.horizontal;
-        undoManager.addCommand(
+        this.list.appStore.undoManager.addCommand(
             `Edit ${this.list.type} list`,
             this.list.appStore.instrumentListStore,
             this.list,
@@ -186,7 +185,7 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesMajorSubdivisionVertical(newValue: number) {
         const oldValue = this.axesLines.majorSubdivision.vertical;
-        undoManager.addCommand(
+        this.list.appStore.undoManager.addCommand(
             `Edit ${this.list.type} list`,
             this.list.appStore.instrumentListStore,
             this.list,
@@ -203,7 +202,7 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesMinorSubdivisionHorizontal(newValue: number) {
         const oldValue = this.axesLines.minorSubdivision.horizontal;
-        undoManager.addCommand(
+        this.list.appStore.undoManager.addCommand(
             `Edit ${this.list.type} list`,
             this.list.appStore.instrumentListStore,
             this.list,
@@ -220,7 +219,7 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesMinorSubdivisionVertical(newValue: number) {
         const oldValue = this.axesLines.minorSubdivision.vertical;
-        undoManager.addCommand(
+        this.list.appStore.undoManager.addCommand(
             `Edit ${this.list.type} list`,
             this.list.appStore.instrumentListStore,
             this.list,
@@ -237,7 +236,7 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesStepsX(newValue: number[]) {
         const oldValue = this.axesLines.steps.x;
-        undoManager.addCommand(
+        this.list.appStore.undoManager.addCommand(
             `Edit ${this.list.type} list`,
             this.list.appStore.instrumentListStore,
             this.list,
@@ -254,7 +253,7 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesStepsY(index: number, newValue: number[]): void {
         const oldValue = this.axesLines.steps.y[index];
-        undoManager.addCommand(
+        this.list.appStore.undoManager.addCommand(
             `Edit ${this.list.type} list`,
             this.list.appStore.instrumentListStore,
             this.list,
@@ -271,7 +270,7 @@ class ListViewOptions implements IViewOptions {
 
     setAxesLinesSnapToGrid(newValue: boolean): void {
         const oldValue = this.axesLines.snapToGrid;
-        undoManager.addCommand(
+        this.list.appStore.undoManager.addCommand(
             `Edit ${this.list.type} list`,
             this.list.appStore.instrumentListStore,
             this.list,
@@ -288,7 +287,7 @@ class ListViewOptions implements IViewOptions {
 
     setShowAxisLabels(newValue: boolean) {
         const oldValue = this.showAxisLabels;
-        undoManager.addCommand(
+        this.list.appStore.undoManager.addCommand(
             `Edit ${this.list.type} list`,
             this.list.appStore.instrumentListStore,
             this.list,
@@ -305,7 +304,7 @@ class ListViewOptions implements IViewOptions {
 
     setShowZoomButtons(newValue: boolean) {
         const oldValue = this.showZoomButtons;
-        undoManager.addCommand(
+        this.list.appStore.undoManager.addCommand(
             `Edit ${this.list.type} list`,
             this.list.appStore.instrumentListStore,
             this.list,

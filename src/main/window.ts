@@ -163,6 +163,16 @@ ipcMain.on("openWindow", function(event: any, params: any) {
     openWindow(params);
 });
 
+ipcMain.on("focusWindow", function(event: any, params: any) {
+    let win = findWindowByParams(params);
+    if (win) {
+        win.browserWindow.focus();
+        event.returnValue = true;
+    } else {
+        event.returnValue = false;
+    }
+});
+
 ipcMain.on("closeWindow", function(event: any, params: any) {
     closeWindow(params);
 });

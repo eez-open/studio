@@ -1,41 +1,56 @@
 import { observable, runInAction } from "mobx";
 
 import { loadCommands } from "instrument/import";
-import { commandsToTree, ScpiCommandTreeNode } from "instrument/commands-tree";
+import { commandsToTree, ScpiCommandTreeNode, ICommandSyntax } from "instrument/commands-tree";
 
 import { ICommandNode } from "instrument/window/terminal/commands-browser";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const commandsTree: ICommandNode = observable({
-    id: "",
-    label: "",
-    selected: false,
-    expanded: true,
-    children: []
-});
+class CommandNode implements ICommandNode {
+    @observable id: string = "";
+    @observable label: string = "";
+    @observable selected: boolean = false;
+    @observable expanded: boolean = true;
+    @observable children: CommandsTree[] = [];
+    @observable commandSyntax: ICommandSyntax | undefined = undefined;
+    @observable querySyntax: ICommandSyntax | undefined = undefined;
 
-function transform(nodes: ScpiCommandTreeNode[] | undefined): ICommandNode[] {
-    if (nodes) {
-        return nodes.map(node =>
-            observable({
-                id: node.mnemonic,
-                label: node.mnemonic,
-                selected: false,
-                expanded: false,
-                children: transform(node.nodes),
-                commandSyntax: node.command && node.command.commandSyntax,
-                querySyntax: node.command && node.command.querySyntax
-            })
-        );
-    } else {
-        return [];
+    constructor(props: any) {
+        Object.assign(this, props);
     }
 }
 
-export async function loadCommandsTree(extensionId: string) {
-    let commands = await loadCommands(extensionId);
-    runInAction(() => {
-        commandsTree.children = transform(commandsToTree(commands).nodes);
-    });
+export class CommandsTree {
+    @observable id: string = "";
+    @observable label: string = "";
+    @observable selected: boolean = false;
+    @observable expanded: boolean = true;
+    @observable children: ICommandNode[] = [];
+
+    transform(nodes: ScpiCommandTreeNode[] | undefined): ICommandNode[] {
+        if (nodes) {
+            return nodes.map(
+                node =>
+                    new CommandNode({
+                        id: node.mnemonic,
+                        label: node.mnemonic,
+                        selected: false,
+                        expanded: false,
+                        children: this.transform(node.nodes),
+                        commandSyntax: node.command && node.command.commandSyntax,
+                        querySyntax: node.command && node.command.querySyntax
+                    })
+            );
+        } else {
+            return [];
+        }
+    }
+
+    async load(extensionId: string) {
+        let commands = await loadCommands(extensionId);
+        runInAction(() => {
+            this.children = this.transform(commandsToTree(commands).nodes);
+        });
+    }
 }

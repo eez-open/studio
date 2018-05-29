@@ -230,7 +230,7 @@ class Page implements IPage {
 
     get selectionResizable() {
         for (let i = 0; i < this.selectedObjects.length; ++i) {
-            if (!this.selectedObjects[i].resizable) {
+            if (!this.selectedObjects[i].isResizable) {
                 return false;
             }
         }

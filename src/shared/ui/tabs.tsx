@@ -3,6 +3,8 @@ import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
+const { Menu, MenuItem } = EEZStudio.electron.remote;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface ITab {
@@ -12,10 +14,11 @@ export interface ITab {
     title: string | JSX.Element;
     makeActive(): void;
     makePermanent?(): void;
+    openInWindow?(): void;
     close?(): void;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////// ///////////////////////////////////////////////
 
 @observer
 class TabView extends React.Component<
@@ -41,8 +44,44 @@ class TabView extends React.Component<
     }
 
     @bind
+    onMouseUp(e: React.MouseEvent<HTMLElement>) {
+        if (e.button === 1) {
+            if (this.props.tab.close) {
+                this.props.tab.close();
+            }
+        }
+    }
+
+    @bind
     onClick() {
         this.props.tab.makeActive();
+    }
+
+    @bind
+    onContextMenu() {
+        const menu = new Menu();
+
+        if (this.props.tab.openInWindow) {
+            menu.append(
+                new MenuItem({
+                    label: "Open in Window",
+                    click: () => this.props.tab.openInWindow!()
+                })
+            );
+        }
+
+        if (this.props.tab.close) {
+            menu.append(
+                new MenuItem({
+                    label: "Close",
+                    click: () => this.props.tab.close!()
+                })
+            );
+        }
+
+        if (menu.items.length > 0) {
+            menu.popup({});
+        }
     }
 
     @bind
@@ -69,7 +108,7 @@ class TabView extends React.Component<
         let closeIcon: JSX.Element | undefined;
         if (this.props.tab.close) {
             closeIcon = (
-                <i className="close material-icons" onClick={this.onClose}>
+                <i className="close material-icons" onClick={this.onClose} title="Close tab">
                     close
                 </i>
             );
@@ -86,7 +125,9 @@ class TabView extends React.Component<
             <div
                 ref={ref => (this.div = ref!)}
                 className={className}
+                onMouseUp={this.onMouseUp}
                 onClick={this.onClick}
+                onContextMenu={this.onContextMenu}
                 onDoubleClick={this.onDoubleClick}
             >
                 <div>

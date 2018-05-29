@@ -33,7 +33,6 @@ import { Toolbar } from "shared/ui/toolbar";
 import { ButtonAction, DropdownButtonAction, DropdownItem } from "shared/ui/action";
 import { showGenericDialog } from "shared/ui/generic-dialog";
 
-import { undoManager } from "instrument/window/undo";
 import { AppStore } from "instrument/window/app-store";
 
 import { BaseList, BaseListData, ListAxisModel } from "instrument/window/lists/store-renderer";
@@ -272,14 +271,19 @@ function executeCommand(list: TableList, modificator: (data: TableListData) => v
         modificator(newData);
     });
 
-    undoManager.addCommand("Edit table list", list.appStore.instrumentListStore, list, {
-        execute: action(() => {
-            list.data.applyChanges(newData);
-        }),
-        undo: action(() => {
-            list.data.applyChanges(oldData);
-        })
-    });
+    list.appStore.undoManager.addCommand(
+        "Edit table list",
+        list.appStore.instrumentListStore,
+        list,
+        {
+            execute: action(() => {
+                list.data.applyChanges(newData);
+            }),
+            undo: action(() => {
+                list.data.applyChanges(oldData);
+            })
+        }
+    );
 }
 
 function cellKeyFromUnit(unit: IUnit): CellKey {
@@ -332,7 +336,7 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
                 const newDescription = result.values.description;
 
                 if (oldName !== newName || oldDescription !== newDescription) {
-                    undoManager.addCommand(
+                    list.appStore.undoManager.addCommand(
                         "Edit envelope list",
                         this.list.appStore.instrumentListStore,
                         list,

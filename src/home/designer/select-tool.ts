@@ -33,6 +33,36 @@ export const selectToolHandler: IToolHandler = {
             if (canvas.selectedObjects.length > 0) {
                 const menu = new Menu();
 
+                if (canvas.selectedObjects.length === 1) {
+                    const object = canvas.selectedObjects[0];
+
+                    if (object.isEditable) {
+                        menu.append(
+                            new MenuItem({
+                                label: "Open in Tab",
+                                click: () => {
+                                    object.openEditor!("tab");
+                                }
+                            })
+                        );
+
+                        menu.append(
+                            new MenuItem({
+                                label: "Open in Window",
+                                click: () => {
+                                    object.openEditor!("window");
+                                }
+                            })
+                        );
+
+                        menu.append(
+                            new MenuItem({
+                                type: "separator"
+                            })
+                        );
+                    }
+                }
+
                 menu.append(
                     new MenuItem({
                         label: "Delete",
