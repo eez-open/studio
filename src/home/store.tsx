@@ -1,5 +1,5 @@
 import * as React from "react";
-import { observable, computed, action, runInAction } from "mobx";
+import { observable, computed, action, runInAction, reaction } from "mobx";
 
 import { isRenderer } from "shared/util";
 import {
@@ -12,7 +12,7 @@ import {
 import { Rect } from "shared/geometry";
 import { IActivityLogEntry } from "shared/activity-log";
 
-import { getObject } from "shared/extensions/extensions";
+import { getObject, loadPreinstalledExtension } from "shared/extensions/extensions";
 import { IObject, IEditor, IActivityLogEntryInfo } from "shared/extensions/extension";
 
 import { IBaseObject } from "shared/model/base-object";
@@ -112,7 +112,7 @@ export class WorkbenchObject {
         }
 
         if (target === "tab") {
-            const tab = tabs.findObjectTab(this.type, this.implementation.id);
+            const tab = tabs.findObjectTab(this.id);
             if (tab) {
                 // tab already exists
                 tabs.makeActive(tab);
@@ -121,11 +121,12 @@ export class WorkbenchObject {
                 EEZStudio.electron.ipcRenderer.send("closeWindow", this.getEditorWindowArgs());
 
                 // open tab
-                tabs.addObjectTab(this.type, this.implementation, this.getEditor());
+                const tab = tabs.addObjectTab(this);
+                tab.makeActive();
             }
         } else {
             // close tab if open
-            const tab = tabs.findObjectTab(this.type, this.implementation.id);
+            const tab = tabs.findObjectTab(this.id);
             if (tab) {
                 tabs.removeTab(tab);
             }
@@ -269,14 +270,12 @@ class HomeTab implements IHomeTab {
 }
 
 class ObjectEditorTab implements IHomeTab {
-    constructor(
-        public tabs: Tabs,
-        public objectType: string,
-        public object: IObject,
-        public objectEditor: IEditor
-    ) {
+    constructor(public tabs: Tabs, public object: WorkbenchObject) {
+        this.objectEditor = this.object.getEditor();
         this.objectEditor.onCreate();
     }
+
+    objectEditor: IEditor;
 
     permanent: boolean = true;
     @observable _active: boolean = false;
@@ -324,22 +323,62 @@ class ObjectEditorTab implements IHomeTab {
     }
 }
 
+interface ISavedTab {
+    id: string;
+    active: boolean;
+}
+
 class Tabs {
     @observable tabs: IHomeTab[] = [new HomeTab(this)];
     @observable activeTab: IHomeTab;
 
     constructor() {
         this.tabs[0].makeActive();
+
+        loadPreinstalledExtension("instrument").then(() => {
+            const tabsJSON = window.localStorage.getItem("home/tabs");
+            if (tabsJSON) {
+                try {
+                    const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
+
+                    savedTabs.forEach(savedTab => {
+                        if (savedTab.id === this.tabs[0].id) {
+                            if (savedTab.active) {
+                                this.tabs[0].makeActive();
+                            }
+                        } else {
+                            const object = workbenchObjects.get(savedTab.id);
+                            if (object) {
+                                const tab = this.addObjectTab(object);
+                                if (savedTab.active) {
+                                    tab.makeActive();
+                                }
+                            }
+                        }
+                    });
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        });
+
+        reaction(
+            () =>
+                this.tabs.map(
+                    tab =>
+                        ({
+                            id: tab.id,
+                            active: tab.active
+                        } as ISavedTab)
+                ),
+            tabs => window.localStorage.setItem("home/tabs", JSON.stringify(tabs))
+        );
     }
 
-    findObjectTab(objectType: string, objectId: string) {
+    findObjectTab(id: string) {
         for (let tabIndex = 0; tabIndex < this.tabs.length; ++tabIndex) {
             const tab = this.tabs[tabIndex];
-            if (
-                tab instanceof ObjectEditorTab &&
-                tab.objectType === objectType &&
-                tab.id === objectId
-            ) {
+            if (tab instanceof ObjectEditorTab && tab.id === id) {
                 return tab;
             }
         }
@@ -347,17 +386,16 @@ class Tabs {
     }
 
     @action
-    addObjectTab(objectType: string, object: IObject, editor: IEditor) {
+    addObjectTab(object: WorkbenchObject) {
         for (let tabIndex = 0; tabIndex < this.tabs.length; ++tabIndex) {
             if (this.tabs[tabIndex].id === object.id) {
-                this.makeActive(this.tabs[tabIndex]);
-                return;
+                return this.tabs[tabIndex];
             }
         }
 
-        const tab = new ObjectEditorTab(this, objectType, object, editor);
+        const tab = new ObjectEditorTab(this, object);
         this.tabs.push(tab);
-        this.makeActive(tab);
+        return tab;
     }
 
     @action
@@ -388,7 +426,11 @@ class Tabs {
     }
 }
 
-export const tabs = new Tabs();
+export let tabs: Tabs;
+
+if (isRenderer()) {
+    tabs = new Tabs();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
