@@ -414,12 +414,6 @@ export class ListWidgetProperties extends WidgetProperties {
 }
 
 export class SelectWidgetProperties extends WidgetProperties {
-    @observable
-    set x(x: number) {
-        console.log(1);
-        this.x = x;
-    }
-
     @observable widgets: WidgetProperties[];
 
     check() {
@@ -427,6 +421,39 @@ export class SelectWidgetProperties extends WidgetProperties {
 
         if (!this.data) {
             messages.push(output.propertyNotSetMessage(this, "data"));
+        } else {
+            let dataItem = data.findDataItem(this.data);
+            if (dataItem) {
+                let enumItems: string[] = [];
+
+                if (dataItem.type == "enum") {
+                    try {
+                        enumItems = JSON.parse(dataItem.enumItems);
+                    } catch (err) {
+                        enumItems = [];
+                    }
+                } else if (dataItem.type == "boolean") {
+                    enumItems = ["0", "1"];
+                }
+
+                if (enumItems.length > this.widgets.length) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Some select children are missing",
+                            this
+                        )
+                    );
+                } else if (enumItems.length < this.widgets.length) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Too many select children defined",
+                            this
+                        )
+                    );
+                }
+            }
         }
 
         return super.check().concat(messages);
