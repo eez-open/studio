@@ -441,6 +441,10 @@ export function doLayout(container?: HTMLElement, reinitialize?: boolean) {
     for (let i = 0; i < children.length; ++i) {
         let el = children[i] as HTMLElement;
 
+        if (!el.className || !el.className.indexOf) {
+            continue;
+        }
+
         if (el.className.indexOf("layoutSplitHorizontal") != -1) {
             if (!container.getAttribute("data-splitter-initialized") || reinitialize) {
                 initSplitHorizontally(container);
@@ -535,6 +539,7 @@ export function enable() {
                 if (
                     mutations[i].target &&
                     mutations[i].target.className &&
+                    mutations[i].target.className.toLowerCase &&
                     mutations[i].target.className.toLowerCase().indexOf("layout") !== -1
                 ) {
                     dl = true;
