@@ -57,13 +57,13 @@ export class NavigationStore {
             renderContent: () => {
                 const {
                     render
-                } = require("instrument/window/terminal/deleted-history-items") as typeof DeletedHistoryItemsModule;
+                } = require("instrument/window/history/deleted-history-items-section") as typeof DeletedHistoryItemsModule;
                 return render(this.appStore);
             },
             renderToolbarButtons: () => {
                 const {
                     renderToolbarButtons
-                } = require("instrument/window/terminal/deleted-history-items") as typeof DeletedHistoryItemsModule;
+                } = require("instrument/window/history/deleted-history-items-section") as typeof DeletedHistoryItemsModule;
                 return renderToolbarButtons(this.appStore);
             }
         };
