@@ -105,12 +105,18 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
         let navigationObjectAdapter = NavigationStore.getNavigationSelectedItemAsObjectAdapter(
             this.props.navigationObject
         );
+
         if (!navigationObjectAdapter) {
-            navigationObjectAdapter = new TreeObjectAdapter(this.props.navigationObject);
-            NavigationStore.setNavigationSelectedItem(
-                this.props.navigationObject,
-                navigationObjectAdapter
-            );
+            const newNavigationObjectAdapter = new TreeObjectAdapter(this.props.navigationObject);
+
+            setTimeout(() => {
+                NavigationStore.setNavigationSelectedItem(
+                    this.props.navigationObject,
+                    newNavigationObjectAdapter
+                );
+            }, 0);
+
+            navigationObjectAdapter = newNavigationObjectAdapter;
         }
 
         let objectAdapter = navigationObjectAdapter.getObjectAdapter(this.props.navigationObject);
