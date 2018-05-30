@@ -1060,8 +1060,10 @@ export class DeletedItemsHistory extends History {
         op: StoreOperation,
         options: IStoreOperationOptions
     ) {
-        this.removeActivityLogEntryFromBlocks(activityLogEntry);
-        --this.deletedCount;
+        if (op === "restore") {
+            this.removeActivityLogEntryFromBlocks(activityLogEntry);
+            --this.deletedCount;
+        }
     }
 
     @action
