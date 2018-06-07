@@ -192,9 +192,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                 dropPosition = DropPosition.DROP_BEFORE;
             } else {
                 if (isArray(this.props.item)) {
-                    if (
-                        this.props.item.$eez.metaData == DragAndDropManager.dragObject.$eez.metaData
-                    ) {
+                    if (isSameInstanceTypeAs(this.props.item, DragAndDropManager.dragObject)) {
                         dropPosition = DropPosition.DROP_INSIDE;
                     }
                 } else {

@@ -1,8 +1,8 @@
-import { ICanvas, IToolHandler, MouseHandler } from "shared/ui/designer";
-import { Point, Rect, pointInRect } from "shared/geometry";
 import { closestByClass } from "shared/util";
-import { rectEqual } from "shared/geometry";
-import { beginTransaction, commitTransaction } from "shared/store";
+import { Point, Rect, pointInRect, rectEqual } from "shared/geometry";
+
+import { IDocument, IToolHandler } from "shared/ui/designer/designer-interfaces";
+import { MouseHandler } from "shared/ui/designer/mouse-handler";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -13,61 +13,38 @@ const { Menu, MenuItem } = EEZStudio.electron.remote;
 // - resize selection
 
 export const selectToolHandler: IToolHandler = {
-    onClick(canvas: ICanvas, point: Point) {},
+    onClick(document: IDocument, point: Point) {},
 
-    onContextMenu(canvas: ICanvas, point: Point, showContextMenu: (menu: Electron.Menu) => void) {
+    onContextMenu(
+        document: IDocument,
+        point: Point,
+        showContextMenu: (menu: Electron.Menu) => void
+    ) {
         if (
-            canvas.selectedObjects.length === 0 ||
-            !pointInRect(point, canvas.selectedObjectsBoundingRect as Rect)
+            document.selectedObjects.length === 0 ||
+            !pointInRect(point, document.selectedObjectsBoundingRect as Rect)
         ) {
-            let object = canvas.objectFromPoint(point);
-            if (object) {
-                canvas.selectObject(object);
-            } else {
-                canvas.deselectAllObjects();
+            document.deselectAllObjects();
+
+            let object = document.objectFromPoint(point);
+            if (!object) {
                 return;
             }
+
+            document.selectObject(object);
         }
 
         setTimeout(() => {
-            if (canvas.selectedObjects.length > 0) {
+            if (document.selectedObjects.length > 0) {
                 const menu = new Menu();
 
-                if (canvas.selectedObjects.length === 1) {
-                    const object = canvas.selectedObjects[0];
-
-                    if (object.isEditable) {
-                        menu.append(
-                            new MenuItem({
-                                label: "Open in Tab",
-                                click: () => {
-                                    object.openEditor!("tab");
-                                }
-                            })
-                        );
-
-                        menu.append(
-                            new MenuItem({
-                                label: "Open in Window",
-                                click: () => {
-                                    object.openEditor!("window");
-                                }
-                            })
-                        );
-
-                        menu.append(
-                            new MenuItem({
-                                type: "separator"
-                            })
-                        );
-                    }
-                }
+                document.initContextMenu(menu);
 
                 menu.append(
                     new MenuItem({
                         label: "Delete",
                         click: () => {
-                            canvas.deleteSelectedObjects();
+                            document.deleteSelectedObjects();
                         }
                     })
                 );
@@ -82,20 +59,19 @@ export const selectToolHandler: IToolHandler = {
     canDrag: false,
     drop() {},
 
-    createMouseHandler(canvas: ICanvas, event: MouseEvent) {
-        if (closestByClass(event.target, "EezStudio_Selection_Handle")) {
+    createMouseHandler(document: IDocument, event: MouseEvent) {
+        if (closestByClass(event.target, "EezStudio_DesignerSelection_Handle")) {
             return new ResizeMouseHandler();
         }
 
-        if (closestByClass(event.target, "EezStudio_Selection")) {
-            return new DragMouseHandler();
-        }
-
-        let point = canvas.mouseEventToModelPoint(event);
-        let object = canvas.objectFromPoint(point);
+        let point = document.transform.mouseEventToModelPoint(event);
+        let object = document.objectFromPoint(point);
         if (object) {
             if (!object.selected) {
-                canvas.selectObject(object);
+                if (!event.ctrlKey && !event.shiftKey) {
+                    document.deselectAllObjects();
+                }
+                document.selectObject(object);
             }
             return new DragMouseHandler();
         }
@@ -105,13 +81,13 @@ export const selectToolHandler: IToolHandler = {
 };
 
 class RubberBandSelectionMouseHandler extends MouseHandler {
-    down(canvas: ICanvas, event: MouseEvent) {
-        super.down(canvas, event);
-        canvas.deselectAllObjects();
+    down(document: IDocument, event: MouseEvent) {
+        super.down(document, event);
+        document.deselectAllObjects();
     }
 
-    move(canvas: ICanvas, event: MouseEvent) {
-        super.move(canvas, event);
+    move(document: IDocument, event: MouseEvent) {
+        super.move(document, event);
 
         let left;
         let top;
@@ -141,75 +117,50 @@ class RubberBandSelectionMouseHandler extends MouseHandler {
             height: height
         };
 
-        canvas.setRubberBendRect(rubberBendRect);
+        document.rubberBendRect = rubberBendRect;
 
-        canvas.selectObjectsInsideRect(canvas.offsetToModelRect(rubberBendRect));
+        document.selectObjectsInsideRect(document.transform.offsetToModelRect(rubberBendRect));
     }
 
-    up(canvas: ICanvas, event?: MouseEvent) {
-        super.up(canvas, event);
+    up(document: IDocument, event?: MouseEvent) {
+        super.up(document, event);
 
-        canvas.setRubberBendRect(undefined);
+        document.rubberBendRect = undefined;
     }
 }
 
 class DragMouseHandler extends MouseHandler {
-    rects: {
-        leftStart: number;
-        topStart: number;
-        left: number;
-        top: number;
-        width: number;
-        height: number;
-    }[] = [];
     changed: boolean;
 
-    down(canvas: ICanvas, event: MouseEvent) {
-        super.down(canvas, event);
-        canvas.hideSelection();
+    down(document: IDocument, event: MouseEvent) {
+        super.down(document, event);
+        document.onDragStart("move");
     }
 
-    move(canvas: ICanvas, event: MouseEvent) {
-        super.move(canvas, event);
+    move(document: IDocument, event: MouseEvent) {
+        super.move(document, event);
 
-        let objects = canvas.selectedObjects;
+        let objects = document.selectedObjects;
         for (let i = 0; i < objects.length; ++i) {
             let object = objects[i];
 
             let rect = {
-                left: object.rect.left + this.movement.x / canvas.getScale(),
-                top: object.rect.top + this.movement.y / canvas.getScale(),
+                left: object.rect.left + this.movement.x / document.transform.scale,
+                top: object.rect.top + this.movement.y / document.transform.scale,
                 width: object.rect.width,
                 height: object.rect.height
             };
 
             if (!rectEqual(rect, object.rect)) {
                 this.changed = true;
-                object.setRect(rect);
+                object.rect = rect;
             }
         }
     }
 
-    up(canvas: ICanvas, event?: MouseEvent) {
-        super.up(canvas, event);
-
-        if (this.changed) {
-            let objects = canvas.selectedObjects;
-
-            if (objects.length > 0) {
-                beginTransaction("Move workbench items");
-            } else {
-                beginTransaction("Move workbench item");
-            }
-
-            for (let i = 0; i < objects.length; ++i) {
-                objects[i].saveRect();
-            }
-
-            commitTransaction();
-        }
-
-        canvas.showSelection();
+    up(document: IDocument, event?: MouseEvent) {
+        super.up(document, event);
+        document.onDragEnd("move", this.changed);
     }
 }
 
@@ -235,9 +186,10 @@ class ResizeMouseHandler extends MouseHandler {
 
     changed: boolean;
 
-    down(canvas: ICanvas, event: MouseEvent) {
-        super.down(canvas, event);
-        canvas.hideSelection();
+    down(document: IDocument, event: MouseEvent) {
+        super.down(document, event);
+
+        document.onDragStart("resize");
 
         let className = (event.target as HTMLElement).className;
         if (className.indexOf("Corner") !== -1) {
@@ -262,7 +214,7 @@ class ResizeMouseHandler extends MouseHandler {
             }
         }
 
-        this.savedBoundingRect = canvas.selectedObjectsBoundingRect!;
+        this.savedBoundingRect = document.selectedObjectsBoundingRect!;
         this.boundingRect = {
             left: this.savedBoundingRect.left,
             top: this.savedBoundingRect.top,
@@ -272,7 +224,7 @@ class ResizeMouseHandler extends MouseHandler {
 
         this.savedRects = [];
         this.rects = [];
-        let objects = canvas.selectedObjects;
+        let objects = document.selectedObjects;
         for (let i = 0; i < objects.length; ++i) {
             let rect = objects[i].rect;
 
@@ -292,41 +244,43 @@ class ResizeMouseHandler extends MouseHandler {
         }
     }
 
-    moveTop(canvas: ICanvas, savedRect: Rect, rect: Rect) {
+    moveTop(document: IDocument, savedRect: Rect, rect: Rect) {
         let bottom = rect.top + rect.height;
-        rect.top = savedRect.top + this.offsetDistance.y / canvas.getScale();
+        rect.top = savedRect.top + this.offsetDistance.y / document.transform.scale;
         if (rect.top >= bottom) {
             rect.top = bottom - 1;
         }
         rect.height = bottom - rect.top;
     }
 
-    moveLeft(canvas: ICanvas, savedRect: Rect, rect: Rect) {
+    moveLeft(document: IDocument, savedRect: Rect, rect: Rect) {
         let right = rect.left + rect.width;
-        rect.left = savedRect.left + this.offsetDistance.x / canvas.getScale();
+        rect.left = savedRect.left + this.offsetDistance.x / document.transform.scale;
         if (rect.left >= right) {
             rect.left = right - 1;
         }
         rect.width = right - rect.left;
     }
 
-    moveBottom(canvas: ICanvas, savedRect: Rect, rect: Rect) {
-        let bottom = savedRect.top + savedRect.height + this.offsetDistance.y / canvas.getScale();
+    moveBottom(document: IDocument, savedRect: Rect, rect: Rect) {
+        let bottom =
+            savedRect.top + savedRect.height + this.offsetDistance.y / document.transform.scale;
         if (bottom <= rect.top) {
             bottom = rect.top + 1;
         }
         rect.height = bottom - rect.top;
     }
 
-    moveRight(canvas: ICanvas, savedRect: Rect, rect: Rect) {
-        let right = savedRect.left + savedRect.width + this.offsetDistance.x / canvas.getScale();
+    moveRight(document: IDocument, savedRect: Rect, rect: Rect) {
+        let right =
+            savedRect.left + savedRect.width + this.offsetDistance.x / document.transform.scale;
         if (right <= rect.left) {
             right = rect.left + 1;
         }
         rect.width = right - rect.left;
     }
 
-    fixAspectRatio(savedRect: Rect, rect: Rect, top: boolean, left: boolean) {
+    maintainSameAspectRatio(savedRect: Rect, rect: Rect, top: boolean, left: boolean) {
         let startAspectRatio = savedRect.width / savedRect.height;
 
         let width;
@@ -352,43 +306,43 @@ class ResizeMouseHandler extends MouseHandler {
         rect.height = height;
     }
 
-    resizeRect(canvas: ICanvas, savedRect: Rect, rect: Rect) {
+    resizeRect(document: IDocument, savedRect: Rect, rect: Rect) {
         if (this.handleType === HandleType.TopLeft) {
-            this.moveTop(canvas, savedRect, rect);
-            this.moveLeft(canvas, savedRect, rect);
-            this.fixAspectRatio(savedRect, rect, true, true);
+            this.moveTop(document, savedRect, rect);
+            this.moveLeft(document, savedRect, rect);
+            //this.maintainSameAspectRatio(savedRect, rect, true, true);
         } else if (this.handleType === HandleType.Top) {
-            this.moveTop(canvas, savedRect, rect);
+            this.moveTop(document, savedRect, rect);
         } else if (this.handleType === HandleType.TopRight) {
-            this.moveTop(canvas, savedRect, rect);
-            this.moveRight(canvas, savedRect, rect);
-            this.fixAspectRatio(savedRect, rect, true, false);
+            this.moveTop(document, savedRect, rect);
+            this.moveRight(document, savedRect, rect);
+            //this.maintainSameAspectRatio(savedRect, rect, true, false);
         } else if (this.handleType === HandleType.Left) {
-            this.moveLeft(canvas, savedRect, rect);
+            this.moveLeft(document, savedRect, rect);
         } else if (this.handleType === HandleType.Right) {
-            this.moveRight(canvas, savedRect, rect);
+            this.moveRight(document, savedRect, rect);
         } else if (this.handleType === HandleType.BottomLeft) {
-            this.moveBottom(canvas, savedRect, rect);
-            this.moveLeft(canvas, savedRect, rect);
-            this.fixAspectRatio(savedRect, rect, false, true);
+            this.moveBottom(document, savedRect, rect);
+            this.moveLeft(document, savedRect, rect);
+            //this.maintainSameAspectRatio(savedRect, rect, false, true);
         } else if (this.handleType === HandleType.Bottom) {
-            this.moveBottom(canvas, savedRect, rect);
+            this.moveBottom(document, savedRect, rect);
         } else {
-            this.moveBottom(canvas, savedRect, rect);
-            this.moveRight(canvas, savedRect, rect);
-            this.fixAspectRatio(savedRect, rect, false, false);
+            this.moveBottom(document, savedRect, rect);
+            this.moveRight(document, savedRect, rect);
+            //this.maintainSameAspectRatio(savedRect, rect, false, false);
         }
     }
 
-    move(canvas: ICanvas, event: MouseEvent) {
-        super.move(canvas, event);
+    move(document: IDocument, event: MouseEvent) {
+        super.move(document, event);
 
-        this.resizeRect(canvas, this.savedBoundingRect, this.boundingRect);
+        this.resizeRect(document, this.savedBoundingRect, this.boundingRect);
 
         let scaleWidth = this.boundingRect.width / this.savedBoundingRect.width;
         let scaleHeight = this.boundingRect.height / this.savedBoundingRect.height;
 
-        let objects = canvas.selectedObjects;
+        let objects = document.selectedObjects;
 
         for (let i = 0; i < this.rects.length; ++i) {
             let savedRect = this.savedRects[i];
@@ -404,30 +358,14 @@ class ResizeMouseHandler extends MouseHandler {
 
             if (!rectEqual(rect, objects[i].rect)) {
                 this.changed = true;
-                objects[i].setRect(rect);
+                objects[i].rect = rect;
             }
         }
     }
 
-    up(canvas: ICanvas, event?: MouseEvent) {
-        super.up(canvas, event);
+    up(document: IDocument, event?: MouseEvent) {
+        super.up(document, event);
 
-        if (this.changed) {
-            let objects = canvas.selectedObjects;
-
-            if (objects.length > 0) {
-                beginTransaction("Resize workbench items");
-            } else {
-                beginTransaction("Resize workbench item");
-            }
-
-            for (let i = 0; i < this.rects.length; ++i) {
-                objects[i].saveRect();
-            }
-
-            commitTransaction();
-        }
-
-        canvas.showSelection();
+        document.onDragEnd("resize", this.changed);
     }
 }

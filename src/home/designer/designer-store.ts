@@ -1,11 +1,31 @@
-import { observable, computed, action, values } from "mobx";
+import { observable, computed, action, runInAction, values, reaction } from "mobx";
+import { bind } from "bind-decorator";
 
-import { Rect, Point, BoundingRectBuilder, pointInRect, isRectInsideRect } from "shared/geometry";
+const { MenuItem } = EEZStudio.electron.remote;
+
+import {
+    Rect,
+    Point,
+    BoundingRectBuilder,
+    pointInRect,
+    isRectInsideRect,
+    Transform
+} from "shared/geometry";
 import { beginTransaction, commitTransaction } from "shared/store";
-import { IBaseObject } from "shared/model/base-object";
-import { ICanvas, ITool, IToolboxGroup, IToolbarButton } from "shared/ui/designer";
+import { humanize } from "shared/string";
+
 import { extensionsToolboxGroups, extensionsToolbarButtons } from "shared/extensions/extensions";
+
 import { BOUNCE_ENTRANCE_TRANSITION_DURATION } from "shared/ui/transitions";
+
+import {
+    IBaseObject,
+    IDocument,
+    ITool,
+    IToolboxGroup,
+    IToolbarButton
+} from "shared/ui/designer/designer-interfaces";
+import { selectToolHandler } from "shared/ui/designer/select-tool";
 
 import {
     store,
@@ -15,19 +35,28 @@ import {
     WorkbenchObject
 } from "home/store";
 
-import { Transform } from "home/designer/transform";
-import { selectToolHandler } from "home/designer/select-tool";
+////////////////////////////////////////////////////////////////////////////////
+
+export interface IWorkbenchObject extends IBaseObject {
+    oid: string;
+
+    content: JSX.Element | null;
+    details: JSX.Element | null;
+
+    setBoundingRect(rect: Rect): void;
+
+    isEditable: boolean;
+    openEditor?(target: "tab" | "window" | "default"): void;
+
+    saveRect(): void;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IDocument {}
+export interface IWorkbenchDocument extends IDocument {
+    objects: IWorkbenchObject[];
+    selectedObjects: IWorkbenchObject[];
 
-export type ITransform = Transform;
-
-export interface IPage extends ICanvas {
-    layers: ILayer[];
-    transform: ITransform;
-    selectionResizable: boolean;
     toolbarButtons: IToolbarButton[];
     toolboxGroups: IToolboxGroup[];
     rubberBendRect: Rect | undefined;
@@ -35,19 +64,54 @@ export interface IPage extends ICanvas {
     boundingRect: Rect | undefined;
 }
 
-export interface ILayer {
-    id: string;
-    objects: IBaseObject[];
-    selectedObjects: IBaseObject[];
-    page: IPage;
-    boundingRect: Rect | undefined;
-    selectObjectsInsideRect(rect: Rect): void;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
-class Layer {
-    constructor(public id: string, public page: IPage) {}
+class WorkbenchDocument implements IWorkbenchDocument {
+    @observable selectedTool: ITool | undefined;
+    @observable _rubberBendRect: Rect | undefined;
+    @observable _selectionVisible: boolean = true;
+    transform: Transform;
+
+    constructor() {
+        let translate: Point | undefined;
+        let scale: number | undefined;
+
+        let transformJson = window.localStorage.getItem("home/designer/transform");
+        if (transformJson) {
+            try {
+                let transformJs = JSON.parse(transformJson);
+                translate = transformJs.translate;
+                scale = transformJs.scale;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        if (translate === undefined || !scale) {
+            translate = { x: 0, y: 0 };
+            scale = 1;
+        }
+
+        this.transform = new Transform(translate, scale);
+
+        reaction(
+            () =>
+                JSON.stringify({
+                    translate: this.transform.translate,
+                    scale: this.transform.scale
+                }),
+            transformJson => window.localStorage.setItem("home/designer/transform", transformJson)
+        );
+    }
+
+    @action
+    resetTransform() {
+        this.transform.scale = 1;
+        this.transform.translate = {
+            x: 0,
+            y: 0
+        };
+    }
 
     @computed
     get objects() {
@@ -70,19 +134,27 @@ class Layer {
         return boundingRectBuilder.getRect();
     }
 
+    selectObject(object: IWorkbenchObject) {
+        runInAction(() => (object.selected = true));
+    }
+
     selectObjectsInsideRect(rect: Rect) {
         for (let i = 0; i < this.objects.length; ++i) {
             let object = this.objects[i];
-            action(() => (object.selected = isRectInsideRect(object.rect, rect)))();
+            runInAction(() => (object.selected = isRectInsideRect(object.rect, rect)));
         }
     }
-}
 
-////////////////////////////////////////////////////////////////////////////////
+    deleteSelectedObjects() {
+        if (this.selectedObjects.length > 0) {
+            beginTransaction("Delete workbench items");
+        } else {
+            beginTransaction("Delete workbench item");
+        }
 
-class Page implements IPage {
-    constructor() {
-        this.selectDefaultTool = this.selectDefaultTool.bind(this);
+        this.selectedObjects.forEach(object => deleteWorkbenchObject(object as WorkbenchObject));
+
+        commitTransaction();
     }
 
     @computed
@@ -94,8 +166,6 @@ class Page implements IPage {
     get toolbarButtons() {
         return extensionsToolbarButtons.get();
     }
-
-    @observable selectedTool: ITool | undefined;
 
     @computed
     get defaultTool() {
@@ -117,12 +187,13 @@ class Page implements IPage {
         }
     }
 
+    @bind
     selectDefaultTool() {
         this.selectTool(this.defaultTool);
     }
 
-    createObject(type: string, oid: string, rect: Rect) {
-        let objectId = store.createObject({ type, oid, rect });
+    createObject(params: any) {
+        let objectId = store.createObject(params);
         setTimeout(() => {
             let object = findWorkbenchObjectById(objectId);
             if (object) {
@@ -132,59 +203,24 @@ class Page implements IPage {
         this.selectDefaultTool();
     }
 
-    @observable rubberBendRect: Rect | undefined;
-
-    @action
-    setRubberBendRect(rect: Rect | undefined) {
-        this.rubberBendRect = rect;
+    get rubberBendRect() {
+        return this._rubberBendRect;
     }
 
-    get activeLayer() {
-        return this.layers[0];
+    set rubberBendRect(value: Rect | undefined) {
+        runInAction(() => (this._rubberBendRect = value));
     }
 
-    selectObjectsInsideRect(rect: Rect) {
-        this.activeLayer.selectObjectsInsideRect(rect);
+    get selectionVisible() {
+        return this._selectionVisible;
     }
 
-    @observable selectionVisible: boolean = true;
-
-    @action
-    showSelection() {
-        this.selectionVisible = true;
-    }
-
-    @action
-    hideSelection() {
-        this.selectionVisible = false;
-    }
-
-    get centerPoint() {
-        return this.transform.centerPoint;
-    }
-
-    @action
-    translateBy(translate: Point) {
-        this.transform.translate = {
-            x: this.transform.translate.x + translate.x,
-            y: this.transform.translate.y + translate.y
-        };
-    }
-
-    mouseEventToOffsetPoint(event: MouseEvent) {
-        return this.transform.mouseEventToOffsetPoint(event);
-    }
-
-    mouseEventToModelPoint(event: MouseEvent) {
-        return this.transform.mouseEventToModelPoint(event);
-    }
-
-    offsetToModelRect(rect: Rect) {
-        return this.transform.offsetToModelRect(rect);
+    set selectionVisible(value: boolean) {
+        runInAction(() => (this._selectionVisible = value));
     }
 
     objectFromPoint(point: Point) {
-        let objects = this.activeLayer.objects;
+        let objects = this.objects;
         for (let i = objects.length - 1; i >= 0; --i) {
             let object = objects[i];
             if (pointInRect(point, object.rect)) {
@@ -193,29 +229,6 @@ class Page implements IPage {
         }
 
         return undefined;
-    }
-
-    getScale() {
-        return this.transform.scale;
-    }
-
-    layers: ILayer[] = [];
-
-    transform = new Transform();
-
-    @computed
-    get boundingRect() {
-        let boundingRectBuilder = new BoundingRectBuilder();
-
-        for (let i = 0; i < this.layers.length; ++i) {
-            boundingRectBuilder.addRect(this.layers[i].boundingRect);
-        }
-
-        return boundingRectBuilder.getRect();
-    }
-
-    get selectedObjects() {
-        return this.layers[0].selectedObjects;
     }
 
     get selectedObjectsBoundingRect() {
@@ -238,27 +251,65 @@ class Page implements IPage {
     }
 
     deselectAllObjects() {
-        action(() => {
+        runInAction(() => {
             this.selectedObjects.forEach(object => (object.selected = false));
-        })();
+        });
     }
 
-    selectObject(object: IBaseObject) {
-        this.deselectAllObjects();
-
-        action(() => (object.selected = true))();
+    onDragStart(op: "move" | "resize"): void {
+        this.selectionVisible = false;
     }
 
-    deleteSelectedObjects() {
-        if (this.selectedObjects.length > 0) {
-            beginTransaction("Delete workbench items");
-        } else {
-            beginTransaction("Delete workbench item");
+    onDragEnd(op: "move" | "resize", changed: boolean): void {
+        this.selectionVisible = true;
+
+        if (changed) {
+            let objects = this.selectedObjects;
+
+            if (objects.length > 0) {
+                beginTransaction(`${humanize(op)} workbench items`);
+            } else {
+                beginTransaction(`${humanize(op)} workbench item`);
+            }
+
+            for (let i = 0; i < objects.length; ++i) {
+                objects[i].saveRect();
+            }
+
+            commitTransaction();
         }
+    }
 
-        this.selectedObjects.forEach(object => deleteWorkbenchObject(object as WorkbenchObject));
+    initContextMenu(menu: Electron.Menu): void {
+        if (this.selectedObjects.length === 1) {
+            const object = this.selectedObjects[0] as IWorkbenchObject;
 
-        commitTransaction();
+            if (object.isEditable) {
+                menu.append(
+                    new MenuItem({
+                        label: "Open in Tab",
+                        click: () => {
+                            object.openEditor!("tab");
+                        }
+                    })
+                );
+
+                menu.append(
+                    new MenuItem({
+                        label: "Open in Window",
+                        click: () => {
+                            object.openEditor!("window");
+                        }
+                    })
+                );
+
+                menu.append(
+                    new MenuItem({
+                        type: "separator"
+                    })
+                );
+            }
+        }
     }
 }
 
@@ -269,15 +320,20 @@ const standardToolboxGroup = {
     label: undefined,
     title: "Standard",
     tools: [
-        observable({
-            id: "select",
-            icon: "_images/select.svg",
-            iconSize: 24,
-            label: undefined,
-            title: "Select",
-            selected: false,
-            toolHandler: selectToolHandler
-        })
+        observable(
+            {
+                id: "select",
+                icon: "_images/select.svg",
+                iconSize: 24,
+                label: undefined,
+                title: "Select",
+                selected: false,
+                toolHandler: selectToolHandler
+            },
+            {
+                toolHandler: observable.ref
+            }
+        )
     ]
 };
 
@@ -287,6 +343,4 @@ const toolboxGroups = computed(() => {
     );
 });
 
-export const page = new Page();
-const layer = new Layer("1", page);
-page.layers.push(layer);
+export const workbenchDocument = new WorkbenchDocument();

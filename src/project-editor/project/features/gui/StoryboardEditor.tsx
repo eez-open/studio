@@ -37,7 +37,6 @@ import {
     CanvasEditorProps,
     CanvasEditorUIState
 } from "project-editor/components/CanvasEditor";
-import { drawTree } from "project-editor/components/CanvasEditorUtil";
 
 import {
     storyboardPageMetaData,
@@ -49,11 +48,12 @@ import {
     StoryboardTabState
 } from "project-editor/project/features/gui/storyboard";
 import { getPages, findPage } from "project-editor/project/features/gui/gui";
+import { PageOrientationProperties } from "project-editor/project/features/gui/page";
 import {
-    PageOrientationProperties,
-    createWidgetTree
-} from "project-editor/project/features/gui/page";
-import { drawPageFrame, drawNotFoundPageFrame } from "project-editor/project/features/gui/draw";
+    drawPageFrame,
+    drawNotFoundPageFrame,
+    drawPage
+} from "project-editor/project/features/gui/draw";
 import { PagesPalette } from "project-editor/project/features/gui/PagesPalette";
 
 const TITLE_FONT = "24px Segoe UI";
@@ -91,18 +91,7 @@ class RenderTask {
     }
 
     render() {
-        let canvas = document.createElement("canvas");
-
-        canvas.width = this.pageOrientation.width;
-        canvas.height = this.pageOrientation.height;
-
-        let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-
-        let tree = createWidgetTree(this.pageOrientation, true);
-
-        drawTree(ctx, tree, 1, () => {});
-
-        return canvas;
+        return drawPage(this.pageOrientation);
     }
 
     callCallbacks() {
@@ -164,7 +153,7 @@ renderLoop();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function drawPage(
+function drawPageFromCache(
     ctx: CanvasRenderingContext2D,
     pageOrientation: PageOrientationProperties,
     callback: () => void
@@ -208,7 +197,7 @@ function drawPageNode(
 
     if (pageOrientation) {
         drawPageFrame(ctx, pageOrientation, scale, pageOrientation.style);
-        drawPage(ctx, node.custom.pageOrientation, callback);
+        drawPageFromCache(ctx, node.custom.pageOrientation, callback);
     } else {
         drawNotFoundPageFrame(
             ctx,
@@ -514,10 +503,14 @@ class StoryboardCanvasEditor extends CanvasEditor {
                         y: storyboardPage.y,
                         width: pageOrientation
                             ? pageOrientation.width
-                            : screenOrientation == "portrait" ? 240 : 320,
+                            : screenOrientation == "portrait"
+                                ? 240
+                                : 320,
                         height: pageOrientation
                             ? pageOrientation.height
-                            : screenOrientation == "portrait" ? 320 : 240
+                            : screenOrientation == "portrait"
+                                ? 320
+                                : 240
                     },
                     selected: storyboardPageItem.selected,
                     resizable: false,

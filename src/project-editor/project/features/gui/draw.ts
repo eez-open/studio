@@ -4,10 +4,7 @@ import { EezObject } from "project-editor/core/metaData";
 
 import * as data from "project-editor/project/features/data/data";
 
-import { drawTree } from "project-editor/components/CanvasEditorUtil";
-
 import * as Widget from "project-editor/project/features/gui/widget";
-import { createWidgetTree } from "project-editor/project/features/gui/page";
 import {
     styleMetaData,
     StyleProperties,
@@ -23,6 +20,11 @@ import {
     findBitmap
 } from "project-editor/project/features/gui/gui";
 import * as lcd from "project-editor/project/features/gui/lcd";
+import { createWidgetTree } from "project-editor/project/features/gui/widget-tree";
+
+import { drawTree } from "project-editor/components/CanvasEditorUtil";
+
+////////////////////////////////////////////////////////////////////////////////
 
 const MAX_DRAW_CACHE_SIZE = 1000;
 
@@ -346,6 +348,11 @@ export function drawBitmap(
     style: StyleProperties,
     inverse: boolean
 ) {
+    const imageElement = bitmap.imageElement;
+    if (!imageElement) {
+        return undefined;
+    }
+
     return drawFromCache(
         "drawBitmap",
         getCacheId(style) + "." + getCacheId(bitmap) + "." + "." + w + "." + h + "." + inverse,
@@ -372,14 +379,8 @@ export function drawBitmap(
             lcd.setColor(backgroundColor);
             lcd.fillRect(ctx, x1, y1, x2, y2);
 
-            let image = new Image();
-            // TODO if bitmap is undefined then draw some default bitmap
-            if (bitmap) {
-                image.src = bitmap.image;
-            }
-
-            let width = image.width;
-            let height = image.height;
+            let width = imageElement.width;
+            let height = imageElement.height;
 
             let x_offset: number;
             if (styleIsHorzAlignLeft(style)) {
@@ -416,7 +417,7 @@ export function drawBitmap(
             lcd.setColor(getStyleProperty(bitmap && bitmap.style, "backgroundColor"));
             lcd.fillRect(ctx, x_offset, y_offset, x_offset + width - 1, y_offset + height - 1);
 
-            lcd.drawBitmap(ctx, image, x_offset, y_offset, width, height);
+            lcd.drawBitmap(ctx, imageElement, x_offset, y_offset, width, height);
         }
     );
 }
@@ -660,7 +661,7 @@ function drawScale(
         }
     }
 
-    let s = 10 * f / d;
+    let s = (10 * f) / d;
 
     let y_offset: number;
     if (vertical) {
@@ -885,7 +886,7 @@ export function drawBarGraphWidget(widget: Widget.WidgetProperties, rect: Rect) 
             let d = horizontal ? rect.width : rect.height;
 
             function calcPos(value: number) {
-                let pos = Math.round(value * d / (max - min));
+                let pos = Math.round((value * d) / (max - min));
                 if (pos < 0) {
                     pos = 0;
                 }
@@ -1165,15 +1166,16 @@ function drawLocalWidget(widget: Widget.WidgetProperties, rect: Rect) {
 export function drawWidget(widget: Widget.WidgetProperties, rect: Rect) {
     if (widget.type && widget.type.startsWith("Local.")) {
         return drawLocalWidget(widget, rect);
-    } else {
-        let widgetType = Widget.getWidgetType(widget);
-        if (widgetType) {
-            let draw = widgetType.draw;
-            if (draw) {
-                return draw(widget, rect);
-            }
+    }
+
+    let widgetType = Widget.getWidgetType(widget);
+    if (widgetType) {
+        let draw = widgetType.draw;
+        if (draw) {
+            return draw(widget, rect);
         }
     }
+
     return undefined;
 }
 
@@ -1208,4 +1210,22 @@ export function drawNotFoundPageFrame(ctx: CanvasRenderingContext2D, rect: Rect,
     drawPageFrameWithColor(ctx, rect, scale, "red");
 }
 
-////////////////////////////////////////////////////////////////////////////////
+export function drawPage(
+    pageOrientation: {
+        width: number;
+        height: number;
+        widgets: Widget.WidgetProperties[];
+    } & EezObject
+) {
+    let canvas = document.createElement("canvas");
+
+    canvas.width = pageOrientation.width;
+    canvas.height = pageOrientation.height;
+
+    let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+
+    let tree = createWidgetTree(pageOrientation, true);
+    drawTree(ctx, tree, 1, () => {});
+
+    return canvas;
+}

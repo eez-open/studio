@@ -55,7 +55,7 @@
     "node-abi": "^2.3.0",
     "node-watch": "^0.5.7",
     "pump": "^3.0.0",
-    "typescript": "^2.8.1"
+    "typescript": "^2.9.1"
   },
   "dependencies": {
     "app-module-path": "^2.2.0",
@@ -72,9 +72,9 @@
     "jquery": "^3.3.1",
     "lodash": "^4.17.5",
     "marked": "^0.4.0",
-    "mobx": "^4.2.0",
-    "mobx-react": "^5.0.0",
-    "mobx-utils": "^4.0.1",
+    "mobx": "^5.0.0",
+    "mobx-react": "^5.2.0",
+    "mobx-utils": "^5.0.0",
     "moment": "^2.20.1",
     "moment-duration-format": "^2.2.1",
     "mousetrap": "^1.6.1",

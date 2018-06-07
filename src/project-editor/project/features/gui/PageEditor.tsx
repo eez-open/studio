@@ -49,19 +49,14 @@ export class PageEditor extends EditorComponent {
     }
 
     @bind
-    focusHander() {
+    focusHandler() {
         NavigationStore.setSelectedPanel(this);
     }
 
     @computed
     get selectedObject() {
         let pageTabState = this.props.editor.state as PageTabState;
-
-        if (this.isExperimentalEditor) {
-            return pageTabState.selectedPageOrientation;
-        } else {
-            return pageTabState.selectedObject;
-        }
+        return pageTabState.selectedObject;
     }
 
     render() {
@@ -135,7 +130,7 @@ export class PageEditor extends EditorComponent {
                     splitPosition="0.7"
                     className="EezStudio_ProjectEditor_page-editor"
                     tabIndex={0}
-                    onFocus={this.focusHander}
+                    onFocus={this.focusHandler}
                 >
                     {panel}
                     <Layout.Split

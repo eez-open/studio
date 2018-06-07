@@ -1,40 +1,44 @@
 import * as React from "react";
 import { observer } from "mobx-react";
 
-import { Rect } from "shared/geometry";
+import { Rect, Transform } from "shared/geometry";
 
-import { IObject } from "home/store";
-
-import { IPage } from "home/designer/designer-store";
-import { Transform } from "home/designer/transform";
+import { IBaseObject, IDocument } from "shared/ui/designer/designer-interfaces";
 
 @observer
 class SelectedObject extends React.Component<
     {
-        object: IObject;
+        object: IBaseObject;
         transform: Transform;
+        className: string;
     },
     {}
 > {
     render() {
-        let rect = this.props.transform.modelToOffsetRect(this.props.object.boundingRect);
+        const rects = this.props.object.selectionRects;
 
-        let style: React.CSSProperties = {
-            position: "absolute",
-            left: rect.left + "px",
-            top: rect.top + "px",
-            width: rect.width + "px",
-            height: rect.height + "px"
-        };
-
-        return <div className="EezStudio_Selection_BoundingRect" style={style} />;
+        return (
+            <React.Fragment>
+                {rects.map((rect, i) => {
+                    rect = this.props.transform.modelToOffsetRect(rect);
+                    let style: React.CSSProperties = {
+                        position: "absolute",
+                        left: rect.left + "px",
+                        top: rect.top + "px",
+                        width: rect.width + "px",
+                        height: rect.height + "px"
+                    };
+                    return <div key={i} className={this.props.className} style={style} />;
+                })}
+            </React.Fragment>
+        );
     }
 }
 
 @observer
 export class Selection extends React.Component<
     {
-        page: IPage;
+        document: IDocument;
         transform: Transform;
         rubberBendRect: Rect | undefined;
     },
@@ -48,17 +52,27 @@ export class Selection extends React.Component<
         let selectedObjectRects;
         let selectedObjectsBoundingRect;
         let resizeHandlers;
-        if (this.props.page.selectedObjects.length > 0) {
+        if (this.props.document.selectedObjects.length > 0) {
+            const selectedObjectClassName =
+                this.props.document.selectedObjects.length > 1
+                    ? "EezStudio_DesignerSelection_SelectedObject"
+                    : "EezStudio_DesignerSelection_BoundingRect";
+
             //
-            selectedObjectRects = this.props.page.selectedObjects.map(object => (
-                <SelectedObject key={object.id} object={object} transform={this.props.transform} />
+            selectedObjectRects = this.props.document.selectedObjects.map(object => (
+                <SelectedObject
+                    className={selectedObjectClassName}
+                    key={object.id}
+                    object={object}
+                    transform={this.props.transform}
+                />
             ));
 
             //
-            let boundingRect = this.props.transform.modelToOffsetRect(this.props.page
+            let boundingRect = this.props.transform.modelToOffsetRect(this.props.document
                 .selectedObjectsBoundingRect as Rect);
 
-            if (this.props.page.selectedObjects.length > 1) {
+            if (this.props.document.selectedObjects.length > 1) {
                 let style: React.CSSProperties = {
                     position: "absolute",
                     left: boundingRect.left + "px",
@@ -68,24 +82,27 @@ export class Selection extends React.Component<
                 };
 
                 selectedObjectsBoundingRect = (
-                    <div className="EezStudio_Selection_BoundingRect" style={style} />
+                    <div className="EezStudio_DesignerSelection_BoundingRect" style={style} />
                 );
             }
 
             //
-            if (!this.props.rubberBendRect && this.props.page.selectionResizable) {
+            if (!this.props.rubberBendRect && this.props.document.selectionResizable) {
                 let left = boundingRect.left;
                 let width = boundingRect.width;
                 let top = boundingRect.top;
                 let height = boundingRect.height;
 
-                if (width < 64) {
-                    width = 64;
+                const B = 8; // HANDLE SIZE
+                const A = B / 2;
+
+                if (width < 3 * B) {
+                    width = 3 * B;
                     left -= (width - boundingRect.width) / 2;
                 }
 
-                if (height < 64) {
-                    height = 64;
+                if (height < 3 * B) {
+                    height = 3 * B;
                     top -= (height - boundingRect.height) / 2;
                 }
 
@@ -94,9 +111,6 @@ export class Selection extends React.Component<
 
                 let vcenter = top + height / 2;
                 let bottom = top + height;
-
-                const B = 16; // HANDLE SIZE
-                const A = B / 2;
 
                 let styleTopLeft: React.CSSProperties = {
                     left: left - A + "px",
@@ -157,42 +171,42 @@ export class Selection extends React.Component<
                 resizeHandlers = [
                     <div
                         key="TopLeft"
-                        className="EezStudio_Selection_Handle Corner TopLeft"
+                        className="EezStudio_DesignerSelection_Handle Corner TopLeft"
                         style={styleTopLeft}
                     />,
                     <div
                         key="Top"
-                        className="EezStudio_Selection_Handle Side Top"
+                        className="EezStudio_DesignerSelection_Handle Side Top"
                         style={styleTop}
                     />,
                     <div
                         key="TopRight"
-                        className="EezStudio_Selection_Handle Corner TopRight"
+                        className="EezStudio_DesignerSelection_Handle Corner TopRight"
                         style={styleTopRight}
                     />,
                     <div
                         key="Left"
-                        className="EezStudio_Selection_Handle Side Left"
+                        className="EezStudio_DesignerSelection_Handle Side Left"
                         style={styleLeft}
                     />,
                     <div
                         key="Right"
-                        className="EezStudio_Selection_Handle Side Right"
+                        className="EezStudio_DesignerSelection_Handle Side Right"
                         style={styleRight}
                     />,
                     <div
                         key="BottomLeft"
-                        className="EezStudio_Selection_Handle Corner BottomLeft"
+                        className="EezStudio_DesignerSelection_Handle Corner BottomLeft"
                         style={styleBottomLeft}
                     />,
                     <div
                         key="Bottom"
-                        className="EezStudio_Selection_Handle Side Bottom"
+                        className="EezStudio_DesignerSelection_Handle Side Bottom"
                         style={styleBottom}
                     />,
                     <div
                         key="BottomRight"
-                        className="EezStudio_Selection_Handle Corner BottomRight"
+                        className="EezStudio_DesignerSelection_Handle Corner BottomRight"
                         style={styleBottomRight}
                     />
                 ];
@@ -204,7 +218,7 @@ export class Selection extends React.Component<
         if (this.props.rubberBendRect) {
             rubberBendRect = (
                 <div
-                    className="EezStudio_SelectionRubberBend"
+                    className="EezStudio_DesignerSelection_RubberBend"
                     style={{
                         left: this.props.rubberBendRect.left,
                         top: this.props.rubberBendRect.top,
@@ -216,7 +230,7 @@ export class Selection extends React.Component<
         }
 
         return (
-            <div className="EezStudio_Selection">
+            <div className="EezStudio_DesignerSelection">
                 {selectedObjectRects}
                 {selectedObjectsBoundingRect}
                 {resizeHandlers}

@@ -184,7 +184,7 @@ LAYOUT
     visibility: hidden;
     position: absolute;
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .layoutCenter {
@@ -941,5 +941,30 @@ Import SCPI doc
         th {
             float: left;
         }
+    }
+}
+
+.EezStudio_ExperimentalPageEditor {
+    overflow: hidden;
+
+    .EezStudio_DesignerSelection_SelectedObject {
+        border: 1px solid #333;
+    }
+
+    .EezStudio_DesignerSelection_BoundingRect {
+        border: 2px solid black;
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .EezStudio_DesignerSelection_Handle.Side {
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .EezStudio_DesignerSelection_Handle.Corner {
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    svg {
+        image-rendering: pixelated;
     }
 }

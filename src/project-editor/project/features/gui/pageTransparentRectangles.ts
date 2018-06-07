@@ -1,8 +1,11 @@
 import { objectClone } from "shared/util";
 
 import { Rect } from "project-editor/core/util";
+import { EezObject } from "project-editor/core/metaData";
 
 import { TreeNode, traverseTree } from "project-editor/components/CanvasEditorTreeNode";
+
+import { createWidgetTree } from "project-editor/project/features/gui/widget-tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -183,4 +186,24 @@ export function findPageTransparentRectanglesInTree(tree: TreeNode): Rect[] {
     });
 
     return grid.getTransparentRectangles();
+}
+
+export function findPageTransparentRectanglesInContainer(container: EezObject) {
+    return findPageTransparentRectanglesInTree(createWidgetTree(container, false));
+}
+
+export function debugDrawPageTransparentRectangles(ctx: CanvasRenderingContext2D, tree: TreeNode) {
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 1;
+
+    var rects = findPageTransparentRectanglesInTree(tree);
+    for (let i = 0; i < rects.length; ++i) {
+        let rect = rects[i];
+
+        ctx.beginPath();
+        ctx.rect(rect.x, rect.y, rect.width, rect.height);
+        ctx.fill();
+        ctx.stroke();
+    }
 }

@@ -6,14 +6,14 @@ import { Box } from "shared/ui/box";
 import { PanelTitle } from "shared/ui/panel";
 import { Splitter } from "shared/ui/splitter";
 
-import { IObject } from "home/store";
+import { IWorkbenchObject } from "home/designer/designer-store";
 
 import { History } from "home/history/history";
 
 @observer
 export class Properties extends React.Component<
     {
-        selectedObjects: IObject[];
+        selectedObjects: IWorkbenchObject[];
         className?: string;
     },
     {}

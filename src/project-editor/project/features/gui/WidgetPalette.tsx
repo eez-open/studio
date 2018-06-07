@@ -6,7 +6,7 @@ import { DragAndDropManager } from "project-editor/core/dd";
 
 import { GuiProperties } from "project-editor/project/features/gui/gui";
 import { widgetMetaData, WidgetType } from "project-editor/project/features/gui/widget";
-import { getWidgetTypes } from "project-editor/project/features/gui/page";
+import { getWidgetTypes } from "project-editor/project/features/gui/widget";
 import { WidgetTypeProperties } from "project-editor/project/features/gui/widgetType";
 
 ////////////////////////////////////////////////////////////////////////////////

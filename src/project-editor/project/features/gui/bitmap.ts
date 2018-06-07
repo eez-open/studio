@@ -1,4 +1,4 @@
-import { observable, computed } from "mobx";
+import { observable, action } from "mobx";
 
 import { validators } from "shared/model/validation";
 
@@ -22,11 +22,19 @@ export class BitmapProperties extends EezObject {
     @observable image: string;
     @observable style?: string;
 
-    @computed
+    private imageElementLoading: boolean = false;
+    @observable private _imageElement: HTMLImageElement | null = null;
+
     get imageElement() {
-        let image = new Image();
-        image.src = this.image;
-        return image;
+        if (!this._imageElement && !this.imageElementLoading) {
+            this.imageElementLoading = true;
+            let imageElement = new Image();
+            imageElement.src = this.image;
+            imageElement.onload = action(() => {
+                this._imageElement = imageElement;
+            });
+        }
+        return this._imageElement;
     }
 }
 

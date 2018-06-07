@@ -56,6 +56,10 @@ export class Draggable {
             return;
         }
 
+        $(this.element)
+            .parent("[tabindex]")
+            .focus();
+
         this.finishDragging(undefined, true);
 
         this.element.addEventListener("pointerup", this.onPointerUp);

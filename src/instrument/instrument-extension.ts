@@ -5,7 +5,8 @@ import { extensions } from "shared/extensions/extensions";
 import { isRenderer } from "shared/util";
 import { stringCompare } from "shared/string";
 import { beginTransaction, commitTransaction } from "shared/store";
-import { createCreateObjectToolHandler, ICanvas } from "shared/ui/designer";
+import { IDocument } from "shared/ui/designer/designer-interfaces";
+import { createCreateObjectToolHandler } from "shared/ui/designer/tool-handler";
 
 import { loadInstrumentExtension } from "instrument/import";
 import { instrumentStore, instruments } from "instrument/instrument-object";
@@ -59,9 +60,12 @@ const instrumentToolboxGroup = computed(() => ({
             label: extension.name,
             title: extension.name,
             selected: false,
-            toolHandler: createCreateObjectToolHandler("Add instrument", () =>
-                createInstrument(extension)
-            )
+            toolHandler: createCreateObjectToolHandler(() => {
+                beginTransaction("Add instrument");
+                const instrument = createInstrument(extension);
+                commitTransaction();
+                return instrument;
+            })
         })
     )
 }));
@@ -95,20 +99,15 @@ const instrumentExtension: IExtension = {
                 label: "Add Instrument",
                 title: "Add instrument",
                 className: "btn-success",
-                onClick: (canvas: ICanvas) => {
+                onClick: (document: IDocument) => {
                     const {
                         showAddInstrumentDialog
                     } = require("instrument/add-instrument-dialog") as typeof AddInstrumentDialogModule;
 
                     showAddInstrumentDialog(extension => {
                         beginTransaction("Add instrument");
-                        let { type, oid, rect } = createInstrument(extension);
-                        canvas.createObject(type, oid, {
-                            left: canvas.centerPoint.x - rect.width / 2,
-                            top: canvas.centerPoint.y - rect.height / 2,
-                            width: rect.width,
-                            height: rect.height
-                        });
+                        let params = createInstrument(extension);
+                        document.createObject(params);
                         commitTransaction();
                     });
                 }
@@ -126,7 +125,7 @@ const instrumentExtension: IExtension = {
                 label: "Deleted Instruments",
                 title: "Show deleted instruments",
                 className: "btn-default",
-                onClick: (canvas: ICanvas) => {
+                onClick: (document: IDocument) => {
                     showDeletedInstrumentsDialog();
                 }
             });

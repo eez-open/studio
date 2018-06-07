@@ -1,4 +1,4 @@
-import { IToolbarButton, IToolboxGroup } from "shared/ui/designer";
+import { IToolbarButton, IToolboxGroup } from "shared/ui/designer/designer-interfaces";
 import { IActivityLogEntry } from "shared/activity-log";
 
 import { IShortcut } from "shortcuts/interfaces";

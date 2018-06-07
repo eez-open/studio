@@ -27,9 +27,10 @@ import {
     drawTree,
     drawSelectedDecoration,
     drawSelection,
-    debugDrawPageTransparentRectangles,
     nodesFromPoint
 } from "project-editor/components/CanvasEditorUtil";
+
+import * as PageTransparentRectanglesModule from "project-editor/project/features/gui/pageTransparentRectangles";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -404,6 +405,9 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
         }
 
         if (this.showPageTransparentRectangles) {
+            const {
+                debugDrawPageTransparentRectangles
+            } = require("project-editor/project/features/gui/pageTransparentRectangles") as typeof PageTransparentRectanglesModule;
             debugDrawPageTransparentRectangles(ctx, this.tree);
         }
 
@@ -714,8 +718,8 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
                                     mouseDragNode.objectStartingPosition.x +
                                     Math.round(
                                         rect.x +
-                                            (mouseDragNode.nodeRect.x - savedSelectionRect.x) *
-                                                rect.width /
+                                            ((mouseDragNode.nodeRect.x - savedSelectionRect.x) *
+                                                rect.width) /
                                                 savedSelectionRect.width -
                                             mouseDragNode.nodeRect.x
                                     ),
@@ -723,8 +727,8 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
                                     mouseDragNode.objectStartingPosition.y +
                                     Math.round(
                                         rect.y +
-                                            (mouseDragNode.nodeRect.y - savedSelectionRect.y) *
-                                                rect.height /
+                                            ((mouseDragNode.nodeRect.y - savedSelectionRect.y) *
+                                                rect.height) /
                                                 savedSelectionRect.height -
                                             mouseDragNode.nodeRect.y
                                     )
@@ -736,13 +740,11 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
                                     rect.height != savedSelectionRect.height)
                             ) {
                                 updatedGeometryProperties.width = Math.round(
-                                    mouseDragNode.nodeRect.width *
-                                        rect.width /
+                                    (mouseDragNode.nodeRect.width * rect.width) /
                                         savedSelectionRect.width
                                 );
                                 updatedGeometryProperties.height = Math.round(
-                                    mouseDragNode.nodeRect.height *
-                                        rect.height /
+                                    (mouseDragNode.nodeRect.height * rect.height) /
                                         savedSelectionRect.height
                                 );
                             } else {

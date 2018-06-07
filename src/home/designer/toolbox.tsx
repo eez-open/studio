@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import * as classNames from "classnames";
 
 import { Icon } from "shared/ui/icon";
-import { IToolboxGroup, ITool } from "shared/ui/designer";
+import { IToolboxGroup, ITool } from "shared/ui/designer/designer-interfaces";
 
 @observer
 export class DndTool extends React.Component<

@@ -246,7 +246,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
             item: TreeObjectAdapter;
             draggable: boolean;
         }[] = _map(itemChildren, item => ({
-            item: item,
+            item: item as any,
             draggable: true
         }));
 

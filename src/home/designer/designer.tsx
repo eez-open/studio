@@ -4,8 +4,8 @@ import { observer } from "mobx-react";
 import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
 import { Splitter } from "shared/ui/splitter";
 
-import { page } from "home/designer/designer-store";
-import { Page } from "home/designer/canvas";
+import { workbenchDocument } from "home/designer/designer-store";
+import { WorkbenchDocument } from "home/designer/canvas";
 import { DesignerToolbar } from "home/designer/toolbar";
 //import { Toolbox } from "home/designer/toolbox";
 import { Properties } from "home/designer/properties";
@@ -15,14 +15,17 @@ export class Designer extends React.Component<{}, {}> {
     constructor(props: any) {
         super(props);
 
-        page.selectDefaultTool();
+        workbenchDocument.selectDefaultTool();
     }
 
     render() {
         return (
             <VerticalHeaderWithBody>
                 <Header>
-                    <DesignerToolbar buttons={page.toolbarButtons} canvas={page} />
+                    <DesignerToolbar
+                        buttons={workbenchDocument.toolbarButtons}
+                        document={workbenchDocument}
+                    />
                 </Header>
                 <Body>
                     <Splitter
@@ -31,18 +34,18 @@ export class Designer extends React.Component<{}, {}> {
                         persistId="home/designer/splitter"
                     >
                         {/*<Toolbox
-                            toolboxGroups={page.toolboxGroups}
-                            selectTool={tool => page.selectTool(tool)}
+                            toolboxGroups={workbenchDocument.toolboxGroups}
+                            selectTool={tool => workbenchDocument.selectTool(tool)}
                         />*/}
 
-                        <Page
-                            page={page}
-                            tool={page.selectedTool}
-                            selectDefaultTool={page.selectDefaultTool}
+                        <WorkbenchDocument
+                            document={workbenchDocument}
+                            tool={workbenchDocument.selectedTool}
+                            selectDefaultTool={workbenchDocument.selectDefaultTool}
                         />
 
                         <Properties
-                            selectedObjects={page.selectedObjects}
+                            selectedObjects={workbenchDocument.selectedObjects}
                             className="EezStudio_DesignerProperties"
                         />
                     </Splitter>

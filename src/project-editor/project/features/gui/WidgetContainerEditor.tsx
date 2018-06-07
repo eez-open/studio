@@ -23,11 +23,9 @@ import {
     widgetMetaData,
     SelectWidgetProperties
 } from "project-editor/project/features/gui/widget";
-import {
-    WidgetContainerDisplayItem,
-    createWidgetTree,
-    drawWidget
-} from "project-editor/project/features/gui/page";
+import { WidgetContainerDisplayItem } from "project-editor/project/features/gui/page";
+import { drawWidget } from "project-editor/project/features/gui/draw";
+import { createWidgetTree } from "project-editor/project/features/gui/widget-tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 

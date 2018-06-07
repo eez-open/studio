@@ -20,10 +20,10 @@ import { StyleProperties } from "project-editor/project/features/gui/style";
 import * as Widget from "project-editor/project/features/gui/widget";
 import {
     PageProperties,
-    PageOrientationProperties,
-    findPageTransparentRectanglesInContainer
+    PageOrientationProperties
 } from "project-editor/project/features/gui/page";
 import { WidgetTypeProperties } from "project-editor/project/features/gui/widgetType";
+import { findPageTransparentRectanglesInContainer } from "project-editor/project/features/gui/pageTransparentRectangles";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -13,9 +13,7 @@ import { Rect } from "shared/geometry";
 import { IActivityLogEntry } from "shared/activity-log";
 
 import { getObject, loadPreinstalledExtension } from "shared/extensions/extensions";
-import { IObject, IEditor, IActivityLogEntryInfo } from "shared/extensions/extension";
-
-import { IBaseObject } from "shared/model/base-object";
+import { IEditor, IActivityLogEntryInfo } from "shared/extensions/extension";
 
 import { Icon } from "shared/ui/icon";
 import { ITab } from "shared/ui/tabs";
@@ -44,7 +42,7 @@ export class WorkbenchObject {
     id: string;
     type: string;
     oid: string;
-    @observable rect: Rect;
+    @observable private _rect: Rect;
     @observable selected: boolean;
 
     @observable _boundingRect: Rect | undefined;
@@ -58,6 +56,14 @@ export class WorkbenchObject {
         return this.implementation.name;
     }
 
+    get rect() {
+        return this._rect;
+    }
+
+    set rect(rect: Rect) {
+        runInAction(() => (this._rect = rect));
+    }
+
     @computed
     get boundingRect() {
         return this._boundingRect || this.rect;
@@ -66,6 +72,11 @@ export class WorkbenchObject {
     @action
     setBoundingRect(rect: Rect) {
         this._boundingRect = rect;
+    }
+
+    @computed
+    get selectionRects() {
+        return [this.boundingRect];
     }
 
     get content(): JSX.Element | null {
@@ -84,9 +95,10 @@ export class WorkbenchObject {
         return this.implementation.isResizable;
     }
 
-    @action
-    toggleSelect() {
-        this.selected = !this.selected;
+    open() {
+        if (this.isEditable) {
+            this.openEditor("default");
+        }
     }
 
     get isEditable() {
@@ -136,11 +148,6 @@ export class WorkbenchObject {
         }
     }
 
-    @action
-    setRect(rect: Rect) {
-        this.rect = rect;
-    }
-
     saveRect() {
         store.updateObject({
             id: this.id,
@@ -154,8 +161,6 @@ export class WorkbenchObject {
         }
     }
 }
-
-export type IObject = IBaseObject;
 
 ////////////////////////////////////////////////////////////////////////////////
 

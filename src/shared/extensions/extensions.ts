@@ -21,7 +21,7 @@ import { registerSource, sendMessage, watch } from "shared/notify";
 import { IActivityLogEntry } from "shared/activity-log";
 
 import * as notification from "shared/ui/notification";
-import { IToolboxGroup, IToolbarButton } from "shared/ui/designer";
+import { IToolboxGroup, IToolbarButton } from "shared/ui/designer/designer-interfaces";
 
 import { IExtension, IObject, IExtensionProperties } from "shared/extensions/extension";
 

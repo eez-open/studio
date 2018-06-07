@@ -1,31 +1,11 @@
 import { Point, Rect, pointInRect } from "project-editor/core/util";
 
-import { findPageTransparentRectanglesInTree } from "project-editor/project/features/gui/pageTransparentRectangles";
-
 import {
     TreeNode,
     traverseTree,
     TraverseTreeContinuation
 } from "project-editor/components/CanvasEditorTreeNode";
 import { RESIZE_HANDLE_SIZE } from "project-editor/components/CanvasEditorHitTest";
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function debugDrawPageTransparentRectangles(ctx: CanvasRenderingContext2D, tree: TreeNode) {
-    ctx.fillStyle = "white";
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 1;
-
-    var rects = findPageTransparentRectanglesInTree(tree);
-    for (let i = 0; i < rects.length; ++i) {
-        let rect = rects[i];
-
-        ctx.beginPath();
-        ctx.rect(rect.x, rect.y, rect.width, rect.height);
-        ctx.fill();
-        ctx.stroke();
-    }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -2,30 +2,19 @@ import { observable, computed, action, autorun } from "mobx";
 
 import { _find } from "shared/algorithm";
 
-import {
-    ProjectStore,
-    isObjectInstanceOf,
-    hasAncestor,
-    isArray,
-    asArray
-} from "project-editor/core/store";
+import { ProjectStore, hasAncestor } from "project-editor/core/store";
 import {
     EezObject,
     MetaData,
     PropertyMetaData,
     registerMetaData
 } from "project-editor/core/metaData";
-import { Rect } from "project-editor/core/util";
 import {
     TreeObjectAdapter,
     DisplayItem,
-    DisplayItemChildren,
-    DisplayItemChildrenObject,
     DisplayItemChildrenArray,
     getDisplayItemFromObjectId
 } from "project-editor/core/objectAdapter";
-
-import { TreeNode } from "project-editor/components/CanvasEditorTreeNode";
 
 import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
 
@@ -35,17 +24,9 @@ import {
     WidgetProperties,
     widgetMetaData,
     getWidgetType,
-    widgetTypes,
-    ListWidgetProperties,
     SelectWidgetProperties
 } from "project-editor/project/features/gui/widget";
-import {
-    widgetTypeMetaData,
-    WidgetTypeProperties
-} from "project-editor/project/features/gui/widgetType";
 import { PageEditor } from "project-editor/project/features/gui/PageEditor";
-import * as draw from "project-editor/project/features/gui/draw";
-import { findPageTransparentRectanglesInTree } from "project-editor/project/features/gui/pageTransparentRectangles";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -137,7 +118,7 @@ export class PageProperties extends EezObject {
     @observable closePageIfTouchedOutside: boolean;
 }
 
-interface IWidgetContainerDisplayItem extends DisplayItem {
+export interface IWidgetContainerDisplayItem extends DisplayItem {
     getSelectedWidgetForSelectWidget(item: DisplayItem): DisplayItem | undefined;
 }
 
@@ -416,66 +397,6 @@ export const pageMetaData = registerMetaData({
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function getWidgetTypes() {
-    return widgetTypes;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDisplayItem {
-    selected: boolean;
-
-    constructor(public object: EezObject) {}
-
-    get children(): DisplayItemChildren {
-        if (isArray(this.object)) {
-            return asArray(this.object).map(child => new DummyWidgetContainerDisplayItem(child));
-        } else {
-            let properties = this.object.$eez.metaData
-                .properties(this.object)
-                .filter(
-                    propertyMetaData =>
-                        (propertyMetaData.type == "object" || propertyMetaData.type == "array") &&
-                        this.object[propertyMetaData.name]
-                );
-
-            if (properties.length == 1 && properties[0].type == "array") {
-                return asArray(this.object[properties[0].name]).map(
-                    child => new DummyWidgetContainerDisplayItem(child)
-                );
-            }
-
-            return properties.reduce(
-                (children, propertyMetaData, i) => {
-                    children[propertyMetaData.name] = new DummyWidgetContainerDisplayItem(
-                        this.object[propertyMetaData.name]
-                    );
-                    return children;
-                },
-                {} as DisplayItemChildrenObject
-            );
-        }
-    }
-
-    getSelectedWidgetForSelectWidget(item: DisplayItem): DisplayItem | undefined {
-        let widget = item.object as SelectWidgetProperties;
-        if (widget.data && widget.widgets) {
-            let index: number = data.getEnumValue(widget.data);
-            if (index >= 0 && index < widget.widgets.length) {
-                let widgetsItemChildren = item.children as DisplayItemChildrenArray;
-                return widgetsItemChildren[index];
-            }
-        }
-        return undefined;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function drawWidget(widget: WidgetProperties, rect: Rect) {
-    return draw.drawWidget(widget, rect);
-}
-
 export function isWidgetOpaque(widgetObj: WidgetProperties) {
     if (widgetObj.type && widgetObj.type.startsWith("Local.")) {
         return true;
@@ -483,141 +404,4 @@ export function isWidgetOpaque(widgetObj: WidgetProperties) {
 
     let widgetType = getWidgetType(widgetObj);
     return widgetType && widgetType.isOpaque;
-}
-
-function drawPageFrame(
-    node: TreeNode,
-    ctx: CanvasRenderingContext2D,
-    scale: number,
-    callback: () => void
-) {
-    if (isObjectInstanceOf(node.item.object, pageOrientationMetaData)) {
-        let pageOrientation = node.item.object as PageOrientationProperties;
-        draw.drawPageFrame(ctx, pageOrientation, scale, pageOrientation.style || "default");
-    } else if (isObjectInstanceOf(node.item.object, widgetTypeMetaData)) {
-        let widgetType = node.item.object as WidgetTypeProperties;
-        draw.drawPageFrame(
-            ctx,
-            {
-                x: 0,
-                y: 0,
-                width: widgetType.width,
-                height: widgetType.height
-            },
-            scale,
-            widgetType.style
-        );
-    }
-}
-
-export function createWidgetTree(
-    widgetContainerDisplayItemOrObject: IWidgetContainerDisplayItem | EezObject,
-    draw: boolean
-) {
-    function enumWidgets(widgetContainerDisplayItem: IWidgetContainerDisplayItem) {
-        function enumWidget(
-            parentNode: TreeNode | undefined,
-            item: DisplayItem,
-            x: number,
-            y: number
-        ) {
-            let object = item.object as
-                | WidgetProperties
-                | PageOrientationProperties
-                | WidgetTypeProperties;
-
-            if (object instanceof WidgetProperties || object instanceof PageOrientationProperties) {
-                x += object.x || 0;
-                y += object.y || 0;
-            }
-
-            let rect = {
-                x: x,
-                y: y,
-                width: object.width,
-                height: object.height
-            };
-
-            let treeNode: TreeNode = {
-                parent: <TreeNode>parentNode,
-                children: [],
-                rect: rect,
-                selected: object instanceof WidgetProperties && item.selected,
-                resizable: true,
-                movable: object instanceof WidgetProperties,
-                selectable: object instanceof WidgetProperties,
-                item: item,
-                draw: object instanceof WidgetProperties ? undefined : drawPageFrame,
-                image:
-                    draw && object instanceof WidgetProperties
-                        ? drawWidget(object, rect)
-                        : undefined,
-                isOpaque: object instanceof WidgetProperties && isWidgetOpaque(object)
-            };
-
-            if (parentNode) {
-                parentNode.children.push(treeNode);
-            }
-
-            if (
-                object instanceof PageOrientationProperties ||
-                object instanceof WidgetTypeProperties
-            ) {
-                let widgetsItemChildren = item.children as DisplayItemChildrenArray;
-
-                widgetsItemChildren.forEach(child => {
-                    enumWidget(treeNode, child, x, y);
-                });
-            } else {
-                if (object.type == "Container") {
-                    let widgetsItemChildren = item.children as DisplayItemChildrenArray;
-
-                    widgetsItemChildren.forEach(child => {
-                        enumWidget(treeNode, child, x, y);
-                    });
-                } else if (object.type == "List") {
-                    let widget = object as ListWidgetProperties;
-                    let itemWidget = widget.itemWidget;
-                    if (itemWidget) {
-                        let itemWidgetItem = (item.children as DisplayItemChildrenObject)[
-                            "itemWidget"
-                        ];
-
-                        for (let i = 0; i < data.count(<string>widget.data); ++i) {
-                            enumWidget(treeNode, itemWidgetItem, x, y);
-
-                            if (widget.listType == "vertical") {
-                                y += itemWidget.height;
-                            } else {
-                                x += itemWidget.width;
-                            }
-                        }
-                    }
-                } else if (object.type == "Select") {
-                    let selectedWidgetItem = widgetContainerDisplayItem.getSelectedWidgetForSelectWidget(
-                        item
-                    );
-                    if (selectedWidgetItem) {
-                        enumWidget(treeNode, selectedWidgetItem, x, y);
-                    }
-                }
-            }
-
-            return treeNode;
-        }
-
-        return enumWidget(undefined, widgetContainerDisplayItem, 0, 0);
-    }
-
-    if (widgetContainerDisplayItemOrObject instanceof EezObject) {
-        return enumWidgets(new DummyWidgetContainerDisplayItem(widgetContainerDisplayItemOrObject));
-    } else {
-        return enumWidgets(widgetContainerDisplayItemOrObject);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function findPageTransparentRectanglesInContainer(container: EezObject) {
-    return findPageTransparentRectanglesInTree(createWidgetTree(container, false));
 }
