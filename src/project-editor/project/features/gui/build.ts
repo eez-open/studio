@@ -1,4 +1,4 @@
-import { OutputSectionsStore } from "project-editor/core/store";
+import { OutputSectionsStore, getParent, getProperty } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 import { BuildResult } from "project-editor/core/extensions";
 
@@ -80,7 +80,7 @@ function buildWidgetText(text: string) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiFontsEnum(project: ProjectProperties) {
-    let gui = project["gui"] as GuiProperties;
+    let gui = getProperty(project, "gui") as GuiProperties;
 
     let fonts = gui.fonts.map(
         font =>
@@ -102,7 +102,7 @@ function buildGuiFontsDecl(project: ProjectProperties) {
 }
 
 function buildGuiFontsDef(project: ProjectProperties) {
-    let gui = project["gui"] as GuiProperties;
+    let gui = getProperty(project, "gui") as GuiProperties;
 
     let fontItemDataList: string[] = [];
     let fontItemList: string[] = [];
@@ -143,7 +143,7 @@ function buildGuiFontsDef(project: ProjectProperties) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiBitmapsEnum(project: ProjectProperties) {
-    let gui = project["gui"] as GuiProperties;
+    let gui = getProperty(project, "gui") as GuiProperties;
 
     let bitmaps = gui.bitmaps.map(
         bitmap =>
@@ -171,7 +171,7 @@ function buildGuiBitmapsDecl(project: ProjectProperties) {
 
 function buildGuiBitmapsDef(project: ProjectProperties) {
     return new Promise<string>((resolve, reject) => {
-        let gui = project["gui"] as GuiProperties;
+        let gui = getProperty(project, "gui") as GuiProperties;
 
         if (gui.bitmaps.length === 0) {
             resolve(`Bitmap bitmaps[] = {
@@ -393,7 +393,7 @@ class Int16 extends Field {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiStylesEnum(project: ProjectProperties) {
-    let gui = project["gui"] as GuiProperties;
+    let gui = getProperty(project, "gui") as GuiProperties;
 
     let styles = gui.styles.map(
         style =>
@@ -486,7 +486,7 @@ function buildGuiStylesDef(project: ProjectProperties) {
     }
 
     function build() {
-        let gui = project["gui"] as GuiProperties;
+        let gui = getProperty(project, "gui") as GuiProperties;
 
         let styles = new ObjectList();
 
@@ -701,7 +701,7 @@ function buildWidget(
             specific.addField(rectObjectList);
 
             specific.addField(
-                new UInt8((object.getParent() as PageProperties).closePageIfTouchedOutside ? 1 : 0)
+                new UInt8((getParent(object) as PageProperties).closePageIfTouchedOutside ? 1 : 0)
             );
         }
     } else if (type == WIDGET_TYPE_SELECT) {
@@ -1145,7 +1145,7 @@ function buildWidget(
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiPagesEnum(project: ProjectProperties) {
-    let gui = project["gui"] as GuiProperties;
+    let gui = getProperty(project, "gui") as GuiProperties;
 
     let pages = gui.pages
         .map(
@@ -1185,7 +1185,7 @@ function buildGuiDocumentDef(project: ProjectProperties, screenOrientation: stri
     }
 
     function build() {
-        let gui = project["gui"] as GuiProperties;
+        let gui = getProperty(project, "gui") as GuiProperties;
 
         let customWidgets = new ObjectList();
         gui.widgets.forEach(customWidget => {
@@ -1195,7 +1195,7 @@ function buildGuiDocumentDef(project: ProjectProperties, screenOrientation: stri
 
         let pages = new ObjectList();
         gui.pages.forEach(page => {
-            pages.addItem(buildPage(page[screenOrientation]));
+            pages.addItem(buildPage(getProperty(page, screenOrientation)));
         });
         document.addField(pages);
     }

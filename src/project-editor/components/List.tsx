@@ -27,7 +27,9 @@ import {
     canPaste,
     pasteItem,
     canDelete,
-    deleteItem
+    deleteItem,
+    getMetaData,
+    getId
 } from "project-editor/core/store";
 
 import { DragAndDropManager, DropPosition } from "project-editor/core/dd";
@@ -199,7 +201,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                     if (
                         findPastePlaceInside(
                             this.props.item,
-                            DragAndDropManager.dragObject.$eez.metaData,
+                            getMetaData(DragAndDropManager.dragObject),
                             true
                         )
                     ) {
@@ -266,10 +268,12 @@ export class ListItem extends React.Component<ListItemProps, {}> {
             className += " drop-target";
         }
 
+        const itemMetaData = getMetaData(this.props.item);
+
         return (
             <div
                 ref="item"
-                data-object-id={this.props.item.$eez.id}
+                data-object-id={getId(this.props.item)}
                 className={className}
                 onClick={this.onClick.bind(this)}
                 onDoubleClick={this.onDoubleClick.bind(this)}
@@ -280,8 +284,8 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                 onDragOver={this.onDragOver.bind(this)}
                 onDragLeave={this.onDragLeave.bind(this)}
             >
-                {this.props.item.$eez.metaData.listLabel
-                    ? this.props.item.$eez.metaData.listLabel(this.props.item)
+                {itemMetaData.listLabel
+                    ? itemMetaData.listLabel(this.props.item)
                     : objectToString(this.props.item)}
             </div>
         );
@@ -447,7 +451,7 @@ export class List extends React.Component<ListProps, {}> {
                 } else if (dropPosition == DropPosition.DROP_INSIDE) {
                     let dropPlace = findPastePlaceInside(
                         DragAndDropManager.dropObject,
-                        object.$eez.metaData,
+                        getMetaData(object),
                         true
                     );
                     if (dropPlace) {
@@ -488,7 +492,7 @@ export class List extends React.Component<ListProps, {}> {
             childrenElements.push(
                 <ListItem
                     navigationObject={this.props.navigationObject}
-                    key={child.$eez.id}
+                    key={getId(child)}
                     item={child}
                     onDoubleClick={this.props.onDoubleClick}
                 />
@@ -503,15 +507,14 @@ export class List extends React.Component<ListProps, {}> {
 
             if (isArray(this.props.navigationObject)) {
                 if (
-                    this.props.navigationObject.$eez.metaData ==
-                    DragAndDropManager.dragObject.$eez.metaData
+                    isSameInstanceTypeAs(this.props.navigationObject, DragAndDropManager.dragObject)
                 ) {
                     addDropPlaceholder = true;
                 }
             } else {
                 let place = findPastePlaceInside(
                     this.props.navigationObject,
-                    DragAndDropManager.dragObject.$eez.metaData,
+                    getMetaData(DragAndDropManager.dragObject),
                     true
                 );
                 if (place) {

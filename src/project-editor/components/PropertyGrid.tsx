@@ -16,12 +16,16 @@ import {
     ProjectStore,
     getObjectFromPath,
     objectToString,
+    getParent,
+    getKey,
+    getProperty,
     getObjectPropertiesMetaData,
     getInheritedValue,
     getPropertyAsString,
     isArray,
     isValue,
-    updateObject
+    updateObject,
+    getId
 } from "project-editor/core/store";
 
 import { EezObject, PropertyMetaData } from "project-editor/core/metaData";
@@ -408,7 +412,7 @@ class Property extends React.Component<PropertyProps, {}> {
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique(this.props.object, this.props.object.getParent())
+                            validators.unique(this.props.object, getParent(this.props.object))
                         ]
                     }
                 ]
@@ -600,7 +604,7 @@ class Property extends React.Component<PropertyProps, {}> {
 
             let options = objects.map(object => {
                 return (
-                    <option key={object.$eez.id} value={object["name"]}>
+                    <option key={getId(object)} value={getProperty(object, "name")}>
                         {objectToString(object)}
                     </option>
                 );
@@ -608,7 +612,7 @@ class Property extends React.Component<PropertyProps, {}> {
 
             options.unshift(<option key="__empty" value="" />);
 
-            if (this.value && !objects.find(object => object["name"] == this.value)) {
+            if (this.value && !objects.find(object => getProperty(object, "name") == this.value)) {
                 options.unshift(
                     <option key="__not_found" value={this.value}>
                         {this.value}
@@ -687,7 +691,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
         let object = this.props.object;
         if (object) {
             if (isValue(object)) {
-                object = object.getParent() as EezObject;
+                object = getParent(object) as EezObject;
             }
             updateObject(object, propertyValues);
         }
@@ -702,8 +706,8 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
 
         let object;
         if (isValue(this.props.object)) {
-            markedPropertyName = this.props.object.getKey();
-            object = this.props.object.getParent() as EezObject;
+            markedPropertyName = getKey(this.props.object);
+            object = getParent(this.props.object) as EezObject;
         } else {
             object = this.props.object;
         }

@@ -13,7 +13,8 @@ import {
     addObject,
     deleteObject,
     cloneObject,
-    updateObject
+    updateObject,
+    getId
 } from "project-editor/core/store";
 import { doLayout } from "project-editor/core/layout";
 
@@ -288,7 +289,7 @@ class Glyphs extends React.Component<
     render() {
         let glyphs: JSX.Element[] = this.props.glyphs.map(glyph => (
             <Glyph
-                key={glyph.$eez.id}
+                key={getId(glyph)}
                 glyph={glyph}
                 isSelected={glyph == this.props.selectedGlyph}
                 onSelect={this.props.onSelectGlyph.bind(null, glyph)}

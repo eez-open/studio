@@ -6,10 +6,16 @@ import { _each, _find, _pickBy } from "shared/algorithm";
 import {
     isArray,
     asArray,
+    getParent,
+    getProperty,
     canCut,
     canPaste,
     canDelete,
-    hasAncestor
+    hasAncestor,
+    extendContextMenu,
+    getId,
+    getMetaData,
+    isSameInstanceTypeAs
 } from "project-editor/core/store";
 import { reduceUntilCommonParent as reduceObjectsUntilCommonParent } from "project-editor/core/store";
 
@@ -59,13 +65,13 @@ export interface DisplayItemSelection extends DisplayItem {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getDisplayItemFromObjectId(item: DisplayItem, id: string): DisplayItem | undefined {
-    if (item.object.$eez.id == id) {
+    if (getId(item.object) == id) {
         return item;
     }
 
     let result = _find(item.children, (displayItemChild: any) => {
         let child: DisplayItem = displayItemChild;
-        return id === child.object.$eez.id || id.startsWith(child.object.$eez.id + ".");
+        return id === getId(child.object) || id.startsWith(getId(child.object) + ".");
     });
 
     if (result) {
@@ -80,7 +86,7 @@ export function reduceUntilCommonParent(
     items: DisplayItem[]
 ): DisplayItem[] {
     let objects = reduceObjectsUntilCommonParent(items.map(item => item.object));
-    let parentItems = objects.map(object => getDisplayItemFromObjectId(rootItem, object.$eez.id));
+    let parentItems = objects.map(object => getDisplayItemFromObjectId(rootItem, getId(object)));
     return parentItems.filter(item => item !== undefined) as DisplayItem[];
 }
 
@@ -112,31 +118,40 @@ export class TreeObjectAdapter {
     get children(): TreeObjectAdapterChildren {
         if (isArray(this.object)) {
             return asArray(this.object).map(child => this.transformer(child));
-        } else {
-            let properties = this.object.$eez.metaData
-                .properties(this.object)
-                .filter(
-                    propertyMetaData =>
-                        (propertyMetaData.type == "object" || propertyMetaData.type == "array") &&
-                        this.object[propertyMetaData.name]
-                );
+        }
 
-            if (properties.length == 1 && properties[0].type == "array") {
-                return asArray(this.object[properties[0].name]).map(child =>
-                    this.transformer(child)
-                );
-            }
+        let properties = getMetaData(this.object)
+            .properties(this.object)
+            .filter(
+                propertyMetaData =>
+                    (propertyMetaData.type == "object" || propertyMetaData.type == "array") &&
+                    !(propertyMetaData.enumerable !== undefined && !propertyMetaData.enumerable) &&
+                    getProperty(this.object, propertyMetaData.name)
+            );
 
-            return properties.reduce(
-                (children, propertyMetaData) => {
-                    children[propertyMetaData.name] = this.transformer(
-                        this.object[propertyMetaData.name]
-                    );
-                    return children;
-                },
-                {} as TreeObjectAdapterChildrenObject
+        if (properties.length == 1 && properties[0].type == "array") {
+            return asArray(getProperty(this.object, properties[0].name)).map(child =>
+                this.transformer(child)
             );
         }
+
+        return properties.reduce(
+            (children, propertyMetaData) => {
+                const childObject = getProperty(this.object, propertyMetaData.name);
+
+                if (isArray(childObject)) {
+                    children[propertyMetaData.name] = new TreeObjectAdapter(
+                        childObject,
+                        this.transformer
+                    );
+                } else {
+                    children[propertyMetaData.name] = this.transformer(childObject);
+                }
+
+                return children;
+            },
+            {} as TreeObjectAdapterChildrenObject
+        );
     }
 
     @computed
@@ -261,13 +276,13 @@ export class TreeObjectAdapter {
             objectAdapter: TreeObjectAdapter,
             id: string
         ): TreeObjectAdapter | undefined {
-            if (objectAdapter.object.$eez.id == id) {
+            if (getId(objectAdapter.object) == id) {
                 return objectAdapter;
             }
 
             let result = _find(objectAdapter.children, (displayItemChild: any) => {
                 let child: DisplayItem = displayItemChild;
-                return id == child.object.$eez.id || id.startsWith(child.object.$eez.id + ".");
+                return id == getId(child.object) || id.startsWith(getId(child.object) + ".");
             });
             if (result) {
                 return getObjectAdapterFromObjectId(result as any, id);
@@ -281,13 +296,13 @@ export class TreeObjectAdapter {
         }
 
         if (objectAdapterOrObjectOrObjectId instanceof EezObject) {
-            return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId.$eez.id);
+            return getObjectAdapterFromObjectId(this, getId(objectAdapterOrObjectOrObjectId));
         }
 
         if (isObservableArray(objectAdapterOrObjectOrObjectId)) {
             return getObjectAdapterFromObjectId(
                 this,
-                (objectAdapterOrObjectOrObjectId as any).$eez.id
+                getId(objectAdapterOrObjectOrObjectId as any)
             );
         }
 
@@ -313,7 +328,7 @@ export class TreeObjectAdapter {
     }
 
     getParent(item: TreeObjectAdapter) {
-        for (let parent = item.object.getParent(); parent; parent = parent.getParent()) {
+        for (let parent = getParent(item.object); parent; parent = getParent(parent)) {
             let parentObjectAdapter = this.getObjectAdapter(parent);
             if (parentObjectAdapter) {
                 return parentObjectAdapter;
@@ -338,7 +353,7 @@ export class TreeObjectAdapter {
                         return true;
                     }
 
-                    if (item.object.$eez.id.startsWith(child.object.$eez.id + ".")) {
+                    if (getId(item.object).startsWith(getId(child.object) + ".")) {
                         return true;
                     }
 
@@ -546,12 +561,12 @@ export class TreeObjectAdapter {
         if (selectedObjects.length > 0) {
             let i: number;
             for (i = 1; i < selectedObjects.length; ++i) {
-                if (selectedObjects[i].$eez.metaData !== selectedObjects[0].$eez.metaData) {
+                if (isSameInstanceTypeAs(selectedObjects[i], selectedObjects[0])) {
                     break;
                 }
             }
             if (i == selectedObjects.length) {
-                selectedObjects[0].extendContextMenu(selectedObjects, menuItems);
+                extendContextMenu(selectedObjects[0], selectedObjects, menuItems);
             }
         }
 

@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 
 import { MenuNavigation } from "project-editor/project/MenuNavigation";
 import { NavigationComponent } from "project-editor/core/metaData";
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore, getProperty } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -13,7 +13,7 @@ export class GuiNavigation extends NavigationComponent {
         return (
             <MenuNavigation
                 id={this.props.id}
-                navigationObject={ProjectStore.projectProperties["gui"]}
+                navigationObject={getProperty(ProjectStore.projectProperties, "gui")}
                 content={this.props.content}
             />
         );

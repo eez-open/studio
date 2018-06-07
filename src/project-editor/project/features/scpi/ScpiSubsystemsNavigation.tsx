@@ -5,7 +5,7 @@ import { observer } from "mobx-react";
 import { IconAction } from "shared/ui/action";
 
 import { EezObject, NavigationComponent } from "project-editor/core/metaData";
-import { ProjectStore, NavigationStore } from "project-editor/core/store";
+import { ProjectStore, NavigationStore, getProperty } from "project-editor/core/store";
 
 import { ListNavigation, ListNavigationWithContent } from "project-editor/project/ListNavigation";
 
@@ -34,7 +34,7 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
     }
 
     render() {
-        let subsystems = ((ProjectStore.projectProperties["scpi"] as ScpiProperties)
+        let subsystems = ((getProperty(ProjectStore.projectProperties, "scpi") as ScpiProperties)
             .subsystems as any) as EezObject;
 
         let selectedScpiSubsystem = NavigationStore.getNavigationSelectedItem(

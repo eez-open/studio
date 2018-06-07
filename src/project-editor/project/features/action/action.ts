@@ -51,7 +51,7 @@ export class ActionProperties extends EezObject {
             messages.push(new Message(Type.WARNING, "Action is not implemented.", this));
         }
 
-        return super.check().concat(messages);
+        return messages;
     }
 }
 

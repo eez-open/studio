@@ -1,3 +1,5 @@
+import { getProperty } from "project-editor/core/store";
+
 import { ProjectProperties } from "project-editor/project/project";
 
 import { ShortcutsProperties } from "project-editor/project/features/shortcuts/shortcuts";
@@ -5,7 +7,7 @@ import { ShortcutsProperties } from "project-editor/project/features/shortcuts/s
 ////////////////////////////////////////////////////////////////////////////////
 
 export function metrics(project: ProjectProperties): { [key: string]: string | number } {
-    let shortcuts = project["shortcuts"] as ShortcutsProperties;
+    let shortcuts = getProperty(project, "shortcuts") as ShortcutsProperties;
 
     return {
         Shortcuts: shortcuts.shortcuts.length

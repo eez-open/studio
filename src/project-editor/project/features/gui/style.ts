@@ -2,7 +2,7 @@ import { _map, _zipObject } from "shared/algorithm";
 
 import { observable, computed } from "mobx";
 
-import { loadObject } from "project-editor/core/store";
+import { loadObject, getProperty } from "project-editor/core/store";
 import {
     PropertyMetaData,
     registerMetaData,
@@ -159,7 +159,7 @@ const propertiesMap: { [propertyName: string]: PropertyMetaData } = _zipObject(
 function getInheritedValue(object: EezObject, propertyName: string): InheritedValue {
     let styleProperties = object as StyleProperties;
 
-    let value = styleProperties[propertyName];
+    let value = getProperty(styleProperties, propertyName);
     if (value !== undefined) {
         return {
             value: value,
@@ -293,7 +293,7 @@ export class StyleProperties extends EezObject {
             messages.push(output.propertyInvalidValueMessage(this, "borderColor"));
         }
 
-        return super.check().concat(messages);
+        return messages;
     }
 }
 

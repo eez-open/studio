@@ -10,7 +10,10 @@ import {
     OutputSectionsStore,
     getChildOfObject,
     isArray,
-    asArray
+    asArray,
+    getProperty,
+    check,
+    getMetaData
 } from "project-editor/core/store";
 import { EezObject, PropertyMetaData } from "project-editor/core/metaData";
 import { Message, Section, Type } from "project-editor/core/output";
@@ -136,7 +139,10 @@ async function getBuildResults() {
     for (let projectFeature of projectFeatures) {
         if (
             projectFeature.eezStudioExtension.implementation.projectFeature.build &&
-            project[projectFeature.eezStudioExtension.implementation.projectFeature.key]
+            getProperty(
+                project,
+                projectFeature.eezStudioExtension.implementation.projectFeature.key
+            )
         ) {
             buildResults.push(
                 await projectFeature.eezStudioExtension.implementation.projectFeature.build(project)
@@ -218,26 +224,36 @@ export async function build(onlyCheck: boolean) {
 
 var checkTransformer: (object: EezObject) => Message[] = createTransformer(
     (object: EezObject): Message[] => {
-        let childrenMessages: Message[];
+        const children = getMetaData(object)
+            .properties(object)
+            .filter(
+                propertyMetaData =>
+                    (propertyMetaData.type === "array" || propertyMetaData.type === "object") &&
+                    getProperty(object, propertyMetaData.name)
+            );
 
-        if (isArray(object)) {
-            childrenMessages = asArray(object).reduce((result: Message[], object: EezObject) => {
-                return result.concat(checkTransformer(object));
-            }, []);
-        } else {
-            childrenMessages = object.$eez.metaData
-                .properties(object)
-                .filter(
-                    propertyMetaData =>
-                        (propertyMetaData.type === "array" || propertyMetaData.type === "object") &&
-                        object[propertyMetaData.name]
-                )
-                .reduce((result: Message[], propertyMetaData: PropertyMetaData) => {
-                    return result.concat(checkTransformer(object[propertyMetaData.name]));
-                }, []);
-        }
+        const childrenMessages = children.reduce(
+            (result: Message[], propertyMetaData: PropertyMetaData) => {
+                const childObject = getProperty(object, propertyMetaData.name);
 
-        return object.check().concat(childrenMessages);
+                let childrenMessages: Message[];
+                if (isArray(childObject)) {
+                    childrenMessages = asArray(childObject).reduce<Message[]>(
+                        (result: Message[], object: EezObject) => {
+                            return result.concat(checkTransformer(object));
+                        },
+                        [] as Message[]
+                    );
+                } else {
+                    childrenMessages = checkTransformer(childObject);
+                }
+
+                return result.concat(childrenMessages);
+            },
+            []
+        );
+
+        return check(object).concat(childrenMessages);
     }
 );
 

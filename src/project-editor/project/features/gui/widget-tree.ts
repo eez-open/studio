@@ -1,4 +1,10 @@
-import { isObjectInstanceOf, isArray, asArray } from "project-editor/core/store";
+import {
+    isObjectInstanceOf,
+    isArray,
+    asArray,
+    getProperty,
+    getMetaData
+} from "project-editor/core/store";
 import { EezObject } from "project-editor/core/metaData";
 import {
     DisplayItem,
@@ -39,16 +45,20 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
         if (isArray(this.object)) {
             return asArray(this.object).map(child => new DummyWidgetContainerDisplayItem(child));
         } else {
-            let properties = this.object.$eez.metaData
+            let properties = getMetaData(this.object)
                 .properties(this.object)
                 .filter(
                     propertyMetaData =>
                         (propertyMetaData.type == "object" || propertyMetaData.type == "array") &&
-                        this.object[propertyMetaData.name]
+                        !(
+                            propertyMetaData.enumerable !== undefined &&
+                            !propertyMetaData.enumerable
+                        ) &&
+                        getProperty(this.object, propertyMetaData.name)
                 );
 
             if (properties.length == 1 && properties[0].type == "array") {
-                return asArray(this.object[properties[0].name]).map(
+                return asArray(getProperty(this.object, properties[0].name)).map(
                     child => new DummyWidgetContainerDisplayItem(child)
                 );
             }
@@ -56,7 +66,7 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
             return properties.reduce(
                 (children, propertyMetaData, i) => {
                     children[propertyMetaData.name] = new DummyWidgetContainerDisplayItem(
-                        this.object[propertyMetaData.name]
+                        getProperty(this.object, propertyMetaData.name)
                     );
                     return children;
                 },
@@ -71,6 +81,7 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
             let index: number = data.getEnumValue(widget.data);
             if (index >= 0 && index < widget.widgets.length) {
                 let widgetsItemChildren = item.children as DisplayItemChildrenArray;
+
                 return widgetsItemChildren[index];
             }
         }

@@ -7,7 +7,9 @@ import {
     replaceObject,
     replaceObjects,
     updateObject,
-    cloneObject
+    cloneObject,
+    getParent,
+    getMetaData
 } from "project-editor/core/store";
 import {
     EnumItem,
@@ -79,19 +81,20 @@ export class WidgetProperties extends EezObject {
     }
 
     getParentWidget(): WidgetProperties | undefined {
-        if (this.$eez.parent && this.$eez.parent.$eez.parent) {
-            return this.$eez.parent.$eez.parent as WidgetProperties;
+        const parent = getParent(this);
+        if (parent) {
+            const parentWidget = getParent(parent);
+            if (parentWidget) {
+                return parentWidget as WidgetProperties;
+            }
         }
         return undefined;
     }
 
     getSelectParent(): SelectWidgetProperties | undefined {
-        if (
-            this.$eez.parent &&
-            this.$eez.parent.$eez.parent &&
-            this.$eez.parent.$eez.parent instanceof SelectWidgetProperties
-        ) {
-            return this.$eez.parent.$eez.parent;
+        const parentWidget = this.getParentWidget();
+        if (parentWidget && parentWidget instanceof SelectWidgetProperties) {
+            return parentWidget;
         }
         return undefined;
     }
@@ -173,7 +176,7 @@ export class WidgetProperties extends EezObject {
             }
         }
 
-        return super.check().concat(messages);
+        return messages;
     }
 
     extendContextMenu(objects: EezObject[], menuItems: Electron.MenuItem[]): void {
@@ -190,7 +193,7 @@ export class WidgetProperties extends EezObject {
 
         let i: number;
         for (i = 1; i < objects.length; ++i) {
-            if (objects[i].$eez.parent !== objects[0].$eez.parent) {
+            if (getParent(objects[i]) !== getParent(objects[0])) {
                 break;
             }
         }
@@ -204,8 +207,8 @@ export class WidgetProperties extends EezObject {
         }
 
         if (objects.length === 1) {
-            let parent = objects[0].getParent();
-            if (parent && parent.getParent() instanceof SelectWidgetProperties) {
+            let parent = getParent(objects[0]);
+            if (parent && getParent(parent) instanceof SelectWidgetProperties) {
                 additionalMenuItems.push(
                     new MenuItem({
                         label: "Replace Parent",
@@ -281,9 +284,9 @@ export class WidgetProperties extends EezObject {
     }
 
     replaceParent() {
-        let parent = this.getParent();
+        let parent = getParent(this);
         if (parent) {
-            let selectWidget = parent.getParent();
+            let selectWidget = getParent(parent);
             if (selectWidget instanceof SelectWidgetProperties) {
                 replaceObject(selectWidget, cloneObject(undefined, this));
             }
@@ -425,8 +428,8 @@ export const selectWidgetEditorMetaData = registerMetaData({
     className: "SelectWidgetEditor",
 
     label: (selectWidgetEditor: SelectWidgetEditorProperties) => {
-        const parent = selectWidgetEditor.getParent()!;
-        return parent.$eez.metaData.label(parent) + " Editor";
+        const parent = getParent(selectWidgetEditor)!;
+        return getMetaData(parent).label(parent) + " Editor";
     },
 
     properties: () => [
@@ -556,6 +559,7 @@ export class DisplayDataWidgetProperties extends WidgetProperties {
 
 export class TextWidgetProperties extends WidgetProperties {
     @observable text?: string;
+    @observable ignoreLuminocity: boolean;
 
     check() {
         let messages: output.Message[] = [];
@@ -583,6 +587,9 @@ export class MultilineTextWidgetProperties extends WidgetProperties {
 }
 
 export class RectangleWidgetProperties extends WidgetProperties {
+    @observable ignoreLuminocity: boolean;
+    @observable invertColors: boolean;
+
     check() {
         let messages: output.Message[] = [];
 
@@ -1118,7 +1125,7 @@ export const widgetSharedProperties: PropertyMetaData[] = [
         type: "enum",
         matchObjectReference: (object: EezObject, path: (string | number)[], value: string) => {
             if (isEqual(path, ["gui", "widgets"])) {
-                let type = object["type"];
+                let type = (object as WidgetProperties).type;
                 if (type && type.startsWith("Local.")) {
                     return type.substring("Local.".length) == value;
                 }
@@ -1265,10 +1272,10 @@ export function getWidgetTypes() {
                         typeMetaData: widgetMetaData,
                         hideInPropertyGrid: true,
                         childLabel: (childObject: EezObject, childLabel: string) => {
-                            if (childObject.$eez.parent) {
-                                let selectWidgetProperties = childObject.$eez.parent.$eez
-                                    .parent as SelectWidgetProperties;
-
+                            if (getParent(childObject)) {
+                                let selectWidgetProperties = getParent(
+                                    getParent(childObject)!
+                                )! as SelectWidgetProperties;
                                 if (selectWidgetProperties.widgets) {
                                     let index = selectWidgetProperties.widgets.indexOf(
                                         childObject as WidgetProperties
@@ -1322,7 +1329,8 @@ export function getWidgetTypes() {
                     {
                         name: "editor",
                         type: "object",
-                        typeMetaData: selectWidgetEditorMetaData
+                        typeMetaData: selectWidgetEditorMetaData,
+                        enumerable: false
                     }
                 ]),
                 isOpaque: false

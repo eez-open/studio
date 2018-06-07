@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Editor, EditorState } from "project-editor/core/store";
+import { Editor, EditorState, getId, setEez } from "project-editor/core/store";
 import { Message } from "project-editor/core/output";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,6 +38,7 @@ export interface PropertyMetaData {
     replaceObjectReference?: (value: string) => string;
     onSelect?: (object: EezObject) => Promise<any>;
     hideInPropertyGrid?: boolean;
+    enumerable?: boolean;
     isOptional?: boolean;
     defaultValue?: any;
     inheritable?: boolean;
@@ -114,28 +115,11 @@ export class EezObjectState {
     lastChildId?: number;
     metaData: MetaData;
     modificationTime?: number;
+    propertyMetaData?: PropertyMetaData;
 }
 
 export class EezObject {
     $eez: EezObjectState;
-
-    [propertyName: string]: any;
-
-    getParent() {
-        return this.$eez.parent;
-    }
-
-    getKey() {
-        return this.$eez.key;
-    }
-
-    check(): Message[] {
-        return [];
-    }
-
-    extendContextMenu(objects: EezObject[], menuItems: Electron.MenuItem[]) {}
-
-    beforeUpdate(values: any) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,11 +139,11 @@ export class EezValueObject extends EezObject {
     constructor(object: EezObject, public propertyMetaData: PropertyMetaData, public value: any) {
         super();
 
-        this.$eez = {
-            id: object.$eez.id + "." + propertyMetaData.name,
+        setEez(this, {
+            id: getId(object) + "." + propertyMetaData.name,
             key: propertyMetaData.name,
             parent: object,
             metaData: valueObjectMetaData
-        };
+        });
     }
 }

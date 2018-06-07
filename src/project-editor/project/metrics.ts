@@ -1,4 +1,4 @@
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore, getProperty } from "project-editor/core/store";
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 
 export function getAllMetrics() {
@@ -9,7 +9,10 @@ export function getAllMetrics() {
     for (let projectFeature of projectFeatures) {
         if (
             projectFeature.eezStudioExtension.implementation.projectFeature.metrics &&
-            project[projectFeature.eezStudioExtension.implementation.projectFeature.key]
+            getProperty(
+                project,
+                projectFeature.eezStudioExtension.implementation.projectFeature.key
+            )
         ) {
             let featureMetrics = projectFeature.eezStudioExtension.implementation.projectFeature.metrics(
                 project

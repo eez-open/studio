@@ -11,7 +11,13 @@ import { IBaseObject, IDocument } from "shared/ui/designer/designer-interfaces";
 import { CanvasParent } from "shared/ui/designer/canvas";
 import { selectToolHandler } from "shared/ui/designer/select-tool";
 
-import { NavigationStore, updateObject, deleteItems, UndoManager } from "project-editor/core/store";
+import {
+    NavigationStore,
+    updateObject,
+    deleteItems,
+    UndoManager,
+    getId
+} from "project-editor/core/store";
 import { EezObject } from "project-editor/core/metaData";
 
 import * as data from "project-editor/project/features/data/data";
@@ -42,7 +48,7 @@ abstract class ObjectAdapter implements IBaseObject {
     abstract get selectionRects(): Rect[];
 
     get id() {
-        return this.object.$eez.id;
+        return getId(this.object);
     }
 
     open() {}

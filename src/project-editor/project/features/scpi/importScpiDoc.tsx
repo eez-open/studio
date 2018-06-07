@@ -4,7 +4,7 @@ import { observable, computed, action, autorun, Lambda, toJS } from "mobx";
 import { observer } from "mobx-react";
 
 import { ProjectStore, UndoManager } from "project-editor/core/store";
-import { loadObject, addObject, deleteObject } from "project-editor/core/store";
+import { loadObject, addObject, deleteObject, getProperty } from "project-editor/core/store";
 
 import { Loading } from "project-editor/components/Loading";
 
@@ -326,8 +326,10 @@ function getChanges() {
             .then(subsystems => {
                 console.log(subsystems);
 
-                let existingSubsystems = (ProjectStore.projectProperties["scpi"] as ScpiProperties)
-                    .subsystems;
+                let existingSubsystems = (getProperty(
+                    ProjectStore.projectProperties,
+                    "scpi"
+                ) as ScpiProperties).subsystems;
 
                 // added
                 let added = findMissingCommands(subsystems, existingSubsystems);
@@ -476,8 +478,10 @@ export class ImportScpiDocDialog extends React.Component<
 
         UndoManager.setCombineCommands(true);
 
-        let existingSubsystems = (ProjectStore.projectProperties["scpi"] as ScpiProperties)
-            .subsystems;
+        let existingSubsystems = (getProperty(
+            ProjectStore.projectProperties,
+            "scpi"
+        ) as ScpiProperties).subsystems;
 
         let getOrAddSubsystem = (subsystem: Subsystem) => {
             let existingSubsystem = existingSubsystems.find(
@@ -507,9 +511,9 @@ export class ImportScpiDocDialog extends React.Component<
             let subsystem = getOrAddSubsystem(commandDefinition.subsystem);
 
             addObject(
-                subsystem.commands,
+                getProperty(subsystem, "commands"),
                 loadObject(
-                    subsystem.commands,
+                    getProperty(subsystem, "commands"),
                     {
                         name: commandDefinition.command.name,
                         helpLink: commandDefinition.command.helpLink
@@ -542,7 +546,7 @@ export class ImportScpiDocDialog extends React.Component<
 
                 let subsystem = getOrAddSubsystem(commandDefinition.toSubsystem);
 
-                addObject(subsystem.commands, command);
+                addObject(getProperty(subsystem, "commands"), command);
             }
         });
 

@@ -26,7 +26,7 @@ function getCommandFuncName(command: ScpiCommandProperties) {
 }
 
 function buildScpiCommandsDecl(project: ProjectProperties) {
-    let projectActions = project["scpi"] as ScpiProperties;
+    let projectActions = (project as any).scpi as ScpiProperties;
 
     let commands: string[] = [];
 

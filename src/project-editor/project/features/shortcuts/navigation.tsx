@@ -14,7 +14,8 @@ import {
     updateObject,
     deleteObject,
     NavigationStore,
-    ProjectStore
+    ProjectStore,
+    getProperty
 } from "project-editor/core/store";
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/PropertyGrid";
 
@@ -37,8 +38,10 @@ export class ShortcutsNavigation extends NavigationComponent {
 
     @computed
     get shortcutsStore() {
-        const shortcuts = (ProjectStore.projectProperties.shortcuts as ShortcutsProperties)
-            .shortcuts;
+        const shortcuts = (getProperty(
+            ProjectStore.projectProperties,
+            "shortcuts"
+        ) as ShortcutsProperties).shortcuts;
 
         let shortcutsMap = new Map<string, ShortcutProperties>();
         shortcuts.forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));

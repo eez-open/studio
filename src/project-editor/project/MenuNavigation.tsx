@@ -2,7 +2,13 @@ import * as React from "react";
 import { observer } from "mobx-react";
 
 import { EezObject } from "project-editor/core/metaData";
-import { NavigationStore, getChildren, objectToString } from "project-editor/core/store";
+import {
+    NavigationStore,
+    getChildren,
+    objectToString,
+    getMetaData,
+    getId
+} from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -33,7 +39,7 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
             classes.push("EezStudio_ProjectEditor_navigation-menu__item--selected");
         }
 
-        let icon = this.props.item.$eez.metaData.icon || "extension";
+        let icon = getMetaData(this.props.item).icon || "extension";
 
         return (
             <div
@@ -63,7 +69,7 @@ class Menu extends React.Component<
     render() {
         let items = getChildren(this.props.navigationObject).map(item => (
             <NavigationMenuItem
-                key={item.$eez.id}
+                key={getId(item)}
                 navigationObject={this.props.navigationObject}
                 item={item}
             />
@@ -97,11 +103,11 @@ export class MenuNavigation extends React.Component<
             this.props.navigationObject
         );
         if (selectedItem) {
-            let NavigationComponent = selectedItem.$eez.metaData.navigationComponent;
+            let NavigationComponent = getMetaData(selectedItem).navigationComponent;
             if (NavigationComponent) {
                 subNavigation = (
                     <NavigationComponent
-                        id={selectedItem.$eez.metaData.navigationComponentId || this.props.id}
+                        id={getMetaData(selectedItem).navigationComponentId || this.props.id}
                         navigationObject={selectedItem}
                         content={this.props.content}
                     />

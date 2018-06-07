@@ -2,11 +2,15 @@ import {
     ProjectStore,
     OutputSectionsStore,
     updateObject,
+    getParent,
+    getKey,
+    getProperty,
     getObjectPath,
     objectToString,
     getObjectPropertyAsObject,
     isArray,
-    asArray
+    asArray,
+    getMetaData
 } from "project-editor/core/store";
 import { EezObject, EezValueObject } from "project-editor/core/metaData";
 
@@ -25,11 +29,11 @@ function* visitWithPause(parentObject: EezObject): IterableIterator<VisitResult>
             yield* visitWithPause(arrayOfObjects[i]);
         }
     } else {
-        let properties = parentObject.$eez.metaData.properties(parentObject);
+        let properties = getMetaData(parentObject).properties(parentObject);
         for (let i = 0; i < properties.length; ++i) {
             let propertyMetaData = properties[i];
             if (!propertyMetaData.skipSearch) {
-                let value = parentObject[propertyMetaData.name];
+                let value = getProperty(parentObject, propertyMetaData.name);
                 if (value) {
                     if (propertyMetaData.type == "object" || propertyMetaData.type == "array") {
                         yield* visitWithPause(value);
@@ -52,11 +56,11 @@ function* visitWithoutPause(parentObject: EezObject): IterableIterator<VisitResu
             yield* visitWithoutPause(arrayOfObjects[i]);
         }
     } else {
-        let properties = parentObject.$eez.metaData.properties(parentObject);
+        let properties = getMetaData(parentObject).properties(parentObject);
         for (let i = 0; i < properties.length; ++i) {
             let propertyMetaData = properties[i];
             if (!propertyMetaData.skipSearch) {
-                let value = parentObject[propertyMetaData.name];
+                let value = getProperty(parentObject, propertyMetaData.name);
                 if (value) {
                     if (propertyMetaData.type == "object" || propertyMetaData.type == "array") {
                         yield* visitWithoutPause(value);
@@ -113,12 +117,12 @@ function* searchForReference(
 ): IterableIterator<SearchResult> {
     let v = withPause ? visitWithPause(root) : visitWithoutPause(root);
 
-    let objectParent = object.getParent();
+    let objectParent = getParent(object);
     if (!objectParent) {
         return;
     }
 
-    let objectName = object["name"];
+    let objectName = getProperty(object, "name");
     if (!objectName || objectName.length == 0) {
         return;
     }
@@ -285,7 +289,7 @@ export function replaceObjectReference(object: EezObject, newValue: string) {
             } else if (searchValue.propertyMetaData.type === "configuration-references") {
                 value = [];
                 for (let i = 0; i < searchValue.value.length; ++i) {
-                    if (searchValue.value[i] !== object["name"]) {
+                    if (searchValue.value[i] !== getProperty(object, "name")) {
                         value.push(searchValue.value[i]);
                     } else {
                         value.push(newValue);
@@ -293,9 +297,9 @@ export function replaceObjectReference(object: EezObject, newValue: string) {
                 }
             }
 
-            let parent = searchValue.getParent();
+            let parent = getParent(searchValue);
             if (parent) {
-                let key = searchValue.getKey();
+                let key = getKey(searchValue);
                 if (parent && key && typeof key == "string") {
                     updateObject(parent, {
                         [key]: value

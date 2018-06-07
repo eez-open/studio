@@ -1,5 +1,10 @@
 import { Rect } from "project-editor/core/util";
-import { isObjectInstanceOf, objectToJS } from "project-editor/core/store";
+import {
+    isObjectInstanceOf,
+    objectToJS,
+    getModificationTime,
+    getId
+} from "project-editor/core/store";
 import { EezObject } from "project-editor/core/metaData";
 
 import * as data from "project-editor/project/features/data/data";
@@ -110,12 +115,12 @@ function drawFromCache(
 function getCacheId(obj: EezObject) {
     let id: string = "";
 
-    if (obj && obj.$eez) {
-        let modificationTime = obj.$eez.modificationTime;
+    if (obj) {
+        let modificationTime = getModificationTime(obj);
         if (modificationTime != undefined) {
-            id = obj.$eez.id + "-" + modificationTime;
+            id = getId(obj) + "-" + modificationTime;
         } else {
-            id = obj.$eez.id;
+            id = getId(obj);
         }
 
         if (isObjectInstanceOf(obj, styleMetaData)) {

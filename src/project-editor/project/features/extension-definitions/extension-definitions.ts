@@ -4,7 +4,7 @@ import { validators } from "shared/model/validation";
 
 import { showGenericDialog } from "shared/ui/generic-dialog";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore, getProperty } from "project-editor/core/store";
 import { registerMetaData, EezObject } from "project-editor/core/metaData";
 import * as output from "project-editor/core/output";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
@@ -52,9 +52,10 @@ export class ExtensionDefinitionProperties extends EezObject {
             messages.push(output.propertyNotSetMessage(this, "idfGuid"));
         }
 
-        let extensionDefinitions = ProjectStore.projectProperties[
+        let extensionDefinitions = getProperty(
+            ProjectStore.projectProperties,
             "extensionDefinitions"
-        ] as ExtensionDefinitionProperties[];
+        ) as ExtensionDefinitionProperties[];
         if (
             extensionDefinitions.find(
                 extensionDefinition =>
@@ -72,14 +73,15 @@ export class ExtensionDefinitionProperties extends EezObject {
             }
         }
 
-        return super.check().concat(messages);
+        return messages;
     }
 }
 
 export function findExtensionDefinition(name: string) {
-    let extensionDefinitions = ProjectStore.projectProperties[
+    let extensionDefinitions = getProperty(
+        ProjectStore.projectProperties,
         "extensionDefinitions"
-    ] as ExtensionDefinitionProperties[];
+    ) as ExtensionDefinitionProperties[];
     for (let i = 0; i < extensionDefinitions.length; ++i) {
         let extensionDefinition = extensionDefinitions[i];
         if (extensionDefinition.name == name) {

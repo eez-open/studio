@@ -1,3 +1,5 @@
+import { getProperty } from "project-editor/core/store";
+
 import { ProjectProperties } from "project-editor/project/project";
 
 import { ScpiProperties } from "project-editor/project/features/scpi/scpi";
@@ -5,7 +7,7 @@ import { ScpiProperties } from "project-editor/project/features/scpi/scpi";
 ////////////////////////////////////////////////////////////////////////////////
 
 export function metrics(project: ProjectProperties): { [key: string]: string | number } {
-    let scpi = project["scpi"] as ScpiProperties;
+    let scpi = getProperty(project, "scpi") as ScpiProperties;
 
     return {
         SCPI: "",

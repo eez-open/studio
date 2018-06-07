@@ -2,7 +2,7 @@ import { observable, computed, action, autorun } from "mobx";
 
 import { _find } from "shared/algorithm";
 
-import { ProjectStore, hasAncestor } from "project-editor/core/store";
+import { ProjectStore, hasAncestor, getParent, getId } from "project-editor/core/store";
 import {
     EezObject,
     MetaData,
@@ -45,7 +45,7 @@ export const pageOrientationMetaData = registerMetaData({
     },
     className: "PageOrientation",
     label: (object: EezObject) => {
-        let parent = object.getParent();
+        let parent = getParent(object);
         if (parent instanceof PageProperties) {
             if (parent.portrait == object) {
                 return "portrait";
@@ -138,20 +138,19 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
 
                 // remove all what we remembered below selected object
                 Object.keys(this.selectWidgetToSelectedWidget).forEach(key => {
-                    if (key.startsWith(selectedObject.$eez.id)) {
+                    if (key.startsWith(getId(selectedObject))) {
                         delete this.selectWidgetToSelectedWidget[key];
                     }
                 });
 
                 // remember from selectedObject up to the root
-                while (selectedObject.$eez.parent && selectedObject.$eez.parent.$eez.parent) {
-                    if (selectedObject.$eez.parent.$eez.parent instanceof SelectWidgetProperties) {
+                while (getParent(selectedObject) && getParent(getParent(selectedObject)!)) {
+                    if (getParent(getParent(selectedObject)!) instanceof SelectWidgetProperties) {
                         this.selectWidgetToSelectedWidget[
-                            selectedObject.$eez.parent.$eez.parent.$eez.id
-                        ] =
-                            selectedObject.$eez.id;
+                            getId(getParent(getParent(selectedObject)!)!)
+                        ] = getId(selectedObject);
                     }
-                    selectedObject = selectedObject.$eez.parent;
+                    selectedObject = getParent(selectedObject)!;
                 }
             }
 
@@ -205,7 +204,7 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
         );
 
         // second, use selectWidgetToSelectedWidget to find selected widget
-        let selectedWidgetId = this.selectWidgetToSelectedWidget[widget.$eez.id];
+        let selectedWidgetId = this.selectWidgetToSelectedWidget[getId(widget)];
         if (selectedWidgetId) {
             selectedWidgetItem = getDisplayItemFromObjectId(this, selectedWidgetId);
         }

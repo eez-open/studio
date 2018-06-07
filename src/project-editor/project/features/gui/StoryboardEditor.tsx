@@ -12,7 +12,10 @@ import {
     getAncestorOfType,
     isObjectInstanceOf,
     loadObject,
-    getEezStudioDataFromDragEvent
+    getEezStudioDataFromDragEvent,
+    getProperty,
+    getId,
+    getModificationTime
 } from "project-editor/core/store";
 import { EezObject, EditorComponent } from "project-editor/core/metaData";
 import {
@@ -66,11 +69,11 @@ let cache: string[] = [];
 let cacheMap: Map<string, HTMLCanvasElement> = new Map<string, HTMLCanvasElement>();
 
 function getCacheId(object: EezObject) {
-    let modificationTime = object.$eez.modificationTime;
+    let modificationTime = getModificationTime(object);
     if (modificationTime != undefined) {
-        return object.$eez.id + "-" + modificationTime;
+        return getId(object) + "-" + modificationTime;
     } else {
-        return object.$eez.id;
+        return getId(object);
     }
 }
 
@@ -492,7 +495,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
                 let storyboardPage = storyboardPageItem.object as StoryboardPageProperties;
                 let page = findPage(storyboardPage.page);
                 let pageOrientation =
-                    page && (page[screenOrientation] as PageOrientationProperties);
+                    page && (getProperty(page, screenOrientation) as PageOrientationProperties);
 
                 pageNodes.push({
                     parent: tree,
@@ -627,7 +630,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
 
                 let page = findPage(storyboardPage.page);
                 let screenOrientation = ProjectStore.selectedScreenOrientation;
-                let pageOrientation = page && page[screenOrientation];
+                let pageOrientation = page && getProperty(page, screenOrientation);
 
                 let rect = {
                     x: Math.round(p.x),

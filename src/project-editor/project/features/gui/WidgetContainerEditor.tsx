@@ -6,7 +6,8 @@ import {
     UIStateStore,
     addObject,
     isObjectInstanceOf,
-    getEezStudioDataFromDragEvent
+    getEezStudioDataFromDragEvent,
+    getProperty
 } from "project-editor/core/store";
 import { Rect, rectContains } from "project-editor/core/util";
 
@@ -172,7 +173,10 @@ export class WidgetContainerEditor extends CanvasEditor {
 
             dropItemWidgetObj.x = this.dropItem.rect.x;
             dropItemWidgetObj.y = this.dropItem.rect.y;
-            addObject(this.props.displaySelection.object["widgets"], dropItemWidgetObj);
+            addObject(
+                getProperty(this.props.displaySelection.object, "widgets"),
+                dropItemWidgetObj
+            );
         }
     }
 

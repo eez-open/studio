@@ -1,7 +1,7 @@
 import { observable } from "mobx";
 
 import { registerMetaData, EezObject } from "project-editor/core/metaData";
-import { ProjectStore, asArray } from "project-editor/core/store";
+import { ProjectStore, asArray, getProperty } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import * as output from "project-editor/core/output";
 
@@ -147,7 +147,8 @@ registerFeatureImplementation("gui", {
 
 export function getGui() {
     return (
-        ProjectStore.projectProperties && (ProjectStore.projectProperties["gui"] as GuiProperties)
+        ProjectStore.projectProperties &&
+        (getProperty(ProjectStore.projectProperties, "gui") as GuiProperties)
     );
 }
 

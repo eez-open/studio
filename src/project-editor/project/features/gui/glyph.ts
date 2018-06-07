@@ -1,15 +1,15 @@
-import { FontProperties } from "./fontMetaData";
 import { observable, computed } from "mobx";
 
 import { showGenericDialog } from "shared/ui/generic-dialog";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
-import { loadObject, objectToJS } from "project-editor/core/store";
+import { loadObject, objectToJS, getParent, getMetaData } from "project-editor/core/store";
 import { EezObject, registerMetaData } from "project-editor/core/metaData";
 import * as util from "project-editor/core/util";
 
 import { GlyphSelectFieldType } from "project-editor/project/features/gui/FontEditor";
+import { FontProperties } from "project-editor/project/features/gui/fontMetaData";
 
 let path = EEZStudio.electron.remote.require("path");
 
@@ -92,7 +92,7 @@ export class GlyphSourceProperties extends EezObject {
     @observable encoding?: number;
 
     toString() {
-        return this.$eez.metaData.label(this);
+        return getMetaData(this).label(this);
     }
 }
 
@@ -148,7 +148,7 @@ function getPixelByteIndex(glyphBitmap: GlyphBitmap, x: number, y: number): numb
 
 export function getPixel(glyphBitmap: GlyphBitmap | undefined, x: number, y: number): number {
     if (glyphBitmap && x < glyphBitmap.width && y < glyphBitmap.height) {
-        return glyphBitmap.pixelArray[getPixelByteIndex(glyphBitmap, x, y)] & (0x80 >> (x % 8));
+        return glyphBitmap.pixelArray[getPixelByteIndex(glyphBitmap, x, y)] & (0x80 >> x % 8);
     } else {
         return 0;
     }
@@ -159,11 +159,11 @@ function setPixelInplace(glyphBitmap: GlyphBitmap, x: number, y: number, color: 
     if (glyphBitmap.pixelArray[byteIndex] === undefined) {
         glyphBitmap.pixelArray[byteIndex] = 0;
     }
-    glyphBitmap.pixelArray[byteIndex] |= 0x80 >> (x % 8);
+    glyphBitmap.pixelArray[byteIndex] |= 0x80 >> x % 8;
     if (color) {
-        glyphBitmap.pixelArray[byteIndex] |= 0x80 >> (x % 8);
+        glyphBitmap.pixelArray[byteIndex] |= 0x80 >> x % 8;
     } else {
-        glyphBitmap.pixelArray[byteIndex] &= ~(0x80 >> (x % 8)) & 0xff;
+        glyphBitmap.pixelArray[byteIndex] &= ~(0x80 >> x % 8) & 0xff;
     }
 }
 
@@ -272,7 +272,7 @@ export class GlyphProperties extends EezObject {
     }
 
     getFont() {
-        return (this.getParent() as EezObject).getParent() as FontProperties;
+        return getParent(getParent(this)!) as FontProperties;
     }
 
     getPixel(x: number, y: number): number {

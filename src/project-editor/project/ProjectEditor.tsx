@@ -15,7 +15,9 @@ import {
     NavigationStore,
     OutputSectionsStore,
     objectToString,
-    isArray
+    isArray,
+    getParent,
+    getMetaData
 } from "project-editor/core/store";
 import { EezObject } from "project-editor/core/metaData";
 import { startSearch } from "project-editor/core/search";
@@ -153,7 +155,7 @@ class Editor extends React.Component<{}, {}> {
 
         let activeEditor = EditorsStore.activeEditor;
         if (activeEditor) {
-            let EditorComponent = activeEditor.object.$eez.metaData.editorComponent;
+            let EditorComponent = getMetaData(activeEditor.object).editorComponent;
             if (EditorComponent) {
                 editor = <EditorComponent editor={activeEditor} />;
             }
@@ -211,9 +213,9 @@ class Content extends React.Component<{}, {}> {
 
     @computed
     get hideInProperties() {
-        for (let object: EezObject | undefined = this.object; object; object = object.getParent()) {
-            if (!isArray(object) && object.$eez.metaData.editorComponent) {
-                return object.$eez.metaData.hideInProperties;
+        for (let object: EezObject | undefined = this.object; object; object = getParent(object)) {
+            if (!isArray(object) && getMetaData(object).editorComponent) {
+                return getMetaData(object).hideInProperties;
             }
         }
         return false;

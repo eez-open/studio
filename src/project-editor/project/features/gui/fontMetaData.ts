@@ -7,6 +7,7 @@ import { showGenericDialog } from "shared/ui/generic-dialog";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
 import { EezObject, registerMetaData } from "project-editor/core/metaData";
+import { getProperty } from "project-editor/core/store";
 
 import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
 
@@ -123,15 +124,15 @@ export const fontMetaData = registerMetaData({
     ],
     newItem: (parent: EezObject) => {
         function isFont(obj: EezObject) {
-            return obj["filePath"];
+            return getProperty(obj, "filePath");
         }
 
         function isNonBdfFont(obj: EezObject) {
-            return isFont(obj) && path.extname(obj["filePath"]) != ".bdf";
+            return isFont(obj) && path.extname(getProperty(obj, "filePath")) != ".bdf";
         }
 
         function isCreateGlyphs(obj: EezObject) {
-            return isFont(obj) && obj["createGlyphs"];
+            return isFont(obj) && getProperty(obj, "createGlyphs");
         }
 
         const obj = {

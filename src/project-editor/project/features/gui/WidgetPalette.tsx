@@ -1,6 +1,11 @@
 import * as React from "react";
 
-import { ProjectStore, objectToClipboardData, setClipboardData } from "project-editor/core/store";
+import {
+    ProjectStore,
+    objectToClipboardData,
+    setClipboardData,
+    setEez
+} from "project-editor/core/store";
 import { EezObject } from "project-editor/core/metaData";
 import { DragAndDropManager } from "project-editor/core/dd";
 
@@ -49,13 +54,13 @@ class Widget extends React.Component<WidgetProps, WidgetState> {
                 height: widgetTypeProperties.height
             } as any;
         }
-        if (!object["style"]) {
-            object["style"] = "default";
+        if (!(object as any).style) {
+            (object as any).style = "default";
         }
-        object.$eez = {
+        setEez(object, {
             id: "undefined",
             metaData: widgetMetaData
-        };
+        });
 
         setClipboardData(event, objectToClipboardData(object));
 
@@ -132,18 +137,17 @@ export class WidgetPalette extends React.Component<
             );
         });
 
-        let localWidgets = (ProjectStore.projectProperties["gui"] as GuiProperties).widgets.map(
-            widgetType => {
-                return (
-                    <Widget
-                        key={"Local." + widgetType.name}
-                        widget={widgetType}
-                        onSelect={this.onSelect.bind(this, widgetType)}
-                        selected={widgetType == this.state.selectedWidget}
-                    />
-                );
-            }
-        );
+        let localWidgets = ((ProjectStore.projectProperties as any)
+            .gui as GuiProperties).widgets.map(widgetType => {
+            return (
+                <Widget
+                    key={"Local." + widgetType.name}
+                    widget={widgetType}
+                    onSelect={this.onSelect.bind(this, widgetType)}
+                    selected={widgetType == this.state.selectedWidget}
+                />
+            );
+        });
 
         return (
             <div tabIndex={0} className="EezStudio_ProjectEditor_widget-palette layoutCenter">

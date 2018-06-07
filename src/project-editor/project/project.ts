@@ -1,7 +1,13 @@
 import { observable, extendObservable } from "mobx";
 
 import { getExtensionsByCategory } from "project-editor/core/extensions";
-import { loadObject, objectToJson, ProjectStore } from "project-editor/core/store";
+import {
+    loadObject,
+    objectToJson,
+    ProjectStore,
+    getProperty,
+    getMetaData
+} from "project-editor/core/store";
 import { PropertyMetaData, registerMetaData, EezObject } from "project-editor/core/metaData";
 import * as output from "project-editor/core/output";
 
@@ -36,7 +42,7 @@ export class BuildConfigurationProperties extends EezObject {
             }
         }
 
-        return super.check().concat(messages);
+        return messages;
     }
 }
 
@@ -229,11 +235,16 @@ export class ProjectProperties extends EezObject {
     callExtendObservableForAllOptionalProjectFeatures() {
         let optionalFeatures: any = {};
 
-        this.$eez.metaData.properties(this).forEach(propertyMetaData => {
-            if (propertyMetaData.isOptional && !(propertyMetaData.name in this)) {
-                optionalFeatures[propertyMetaData.name] = this[propertyMetaData.name];
-            }
-        });
+        getMetaData(this)
+            .properties(this)
+            .forEach(propertyMetaData => {
+                if (propertyMetaData.isOptional && !(propertyMetaData.name in this)) {
+                    optionalFeatures[propertyMetaData.name] = getProperty(
+                        this,
+                        propertyMetaData.name
+                    );
+                }
+            });
 
         extendObservable(this, optionalFeatures);
     }

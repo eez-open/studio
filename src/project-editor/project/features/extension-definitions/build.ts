@@ -4,7 +4,7 @@ import {
     buildInstrumentExtension,
     IdfProperties as InstrumentIdfProperties
 } from "instrument/export";
-import { ProjectStore, OutputSectionsStore } from "project-editor/core/store";
+import { ProjectStore, OutputSectionsStore, getProperty } from "project-editor/core/store";
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 import { Section, Type } from "project-editor/core/output";
 
@@ -22,7 +22,10 @@ function getInstrumentExtensionProperties(extensionDefinition: ExtensionDefiniti
         if (
             projectFeature.eezStudioExtension.implementation.projectFeature
                 .collectExtensionDefinitions &&
-            project[projectFeature.eezStudioExtension.implementation.projectFeature.key]
+            getProperty(
+                project,
+                projectFeature.eezStudioExtension.implementation.projectFeature.key
+            )
         ) {
             projectFeature.eezStudioExtension.implementation.projectFeature.collectExtensionDefinitions(
                 project,
@@ -36,9 +39,10 @@ function getInstrumentExtensionProperties(extensionDefinition: ExtensionDefiniti
 }
 
 export async function extensionDefinitionBuild() {
-    let extensionDefinitions = ProjectStore.projectProperties[
+    let extensionDefinitions = getProperty(
+        ProjectStore.projectProperties,
         "extensionDefinitions"
-    ] as ExtensionDefinitionProperties[];
+    ) as ExtensionDefinitionProperties[];
 
     if (extensionDefinitions) {
         await Promise.all(
@@ -87,7 +91,8 @@ export async function extensionDefinitionBuild() {
                         await buildInstrumentExtension(
                             instrumentIdf,
 
-                            (ProjectStore.projectProperties["scpi"] as ScpiProperties).subsystems,
+                            (getProperty(ProjectStore.projectProperties, "scpi") as ScpiProperties)
+                                .subsystems,
 
                             idfFilePath,
 

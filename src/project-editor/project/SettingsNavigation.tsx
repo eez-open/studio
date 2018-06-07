@@ -8,7 +8,9 @@ import {
     updateObject,
     loadObject,
     NavigationStore,
-    UIStateStore
+    UIStateStore,
+    getProperty,
+    getMetaData
 } from "project-editor/core/store";
 import { confirm } from "project-editor/core/util";
 import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
@@ -54,9 +56,10 @@ class ProjectFeature extends React.Component<
     render() {
         let button: JSX.Element | undefined;
         if (
-            ProjectStore.projectProperties[
+            getProperty(
+                ProjectStore.projectProperties,
                 this.props.extension.eezStudioExtension.implementation.projectFeature.key
-            ]
+            )
         ) {
             if (this.props.extension.eezStudioExtension.implementation.projectFeature.mandatory) {
                 button = (
@@ -151,7 +154,7 @@ export class SettingsNavigation extends NavigationComponent {
 
     render() {
         let content = this.props.content;
-        if (this.object && this.object.$eez.metaData.editorComponent) {
+        if (this.object && getMetaData(this.object).editorComponent) {
             content = this.props.content;
         } else {
             content = <SettingsEditor object={this.object} />;

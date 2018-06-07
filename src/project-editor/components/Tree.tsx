@@ -20,7 +20,9 @@ import {
     isArrayElement,
     isSameInstanceTypeAs,
     objectToString,
-    setClipboardData
+    setClipboardData,
+    getId,
+    getMetaData
 } from "project-editor/core/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -267,7 +269,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
 
                 childrenRows.push(
                     <TreeRow
-                        key={child.item.object.$eez.id}
+                        key={getId(child.item.object)}
                         showOnlyChildren={children.length == 1 && isArray(child.item.object)}
                         rootItem={this.props.rootItem}
                         item={child.item}
@@ -288,15 +290,14 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
 
                 if (isArray(this.props.item.object)) {
                     if (
-                        this.props.item.object.$eez.metaData ==
-                        DragAndDropManager.dragObject.$eez.metaData
+                        isSameInstanceTypeAs(this.props.item.object, DragAndDropManager.dragObject)
                     ) {
                         addDropPlaceholder = true;
                     }
                 } else {
                     let place = findPastePlaceInside(
                         this.props.item.object,
-                        DragAndDropManager.dragObject.$eez.metaData,
+                        getMetaData(DragAndDropManager.dragObject),
                         true
                     );
                     if (place) {
@@ -368,7 +369,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
             row = (
                 <div
                     ref="row"
-                    data-object-id={this.props.item.object.$eez.id}
+                    data-object-id={getId(this.props.item.object)}
                     className={className}
                     style={{ paddingLeft: this.props.level * 20 }}
                     onClick={this.onClick.bind(this)}
@@ -580,7 +581,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                 } else if (dropPosition == DropPosition.DROP_INSIDE) {
                     let dropPlace = findPastePlaceInside(
                         DragAndDropManager.dropObject.object,
-                        object.$eez.metaData,
+                        getMetaData(object),
                         true
                     );
                     if (dropPlace) {

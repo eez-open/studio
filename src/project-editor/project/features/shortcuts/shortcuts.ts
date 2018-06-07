@@ -2,7 +2,7 @@ import { observable } from "mobx";
 
 import { registerMetaData, EezObject } from "project-editor/core/metaData";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
-import { objectToJS } from "project-editor/core/store";
+import { objectToJS, getProperty } from "project-editor/core/store";
 
 import { ExtensionDefinitionProperties } from "project-editor/project/features/extension-definitions/extension-definitions";
 
@@ -149,7 +149,7 @@ registerFeatureImplementation("shortcuts", {
             extensionDefinition: ExtensionDefinitionProperties,
             properties
         ) => {
-            let shortcuts = project["shortcuts"] as ShortcutsProperties;
+            let shortcuts = getProperty(project, "shortcuts") as ShortcutsProperties;
             properties.shortcuts = objectToJS(shortcuts.shortcuts.filter(
                 shortcut =>
                     !shortcut.usedIn ||
