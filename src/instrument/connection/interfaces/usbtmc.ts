@@ -461,11 +461,10 @@ export class Instrument {
             this.device.deviceDescriptor.idVendor == 0x1ab1 &&
             RIGOL_QUIRK_PIDS.indexOf(this.device.deviceDescriptor.idProduct) !== -1
         ) {
-            this.rigol_quirk = true;
-
-            if (this.device.deviceDescriptor.idProduct == 0x04ce) {
-                this.rigol_quirk_ieee_block = true;
-            }
+            //this.rigol_quirk = true;
+            // if (this.device.deviceDescriptor.idProduct == 0x04ce) {
+            //     this.rigol_quirk_ieee_block = true;
+            // }
         }
 
         this.connected = true;
@@ -789,6 +788,9 @@ export class Instrument {
                 }
 
                 const resp = await this.bulk_in_ep_read(read_len + USBTMC_HEADER_SIZE + 3);
+                if (resp.length === 0) {
+                    break;
+                }
 
                 let data: Buffer | undefined = undefined;
 
@@ -865,6 +867,20 @@ export class Instrument {
             throw err;
         }
 
+        if (read_data.length > 0 && read_data[0] === "#".charCodeAt(0)) {
+            // ieee block incoming, the transfer_size usbtmc header is lying about the transaction size
+            const l = read_data[1] - "0".charCodeAt(0);
+            const n = parseInt(read_data.slice(2, l + 2).toString());
+            const transfer_size = n + (l + 2); // account for ieee header
+
+            if (read_data.length < transfer_size) {
+                read_data = Buffer.concat([
+                    read_data,
+                    Buffer.alloc(transfer_size - read_data.length)
+                ]);
+            }
+        }
+
         return read_data;
     }
 
@@ -886,16 +902,16 @@ export class Instrument {
         }
     }
 
-    async write(message: string, encoding: string = "utf8") {
+    async write(message: string, encoding: string = "binary") {
         await this.write_raw(Buffer.from(message, encoding));
     }
 
-    async read(num: number = -1, encoding: string = "utf8") {
+    async read(num: number = -1, encoding: string = "binary") {
         // Read string from instrument
         return (await this.read_raw(num)).toString(encoding);
     }
 
-    async ask(message: string, num: number = -1, encoding: string = "utf8") {
+    async ask(message: string, num: number = -1, encoding: string = "binary") {
         // Write then read string
         // Advantest/ADCMT hardware won't respond to a command unless it's in Local Lockout mode
         const was_locked = this.advantest_locked;

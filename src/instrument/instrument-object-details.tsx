@@ -80,11 +80,11 @@ class Connection extends React.Component<{
 
                 connectionParameters = (
                     <ConnectionProperties
-                        connectionParameters={
-                            (instrument.lastConnection as ConnectionParameters) ||
-                            this.connectionParameters ||
+                        connectionParameters={instrument.getConnectionParameters([
+                            instrument.lastConnection,
+                            this.connectionParameters,
                             instrument.defaultConnectionParameters
-                        }
+                        ])}
                         onConnectionParametersChanged={(
                             connectionParameters: ConnectionParameters
                         ) => {

@@ -66,7 +66,10 @@ class Connection {
 
     openConnectDialog() {
         showConnectionDialog(
-            this.instrument.lastConnection || this.instrument.defaultConnectionParameters,
+            this.instrument.getConnectionParameters([
+                this.instrument.lastConnection,
+                this.instrument.defaultConnectionParameters
+            ]),
             this.handleConnect,
             this.instrument.availableConnections,
             this.instrument.serialBaudRates
