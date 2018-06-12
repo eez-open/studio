@@ -8,6 +8,7 @@ import { isRenderer } from "shared/util";
 import { InstrumentObject } from "instrument/instrument-object";
 import { EthernetInterface } from "instrument/connection/interfaces/ethernet";
 import { SerialInterface } from "instrument/connection/interfaces/serial";
+import { UsbTmcInterface } from "instrument/connection/interfaces/usbtmc";
 import {
     CommunicationInterface,
     CommunicationInterfaceHost,
@@ -192,8 +193,10 @@ export class Connection extends ConnectionBase implements CommunicationInterface
 
         if (this.connectionParameters.type === "ethernet") {
             this.communicationInterface = new EthernetInterface(this);
-        } else {
+        } else if (this.connectionParameters.type === "serial") {
             this.communicationInterface = new SerialInterface(this);
+        } else {
+            this.communicationInterface = new UsbTmcInterface(this);
         }
 
         this.communicationInterface!.connect();

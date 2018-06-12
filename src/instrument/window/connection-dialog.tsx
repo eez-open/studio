@@ -19,7 +19,7 @@ import { ConnectionParameters } from "instrument/connection/interface";
 interface ConnectionPropertiesProps {
     connectionParameters: ConnectionParameters;
     onConnectionParametersChanged: (connectionParameters: ConnectionParameters) => void;
-    availableConnections: ("ethernet" | "serial")[];
+    availableConnections: ("ethernet" | "serial" | "usbtmc")[];
     serialBaudRates: number[];
 }
 
@@ -47,6 +47,8 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
     @observable ethernetPort: number;
     @observable serialPortPath: string;
     @observable serialPortBaudRate: number;
+    @observable idVendor: number;
+    @observable idProduct: number;
 
     disposer: any;
 
@@ -61,6 +63,8 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
         this.ethernetPort = connectionParameters.ethernetParameters.port;
         this.serialPortPath = connectionParameters.serialParameters.port;
         this.serialPortBaudRate = connectionParameters.serialParameters.baudRate;
+        this.idVendor = connectionParameters.usbtmcParameters.idVendor;
+        this.idProduct = connectionParameters.usbtmcParameters.idProduct;
     }
 
     componentDidMount() {
@@ -82,10 +86,14 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                     connectionParameters.type = "ethernet";
                     connectionParameters.ethernetParameters.address = this.ethernetAddress;
                     connectionParameters.ethernetParameters.port = this.ethernetPort;
-                } else {
+                } else if (this.iface === "serial") {
                     connectionParameters.type = "serial";
                     connectionParameters.serialParameters.port = this.serialPortPath;
                     connectionParameters.serialParameters.baudRate = this.serialPortBaudRate;
+                } else {
+                    connectionParameters.type = "usbtmc";
+                    connectionParameters.usbtmcParameters.idVendor = this.idVendor;
+                    connectionParameters.usbtmcParameters.idProduct = this.idProduct;
                 }
 
                 return connectionParameters;
@@ -124,6 +132,16 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
     @action.bound
     onSerialPortBaudRateChange(value: string) {
         this.serialPortBaudRate = parseInt(value);
+    }
+
+    @action.bound
+    onIDVendorChange(value: string) {
+        this.idVendor = parseInt(value);
+    }
+
+    @action.bound
+    onIDProductChange(value: string) {
+        this.idProduct = parseInt(value);
     }
 
     @bind
@@ -187,7 +205,7 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                     onChange={this.onEthernetPortChange}
                 />
             ];
-        } else {
+        } else if (this.iface === "serial") {
             options = [
                 <SelectProperty
                     key="serialPort"
@@ -225,6 +243,21 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                     ))}
                 </SelectProperty>
             ];
+        } else {
+            options = [
+                <TextInputProperty
+                    key="idVendor"
+                    name="Vendor ID"
+                    value={"0x" + this.idVendor.toString(16)}
+                    onChange={this.onIDVendorChange}
+                />,
+                <TextInputProperty
+                    key="idProduct"
+                    name="Product ID"
+                    value={"0x" + this.idProduct.toString(16)}
+                    onChange={this.onIDProductChange}
+                />
+            ];
         }
 
         return (
@@ -235,6 +268,9 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                     )}
                     {this.props.availableConnections.indexOf("serial") !== -1 && (
                         <option value="serial">Serial</option>
+                    )}
+                    {this.props.availableConnections.indexOf("usbtmc") !== -1 && (
+                        <option value="usbtmc">USBTMC</option>
                     )}
                 </SelectProperty>
                 {options}
@@ -248,7 +284,7 @@ class ConnectionDialog extends React.Component<
     {
         connectionParameters: ConnectionParameters;
         connect: (connectionParameters: ConnectionParameters) => void;
-        availableConnections: ("ethernet" | "serial")[];
+        availableConnections: ("ethernet" | "serial" | "usbtmc")[];
         serialBaudRates: number[];
     },
     {}
@@ -283,7 +319,7 @@ class ConnectionDialog extends React.Component<
 export function showConnectionDialog(
     connectionParameters: ConnectionParameters,
     connect: (connectionParameters: ConnectionParameters) => void,
-    availableConnections: ("ethernet" | "serial")[],
+    availableConnections: ("ethernet" | "serial" | "usbtmc")[],
     serialBaudRates: number[]
 ) {
     showDialog(

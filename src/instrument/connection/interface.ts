@@ -15,10 +15,16 @@ export interface SerialConnectionParameters {
     baudRate: number;
 }
 
+export interface UsbtmcConnectionParameters {
+    idVendor: number;
+    idProduct: number;
+}
+
 export interface ConnectionParameters {
-    type: "ethernet" | "serial";
+    type: "ethernet" | "serial" | "usbtmc";
     ethernetParameters: EthernetConnectionParameters;
     serialParameters: SerialConnectionParameters;
+    usbtmcParameters: UsbtmcConnectionParameters;
 }
 
 export interface CommunicationInterfaceHost {

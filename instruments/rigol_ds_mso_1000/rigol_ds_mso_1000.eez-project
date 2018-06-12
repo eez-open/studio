@@ -9,7 +9,7 @@
           "name": "DS1000Z",
           "description": "The Rigol DS1000Z Oscilloscopes feature 4 channels and professional measurement functions at value pricing, making them attractive for educational and private use. All devices are equipped with the same well constructed and intuitive operational menu providing extensive functions as found in bigger and higher priced models.\nAll models of the DS1000Z series are equipped with 4 channels, a sample rate of 1 GSa/s, a storage size of 12 Mpts and a 7” (17,8 cm) TFT color display, as well as professional measurement and mathematical functions.\nYou can choose between 2 ranges of bandwidth: 70 and 100 MHz.\n\nExtendibility\nSerial decoding (RS232, I²C, SPI), advanced trigger options (Windows, Nth Edge, Video / HDTV, Delay, TimeOut, Duration und USB) and recording features can be added per software code. Additionally, the storage size can be upgraded from 12 Mpts to 24 Mpts by using a software code too.",
           "screenOrientation": "landscape",
-          "properties": "{\n  \"connection\": {\n    \"ethernet\": {\n      \"port\": 5555\n      }\n  },\n  \"channels\": [\n    { \"color\": \"#FBFB00\", \"colorInverse\": \"#AEAE00\" },\n    { \"color\": \"#03FFFF\", \"colorInverse\": \"#00B5B5\" },\n    { \"color\": \"#F000F0\", \"colorInverse\": \"#A300A3\" },\n    { \"color\": \"#007FFF\", \"colorInverse\": \"#0059B3\" }\n  ]\n}\n"
+          "properties": "{\n  \"connection\": {\n    \"ethernet\": {\n      \"port\": 5555\n    },\n    \"usbtmc\": {\n        \"idVendor\": 6833,\n        \"idProduct\": 1230\n    }\n  },\n  \"channels\": [\n    { \"color\": \"#FBFB00\", \"colorInverse\": \"#AEAE00\" },\n    { \"color\": \"#03FFFF\", \"colorInverse\": \"#00B5B5\" },\n    { \"color\": \"#F000F0\", \"colorInverse\": \"#A300A3\" },\n    { \"color\": \"#007FFF\", \"colorInverse\": \"#0059B3\" }\n  ]\n}\n"
         },
         {
           "name": "DS1000Z-S",
@@ -3439,8 +3439,7 @@
         "showInToolbar": true,
         "toolbarButtonPosition": 1,
         "toolbarButtonColor": "#7BC3D4",
-        "requiresConfirmation": false,
-        "selected": true
+        "requiresConfirmation": false
       },
       {
         "id": "a8bf8f4a-dc9d-4672-d6a9-40615e68102a",

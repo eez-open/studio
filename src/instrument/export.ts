@@ -19,6 +19,10 @@ export interface IInstrumentProperties {
             baudRates: number[];
             defaultBaudRate: number;
         };
+        usbtmc?: {
+            idVendor: number;
+            idProduct: number;
+        };
     };
     channels?: {
         maxVoltage?: number;

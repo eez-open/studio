@@ -247,9 +247,11 @@ export class InstrumentObject {
     }
 
     get defaultConnectionParameters(): ConnectionParameters {
-        let type: "ethernet" | "serial" | undefined;
+        let type: "ethernet" | "serial" | "usbtmc" | undefined;
         let ethernetPort: number | undefined;
         let baudRate: number | undefined;
+        let idVendor: number | undefined;
+        let idProduct: number | undefined;
 
         const connection = this.getConnectionProperty();
         if (connection) {
@@ -263,6 +265,14 @@ export class InstrumentObject {
                     type = "serial";
                 }
                 baudRate = connection.serial.defaultBaudRate;
+            }
+
+            if (connection.usbtmc) {
+                if (type === undefined) {
+                    type = "usbtmc";
+                }
+                idVendor = connection.usbtmc.idVendor;
+                idProduct = connection.usbtmc.idProduct;
             }
         }
 
@@ -278,6 +288,14 @@ export class InstrumentObject {
             baudRate = DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!.serial!.defaultBaudRate;
         }
 
+        if (idVendor === undefined) {
+            idVendor = 0;
+        }
+
+        if (idProduct === undefined) {
+            idProduct = 0;
+        }
+
         return {
             type,
             ethernetParameters: {
@@ -287,12 +305,16 @@ export class InstrumentObject {
             serialParameters: {
                 port: "",
                 baudRate
+            },
+            usbtmcParameters: {
+                idVendor: idVendor,
+                idProduct: idProduct
             }
         };
     }
 
-    get availableConnections(): ("ethernet" | "serial")[] {
-        let availableConnections: ("ethernet" | "serial")[] = [];
+    get availableConnections(): ("ethernet" | "serial" | "usbtmc")[] {
+        let availableConnections: ("ethernet" | "serial" | "usbtmc")[] = [];
 
         const connection = this.getConnectionProperty();
         if (connection) {
@@ -302,10 +324,13 @@ export class InstrumentObject {
             if (connection.serial) {
                 availableConnections.push("serial");
             }
+            if (connection.usbtmc) {
+                availableConnections.push("usbtmc");
+            }
         }
 
         if (availableConnections.length === 0) {
-            availableConnections.push("ethernet", "serial");
+            availableConnections.push("ethernet", "serial", "usbtmc");
         }
 
         return availableConnections;
@@ -420,6 +445,24 @@ export class InstrumentObject {
                         <StaticProperty
                             name="Baud rate"
                             value={this.lastConnection.serialParameters.baudRate.toString()}
+                        />
+                    </PropertyList>
+                );
+            } else if (this.lastConnection.type === "usbtmc") {
+                return (
+                    <PropertyList>
+                        <StaticProperty name="Interface" value="USBTMC" />
+                        <StaticProperty
+                            name="Vendor ID"
+                            value={
+                                "0x" + this.lastConnection.usbtmcParameters.idVendor.toString(16)
+                            }
+                        />
+                        <StaticProperty
+                            name="Product ID"
+                            value={
+                                "0x" + this.lastConnection.usbtmcParameters.idProduct.toString(16)
+                            }
                         />
                     </PropertyList>
                 );

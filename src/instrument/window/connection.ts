@@ -19,11 +19,13 @@ export function getConnectionParametersInfo(connectionParameters: ConnectionPara
         return `${connectionParameters.ethernetParameters.address}:${
             connectionParameters.ethernetParameters.port
         }`;
+    } else if (connectionParameters.type === "serial") {
+        return `${connectionParameters.serialParameters.port}:${
+            connectionParameters.serialParameters.baudRate
+        }`;
+    } else {
+        return `USBTMC`;
     }
-
-    return `${connectionParameters.serialParameters.port}:${
-        connectionParameters.serialParameters.baudRate
-    }`;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
