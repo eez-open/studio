@@ -270,6 +270,7 @@ PANEL
     height: 38px;
     display: flex;
     flex-direction: row;
+    border-right: 1px solid #d5d5d5;
 
     .quick-help-icon {
         visibility: hidden;
@@ -312,6 +313,22 @@ PANEL
 
 .quick-help-content {
     padding: 10px;
+}
+
+.EezStudio_ProjectEditor_BorderLeft {
+    border-left: 1px solid #d5d5d5;
+}
+
+.EezStudio_ProjectEditor_BorderTop {
+    border-top: 1px solid #d5d5d5;
+}
+
+.EezStudio_ProjectEditor_BorderRight {
+    border-right: 1px solid #d5d5d5;
+}
+
+.EezStudio_ProjectEditor_BorderBottom {
+    border-bottom: 1px solid #d5d5d5;
 }
 
 /*------------------------------------------------------------------------------
@@ -519,15 +536,18 @@ PROPERTY GRID
         }
 
         td:first-child {
-            white-space: nowrap;
+            /*white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis;
+            text-overflow: ellipsis;*/
+            width: 25%;
+            max-width: 150px;
             vertical-align: baseline;
             transform: translateY(8px);
         }
 
         td:nth-child(2) {
-            width: 100%;
+            /*width: 100%;*/
+            width: 75%;
         }
 
         td > input[type="checkbox"] {

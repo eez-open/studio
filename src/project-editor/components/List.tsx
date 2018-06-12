@@ -1,5 +1,6 @@
 import * as React from "react";
 import { observer } from "mobx-react";
+import { bind } from "bind-decorator";
 
 import { EezObject, PropertyMetaData } from "project-editor/core/metaData";
 
@@ -55,6 +56,7 @@ interface DropPlaceholderProps {
 
 @observer
 export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
+    @bind
     onDragOver(event: any) {
         if (!DragAndDropManager.dragObject) {
             return;
@@ -68,6 +70,7 @@ export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
         DragAndDropManager.setDropObjectAndPosition(this.props.object, DropPosition.DROP_INSIDE);
     }
 
+    @bind
     onDragLeave() {
         DragAndDropManager.unsetDropObjectAndPosition();
     }
@@ -85,8 +88,8 @@ export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
         return (
             <div
                 className={className}
-                onDragOver={this.onDragOver.bind(this)}
-                onDragLeave={this.onDragLeave.bind(this)}
+                onDragOver={this.onDragOver}
+                onDragLeave={this.onDragLeave}
             />
         );
     }
@@ -120,26 +123,6 @@ export class ListItem extends React.Component<ListItemProps, {}> {
     }
 
     componentDidMount() {
-        $(this.refs.item).on("contextmenu", event => {
-            event.preventDefault();
-
-            let selectedItem = NavigationStore.getNavigationSelectedItem(
-                this.props.navigationObject
-            );
-
-            if (this.props.item == selectedItem) {
-                showContextMenu(this.props.item);
-            } else {
-                NavigationStore.setNavigationSelectedItem(
-                    this.props.navigationObject,
-                    this.props.item
-                );
-                setTimeout(() => {
-                    showContextMenu(this.props.item);
-                });
-            }
-        });
-
         this.ensureVisible();
     }
 
@@ -147,6 +130,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
         this.ensureVisible();
     }
 
+    @bind
     onDragStart(event: any) {
         event.dataTransfer.effectAllowed = "copyMove";
         setClipboardData(event, objectToClipboardData(this.props.item));
@@ -158,14 +142,17 @@ export class ListItem extends React.Component<ListItemProps, {}> {
         });
     }
 
+    @bind
     onDrag(event: any) {
         DragAndDropManager.drag(event);
     }
 
+    @bind
     onDragEnd(event: any) {
         DragAndDropManager.end(event);
     }
 
+    @bind
     onDragOver(event: any) {
         if (!DragAndDropManager.dragObject) {
             return;
@@ -220,10 +207,12 @@ export class ListItem extends React.Component<ListItemProps, {}> {
         DragAndDropManager.setDropEffect(event);
     }
 
+    @bind
     onDragLeave() {
         DragAndDropManager.unsetDropObjectAndPosition();
     }
 
+    @bind
     onClick(e: React.MouseEvent<HTMLDivElement>) {
         e.preventDefault();
         e.stopPropagation();
@@ -239,6 +228,28 @@ export class ListItem extends React.Component<ListItemProps, {}> {
         NavigationStore.setNavigationSelectedItem(this.props.navigationObject, this.props.item);
     }
 
+    @bind
+    onMouseUp(e: React.MouseEvent<HTMLDivElement>) {
+        if (e.button === 2) {
+            let selectedItem = NavigationStore.getNavigationSelectedItem(
+                this.props.navigationObject
+            );
+
+            if (this.props.item == selectedItem) {
+                showContextMenu(this.props.item);
+            } else {
+                NavigationStore.setNavigationSelectedItem(
+                    this.props.navigationObject,
+                    this.props.item
+                );
+                setTimeout(() => {
+                    showContextMenu(this.props.item);
+                });
+            }
+        }
+    }
+
+    @bind
     onDoubleClick(e: any) {
         e.preventDefault();
         e.stopPropagation();
@@ -275,14 +286,15 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                 ref="item"
                 data-object-id={getId(this.props.item)}
                 className={className}
-                onClick={this.onClick.bind(this)}
-                onDoubleClick={this.onDoubleClick.bind(this)}
+                onMouseUp={this.onMouseUp}
+                onClick={this.onClick}
+                onDoubleClick={this.onDoubleClick}
                 draggable={true}
-                onDragStart={this.onDragStart.bind(this)}
-                onDrag={this.onDrag.bind(this)}
-                onDragEnd={this.onDragEnd.bind(this)}
-                onDragOver={this.onDragOver.bind(this)}
-                onDragLeave={this.onDragLeave.bind(this)}
+                onDragStart={this.onDragStart}
+                onDrag={this.onDrag}
+                onDragEnd={this.onDragEnd}
+                onDragOver={this.onDragOver}
+                onDragLeave={this.onDragLeave}
             >
                 {itemMetaData.listLabel
                     ? itemMetaData.listLabel(this.props.item)

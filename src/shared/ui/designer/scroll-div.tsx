@@ -14,6 +14,7 @@ export class ScrollDiv extends React.Component<{
     transform: Transform;
 }> {
     scrollDiv: HTMLDivElement;
+    div: HTMLDivElement;
 
     @observable
     boundingRect: Rect = {
@@ -28,6 +29,9 @@ export class ScrollDiv extends React.Component<{
     private scrollStopTimeout: any;
     changeScrollTimeout: any;
     guardOnScrollTimeout: any;
+
+    @observable scrollLeft: number = 0;
+    @observable scrollTop: number = 0;
 
     get isScrolling() {
         return !!this.scrollStopTimeout;
@@ -120,10 +124,23 @@ export class ScrollDiv extends React.Component<{
                 }, CONF_CHANGE_SCROLL_TIMEOUT);
             });
         }
+
+        runInAction(() => {
+            this.scrollLeft = this.scrollDiv.scrollLeft;
+            this.scrollTop = this.scrollDiv.scrollTop;
+        });
     }
 
     @action.bound
     onScroll(e: any) {
+        runInAction(() => {
+            this.scrollLeft = this.scrollDiv.scrollLeft;
+            this.scrollTop = this.scrollDiv.scrollTop;
+        });
+
+        this.div.style.left = this.scrollLeft + "px";
+        this.div.style.top = this.scrollTop + "px";
+
         if (this.guardOnScrollTimeout) {
             return;
         }
@@ -166,10 +183,21 @@ export class ScrollDiv extends React.Component<{
                         left: 0,
                         top: 0,
                         width: this.boundingRect.width,
-                        height: this.boundingRect.height
+                        height: this.boundingRect.height,
+                        overflow: "hidden"
                     }}
-                />
-                {this.props.children}
+                >
+                    <div
+                        ref={ref => (this.div = ref!)}
+                        style={{
+                            position: "absolute",
+                            left: this.scrollLeft,
+                            top: this.scrollTop
+                        }}
+                    >
+                        {this.props.children}
+                    </div>
+                </div>
             </div>
         );
     }

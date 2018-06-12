@@ -15,7 +15,7 @@ import { Tree } from "project-editor/components/Tree";
 import { PageProperties, PageTabState } from "project-editor/project/features/gui/page";
 import { WidgetPalette } from "project-editor/project/features/gui/WidgetPalette";
 import { WidgetContainerEditor } from "project-editor/project/features/gui/WidgetContainerEditor";
-import { ExperimentalPageEditor } from "project-editor/project/features/gui/experimental-page-editor/editor";
+import { ExperimentalWidgetContainerEditor } from "project-editor/project/features/gui/experimental-page-editor/editor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -26,9 +26,8 @@ export class PageEditor extends EditorComponent {
     }
 
     @observable
-    isExperimentalEditor: boolean = window.localStorage.getItem("isExperimentalEditor") === "1"
-        ? true
-        : false;
+    isExperimentalEditor: boolean =
+        window.localStorage.getItem("isExperimentalEditor") === "1" ? true : false;
 
     @action.bound
     toggleExperimentalEditor() {
@@ -63,10 +62,11 @@ export class PageEditor extends EditorComponent {
         let pageTabState = this.props.editor.state as PageTabState;
 
         let editor;
-
         if (this.isExperimentalEditor) {
             editor = (
-                <ExperimentalPageEditor pageOrientation={pageTabState.selectedPageOrientation} />
+                <ExperimentalWidgetContainerEditor
+                    container={pageTabState.selectedPageOrientation}
+                />
             );
         } else {
             editor = (

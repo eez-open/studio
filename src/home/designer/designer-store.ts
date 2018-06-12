@@ -92,7 +92,7 @@ class WorkbenchDocument implements IWorkbenchDocument {
             scale = 1;
         }
 
-        this.transform = new Transform(translate, scale);
+        this.transform = new Transform({ translate, scale });
 
         reaction(
             () =>

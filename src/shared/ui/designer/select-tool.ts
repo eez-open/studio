@@ -64,6 +64,10 @@ export const selectToolHandler: IToolHandler = {
             return new ResizeMouseHandler();
         }
 
+        if (closestByClass(event.target, "EezStudio_DesignerSelection")) {
+            return new DragMouseHandler();
+        }
+
         let point = document.transform.mouseEventToModelPoint(event);
         let object = document.objectFromPoint(point);
         if (object) {

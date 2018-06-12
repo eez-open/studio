@@ -1,5 +1,6 @@
 import * as React from "react";
 import { observer } from "mobx-react";
+import { bind } from "bind-decorator";
 
 import { _filter, _map } from "shared/algorithm";
 
@@ -58,6 +59,7 @@ interface DropPlaceholderProps {
 
 @observer
 export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
+    @bind
     onDragOver(event: any) {
         if (!DragAndDropManager.dragObject) {
             return;
@@ -71,6 +73,7 @@ export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
         DragAndDropManager.setDropObjectAndPosition(this.props.item, DropPosition.DROP_INSIDE);
     }
 
+    @bind
     onDragLeave() {
         DragAndDropManager.unsetDropObjectAndPosition();
     }
@@ -89,8 +92,8 @@ export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
             <div
                 className={className}
                 style={{ marginLeft: this.props.level * 20 + 13 }}
-                onDragOver={this.onDragOver.bind(this)}
-                onDragLeave={this.onDragLeave.bind(this)}
+                onDragOver={this.onDragOver}
+                onDragLeave={this.onDragLeave}
             />
         );
     }
@@ -128,19 +131,6 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
     }
 
     componentDidMount() {
-        $(this.refs.row).on("contextmenu", event => {
-            event.preventDefault();
-
-            if (this.props.item.selected) {
-                this.props.rootItem.showSelectionContextMenu();
-            } else {
-                this.props.rootItem.selectItems([this.props.item]);
-                setTimeout(() => {
-                    this.props.rootItem.showSelectionContextMenu();
-                });
-            }
-        });
-
         this.ensureVisible();
     }
 
@@ -148,6 +138,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
         this.ensureVisible();
     }
 
+    @bind
     onDragStart(event: any) {
         event.dataTransfer.effectAllowed = "copyMove";
         setClipboardData(event, objectToClipboardData(this.props.item.object));
@@ -159,14 +150,17 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
         });
     }
 
+    @bind
     onDrag(event: any) {
         DragAndDropManager.drag(event);
     }
 
+    @bind
     onDragEnd(event: any) {
         DragAndDropManager.end(event);
     }
 
+    @bind
     onDragOver(event: any) {
         if (!DragAndDropManager.dragObject) {
             return;
@@ -202,10 +196,26 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
         DragAndDropManager.setDropEffect(event);
     }
 
+    @bind
     onDragLeave() {
         DragAndDropManager.unsetDropObjectAndPosition();
     }
 
+    @bind
+    onMouseUp(e: React.MouseEvent<HTMLDivElement>) {
+        if (e.button === 2) {
+            if (this.props.item.selected) {
+                this.props.rootItem.showSelectionContextMenu();
+            } else {
+                this.props.rootItem.selectItems([this.props.item]);
+                setTimeout(() => {
+                    this.props.rootItem.showSelectionContextMenu();
+                });
+            }
+        }
+    }
+
+    @bind
     onTriangleClick(event: any) {
         event.preventDefault();
         event.stopPropagation();
@@ -214,6 +224,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
         this.props.item.toggleExpanded();
     }
 
+    @bind
     onClick(e: React.MouseEvent<HTMLDivElement>) {
         e.preventDefault();
         e.stopPropagation();
@@ -225,6 +236,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
         }
     }
 
+    @bind
     onDoubleClick(e: any) {
         e.preventDefault();
         e.stopPropagation();
@@ -344,7 +356,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
                     triangle = (
                         <small
                             className="EezStudio_ProjectEditor_tree-row-triangle"
-                            onClick={this.onTriangleClick.bind(this)}
+                            onClick={this.onTriangleClick}
                         >
                             <Icon
                                 icon={
@@ -372,16 +384,15 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
                     data-object-id={getId(this.props.item.object)}
                     className={className}
                     style={{ paddingLeft: this.props.level * 20 }}
-                    onClick={this.onClick.bind(this)}
-                    onDoubleClick={
-                        triangle ? this.onTriangleClick.bind(this) : this.onDoubleClick.bind(this)
-                    }
+                    onMouseUp={this.onMouseUp}
+                    onClick={this.onClick}
+                    onDoubleClick={triangle ? this.onTriangleClick : this.onDoubleClick}
                     draggable={this.props.draggable}
-                    onDragStart={this.onDragStart.bind(this)}
-                    onDrag={this.onDrag.bind(this)}
-                    onDragEnd={this.onDragEnd.bind(this)}
-                    onDragOver={this.onDragOver.bind(this)}
-                    onDragLeave={this.onDragLeave.bind(this)}
+                    onDragStart={this.onDragStart}
+                    onDrag={this.onDrag}
+                    onDragEnd={this.onDragEnd}
+                    onDragOver={this.onDragOver}
+                    onDragLeave={this.onDragLeave}
                 >
                     {triangle}
                     {label}
@@ -439,6 +450,7 @@ export class Tree extends React.Component<TreeProps, {}> {
         });
     }
 
+    @bind
     onDoubleClick(object: EezObject) {
         if (this.props.onDoubleClick) {
             this.props.onDoubleClick(object);
@@ -452,6 +464,7 @@ export class Tree extends React.Component<TreeProps, {}> {
         }
     }
 
+    @bind
     onKeyDown(event: any) {
         let focusedItemId = $(this.refs.tree)
             .find(".EezStudio_ProjectEditor_tree-row.selected")
@@ -567,6 +580,7 @@ export class Tree extends React.Component<TreeProps, {}> {
         }
     }
 
+    @bind
     onDrop(event: any) {
         if (DragAndDropManager.dropObject) {
             let dropPosition = DragAndDropManager.dropPosition;
@@ -617,16 +631,16 @@ export class Tree extends React.Component<TreeProps, {}> {
                 className={className}
                 style={{ overflow: "auto" }}
                 tabIndex={this.props.tabIndex}
-                onKeyDown={this.onKeyDown.bind(this)}
+                onKeyDown={this.onKeyDown}
                 onFocus={() => this.props.onFocus && this.props.onFocus()}
             >
-                <div onDrop={this.onDrop.bind(this)}>
+                <div onDrop={this.onDrop}>
                     <TreeRow
                         showOnlyChildren={true}
                         collapsable={this.props.collapsable || false}
                         rootItem={this.props.rootItem}
                         item={this.props.item || this.props.rootItem}
-                        onDoubleClick={this.onDoubleClick.bind(this)}
+                        onDoubleClick={this.onDoubleClick}
                         level={0}
                         filter={this.props.filter}
                         draggable={false}

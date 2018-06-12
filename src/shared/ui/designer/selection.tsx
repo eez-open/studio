@@ -230,7 +230,13 @@ export class Selection extends React.Component<
         }
 
         return (
-            <div className="EezStudio_DesignerSelection">
+            <div
+                className="EezStudio_DesignerSelection"
+                style={{
+                    left: 0,
+                    top: 0
+                }}
+            >
                 {selectedObjectRects}
                 {selectedObjectsBoundingRect}
                 {resizeHandlers}

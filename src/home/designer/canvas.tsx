@@ -12,7 +12,7 @@ import {
     BOUNCE_ENTRANCE_TRANSITION_DURATION
 } from "shared/ui/transitions";
 
-import { CanvasParent } from "shared/ui/designer/canvas";
+import { Canvas } from "shared/ui/designer/canvas";
 
 import { IWorkbenchObject, IWorkbenchDocument } from "home/designer/designer-store";
 
@@ -94,19 +94,23 @@ class DndWorkbenchDocument extends React.Component<DndWorkbenchDocumentProps, {}
 
         return (
             /*this.props.connectDropTarget*/
-            <CanvasParent
+            <Canvas
                 className="EezStudio_WorkbenchDocumentCanvas"
                 document={this.props.document}
                 toolHandler={toolHandler}
             >
-                <TransitionGroup component="g" className="EezStudio_Layer">
+                <TransitionGroup
+                    component="g"
+                    className="EezStudio_Layer"
+                    style={{ pointerEvents: "none" }}
+                >
                     {this.props.document.objects.map(obj => (
                         <BounceEntranceTransition key={obj.id}>
                             <ObjectComponent object={obj} transform={transform} />
                         </BounceEntranceTransition>
                     ))}
                 </TransitionGroup>
-            </CanvasParent>
+            </Canvas>
         );
     }
 }

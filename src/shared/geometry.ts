@@ -171,8 +171,8 @@ const SCALES = [
 ];
 
 export class Transform {
-    @observable _translate: Point = { x: 0, y: 0 };
-    @observable _scale: number = 1.0;
+    @observable _translate: Point;
+    @observable _scale: number;
 
     @observable
     clientRect = {
@@ -188,9 +188,8 @@ export class Transform {
         y: 0
     };
 
-    constructor(translate: Point, scale: number) {
-        this.translate = translate;
-        this.scale = scale;
+    constructor(params: { translate: Point; scale: number }) {
+        Object.assign(this, params);
     }
 
     get translate() {

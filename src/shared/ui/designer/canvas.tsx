@@ -3,15 +3,15 @@ import { observable, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { Point, Transform, pointDistance } from "shared/geometry";
+import { Point, pointDistance } from "shared/geometry";
 
 import { Draggable } from "shared/ui/draggable";
 
 import { IDocument, IToolHandler, IMouseHandler } from "shared/ui/designer/designer-interfaces";
-import { ScrollDiv } from "shared/ui/designer/scroll-div";
 import { PanMouseHandler } from "shared/ui/designer/mouse-handlers/pan";
 import { selectToolHandler } from "shared/ui/designer/select-tool";
 import { Selection } from "shared/ui/designer/selection";
+import { ScrollDiv } from "shared/ui/designer/scroll-div";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -23,41 +23,6 @@ const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
 @observer
 export class Canvas extends React.Component<
     {
-        transform: Transform;
-    },
-    {}
-> {
-    render() {
-        let xt =
-            this.props.transform.clientRect.width / 2 +
-            this.props.transform.translate.x +
-            this.props.transform.scrollOffset.x;
-        let yt =
-            this.props.transform.clientRect.height / 2 +
-            this.props.transform.translate.y +
-            this.props.transform.scrollOffset.y;
-
-        return (
-            <svg
-                style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0
-                }}
-                width={this.props.transform.clientRect.width}
-                height={this.props.transform.clientRect.height}
-            >
-                <g transform={`translate(${xt}, ${yt}) scale(${this.props.transform.scale})`}>
-                    {this.props.children}
-                </g>
-            </svg>
-        );
-    }
-}
-
-@observer
-export class CanvasParent extends React.Component<
-    {
         document: IDocument;
         toolHandler: IToolHandler | undefined;
         className: string;
@@ -66,6 +31,7 @@ export class CanvasParent extends React.Component<
     {}
 > {
     div: Element;
+    svg: SVGSVGElement;
     intervalTimerIDForClientRectUpdate: any;
     deltaY = 0;
 
@@ -83,20 +49,18 @@ export class CanvasParent extends React.Component<
         this.draggable.attach(this.div);
 
         this.intervalTimerIDForClientRectUpdate = setInterval(() => {
-            if (this.div) {
-                const transform = this.props.document.transform;
+            const transform = this.props.document.transform;
 
-                let clientRect = this.div.getBoundingClientRect();
-                if (
-                    clientRect.left !== transform.clientRect.left ||
-                    clientRect.top !== transform.clientRect.top ||
-                    clientRect.width !== transform.clientRect.width ||
-                    clientRect.height !== transform.clientRect.height
-                ) {
-                    runInAction(() => {
-                        transform.clientRect = clientRect;
-                    });
-                }
+            let clientRect = this.div.getBoundingClientRect();
+            if (
+                clientRect.left !== transform.clientRect.left ||
+                clientRect.top !== transform.clientRect.top ||
+                clientRect.width !== transform.clientRect.width ||
+                clientRect.height !== transform.clientRect.height
+            ) {
+                runInAction(() => {
+                    transform.clientRect = clientRect;
+                });
             }
         }, 0);
     }
@@ -141,8 +105,8 @@ export class CanvasParent extends React.Component<
                 });
                 let x = point.x - transform.clientRect.width / 2;
                 let y = point.y - transform.clientRect.height / 2;
-                let tx = x - (x - transform.translate.x) * scale / transform.scale;
-                let ty = y - (y - transform.translate.y) * scale / transform.scale;
+                let tx = x - ((x - transform.translate.x) * scale) / transform.scale;
+                let ty = y - ((y - transform.translate.y) * scale) / transform.scale;
 
                 runInAction(() => {
                     transform.scale = scale;
@@ -305,29 +269,47 @@ export class CanvasParent extends React.Component<
 
         this.draggable.cursor = style.cursor;
 
+        const transform = this.props.document.transform;
+
+        let xt = transform.clientRect.width / 2 + transform.translate.x + transform.scrollOffset.x;
+        let yt = transform.clientRect.height / 2 + transform.translate.y + transform.scrollOffset.y;
+
         return (
             <div
                 ref={ref => (this.div = ref!)}
                 className={this.props.className}
-                style={this.props.style}
+                style={style}
                 onClick={this.onClick}
                 onWheel={this.onWheel}
             >
-                <Canvas transform={this.props.document.transform}>{this.props.children}</Canvas>
-
                 <ScrollDiv
                     ref={ref => (this.scrollDiv = ref!)}
                     transform={this.props.document.transform}
-                />
+                >
+                    <svg
+                        ref={ref => (this.svg = ref!)}
+                        style={{
+                            position: "absolute",
+                            left: 0,
+                            top: 0
+                        }}
+                        width={transform.clientRect.width}
+                        height={transform.clientRect.height}
+                    >
+                        <g transform={`translate(${xt}, ${yt}) scale(${transform.scale})`}>
+                            {this.props.children}
+                        </g>
+                    </svg>
 
-                {this.props.document.selectionVisible &&
-                    this.props.toolHandler === selectToolHandler && (
-                        <Selection
-                            document={this.props.document}
-                            transform={this.props.document.transform}
-                            rubberBendRect={this.props.document.rubberBendRect}
-                        />
-                    )}
+                    {this.props.document.selectionVisible &&
+                        this.props.toolHandler === selectToolHandler && (
+                            <Selection
+                                document={this.props.document}
+                                transform={this.props.document.transform}
+                                rubberBendRect={this.props.document.rubberBendRect}
+                            />
+                        )}
+                </ScrollDiv>
             </div>
         );
     }

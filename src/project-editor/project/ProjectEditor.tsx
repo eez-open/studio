@@ -172,7 +172,7 @@ class Editors extends React.Component<{}, {}> {
     render() {
         return (
             <div id="EezStudio_ProjectEditor_editors" className="layoutCenter">
-                <div className="layoutTop">
+                <div className="layoutTop EezStudio_ProjectEditor_BorderRight">
                     <TabsView tabs={EditorsStore.editors} />
                 </div>
                 <div className="layoutCenter">

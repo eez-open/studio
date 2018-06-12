@@ -1,15 +1,22 @@
 import { observable, computed, action } from "mobx";
 
+import { validators } from "shared/model/validation";
+
+import { showGenericDialog } from "shared/ui/generic-dialog";
+
 import {
     getChildOfObject,
     loadObject,
     objectToJS,
+    addObject,
     replaceObject,
     replaceObjects,
     updateObject,
     cloneObject,
     getParent,
-    getMetaData
+    getMetaData,
+    getProperty,
+    ProjectStore
 } from "project-editor/core/store";
 import {
     EnumItem,
@@ -25,7 +32,8 @@ import { findActionIndex } from "project-editor/project/features/action/action";
 
 import { GeometryProperties, ObjectGeometryChange } from "project-editor/components/CanvasEditor";
 
-import { findStyle, findBitmapIndex } from "project-editor/project/features/gui/gui";
+import { findStyle, findBitmapIndex, GuiProperties } from "project-editor/project/features/gui/gui";
+import { widgetTypeMetaData } from "project-editor/project/features/gui/widgetType";
 import * as draw from "project-editor/project/features/gui/draw";
 
 const { MenuItem } = EEZStudio.electron.remote;
@@ -207,6 +215,20 @@ export class WidgetProperties extends EezObject {
         }
 
         if (objects.length === 1) {
+            additionalMenuItems.push(
+                new MenuItem({
+                    label: "Create Local Widget Type",
+                    click: () => (objects[0] as WidgetProperties).createLocalWidgetType()
+                })
+            );
+
+            additionalMenuItems.push(
+                new MenuItem({
+                    label: "Replace with Local Widget Type",
+                    click: () => (objects[0] as WidgetProperties).replaceWithLocalWidgetType()
+                })
+            );
+
             let parent = getParent(objects[0]);
             if (parent && getParent(parent) instanceof SelectWidgetProperties) {
                 additionalMenuItems.push(
@@ -281,6 +303,112 @@ export class WidgetProperties extends EezObject {
         }
 
         replaceObjects(widgets, loadObject(undefined, containerWidgetJsObject, widgetMetaData));
+    }
+
+    async createLocalWidgetType() {
+        const widgets = (getProperty(ProjectStore.projectProperties, "gui") as GuiProperties)
+            .widgets;
+
+        try {
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "Local widget type name",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [validators.required, validators.unique({}, widgets)]
+                        }
+                    ]
+                },
+                values: {
+                    name: ""
+                }
+            });
+
+            // create a new local widget type
+            const localWidgetTypeName = result.values.name;
+
+            const thisWidgetJS = objectToJS(this);
+            thisWidgetJS.x = 0;
+            thisWidgetJS.y = 0;
+
+            addObject(
+                widgets,
+                loadObject(
+                    undefined,
+                    {
+                        name: localWidgetTypeName,
+                        width: this.width,
+                        height: this.height,
+                        style: "default",
+                        widgets: [thisWidgetJS]
+                    },
+                    widgetTypeMetaData
+                )
+            );
+
+            // replace this widget with new local widget of type "Local." + localWidgetTypeName
+            const newWidget = loadObject(
+                undefined,
+                {
+                    type: "Local." + localWidgetTypeName,
+                    style: "default",
+                    x: this.x,
+                    y: this.y,
+                    width: this.width,
+                    height: this.height
+                },
+                widgetMetaData
+            );
+
+            replaceObject(this, newWidget);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async replaceWithLocalWidgetType() {
+        const widgets = (getProperty(ProjectStore.projectProperties, "gui") as GuiProperties)
+            .widgets;
+
+        try {
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "Local widget type",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "enum",
+                            enumItems: widgets.map(widget => widget.name)
+                        }
+                    ]
+                },
+                values: {
+                    name: ""
+                }
+            });
+
+            const localWidgetTypeName = result.values.name;
+
+            // replace this widget with local widget of type "Local." + widgetName
+            const newWidget = loadObject(
+                undefined,
+                {
+                    type: "Local." + localWidgetTypeName,
+                    style: "default",
+                    x: this.x,
+                    y: this.y,
+                    width: this.width,
+                    height: this.height
+                },
+                widgetMetaData
+            );
+
+            replaceObject(this, newWidget);
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     replaceParent() {
@@ -417,8 +545,8 @@ export class ListWidgetProperties extends WidgetProperties {
 }
 
 export class SelectWidgetEditorProperties extends EezObject {
-    x: number;
-    y: number;
+    @observable x: number;
+    @observable y: number;
 }
 
 export const selectWidgetEditorMetaData = registerMetaData({
@@ -526,6 +654,41 @@ export class SelectWidgetProperties extends WidgetProperties {
                 }
             }
         }
+    }
+
+    getChildLabel(childObject: WidgetProperties) {
+        if (this.widgets) {
+            let index = this.widgets.indexOf(childObject);
+            if (index != -1) {
+                if (this.data) {
+                    let dataItem = data.findDataItem(this.data);
+                    if (dataItem) {
+                        if (dataItem.type == "enum") {
+                            let enumItems: string[];
+                            try {
+                                enumItems = JSON.parse(dataItem.enumItems);
+                            } catch (err) {
+                                enumItems = [];
+                                console.error("Invalid enum items", dataItem, err);
+                            }
+
+                            if (index < enumItems.length) {
+                                let enumItemLabel = htmlEncode(enumItems[index]);
+                                return enumItemLabel;
+                            }
+                        } else if (dataItem.type == "boolean") {
+                            if (index == 0) {
+                                return "0";
+                            } else if (index == 1) {
+                                return "1";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return undefined;
     }
 }
 
@@ -1272,58 +1435,19 @@ export function getWidgetTypes() {
                         typeMetaData: widgetMetaData,
                         hideInPropertyGrid: true,
                         childLabel: (childObject: EezObject, childLabel: string) => {
+                            let label;
+
                             if (getParent(childObject)) {
                                 let selectWidgetProperties = getParent(
                                     getParent(childObject)!
                                 )! as SelectWidgetProperties;
-                                if (selectWidgetProperties.widgets) {
-                                    let index = selectWidgetProperties.widgets.indexOf(
-                                        childObject as WidgetProperties
-                                    );
 
-                                    if (index == -1) {
-                                        index = 2;
-                                    }
-
-                                    if (index != -1) {
-                                        if (selectWidgetProperties.data) {
-                                            let dataItem = data.findDataItem(
-                                                selectWidgetProperties.data
-                                            );
-                                            if (dataItem) {
-                                                if (dataItem.type == "enum") {
-                                                    let enumItems: string[];
-                                                    try {
-                                                        enumItems = JSON.parse(dataItem.enumItems);
-                                                    } catch (err) {
-                                                        enumItems = [];
-                                                        console.error(
-                                                            "Invalid enum items",
-                                                            dataItem,
-                                                            err
-                                                        );
-                                                    }
-
-                                                    if (index < enumItems.length) {
-                                                        let enumItemLabel = htmlEncode(
-                                                            enumItems[index]
-                                                        );
-                                                        return `${enumItemLabel} ➔ ${childLabel}`;
-                                                    }
-                                                } else if (dataItem.type == "boolean") {
-                                                    if (index == 0) {
-                                                        return `0 ➔ ${childLabel}`;
-                                                    } else if (index == 1) {
-                                                        return `1 ➔ ${childLabel}`;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                label = selectWidgetProperties.getChildLabel(
+                                    childObject as WidgetProperties
+                                );
                             }
 
-                            return `??? ➔ ${childLabel}`;
+                            return `${label || "???"} ➔ ${childLabel}`;
                         }
                     },
                     {

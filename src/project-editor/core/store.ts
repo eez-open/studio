@@ -525,6 +525,7 @@ class UIStateStoreClass {
     @observable selectedBuildConfiguration: string;
     @observable splitters = new Map<string, number>();
     @observable features: any;
+    @observable objects = new Map<string, any>();
 
     @observable savedState: any;
 
@@ -550,7 +551,14 @@ class UIStateStoreClass {
     loadSplitters(splitters: any) {
         this.splitters.clear();
         _each(splitters, (value: any, name: any) => {
-            this.splitters.set(name as string, value);
+            this.splitters.set(name, value);
+        });
+    }
+
+    loadObjects(objects: any) {
+        this.objects.clear();
+        _each(objects, (value: any, objectPath: any) => {
+            this.objects.set(objectPath, value);
         });
     }
 
@@ -562,6 +570,7 @@ class UIStateStoreClass {
         this.selectedBuildConfiguration = uiState.selectedBuildConfiguration || "Default";
         this.loadSplitters(uiState.splitters);
         this.features = observable(uiState.features || {});
+        this.loadObjects(uiState.objects);
     }
 
     @computed
@@ -579,6 +588,17 @@ class UIStateStoreClass {
     }
 
     @computed
+    get objectsJS() {
+        let map: any = {};
+        for (var [objectPath, value] of this.objects) {
+            if (getObjectFromStringPath(objectPath)) {
+                map[objectPath] = value;
+            }
+        }
+        return map;
+    }
+
+    @computed
     get toJS() {
         return {
             viewOptions: this.viewOptions.toJS,
@@ -586,7 +606,8 @@ class UIStateStoreClass {
             editors: EditorsStore.toJS,
             selectedBuildConfiguration: this.selectedBuildConfiguration,
             splitters: this.splittersJS,
-            features: this.featuresJS
+            features: this.featuresJS,
+            objects: this.objectsJS
         };
     }
 
@@ -624,6 +645,20 @@ class UIStateStoreClass {
     @action
     setSelectedBuildConfiguration(selectedBuildConfiguration: string) {
         this.selectedBuildConfiguration = selectedBuildConfiguration;
+    }
+
+    getObjectUIState(object: EezObject) {
+        return this.objects.get(getObjectPathAsString(object));
+    }
+
+    updateObjectUIState(object: EezObject, changes: any) {
+        const path = getObjectPathAsString(object);
+        let objectUIState = this.objects.get(path);
+        if (objectUIState) {
+            Object.assign(objectUIState, changes);
+        } else {
+            this.objects.set(path, changes);
+        }
     }
 }
 
