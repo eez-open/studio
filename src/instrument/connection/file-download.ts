@@ -115,6 +115,14 @@ export class FileDownload extends FileTransfer {
                             this.dataSurplus = undefined;
                         }
                     }
+
+                    if (
+                        this.dataSurplus &&
+                        this.dataSurplus.length === 1 &&
+                        this.dataSurplus.charCodeAt(0) === 0
+                    ) {
+                        this.dataSurplus = undefined;
+                    }
                 }
 
                 this.data = this.data.substr(0, this.expectedDataLength);

@@ -1155,17 +1155,26 @@ export class UsbTmcInterface implements CommunicationInterface {
         if (command) {
             this.executing = true;
             try {
+                console.log("flush", command);
                 this.instrument.write(command).then(() => {
                     if (this.instrument) {
                         try {
+                            console.log("read start", command);
                             this.instrument
                                 .readWithCallback(data => {
+                                    console.log("read inter", command, data);
                                     this.host.onData(data);
                                 })
                                 .then(data => {
+                                    console.log("read finish", command, data);
                                     if (data && data.length > 0) {
                                         this.host.onData(data);
                                     }
+                                    this.executing = false;
+                                    this.flush();
+                                })
+                                .catch(err => {
+                                    console.log("read error", command);
                                     this.executing = false;
                                     this.flush();
                                 });
@@ -1183,6 +1192,7 @@ export class UsbTmcInterface implements CommunicationInterface {
     }
 
     write(data: string) {
+        console.log("write", data);
         this.commands.push(data);
         if (!this.executing) {
             this.flush();
