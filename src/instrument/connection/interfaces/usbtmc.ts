@@ -426,6 +426,9 @@ export class Instrument {
         //     self.device.set_configuration(self.cfg)
 
         // claim interface
+        if (this.iface.isKernelDriverActive()) {
+            this.iface.detachKernelDriver();
+        }
         this.iface.claim();
 
         // don't need to set altsetting - USBTMC devices have 1 altsetting as per the spec
@@ -1117,10 +1120,16 @@ export class UsbTmcInterface implements CommunicationInterface {
                 this.host.connectionParameters.usbtmcParameters.idProduct
             );
 
-            instrument.open().then(() => {
-                this.instrument = instrument;
-                this.host.connected();
-            });
+            instrument
+                .open()
+                .then(() => {
+                    this.instrument = instrument;
+                    this.host.connected();
+                })
+                .catch(err => {
+                    this.host.setError(ConnectionErrorCode.NONE, err.toString());
+                    this.destroy();
+                });
         } catch (err) {
             this.host.setError(ConnectionErrorCode.NONE, err.toString());
             this.destroy();
