@@ -1111,12 +1111,12 @@ export class UsbTmcInterface implements CommunicationInterface {
     executing: boolean;
 
     constructor(private host: CommunicationInterfaceHost) {
-        const instrument = new Instrument(
-            this.host.connectionParameters.usbtmcParameters.idVendor,
-            this.host.connectionParameters.usbtmcParameters.idProduct
-        );
-
         try {
+            const instrument = new Instrument(
+                this.host.connectionParameters.usbtmcParameters.idVendor,
+                this.host.connectionParameters.usbtmcParameters.idProduct
+            );
+
             instrument.open().then(() => {
                 this.instrument = instrument;
                 this.host.connected();

@@ -20,8 +20,8 @@ export interface IInstrumentProperties {
             defaultBaudRate: number;
         };
         usbtmc?: {
-            idVendor: number;
-            idProduct: number;
+            idVendor: number | string | undefined;
+            idProduct: number | string | undefined;
         };
     };
     channels?: {

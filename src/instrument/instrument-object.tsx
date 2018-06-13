@@ -283,8 +283,22 @@ export class InstrumentObject {
                 if (type === undefined) {
                     type = "usbtmc";
                 }
-                idVendor = connection.usbtmc.idVendor;
-                idProduct = connection.usbtmc.idProduct;
+
+                if (typeof connection.usbtmc.idVendor === "number") {
+                    idVendor = connection.usbtmc.idVendor;
+                } else if (typeof connection.usbtmc.idVendor === "string") {
+                    idVendor = parseInt(connection.usbtmc.idVendor);
+                } else {
+                    idVendor = 0;
+                }
+
+                if (typeof connection.usbtmc.idProduct === "number") {
+                    idProduct = connection.usbtmc.idProduct;
+                } else if (typeof connection.usbtmc.idProduct === "string") {
+                    idProduct = parseInt(connection.usbtmc.idProduct);
+                } else {
+                    idProduct = 0;
+                }
             }
         }
 

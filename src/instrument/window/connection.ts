@@ -124,11 +124,13 @@ class Connection {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let connection: Connection | undefined = undefined;
+const connections = new Map<InstrumentObject, Connection>();
 
 export function getConnection(instrument: InstrumentObject) {
+    let connection = connections.get(instrument);
     if (!connection) {
         connection = new Connection(instrument);
+        connections.set(instrument, connection);
     }
     return connection;
 }
