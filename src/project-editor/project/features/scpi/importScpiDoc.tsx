@@ -82,7 +82,7 @@ function getCommandFromSyntax(command: string) {
 }
 
 function detectVersionOfScpiFileDoc(aElements: NodeListOf<Element>) {
-    for (let i = 0; i < aElements.length; ++i) {
+    for (let i = 0; i < aElements.length; i++) {
         let bookmark = aElements[i].getAttribute("name");
         if (bookmark && (bookmark.startsWith("_scpi_subsys_") || bookmark.startsWith("_scpi_"))) {
             return 2;
@@ -105,7 +105,7 @@ function getSubsystemFromScpiFileVersion1Doc(file: string, aElements: NodeListOf
 
             let commands = new Map<string, string>();
 
-            for (let i = 1; i < aElements.length; ++i) {
+            for (let i = 1; i < aElements.length; i++) {
                 let bookmark = aElements[i].getAttribute("name");
                 if (bookmark) {
                     let commandElement = aElements[i].parentElement as HTMLElement;
@@ -175,7 +175,7 @@ function getSubsystemFromScpiFileVersion2Doc(file: string, aElements: NodeListOf
     let subsystem: Subsystem | undefined;
     let commandBookmark: string | undefined;
 
-    for (let i = 0; i < aElements.length; ++i) {
+    for (let i = 0; i < aElements.length; i++) {
         let bookmark = aElements[i].getAttribute("name");
         if (bookmark) {
             let parentElement = aElements[i].parentElement;
@@ -288,9 +288,9 @@ function compareCommandDefinitions(a: CommandDefinition, b: CommandDefinition) {
 }
 
 function findCommandInSubsystems(subsystems: Subsystem[], commandName: string) {
-    for (let i = 0; i < subsystems.length; ++i) {
+    for (let i = 0; i < subsystems.length; i++) {
         let subsystem = subsystems[i];
-        for (let j = 0; j < subsystem.commands.length; ++j) {
+        for (let j = 0; j < subsystem.commands.length; j++) {
             let command = subsystem.commands[j];
             if (command.name === commandName) {
                 return {

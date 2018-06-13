@@ -82,7 +82,7 @@ export function findExtensionDefinition(name: string) {
         ProjectStore.projectProperties,
         "extensionDefinitions"
     ) as ExtensionDefinitionProperties[];
-    for (let i = 0; i < extensionDefinitions.length; ++i) {
+    for (let i = 0; i < extensionDefinitions.length; i++) {
         let extensionDefinition = extensionDefinitions[i];
         if (extensionDefinition.name == name) {
             return extensionDefinition;

@@ -92,7 +92,7 @@ abstract class ObjectAdapter implements IBaseObject {
     objectFromPoint(point: Point): ObjectAdapter | undefined {
         let foundObject: ObjectAdapter | undefined = undefined;
 
-        for (let i = 0; i < this.children.length; ++i) {
+        for (let i = 0; i < this.children.length; i++) {
             let result = this.children[i].objectFromPoint(point);
             if (result) {
                 foundObject = result;
@@ -103,7 +103,7 @@ abstract class ObjectAdapter implements IBaseObject {
             return foundObject;
         }
 
-        for (let i = 0; i < this.selectionRects.length; ++i) {
+        for (let i = 0; i < this.selectionRects.length; i++) {
             if (pointInRect(point, this.selectionRects[i])) {
                 return this;
             }
@@ -184,7 +184,7 @@ class WidgetObjectAdapter extends ObjectAdapter {
 
         let rects = [this.boundingRect];
 
-        for (let i = 1; i < listWidget.count; ++i) {
+        for (let i = 1; i < listWidget.count; i++) {
             if (listWidget.listWidgetProperties.listType === "horizontal") {
                 rects.push({
                     left:
@@ -209,39 +209,45 @@ class WidgetObjectAdapter extends ObjectAdapter {
         return rects;
     }
 
+    renderCache: any;
+
     render(): () => JSX.Element | null {
-        return observer(() => {
-            const canvas = drawWidget(this.widgetProperties, {
-                x: this.rect.left,
-                y: this.rect.top,
-                width: this.rect.width,
-                height: this.rect.height
+        if (!this.renderCache) {
+            this.renderCache = observer(() => {
+                const canvas = drawWidget(this.widgetProperties, {
+                    x: this.rect.left,
+                    y: this.rect.top,
+                    width: this.rect.width,
+                    height: this.rect.height
+                });
+
+                if (canvas) {
+                    return (
+                        <image
+                            x={this.rect.left}
+                            y={this.rect.top}
+                            width={this.rect.width}
+                            height={this.rect.height}
+                            xlinkHref={canvas.toDataURL()}
+                        />
+                    );
+                } else {
+                    const style = findStyleOrGetDefault(this.widgetProperties.style);
+
+                    return (
+                        <rect
+                            x={this.rect.left}
+                            y={this.rect.top}
+                            width={this.rect.width}
+                            height={this.rect.height}
+                            fill={style.backgroundColor}
+                        />
+                    );
+                }
             });
+        }
 
-            if (canvas) {
-                return (
-                    <image
-                        x={this.rect.left}
-                        y={this.rect.top}
-                        width={this.rect.width}
-                        height={this.rect.height}
-                        xlinkHref={canvas.toDataURL()}
-                    />
-                );
-            } else {
-                const style = findStyleOrGetDefault(this.widgetProperties.style);
-
-                return (
-                    <rect
-                        x={this.rect.left}
-                        y={this.rect.top}
-                        width={this.rect.width}
-                        height={this.rect.height}
-                        fill={style.backgroundColor}
-                    />
-                );
-            }
-        });
+        return this.renderCache;
     }
 }
 
@@ -261,15 +267,19 @@ class ContainerWidgetObjectAdapter extends WidgetObjectAdapter {
         });
     }
 
-    render(): () => JSX.Element | null {
-        const This = super.render();
+    renderCache: any;
 
-        return observer(() => (
-            <React.Fragment>
-                {<This />}
-                {this.renderChildren()}
-            </React.Fragment>
-        ));
+    render(): () => JSX.Element | null {
+        if (!this.renderCache) {
+            const This = super.render();
+            this.renderCache = observer(() => (
+                <React.Fragment>
+                    {<This />}
+                    {this.renderChildren()}
+                </React.Fragment>
+            ));
+        }
+        return this.renderCache;
     }
 }
 
@@ -302,32 +312,37 @@ class ListWidgetObjectAdapter extends WidgetObjectAdapter {
         return this.children[0] as WidgetObjectAdapter;
     }
 
+    renderCache: any;
+
     render(): () => JSX.Element | null {
-        const This = super.render();
-        return observer(() => (
-            <React.Fragment>
-                {<This />}
+        if (!this.renderCache) {
+            const This = super.render();
+            this.renderCache = observer(() => (
+                <React.Fragment>
+                    {<This />}
 
-                {_range(this.count).map(i => {
-                    let xListItem = this.rect.left;
-                    let yListItem = this.rect.top;
+                    {_range(this.count).map(i => {
+                        let xListItem = this.rect.left;
+                        let yListItem = this.rect.top;
 
-                    if (this.listWidgetProperties.listType === "horizontal") {
-                        xListItem += i * this.listItemWidget.rect.width;
-                    } else {
-                        yListItem += i * this.listItemWidget.rect.height;
-                    }
+                        if (this.listWidgetProperties.listType === "horizontal") {
+                            xListItem += i * this.listItemWidget.rect.width;
+                        } else {
+                            yListItem += i * this.listItemWidget.rect.height;
+                        }
 
-                    const Item = this.listItemWidget.render();
+                        const Item = this.listItemWidget.render();
 
-                    return (
-                        <g key={i} transform={`translate(${xListItem} ${yListItem})`}>
-                            {<Item />}
-                        </g>
-                    );
-                })}
-            </React.Fragment>
-        ));
+                        return (
+                            <g key={i} transform={`translate(${xListItem} ${yListItem})`}>
+                                {<Item />}
+                            </g>
+                        );
+                    })}
+                </React.Fragment>
+            ));
+        }
+        return this.renderCache;
     }
 }
 
@@ -355,33 +370,38 @@ class SelectWidgetObjectAdapter extends WidgetObjectAdapter {
         return -1;
     }
 
+    renderCache: any;
+
     render(): () => JSX.Element | null {
-        return observer(() => {
-            const index = this.index;
-            if (index === -1) {
-                return null;
-            }
+        if (!this.renderCache) {
+            this.renderCache = observer(() => {
+                const index = this.index;
+                if (index === -1) {
+                    return null;
+                }
 
-            let canvas = document.createElement("canvas");
+                let canvas = document.createElement("canvas");
 
-            canvas.width = this.rect.width;
-            canvas.height = this.rect.height;
+                canvas.width = this.rect.width;
+                canvas.height = this.rect.height;
 
-            let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+                let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-            let tree = createWidgetTree(this.selectWidgetProperties.widgets[index], true);
-            drawTree(ctx, tree, 1, () => {});
+                let tree = createWidgetTree(this.selectWidgetProperties.widgets[index], true);
+                drawTree(ctx, tree, 1, () => {});
 
-            return (
-                <image
-                    x={this.rect.left}
-                    y={this.rect.top}
-                    width={this.rect.width}
-                    height={this.rect.height}
-                    xlinkHref={canvas.toDataURL()}
-                />
-            );
-        });
+                return (
+                    <image
+                        x={this.rect.left}
+                        y={this.rect.top}
+                        width={this.rect.width}
+                        height={this.rect.height}
+                        xlinkHref={canvas.toDataURL()}
+                    />
+                );
+            });
+        }
+        return this.renderCache;
     }
 }
 
@@ -627,158 +647,165 @@ class SelectWidgetEditorObjectAdapter extends ObjectAdapter {
         }
     }
 
+    renderCache: any;
+
     render(): () => JSX.Element | null {
-        return observer(() => {
-            let x1: number;
-            let y1: number;
-            let x2: number;
-            let y2: number;
+        if (!this.renderCache) {
+            this.renderCache = observer(() => {
+                let x1: number;
+                let y1: number;
+                let x2: number;
+                let y2: number;
 
-            if (this.relativePosition === "left") {
-                x1 = this.selectWidgetObjectAdapter.boundingRect.left;
-                y1 =
-                    this.selectWidgetObjectAdapter.boundingRect.top +
-                    this.selectWidgetObjectAdapter.boundingRect.height / 2;
+                if (this.relativePosition === "left") {
+                    x1 = this.selectWidgetObjectAdapter.boundingRect.left;
+                    y1 =
+                        this.selectWidgetObjectAdapter.boundingRect.top +
+                        this.selectWidgetObjectAdapter.boundingRect.height / 2;
 
-                x2 = this.boundingRect.left + this.boundingRect.width;
-                y2 = this.boundingRect.top + this.boundingRect.height / 2;
-            } else if (this.relativePosition === "right") {
-                x1 =
-                    this.selectWidgetObjectAdapter.boundingRect.left +
-                    this.selectWidgetObjectAdapter.boundingRect.width;
-                y1 =
-                    this.selectWidgetObjectAdapter.boundingRect.top +
-                    this.selectWidgetObjectAdapter.boundingRect.height / 2;
+                    x2 = this.boundingRect.left + this.boundingRect.width;
+                    y2 = this.boundingRect.top + this.boundingRect.height / 2;
+                } else if (this.relativePosition === "right") {
+                    x1 =
+                        this.selectWidgetObjectAdapter.boundingRect.left +
+                        this.selectWidgetObjectAdapter.boundingRect.width;
+                    y1 =
+                        this.selectWidgetObjectAdapter.boundingRect.top +
+                        this.selectWidgetObjectAdapter.boundingRect.height / 2;
 
-                x2 = this.boundingRect.left;
-                y2 = this.boundingRect.top + this.boundingRect.height / 2;
-            } else if (this.relativePosition === "top") {
-                x1 =
-                    this.selectWidgetObjectAdapter.boundingRect.left +
-                    this.selectWidgetObjectAdapter.boundingRect.width / 2;
-                y1 = this.selectWidgetObjectAdapter.boundingRect.top;
+                    x2 = this.boundingRect.left;
+                    y2 = this.boundingRect.top + this.boundingRect.height / 2;
+                } else if (this.relativePosition === "top") {
+                    x1 =
+                        this.selectWidgetObjectAdapter.boundingRect.left +
+                        this.selectWidgetObjectAdapter.boundingRect.width / 2;
+                    y1 = this.selectWidgetObjectAdapter.boundingRect.top;
 
-                x2 = this.boundingRect.left + this.boundingRect.width / 2;
-                y2 = this.boundingRect.top + this.boundingRect.height;
-            } else {
-                x1 =
-                    this.selectWidgetObjectAdapter.boundingRect.left +
-                    this.selectWidgetObjectAdapter.boundingRect.width / 2;
-                y1 =
-                    this.selectWidgetObjectAdapter.boundingRect.top +
-                    this.selectWidgetObjectAdapter.boundingRect.height;
+                    x2 = this.boundingRect.left + this.boundingRect.width / 2;
+                    y2 = this.boundingRect.top + this.boundingRect.height;
+                } else {
+                    x1 =
+                        this.selectWidgetObjectAdapter.boundingRect.left +
+                        this.selectWidgetObjectAdapter.boundingRect.width / 2;
+                    y1 =
+                        this.selectWidgetObjectAdapter.boundingRect.top +
+                        this.selectWidgetObjectAdapter.boundingRect.height;
 
-                x2 = this.boundingRect.left + this.boundingRect.width / 2;
-                y2 = this.boundingRect.top;
-            }
+                    x2 = this.boundingRect.left + this.boundingRect.width / 2;
+                    y2 = this.boundingRect.top;
+                }
 
-            let c1x;
-            let c1y;
-            let c2x;
-            let c2y;
+                let c1x;
+                let c1y;
+                let c2x;
+                let c2y;
 
-            const K = 0.8;
+                const K = 0.8;
 
-            if (this.relativePosition === "left" || this.relativePosition === "right") {
-                c1x = x1 + (x2 - x1) * K;
-                c1y = y1;
-                c2x = x2 - (x2 - x1) * K;
-                c2y = y2;
-            } else {
-                c1x = x1;
-                c1y = y1 + (y2 - y1) * K;
-                c2x = x2;
-                c2y = y2 - (y2 - y1) * K;
-            }
+                if (this.relativePosition === "left" || this.relativePosition === "right") {
+                    c1x = x1 + (x2 - x1) * K;
+                    c1y = y1;
+                    c2x = x2 - (x2 - x1) * K;
+                    c2y = y2;
+                } else {
+                    c1x = x1;
+                    c1y = y1 + (y2 - y1) * K;
+                    c2x = x2;
+                    c2y = y2 - (y2 - y1) * K;
+                }
 
-            const label = (this.selectWidgetObjectAdapter.object as SelectWidgetProperties).data;
+                const label = (this.selectWidgetObjectAdapter.object as SelectWidgetProperties)
+                    .data;
 
-            const COLOR = "rgba(255, 128, 128, 0.9)";
+                const COLOR = "rgba(255, 128, 128, 0.9)";
 
-            return (
-                <React.Fragment>
-                    <rect
-                        x={this.selectWidgetObjectAdapter.boundingRect.left + 0.5}
-                        y={this.selectWidgetObjectAdapter.boundingRect.top + 0.5}
-                        width={this.selectWidgetObjectAdapter.boundingRect.width}
-                        height={this.selectWidgetObjectAdapter.boundingRect.height}
-                        fill="transparent"
-                        stroke={COLOR}
-                    />
-
-                    <circle cx={x1} cy={y1} r={2} fill={COLOR} />
-
-                    <path
-                        d={`M${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`}
-                        stroke={COLOR}
-                        fill="transparent"
-                    />
-
-                    <circle cx={x2} cy={y2} r={3} fill={COLOR} />
-
-                    {label && (
-                        <SvgLabel
-                            text={label}
-                            x={Math.round((x1 + x2) / 2) + 0.5}
-                            y={Math.round((y1 + y2) / 2) + 0.5}
-                            horizontalAlignement="center"
-                            verticalAlignment="center"
-                            backgroundColor="white"
-                            textColor="#333"
-                            border={{
-                                color: COLOR
-                            }}
+                return (
+                    <React.Fragment>
+                        <rect
+                            x={this.selectWidgetObjectAdapter.boundingRect.left + 0.5}
+                            y={this.selectWidgetObjectAdapter.boundingRect.top + 0.5}
+                            width={this.selectWidgetObjectAdapter.boundingRect.width}
+                            height={this.selectWidgetObjectAdapter.boundingRect.height}
+                            fill="transparent"
+                            stroke={COLOR}
                         />
-                    )}
 
-                    <rect
-                        x={this.boundingRect.left + 0.5}
-                        y={this.boundingRect.top + 0.5}
-                        width={this.boundingRect.width}
-                        height={this.boundingRect.height}
-                        fill="transparent"
-                        stroke={COLOR}
-                    />
+                        <circle cx={x1} cy={y1} r={2} fill={COLOR} />
 
-                    {this.children.map((child, i) => {
-                        let x = this.rect.left + this.getChildOffsetX(child);
-                        let y = this.rect.top + this.getChildOffsetY(child);
+                        <path
+                            d={`M${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`}
+                            stroke={COLOR}
+                            fill="transparent"
+                        />
 
-                        const Child = child.render();
+                        <circle cx={x2} cy={y2} r={3} fill={COLOR} />
 
-                        let xLabel =
-                            this.relativePosition === "left"
-                                ? this.boundingRect.left +
-                                  this.boundingRect.width +
-                                  SelectWidgetEditorObjectAdapter.PADDING
-                                : this.boundingRect.left - SelectWidgetEditorObjectAdapter.PADDING;
-                        let yLabel = y + this.selectWidgetObjectAdapter.rect.height / 2;
-                        let textAnchor = this.relativePosition === "left" ? "begin" : "end";
+                        {label && (
+                            <SvgLabel
+                                text={label}
+                                x={Math.round((x1 + x2) / 2) + 0.5}
+                                y={Math.round((y1 + y2) / 2) + 0.5}
+                                horizontalAlignement="center"
+                                verticalAlignment="center"
+                                backgroundColor="white"
+                                textColor="#333"
+                                border={{
+                                    color: COLOR
+                                }}
+                            />
+                        )}
 
-                        let label = (this.selectWidgetObjectAdapter
-                            .object as SelectWidgetProperties).getChildLabel(
-                            child.object as WidgetProperties
-                        );
+                        <rect
+                            x={this.boundingRect.left + 0.5}
+                            y={this.boundingRect.top + 0.5}
+                            width={this.boundingRect.width}
+                            height={this.boundingRect.height}
+                            fill="transparent"
+                            stroke={COLOR}
+                        />
 
-                        return (
-                            <React.Fragment key={child.id}>
-                                <text
-                                    x={xLabel}
-                                    y={yLabel}
-                                    textAnchor={textAnchor}
-                                    alignmentBaseline="middle"
-                                >
-                                    {label}
-                                </text>
-                                <g transform={`translate(${x} ${y})`}>
-                                    <Child />
-                                </g>
-                            </React.Fragment>
-                        );
-                    })}
-                </React.Fragment>
-            );
-        });
+                        {this.children.map((child, i) => {
+                            let x = this.rect.left + this.getChildOffsetX(child);
+                            let y = this.rect.top + this.getChildOffsetY(child);
+
+                            const Child = child.render();
+
+                            let xLabel =
+                                this.relativePosition === "left"
+                                    ? this.boundingRect.left +
+                                      this.boundingRect.width +
+                                      SelectWidgetEditorObjectAdapter.PADDING
+                                    : this.boundingRect.left -
+                                      SelectWidgetEditorObjectAdapter.PADDING;
+                            let yLabel = y + this.selectWidgetObjectAdapter.rect.height / 2;
+                            let textAnchor = this.relativePosition === "left" ? "begin" : "end";
+
+                            let label = (this.selectWidgetObjectAdapter
+                                .object as SelectWidgetProperties).getChildLabel(
+                                child.object as WidgetProperties
+                            );
+
+                            return (
+                                <React.Fragment key={child.id}>
+                                    <text
+                                        x={xLabel}
+                                        y={yLabel}
+                                        textAnchor={textAnchor}
+                                        alignmentBaseline="middle"
+                                    >
+                                        {label}
+                                    </text>
+                                    <g transform={`translate(${x} ${y})`}>
+                                        <Child />
+                                    </g>
+                                </React.Fragment>
+                            );
+                        })}
+                    </React.Fragment>
+                );
+            });
+        }
+        return this.renderCache;
     }
 }
 
@@ -852,22 +879,27 @@ class PageOrientationObjectAdapter extends ObjectAdapter {
         return [this.rect];
     }
 
+    renderCache: any;
+
     render(): () => JSX.Element | null {
-        return observer(() => {
-            const style = findStyleOrGetDefault(this.pageOrientation.style);
-            return (
-                <React.Fragment>
-                    <rect
-                        x={this.rect.left}
-                        y={this.rect.top}
-                        width={this.rect.width}
-                        height={this.rect.height}
-                        fill={style.backgroundColor}
-                    />
-                    {this.renderChildren()}
-                </React.Fragment>
-            );
-        });
+        if (!this.renderCache) {
+            this.renderCache = observer(() => {
+                const style = findStyleOrGetDefault(this.pageOrientation.style);
+                return (
+                    <React.Fragment>
+                        <rect
+                            x={this.rect.left}
+                            y={this.rect.top}
+                            width={this.rect.width}
+                            height={this.rect.height}
+                            fill={style.backgroundColor}
+                        />
+                        {this.renderChildren()}
+                    </React.Fragment>
+                );
+            });
+        }
+        return this.renderCache;
     }
 }
 
@@ -911,22 +943,27 @@ class WidgetTypeObjectAdapter extends ObjectAdapter {
         return [this.rect];
     }
 
+    renderCache: any;
+
     render(): () => JSX.Element | null {
-        return observer(() => {
-            const style = findStyleOrGetDefault(this.widgetType.style);
-            return (
-                <React.Fragment>
-                    <rect
-                        x={this.rect.left}
-                        y={this.rect.top}
-                        width={this.rect.width}
-                        height={this.rect.height}
-                        fill={style.backgroundColor}
-                    />
-                    {this.renderChildren()}
-                </React.Fragment>
-            );
-        });
+        if (!this.renderCache) {
+            this.renderCache = observer(() => {
+                const style = findStyleOrGetDefault(this.widgetType.style);
+                return (
+                    <React.Fragment>
+                        <rect
+                            x={this.rect.left}
+                            y={this.rect.top}
+                            width={this.rect.width}
+                            height={this.rect.height}
+                            fill={style.backgroundColor}
+                        />
+                        {this.renderChildren()}
+                    </React.Fragment>
+                );
+            });
+        }
+        return this.renderCache;
     }
 }
 
@@ -1067,7 +1104,7 @@ class WidgetContainerDocument implements IDocument {
 
     get selectedObjectsBoundingRect() {
         let boundingRectBuilder = new BoundingRectBuilder();
-        for (let i = 0; i < this.selectedObjects.length; ++i) {
+        for (let i = 0; i < this.selectedObjects.length; i++) {
             boundingRectBuilder.addRect(this.selectedObjects[i].boundingRect);
         }
         return boundingRectBuilder.getRect();

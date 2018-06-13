@@ -145,7 +145,7 @@ class DragMouseHandler extends MouseHandler {
         super.move(document, event);
 
         let objects = document.selectedObjects;
-        for (let i = 0; i < objects.length; ++i) {
+        for (let i = 0; i < objects.length; i++) {
             let object = objects[i];
 
             let rect = {
@@ -229,7 +229,7 @@ class ResizeMouseHandler extends MouseHandler {
         this.savedRects = [];
         this.rects = [];
         let objects = document.selectedObjects;
-        for (let i = 0; i < objects.length; ++i) {
+        for (let i = 0; i < objects.length; i++) {
             let rect = objects[i].rect;
 
             this.savedRects.push({
@@ -348,7 +348,7 @@ class ResizeMouseHandler extends MouseHandler {
 
         let objects = document.selectedObjects;
 
-        for (let i = 0; i < this.rects.length; ++i) {
+        for (let i = 0; i < this.rects.length; i++) {
             let savedRect = this.savedRects[i];
             let rect = this.rects[i];
 

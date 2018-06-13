@@ -59,7 +59,7 @@ export function findSnapLines(
                     }
                 }
 
-                for (let i = 0; i < node.children.length; ++i) {
+                for (let i = 0; i < node.children.length; i++) {
                     findSnapLinesInNode(node.children[i]);
                 }
             }
@@ -81,7 +81,7 @@ export function findSnapLines(
 function findClosestSnapLinesToPosition(lines: SnapLine[], pos: number) {
     let result: ClosestSnapLines | undefined = undefined;
 
-    for (let i = 0; i < lines.length; ++i) {
+    for (let i = 0; i < lines.length; i++) {
         let diff = Math.abs(pos - lines[i].pos);
         if (diff < MAX_SNAP_LINE_DISTANCE) {
             if (!result || diff < result.diff) {
@@ -174,7 +174,7 @@ export function drawSnapLines(
 
     // draw horizontal snap lines
     drawnPositions = [];
-    for (let i = 0; i < snapLines.horizontalLines.length; ++i) {
+    for (let i = 0; i < snapLines.horizontalLines.length; i++) {
         let pos = snapLines.horizontalLines[i].pos;
         if (drawnPositions.indexOf(pos) == -1) {
             // do not draw multiple lines over the same position
@@ -192,7 +192,7 @@ export function drawSnapLines(
 
     // draw vertical snap lines
     drawnPositions = [];
-    for (let i = 0; i < snapLines.verticalLines.length; ++i) {
+    for (let i = 0; i < snapLines.verticalLines.length; i++) {
         let pos = snapLines.verticalLines[i].pos;
         if (drawnPositions.indexOf(pos) == -1) {
             // do not draw multiple lines over the same position
@@ -214,7 +214,7 @@ export function drawSnapLines(
     let horizontalSnapLines = findHorizontalSnapLinesClosestToRect(snapLines, selectionRect);
     if (horizontalSnapLines) {
         drawnPositions = [];
-        for (let i = 0; i < horizontalSnapLines.lines.length; ++i) {
+        for (let i = 0; i < horizontalSnapLines.lines.length; i++) {
             let pos = horizontalSnapLines.lines[i].pos;
             if (drawnPositions.indexOf(pos) == -1) {
                 ctx.beginPath();
@@ -230,7 +230,7 @@ export function drawSnapLines(
     let verticalSnapLines = findVerticalSnapLinesClosestToRect(snapLines, selectionRect);
     if (verticalSnapLines) {
         drawnPositions = [];
-        for (let i = 0; i < verticalSnapLines.lines.length; ++i) {
+        for (let i = 0; i < verticalSnapLines.lines.length; i++) {
             let pos = verticalSnapLines.lines[i].pos;
             if (drawnPositions.indexOf(pos) == -1) {
                 ctx.beginPath();

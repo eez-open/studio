@@ -224,7 +224,7 @@ export function destroyExtensions() {
 function compareVersions(versionString1: string, versionString2: string) {
     let parts1 = versionString1.split(".");
     let parts2 = versionString2.split(".");
-    for (let i = 0; i < parts1.length && i < parts2.length; ++i) {
+    for (let i = 0; i < parts1.length && i < parts2.length; i++) {
         let v1 = parseInt(parts1[i]);
         let v2 = parseInt(parts2[i]);
         if (isNaN(v1) || isNaN(v2)) {

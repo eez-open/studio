@@ -116,7 +116,7 @@ export class TableList extends BaseList {
     getMaxTime() {
         let max = 0;
         const dwellData = this.data.dwell;
-        for (let i = 0; i < this.numPoints; ++i) {
+        for (let i = 0; i < this.numPoints; i++) {
             max += i < dwellData.length ? dwellData[i] : dwellData[dwellData.length - 1];
         }
         return max;
@@ -234,7 +234,7 @@ export class TableLineView extends React.Component<
 
         let path;
 
-        for (let i = 0; i < size; ++i) {
+        for (let i = 0; i < size; i++) {
             if (i === 0) {
                 path = `M${chartLeft + xAxisController.valueToPx(0)} ${chartBottom -
                     yAxisController.valueToPx(values[0] || 0)}`;
@@ -617,7 +617,7 @@ export class Table extends React.Component<
                     data[key] = array;
                 }
 
-                for (let i = index - 1; i >= 0 && isNaN(array[i]); --i) {
+                for (let i = index - 1; i >= 0 && isNaN(array[i]); i--) {
                     array[i] = numValue;
                 }
 
@@ -954,7 +954,7 @@ class TableChartController extends ChartController {
         }
         let time = 0;
         let lastDwell: number | undefined = data.dwell[0];
-        for (let i = 0; i < list.numPoints; ++i) {
+        for (let i = 0; i < list.numPoints; i++) {
             let dwell: number | undefined = data.dwell[i];
             if (isNaN(dwell)) {
                 dwell = lastDwell;
@@ -985,7 +985,7 @@ class TableChartController extends ChartController {
         }
         let time = 0;
         let lastDwell: number | undefined = data.dwell[0];
-        for (let i = 0; i <= selectedCell.index; ++i) {
+        for (let i = 0; i <= selectedCell.index; i++) {
             let dwell: number;
             if (i < data.dwell.length) {
                 dwell = data.dwell[i];

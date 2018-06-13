@@ -245,7 +245,7 @@ export class InstrumentObject {
     getConnectionParameters(parameters: any[]): ConnectionParameters {
         let finalParameters: any = {};
 
-        for (let i = parameters.length - 1; i >= 0; --i) {
+        for (let i = parameters.length - 1; i >= 0; i--) {
             if (parameters[i]) {
                 finalParameters = Object.assign(finalParameters, parameters[i]);
             }

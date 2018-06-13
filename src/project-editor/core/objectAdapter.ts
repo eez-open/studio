@@ -383,7 +383,7 @@ export class TreeObjectAdapter {
             return false;
         }
 
-        for (let i = 0; i < this.selectedItems.length; ++i) {
+        for (let i = 0; i < this.selectedItems.length; i++) {
             if (!canCut(this.selectedItems[i].object)) {
                 return false;
             }
@@ -413,7 +413,7 @@ export class TreeObjectAdapter {
             return false;
         }
 
-        for (let i = 0; i < this.selectedItems.length; ++i) {
+        for (let i = 0; i < this.selectedItems.length; i++) {
             if (!canCut(this.selectedItems[i].object)) {
                 return false;
             }
@@ -468,7 +468,7 @@ export class TreeObjectAdapter {
             return false;
         }
 
-        for (let i = 0; i < this.selectedItems.length; ++i) {
+        for (let i = 0; i < this.selectedItems.length; i++) {
             if (!canDelete(this.selectedItems[i].object)) {
                 return false;
             }
@@ -560,7 +560,7 @@ export class TreeObjectAdapter {
         let selectedObjects = this.selectedObjects;
         if (selectedObjects.length > 0) {
             let i: number;
-            for (i = 1; i < selectedObjects.length; ++i) {
+            for (i = 1; i < selectedObjects.length; i++) {
                 if (isSameInstanceTypeAs(selectedObjects[i], selectedObjects[0])) {
                     break;
                 }

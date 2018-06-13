@@ -261,7 +261,7 @@ function buildCommonCommands(idf: IdfProperties, subsystems: ISubsystem[]) {
 function getAliases(mnemonic: string) {
     let i;
 
-    for (i = 0; i < mnemonic.length; ++i) {
+    for (i = 0; i < mnemonic.length; i++) {
         if (mnemonic[i] != mnemonic[i].toUpperCase()) {
             break;
         }

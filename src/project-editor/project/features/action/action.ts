@@ -148,7 +148,7 @@ function getActions() {
 
 export function findAction(actionName: string) {
     let actions = getActions();
-    for (let i = 0; i < actions.length; ++i) {
+    for (let i = 0; i < actions.length; i++) {
         let action = actions[i];
         if (action.name == actionName) {
             return action;
@@ -158,7 +158,7 @@ export function findAction(actionName: string) {
 
 export function findActionIndex(actionName: string) {
     let actions = getActions();
-    for (let i = 0; i < actions.length; ++i) {
+    for (let i = 0; i < actions.length; i++) {
         if (actions[i].name == actionName) {
             return i;
         }

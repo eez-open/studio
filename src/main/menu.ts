@@ -185,7 +185,7 @@ function insertBefore(
     referenceMenuItems: Electron.MenuItemConstructorOptions[],
     id: string
 ) {
-    for (let i = 0; i < referenceMenuItems.length; ++i) {
+    for (let i = 0; i < referenceMenuItems.length; i++) {
         if (referenceMenuItems[i].id === id) {
             return referenceMenuItems
                 .slice(0, i)
@@ -202,7 +202,7 @@ function enableMenuItem(
     id: string,
     enabled: boolean
 ) {
-    for (let i = 0; i < menuItems.length; ++i) {
+    for (let i = 0; i < menuItems.length; i++) {
         if (menuItems[i].id === id) {
             menuItems[i].enabled = enabled;
             return;
@@ -521,6 +521,15 @@ function buildViewMenu(windowType: WindowType) {
             type: "separator"
         },
         {
+            label: "Test",
+            click: function() {
+                openWindow({ url: "test/index.html" });
+            }
+        },
+        {
+            type: "separator"
+        },
+        {
             label: "Zoom In",
             role: "zoomin"
         },
@@ -583,7 +592,7 @@ function buildMenuTemplate(windowType: WindowType, win: IWindow | undefined) {
 ////////////////////////////////////////////////////////////////////////////////
 
 autorun(() => {
-    for (let i = 0; i < windows.length; ++i) {
+    for (let i = 0; i < windows.length; i++) {
         const win = windows[i];
         if (win.focused) {
             const windowType = getWindowType(win);
@@ -615,7 +624,7 @@ ipcMain.on("getReservedKeybindings", function(event: any) {
     }
 
     function addKeybindings(menu: Electron.MenuItemConstructorOptions[]) {
-        for (let i = 0; i < menu.length; ++i) {
+        for (let i = 0; i < menu.length; i++) {
             const menuItem = menu[i];
             if (menuItem.accelerator) {
                 addKeybinding(menuItem.accelerator);

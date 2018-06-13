@@ -3,7 +3,7 @@ import * as React from 'react';
 function combineClassNames(...classNames: (string | undefined)[]) {
     let className: string|undefined;
 
-    for (let i = 0; i < classNames.length; ++i) {
+    for (let i = 0; i < classNames.length; i++) {
         if (classNames[i]) {
             if (className) {
                 className += ' ' + classNames[i];

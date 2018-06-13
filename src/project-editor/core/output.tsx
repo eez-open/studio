@@ -82,9 +82,9 @@ export class OutputSection {
     @computed
     get numErrors() {
         let n = 0;
-        for (let i = 0; i < this.messages.length; ++i) {
+        for (let i = 0; i < this.messages.length; i++) {
             if (this.messages[i].type == Type.ERROR) {
-                ++n;
+                n++;
             }
         }
         return n;
@@ -93,9 +93,9 @@ export class OutputSection {
     @computed
     get numWarnings() {
         let n = 0;
-        for (let i = 0; i < this.messages.length; ++i) {
+        for (let i = 0; i < this.messages.length; i++) {
             if (this.messages[i].type == Type.WARNING) {
-                ++n;
+                n++;
             }
         }
         return n;

@@ -242,7 +242,7 @@ export class CanvasEditorScrollBars {
     }
 
     findNextScale() {
-        for (let i = 0; i < SCALES.length; ++i) {
+        for (let i = 0; i < SCALES.length; i++) {
             if (SCALES[i] > this.canvasEditor.scale) {
                 return SCALES[i];
             }
@@ -251,7 +251,7 @@ export class CanvasEditorScrollBars {
     }
 
     findPrevScale() {
-        for (let i = SCALES.length - 1; i >= 0; --i) {
+        for (let i = SCALES.length - 1; i >= 0; i--) {
             if (SCALES[i] < this.canvasEditor.scale) {
                 return SCALES[i];
             }

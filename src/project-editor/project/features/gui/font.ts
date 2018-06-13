@@ -39,7 +39,7 @@ export function getData(font: FontProperties) {
     let data: number[] = [];
 
     function add(...values: number[]) {
-        for (let i = 0; i < values.length; ++i) {
+        for (let i = 0; i < values.length; i++) {
             if (values[i] < 0) {
                 data.push(256 + values[i]);
             } else {
@@ -54,12 +54,12 @@ export function getData(font: FontProperties) {
         add(startEncoding);
         add(endEncoding);
 
-        for (let i = startEncoding; i <= endEncoding; ++i) {
+        for (let i = startEncoding; i <= endEncoding; i++) {
             add(0);
             add(0);
         }
 
-        for (let i = startEncoding; i <= endEncoding; ++i) {
+        for (let i = startEncoding; i <= endEncoding; i++) {
             let offsetIndex = 4 + (i - startEncoding) * 2;
             let offset = data.length;
             data[offsetIndex] = offset >> 8;

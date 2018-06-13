@@ -82,7 +82,7 @@ export function saveSettings() {
 }
 
 export function findMruIndex(mruItemFilePath: string) {
-    for (var i = 0; i < settings.mru.length; ++i) {
+    for (var i = 0; i < settings.mru.length; i++) {
         if (settings.mru[i].filePath == mruItemFilePath) {
             return i;
         }

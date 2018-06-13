@@ -94,7 +94,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         this.childIsFixed = [];
 
         let offset = 0;
-        for (let i = 0; i < sizes.length; ++i) {
+        for (let i = 0; i < sizes.length; i++) {
             let size = parseFloat(sizes[i]);
             this.offsets.push(offset);
             offset += size;
@@ -113,7 +113,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
             (this.sizes.length - 1) * SPLITTER_SIZE;
 
         let totalSizeOfFixedChildren = 0;
-        for (let i = 0; i < this.idealSizes.length; ++i) {
+        for (let i = 0; i < this.idealSizes.length; i++) {
             if (this.childIsFixed[i]) {
                 totalSizeOfFixedChildren += this.idealSizes[i];
             }
@@ -128,7 +128,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
 
         let availableSize = totalSize;
 
-        for (let i = 0; i < this.sizes.length; ++i) {
+        for (let i = 0; i < this.sizes.length; i++) {
             if (this.childIsFixed[i]) {
                 this.sizes[i] = Math.floor(this.idealSizes[i] * stretchFactorForFixedChildren);
                 availableSize -= this.sizes[i];
@@ -136,7 +136,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         }
 
         let availableSizeForStretchableChildren = availableSize;
-        for (let i = 0; i < this.sizes.length; ++i) {
+        for (let i = 0; i < this.sizes.length; i++) {
             if (!this.childIsFixed[i]) {
                 this.sizes[i] = Math.floor(
                     this.idealSizes[i] * availableSizeForStretchableChildren / 100
@@ -148,7 +148,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         this.sizes[0] += availableSize;
 
         this.offsets[0] = 0;
-        for (let i = 1; i < this.sizes.length; ++i) {
+        for (let i = 1; i < this.sizes.length; i++) {
             this.offsets[i] = this.offsets[i - 1] + this.sizes[i - 1] + SPLITTER_SIZE;
         }
     }
@@ -179,13 +179,13 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         this.sizes[iSplitter + 1] = size2;
 
         let sizeStretchable = 0;
-        for (let i = 0; i < this.sizes.length; ++i) {
+        for (let i = 0; i < this.sizes.length; i++) {
             if (!this.childIsFixed[i]) {
                 sizeStretchable += this.sizes[i];
             }
         }
 
-        for (let i = 0; i < this.sizes.length; ++i) {
+        for (let i = 0; i < this.sizes.length; i++) {
             if (this.childIsFixed[i]) {
                 this.idealSizes[i] = this.sizes[i];
             } else {
@@ -197,7 +197,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
 
         // store ideal sizes to local storage
         let sizes = [];
-        for (let i = 0; i < this.idealSizes.length; ++i) {
+        for (let i = 0; i < this.idealSizes.length; i++) {
             if (this.childIsFixed[i]) {
                 sizes.push(this.idealSizes[i] + "px");
             } else {
@@ -223,7 +223,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
 
         let childStyles: React.CSSProperties[] = [];
 
-        for (let i = 0; i < children.length; ++i) {
+        for (let i = 0; i < children.length; i++) {
             let style: React.CSSProperties = {
                 position: "absolute",
                 overflow: "auto",
@@ -241,7 +241,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
 
         let splitterStyles: React.CSSProperties[] = [];
 
-        for (let i = 0; i < children.length - 1; ++i) {
+        for (let i = 0; i < children.length - 1; i++) {
             let style: React.CSSProperties = {
                 position: "absolute",
                 boxSizing: "border-box",

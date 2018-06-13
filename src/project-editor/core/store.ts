@@ -329,7 +329,7 @@ class EditorsStoreClass {
 
         // close non-permanent editor if editor object is not selected
         // autorun(() => {
-        //     for (let i = 0; i < this.editors.length; ++i) {
+        //     for (let i = 0; i < this.editors.length; i++) {
         //         if (!this.editors[i].permanent) {
         //             if (!NavigationStore.isSelected(this.editors[i].object)) {
         //                 this.closeEditor(this.editors[i]);
@@ -394,7 +394,7 @@ class EditorsStoreClass {
 
     @computed
     get activeEditor() {
-        for (let i = 0; i < this.editors.length; ++i) {
+        for (let i = 0; i < this.editors.length; i++) {
             let editor = this.editors[i];
             if (editor.active) {
                 return editor;
@@ -423,7 +423,7 @@ class EditorsStoreClass {
 
         let editorFound: Editor | undefined;
 
-        for (let i = 0; i < this.editors.length; ++i) {
+        for (let i = 0; i < this.editors.length; i++) {
             if (this.editors[i].object == object) {
                 this.editors[i].active = true;
                 editorFound = this.editors[i];
@@ -465,7 +465,7 @@ class EditorsStoreClass {
 
     @action
     makeActiveEditorPermanent() {
-        for (let i = 0; i < this.editors.length; ++i) {
+        for (let i = 0; i < this.editors.length; i++) {
             if (this.editors[i].active) {
                 this.editors[i].permanent = true;
                 return;
@@ -758,7 +758,7 @@ export class UndoManagerClass {
 
         let undoItem = this.undoStack.pop();
         if (undoItem) {
-            for (let i = undoItem.commands.length - 1; i >= 0; --i) {
+            for (let i = undoItem.commands.length - 1; i >= 0; i--) {
                 undoItem.commands[i].undo();
             }
 
@@ -789,7 +789,7 @@ export class UndoManagerClass {
     redo() {
         let redoItem = this.redoStack.pop();
         if (redoItem) {
-            for (let i = 0; i < redoItem.commands.length; ++i) {
+            for (let i = 0; i < redoItem.commands.length; i++) {
                 redoItem.commands[i].execute();
             }
 
@@ -1128,7 +1128,7 @@ function createEezObjectState(parent: EezObject | undefined, metaData: MetaData)
         if (parentEezObjectState.lastChildId === undefined) {
             parentEezObjectState.lastChildId = 1;
         } else {
-            ++parentEezObjectState.lastChildId;
+            parentEezObjectState.lastChildId++;
         }
 
         id = parentEezObjectState.id + "." + parentEezObjectState.lastChildId;
@@ -1152,7 +1152,7 @@ function loadArrayObject(arrayObject: any, parent: any, propertyMetaData: Proper
     arrayEezObjectState.propertyMetaData = propertyMetaData;
     setEez(arrayObject, arrayEezObjectState);
 
-    for (let j = 0; j < arrayObject.length; ++j) {
+    for (let j = 0; j < arrayObject.length; j++) {
         arrayObject[j] = loadObject(
             arrayObject,
             arrayObject[j],
@@ -1183,7 +1183,7 @@ export function loadObject(
     object.$eez = createEezObjectState(parent as EezObject, metaData);
 
     let properties = metaData.properties(jsObject);
-    for (let i = 0; i < properties.length; ++i) {
+    for (let i = 0; i < properties.length; i++) {
         let propertyMetaData = properties[i];
 
         let value = jsObject[propertyMetaData.name];
@@ -1410,7 +1410,7 @@ export function getObjectFromObjectId(objectID: string): EezObject | undefined {
         } else {
             let properties = getMetaData(object).properties(object);
 
-            for (let i = 0; i < properties.length; ++i) {
+            for (let i = 0; i < properties.length; i++) {
                 let propertyMetaData = properties[i];
                 if (propertyMetaData.type == "object" || propertyMetaData.type == "array") {
                     let childObject = getChildOfObject(object, propertyMetaData);
@@ -1629,7 +1629,7 @@ export function getObjectPath(object: EezObject): (string | number)[] {
 export function getObjectFromPath(path: string[]) {
     let object: EezObject = ProjectStore.projectProperties;
 
-    for (let i = 0; i < path.length && object; ++i) {
+    for (let i = 0; i < path.length && object; i++) {
         object = getChildOfObject(object, path[i]) as EezObject;
     }
 
@@ -1685,15 +1685,15 @@ export function getAncestors(
         let properties = getMetaData(ancestor).properties(ancestor);
 
         let numObjectOrArrayProperties = 0;
-        for (let i = 0; i < properties.length; ++i) {
+        for (let i = 0; i < properties.length; i++) {
             let propertyMetaData = properties[i];
             if (propertyMetaData.type == "object" || propertyMetaData.type == "array") {
-                ++numObjectOrArrayProperties;
+                numObjectOrArrayProperties++;
             }
         }
 
         if (numObjectOrArrayProperties > 0) {
-            for (let i = 0; i < properties.length; ++i) {
+            for (let i = 0; i < properties.length; i++) {
                 let propertyMetaData = properties[i];
                 if (propertyMetaData.type == "object" || propertyMetaData.type == "array") {
                     let possibleAncestor: EezObject = (ancestor as any)[propertyMetaData.name];
@@ -1805,7 +1805,7 @@ export function canCopy(object: EezObject) {
 export function canContainChildren(object: EezObject) {
     let properties = getProperties(object);
 
-    for (let i = 0; i < properties.length; ++i) {
+    for (let i = 0; i < properties.length; i++) {
         let propertyMetaData = properties[i];
         if (propertyMetaData.type == "array" || propertyMetaData.type == "object") {
             return true;
@@ -1834,7 +1834,7 @@ export function findPastePlaceInside(
     let properties = getProperties(object);
 
     // first, find among array properties
-    for (let i = 0; i < properties.length; ++i) {
+    for (let i = 0; i < properties.length; i++) {
         let propertyMetaData = properties[i];
         if (propertyMetaData.type == "array" && propertyMetaData.typeMetaData == metaData) {
             let collectionObject = getChildOfObject(object, propertyMetaData);
@@ -1845,7 +1845,7 @@ export function findPastePlaceInside(
     }
 
     // then, find among object properties
-    for (let i = 0; i < properties.length; ++i) {
+    for (let i = 0; i < properties.length; i++) {
         let propertyMetaData = properties[i];
         if (
             propertyMetaData.type == "object" &&
@@ -1982,7 +1982,7 @@ export let addObjects = action((parentObject: EezObject, objects: EezObject[]) =
         }),
 
         undo: action(() => {
-            for (let i = 0; i < objects.length; ++i) {
+            for (let i = 0; i < objects.length; i++) {
                 (parentObject as any).pop();
             }
             onObjectModified(parentObject);
@@ -2138,7 +2138,7 @@ export let deleteObjects = action((objects: EezObject[]) => {
     UndoManager.executeCommand({
         execute: action(() => {
             undoIndexes = [];
-            for (let i = 0; i < objects.length; ++i) {
+            for (let i = 0; i < objects.length; i++) {
                 let object = objects[i];
                 let parent = getParent(object) as any;
                 if (isArrayElement(object)) {
@@ -2154,7 +2154,7 @@ export let deleteObjects = action((objects: EezObject[]) => {
         }),
 
         undo: action(() => {
-            for (let i = objects.length - 1; i >= 0; --i) {
+            for (let i = objects.length - 1; i >= 0; i--) {
                 let object = objects[i];
                 let parent = getParent(object) as any;
                 if (isArrayElement(object)) {
@@ -2221,7 +2221,7 @@ export let replaceObjects = action((objects: EezObject[], replaceWithObject: Eez
             parent[index] = replaceWithObject;
 
             undoIndexes = [];
-            for (let i = 1; i < objects.length; ++i) {
+            for (let i = 1; i < objects.length; i++) {
                 let object = objects[i];
                 let index = parent.indexOf(object);
                 undoIndexes.push(index);
@@ -2230,7 +2230,7 @@ export let replaceObjects = action((objects: EezObject[], replaceWithObject: Eez
         }),
 
         undo: action(() => {
-            for (let i = objects.length - 1; i >= 1; --i) {
+            for (let i = objects.length - 1; i >= 1; i--) {
                 let object = objects[i];
                 let index = undoIndexes[i - 1];
                 parent.splice(index, 0, object);
@@ -2470,7 +2470,7 @@ export function deleteItems(objects: EezObject[], callback?: () => void) {
     } else {
         let isAnyItemReferenced = false;
 
-        for (let i = 0; i < objects.length; ++i) {
+        for (let i = 0; i < objects.length; i++) {
             if (isReferenced(objects[i])) {
                 isAnyItemReferenced = true;
                 break;

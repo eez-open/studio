@@ -915,16 +915,16 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
 
                     if (event.keyCode == 37) {
                         // left
-                        --rect.x;
+                        rect.x--;
                     } else if (event.keyCode == 39) {
                         // right
-                        ++rect.x;
+                        rect.x++;
                     } else if (event.keyCode == 38) {
                         // up
-                        --rect.y;
+                        rect.y--;
                     } else if (event.keyCode == 40) {
                         // down
-                        ++rect.y;
+                        rect.y++;
                     } else if (event.keyCode == 36) {
                         // home
                         rect.x = 0;
@@ -936,7 +936,7 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
                     let dx = rect.x - this.selectionRect.x;
                     let dy = rect.y - this.selectionRect.y;
                     if (dx || dy) {
-                        for (let i = 0; i < nodes.length; ++i) {
+                        for (let i = 0; i < nodes.length; i++) {
                             let nodeObj = nodes[i].item.object as any;
                             updateObject(nodeObj, {
                                 x: nodeObj.x + dx,

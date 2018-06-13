@@ -22,10 +22,10 @@ function addAlphaToColor(color: string, alpha: number) {
 
 function genRandomOffsets(K: number) {
     let offsets = new Array(K);
-    for (let i = 0; i < K; ++i) {
+    for (let i = 0; i < K; i++) {
         offsets[i] = i;
     }
-    for (let i = 0; i < K; ++i) {
+    for (let i = 0; i < K; i++) {
         let a = Math.floor(Math.random() * K);
         let b = Math.floor(Math.random() * K);
         let temp = offsets[a];
@@ -106,7 +106,7 @@ export function renderWaveformPath(
     let xToPx = xAxisController.valueToPx(xAxisController.to);
 
     function xAxisPxToIndex(px: number) {
-        return xAxisController.pxToValue(px) / xAxisController.range * (waveform.length - 1);
+        return (xAxisController.pxToValue(px) / xAxisController.range) * (waveform.length - 1);
     }
 
     function renderSparse() {
@@ -125,9 +125,9 @@ export function renderWaveformPath(
         let xPrev = 0;
         let yPrev = 0;
 
-        for (let i = a; i <= b; ++i) {
+        for (let i = a; i <= b; i++) {
             let x = Math.round(
-                xAxisController.valueToPx(i * xAxisController.range / (waveform.length - 1))
+                xAxisController.valueToPx((i * xAxisController.range) / (waveform.length - 1))
             );
             let y = Math.round(canvas.height - yAxisController.valueToPx(waveform.value(i)));
 
@@ -180,9 +180,9 @@ export function renderWaveformPath(
             c += bd;
             b = bb;
 
-            for (let i = a; i < b; ++i) {
+            for (let i = a; i < b; i++) {
                 y += waveform.value(i);
-                ++c;
+                c++;
             }
 
             y /= c;
@@ -211,7 +211,7 @@ export function renderWaveformPath(
 
         let startTime = new Date().getTime();
 
-        for (; offset < N; ++offset) {
+        for (; offset < N; offset++) {
             if (new Date().getTime() - startTime > CONF_SINGLE_STEP_TIMEOUT) {
                 return {
                     offsets,
@@ -247,7 +247,7 @@ export function renderWaveformPath(
 
             let min = Number.MAX_VALUE;
             let max = -Number.MAX_VALUE;
-            for (let i = a; i < b; ++i) {
+            for (let i = a; i < b; i++) {
                 const y = waveform.value(i);
                 if (y < min) {
                     min = y;
@@ -287,7 +287,7 @@ export function renderWaveformPath(
 
         let startTime = new Date().getTime();
 
-        for (; offset < N; ++offset) {
+        for (; offset < N; offset++) {
             if (new Date().getTime() - startTime > CONF_SINGLE_STEP_TIMEOUT) {
                 return {
                     offsets,
@@ -348,7 +348,7 @@ export function renderWaveformPath(
         function renderStep(a: number, b: number, K: number, offset: number) {
             for (let i = a + offset; i < b; i += K) {
                 let x = Math.round(
-                    xAxisController.valueToPx(i * xAxisController.range / waveform.length)
+                    xAxisController.valueToPx((i * xAxisController.range) / waveform.length)
                 );
                 let y = yAxisController.valueToPx(waveform.value(i));
                 if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {

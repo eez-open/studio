@@ -166,23 +166,23 @@ export class EnvelopeList extends BaseList {
         while (iVoltage < voltage.length || iCurrent < current.length) {
             if (iCurrent === current.length) {
                 timeN.push(voltage[iVoltage].time);
-                ++iVoltage;
+                iVoltage++;
             } else if (iVoltage === voltage.length) {
                 timeN.push(current[iCurrent].time);
-                ++iCurrent;
+                iCurrent++;
             } else {
                 let voltageTime = voltage[iVoltage].time;
                 let currentTime = current[iCurrent].time;
                 if (voltageTime < currentTime) {
                     timeN.push(voltageTime);
-                    ++iVoltage;
+                    iVoltage++;
                 } else if (currentTime < voltageTime) {
                     timeN.push(currentTime);
-                    ++iCurrent;
+                    iCurrent++;
                 } else {
                     timeN.push(voltageTime);
-                    ++iVoltage;
-                    ++iCurrent;
+                    iVoltage++;
+                    iCurrent++;
                 }
             }
         }
@@ -190,7 +190,7 @@ export class EnvelopeList extends BaseList {
         let timeTemp = [0];
         const minDwell = this.$eez_noser_appStore.instrument!.listsMinDwellProperty;
         const maxDwell = this.$eez_noser_appStore.instrument!.listsMaxDwellProperty;
-        for (let i = 1; i < timeN.length; ++i) {
+        for (let i = 1; i < timeN.length; i++) {
             let dt = timeN[i] - timeTemp[timeTemp.length - 1];
             while (dt > maxDwell) {
                 timeTemp.push(timeTemp[timeTemp.length - 1] + maxDwell);
@@ -205,49 +205,47 @@ export class EnvelopeList extends BaseList {
         let currentN = [current[0].value];
         iVoltage = 1;
         iCurrent = 1;
-        for (let i = 1; i < timeN.length; ++i) {
+        for (let i = 1; i < timeN.length; i++) {
             while (iVoltage < voltage.length && voltage[iVoltage].time < timeN[i]) {
-                ++iVoltage;
+                iVoltage++;
             }
             if (iVoltage === voltage.length) {
                 voltageN.push(voltage[voltage.length - 1].value);
             } else {
                 voltageN.push(
                     voltage[iVoltage - 1].value +
-                        (timeN[i] - voltage[iVoltage - 1].time) /
-                            (voltage[iVoltage].time - voltage[iVoltage - 1].time) *
+                        ((timeN[i] - voltage[iVoltage - 1].time) /
+                            (voltage[iVoltage].time - voltage[iVoltage - 1].time)) *
                             (voltage[iVoltage].value - voltage[iVoltage - 1].value)
                 );
             }
 
             while (iCurrent < current.length && current[iCurrent].time < timeN[i]) {
-                ++iCurrent;
+                iCurrent++;
             }
             if (iCurrent === current.length) {
                 currentN.push(current[current.length - 1].value);
             } else {
                 currentN.push(
                     current[iCurrent - 1].value +
-                        (timeN[i] - current[iCurrent - 1].time) /
-                            (current[iCurrent].time - current[iCurrent - 1].time) *
+                        ((timeN[i] - current[iCurrent - 1].time) /
+                            (current[iCurrent].time - current[iCurrent - 1].time)) *
                             (current[iCurrent].value - current[iCurrent - 1].value)
                 );
             }
         }
 
-        for (let i = 0; i < timeN.length; ++i) {
+        for (let i = 0; i < timeN.length; i++) {
             if (timeN[i] >= duration) {
                 if (timeN[i] > duration) {
                     voltageN[i] =
                         voltageN[i - 1] +
-                        (duration - timeN[i - 1]) /
-                            (timeN[i] - timeN[i - 1]) *
+                        ((duration - timeN[i - 1]) / (timeN[i] - timeN[i - 1])) *
                             (voltageN[i] - voltageN[i - 1]);
 
                     currentN[i] =
                         currentN[i - 1] +
-                        (duration - timeN[i - 1]) /
-                            (timeN[i] - timeN[i - 1]) *
+                        ((duration - timeN[i - 1]) / (timeN[i] - timeN[i - 1])) *
                             (currentN[i] - currentN[i - 1]);
 
                     timeN[i] = duration;
@@ -269,9 +267,9 @@ export class EnvelopeList extends BaseList {
         let T = 0;
         let N = numSamples;
 
-        for (let i = 1; i < timeN.length; ++i) {
+        for (let i = 1; i < timeN.length; i++) {
             if (voltageN[i] === voltageN[i - 1] && currentN[i] === currentN[i - 1]) {
-                --N;
+                N--;
             } else {
                 T += timeN[i] - timeN[i - 1];
             }
@@ -281,7 +279,7 @@ export class EnvelopeList extends BaseList {
         const voltageS = [];
         const currentS = [];
 
-        for (let i = 1; i < timeN.length; ++i) {
+        for (let i = 1; i < timeN.length; i++) {
             let dt = timeN[i] - timeN[i - 1];
 
             if (voltageN[i] === voltageN[i - 1] && currentN[i] === currentN[i - 1]) {
@@ -289,18 +287,18 @@ export class EnvelopeList extends BaseList {
                 voltageS.push(voltageN[i]);
                 currentS.push(currentN[i]);
             } else {
-                let n = Math.round(N * dt / T);
+                let n = Math.round((N * dt) / T);
 
                 let dwellSum = 0;
                 let dVoltage = voltageN[i] - voltageN[i - 1];
                 let dCurrent = currentN[i] - currentN[i - 1];
 
-                for (let j = 0; j < n; ++j) {
+                for (let j = 0; j < n; j++) {
                     let dwell = (dt - dwellSum) / (n - j);
                     dwellS.push(dwell);
 
-                    voltageS.push(voltageN[i - 1] + (dwellSum + dwell / 2) * dVoltage / dt);
-                    currentS.push(currentN[i - 1] + (dwellSum + dwell / 2) * dCurrent / dt);
+                    voltageS.push(voltageN[i - 1] + ((dwellSum + dwell / 2) * dVoltage) / dt);
+                    currentS.push(currentN[i - 1] + ((dwellSum + dwell / 2) * dCurrent) / dt);
 
                     dwellSum += dwell;
                 }
@@ -328,7 +326,7 @@ export class EnvelopeList extends BaseList {
 
     @computed
     get powerLimitError() {
-        for (let i = 0; i < this.tableListData.dwell.length; ++i) {
+        for (let i = 0; i < this.tableListData.dwell.length; i++) {
             let power = this.tableListData.voltage[i] * this.tableListData.current[i];
             if (!checkPower(power, this.$eez_noser_appStore)) {
                 return getPowerLimitErrorMessage(this.$eez_noser_appStore);
@@ -961,7 +959,7 @@ export class EnvelopeLineController extends LineController {
         cursor.visible = true;
         cursor.lineController = this;
 
-        for (let i = 0; i < this.values.length; ++i) {
+        for (let i = 0; i < this.values.length; i++) {
             if (
                 pointDistance(
                     { x, y },
@@ -983,7 +981,7 @@ export class EnvelopeLineController extends LineController {
         }
 
         let i;
-        for (i = 0; i < this.values.length; ++i) {
+        for (i = 0; i < this.values.length; i++) {
             if (x < this.xAxisController.valueToPx(this.values[i].time)) {
                 break;
             }
@@ -1018,7 +1016,7 @@ export class EnvelopeLineController extends LineController {
         }
 
         if (valueIndex - 2 >= 0 && this.values[valueIndex - 2].time === value.time) {
-            --valueIndex;
+            valueIndex--;
             const oldValue = this.values[valueIndex];
             this.list.$eez_noser_appStore.undoManager.addCommand(
                 "Edit envelope list",
@@ -1082,7 +1080,7 @@ export class EnvelopeLineController extends LineController {
         let minDistance: number | undefined = undefined;
         let closestPoint: Point | undefined;
 
-        for (let i = 1; i < this.values.length; ++i) {
+        for (let i = 1; i < this.values.length; i++) {
             const pointOnSegment = closestPointOnSegment(
                 point,
                 {
@@ -1302,7 +1300,10 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique(this.list, values(this.list.$eez_noser_appStore.instrumentLists))
+                            validators.unique(
+                                this.list,
+                                values(this.list.$eez_noser_appStore.instrumentLists)
+                            )
                         ]
                     },
                     {
@@ -1388,7 +1389,9 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
             const oldVoltage = this.list.data.voltage;
             const oldCurrent = this.list.data.current;
 
-            const defaultEnvelopeListData = getDefaultEnvelopeListData(this.list.$eez_noser_appStore);
+            const defaultEnvelopeListData = getDefaultEnvelopeListData(
+                this.list.$eez_noser_appStore
+            );
 
             const newVoltage = objectClone(defaultEnvelopeListData.voltage);
             newVoltage[1].time = this.list.data.duration;
@@ -1426,7 +1429,9 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
         if (this.canClearAllVoltagePoints) {
             const oldVoltage = this.list.data.voltage;
 
-            const defaultEnvelopeListData = getDefaultEnvelopeListData(this.list.$eez_noser_appStore);
+            const defaultEnvelopeListData = getDefaultEnvelopeListData(
+                this.list.$eez_noser_appStore
+            );
 
             const newVoltage = defaultEnvelopeListData.voltage.slice();
             newVoltage[1].time = this.list.data.duration;
@@ -1459,7 +1464,9 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
         if (this.canClearAllCurrentPoints) {
             const oldCurrent = this.list.data.current;
 
-            const defaultEnvelopeListData = getDefaultEnvelopeListData(this.list.$eez_noser_appStore);
+            const defaultEnvelopeListData = getDefaultEnvelopeListData(
+                this.list.$eez_noser_appStore
+            );
 
             const newCurrent = defaultEnvelopeListData.current.slice();
             newCurrent[1].time = this.list.data.duration;

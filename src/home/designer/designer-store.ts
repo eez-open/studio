@@ -127,7 +127,7 @@ class WorkbenchDocument implements IWorkbenchDocument {
     get boundingRect() {
         let boundingRectBuilder = new BoundingRectBuilder();
 
-        for (let i = 0; i < this.objects.length; ++i) {
+        for (let i = 0; i < this.objects.length; i++) {
             boundingRectBuilder.addRect(this.objects[i].rect);
         }
 
@@ -139,7 +139,7 @@ class WorkbenchDocument implements IWorkbenchDocument {
     }
 
     selectObjectsInsideRect(rect: Rect) {
-        for (let i = 0; i < this.objects.length; ++i) {
+        for (let i = 0; i < this.objects.length; i++) {
             let object = this.objects[i];
             runInAction(() => (object.selected = isRectInsideRect(object.rect, rect)));
         }
@@ -221,7 +221,7 @@ class WorkbenchDocument implements IWorkbenchDocument {
 
     objectFromPoint(point: Point) {
         let objects = this.objects;
-        for (let i = objects.length - 1; i >= 0; --i) {
+        for (let i = objects.length - 1; i >= 0; i--) {
             let object = objects[i];
             if (pointInRect(point, object.rect)) {
                 return object;
@@ -234,7 +234,7 @@ class WorkbenchDocument implements IWorkbenchDocument {
     get selectedObjectsBoundingRect() {
         let boundingRectBuilder = new BoundingRectBuilder();
 
-        for (let i = 0; i < this.selectedObjects.length; ++i) {
+        for (let i = 0; i < this.selectedObjects.length; i++) {
             boundingRectBuilder.addRect(this.selectedObjects[i].boundingRect);
         }
 
@@ -242,7 +242,7 @@ class WorkbenchDocument implements IWorkbenchDocument {
     }
 
     get selectionResizable() {
-        for (let i = 0; i < this.selectedObjects.length; ++i) {
+        for (let i = 0; i < this.selectedObjects.length; i++) {
             if (!this.selectedObjects[i].isResizable) {
                 return false;
             }
@@ -272,7 +272,7 @@ class WorkbenchDocument implements IWorkbenchDocument {
                 beginTransaction(`${humanize(op)} workbench item`);
             }
 
-            for (let i = 0; i < objects.length; ++i) {
+            for (let i = 0; i < objects.length; i++) {
                 objects[i].saveRect();
             }
 

@@ -92,7 +92,7 @@ export function loadExtensions(): Promise<void> {
         }
 
         function loadExtensionFinished(extension?: Extension) {
-            ++numLoaded;
+            numLoaded++;
 
             if (extension) {
                 var categoryExtensions = mapCategoryToExtensions.get(
@@ -115,7 +115,7 @@ export function loadExtensions(): Promise<void> {
         }
 
         function loadExtensionFolder(folder: string) {
-            ++totalExtensions;
+            totalExtensions++;
             fs.stat(folder, function(err: any, stats: any) {
                 if (err) {
                     console.error(err);

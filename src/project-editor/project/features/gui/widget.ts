@@ -200,7 +200,7 @@ export class WidgetProperties extends EezObject {
         }
 
         let i: number;
-        for (i = 1; i < objects.length; ++i) {
+        for (i = 1; i < objects.length; i++) {
             if (getParent(objects[i]) !== getParent(objects[0])) {
                 break;
             }
@@ -277,7 +277,7 @@ export class WidgetProperties extends EezObject {
         let y1 = widgets[0].y;
         let x2 = widgets[0].x + widgets[0].width;
         let y2 = widgets[0].y + widgets[0].height;
-        for (let i = 1; i < widgets.length; ++i) {
+        for (let i = 1; i < widgets.length; i++) {
             let widget = widgets[i];
             x1 = Math.min(widget.x, x1);
             y1 = Math.min(widget.y, y1);
@@ -292,7 +292,7 @@ export class WidgetProperties extends EezObject {
         containerWidgetJsObject.width = x2 - x1;
         containerWidgetJsObject.height = y2 - y1;
 
-        for (let i = 0; i < widgets.length; ++i) {
+        for (let i = 0; i < widgets.length; i++) {
             let widget = widgets[i];
             let widgetJsObject = objectToJS(widget);
 
@@ -468,7 +468,7 @@ export class ContainerWidgetProperties extends WidgetProperties {
 
         updateObject(this, changedProperties);
 
-        for (let j = 0; j < this.widgets.length; ++j) {
+        for (let j = 0; j < this.widgets.length; j++) {
             let childWidget = this.widgets[j];
             if (!geometryChanges.find(geometryChange => geometryChange.object == childWidget)) {
                 var childChangedProperties: GeometryProperties = {};
@@ -631,7 +631,7 @@ export class SelectWidgetProperties extends WidgetProperties {
     ) {
         updateObject(this, changedProperties);
 
-        for (let j = 0; j < this.widgets.length; ++j) {
+        for (let j = 0; j < this.widgets.length; j++) {
             let childWidget = this.widgets[j];
             if (!geometryChanges.find(geometryChange => geometryChange.object == childWidget)) {
                 var childChangedProperties: GeometryProperties = {};

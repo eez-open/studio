@@ -25,12 +25,12 @@ type VisitResult = EezValueObject | null;
 function* visitWithPause(parentObject: EezObject): IterableIterator<VisitResult> {
     if (isArray(parentObject)) {
         let arrayOfObjects = asArray(parentObject);
-        for (let i = 0; i < arrayOfObjects.length; ++i) {
+        for (let i = 0; i < arrayOfObjects.length; i++) {
             yield* visitWithPause(arrayOfObjects[i]);
         }
     } else {
         let properties = getMetaData(parentObject).properties(parentObject);
-        for (let i = 0; i < properties.length; ++i) {
+        for (let i = 0; i < properties.length; i++) {
             let propertyMetaData = properties[i];
             if (!propertyMetaData.skipSearch) {
                 let value = getProperty(parentObject, propertyMetaData.name);
@@ -52,12 +52,12 @@ function* visitWithPause(parentObject: EezObject): IterableIterator<VisitResult>
 function* visitWithoutPause(parentObject: EezObject): IterableIterator<VisitResult> {
     if (isArray(parentObject)) {
         let arrayOfObjects = asArray(parentObject);
-        for (let i = 0; i < arrayOfObjects.length; ++i) {
+        for (let i = 0; i < arrayOfObjects.length; i++) {
             yield* visitWithoutPause(arrayOfObjects[i]);
         }
     } else {
         let properties = getMetaData(parentObject).properties(parentObject);
-        for (let i = 0; i < properties.length; ++i) {
+        for (let i = 0; i < properties.length; i++) {
             let propertyMetaData = properties[i];
             if (!propertyMetaData.skipSearch) {
                 let value = getProperty(parentObject, propertyMetaData.name);
@@ -161,7 +161,7 @@ function* searchForReference(
                     } else if (valueObject.propertyMetaData.type === "configuration-references") {
                         if (isEqual(["settings", "build", "configurations"], objectParentPath)) {
                             if (valueObject.value) {
-                                for (let i = 0; i < valueObject.value.length; ++i) {
+                                for (let i = 0; i < valueObject.value.length; i++) {
                                     if (valueObject.value[i] === objectName) {
                                         match = true;
                                         break;
@@ -288,7 +288,7 @@ export function replaceObjectReference(object: EezObject, newValue: string) {
                 value = searchValue.propertyMetaData.replaceObjectReference(value);
             } else if (searchValue.propertyMetaData.type === "configuration-references") {
                 value = [];
-                for (let i = 0; i < searchValue.value.length; ++i) {
+                for (let i = 0; i < searchValue.value.length; i++) {
                     if (searchValue.value[i] !== getProperty(object, "name")) {
                         value.push(searchValue.value[i]);
                     } else {

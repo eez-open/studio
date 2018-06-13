@@ -317,7 +317,7 @@ export class Waveform extends FileHistoryItem {
         if (this.length > 0) {
             minValue = this.waveformData(0);
             maxValue = this.waveformData(0);
-            for (let i = 1; i < this.length; ++i) {
+            for (let i = 1; i < this.length; i++) {
                 const value = this.waveformData(i);
                 if (value < minValue) {
                     minValue = value;

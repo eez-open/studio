@@ -85,7 +85,7 @@ class RenderTask {
     constructor(public id: string, public pageOrientation: PageOrientationProperties) {}
 
     addCallback(callback: () => void) {
-        for (var i = 0; i < this.callbacks.length; ++i) {
+        for (var i = 0; i < this.callbacks.length; i++) {
             if (this.callbacks[i] == callback) {
                 return;
             }

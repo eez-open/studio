@@ -30,7 +30,7 @@ async function setupExtensions(
 
     const { installExtension } = require("shared/extensions/extensions") as typeof ExtensionsModule;
 
-    for (let i = 0; i < fileList.length; ++i) {
+    for (let i = 0; i < fileList.length; i++) {
         const filePath = fileList[i];
 
         const fileName = path.basename(filePath);

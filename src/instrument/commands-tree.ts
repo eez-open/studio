@@ -37,26 +37,26 @@ function splitCommandToMnemonics(command: string) {
                 start = end;
                 end += 2;
             }
-            ++bracket;
-            ++end;
+            bracket++;
+            end++;
         } else if (command[end] === "]") {
             if (--bracket === 0) {
-                ++end;
+                end++;
                 mnemonics.push(command.substring(start, end));
                 start = end;
             } else {
-                ++end;
+                end++;
             }
         } else if (command[end] === ":" && bracket === 0) {
             mnemonics.push(command.substring(start, end));
-            ++end;
+            end++;
             start = end;
         } else if (command[end] === "?") {
             mnemonics.push(command.substring(start, end));
             start = end;
-            ++end;
+            end++;
         } else {
-            ++end;
+            end++;
         }
     }
 
@@ -172,13 +172,13 @@ export function matchCommand(commandSyntax: ICommandSyntax | undefined, pattern:
 
     let position = 0;
     let parts = pattern.split(":");
-    for (let i = 0; i < parts.length; ++i) {
+    for (let i = 0; i < parts.length; i++) {
         position = command.indexOf(parts[i], position);
         if (position === -1) {
             return undefined;
         }
 
-        ++position;
+        position++;
 
         if (i < parts.length - 1) {
             position = command.indexOf(":", position);
@@ -186,7 +186,7 @@ export function matchCommand(commandSyntax: ICommandSyntax | undefined, pattern:
                 return undefined;
             }
 
-            ++position;
+            position++;
         }
     }
 

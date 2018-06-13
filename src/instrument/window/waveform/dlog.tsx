@@ -124,7 +124,7 @@ class DlogWaveformLineController extends LineController {
             rowOffset += 4; // skip jitter column
         }
 
-        for (let i = 0; i < this.dlogWaveform.channels.length; ++i) {
+        for (let i = 0; i < this.dlogWaveform.channels.length; i++) {
             if (
                 this.dlogWaveform.channels[i].iChannel === channel.iChannel &&
                 this.dlogWaveform.channels[i].unit === channel.unit
@@ -294,7 +294,7 @@ export class DlogWaveform extends FileHistoryItem {
 
         if (this.values) {
             const columns = this.readUInt32(12);
-            for (let iChannel = 0; iChannel < 8; ++iChannel) {
+            for (let iChannel = 0; iChannel < 8; iChannel++) {
                 if (columns & (1 << (4 * iChannel))) {
                     channels.push({
                         iChannel,

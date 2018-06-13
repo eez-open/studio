@@ -618,7 +618,7 @@ class HistorySessions {
     onActivityLogEntryCreated(activityLogEntry: IActivityLogEntry) {
         if (activityLogEntry.type === "instrument/connected") {
             let i;
-            for (i = 0; i < this.sessions.length; ++i) {
+            for (i = 0; i < this.sessions.length; i++) {
                 if (activityLogEntry.id === this.sessions[i].activityLogEntry.id) {
                     return;
                 }
@@ -636,7 +636,7 @@ class HistorySessions {
 
     onActivityLogEntryRemoved(activityLogEntry: IActivityLogEntry) {
         if (activityLogEntry.type === "instrument/connected") {
-            for (let i = 0; i < this.sessions.length; ++i) {
+            for (let i = 0; i < this.sessions.length; i++) {
                 if (this.sessions[i].id === activityLogEntry.id) {
                     this.sessions.splice(i, 1);
                     break;
@@ -767,9 +767,9 @@ export class History {
     }
 
     findHistoryItemById(id: string) {
-        for (let i = 0; i < this.blocks.length; ++i) {
+        for (let i = 0; i < this.blocks.length; i++) {
             const historyItems = this.blocks[i];
-            for (let j = 0; j < historyItems.length; ++j) {
+            for (let j = 0; j < historyItems.length; j++) {
                 let historyItem = historyItems[j];
                 if (historyItem.id === id) {
                     return { block: historyItems, blockIndex: i, index: j };
@@ -824,7 +824,7 @@ export class History {
 
         // find the block (according to datetime) to which it should be added
         let i;
-        for (i = 0; i < this.blocks.length; ++i) {
+        for (i = 0; i < this.blocks.length; i++) {
             const historyItemBlock = this.blocks[i];
             if (
                 historyItemBlock.length > 0 &&
@@ -847,7 +847,7 @@ export class History {
             // add inside existing block
             const historyItemBlock = this.blocks[i - 1];
             let j;
-            for (j = 0; j < historyItemBlock.length; ++j) {
+            for (j = 0; j < historyItemBlock.length; j++) {
                 if (
                     historyItemBlock.length > 0 &&
                     (historyItem.date < historyItemBlock[j].date ||
@@ -1062,7 +1062,7 @@ export class DeletedItemsHistory extends History {
     ) {
         if (op === "restore") {
             this.removeActivityLogEntryFromBlocks(activityLogEntry);
-            --this.deletedCount;
+            this.deletedCount--;
         }
     }
 
@@ -1074,13 +1074,13 @@ export class DeletedItemsHistory extends History {
     ) {
         if (options.deletePermanently) {
             this.removeActivityLogEntryFromBlocks(activityLogEntry);
-            --this.deletedCount;
+            this.deletedCount--;
         } else {
             // we need all properties here since only id is guaranteed from store notification when deleting object
             activityLogEntry = activityLogStore.findById(activityLogEntry.id);
             if (activityLogEntry) {
                 this.addActivityLogEntryToBlocks(activityLogEntry);
-                ++this.deletedCount;
+                this.deletedCount++;
             }
         }
     }

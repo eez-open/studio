@@ -221,7 +221,7 @@ export class Transform {
     }
 
     nextScale() {
-        for (let i = 0; i < SCALES.length; ++i) {
+        for (let i = 0; i < SCALES.length; i++) {
             if (SCALES[i] - this.scale > 0.001) {
                 return SCALES[i];
             }
@@ -231,7 +231,7 @@ export class Transform {
     }
 
     previousScale() {
-        for (let i = SCALES.length - 1; i >= 0; --i) {
+        for (let i = SCALES.length - 1; i >= 0; i--) {
             if (this.scale - SCALES[i] > 0.001) {
                 return SCALES[i];
             }

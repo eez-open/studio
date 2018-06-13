@@ -80,7 +80,7 @@ export function fixDataForMegaBootloader(data: any, object: EezObject) {
 
     let threeExclamationsDetected = false;
 
-    for (let i = 0; i < data.length; ++i) {
+    for (let i = 0; i < data.length; i++) {
         if (i >= 2 && data[i - 2] == 33 && data[i - 1] == 33 && data[i] == 33) {
             threeExclamationsDetected = true;
             result.push(32);
@@ -158,7 +158,7 @@ async function doBuild(destinationFolderPath: string, buildResults: BuildResult[
 
     if (project.settings.build.files.length > 0) {
         let parts: any = {};
-        for (let i = 0; i < buildResults.length; ++i) {
+        for (let i = 0; i < buildResults.length; i++) {
             parts = Object.assign(parts, buildResults[i]);
         }
 

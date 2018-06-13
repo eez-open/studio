@@ -358,16 +358,16 @@ export class Shortcuts extends React.Component<
         let result: (IShortcut | IShortcut[])[] = [];
 
         // combine duplicate shortcuts
-        for (let i = 0; i < sorted.length; ++i) {
+        for (let i = 0; i < sorted.length; i++) {
             let j;
-            for (j = i; j + 1 < sorted.length; ++j) {
+            for (j = i; j + 1 < sorted.length; j++) {
                 if (!isSameShortcutFromDifferentExtension(sorted[i], sorted[j + 1])) {
                     break;
                 }
             }
             if (j > i) {
                 let shortcuts: IShortcut[] = [];
-                for (let k = i; k <= j; ++k) {
+                for (let k = i; k <= j; k++) {
                     shortcuts.push(sorted[k]);
                 }
                 result.push(shortcuts);

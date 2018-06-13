@@ -49,7 +49,7 @@ export class WidgetContainerEditor extends CanvasEditor {
     }
 
     applyGeometryChanges(geometryChanges: ObjectGeometryChange[]) {
-        for (let i = 0; i < geometryChanges.length; ++i) {
+        for (let i = 0; i < geometryChanges.length; i++) {
             let geometryChange = geometryChanges[i];
             let widget = geometryChange.object as WidgetProperties;
             widget.applyGeometryChange(geometryChange.changedProperties, geometryChanges);
@@ -66,7 +66,7 @@ export class WidgetContainerEditor extends CanvasEditor {
                 }
             }
 
-            for (let i = 0; i < node.children.length; ++i) {
+            for (let i = 0; i < node.children.length; i++) {
                 findItemsInsideRect(node.children[i]);
             }
         }
@@ -80,7 +80,7 @@ export class WidgetContainerEditor extends CanvasEditor {
         if (nodes.length > 1) {
             let i = nodes.length - 1;
             while (i > 0 && nodes[i - 1].item.object instanceof SelectWidgetProperties) {
-                --i;
+                i--;
             }
             return [nodes[i]];
         } else {

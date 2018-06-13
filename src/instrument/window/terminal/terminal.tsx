@@ -143,7 +143,7 @@ class Input extends React.Component<
             if (historyItemIndex === undefined) {
                 historyItemIndex = this.commandsHistory.length - 1;
             } else {
-                --historyItemIndex;
+                historyItemIndex--;
             }
 
             if (historyItemIndex < 0) {
@@ -162,7 +162,7 @@ class Input extends React.Component<
             if (historyItemIndex === undefined) {
                 historyItemIndex = 0;
             } else {
-                ++historyItemIndex;
+                historyItemIndex++;
             }
 
             if (historyItemIndex >= this.commandsHistory.length) {

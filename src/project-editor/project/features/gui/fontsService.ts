@@ -123,7 +123,7 @@ function loadBdfFont(
                         return 0;
                     });
 
-                    for (let i = fromEncoding, j = 0; i <= toEncoding; ++i, ++j) {
+                    for (let i = fromEncoding, j = 0; i <= toEncoding; i++, j++) {
                         if (j >= font.glyphs.length || font.glyphs[j].encoding != i) {
                             let glyph: GlyphProperties = <any>{};
 
@@ -165,7 +165,7 @@ function loadFontUsingOpentypeJS(
     function toArrayBuffer(buffer: any) {
         let ab = new ArrayBuffer(buffer.length);
         let view = new Uint8Array(ab);
-        for (let i = 0; i < buffer.length; ++i) {
+        for (let i = 0; i < buffer.length; i++) {
             view[i] = buffer[i];
         }
         return ab;
@@ -183,9 +183,9 @@ function loadFontUsingOpentypeJS(
             }
 
             let PPI = 100;
-            let sizePX = size * PPI / 72;
+            let sizePX = (size * PPI) / 72;
 
-            let scale = 1 / openTypeFont.unitsPerEm * sizePX;
+            let scale = (1 / openTypeFont.unitsPerEm) * sizePX;
 
             let ascent = Math.round(openTypeFont.ascender * scale);
             let descent = Math.round(-openTypeFont.descender * scale);
@@ -249,8 +249,8 @@ function loadFontUsingOpentypeJS(
 
                         let hasPixels = false;
 
-                        for (let y = 0; y < canvas.height; ++y) {
-                            for (let x = 0; x < canvas.width; ++x) {
+                        for (let y = 0; y < canvas.height; y++) {
+                            for (let x = 0; x < canvas.width; x++) {
                                 let i = (y * canvas.width + x) * 4 + 3;
                                 if (pixelMatrix[i] >= threshold) {
                                     hasPixels = true;
@@ -279,15 +279,15 @@ function loadFontUsingOpentypeJS(
 
                             let pixelArray = [];
 
-                            for (let y = yMin; y <= yMax; ++y) {
+                            for (let y = yMin; y <= yMax; y++) {
                                 for (
                                     let x = xMin, iByte = 0;
                                     iByte < widthInBytes && x <= xMax;
-                                    ++iByte
+                                    iByte++
                                 ) {
                                     let byteData = 0;
 
-                                    for (let iBit = 0; iBit < 8 && x <= xMax; ++iBit, ++x) {
+                                    for (let iBit = 0; iBit < 8 && x <= xMax; iBit++, x++) {
                                         let i = (y * canvas.width + x) * 4 + 3;
                                         if (pixelMatrix[i] == 255) {
                                             byteData |= 0x80 >> iBit;
@@ -327,14 +327,14 @@ function loadFontUsingOpentypeJS(
                 }
 
                 if (fromEncoding && toEncoding) {
-                    for (let encoding = fromEncoding; encoding <= toEncoding; ++encoding) {
+                    for (let encoding = fromEncoding; encoding <= toEncoding; encoding++) {
                         let glyph = openTypeFont.charToGlyph(String.fromCharCode(encoding));
                         if (glyph) {
                             addGlyph(glyph, encoding);
                         }
                     }
                 } else {
-                    for (let i = 0; i < openTypeFont.glyphs.length; ++i) {
+                    for (let i = 0; i < openTypeFont.glyphs.length; i++) {
                         let glyph = openTypeFont.glyphs.glyphs[i];
                         if (glyph.unicode !== undefined) {
                             addGlyph(glyph, glyph.unicode);

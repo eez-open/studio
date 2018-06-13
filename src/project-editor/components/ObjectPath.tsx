@@ -15,7 +15,7 @@ export class ObjectPath extends React.Component<
         let pathComponents: JSX.Element[] = [];
 
         let ancestors = getAncestors(this.props.object);
-        for (let i = 1; i < ancestors.length; ++i) {
+        for (let i = 1; i < ancestors.length; i++) {
             pathComponents.push(<span key={i}>{objectToString(ancestors[i])}</span>);
         }
 

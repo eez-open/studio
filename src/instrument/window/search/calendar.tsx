@@ -89,7 +89,7 @@ export class Month extends React.Component<{ history: History; month: Date }> {
         const month = this.props.month;
 
         // 1st row contains day of week names
-        for (let i = 0; i < 7; ++i) {
+        for (let i = 0; i < 7; i++) {
             days.push(<DayOfWeek key={"dow" + i} dayOfWeek={(getFirstDayOfWeek() + i) % 7} />);
         }
 
@@ -98,8 +98,8 @@ export class Month extends React.Component<{ history: History; month: Date }> {
 
         let start = -getDayOfWeek(month);
 
-        for (let row = 0; row < 6; ++row) {
-            for (let col = 0; col < 7; ++col) {
+        for (let row = 0; row < 6; row++) {
+            for (let col = 0; col < 7; col++) {
                 const i = start + row * 7 + col;
                 const day = new Date(month);
                 day.setDate(day.getDate() + i);

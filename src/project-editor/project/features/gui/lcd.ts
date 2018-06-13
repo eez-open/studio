@@ -95,7 +95,7 @@ function measureGlyph(encoding: number, font: FontProperties): number {
 export function measureStr(text: string, font: FontProperties, maxWidth: number): number {
     let width = 0;
 
-    for (let i = 0; i < text.length; ++i) {
+    for (let i = 0; i < text.length; i++) {
         let encoding = text.charCodeAt(i);
         let glyph_width = measureGlyph(encoding, font);
         if (maxWidth > 0 && width + glyph_width > maxWidth) {
@@ -127,8 +127,8 @@ function drawGlyph(
 
     if (width > 0 && height > 0) {
         setXY(x_glyph, y_glyph, x_glyph + width - 1, y_glyph + height - 1);
-        for (let y = 0; y < height; ++y) {
-            for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
                 setPixel(ctx, glyph.getPixel(x, y) ? fgColor : bgColor);
             }
         }
@@ -144,7 +144,7 @@ export function drawStr(
     y: number,
     font: FontProperties
 ) {
-    for (let i = 0; i < text.length; ++i) {
+    for (let i = 0; i < text.length; i++) {
         let encoding = text.charCodeAt(i);
         x += drawGlyph(ctx, x, y, encoding, font);
     }

@@ -149,16 +149,16 @@ export class History extends React.Component<{ oids?: string[] }, {}> {
                 this.history[this.history.length - 1].id !==
                     this.allHistory[this.allHistory.length - 1].id
             ) {
-                for (let i = this.allHistory.length - 2; i >= 0; --i) {
+                for (let i = this.allHistory.length - 2; i >= 0; i--) {
                     if (this.history[this.history.length - 1].id === this.allHistory[i].id) {
-                        for (let j = i + 1; j < this.allHistory.length; ++j) {
+                        for (let j = i + 1; j < this.allHistory.length; j++) {
                             this.history.push(this.allHistory[j]);
                         }
                     }
                 }
             }
 
-            for (let i = 0; i < CONF_ADVANCE_READ_NUM; ++i) {
+            for (let i = 0; i < CONF_ADVANCE_READ_NUM; i++) {
                 if (this.div.scrollTop === 0 && this.history.length < this.allHistory.length) {
                     const session = this.allHistory[
                         this.allHistory.length - 1 - this.history.length

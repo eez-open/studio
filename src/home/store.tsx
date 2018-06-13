@@ -381,7 +381,7 @@ class Tabs {
     }
 
     findObjectTab(id: string) {
-        for (let tabIndex = 0; tabIndex < this.tabs.length; ++tabIndex) {
+        for (let tabIndex = 0; tabIndex < this.tabs.length; tabIndex++) {
             const tab = this.tabs[tabIndex];
             if (tab instanceof ObjectEditorTab && tab.id === id) {
                 return tab;
@@ -392,7 +392,7 @@ class Tabs {
 
     @action
     addObjectTab(object: WorkbenchObject) {
-        for (let tabIndex = 0; tabIndex < this.tabs.length; ++tabIndex) {
+        for (let tabIndex = 0; tabIndex < this.tabs.length; tabIndex++) {
             if (this.tabs[tabIndex].id === object.id) {
                 return this.tabs[tabIndex];
             }

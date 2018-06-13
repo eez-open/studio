@@ -217,7 +217,7 @@ export async function readCsvFile(filePath: string, columnDefinitions: ICsvColum
             return undefined;
         }
 
-        for (let i = 0; i < columns.length; ++i) {
+        for (let i = 0; i < columns.length; i++) {
             let value = columns[i];
             if (value !== "=") {
                 let numValue = parseFloat(value);
@@ -240,13 +240,13 @@ export async function writeCsvFile(
     let rows = [];
 
     let n = data[columnDefinitions[0].id].length;
-    for (let i = 1; i < columnDefinitions.length; ++i) {
+    for (let i = 1; i < columnDefinitions.length; i++) {
         n = Math.max(n, data[columnDefinitions[i].id].length);
     }
 
-    for (let i = 0; i < n; ++i) {
+    for (let i = 0; i < n; i++) {
         let row = [];
-        for (let j = 0; j < columnDefinitions.length; ++j) {
+        for (let j = 0; j < columnDefinitions.length; j++) {
             let columnDefinition = columnDefinitions[j];
             if (i < data[columnDefinition.id].length) {
                 row.push(roundNumber(data[columnDefinition.id][i], columnDefinition.digits));
@@ -426,7 +426,7 @@ export function getFileNameExtension(filePath: string) {
 export function getValidFileNameFromFileName(fileName: string) {
     var validFileName = "";
 
-    for (let i = 0; i < fileName.length; ++i) {
+    for (let i = 0; i < fileName.length; i++) {
         const codePoint = fileName.codePointAt(i);
         if (
             !codePoint ||
@@ -682,7 +682,7 @@ function keybindingEqual(keybinding1: string, keybinding2: string) {
         return false;
     }
 
-    for (let i = 0; i < keybinding1Parts.length; ++i) {
+    for (let i = 0; i < keybinding1Parts.length; i++) {
         if (keybinding2Parts.indexOf(keybinding1Parts[i]) === -1) {
             return false;
         }
@@ -694,7 +694,7 @@ function keybindingEqual(keybinding1: string, keybinding2: string) {
 export function isReserverdKeybinding(keybinding: string) {
     let reservedKeybindings = getReservedKeybindings();
 
-    for (let i = 0; i < reservedKeybindings.length; ++i) {
+    for (let i = 0; i < reservedKeybindings.length; i++) {
         if (keybindingEqual(keybinding, reservedKeybindings[i])) {
             return true;
         }

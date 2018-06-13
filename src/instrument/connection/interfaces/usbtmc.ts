@@ -366,7 +366,7 @@ export class Instrument {
 
             (this.device as any) = undefined;
 
-            for (let i = 0; i < 40; ++i) {
+            for (let i = 0; i < 40; i++) {
                 this.device = usb.findByIds(0x0957, new_id);
                 if (this.device) {
                     break;
@@ -434,7 +434,7 @@ export class Instrument {
         // don't need to set altsetting - USBTMC devices have 1 altsetting as per the spec
 
         // find endpoints
-        for (let i = 0; i < this.iface.endpoints.length; ++i) {
+        for (let i = 0; i < this.iface.endpoints.length; i++) {
             if (this.iface.endpoints[i].transferType === usb.LIBUSB_TRANSFER_TYPE_BULK) {
                 if (this.iface.endpoints[i] instanceof usb.InEndpoint) {
                     this.bulk_in_ep = this.iface.endpoints[i] as usb.InEndpoint;
@@ -660,7 +660,7 @@ export class Instrument {
         const hdr = this.pack_bulk_out_header(USB488_MSGID_TRIGGER);
         hdr.copy(buffer, 0);
 
-        for (let i = 4; i < 12; ++i) {
+        for (let i = 4; i < 12; i++) {
             buffer.writeUInt8(0, i);
         }
 

@@ -180,7 +180,7 @@ export class MultiWaveform extends HistoryItem {
     get longestWaveform() {
         let longestWaveform;
         let maxTime;
-        for (let i = 0; i < this.linkedWaveforms.length; ++i) {
+        for (let i = 0; i < this.linkedWaveforms.length; i++) {
             const waveform = this.linkedWaveforms[i].waveform;
             let time = waveform.length / waveform.samplingRate;
             if (maxTime === undefined || time > maxTime) {
@@ -361,7 +361,7 @@ class MultiWaveformConfigurationDialog extends React.Component<
     async handleSubmit() {
         let anyError = false;
 
-        for (let i = 0; i < this.waveforms.length; ++i) {
+        for (let i = 0; i < this.waveforms.length; i++) {
             const waveformLinkProperties = this.waveforms[i];
 
             if (!(await waveformLinkProperties.waveformLinkProperties.checkValidity())) {

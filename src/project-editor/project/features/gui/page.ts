@@ -133,7 +133,7 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
         autorun(() => {
             // update selectWidgetToSelectedWidget when selection is changed
             let selectedObjects = this.selectedObjects;
-            for (let i = 0; i < selectedObjects.length; ++i) {
+            for (let i = 0; i < selectedObjects.length; i++) {
                 let selectedObject = selectedObjects[i];
 
                 // remove all what we remembered below selected object

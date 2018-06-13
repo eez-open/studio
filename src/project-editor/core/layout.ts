@@ -27,7 +27,7 @@ function getPathTo(node: Node): string | undefined {
         if (element.parentNode) {
             let ix = 0;
             let siblings = element.parentNode.childNodes;
-            for (let i = 0; i < siblings.length; ++i) {
+            for (let i = 0; i < siblings.length; i++) {
                 let sibling = siblings[i];
 
                 if (sibling === element) {
@@ -83,7 +83,7 @@ function getSplitterPositions(
     const $splitters = $container.find(`>.${orientation}Splitter`);
 
     let splitterPositions: any[] = [];
-    for (let i = 0; i < $splitters.length; ++i) {
+    for (let i = 0; i < $splitters.length; i++) {
         let position: any = $($splitters[i]).attr("data-splitter-position");
 
         if (position == "auto") {
@@ -438,7 +438,7 @@ export function doLayout(container?: HTMLElement, reinitialize?: boolean) {
     }
 
     let children = container.children;
-    for (let i = 0; i < children.length; ++i) {
+    for (let i = 0; i < children.length; i++) {
         let el = children[i] as HTMLElement;
 
         if (!el.className || !el.className.indexOf) {
@@ -535,7 +535,7 @@ export function enable() {
 
         mutationObserver = new WindowMutationObserver(function(mutations: any, observer: any) {
             let dl = false;
-            for (let i = 0; i < mutations.length; ++i) {
+            for (let i = 0; i < mutations.length; i++) {
                 if (
                     mutations[i].target &&
                     mutations[i].target.className &&

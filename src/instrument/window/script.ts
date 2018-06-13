@@ -143,7 +143,7 @@ class JavaScriptSession {
         let data;
         if (Array.isArray(config.data)) {
             var dataBuffers = [];
-            for (let i = 0; i < config.data.length; ++i) {
+            for (let i = 0; i < config.data.length; i++) {
                 if (typeof config.data[i] === "string") {
                     dataBuffers.push(new Buffer(config.data[i], "binary"));
                 } else if (config.data[i] instanceof Buffer) {

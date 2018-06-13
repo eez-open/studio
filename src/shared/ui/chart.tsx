@@ -408,7 +408,7 @@ class DynamicAxisController extends AxisController {
         let linesMap = new Map<number, ITick>();
 
         let steps = this.steps;
-        for (let i = steps.length - 1; i >= 0; --i) {
+        for (let i = steps.length - 1; i >= 0; i--) {
             let unit = steps[i];
             let unitPx = unit * scale;
 
@@ -416,7 +416,7 @@ class DynamicAxisController extends AxisController {
                 let p = Math.floor(from / unit);
                 let q = Math.ceil(to / unit);
 
-                for (let j = p; j <= q; ++j) {
+                for (let j = p; j <= q; j++) {
                     let value = j * unit;
                     let px = Math.round((value - from) * scale);
                     if (px < 0 || px > Math.round(this.distancePx)) {
@@ -640,8 +640,8 @@ const MIN_FIXED_SCALE_POWER = -9;
 const MAX_FIXED_SCALE_POWER = 9;
 
 function calcSubdivisionScaleOffset(from: number, to: number, subdivision: number) {
-    for (let i = MIN_FIXED_SCALE_POWER; i <= MAX_FIXED_SCALE_POWER; ++i) {
-        for (let k = 1; k < 100; ++k) {
+    for (let i = MIN_FIXED_SCALE_POWER; i <= MAX_FIXED_SCALE_POWER; i++) {
+        for (let k = 1; k < 100; k++) {
             const scale = k * Math.pow(10, i);
             const offset = Math.floor(from / scale) * scale;
             const range = scale * subdivision;
@@ -664,8 +664,8 @@ function calcSubdivisionScaleOffset(from: number, to: number, subdivision: numbe
 }
 
 function scaleZoomIn(currentScale: number) {
-    for (let i = MAX_FIXED_SCALE_POWER; i >= MIN_FIXED_SCALE_POWER; --i) {
-        for (let k = 9; k >= 1; --k) {
+    for (let i = MAX_FIXED_SCALE_POWER; i >= MIN_FIXED_SCALE_POWER; i--) {
+        for (let k = 9; k >= 1; k--) {
             const scale = k * Math.pow(10, i);
             if (scale < currentScale) {
                 return scale;
@@ -677,8 +677,8 @@ function scaleZoomIn(currentScale: number) {
 }
 
 function scaleZoomOut(currentScale: number) {
-    for (let i = MIN_FIXED_SCALE_POWER; i <= MAX_FIXED_SCALE_POWER; ++i) {
-        for (let k = 1; k <= 9; ++k) {
+    for (let i = MIN_FIXED_SCALE_POWER; i <= MAX_FIXED_SCALE_POWER; i++) {
+        for (let k = 1; k <= 9; k++) {
             const scale = k * Math.pow(10, i);
             if (scale > currentScale) {
                 return scale;
@@ -802,7 +802,7 @@ class FixedAxisController extends AxisController {
             ? CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_BLACK_BACKGROUND
             : CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_WHITE_BACKGROUND;
 
-        for (let i = 0; i <= n * m; ++i) {
+        for (let i = 0; i <= n * m; i++) {
             const value = this.from + i * minorSubdivision;
 
             let isMajorLine = i % m === 0;
@@ -1107,7 +1107,7 @@ export class ChartController {
     }
 
     onDragStart(chartView: ChartView, event: PointerEvent): MouseHandler | undefined {
-        for (let i = 0; i < this.lineControllers.length; ++i) {
+        for (let i = 0; i < this.lineControllers.length; i++) {
             const mouseHandler = this.lineControllers[i].onDragStart(chartView, event);
             if (mouseHandler) {
                 return mouseHandler;
@@ -1302,7 +1302,7 @@ export class ChartsController {
     @computed
     get yAxisLabelTextsWidth() {
         let maxLabelTextsWidth = 0;
-        for (let i = 0; i < this.chartControllers.length; ++i) {
+        for (let i = 0; i < this.chartControllers.length; i++) {
             const chartController = this.chartControllers[i];
             if (chartController.yAxisController.labelTextsWidth > maxLabelTextsWidth) {
                 maxLabelTextsWidth = chartController.yAxisController.labelTextsWidth;
@@ -2026,7 +2026,7 @@ class PanMouseHandler implements MouseHandler {
         this.axes[0].panByDistanceInPx(dx);
 
         let dy = this.lastPoint.y - point.y;
-        for (let i = 1; i < this.axes.length; ++i) {
+        for (let i = 1; i < this.axes.length; i++) {
             this.axes[i].panByDistanceInPx(dy);
         }
 

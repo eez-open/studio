@@ -170,10 +170,10 @@ export function drawText(
             if (styleHasBorder(style)) {
                 lcd.setColor(getStyleProperty(style, "borderColor"));
                 lcd.drawRect(ctx, x1, y1, x2, y2);
-                ++x1;
-                ++y1;
-                --x2;
-                --y2;
+                x1++;
+                y1++;
+                x2--;
+                y2--;
             }
 
             const font = styleGetFont(style);
@@ -247,10 +247,10 @@ export function drawMultilineText(
             if (styleHasBorder(style)) {
                 lcd.setColor(getStyleProperty(style, "borderColor"));
                 lcd.drawRect(ctx, x1, y1, x2, y2);
-                ++x1;
-                ++y1;
-                --x2;
-                --y2;
+                x1++;
+                y1++;
+                x2--;
+                y2--;
             }
 
             let backgroundColor = inverse
@@ -287,7 +287,7 @@ export function drawMultilineText(
             while (true) {
                 let j = i;
                 while (i < text.length && text[i] != " " && text[i] != "\n") {
-                    ++i;
+                    i++;
                 }
 
                 let width = lcd.measureStr(text.substr(j, i - j), font, 0);
@@ -319,7 +319,7 @@ export function drawMultilineText(
 
                 while (text[i] == " ") {
                     x += spaceWidth;
-                    ++i;
+                    i++;
                 }
 
                 if (i == text.length || text[i] == "\n") {
@@ -329,7 +329,7 @@ export function drawMultilineText(
                         break;
                     }
 
-                    ++i;
+                    i++;
 
                     let extraHeightBetweenParagraphs = Math.floor(0.2 * height);
 
@@ -373,10 +373,10 @@ export function drawBitmap(
             if (styleHasBorder(style)) {
                 lcd.setColor(getStyleProperty(style, "borderColor"));
                 lcd.drawRect(ctx, x1, y1, x2, y2);
-                ++x1;
-                ++y1;
-                --x2;
-                --y2;
+                x1++;
+                y1++;
+                x2--;
+                y2--;
             }
 
             let backgroundColor = inverse
@@ -446,10 +446,10 @@ export function drawRectangle(w: number, h: number, style: StyleProperties, inve
                 if (styleHasBorder(style)) {
                     lcd.setColor(getStyleProperty(style, "borderColor"));
                     lcd.drawRect(ctx, x1, y1, x2, y2);
-                    ++x1;
-                    ++y1;
-                    --x2;
-                    --y2;
+                    x1++;
+                    y1++;
+                    x2--;
+                    y2--;
                 }
 
                 lcd.setColor(
@@ -576,7 +576,7 @@ export function drawButtonGroupWidget(widget: Widget.WidgetProperties, rect: Rec
                 let buttonWidth = Math.floor(w / buttonLabels.length);
                 x += Math.floor((w - buttonWidth * buttonLabels.length) / 2);
                 let buttonHeight = h;
-                for (let i = 0; i < buttonLabels.length; ++i) {
+                for (let i = 0; i < buttonLabels.length; i++) {
                     ctx.drawImage(
                         drawText(
                             buttonLabels[i],
@@ -600,7 +600,7 @@ export function drawButtonGroupWidget(widget: Widget.WidgetProperties, rect: Rec
                 let labelHeight = Math.min(buttonWidth, buttonHeight);
                 let yOffset = Math.floor((buttonHeight - labelHeight) / 2);
 
-                for (let i = 0; i < buttonLabels.length; ++i) {
+                for (let i = 0; i < buttonLabels.length; i++) {
                     ctx.drawImage(
                         drawText(
                             buttonLabels[i],
@@ -678,7 +678,7 @@ function drawScale(
 
     let style = findStyleOrGetDefault(scaleWidget.style);
 
-    for (let y_i = y_from; y_i <= y_to; ++y_i) {
+    for (let y_i = y_from; y_i <= y_to; y_i++) {
         let y: number;
 
         if (vertical) {
@@ -1022,10 +1022,10 @@ export function drawYTGraphWidget(widget: Widget.WidgetProperties, rect: Rect) {
             if (styleHasBorder(style)) {
                 lcd.setColor(getStyleProperty(style, "borderColor"));
                 lcd.drawRect(ctx, x1, y1, x2, y2);
-                ++x1;
-                ++y1;
-                --x2;
-                --y2;
+                x1++;
+                y1++;
+                x2--;
+                y2--;
             }
 
             lcd.setColor(getStyleProperty(style, "backgroundColor"));
@@ -1136,10 +1136,10 @@ export function drawListGraphWidget(widget: Widget.WidgetProperties, rect: Rect)
             if (styleHasBorder(style)) {
                 lcd.setColor(getStyleProperty(style, "borderColor"));
                 lcd.drawRect(ctx, x1, y1, x2, y2);
-                ++x1;
-                ++y1;
-                --x2;
-                --y2;
+                x1++;
+                y1++;
+                x2--;
+                y2--;
             }
 
             lcd.setColor(getStyleProperty(style, "backgroundColor"));

@@ -554,7 +554,7 @@ export function createStore({
 
         let version;
 
-        for (let i = 0; i < versionTables.length; ++i) {
+        for (let i = 0; i < versionTables.length; i++) {
             try {
                 let versionRow = db.prepare(`SELECT * FROM "${versionTables[i]}"`).get();
                 if (versionRow !== undefined) {
@@ -769,13 +769,13 @@ class UndoManager {
 
         db.exec(`BEGIN EXCLUSIVE TRANSACTION`);
 
-        for (let i = transaction.commands.length - 1; i >= 0; --i) {
+        for (let i = transaction.commands.length - 1; i >= 0; i--) {
             transaction.commands[i].undo.exec();
         }
 
         db.exec(`COMMIT TRANSACTION`);
 
-        for (let i = transaction.commands.length - 1; i >= 0; --i) {
+        for (let i = transaction.commands.length - 1; i >= 0; i--) {
             sendMessage(
                 transaction.commands[i].store.notifySource,
                 transaction.commands[i].undo.notifyArg
@@ -802,13 +802,13 @@ class UndoManager {
 
         db.exec(`BEGIN EXCLUSIVE TRANSACTION`);
 
-        for (let i = 0; i < transaction.commands.length; ++i) {
+        for (let i = 0; i < transaction.commands.length; i++) {
             transaction.commands[i].redo.exec();
         }
 
         db.exec(`COMMIT TRANSACTION`);
 
-        for (let i = 0; i < transaction.commands.length; ++i) {
+        for (let i = 0; i < transaction.commands.length; i++) {
             sendMessage(
                 transaction.commands[i].store.notifySource,
                 transaction.commands[i].redo.notifyArg
@@ -868,7 +868,7 @@ class UndoManager {
     @action
     removeAllTransactionsReferencingObject(store: IStore, object: any) {
         const filter = (transaction: ITransaction) => {
-            for (let i = 0; i < transaction.commands.length; ++i) {
+            for (let i = 0; i < transaction.commands.length; i++) {
                 let command = transaction.commands[i];
                 if (command.store === store) {
                     if (object.id && command.notifyArg.object.id === object.id) {

@@ -181,7 +181,7 @@ function buildGuiBitmapsDef(project: ProjectProperties) {
         }
 
         let getBitmapDataPromises: Promise<BitmapData>[] = [];
-        for (let i = 0; i < gui.bitmaps.length; ++i) {
+        for (let i = 0; i < gui.bitmaps.length; i++) {
             getBitmapDataPromises.push(getBitmapData(gui.bitmaps[i]));
         }
 
@@ -195,7 +195,7 @@ function buildGuiBitmapsDef(project: ProjectProperties) {
                 height: number;
                 pixels: number[];
             }[] = [];
-            for (let i = 0; i < gui.bitmaps.length; ++i) {
+            for (let i = 0; i < gui.bitmaps.length; i++) {
                 bitmaps.push({
                     name: gui.bitmaps[i].name,
                     width: bitmapsData[i].width,
@@ -349,7 +349,7 @@ class String extends ObjectField {
 
     packObject(): number[] {
         let packedData: number[] = [];
-        for (let i = 0; i < this.value.length; ++i) {
+        for (let i = 0; i < this.value.length; i++) {
             packedData.push(this.value.charCodeAt(i));
         }
         packedData.push(0);
@@ -530,7 +530,7 @@ function buildGuiStylesDef(project: ProjectProperties) {
     let data = pack(objects);
 
     let threeExclamationsDetected = false;
-    for (let i = 2; i < data.length; ++i) {
+    for (let i = 2; i < data.length; i++) {
         if (data[i - 2] == 33 && data[i - 1] == 33 && data[i] == 33) {
             threeExclamationsDetected = true;
         }
@@ -603,7 +603,7 @@ function buildWidget(
         if (object.data) {
             data = findDataItemIndex(object.data);
             if (data != -1) {
-                ++data;
+                data++;
                 if (data > 255) {
                     data = 0;
                 }
@@ -618,7 +618,7 @@ function buildWidget(
         if (object.action) {
             action = findActionIndex(object.action);
             if (action != -1) {
-                ++action;
+                action++;
                 if (action > 255) {
                     action = 0;
                 }
@@ -654,7 +654,7 @@ function buildWidget(
     } else {
         style = findStyleIndex("default");
     }
-    ++style;
+    style++;
     result.addField(new UInt8(style));
 
     // specific
@@ -685,7 +685,7 @@ function buildWidget(
 
             let rectObjectList = new ObjectList();
 
-            for (let i = 0; i < rects.length; ++i) {
+            for (let i = 0; i < rects.length; i++) {
                 var rect = rects[i];
 
                 let rectStruct = new Struct();
@@ -870,7 +870,7 @@ function buildWidget(
         if (widget.line1Data) {
             line1Data = findDataItemIndex(widget.line1Data);
             if (line1Data != -1) {
-                ++line1Data;
+                line1Data++;
                 if (line1Data > 255) {
                     line1Data = 255;
                 }
@@ -892,7 +892,7 @@ function buildWidget(
         if (widget.line2Data) {
             line2Data = findDataItemIndex(widget.line2Data);
             if (line2Data != -1) {
-                ++line2Data;
+                line2Data++;
                 if (line2Data > 255) {
                     line2Data = 255;
                 }
@@ -925,7 +925,7 @@ function buildWidget(
         if (widget.y2Data) {
             y2Data = findDataItemIndex(widget.y2Data);
             if (y2Data != -1) {
-                ++y2Data;
+                y2Data++;
                 if (y2Data > 255) {
                     y2Data = 255;
                 }
@@ -980,7 +980,7 @@ function buildWidget(
         if (widget.dwellData) {
             dwellData = findDataItemIndex(widget.dwellData);
             if (dwellData != -1) {
-                ++dwellData;
+                dwellData++;
                 if (dwellData > 255) {
                     dwellData = 255;
                 }
@@ -994,7 +994,7 @@ function buildWidget(
         if (widget.y1Data) {
             y1Data = findDataItemIndex(widget.y1Data);
             if (y1Data != -1) {
-                ++y1Data;
+                y1Data++;
                 if (y1Data > 255) {
                     y1Data = 255;
                 }
@@ -1016,7 +1016,7 @@ function buildWidget(
         if (widget.y2Data) {
             y2Data = findDataItemIndex(widget.y2Data);
             if (y2Data != -1) {
-                ++y2Data;
+                y2Data++;
                 if (y2Data > 255) {
                     y2Data = 255;
                 }
@@ -1038,7 +1038,7 @@ function buildWidget(
         if (widget.cursorData) {
             cursorData = findDataItemIndex(widget.cursorData);
             if (cursorData != -1) {
-                ++cursorData;
+                cursorData++;
                 if (cursorData > 255) {
                     cursorData = 255;
                 }
@@ -1073,7 +1073,7 @@ function buildWidget(
         if (widget.enabled) {
             enabledData = findDataItemIndex(widget.enabled);
             if (enabledData != -1) {
-                ++enabledData;
+                enabledData++;
                 if (enabledData > 255) {
                     enabledData = 255;
                 }
@@ -1121,7 +1121,7 @@ function buildWidget(
         if (widget.bitmap) {
             bitmap = findBitmapIndex(widget.bitmap);
             if (bitmap != -1) {
-                ++bitmap;
+                bitmap++;
                 if (bitmap > 255) {
                     bitmap = 0;
                 }
@@ -1231,7 +1231,7 @@ function buildGuiDocumentDef(project: ProjectProperties, screenOrientation: stri
     let data = pack(objects);
 
     let threeExclamationsDetected = false;
-    for (let i = 2; i < data.length; ++i) {
+    for (let i = 2; i < data.length; i++) {
         if (data[i - 2] == 33 && data[i - 1] == 33 && data[i] == 33) {
             threeExclamationsDetected = true;
         }

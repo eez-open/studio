@@ -37,7 +37,7 @@ class PageTransparencyGrid {
     }
 
     private addCol(x: number) {
-        for (let iCol = 0; iCol < this.cols.length; ++iCol) {
+        for (let iCol = 0; iCol < this.cols.length; iCol++) {
             let col = this.cols[iCol];
 
             if (x <= col.x) {
@@ -60,10 +60,10 @@ class PageTransparencyGrid {
     }
 
     private addRow(y: number) {
-        for (let iCol = 0; iCol < this.cols.length; ++iCol) {
+        for (let iCol = 0; iCol < this.cols.length; iCol++) {
             let col = this.cols[iCol];
 
-            for (let iRow = 0; iRow < col.rows.length; ++iRow) {
+            for (let iRow = 0; iRow < col.rows.length; iRow++) {
                 let row = col.rows[iRow];
 
                 if (y <= row.y) {
@@ -98,10 +98,10 @@ class PageTransparencyGrid {
             this.addRect(rect);
 
             // mark as opaque
-            for (let iCol = 0; iCol < this.cols.length; ++iCol) {
+            for (let iCol = 0; iCol < this.cols.length; iCol++) {
                 let col = this.cols[iCol];
                 if (col.x >= rect.x && col.x + col.width <= rect.x + rect.width) {
-                    for (let iRow = 0; iRow < col.rows.length; ++iRow) {
+                    for (let iRow = 0; iRow < col.rows.length; iRow++) {
                         let row = col.rows[iRow];
                         if (row.y >= rect.y && row.y + row.height <= rect.y + rect.height) {
                             row.opaque = true;
@@ -116,23 +116,23 @@ class PageTransparencyGrid {
         let colStart = this.cols[iColStart];
 
         let iColEnd: number;
-        for (iColEnd = iColStart + 1; iColEnd < this.cols.length; ++iColEnd) {
+        for (iColEnd = iColStart + 1; iColEnd < this.cols.length; iColEnd++) {
             let row = this.cols[iColEnd].rows[iRowStart];
             if (row.opaque) {
                 break;
             }
             row.opaque = true;
         }
-        --iColEnd;
+        iColEnd--;
         let colEnd = this.cols[iColEnd];
 
         let rowStart = colStart.rows[iRowStart];
 
         let iRowEnd: number;
-        for (iRowEnd = iRowStart + 1; iRowEnd < colStart.rows.length; ++iRowEnd) {
+        for (iRowEnd = iRowStart + 1; iRowEnd < colStart.rows.length; iRowEnd++) {
             let opaque = false;
 
-            for (let iCol = iColStart; iCol <= iColEnd; ++iCol) {
+            for (let iCol = iColStart; iCol <= iColEnd; iCol++) {
                 if (this.cols[iCol].rows[iRowEnd].opaque) {
                     opaque = true;
                     break;
@@ -143,11 +143,11 @@ class PageTransparencyGrid {
                 break;
             }
 
-            for (let iCol = iColStart; iCol <= iColEnd; ++iCol) {
+            for (let iCol = iColStart; iCol <= iColEnd; iCol++) {
                 this.cols[iCol].rows[iRowEnd].opaque = true;
             }
         }
-        --iRowEnd;
+        iRowEnd--;
         let rowEnd = colEnd.rows[iRowEnd];
 
         return {
@@ -161,9 +161,9 @@ class PageTransparencyGrid {
     getTransparentRectangles(): Rect[] {
         let rects: Rect[] = [];
 
-        for (let iCol = 0; iCol < this.cols.length; ++iCol) {
+        for (let iCol = 0; iCol < this.cols.length; iCol++) {
             let col = this.cols[iCol];
-            for (let iRow = 0; iRow < col.rows.length; ++iRow) {
+            for (let iRow = 0; iRow < col.rows.length; iRow++) {
                 let row = col.rows[iRow];
                 if (!row.opaque) {
                     let rect = this.getMaxRectAtCell(iCol, iRow);
@@ -198,7 +198,7 @@ export function debugDrawPageTransparentRectangles(ctx: CanvasRenderingContext2D
     ctx.lineWidth = 1;
 
     var rects = findPageTransparentRectanglesInTree(tree);
-    for (let i = 0; i < rects.length; ++i) {
+    for (let i = 0; i < rects.length; i++) {
         let rect = rects[i];
 
         ctx.beginPath();

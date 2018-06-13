@@ -346,7 +346,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
 
         let index = this.data.indexOf("\n");
         if (index !== -1) {
-            ++index;
+            index++;
             let data = this.data.substr(0, index);
             if (index < this.data.length) {
                 this.data = this.data.substr(index);

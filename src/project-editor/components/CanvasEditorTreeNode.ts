@@ -49,7 +49,7 @@ export function traverseTree(
 ) {
     let result = callback(node);
     if (result == undefined || result === TraverseTreeContinuation.CONTINUE) {
-        for (let i = 0; i < node.children.length; ++i) {
+        for (let i = 0; i < node.children.length; i++) {
             if (traverseTree(node.children[i], callback) == TraverseTreeContinuation.BREAK) {
                 return TraverseTreeContinuation.BREAK;
             }

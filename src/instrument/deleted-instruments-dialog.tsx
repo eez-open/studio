@@ -89,7 +89,7 @@ class DeletedInstrumentsDialog extends React.Component<{}, {}> {
     deleteAllPermanently() {
         confirm("Are you sure?", "It will also delete all the history.", () => {
             let deletedInstruments = this.deletedInstruments.slice();
-            for (let i = 0; i < deletedInstruments.length; ++i) {
+            for (let i = 0; i < deletedInstruments.length; i++) {
                 deletedInstruments[i].data.deletePermanently();
             }
         });

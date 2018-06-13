@@ -189,8 +189,8 @@ function resizeGlyphBitmap(glyphBitmap: GlyphBitmap | undefined, width: number, 
         pixelArray: []
     };
 
-    for (let y = 0; y < height; ++y) {
-        for (let x = 0; x < width; ++x) {
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
             setPixelInplace(result, x, y, getPixel(glyphBitmap, x, y));
         }
     }
@@ -259,8 +259,8 @@ export class GlyphProperties extends EezObject {
             let xOffset = this.x;
             let yOffset = font.ascent - (this.y + this.height);
 
-            for (let x = 0; x < this.width; ++x) {
-                for (let y = 0; y < this.height; ++y) {
+            for (let x = 0; x < this.width; x++) {
+                for (let y = 0; y < this.height; y++) {
                     if (getPixel(this.glyphBitmap, x, y)) {
                         ctx.fillRect(x + xOffset, y + yOffset, 1, 1);
                     }
@@ -328,7 +328,7 @@ export class GlyphProperties extends EezObject {
         ctx.lineWidth = 0.5;
 
         // draw vertical grid lines
-        for (let x = 0; x <= dx; ++x) {
+        for (let x = 0; x <= dx; x++) {
             if (x >= xOffset && x <= xOffset + width) {
                 ctx.beginPath();
                 ctx.moveTo(x * GLYPH_EDITOR_PIXEL_SIZE, 0);
@@ -363,7 +363,7 @@ export class GlyphProperties extends EezObject {
         }
 
         // draw horizontal grid lines
-        for (let y = 0; y <= fontHeight; ++y) {
+        for (let y = 0; y <= fontHeight; y++) {
             if (y >= yOffset && y <= yOffset + height) {
                 ctx.beginPath();
                 ctx.moveTo(0, y * GLYPH_EDITOR_PIXEL_SIZE);
@@ -407,8 +407,8 @@ export class GlyphProperties extends EezObject {
         // draw pixels
         if (this.glyphBitmap) {
             ctx.fillStyle = GLYPH_EDITOR_PIXEL_COLOR;
-            for (let y = 0; y < height; ++y) {
-                for (let x = 0; x < width; ++x) {
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
                     if (this.getPixel(x, y)) {
                         ctx.beginPath();
                         ctx.rect(

@@ -159,7 +159,7 @@ export function getPages() {
 
 export function findPage(pageName: string) {
     let pages = getPages();
-    for (let i = 0; i < pages.length; ++i) {
+    for (let i = 0; i < pages.length; i++) {
         let page = pages[i];
         if (page.name == pageName) {
             return page;
@@ -171,7 +171,7 @@ export function findPage(pageName: string) {
 export function findLocalWidgetType(widgetTypeName: string) {
     let gui = getGui();
     let widgetTypes = (gui && gui.widgets) || [];
-    for (let i = 0; i < widgetTypes.length; ++i) {
+    for (let i = 0; i < widgetTypes.length; i++) {
         let widgetType = widgetTypes[i];
         if (widgetType.name == widgetTypeName) {
             return widgetType;
@@ -183,7 +183,7 @@ export function findLocalWidgetType(widgetTypeName: string) {
 export function findLocalWidgetTypeIndex(widgetTypeName: string) {
     let gui = getGui();
     let widgetTypes = (gui && gui.widgets) || [];
-    for (let i = 0; i < widgetTypes.length; ++i) {
+    for (let i = 0; i < widgetTypes.length; i++) {
         let widgetType = widgetTypes[i];
         if (widgetType.name == widgetTypeName) {
             return i;
@@ -195,7 +195,7 @@ export function findLocalWidgetTypeIndex(widgetTypeName: string) {
 export function findStyle(styleName: any) {
     let gui = getGui();
     let styles = (gui && gui.styles) || [];
-    for (let i = 0; i < styles.length; ++i) {
+    for (let i = 0; i < styles.length; i++) {
         let style = styles[i];
         if (style.name == styleName) {
             return style;
@@ -211,7 +211,7 @@ export function findStyleOrGetDefault(styleName: any) {
 export function findStyleIndex(styleName: any) {
     let gui = getGui();
     let styles = (gui && gui.styles) || [];
-    for (let i = 0; i < styles.length; ++i) {
+    for (let i = 0; i < styles.length; i++) {
         let style = styles[i];
         if (style.name == styleName) {
             return i;
@@ -223,7 +223,7 @@ export function findStyleIndex(styleName: any) {
 export function findFontIndex(fontName: any) {
     let gui = getGui();
     let fonts = (gui && gui.fonts) || [];
-    for (let i = 0; i < fonts.length; ++i) {
+    for (let i = 0; i < fonts.length; i++) {
         if (fonts[i].name == fontName) {
             return i;
         }
@@ -234,7 +234,7 @@ export function findFontIndex(fontName: any) {
 export function findFont(fontName: any) {
     let gui = getGui();
     let fonts = (gui && gui.fonts) || [];
-    for (let i = 0; i < fonts.length; ++i) {
+    for (let i = 0; i < fonts.length; i++) {
         let font = fonts[i];
         if (font.name == fontName) {
             return font;
@@ -246,7 +246,7 @@ export function findFont(fontName: any) {
 export function findBitmapIndex(bitmapName: any) {
     let gui = getGui();
     let bitmaps = (gui && gui.bitmaps) || [];
-    for (let i = 0; i < bitmaps.length; ++i) {
+    for (let i = 0; i < bitmaps.length; i++) {
         if (bitmaps[i].name == bitmapName) {
             return i;
         }
@@ -257,7 +257,7 @@ export function findBitmapIndex(bitmapName: any) {
 export function findBitmap(bitmapName: any) {
     let gui = getGui();
     let bitmaps = (gui && gui.bitmaps) || [];
-    for (let i = 0; i < bitmaps.length; ++i) {
+    for (let i = 0; i < bitmaps.length; i++) {
         let bitmap = bitmaps[i];
         if (bitmap.name == bitmapName) {
             return bitmap;

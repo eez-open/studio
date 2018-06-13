@@ -205,7 +205,7 @@ export class FileUpload extends FileTransfer {
                     longOperation: true
                 });
 
-                ++this.chunkIndex;
+                this.chunkIndex++;
             } else {
                 this.state = "error";
                 this.error = "Can't read data from the file";

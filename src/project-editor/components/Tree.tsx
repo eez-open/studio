@@ -507,10 +507,10 @@ export class Tree extends React.Component<TreeProps, {}> {
 
                 if (event.keyCode == 38) {
                     // up
-                    --index;
+                    index--;
                 } else if (event.keyCode == 40) {
                     // down
-                    ++index;
+                    index++;
                 } else if (event.keyCode == 33) {
                     // page up
                     index -= pageSize;

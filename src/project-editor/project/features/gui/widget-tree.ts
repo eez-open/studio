@@ -189,7 +189,7 @@ export function createWidgetTree(
                             "itemWidget"
                         ];
 
-                        for (let i = 0; i < data.count(<string>widget.data); ++i) {
+                        for (let i = 0; i < data.count(<string>widget.data); i++) {
                             enumWidget(treeNode, itemWidgetItem, x, y);
 
                             if (widget.listType == "vertical") {

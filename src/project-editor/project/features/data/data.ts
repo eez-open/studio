@@ -149,7 +149,7 @@ registerFeatureImplementation("data", {
 
 export function findDataItem(dataItemName: string) {
     let dataItems = ProjectStore.projectProperties.data as DataItemProperties[];
-    for (let i = 0; i < dataItems.length; ++i) {
+    for (let i = 0; i < dataItems.length; i++) {
         let dataItem = dataItems[i];
         if (dataItem.name == dataItemName) {
             return dataItem;
@@ -160,7 +160,7 @@ export function findDataItem(dataItemName: string) {
 
 export function findDataItemIndex(dataItemName: string) {
     let dataItems = (ProjectStore.projectProperties as any).data;
-    for (let i = 0; i < dataItems.length; ++i) {
+    for (let i = 0; i < dataItems.length; i++) {
         if (dataItems[i].name == dataItemName) {
             return i;
         }
