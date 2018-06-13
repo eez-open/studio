@@ -1078,9 +1078,10 @@ export class DeletedItemsHistory extends History {
         } else {
             // we need all properties here since only id is guaranteed from store notification when deleting object
             activityLogEntry = activityLogStore.findById(activityLogEntry.id);
-
-            this.addActivityLogEntryToBlocks(activityLogEntry);
-            ++this.deletedCount;
+            if (activityLogEntry) {
+                this.addActivityLogEntryToBlocks(activityLogEntry);
+                ++this.deletedCount;
+            }
         }
     }
 

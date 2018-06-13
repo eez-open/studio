@@ -1,6 +1,8 @@
 import * as usb from "usb";
 
-// This port of https://github.com/python-ivi/python-usbtmc,
+////////////////////////////////////////////////////////////////////////////////
+
+// This is port of https://github.com/python-ivi/python-usbtmc,
 // latest commit was d9bfb20b2ef002da787adb6b093e1679705c00e2
 
 // constants
@@ -760,7 +762,7 @@ export class Instrument {
         });
     }
 
-    async read_raw(num: number = -1) {
+    async read_raw(num: number = -1, callback?: (buffer: Buffer) => void) {
         // Read binary data from instrument
 
         if (!this.connected) {
@@ -829,7 +831,11 @@ export class Instrument {
                         }
                     } else {
                         eom = transfer_attributes & 1 ? true : false;
-                        read_data = Buffer.concat([read_data, data]);
+                        if (callback) {
+                            callback(data);
+                        } else {
+                            read_data = Buffer.concat([read_data, data]);
+                        }
                     }
                 }
 
@@ -909,6 +915,13 @@ export class Instrument {
     async read(num: number = -1, encoding: string = "binary") {
         // Read string from instrument
         return (await this.read_raw(num)).toString(encoding);
+    }
+
+    async readWithCallback(callback: (data: string) => void) {
+        // Read string from instrument
+        return (await this.read_raw(-1, buffer => {
+            callback(buffer.toString("binary"));
+        })).toString("binary");
     }
 
     async ask(message: string, num: number = -1, encoding: string = "binary") {
@@ -1094,6 +1107,8 @@ import {
 
 export class UsbTmcInterface implements CommunicationInterface {
     instrument: Instrument | undefined = undefined;
+    commands: string[] = [];
+    executing: boolean;
 
     constructor(private host: CommunicationInterfaceHost) {
         const instrument = new Instrument(
@@ -1122,27 +1137,46 @@ export class UsbTmcInterface implements CommunicationInterface {
         this.host.disconnected();
     }
 
-    write(data: string) {
+    flush() {
         if (!this.instrument) {
             return;
         }
 
-        try {
-            this.instrument.write(data).then(() => {
-                if (this.instrument) {
-                    try {
-                        this.instrument.read().then(data => {
-                            this.host.onData(data);
-                        });
-                    } catch (err) {
-                        this.host.setError(ConnectionErrorCode.NONE, err.toString());
-                        this.destroy();
+        const command = this.commands.shift();
+        if (command) {
+            this.executing = true;
+            try {
+                this.instrument.write(command).then(() => {
+                    if (this.instrument) {
+                        try {
+                            this.instrument
+                                .readWithCallback(data => {
+                                    this.host.onData(data);
+                                })
+                                .then(data => {
+                                    if (data && data.length > 0) {
+                                        this.host.onData(data);
+                                    }
+                                    this.executing = false;
+                                    this.flush();
+                                });
+                        } catch (err) {
+                            this.host.setError(ConnectionErrorCode.NONE, err.toString());
+                            this.destroy();
+                        }
                     }
-                }
-            });
-        } catch (err) {
-            this.host.setError(ConnectionErrorCode.NONE, err.toString());
-            this.destroy();
+                });
+            } catch (err) {
+                this.host.setError(ConnectionErrorCode.NONE, err.toString());
+                this.destroy();
+            }
+        }
+    }
+
+    write(data: string) {
+        this.commands.push(data);
+        if (!this.executing) {
+            this.flush();
         }
     }
 
