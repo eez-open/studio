@@ -30,8 +30,6 @@ src/project-editor/**/*.js
 src/project-editor/**/*.js.map
 src/project-editor/_stylesheets/main.css
 
-test
-
 TODO.txt
 
 .cache-require-paths.json
