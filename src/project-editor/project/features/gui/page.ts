@@ -37,6 +37,16 @@ export class PageOrientationProperties extends EezObject {
     @observable height: number;
     @observable style?: string;
     @observable widgets: WidgetProperties[];
+
+    @computed
+    get boundingRect() {
+        return {
+            left: this.x,
+            top: this.y,
+            width: this.width,
+            height: this.height
+        };
+    }
 }
 
 export const pageOrientationMetaData = registerMetaData({

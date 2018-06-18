@@ -17,6 +17,16 @@ export class WidgetTypeProperties extends EezObject {
     @observable height: number;
     @observable style: string;
     @observable widgets: WidgetProperties[];
+
+    @computed
+    get boundingRect() {
+        return {
+            left: 0,
+            top: 0,
+            width: this.width,
+            height: this.height
+        };
+    }
 }
 
 export class WidgetTypeTabState {

@@ -16,7 +16,8 @@ import {
     getParent,
     getMetaData,
     getProperty,
-    ProjectStore
+    ProjectStore,
+    isArray
 } from "project-editor/core/store";
 import {
     EnumItem,
@@ -33,7 +34,11 @@ import { findActionIndex } from "project-editor/project/features/action/action";
 import { GeometryProperties, ObjectGeometryChange } from "project-editor/components/CanvasEditor";
 
 import { findStyle, findBitmapIndex, GuiProperties } from "project-editor/project/features/gui/gui";
-import { widgetTypeMetaData } from "project-editor/project/features/gui/widgetType";
+import { PageOrientationProperties } from "project-editor/project/features/gui/page";
+import {
+    widgetTypeMetaData,
+    WidgetTypeProperties
+} from "project-editor/project/features/gui/widgetType";
 import * as draw from "project-editor/project/features/gui/draw";
 
 const { MenuItem } = EEZStudio.electron.remote;
@@ -69,6 +74,8 @@ function getWidgetTypeClass() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export type WidgetParent = PageOrientationProperties | WidgetTypeProperties | WidgetProperties;
+
 export class WidgetProperties extends EezObject {
     // shared properties
     @observable type: string;
@@ -88,42 +95,108 @@ export class WidgetProperties extends EezObject {
         return undefined;
     }
 
-    getParentWidget(): WidgetProperties | undefined {
-        const parent = getParent(this);
-        if (parent) {
-            const parentWidget = getParent(parent);
-            if (parentWidget) {
-                return parentWidget as WidgetProperties;
+    // Return immediate parent, which can be of type PageOrientationProperties, WidgetTyperProperties
+    // or WidgetProperties (i.e. ContainerWidgetProperties, ListWidgetProperties, SelectWidgetPropertis)
+    get parent(): WidgetParent {
+        let parent = getParent(this)!;
+        if (isArray(parent)) {
+            parent = getParent(parent)!;
+        }
+        return parent as WidgetParent;
+    }
+
+    // Return first ancestor of type:
+    //   - PageOrientationProperties or
+    //   - WidgetTyperProperties or
+    //   - WidgetProperties, if that ancestor parent is SelectWidgetProperties
+    get anchorParent() {
+        let widget: WidgetProperties = this;
+
+        while (true) {
+            let parent = widget.parent;
+
+            if (
+                parent instanceof PageOrientationProperties ||
+                parent instanceof WidgetTypeProperties
+            ) {
+                return parent;
             }
+
+            if (parent instanceof SelectWidgetProperties) {
+                return widget;
+            }
+
+            widget = parent;
+        }
+    }
+
+    // If this widget is immediate child of SelectWidgetProperties parent return that parent.
+    get selectParent(): SelectWidgetProperties | undefined {
+        const parent = this.parent;
+        if (parent instanceof SelectWidgetProperties) {
+            return parent;
         }
         return undefined;
     }
 
-    getSelectParent(): SelectWidgetProperties | undefined {
-        const parentWidget = this.getParentWidget();
-        if (parentWidget && parentWidget instanceof SelectWidgetProperties) {
-            return parentWidget;
+    @computed
+    get boundingRect() {
+        const rect = {
+            left: this.x,
+            top: this.y,
+            width: this.width,
+            height: this.height
+        };
+
+        let object: WidgetProperties = this;
+
+        while (true) {
+            let parent = object.parent;
+
+            if (parent instanceof SelectWidgetProperties) {
+                let i = parent.widgets.indexOf(object);
+
+                rect.left += parent.editor.rect.left + SelectWidgetEditorProperties.EDITOR_PADDING;
+                rect.top +=
+                    parent.editor.rect.top +
+                    SelectWidgetEditorProperties.EDITOR_PADDING +
+                    i * (parent.height + SelectWidgetEditorProperties.EDITOR_PADDING);
+
+                break;
+            }
+
+            if (parent instanceof WidgetTypeProperties) {
+                break;
+            }
+
+            rect.left += parent.x;
+            rect.top += parent.y;
+
+            if (parent instanceof PageOrientationProperties) {
+                break;
+            }
+
+            object = parent;
         }
-        return undefined;
+
+        return rect;
     }
 
     check() {
         let messages: output.Message[] = [];
 
-        let parentWidget = this.getParentWidget();
+        let parent = this.parent;
         if (
             this.x < 0 ||
             this.y < 0 ||
-            (parentWidget &&
-                (this.x + this.width > parentWidget.width ||
-                    this.y + this.height > parentWidget.height))
+            (parent && (this.x + this.width > parent.width || this.y + this.height > parent.height))
         ) {
             messages.push(
                 new output.Message(output.Type.ERROR, "Widget is outside of its parent", this)
             );
         }
 
-        let selectParent = this.getSelectParent();
+        let selectParent = this.selectParent;
         if (selectParent) {
             if (this.width != selectParent.width) {
                 messages.push(
@@ -544,9 +617,186 @@ export class ListWidgetProperties extends WidgetProperties {
     }
 }
 
+export type Position = "left" | "right" | "top" | "bottom";
+
 export class SelectWidgetEditorProperties extends EezObject {
+    static readonly EDITOR_PADDING = 10;
+
     @observable x: number;
     @observable y: number;
+
+    get parent() {
+        return getParent(this) as SelectWidgetProperties;
+    }
+
+    // Returns array of edges (as Position[]) that Select Widget touches.
+    // It can return 0, 1, 2, 3 or 4 positions.
+    //
+    // For example, in this case it will return ["left", "top"].
+    //
+    //                top
+    //                 ^
+    //                 |
+    //             +-------------------------+
+    //    left <---+      |                  |
+    //             |      |                  |
+    //             +------+                  |
+    //             |  |                      |
+    //             |  |                      |
+    //             |  +-->  Select widget    |
+    //             |                         |
+    //             |                         |
+    //             +-------------------------+
+    //                          |
+    //                          |
+    //                          +-->  Anchor
+    @computed
+    get selectWidgetPosition(): Position[] {
+        const result: Position[] = [];
+
+        const anchorBoundingRect = this.parent.anchorParent.boundingRect;
+        const selectWidgetBoundingRect = this.parent.boundingRect;
+
+        if (anchorBoundingRect.left === selectWidgetBoundingRect.left) {
+            result.push("left");
+        }
+
+        if (anchorBoundingRect.top === selectWidgetBoundingRect.top) {
+            result.push("top");
+        }
+
+        if (
+            anchorBoundingRect.left + anchorBoundingRect.width ===
+            selectWidgetBoundingRect.left + selectWidgetBoundingRect.width
+        ) {
+            result.push("right");
+        }
+
+        if (
+            anchorBoundingRect.top + anchorBoundingRect.height ===
+            selectWidgetBoundingRect.top + selectWidgetBoundingRect.height
+        ) {
+            result.push("bottom");
+        }
+
+        return result;
+    }
+
+    // Returns position of Select Widget Editor relative to Select Widget.
+    //
+    // For example, in this case it will return "right" since Select Widget Editor is on the right side of Select Widget.
+    //
+    //                                       Select Widget Editor
+    //
+    //                                       +-----------------+
+    //                                       |                 |
+    //                                       | +-------------+ |
+    //                                       | |             | |
+    // +---------------+---------+           | |             | |
+    // |               |         |           | +-------------+ |
+    // |               +---------------+     |                 |
+    // +---------------+         |     |     | +-------------+ |
+    // |                         |     |     | |             | |
+    // |  Select Widget          |     +-----> |             | |
+    // |                         |           | +-------------+ |
+    // |                         |           |                 |
+    // |                         |           | +-------------+ |
+    // +-------------------------+           | |             | |
+    //                                       | |             | |
+    //          Anchor                       | +-------------+ |
+    //                                       |                 |
+    //                                       +-----------------+
+    @computed
+    get relativePosition(): Position {
+        const positions: Position[] = [];
+
+        if (this.x < this.parent.boundingRect.left) {
+            positions.push("left");
+        }
+        if (this.y < this.parent.boundingRect.top) {
+            positions.push("top");
+        }
+        if (this.x > this.parent.boundingRect.left + this.parent.boundingRect.width) {
+            positions.push("right");
+        }
+        if (this.y > this.parent.boundingRect.top + this.parent.boundingRect.height) {
+            positions.push("bottom");
+        }
+
+        const selectWidgetPosition = this.selectWidgetPosition;
+
+        if (selectWidgetPosition.length === 1) {
+            if (positions.indexOf(selectWidgetPosition[0]) !== -1) {
+                return selectWidgetPosition[0];
+            }
+        } else if (selectWidgetPosition.length === 2) {
+            if (
+                positions.indexOf(selectWidgetPosition[0]) !== -1 &&
+                positions.indexOf(selectWidgetPosition[1]) === -1
+            ) {
+                return selectWidgetPosition[0];
+            }
+            if (
+                positions.indexOf(selectWidgetPosition[0]) === -1 &&
+                positions.indexOf(selectWidgetPosition[1]) !== -1
+            ) {
+                return selectWidgetPosition[1];
+            }
+        }
+
+        const dx = this.x - (this.parent.boundingRect.left + this.parent.boundingRect.width / 2);
+        const dy = this.y - (this.parent.boundingRect.top + this.parent.boundingRect.height / 2);
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+        if (angle > -135 && angle <= -45) {
+            return "top";
+        }
+
+        if (angle > -45 && angle <= 45) {
+            return "right";
+        }
+
+        if (angle > 45 && angle <= 135) {
+            return "bottom";
+        }
+
+        return "left";
+    }
+
+    @computed
+    get editorOrientation(): "vertical" | "horizontal" {
+        // currently, it is always vertical orientation
+        return "vertical";
+    }
+
+    @computed
+    get rect() {
+        let width;
+        let height;
+
+        const count = this.parent.widgets.length;
+
+        if (this.editorOrientation === "vertical") {
+            width = this.parent.width + 2 * SelectWidgetEditorProperties.EDITOR_PADDING;
+
+            height =
+                (this.parent.height + SelectWidgetEditorProperties.EDITOR_PADDING) * count +
+                SelectWidgetEditorProperties.EDITOR_PADDING;
+        } else {
+            width =
+                (this.parent.width + SelectWidgetEditorProperties.EDITOR_PADDING) * count +
+                SelectWidgetEditorProperties.EDITOR_PADDING;
+
+            height = this.parent.height + 2 * SelectWidgetEditorProperties.EDITOR_PADDING;
+        }
+
+        return {
+            left: this.x - Math.round(width / 2),
+            top: this.y - Math.round(height / 2),
+            width,
+            height
+        };
+    }
 }
 
 export const selectWidgetEditorMetaData = registerMetaData({
@@ -1420,6 +1670,10 @@ export function getWidgetTypes() {
                 create() {
                     return <any>{
                         type: "Select",
+                        editor: {
+                            x: 0,
+                            y: 0
+                        },
                         widgets: [],
                         x: 0,
                         y: 0,

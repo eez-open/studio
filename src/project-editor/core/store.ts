@@ -342,8 +342,7 @@ class EditorsStoreClass {
         // close editor if editor object doesn't exists anymore
         autorun(() => {
             this.editors.slice().forEach(editor => {
-                let parent = getParent(editor.object);
-                if (parent && isArray(parent) && asArray(parent).indexOf(editor.object) == -1) {
+                if (!isObjectExists(editor.object)) {
                     this.closeEditor(editor);
                 }
             });
@@ -1195,7 +1194,7 @@ export function loadObject(
                 childObject = loadObject(object, value, propertyMetaData.typeMetaData as MetaData);
             } else if (!propertyMetaData.isOptional) {
                 let typeMetaData = propertyMetaData.typeMetaData as MetaData;
-                childObject = loadObject(parent, typeMetaData.defaultValue, typeMetaData);
+                childObject = loadObject(object, typeMetaData.defaultValue, typeMetaData);
             }
 
             if (childObject) {
@@ -1747,6 +1746,23 @@ export function getPropertyAsString(object: EezObject, propertyMetaData: Propert
         }
         return value.toString();
     }
+}
+
+export function isObjectExists(object: EezObject) {
+    let parent = getParent(object);
+    if (parent) {
+        if (isArray(parent)) {
+            if (asArray(parent).indexOf(object) === -1) {
+                return false;
+            }
+        } else {
+            const key = getKey(object);
+            if (key && (parent as any)[key] !== object) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 export function canAdd(object: EezObject) {
