@@ -129,9 +129,9 @@ export class FileDownload extends FileTransfer {
 
                 let fileType = detectFileType(this.data);
                 if (fileType.mime === "image/bmp") {
-                    fileType = "image/png";
                     try {
                         this.data = convertToPng(this.data);
+                        fileType = "image/png";
                     } catch (err) {
                         console.error(err);
                     }
