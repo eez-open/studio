@@ -89,27 +89,15 @@ export function detectFileType(data: string | Buffer, fileName?: string) {
 }
 
 export function convertToPng(data: string): string {
-    /*
     const BMP = require("bmp-js");
     var bmpData = BMP.decode(Buffer.from(data, "binary"));
     const PNG = require("pngjs").PNG;
     var png = new PNG({ width: bmpData.width, height: bmpData.height });
 
-    var srcBuffer = bmpData.data;
-    var dstBuffer = new Buffer(bmpData.width * bmpData.height * 4);
-    for (let i = 0, j = 0; i < srcBuffer.length; i += 4) {
-        dstBuffer[j++] = srcBuffer[i + 0];
-        dstBuffer[j++] = srcBuffer[i + 1];
-        dstBuffer[j++] = srcBuffer[i + 2];
-        dstBuffer[j++] = srcBuffer[i + 3];
-    }
-
-    png.data = dstBuffer;
+    png.data = bmpData.data;
     var pngData = PNG.sync.write(png);
     data = pngData.toString("binary");
     return data;
-    */
-    throw "not supported";
 }
 
 export function isCSV(data: string | Buffer) {
