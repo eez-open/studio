@@ -130,7 +130,11 @@ export class FileDownload extends FileTransfer {
                 let fileType = detectFileType(this.data);
                 if (fileType.mime === "image/bmp") {
                     fileType = "image/png";
-                    this.data = convertToPng(this.data);
+                    try {
+                        this.data = convertToPng(this.data);
+                    } catch (err) {
+                        console.error(err);
+                    }
                 }
 
                 this.fileType = fileType;
@@ -150,7 +154,7 @@ export class FileDownload extends FileTransfer {
             state.expectedDataLength = this.expectedDataLength;
             this.updateTransferSpeed(state);
         } else if (this.state === "success") {
-            state.dataLength = this.expectedDataLength;
+            state.dataLength = this.data.length;
             state.fileType = this.fileType;
         } else if (this.state === "error") {
             state.error = this.error;
