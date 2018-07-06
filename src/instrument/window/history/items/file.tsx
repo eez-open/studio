@@ -129,18 +129,7 @@ export class FileHistoryItemComponent extends React.Component<
     onSave() {
         let filters = [];
 
-        let fileExtension;
-        if (typeof this.props.historyItem.fileType === "string") {
-            if (this.props.historyItem.fileType === "image") {
-                fileExtension = "png";
-            } else if (this.props.historyItem.fileType.startsWith("image/")) {
-                fileExtension = this.props.historyItem.fileType.slice("image/".length);
-            } else if (this.props.historyItem.fileType === "CSV") {
-                fileExtension = "csv";
-            }
-        } else {
-            fileExtension = this.props.historyItem.fileType.ext;
-        }
+        let fileExtension = this.props.historyItem.fileExtension;
 
         if (fileExtension) {
             filters.push({
@@ -206,8 +195,7 @@ export class FileHistoryItemComponent extends React.Component<
         } else if (this.props.historyItem.state === "progress") {
             let percent = this.props.historyItem.expectedDataLength
                 ? Math.floor(
-                      100 *
-                          this.props.historyItem.dataLength /
+                      (100 * this.props.historyItem.dataLength) /
                           this.props.historyItem.expectedDataLength
                   )
                 : 0;
@@ -408,7 +396,10 @@ export class FileHistoryItem extends HistoryItem {
     get previewElement(): JSX.Element | null {
         if (this.isImage) {
             let imageData =
-                "data:image/png;base64," + Buffer.from(this.data, "binary").toString("base64");
+                "data:image/" +
+                this.fileExtension +
+                ";base64," +
+                Buffer.from(this.data, "binary").toString("base64");
             return <ImagePreview src={imageData} />;
         }
         return null;
@@ -470,6 +461,22 @@ export class FileHistoryItem extends HistoryItem {
         }
 
         return this.fileType.mime;
+    }
+
+    get fileExtension() {
+        let fileExtension;
+        if (typeof this.fileType === "string") {
+            if (this.fileType === "image") {
+                fileExtension = "png";
+            } else if (this.fileType.startsWith("image/")) {
+                fileExtension = this.fileType.slice("image/".length);
+            } else if (this.fileType === "CSV") {
+                fileExtension = "csv";
+            }
+        } else {
+            fileExtension = this.fileType.ext;
+        }
+        return fileExtension;
     }
 
     @computed

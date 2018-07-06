@@ -88,16 +88,30 @@ export function detectFileType(data: string | Buffer, fileName?: string) {
     };
 }
 
-export function convertToPng(data: string): string {
-    const BMP = require("bmp-js");
-    var bmpData = BMP.decode(Buffer.from(data, "binary"));
-    const PNG = require("pngjs").PNG;
-    var png = new PNG({ width: bmpData.width, height: bmpData.height });
+export function convertBmpToPng(data: string): string {
+    const image = new Image();
+    image.src = "data:image/bmp;base64," + Buffer.from(data, "binary").toString("base64");
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+        throw "canvas getContext failed";
+    }
+    ctx.drawImage(image, 0, 0);
+    const pngDataBase64 = canvas.toDataURL("image/png");
+    var pngData = Buffer.from(pngDataBase64.slice("data:image/png;base64,".length), "base64");
+    return pngData.toString("binary");
 
-    png.data = bmpData.data;
-    var pngData = PNG.sync.write(png);
-    data = pngData.toString("binary");
-    return data;
+    // const BMP = require("bmp-js");
+    // var bmpData = BMP.decode(Buffer.from(data, "binary"));
+    // const PNG = require("pngjs").PNG;
+    // var png = new PNG({ width: bmpData.width, height: bmpData.height });
+
+    // png.data = bmpData.data;
+    // var pngData = PNG.sync.write(png);
+    // data = pngData.toString("binary");
+    // return data;
 }
 
 export function isCSV(data: string | Buffer) {

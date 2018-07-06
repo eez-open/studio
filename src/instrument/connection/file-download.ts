@@ -3,7 +3,7 @@ import { log, logUpdate, IActivityLogEntry } from "shared/activity-log";
 import { FileState } from "instrument/connection/file-state";
 import { FileTransfer } from "instrument/connection/file-transfer";
 import { Connection } from "instrument/connection/connection";
-import { detectFileType, convertToPng } from "instrument/connection/file-type";
+import { detectFileType, convertBmpToPng } from "instrument/connection/file-type";
 
 export class FileDownload extends FileTransfer {
     fileType: string;
@@ -130,7 +130,7 @@ export class FileDownload extends FileTransfer {
                 let fileType = detectFileType(this.data);
                 if (fileType.mime === "image/bmp") {
                     try {
-                        this.data = convertToPng(this.data);
+                        this.data = convertBmpToPng(this.data);
                         fileType = "image/png";
                     } catch (err) {
                         console.error(err);
