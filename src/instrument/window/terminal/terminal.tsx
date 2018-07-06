@@ -1,6 +1,7 @@
 import * as React from "react";
 import { observable, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
+import { bind } from "bind-decorator";
 
 import { Splitter } from "shared/ui/splitter";
 import { Toolbar } from "shared/ui/toolbar";
@@ -264,6 +265,7 @@ export class Terminal extends React.Component<{ appStore: AppStore }, {}> {
         this.props.appStore.selectHistoryItemsSpecification!.onOk();
     }
 
+    @bind
     onSelectHistoryItemsCancel() {
         this.props.appStore.selectHistoryItems(undefined);
     }
