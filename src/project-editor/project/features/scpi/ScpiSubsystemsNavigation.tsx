@@ -6,6 +6,7 @@ import { IconAction } from "shared/ui/action";
 
 import { EezObject, NavigationComponent } from "project-editor/core/metaData";
 import { ProjectStore, NavigationStore, getProperty } from "project-editor/core/store";
+import { doLayout } from "project-editor/core/layout";
 
 import { ListNavigation, ListNavigationWithContent } from "project-editor/project/ListNavigation";
 
@@ -31,6 +32,14 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
             return NavigationStore.selectedPanel.selectedObject;
         }
         return NavigationStore.selectedObject;
+    }
+
+    componentDidMount() {
+        doLayout();
+    }
+
+    componentDidUpdate() {
+        doLayout();
     }
 
     render() {
@@ -62,7 +71,11 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
 
         if (selectedScpiSubsystem) {
             return (
-                <Layout.Split orientation="horizontal" splitId={this.props.id} splitPosition="0.25">
+                <Layout.Split
+                    orientation="horizontal"
+                    splitId={`navigation-${this.props.id}`}
+                    splitPosition="0.25"
+                >
                     <ListNavigation
                         navigationObject={subsystems}
                         additionalButtons={additionalButtons}

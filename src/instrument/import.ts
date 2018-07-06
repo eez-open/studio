@@ -202,7 +202,7 @@ function buildNodes(path: string, sdlNodes: JQuery, docPath: string, commands: I
     });
 }
 
-function buildCommands(sdl: JQuery, docPath: string) {
+function buildCommands(sdl: JQuery<any>, docPath: string) {
     let commands: ICommand[] = [];
 
     let ScpiDefinition = sdl.find(">ScpiDefinition");

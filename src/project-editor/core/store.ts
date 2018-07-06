@@ -2070,7 +2070,7 @@ class UpdateCommand implements Command {
         for (let propertyName in src) {
             dest[propertyName] = src[propertyName];
             if (isArray(dest[propertyName])) {
-                setEez(dest[propertyName], src[propertyName]);
+                setEez(dest[propertyName], src[propertyName].$eez);
             }
         }
     }
