@@ -89,6 +89,7 @@ export function detectFileType(data: string | Buffer, fileName?: string) {
 }
 
 export function convertBmpToPng(data: string): string {
+    console.log("T5");
     const image = new Image();
     image.src = "data:image/bmp;base64," + Buffer.from(data, "binary").toString("base64");
     const canvas = document.createElement("canvas");
@@ -96,11 +97,13 @@ export function convertBmpToPng(data: string): string {
     canvas.height = image.height;
     const ctx = canvas.getContext("2d");
     if (!ctx) {
+        console.log("T6");
         throw "canvas getContext failed";
     }
     ctx.drawImage(image, 0, 0);
     const pngDataBase64 = canvas.toDataURL("image/png");
     var pngData = Buffer.from(pngDataBase64.slice("data:image/png;base64,".length), "base64");
+    console.log("T7");
     return pngData.toString("binary");
 
     // const BMP = require("bmp-js");
