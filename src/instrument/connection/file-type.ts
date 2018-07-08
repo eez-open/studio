@@ -1,3 +1,5 @@
+import { BrowserWindow, ipcMain } from "electron";
+
 const fileType = require("file-type");
 
 import { getFileNameExtension } from "shared/util";
@@ -88,33 +90,29 @@ export function detectFileType(data: string | Buffer, fileName?: string) {
     };
 }
 
-export function convertBmpToPng(data: string): string {
-    console.log("T5");
-    const image = new Image();
-    image.src = "data:image/bmp;base64," + Buffer.from(data, "binary").toString("base64");
-    const canvas = document.createElement("canvas");
-    canvas.width = image.width;
-    canvas.height = image.height;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-        console.log("T6");
-        throw "canvas getContext failed";
-    }
-    ctx.drawImage(image, 0, 0);
-    const pngDataBase64 = canvas.toDataURL("image/png");
-    var pngData = Buffer.from(pngDataBase64.slice("data:image/png;base64,".length), "base64");
-    console.log("T7");
-    return pngData.toString("binary");
+export function convertBmpToPng(data: string) {
+    return new Promise<string>((resolve, reject) => {
+        let browserWindow = new BrowserWindow({
+            show: false
+        });
 
-    // const BMP = require("bmp-js");
-    // var bmpData = BMP.decode(Buffer.from(data, "binary"));
-    // const PNG = require("pngjs").PNG;
-    // var png = new PNG({ width: bmpData.width, height: bmpData.height });
+        browserWindow.webContents.once("dom-ready", () => {
+            browserWindow.webContents.send("convertBmpToPng", data);
 
-    // png.data = bmpData.data;
-    // var pngData = PNG.sync.write(png);
-    // data = pngData.toString("binary");
-    // return data;
+            ipcMain.on("convertBmpToPngResult", (event: any, error: any, data: string) => {
+                if (browserWindow.webContents === event.sender) {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(data);
+                    }
+                    browserWindow.close();
+                }
+            });
+        });
+
+        browserWindow.loadURL(`file://${__dirname}/convertBmpToPng.html`);
+    });
 }
 
 export function isCSV(data: string | Buffer) {

@@ -128,22 +128,24 @@ export class FileDownload extends FileTransfer {
                 this.data = this.data.substr(0, this.expectedDataLength);
 
                 let fileType = detectFileType(this.data);
-                console.log("T1");
                 if (fileType.mime === "image/bmp") {
-                    try {
-                        console.log("T2");
-                        this.data = convertBmpToPng(this.data);
-                        console.log("T3");
-                        fileType = "image/png";
-                    } catch (err) {
-                        console.log("T4");
-                        console.error(err);
-                    }
+                    convertBmpToPng(this.data)
+                        .then(data => {
+                            this.data = data;
+                            this.fileType = "image/png";
+                            this.state = "success";
+                            this.updateLog();
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            this.fileType = fileType;
+                            this.state = "success";
+                            this.updateLog();
+                        });
+                } else {
+                    this.fileType = fileType;
+                    this.state = "success";
                 }
-
-                this.fileType = fileType;
-
-                this.state = "success";
             }
         }
     }

@@ -64,7 +64,6 @@
     "archiver": "^2.1.1",
     "better-sqlite3": "^4.1.4",
     "bind-decorator": "^1.0.11",
-    "bmp-js": "0.0.3",
     "bootstrap": "^4.1.1",
     "cache-require-paths": "^0.3.0",
     "classnames": "^2.2.6",

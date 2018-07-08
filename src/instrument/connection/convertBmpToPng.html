@@ -1,0 +1,34 @@
+<script>
+    const { ipcRenderer } = require('electron')
+
+    window.onload = () => {
+        ipcRenderer.on('convertBmpToPng', (event, data) => {
+            const image = new Image();
+
+            image.onload = () => {
+                const canvas = document.createElement("canvas");
+                canvas.width = image.width;
+                canvas.height = image.height;
+                const ctx = canvas.getContext("2d");
+                if (ctx) {
+                    ctx.drawImage(image, 0, 0);
+                    const pngDataBase64 = canvas.toDataURL("image/png");
+                    var pngData = Buffer.from(
+                        pngDataBase64.slice("data:image/png;base64,".length),
+                        "base64"
+                    );
+
+                    event.sender.send('convertBmpToPngResult', null, pngData.toString("binary"));
+                } else {
+                    event.sender.send('convertBmpToPngResult', "canvas getContext failed");
+                }
+            };
+
+            image.onerror = () => {
+                event.sender.send('convertBmpToPngResult', "image load failed");
+            };
+
+            image.src = "data:image/bmp;base64," + Buffer.from(data, "binary").toString("base64");
+        });
+    };
+</script>
