@@ -390,8 +390,15 @@ export class Waveform extends FileHistoryItem {
         let migrated = false;
 
         if (this.waveformHistoryItemMessage.waveformDefinition) {
+            const oldFormat = this.waveformDefinition && this.waveformDefinition.format;
             this.waveformDefinition = this.waveformHistoryItemMessage.waveformDefinition;
             migrated = this.migrateWaveformDefinition();
+            if (!migrated) {
+                if (oldFormat !== this.waveformDefinition.format) {
+                    // recalculate range
+                    migrated = true;
+                }
+            }
         } else {
             this.waveformDefinition = this.getDefaultWaveformDefinition();
             migrated = true;
