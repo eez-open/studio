@@ -99,7 +99,7 @@ export function convertBmpToPng(data: string) {
         browserWindow.webContents.once("dom-ready", () => {
             browserWindow.webContents.send("convertBmpToPng", data);
 
-            ipcMain.on("convertBmpToPngResult", (event: any, error: any, data: string) => {
+            const onConvertBmpToPngResult = (event: any, error: any, data: string) => {
                 if (browserWindow.webContents === event.sender) {
                     if (error) {
                         reject(error);
@@ -107,8 +107,11 @@ export function convertBmpToPng(data: string) {
                         resolve(data);
                     }
                     browserWindow.close();
+                    ipcMain.removeListener("convertBmpToPngResult", onConvertBmpToPngResult);
                 }
-            });
+            };
+
+            ipcMain.on("convertBmpToPngResult", onConvertBmpToPngResult);
         });
 
         browserWindow.loadURL(`file://${__dirname}/convertBmpToPng.html`);

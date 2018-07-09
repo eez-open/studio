@@ -49,9 +49,7 @@ export class FileDownload extends FileTransfer {
         this.data += data;
 
         this.updateState();
-
         this.updateLog();
-
         this.setTimeout();
     }
 
@@ -135,12 +133,14 @@ export class FileDownload extends FileTransfer {
                             this.fileType = "image/png";
                             this.state = "success";
                             this.updateLog();
+                            this.clearTimeout();
                         })
                         .catch(err => {
                             console.error(err);
                             this.fileType = fileType;
                             this.state = "success";
                             this.updateLog();
+                            this.clearTimeout();
                         });
                 } else {
                     this.fileType = fileType;
@@ -148,6 +148,8 @@ export class FileDownload extends FileTransfer {
                 }
             }
         }
+
+        return true;
     }
 
     serializeState() {
