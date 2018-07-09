@@ -324,7 +324,7 @@ export class DlogWaveform extends FileHistoryItem {
         return channels;
     }
 
-    @observable
+    @computed
     get hasJitterColumn() {
         if (!this.values) {
             return false;
