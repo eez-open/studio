@@ -158,7 +158,7 @@ export class WaveformAxisModel implements IAxisModel {
     get minValue() {
         return (
             this.waveform.minValue -
-            CONF_RANGE_OVERFLOW_PERCENT / 100 * (this.waveform.maxValue - this.waveform.minValue)
+            (CONF_RANGE_OVERFLOW_PERCENT / 100) * (this.waveform.maxValue - this.waveform.minValue)
         );
     }
 
@@ -166,7 +166,7 @@ export class WaveformAxisModel implements IAxisModel {
     get maxValue() {
         return (
             this.waveform.maxValue +
-            CONF_RANGE_OVERFLOW_PERCENT / 100 * (this.waveform.maxValue - this.waveform.minValue)
+            (CONF_RANGE_OVERFLOW_PERCENT / 100) * (this.waveform.maxValue - this.waveform.minValue)
         );
     }
 
@@ -303,6 +303,8 @@ export class Waveform extends FileHistoryItem {
                         }
                     );
                 }
+
+                this.initWaveformDefinition();
             }
         );
     }
@@ -572,7 +574,7 @@ export class Waveform extends FileHistoryItem {
                 .majorSubdivision.vertical;
 
             return {
-                offset: (min + max) / 2 - verticalScale * subdivision / 2,
+                offset: (min + max) / 2 - (verticalScale * subdivision) / 2,
                 scale: verticalScale
             };
         }
