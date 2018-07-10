@@ -11,6 +11,7 @@ import { Point, pointDistance } from "shared/geometry";
 import { IUnit } from "shared/units";
 
 import { Draggable } from "shared/ui/draggable";
+import { Splitter } from "shared/ui/splitter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -425,8 +426,7 @@ class DynamicAxisController extends AxisController {
                     if (!linesMap.has(px)) {
                         let opacity = clamp(
                             minColorOpacity +
-                                (maxColorOpacity - minColorOpacity) *
-                                    (unitPx - minDistanceInPx) /
+                                ((maxColorOpacity - minColorOpacity) * (unitPx - minDistanceInPx)) /
                                     (maxDistanceInPx - minDistanceInPx),
                             minColorOpacity,
                             maxColorOpacity
@@ -586,7 +586,7 @@ class DynamicAxisController extends AxisController {
             distance = this.range;
         }
 
-        let from = this.from + (this.distance - distance) * pivotPx / this.distancePx;
+        let from = this.from + ((this.distance - distance) * pivotPx) / this.distancePx;
         let to = from + distance;
 
         if (from < this.minValue) {
@@ -938,9 +938,7 @@ class FixedAxisController extends AxisController {
         if (newScale !== this.subdivisionScale) {
             let fixedOffset =
                 this.subdivisionOffset +
-                (this.subdivisionScale - newScale) *
-                    this.majorSubdivison *
-                    pivotPx /
+                ((this.subdivisionScale - newScale) * this.majorSubdivison * pivotPx) /
                     this.distancePx;
 
             if (fixedOffset > this.maxValue - this.majorSubdivison * newScale) {
@@ -1403,8 +1401,7 @@ export class ChartsController {
         }
 
         return (
-            this.viewOptions.axesLines.majorSubdivision.horizontal *
-            this.maxChartHeight /
+            (this.viewOptions.axesLines.majorSubdivision.horizontal * this.maxChartHeight) /
             this.viewOptions.axesLines.majorSubdivision.vertical
         );
     }
@@ -1420,8 +1417,7 @@ export class ChartsController {
             this.maxChartHeight / this.viewOptions.axesLines.majorSubdivision.vertical
         ) {
             return (
-                this.viewOptions.axesLines.majorSubdivision.vertical *
-                this.maxChartWidth /
+                (this.viewOptions.axesLines.majorSubdivision.vertical * this.maxChartWidth) /
                 this.viewOptions.axesLines.majorSubdivision.horizontal
             );
         }
@@ -1908,21 +1904,21 @@ class AxisView extends React.Component<
             y1 = chartsController.xAxisHeight - SCROLL_BAR_SIZE - ZOOM_ICON_SIZE;
         } else if (axisController.position === "y") {
             x1 = chartsController.chartLeft - chartsController.minLeftMargin + SCROLL_BAR_SIZE;
-            y1 = chartsController.chartBottom - 3 * ZOOM_ICON_SIZE / 2;
+            y1 = chartsController.chartBottom - (3 * ZOOM_ICON_SIZE) / 2;
         } else {
             x1 =
                 chartsController.chartRight +
                 chartsController.minRightMargin -
                 ZOOM_ICON_SIZE -
                 SCROLL_BAR_SIZE;
-            y1 = chartsController.chartBottom - 3 * ZOOM_ICON_SIZE / 2;
+            y1 = chartsController.chartBottom - (3 * ZOOM_ICON_SIZE) / 2;
         }
 
         let x2;
         let y2;
 
         if (axisController.position === "x") {
-            x2 = chartsController.chartRight - 3 * ZOOM_ICON_SIZE / 2;
+            x2 = chartsController.chartRight - (3 * ZOOM_ICON_SIZE) / 2;
             y2 = y1;
         } else if (axisController.position === "y") {
             x2 = x1;
@@ -2365,15 +2361,15 @@ class Cursor implements ICursor {
                     <React.Fragment>
                         <rect
                             x={point.x - CONF_CURSOR_RADIUS / 8}
-                            y={point.y - CONF_CURSOR_RADIUS * 2 / 3}
+                            y={point.y - (CONF_CURSOR_RADIUS * 2) / 3}
                             width={CONF_CURSOR_RADIUS / 4}
-                            height={CONF_CURSOR_RADIUS * 4 / 3}
+                            height={(CONF_CURSOR_RADIUS * 4) / 3}
                             fill={this.yAxisController.axisModel.color}
                         />
                         <rect
-                            x={point.x - CONF_CURSOR_RADIUS * 2 / 3}
+                            x={point.x - (CONF_CURSOR_RADIUS * 2) / 3}
                             y={point.y - CONF_CURSOR_RADIUS / 8}
-                            width={CONF_CURSOR_RADIUS * 4 / 3}
+                            width={(CONF_CURSOR_RADIUS * 4) / 3}
                             height={CONF_CURSOR_RADIUS / 4}
                             fill={this.yAxisController.axisModel.color}
                         />
@@ -2672,6 +2668,24 @@ export class ChartView extends React.Component<
     }
 }
 
+class MarkersComponent extends React.Component<{ label: string }> {
+    render() {
+        return this.props.label;
+    }
+}
+
+class MeasurementsComponent extends React.Component<{ label: string }> {
+    render() {
+        return this.props.label;
+    }
+}
+
+class ViewOptionsComponent extends React.Component<{ label: string }> {
+    render() {
+        return this.props.label;
+    }
+}
+
 interface ChartsViewInterface {
     chartsController: ChartsController;
     className?: string;
@@ -2722,6 +2736,8 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             }
         });
 
+        this.updateLayoutSize();
+
         this.animationFrameRequestId = window.requestAnimationFrame(this.frameAnimation);
     }
 
@@ -2731,13 +2747,126 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
         }
     }
 
+    @observable dockVisible: boolean = true;
+
+    @action.bound
+    toggleDockVisible() {
+        this.dockVisible = !this.dockVisible;
+    }
+
+    layoutDiv: HTMLDivElement | null;
+    layout: any;
+    layoutWidth: number | undefined;
+    layoutHeight: number | undefined;
+
+    updateLayout() {
+        if (this.layout) {
+            if (!(this.props.chartsController.mode === "interactive" && this.layoutDiv)) {
+                this.layout.destroy();
+                this.layout = undefined;
+                this.layoutWidth = undefined;
+                this.layoutHeight = undefined;
+            }
+        } else {
+            if (this.props.chartsController.mode === "interactive" && this.layoutDiv) {
+                var config = {
+                    settings: {
+                        showPopoutIcon: false,
+                        showMaximiseIcon: false,
+                        showCloseIcon: false
+                    },
+                    dimensions: {
+                        borderWidth: 8
+                    },
+                    content: [
+                        {
+                            type: "column",
+                            content: [
+                                {
+                                    type: "component",
+                                    componentName: "MarkersComponent",
+                                    componentState: { label: "A" },
+                                    title: "Markers",
+                                    isClosable: false
+                                },
+                                {
+                                    type: "component",
+                                    componentName: "MeasurementsComponent",
+                                    componentState: { label: "B" },
+                                    title: "Measurements",
+                                    isClosable: false
+                                },
+                                {
+                                    type: "component",
+                                    componentName: "ViewOptionsComponent",
+                                    componentState: { label: "C" },
+                                    title: "View Options",
+                                    isClosable: false
+                                }
+                            ]
+                        }
+                    ]
+                };
+
+                this.layout = new GoldenLayout(config, this.layoutDiv);
+
+                this.layout.registerComponent("MarkersComponent", function(
+                    container: any,
+                    componentState: any
+                ) {
+                    ReactDOM.render(
+                        <MarkersComponent label={componentState.label} />,
+                        container.getElement()[0]
+                    );
+                });
+
+                this.layout.registerComponent("MeasurementsComponent", function(
+                    container: any,
+                    componentState: any
+                ) {
+                    ReactDOM.render(
+                        <MeasurementsComponent label={componentState.label} />,
+                        container.getElement()[0]
+                    );
+                });
+
+                this.layout.registerComponent("ViewOptionsComponent", function(
+                    container: any,
+                    componentState: any
+                ) {
+                    ReactDOM.render(
+                        <ViewOptionsComponent label={componentState.label} />,
+                        container.getElement()[0]
+                    );
+                });
+
+                this.layout.init();
+            }
+        }
+    }
+
+    updateLayoutSize() {
+        if (this.layout) {
+            const rect = this.layoutDiv!.parentElement!.getBoundingClientRect();
+            if (this.layoutWidth !== rect.width || this.layoutHeight !== rect.height) {
+                this.layout.updateSize(rect.width, rect.height);
+                this.layoutWidth = rect.width;
+                this.layoutHeight = rect.height;
+            }
+        }
+    }
+
     componentDidMount() {
         this.frameAnimation();
         this.setFocus();
+
+        this.updateLayout();
     }
 
     componentDidUpdate() {
         this.setFocus();
+
+        this.updateLayout();
     }
 
     componentWillUnmount() {
@@ -2779,7 +2908,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             />
         ));
 
-        return (
+        const div = (
             <div
                 ref={ref => (this.div = ref)}
                 className={className}
@@ -2792,5 +2921,37 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
                 </svg>
             </div>
         );
+
+        if (mode === "interactive" && this.dockVisible) {
+            return (
+                <Splitter
+                    type="horizontal"
+                    sizes={"100%|240px"}
+                    persistId="shared/ui/chart"
+                    childrenOverflow="visible"
+                >
+                    {div}
+                    <div ref={ref => (this.layoutDiv = ref)} style={{ overflow: "visible" }}>
+                        <div
+                            className="EezStudio_VerticalDockSwitcher_Right"
+                            onClick={this.toggleDockVisible}
+                        />
+                    </div>
+                </Splitter>
+            );
+        } else {
+            return (
+                <React.Fragment>
+                    {div}
+                    {mode === "interactive" &&
+                        !this.dockVisible && (
+                            <div
+                                className="EezStudio_VerticalDockSwitcher_Right EezStudio_VerticalDockSwitcher_Right_Closed"
+                                onClick={this.toggleDockVisible}
+                            />
+                        )}
+                </React.Fragment>
+            );
+        }
     }
 }

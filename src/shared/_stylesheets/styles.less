@@ -1,6 +1,7 @@
 @import "vars.less";
 @import "quill.less";
 @import "transitions.less";
+@import "goldenlayout.less";
 
 * {
     user-select: none;
@@ -489,9 +490,9 @@ input[type="color"] {
 }
 
 .EezStudio_Splitter {
-    background-color: @panel-header-color;
+    background-color: @splitter-background-color;
 
-    border-color: @border-color;
+    border-color: @splitter-border-color;
 
     &.EezStudio_Splitter_Horizontal {
         background-image: url(../../shared/_images/splitter_horizontal_thumb.png);
@@ -505,7 +506,7 @@ input[type="color"] {
     background-position: center center;
 
     &:hover {
-        background-color: @border-color;
+        background-color: @splitter-hover-color;
     }
 }
 
@@ -736,5 +737,39 @@ DESIGNER
 
     .EezStudio_DesignerSelection_Handle.BottomRight {
         cursor: se-resize;
+    }
+}
+
+@dock-switcher-size: 44px;
+
+.EezStudio_VerticalDockSwitcher_Right {
+    position: absolute;
+    left: -@dock-switcher-size / 2 - @splitter-size;
+    top: calc(50% - @dock-switcher-size / 2);
+    width: @dock-switcher-size / 2;
+    height: @dock-switcher-size;
+    border-top-left-radius: @dock-switcher-size / 2;
+    border-bottom-left-radius: @dock-switcher-size / 2;
+    background-color: @panel-header-color;
+    border: 1px solid @border-color;
+    overflow: hidden;
+
+    &::before {
+        font-family: "Material Icons";
+        content: "chevron_right";
+        color: @dark-text-color;
+        font-size: @dock-switcher-size * 0.64;
+    }
+
+    &:hover {
+        background-color: @border-color;
+    }
+
+    &.EezStudio_VerticalDockSwitcher_Right_Closed {
+        left: calc(100% - @dock-switcher-size / 2);
+    }
+
+    &.EezStudio_VerticalDockSwitcher_Right_Closed::before {
+        content: "chevron_left";
     }
 }

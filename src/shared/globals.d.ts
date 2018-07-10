@@ -20,3 +20,8 @@ interface HTMLCanvasElement {
 interface CanvasRenderingContext2D {
     commit(): void;
 }
+
+//
+declare class GoldenLayout {
+    constructor(config: any, layout: any);
+}

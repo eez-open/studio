@@ -17,6 +17,9 @@ interface SplitterProps {
     sizes: string;
 
     persistId?: string;
+
+    overflow?: string;
+    childrenOverflow?: string;
 }
 
 interface IDraggableParams {
@@ -139,7 +142,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         for (let i = 0; i < this.sizes.length; i++) {
             if (!this.childIsFixed[i]) {
                 this.sizes[i] = Math.floor(
-                    this.idealSizes[i] * availableSizeForStretchableChildren / 100
+                    (this.idealSizes[i] * availableSizeForStretchableChildren) / 100
                 );
                 availableSize -= this.sizes[i];
             }
@@ -189,7 +192,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
             if (this.childIsFixed[i]) {
                 this.idealSizes[i] = this.sizes[i];
             } else {
-                this.idealSizes[i] = Math.round(100 * this.sizes[i] / sizeStretchable);
+                this.idealSizes[i] = Math.round((100 * this.sizes[i]) / sizeStretchable);
             }
         }
 
@@ -226,7 +229,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         for (let i = 0; i < children.length; i++) {
             let style: React.CSSProperties = {
                 position: "absolute",
-                overflow: "auto",
+                overflow: this.props.childrenOverflow || "auto",
                 boxSizing: "border-box",
                 left: (this.props.type === "horizontal" ? this.offsets[i] : 0) + "px",
                 top: (this.props.type === "vertical" ? this.offsets[i] : 0) + "px",
@@ -274,7 +277,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         ////////////////////////////////////////////////////////////////////////////////
 
         let style: React.CSSProperties = {
-            overflow: "hidden",
+            overflow: this.props.overflow || "hidden",
             position: "absolute",
             left: 0,
             top: 0,
