@@ -1,5 +1,5 @@
 import * as React from "react";
-import { observable, computed, autorun, toJS } from "mobx";
+import { observable, computed, reaction, toJS } from "mobx";
 
 import { objectEqual, formatDateTimeLong } from "shared/util";
 import { capitalize } from "shared/string";
@@ -15,6 +15,8 @@ import {
     ZoomMode,
     LineController
 } from "shared/ui/chart/chart";
+import { RulersModel } from "shared/ui/chart/rulers";
+import { MeasurementsModel } from "shared/ui/chart/measurements";
 import { IWaveform } from "shared/ui/chart/render";
 import { WaveformFormat, initValuesAccesor } from "shared/ui/chart/buffer";
 
@@ -226,28 +228,88 @@ export class DlogWaveform extends FileHistoryItem {
             this.isVisible = activityLogEntry.isVisible;
         }
 
-        // save viewOptions when changed
-        autorun(() => {
-            let message = JSON.parse(this.message);
-            let viewOptions = toJS(this.viewOptions);
+        const message = JSON.parse(this.message);
 
-            if (!objectEqual(message.viewOptions, viewOptions)) {
-                logUpdate(
-                    {
-                        id: this.id,
-                        oid: this.oid,
-                        message: JSON.stringify(
-                            Object.assign(message, {
-                                viewOptions
-                            })
-                        )
-                    },
-                    {
-                        undoable: false
-                    }
-                );
+        this.viewOptions = new ViewOptions(message.viewOptions);
+        this.rulers = new RulersModel(message.rulers);
+        this.measurements = new MeasurementsModel(message.measurements);
+
+        // save viewOptions when changed
+        reaction(
+            () => toJS(this.viewOptions),
+            viewOptions => {
+                const message = JSON.parse(this.message);
+                if (!objectEqual(message.viewOptions, viewOptions)) {
+                    logUpdate(
+                        {
+                            id: this.id,
+                            oid: this.oid,
+                            message: JSON.stringify(
+                                Object.assign(message, {
+                                    viewOptions
+                                })
+                            )
+                        },
+                        {
+                            undoable: false
+                        }
+                    );
+                }
             }
-        });
+        );
+
+        // save rulers when changed
+        reaction(
+            () => toJS(this.rulers),
+            rulers => {
+                if (rulers.pauseDbUpdate) {
+                    return;
+                }
+                delete rulers.pauseDbUpdate;
+
+                const message = JSON.parse(this.message);
+                if (!objectEqual(message.rulers, rulers)) {
+                    logUpdate(
+                        {
+                            id: this.id,
+                            oid: this.oid,
+                            message: JSON.stringify(
+                                Object.assign(message, {
+                                    rulers
+                                })
+                            )
+                        },
+                        {
+                            undoable: false
+                        }
+                    );
+                }
+            }
+        );
+
+        // save measurements when changed
+        reaction(
+            () => toJS(this.measurements),
+            measurements => {
+                const message = JSON.parse(this.message);
+                if (!objectEqual(message.measurements, measurements)) {
+                    logUpdate(
+                        {
+                            id: this.id,
+                            oid: this.oid,
+                            message: JSON.stringify(
+                                Object.assign(message, {
+                                    measurements
+                                })
+                            )
+                        },
+                        {
+                            undoable: false
+                        }
+                    );
+                }
+            }
+        );
     }
 
     @computed
@@ -379,30 +441,29 @@ export class DlogWaveform extends FileHistoryItem {
 
         chartController.createYAxisController(channel.unit, channel.axisModel);
 
-        chartController.lineControllers.push(
-            new DlogWaveformLineController(
-                "waveform-" + chartController.yAxisController.position,
-                this,
-                chartController.yAxisController,
-                channel,
-                this.values || ""
-            )
+        const lineController = new DlogWaveformLineController(
+            "waveform-" + chartController.yAxisController.position,
+            this,
+            chartController.yAxisController,
+            channel,
+            this.values || ""
         );
+
+        chartController.lineControllers.push(lineController);
+
+        const waveformModel = Object.assign({}, lineController.waveform, {
+            rulers: this.rulers,
+            measurements: this.measurements
+        });
+
+        chartController.createRulersController(waveformModel);
 
         return chartController;
     }
 
-    @computed
-    get viewOptions() {
-        let message = JSON.parse(this.message);
-        let viewOptions: ViewOptions;
-        if (message.viewOptions) {
-            viewOptions = new ViewOptions(message.viewOptions);
-        } else {
-            viewOptions = new ViewOptions();
-        }
-        return viewOptions;
-    }
+    viewOptions: ViewOptions;
+    rulers: RulersModel;
+    measurements: MeasurementsModel;
 
     xAxisModel = new WaveformTimeAxisModel(this);
 

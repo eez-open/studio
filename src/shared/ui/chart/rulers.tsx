@@ -491,8 +491,14 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         }
 
         this.outsideChangeInXRulersSubscriptionDisposer = autorun(() => {
-            const x1 = this.chartController.xAxisController.unit.formatValue(this.rulersModel.x1);
-            const x2 = this.chartController.xAxisController.unit.formatValue(this.rulersModel.x2);
+            const x1 = this.chartController.xAxisController.unit.formatValue(
+                this.rulersModel.x1,
+                4
+            );
+            const x2 = this.chartController.xAxisController.unit.formatValue(
+                this.rulersModel.x2,
+                4
+            );
             if (!this.isInsideChange) {
                 runInAction(() => {
                     this.x1 = x1;
@@ -508,8 +514,14 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         }
 
         this.outsideChangeInYRulersSubscriptionDisposer = autorun(() => {
-            const y1 = this.chartController.yAxisController.unit.formatValue(this.rulersModel.y1);
-            const y2 = this.chartController.yAxisController.unit.formatValue(this.rulersModel.y2);
+            const y1 = this.chartController.yAxisController.unit.formatValue(
+                this.rulersModel.y1,
+                4
+            );
+            const y2 = this.chartController.yAxisController.unit.formatValue(
+                this.rulersModel.y2,
+                4
+            );
             if (!this.isInsideChange) {
                 runInAction(() => {
                     this.y1 = y1;
@@ -689,7 +701,8 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                                                 type="text"
                                                 className="form-control"
                                                 value={this.chartController.xAxisController.unit.formatValue(
-                                                    this.rulersModel.x2 - this.rulersModel.x1
+                                                    this.rulersModel.x2 - this.rulersModel.x1,
+                                                    4
                                                 )}
                                                 readOnly={true}
                                             />
@@ -760,7 +773,8 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                                                 type="text"
                                                 className="form-control"
                                                 value={this.chartController.yAxisController.unit.formatValue(
-                                                    this.rulersModel.y2 - this.rulersModel.y1
+                                                    this.rulersModel.y2 - this.rulersModel.y1,
+                                                    4
                                                 )}
                                                 readOnly={true}
                                             />
