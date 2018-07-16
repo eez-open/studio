@@ -204,7 +204,7 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
 
     @computed
     get originalShortcut() {
-        if (this.extension && this.extension.properties.shortcuts) {
+        if (this.extension && this.extension.properties && this.extension.properties.shortcuts) {
             return this.extension.properties.shortcuts!.find(
                 shortcut => shortcut.id === this.props.shortcut.originalId
             );

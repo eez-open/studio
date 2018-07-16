@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { observable, computed, action, runInAction } from "mobx";
+import { observable, computed, action, runInAction, autorun, toJS } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
@@ -12,6 +12,11 @@ import { IUnit } from "shared/units";
 
 import { Draggable } from "shared/ui/draggable";
 import { Splitter } from "shared/ui/splitter";
+import { ChartViewOptionsProps, ChartViewOptions } from "shared/ui/chart/view-options";
+import { WaveformRenderAlgorithm } from "shared/ui/chart/render";
+import { WaveformModel } from "shared/ui/chart/waveform";
+import { RulersController, RulersDockView } from "shared/ui/chart/rulers";
+import { MeasurementsDockView, MeasurementsController } from "shared/ui/chart/measurements";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -539,6 +544,12 @@ class DynamicAxisController extends AxisController {
     zoom(from: number, to: number) {
         let distance = to - from;
 
+        if (distance * this.maxScale < this.distancePx) {
+            distance = this.distancePx / this.maxScale;
+            from = (from + to - distance) / 2;
+            to = from + distance;
+        }
+
         if (distance < this.distance) {
             if (!this.zoomInEnabled) {
                 return;
@@ -1047,7 +1058,7 @@ export abstract class LineController implements ILineController {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////
 
 export class ChartController {
     constructor(public chartsController: ChartsController, public id: string) {}
@@ -1105,6 +1116,13 @@ export class ChartController {
     }
 
     onDragStart(chartView: ChartView, event: PointerEvent): MouseHandler | undefined {
+        if (this.rulersController) {
+            const mouseHandler = this.rulersController.onDragStart(chartView, event);
+            if (mouseHandler) {
+                return mouseHandler;
+            }
+        }
+
         for (let i = 0; i < this.lineControllers.length; i++) {
             const mouseHandler = this.lineControllers[i].onDragStart(chartView, event);
             if (mouseHandler) {
@@ -1210,6 +1228,14 @@ export class ChartController {
     customRender(): JSX.Element | null {
         return null;
     }
+
+    rulersController: RulersController;
+    measurementsController: MeasurementsController;
+
+    createRulersController(waveformModel: WaveformModel) {
+        this.rulersController = new RulersController(this, waveformModel);
+        this.measurementsController = new MeasurementsController(this, waveformModel);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1256,15 +1282,38 @@ export interface IViewOptions {
 }
 
 export class GlobalViewOptions {
+    static LOCAL_STORAGE_ITEM_ID = "shared/ui/chart/globalViewOptions";
+
     @observable enableZoomAnimations: boolean = true;
     @observable blackBackground: boolean = false;
+    @observable renderAlgorithm: WaveformRenderAlgorithm = "minmax";
+    @observable showSampledData: boolean = false;
+
+    constructor() {
+        const globalViewOptionsJSON = localStorage.getItem(GlobalViewOptions.LOCAL_STORAGE_ITEM_ID);
+        if (globalViewOptionsJSON) {
+            try {
+                const globakViewOptionsJS = JSON.parse(globalViewOptionsJSON);
+                runInAction(() => Object.assign(this, globakViewOptionsJS));
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        autorun(() => {
+            localStorage.setItem(
+                GlobalViewOptions.LOCAL_STORAGE_ITEM_ID,
+                JSON.stringify(toJS(this))
+            );
+        });
+    }
 }
 
 export const globalViewOptions = new GlobalViewOptions();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ChartsController {
+export abstract class ChartsController {
     constructor(
         public mode: ChartMode,
         private xAxisModel: IAxisModel,
@@ -1530,6 +1579,12 @@ export class ChartsController {
     zoomDefault() {
         this.xAxisController.zoomDefault();
         this.chartControllers.forEach(chartController => chartController.zoomDefault());
+    }
+
+    abstract get chartViewOptionsProps(): ChartViewOptionsProps;
+
+    get supportRulers() {
+        return false;
     }
 }
 
@@ -2384,6 +2439,8 @@ class Cursor implements ICursor {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 export type ChartMode = "preview" | "interactive" | "editable";
 
 @observer
@@ -2398,7 +2455,7 @@ export class ChartView extends React.Component<
     deltaY: number = 0;
     cursor = new Cursor(this);
     @observable mouseHandler: MouseHandler | undefined;
-
+    clipId = "c_" + guid();
     draggable = new Draggable(this);
 
     transformEventPoint(event: { clientX: number; clientY: number }) {
@@ -2603,8 +2660,6 @@ export class ChartView extends React.Component<
             );
         }
 
-        const clipId = "c_" + guid();
-
         return (
             <div className="EezStudio_ChartContainer">
                 <svg
@@ -2622,7 +2677,7 @@ export class ChartView extends React.Component<
                     <ChartBorder chartsController={chartController.chartsController} />
 
                     <defs>
-                        <clipPath id={clipId}>
+                        <clipPath id={this.clipId}>
                             <rect
                                 x={chartsController.chartLeft}
                                 y={chartsController.chartTop}
@@ -2654,10 +2709,14 @@ export class ChartView extends React.Component<
 
                         {chartsController.chartViewWidth &&
                             chartController.lineControllers.map(lineController =>
-                                lineController.render(clipId)
+                                lineController.render(this.clipId)
                             )}
 
                         {this.cursor.render()}
+
+                        {this.props.mode !== "preview" &&
+                            chartController.rulersController &&
+                            chartController.rulersController.render(this.clipId)}
 
                         {this.mouseHandler && this.mouseHandler.render()}
                     </g>
@@ -2668,23 +2727,212 @@ export class ChartView extends React.Component<
     }
 }
 
-class MarkersComponent extends React.Component<{ label: string }> {
+////////////////////////////////////////////////////////////////////////////////
+
+class SideDock extends React.Component<{
+    chartsController: ChartsController;
+}> {
+    static IS_OPEN_LOCAL_STORAGE_ITEM_ID = "shared/ui/chart/sideDock/isOpen";
+
+    static isOpen = observable.box<boolean>(
+        localStorage.getItem(SideDock.IS_OPEN_LOCAL_STORAGE_ITEM_ID) === "0" ? false : true
+    );
+
+    static toggleIsOpen() {
+        runInAction(() => {
+            SideDock.isOpen.set(!SideDock.isOpen.get());
+
+            localStorage.setItem(
+                SideDock.IS_OPEN_LOCAL_STORAGE_ITEM_ID,
+                SideDock.isOpen.get() ? "1" : "0"
+            );
+        });
+    }
+
+    containerDiv: HTMLDivElement | null;
+
+    goldenLayout: any;
+
+    lastWidth: number | undefined;
+    lastHeight: number | undefined;
+
+    get layoutLocalStorageItemId() {
+        return (
+            "shared/ui/chart/sideDock/layout/1" +
+            (this.props.chartsController.supportRulers ? "/with-rulers" : "")
+        );
+    }
+
+    get defaultLayoutConfig() {
+        var content = [];
+
+        if (this.props.chartsController.supportRulers) {
+            content.push(
+                {
+                    type: "component",
+                    componentName: "RulersDockView",
+                    componentState: {},
+                    title: "Rulers",
+                    isClosable: false
+                },
+                {
+                    type: "component",
+                    componentName: "MeasurementsDockView",
+                    componentState: {},
+                    title: "Measurements",
+                    isClosable: false
+                }
+            );
+        }
+
+        content.push({
+            type: "component",
+            componentName: "ChartViewOptions",
+            componentState: this.props.chartsController.chartViewOptionsProps,
+            title: "View Options",
+            isClosable: false
+        });
+
+        return {
+            settings: {
+                showPopoutIcon: false,
+                showMaximiseIcon: false,
+                showCloseIcon: false
+            },
+            dimensions: {
+                borderWidth: 8
+            },
+            content: [
+                {
+                    type: "column",
+                    content
+                }
+            ]
+        };
+    }
+
+    get layoutConfig() {
+        const savedStateJSON = localStorage.getItem(this.layoutLocalStorageItemId);
+        if (savedStateJSON) {
+            try {
+                return JSON.parse(savedStateJSON);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        return this.defaultLayoutConfig;
+    }
+
+    update() {
+        if (this.goldenLayout) {
+            if (!(this.props.chartsController.mode !== "preview" && this.containerDiv)) {
+                this.destroy();
+            }
+        } else {
+            if (this.props.chartsController.mode !== "preview" && this.containerDiv) {
+                const chartsController = this.props.chartsController;
+
+                this.goldenLayout = new GoldenLayout(this.layoutConfig, this.containerDiv);
+
+                this.goldenLayout.registerComponent("RulersDockView", function(
+                    container: any,
+                    props: any
+                ) {
+                    ReactDOM.render(
+                        <RulersDockView chartsController={chartsController} {...props} />,
+                        container.getElement()[0]
+                    );
+                });
+
+                this.goldenLayout.registerComponent("MeasurementsDockView", function(
+                    container: any,
+                    props: any
+                ) {
+                    ReactDOM.render(
+                        <MeasurementsDockView chartsController={chartsController} {...props} />,
+                        container.getElement()[0]
+                    );
+                });
+
+                this.goldenLayout.registerComponent("ChartViewOptions", function(
+                    container: any,
+                    props: ChartViewOptionsProps
+                ) {
+                    ReactDOM.render(
+                        <ChartViewOptions chartsController={chartsController} {...props} />,
+                        container.getElement()[0]
+                    );
+                });
+
+                this.goldenLayout.on("stateChanged", this.onStateChanged);
+
+                this.goldenLayout.init();
+            }
+        }
+    }
+
+    @bind
+    onStateChanged() {
+        const state = JSON.stringify(this.goldenLayout.toConfig());
+        localStorage.setItem(this.layoutLocalStorageItemId, state);
+    }
+
+    updateSize() {
+        if (this.goldenLayout) {
+            const rect = this.containerDiv!.parentElement!.getBoundingClientRect();
+            if (this.lastWidth !== rect.width || this.lastHeight !== rect.height) {
+                this.goldenLayout.updateSize(rect.width, rect.height);
+                this.lastWidth = rect.width;
+                this.lastHeight = rect.height;
+            }
+        }
+    }
+
+    destroy() {
+        if (this.goldenLayout) {
+            this.goldenLayout.destroy();
+            this.goldenLayout = undefined;
+            this.lastWidth = undefined;
+            this.lastHeight = undefined;
+        }
+    }
+
+    componentDidMount() {
+        this.update();
+    }
+
+    componentDidUpdate() {
+        this.update();
+    }
+
+    componentWillUnmount() {
+        this.destroy();
+    }
+
     render() {
-        return this.props.label;
+        const isOpen = SideDock.isOpen.get();
+
+        const dockSwitcherClassName = classNames("EezStudio_SideDockSwitch", {
+            EezStudio_SideDockSwitch_Closed: !isOpen
+        });
+
+        const dockSwitcher = (
+            <div className={dockSwitcherClassName} onClick={SideDock.toggleIsOpen} />
+        );
+
+        if (isOpen) {
+            return (
+                <div ref={ref => (this.containerDiv = ref)} style={{ overflow: "visible" }}>
+                    {dockSwitcher}
+                </div>
+            );
+        } else {
+            return dockSwitcher;
+        }
     }
 }
 
-class MeasurementsComponent extends React.Component<{ label: string }> {
-    render() {
-        return this.props.label;
-    }
-}
-
-class ViewOptionsComponent extends React.Component<{ label: string }> {
-    render() {
-        return this.props.label;
-    }
-}
+////////////////////////////////////////////////////////////////////////////////
 
 interface ChartsViewInterface {
     chartsController: ChartsController;
@@ -2696,6 +2944,11 @@ interface ChartsViewInterface {
 export class ChartsView extends React.Component<ChartsViewInterface, {}> {
     animationFrameRequestId: any;
     div: HTMLDivElement | null;
+    sideDock: SideDock | null;
+
+    get sideDockAvailable() {
+        return this.props.chartsController.mode !== "preview";
+    }
 
     @action
     adjustSize() {
@@ -2736,7 +2989,9 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             }
         });
 
-        this.updateLayoutSize();
+        if (this.sideDock) {
+            this.sideDock.updateSize();
+        }
 
         this.animationFrameRequestId = window.requestAnimationFrame(this.frameAnimation);
     }
@@ -2747,126 +3002,13 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
         }
     }
 
-    @observable dockVisible: boolean = true;
-
-    @action.bound
-    toggleDockVisible() {
-        this.dockVisible = !this.dockVisible;
-    }
-
-    layoutDiv: HTMLDivElement | null;
-    layout: any;
-    layoutWidth: number | undefined;
-    layoutHeight: number | undefined;
-
-    updateLayout() {
-        if (this.layout) {
-            if (!(this.props.chartsController.mode === "interactive" && this.layoutDiv)) {
-                this.layout.destroy();
-                this.layout = undefined;
-                this.layoutWidth = undefined;
-                this.layoutHeight = undefined;
-            }
-        } else {
-            if (this.props.chartsController.mode === "interactive" && this.layoutDiv) {
-                var config = {
-                    settings: {
-                        showPopoutIcon: false,
-                        showMaximiseIcon: false,
-                        showCloseIcon: false
-                    },
-                    dimensions: {
-                        borderWidth: 8
-                    },
-                    content: [
-                        {
-                            type: "column",
-                            content: [
-                                {
-                                    type: "component",
-                                    componentName: "MarkersComponent",
-                                    componentState: { label: "A" },
-                                    title: "Markers",
-                                    isClosable: false
-                                },
-                                {
-                                    type: "component",
-                                    componentName: "MeasurementsComponent",
-                                    componentState: { label: "B" },
-                                    title: "Measurements",
-                                    isClosable: false
-                                },
-                                {
-                                    type: "component",
-                                    componentName: "ViewOptionsComponent",
-                                    componentState: { label: "C" },
-                                    title: "View Options",
-                                    isClosable: false
-                                }
-                            ]
-                        }
-                    ]
-                };
-
-                this.layout = new GoldenLayout(config, this.layoutDiv);
-
-                this.layout.registerComponent("MarkersComponent", function(
-                    container: any,
-                    componentState: any
-                ) {
-                    ReactDOM.render(
-                        <MarkersComponent label={componentState.label} />,
-                        container.getElement()[0]
-                    );
-                });
-
-                this.layout.registerComponent("MeasurementsComponent", function(
-                    container: any,
-                    componentState: any
-                ) {
-                    ReactDOM.render(
-                        <MeasurementsComponent label={componentState.label} />,
-                        container.getElement()[0]
-                    );
-                });
-
-                this.layout.registerComponent("ViewOptionsComponent", function(
-                    container: any,
-                    componentState: any
-                ) {
-                    ReactDOM.render(
-                        <ViewOptionsComponent label={componentState.label} />,
-                        container.getElement()[0]
-                    );
-                });
-
-                this.layout.init();
-            }
-        }
-    }
-
-    updateLayoutSize() {
-        if (this.layout) {
-            const rect = this.layoutDiv!.parentElement!.getBoundingClientRect();
-            if (this.layoutWidth !== rect.width || this.layoutHeight !== rect.height) {
-                this.layout.updateSize(rect.width, rect.height);
-                this.layoutWidth = rect.width;
-                this.layoutHeight = rect.height;
-            }
-        }
-    }
-
     componentDidMount() {
         this.frameAnimation();
         this.setFocus();
-
-        this.updateLayout();
     }
 
     componentDidUpdate() {
         this.setFocus();
-
-        this.updateLayout();
     }
 
     componentWillUnmount() {
@@ -2922,36 +3064,35 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             </div>
         );
 
-        if (mode === "interactive" && this.dockVisible) {
-            return (
-                <Splitter
-                    type="horizontal"
-                    sizes={"100%|240px"}
-                    persistId="shared/ui/chart"
-                    childrenOverflow="visible"
-                >
-                    {div}
-                    <div ref={ref => (this.layoutDiv = ref)} style={{ overflow: "visible" }}>
-                        <div
-                            className="EezStudio_VerticalDockSwitcher_Right"
-                            onClick={this.toggleDockVisible}
-                        />
-                    </div>
-                </Splitter>
+        if (this.sideDockAvailable) {
+            const sideDock = (
+                <SideDock
+                    chartsController={this.props.chartsController}
+                    ref={ref => (this.sideDock = ref)}
+                />
             );
+            if (SideDock.isOpen.get()) {
+                return (
+                    <Splitter
+                        type="horizontal"
+                        sizes={"100%|240px"}
+                        persistId="shared/ui/chart"
+                        childrenOverflow="visible"
+                    >
+                        {div}
+                        {sideDock}
+                    </Splitter>
+                );
+            } else {
+                return (
+                    <React.Fragment>
+                        {div}
+                        {sideDock}
+                    </React.Fragment>
+                );
+            }
         } else {
-            return (
-                <React.Fragment>
-                    {div}
-                    {mode === "interactive" &&
-                        !this.dockVisible && (
-                            <div
-                                className="EezStudio_VerticalDockSwitcher_Right EezStudio_VerticalDockSwitcher_Right_Closed"
-                                onClick={this.toggleDockVisible}
-                            />
-                        )}
-                </React.Fragment>
-            );
+            return div;
         }
     }
 }

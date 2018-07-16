@@ -33,6 +33,9 @@ src/project-editor/_stylesheets/main.css
 src/test/**/*.js
 src/test/**/*.js.map
 
+src/basic-measurements/**/*.js
+src/basic-measurements/**/*.js.map
+
 TODO.txt
 
 .cache-require-paths.json

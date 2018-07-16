@@ -1,6 +1,10 @@
 import { observable, computed, values } from "mobx";
 
-import { IExtension, IExtensionProperties } from "shared/extensions/extension";
+import {
+    IExtensionPropertiesFromMainJs,
+    IExtension,
+    IExtensionProperties
+} from "shared/extensions/extension";
 import { extensions } from "shared/extensions/extensions";
 import { isRenderer } from "shared/util";
 import { stringCompare } from "shared/string";
@@ -55,7 +59,7 @@ const instrumentToolboxGroup = computed(() => ({
     tools: instrumentExtensions.get().map((extension: IExtension) =>
         observable({
             id: extension.id,
-            icon: extension.image,
+            icon: extension.image || "",
             iconSize: 48,
             label: extension.name,
             title: extension.name,
@@ -70,13 +74,8 @@ const instrumentToolboxGroup = computed(() => ({
     )
 }));
 
-const instrumentExtension: IExtension = {
-    id: "instrument",
+const instrumentExtension: IExtensionPropertiesFromMainJs = {
     preInstalled: true,
-    name: "Instrument",
-    version: "0.1",
-    author: "Envox",
-    image: "",
 
     init() {
         if (!isRenderer()) {
@@ -142,9 +141,7 @@ const instrumentExtension: IExtension = {
         instrument: (id: string) => instruments.get(id)
     },
 
-    loadExtension: loadInstrumentExtension,
-
-    properties: {}
+    loadExtension: loadInstrumentExtension
 };
 
 export default instrumentExtension;

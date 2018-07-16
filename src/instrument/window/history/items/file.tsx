@@ -52,12 +52,23 @@ class ImagePreview extends React.Component<
         this.zoom = !this.zoom;
     }
 
+    @bind
+    onContextMenu(event: React.MouseEvent<HTMLDivElement>) {
+        if (this.zoom) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }
+
     render() {
         const img = <img src={this.props.src} onClick={this.toggleZoom} />;
 
         if (this.zoom) {
             return (
-                <VerticalHeaderWithBody className="EezStudio_ImagePreview zoom">
+                <VerticalHeaderWithBody
+                    className="EezStudio_ImagePreview zoom"
+                    onContextMenu={this.onContextMenu}
+                >
                     <Header>
                         <Toolbar />
                         <Toolbar>
@@ -73,7 +84,11 @@ class ImagePreview extends React.Component<
                 </VerticalHeaderWithBody>
             );
         } else {
-            return <div className="EezStudio_ImagePreview">{img}</div>;
+            return (
+                <div className="EezStudio_ImagePreview" onContextMenu={this.onContextMenu}>
+                    {img}
+                </div>
+            );
         }
     }
 }

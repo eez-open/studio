@@ -1,13 +1,10 @@
 import * as React from "react";
-import { action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { Toolbar } from "shared/ui/toolbar";
 import { ButtonAction } from "shared/ui/action";
-import { ChartsController } from "shared/ui/chart";
-
-import { ChartViewOptions, chartViewOptionsVisible } from "instrument/window/chart-view-options";
+import { ChartsController } from "shared/ui/chart/chart";
 
 import { Waveform } from "instrument/window/waveform/generic";
 import { MultiWaveform } from "instrument/window/waveform/multi";
@@ -28,11 +25,6 @@ export class WaveformToolbar extends React.Component<
         if (!(this.props.waveform instanceof DlogWaveform)) {
             this.props.waveform.openConfigurationDialog();
         }
-    }
-
-    @action.bound
-    showViewOptions() {
-        chartViewOptionsVisible.set(!chartViewOptionsVisible.get());
     }
 
     render() {
@@ -61,17 +53,7 @@ export class WaveformToolbar extends React.Component<
                         title="Zoom all"
                         onClick={this.props.chartsController.zoomAll}
                     />
-                    <ButtonAction
-                        text="View Options"
-                        className="btn-secondary"
-                        title="View options"
-                        onClick={this.showViewOptions}
-                    />
                 </Toolbar>
-                <ChartViewOptions
-                    chartsController={this.props.chartsController}
-                    showRenderAlgorithm={true}
-                />
             </React.Fragment>
         );
     }

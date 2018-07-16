@@ -2,11 +2,7 @@ import * as React from "react";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 
-import { ChartsController } from "shared/ui/chart";
-
-import { ChartViewOptions, chartViewOptionsVisible } from "instrument/window/chart-view-options";
-
-import { EnvelopeChartsController } from "instrument/window/lists/envelope";
+import { ChartsController } from "shared/ui/chart/chart";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -19,16 +15,11 @@ export type ChartsDisplayOption = "split" | "voltage" | "current" | "both";
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class ChartsViewOptions extends React.Component<{ chartsController: ChartsController }, {}> {
+export class CommonTools extends React.Component<{ chartsController: ChartsController }, {}> {
     @action
     onDisplayOptionChange(event: React.ChangeEvent<HTMLSelectElement>) {
         displayOption.set(event.target.value);
         localStorage.setItem("instrument/window/lists/displayOption", displayOption.get());
-    }
-
-    @action.bound
-    showViewOptions() {
-        chartViewOptionsVisible.set(!chartViewOptionsVisible.get());
     }
 
     render() {
@@ -47,24 +38,6 @@ export class ChartsViewOptions extends React.Component<{ chartsController: Chart
                                 </button>
                             </td>
                         )}
-                        <td>
-                            <button
-                                className="btn btn-secondary"
-                                title="View options"
-                                onClick={this.showViewOptions}
-                            >
-                                View Options
-                            </button>
-                            {chartViewOptionsVisible.get() && (
-                                <ChartViewOptions
-                                    chartsController={this.props.chartsController}
-                                    showShowSampledDataOption={
-                                        this.props.chartsController instanceof
-                                        EnvelopeChartsController
-                                    }
-                                />
-                            )}
-                        </td>
                         <td>
                             <label>Display</label>
                         </td>

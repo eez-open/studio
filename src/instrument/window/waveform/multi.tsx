@@ -16,7 +16,7 @@ import {
     SelectFromListProperty
 } from "shared/ui/properties";
 import { IListNode, ListItem } from "shared/ui/list";
-import { ChartMode, ChartsController, IAxisModel } from "shared/ui/chart";
+import { ChartMode, ChartsController, IAxisModel } from "shared/ui/chart/chart";
 import { Icon } from "shared/ui/icon";
 
 import { AppStore } from "instrument/window/app-store";
@@ -57,6 +57,17 @@ class MultiWaveformChartsController extends ChartsController {
         viewOptions: ViewOptions
     ) {
         super(mode, xAxisModel, viewOptions);
+    }
+
+    get chartViewOptionsProps() {
+        return {
+            showRenderAlgorithm: true,
+            showShowSampledDataOption: false
+        };
+    }
+
+    get supportRulers() {
+        return true;
     }
 }
 

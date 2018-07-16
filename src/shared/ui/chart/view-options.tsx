@@ -1,62 +1,12 @@
 import * as React from "react";
-import { observable, action, autorun, toJS, runInAction } from "mobx";
+import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
 
-import { ChartsController, ChartController, globalViewOptions } from "shared/ui/chart";
 import { Checkbox, Radio } from "shared/ui/properties";
 import { CONF_BORDER_COLOR } from "shared/ui/box";
-
-import { EnvelopeChartsController } from "instrument/window/lists/envelope";
-
-import { WaveformRenderAlgorithm } from "instrument/window/waveform/render";
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const chartViewOptionsVisible = observable.box<boolean>(false);
-
-export const renderAlgorithm = observable.box<WaveformRenderAlgorithm>(
-    (localStorage.getItem(
-        "instrument/window/waveform/renderAlgorithm"
-    ) as WaveformRenderAlgorithm) || "minmax"
-);
-
-function onChangeRenderAlgorithm(event: React.ChangeEvent<HTMLSelectElement>) {
-    const algorithm = event.target.value as WaveformRenderAlgorithm;
-    runInAction(() => renderAlgorithm.set(algorithm));
-    localStorage.setItem("instrument/window/waveform/renderAlgorithm", algorithm);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-autorun(() => {
-    localStorage.setItem(
-        "instrument/window/waveform/globalViewOptions",
-        JSON.stringify(toJS(globalViewOptions))
-    );
-});
-
-const globalViewOptionsJSON = localStorage.getItem("instrument/window/waveform/globalViewOptions");
-if (globalViewOptionsJSON) {
-    const globakViewOptionsJS = JSON.parse(globalViewOptionsJSON);
-    runInAction(() => Object.assign(globalViewOptions, globakViewOptionsJS));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const showSampledData = observable.box<boolean>(
-    localStorage.getItem("instrument/window/lists/envelope/showSampledData") === "1" || false
-);
-
-function setShowSampledData(checked: boolean) {
-    runInAction(() => {
-        showSampledData.set(checked);
-    });
-    localStorage.setItem(
-        "instrument/window/lists/envelope/showSampledData",
-        showSampledData.get() ? "1" : "0"
-    );
-}
+import { ChartsController, ChartController, globalViewOptions } from "shared/ui/chart/chart";
+import { WaveformRenderAlgorithm } from "shared/ui/chart/render";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,10 +22,14 @@ class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOption
     @observable yAxisSteps: string[];
     @observable yAxisStepsError: boolean[];
 
-    constructor(props: any) {
+    constructor(props: DynamicSubdivisionOptionsProps) {
         super(props);
 
         this.loadProps(this.props);
+    }
+
+    componentWillReceiveProps(props: DynamicSubdivisionOptionsProps) {
+        this.loadProps(props);
     }
 
     @action
@@ -103,10 +57,6 @@ class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOption
             }
         );
         this.yAxisStepsError = this.yAxisSteps.map(x => false);
-    }
-
-    componentWillReceiveProps(props: DynamicSubdivisionOptionsProps) {
-        this.loadProps(props);
     }
 
     render() {
@@ -230,10 +180,14 @@ class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsPro
 
     @observable majorSubdivisionHorizontalError: boolean;
 
-    constructor(props: any) {
+    constructor(props: FixedSubdivisionOptionsProps) {
         super(props);
 
         this.loadProps(this.props);
+    }
+
+    componentWillReceiveProps(props: FixedSubdivisionOptionsProps) {
+        this.loadProps(props);
     }
 
     @action
@@ -244,10 +198,6 @@ class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsPro
         this.majorSubdivisionVertical = axesLines.majorSubdivision.vertical;
         this.minorSubdivisionHorizontal = axesLines.minorSubdivision.horizontal;
         this.minorSubdivisionVertical = axesLines.minorSubdivision.vertical;
-    }
-
-    componentWillReceiveProps(props: FixedSubdivisionOptionsProps) {
-        this.loadProps(props);
     }
 
     render() {
@@ -364,30 +314,28 @@ class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsPro
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface ChartViewOptionsProps {
+    showRenderAlgorithm: boolean;
+    showShowSampledDataOption: boolean;
+}
+
 @observer
 export class ChartViewOptions extends React.Component<
-    {
+    ChartViewOptionsProps & {
         chartsController: ChartsController;
-        showRenderAlgorithm?: boolean;
-        showShowSampledDataOption?: boolean;
-    },
-    {}
+    }
 > {
     render() {
-        if (!chartViewOptionsVisible.get()) {
-            return null;
-        }
-
         const chartsController = this.props.chartsController;
         const viewOptions = chartsController.viewOptions;
 
         return (
-            <div className="EezStudio_ChartViewOptions">
+            <div className="EezStudio_SideDockView EezStudio_ChartViewOptions">
                 <div>
-                    <div className="EezStudio_ChartViewOptions_PropertyLabel">
+                    <div className="EezStudio_SideDockView_PropertyLabel">
                         Axes lines subdivision:
                     </div>
-                    <div className="EezStudio_ChartViewOptions_Property">
+                    <div className="EezStudio_SideDockView_Property">
                         <Radio
                             checked={viewOptions.axesLines.type === "dynamic"}
                             onChange={action(() => viewOptions.setAxesLinesType("dynamic"))}
@@ -407,30 +355,32 @@ export class ChartViewOptions extends React.Component<
                             <FixedSubdivisionOptions chartsController={chartsController} />
                         )}
                     </div>
-                    {this.props.chartsController instanceof EnvelopeChartsController && (
-                        <div className="EezStudio_ChartViewOptions_PropertyLabel">
-                            <Checkbox
-                                checked={viewOptions.axesLines.snapToGrid}
-                                onChange={action((checked: boolean) => {
-                                    viewOptions.setAxesLinesSnapToGrid(checked);
-                                })}
-                            >
-                                Snap to grid
-                            </Checkbox>
-                        </div>
-                    )}
+                    <div className="EezStudio_SideDockView_PropertyLabel">
+                        <Checkbox
+                            checked={viewOptions.axesLines.snapToGrid}
+                            onChange={action((checked: boolean) => {
+                                viewOptions.setAxesLinesSnapToGrid(checked);
+                            })}
+                        >
+                            Snap to grid
+                        </Checkbox>
+                    </div>
                 </div>
                 {this.props.showRenderAlgorithm && (
                     <div>
-                        <div className="EezStudio_ChartViewOptions_PropertyLabel">
+                        <div className="EezStudio_SideDockView_PropertyLabel">
                             Rendering algorithm:
                         </div>
-                        <div className="EezStudio_ChartViewOptions_Property">
+                        <div className="EezStudio_SideDockView_Property">
                             <select
                                 className="form-control"
                                 title="Chart rendering algorithm"
-                                value={renderAlgorithm.get()}
-                                onChange={onChangeRenderAlgorithm}
+                                value={globalViewOptions.renderAlgorithm}
+                                onChange={action(
+                                    (event: React.ChangeEvent<HTMLSelectElement>) =>
+                                        (globalViewOptions.renderAlgorithm = event.target
+                                            .value as WaveformRenderAlgorithm)
+                                )}
                             >
                                 <option value="avg">Average</option>
                                 <option value="minmax">Min-max</option>
@@ -493,7 +443,13 @@ export class ChartViewOptions extends React.Component<
                     </div>
                     {this.props.showShowSampledDataOption && (
                         <div>
-                            <Checkbox checked={showSampledData.get()} onChange={setShowSampledData}>
+                            <Checkbox
+                                checked={globalViewOptions.showSampledData}
+                                onChange={action(
+                                    (checked: boolean) =>
+                                        (globalViewOptions.showSampledData = checked)
+                                )}
+                            >
                                 Show sampled data
                             </Checkbox>
                         </div>

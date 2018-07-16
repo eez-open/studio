@@ -28,7 +28,7 @@ import {
     LineController,
     ChartView,
     MouseHandler
-} from "shared/ui/chart";
+} from "shared/ui/chart/chart";
 import { Toolbar } from "shared/ui/toolbar";
 import { ButtonAction, DropdownButtonAction, DropdownItem } from "shared/ui/action";
 import { showGenericDialog } from "shared/ui/generic-dialog";
@@ -47,8 +47,8 @@ import {
 import {
     displayOption,
     ChartsDisplayOption,
-    ChartsViewOptions
-} from "instrument/window/lists/charts-view-options";
+    CommonTools
+} from "instrument/window/lists/common-tools";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -369,7 +369,7 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
                         title="Edit properties"
                         onClick={this.editProperties}
                     />
-                    <ChartsViewOptions chartsController={this.props.chartsController} />
+                    <CommonTools chartsController={this.props.chartsController} />
                 </Toolbar>
             </Header>
         );
@@ -933,6 +933,13 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
 class TableChartsController extends ChartsController {
     constructor(public list: TableList, mode: ChartMode, xAxisModel: IAxisModel) {
         super(mode, xAxisModel, list.data.viewOptions);
+    }
+
+    get chartViewOptionsProps() {
+        return {
+            showRenderAlgorithm: false,
+            showShowSampledDataOption: false
+        };
     }
 }
 

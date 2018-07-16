@@ -220,7 +220,6 @@ function buildCommands(sdl: JQuery<any>, docPath: string) {
 export function getNotFoundInstrumentExtension(instrumentExtensionId: string) {
     return {
         id: instrumentExtensionId,
-        preInstalled: false,
         name: "no name",
         version: "no version",
         author: "no author",
@@ -288,7 +287,6 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                 const extension: IExtension = observable(
                     {
                         id,
-                        preInstalled: false,
                         type: "instrument",
                         name,
                         description:
@@ -328,7 +326,6 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
 
             const extension: IExtension = {
                 id: packageJSON["id"],
-                preInstalled: false,
                 type: "instrument",
                 name: "",
                 description: "",

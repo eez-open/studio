@@ -70,6 +70,7 @@ export class IconAction extends React.Component<
         selected?: boolean;
         enabled?: boolean;
         style?: React.CSSProperties;
+        color?: string;
     },
     {}
 > {

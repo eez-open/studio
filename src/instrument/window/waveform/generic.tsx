@@ -26,7 +26,10 @@ import {
     IViewOptions,
     IViewOptionsAxesLines,
     IViewOptionsAxesLinesType
-} from "shared/ui/chart";
+} from "shared/ui/chart/chart";
+import { RulersModel } from "shared/ui/chart/rulers";
+import { MeasurementsModel } from "shared/ui/chart/measurements";
+import { initValuesAccesor, WaveformFormat } from "shared/ui/chart/buffer";
 
 import { checkMime } from "instrument/connection/file-type";
 
@@ -35,7 +38,6 @@ import { ChartPreview } from "instrument/window/chart-preview";
 
 import { FileHistoryItem } from "instrument/window/history/items/file";
 
-import { initValuesAccesor, WaveformFormat } from "instrument/window/waveform/buffer";
 import { IWaveformLink } from "instrument/window/waveform/multi";
 import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
 import { WaveformLineView } from "instrument/window/waveform/line-view";
@@ -43,7 +45,7 @@ import { WaveformToolbar } from "instrument/window/waveform/toolbar";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type IWaveformDefinition = {
+interface IWaveformDefinition {
     samplingRate: number;
     format: WaveformFormat;
     unitName: keyof typeof UNITS;
@@ -54,11 +56,13 @@ type IWaveformDefinition = {
     scale: number;
     cachedMinValue: number;
     cachedMaxValue: number;
-};
+}
 
 export interface IWaveformHistoryItemMessage {
     waveformDefinition: IWaveformDefinition;
     viewOptions: ViewOptions;
+    rulers: RulersModel;
+    measurements: RulersModel;
     horizontalScale?: number;
     verticalScale?: number;
 }
@@ -260,6 +264,17 @@ export class WaveformChartsController extends ChartsController {
     constructor(public waveform: Waveform, mode: ChartMode, xAxisModel: IAxisModel) {
         super(mode, xAxisModel, waveform.viewOptions);
     }
+
+    get chartViewOptionsProps() {
+        return {
+            showRenderAlgorithm: true,
+            showShowSampledDataOption: false
+        };
+    }
+
+    get supportRulers() {
+        return true;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,6 +282,12 @@ export class WaveformChartsController extends ChartsController {
 export class Waveform extends FileHistoryItem {
     constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem, appStore: AppStore) {
         super(activityLogEntry, appStore);
+
+        const message = JSON.parse(this.message);
+
+        this.viewOptions = new ViewOptions(message.viewOptions);
+        this.rulers = new RulersModel(message.rulers);
+        this.measurements = new MeasurementsModel(message.measurements);
 
         when(
             () => this.transferSucceeded && this.isVisible,
@@ -277,16 +298,35 @@ export class Waveform extends FileHistoryItem {
             }
         );
 
+        // save waveformDefinition when changed
+        reaction(
+            () => toJS(this.waveformDefinition),
+            waveformDefinition => {
+                const message = JSON.parse(this.message);
+                if (!objectEqual(message.waveformDefinition, waveformDefinition)) {
+                    logUpdate(
+                        {
+                            id: this.id,
+                            oid: this.oid,
+                            message: JSON.stringify(
+                                Object.assign(message, {
+                                    waveformDefinition
+                                })
+                            )
+                        },
+                        {
+                            undoable: false
+                        }
+                    );
+                }
+            }
+        );
+
         // save viewOptions when changed
         reaction(
-            () => ({
-                message: this.message,
-                viewOptions: this.viewOptions
-            }),
-            () => {
-                let message = JSON.parse(this.message);
-                let viewOptions = toJS(this.viewOptions);
-
+            () => toJS(this.viewOptions),
+            viewOptions => {
+                const message = JSON.parse(this.message);
                 if (!objectEqual(message.viewOptions, viewOptions)) {
                     logUpdate(
                         {
@@ -303,8 +343,70 @@ export class Waveform extends FileHistoryItem {
                         }
                     );
                 }
+            }
+        );
 
-                this.initWaveformDefinition();
+        // save rulers when changed
+        reaction(
+            () => toJS(this.rulers),
+            rulers => {
+                if (rulers.pauseDbUpdate) {
+                    return;
+                }
+                delete rulers.pauseDbUpdate;
+
+                const message = JSON.parse(this.message);
+                if (!objectEqual(message.rulers, rulers)) {
+                    logUpdate(
+                        {
+                            id: this.id,
+                            oid: this.oid,
+                            message: JSON.stringify(
+                                Object.assign(message, {
+                                    rulers
+                                })
+                            )
+                        },
+                        {
+                            undoable: false
+                        }
+                    );
+                }
+            }
+        );
+
+        // save measurements when changed
+        reaction(
+            () => toJS(this.measurements),
+            measurements => {
+                const message = JSON.parse(this.message);
+                if (!objectEqual(message.measurements, measurements)) {
+                    logUpdate(
+                        {
+                            id: this.id,
+                            oid: this.oid,
+                            message: JSON.stringify(
+                                Object.assign(message, {
+                                    measurements
+                                })
+                            )
+                        },
+                        {
+                            undoable: false
+                        }
+                    );
+                }
+            }
+        );
+
+        //
+        reaction(
+            () => JSON.parse(this.message),
+            message => {
+                const waveformDefinition = toJS(this.waveformDefinition);
+                if (!objectEqual(message.waveformDefinition, waveformDefinition)) {
+                    this.initWaveformDefinition();
+                }
             }
         );
     }
@@ -408,29 +510,7 @@ export class Waveform extends FileHistoryItem {
 
         if (migrated) {
             this.findRange();
-            this.updateWaveformDefinition();
         }
-    }
-
-    updateWaveformDefinition(changes?: Partial<IWaveformDefinition>) {
-        logUpdate(
-            {
-                id: this.id,
-                oid: this.oid,
-                message: JSON.stringify(
-                    Object.assign({}, this.waveformHistoryItemMessage, {
-                        waveformDefinition: Object.assign(
-                            {},
-                            toJS(this.waveformDefinition),
-                            changes
-                        )
-                    })
-                )
-            },
-            {
-                undoable: false
-            }
-        );
     }
 
     @computed
@@ -460,7 +540,6 @@ export class Waveform extends FileHistoryItem {
 
     set offset(value: number) {
         this.waveformDefinition.offset = value;
-        this.updateWaveformDefinition();
     }
 
     get scale() {
@@ -469,7 +548,6 @@ export class Waveform extends FileHistoryItem {
 
     set scale(value: number) {
         this.waveformDefinition.scale = value;
-        this.updateWaveformDefinition();
     }
 
     @computed
@@ -477,17 +555,9 @@ export class Waveform extends FileHistoryItem {
         return this.waveformDefinition.samplingRate;
     }
 
-    @computed
-    get viewOptions() {
-        let message = JSON.parse(this.message);
-        let viewOptions: ViewOptions;
-        if (message.viewOptions) {
-            viewOptions = new ViewOptions(message.viewOptions);
-        } else {
-            viewOptions = new ViewOptions();
-        }
-        return viewOptions;
-    }
+    viewOptions: ViewOptions;
+    rulers: RulersModel;
+    measurements: MeasurementsModel;
 
     xAxisModel = new WaveformTimeAxisModel(this);
 
@@ -515,6 +585,8 @@ export class Waveform extends FileHistoryItem {
                 chartController.yAxisController
             )
         );
+
+        chartController.createRulersController(this);
 
         return chartController;
     }

@@ -14,7 +14,9 @@ import {
     IAxisModel,
     ZoomMode,
     LineController
-} from "shared/ui/chart";
+} from "shared/ui/chart/chart";
+import { IWaveform } from "shared/ui/chart/render";
+import { WaveformFormat, initValuesAccesor } from "shared/ui/chart/buffer";
 
 import { AppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
@@ -23,9 +25,7 @@ import { FileHistoryItem } from "instrument/window/history/items/file";
 
 import { MIME_EEZ_DLOG, checkMime } from "instrument/connection/file-type";
 
-import { WaveformFormat, initValuesAccesor } from "instrument/window/waveform/buffer";
 import { ViewOptions } from "instrument/window/waveform/generic";
-import { IWaveform } from "instrument/window/waveform/render";
 import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
 import { WaveformLineView } from "instrument/window/waveform/line-view";
 import { WaveformToolbar } from "instrument/window/waveform/toolbar";
@@ -171,6 +171,17 @@ class DlogWaveformLineController extends LineController {
 class DlogWaveformChartsController extends ChartsController {
     constructor(public dlogWaveform: DlogWaveform, mode: ChartMode, xAxisModel: IAxisModel) {
         super(mode, xAxisModel, dlogWaveform.viewOptions);
+    }
+
+    get chartViewOptionsProps() {
+        return {
+            showRenderAlgorithm: true,
+            showShowSampledDataOption: false
+        };
+    }
+
+    get supportRulers() {
+        return true;
     }
 }
 

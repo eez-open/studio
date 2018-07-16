@@ -13,7 +13,7 @@ import { IExtension } from "shared/extensions/extension";
 export class ExtensionShortcuts extends React.Component<{ extension: IExtension }, {}> {
     @computed
     get shortcutsStore() {
-        const shortcuts = this.props.extension.properties.shortcuts!;
+        const shortcuts = this.props.extension.properties!.shortcuts!;
         let shortcutsMap = new Map<string, IShortcut>();
         shortcuts.forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
         return {

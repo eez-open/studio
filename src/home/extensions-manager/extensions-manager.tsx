@@ -245,7 +245,7 @@ export class ExtensionSections extends React.Component<ExtensionSectionsProps, {
             availableSections.push("properties");
         }
 
-        if (this.props.extension.properties.shortcuts) {
+        if (this.props.extension.properties && this.props.extension.properties.shortcuts) {
             availableSections.push("shortcuts");
         }
 

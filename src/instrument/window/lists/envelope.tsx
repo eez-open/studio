@@ -20,20 +20,20 @@ import {
     ChartsController,
     ChartsView,
     getSnapToValue,
+    globalViewOptions,
     IAxisModel,
     ICursor,
     LineController,
     ILineController,
     MouseHandler,
     CONF_CURSOR_RADIUS
-} from "shared/ui/chart";
+} from "shared/ui/chart/chart";
 import { showPopup } from "shared/ui/popup";
 import { Toolbar } from "shared/ui/toolbar";
 import { ButtonAction, DropdownButtonAction, DropdownItem } from "shared/ui/action";
 import { showGenericDialog } from "shared/ui/generic-dialog";
 
 import { AppStore } from "instrument/window/app-store";
-import { showSampledData } from "instrument/window/chart-view-options";
 
 import { BaseList, BaseListData, ListAxisModel } from "instrument/window/lists/store-renderer";
 import {
@@ -45,8 +45,8 @@ import {
 import {
     displayOption,
     ChartsDisplayOption,
-    ChartsViewOptions
-} from "instrument/window/lists/charts-view-options";
+    CommonTools
+} from "instrument/window/lists/common-tools";
 import { TableLineController } from "instrument/window/lists/table";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1520,7 +1520,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                             />
                         </DropdownButtonAction>
                     </Toolbar>
-                    <ChartsViewOptions chartsController={this.props.chartsController} />
+                    <CommonTools chartsController={this.props.chartsController} />
                 </Toolbar>
             </Header>
         );
@@ -1568,6 +1568,13 @@ export class EnvelopeDetailsView extends React.Component<EnvelopeDetailsViewProp
 export class EnvelopeChartsController extends ChartsController {
     constructor(public list: EnvelopeList, mode: ChartMode, xAxisModel: IAxisModel) {
         super(mode, xAxisModel, list.data.viewOptions);
+    }
+
+    get chartViewOptionsProps() {
+        return {
+            showRenderAlgorithm: false,
+            showShowSampledDataOption: true
+        };
     }
 }
 
@@ -1618,7 +1625,7 @@ function getLineControllers(list: EnvelopeList, axisController: AxisController) 
         new EnvelopeLineController("envelope-" + axisController.position, axisController)
     );
 
-    if (showSampledData.get()) {
+    if (globalViewOptions.showSampledData) {
         lineControllers.push(
             new TableLineController(
                 "envelope-sample-data-" + axisController.position,

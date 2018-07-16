@@ -65,7 +65,6 @@ export interface IInstrumentObjectProps {
 
 const UNKNOWN_INSTRUMENT_EXTENSION: IExtension = {
     id: "",
-    preInstalled: false,
     name: "Unknown instrument",
     version: "no version",
     author: "no author",

@@ -31,10 +31,12 @@ function readFloat(data: any, i: number) {
 }
 
 export function initValuesAccesor(object: {
+    // input
     format: WaveformFormat;
     values: any;
     offset: number;
     scale: number;
+    // output
     length: number;
     value(value: number): number;
     waveformData(value: number): number;

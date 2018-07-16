@@ -57,24 +57,34 @@ export class Body extends React.Component<
 class HeaderWithBody extends React.Component<
     {
         className?: string;
+        onContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
     },
     {}
 > {
     render() {
         let className = classNames("EezStudio_HeaderWithBody", this.props.className);
-        return <div className={className}>{this.props.children}</div>;
+        return (
+            <div className={className} onContextMenu={this.props.onContextMenu}>
+                {this.props.children}
+            </div>
+        );
     }
 }
 
 export class VerticalHeaderWithBody extends React.Component<
     {
         className?: string;
+        onContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
     },
     {}
 > {
     render() {
         let className = classNames("EezStudio_HeaderWithBody_Vertical", this.props.className);
-        return <HeaderWithBody className={className}>{this.props.children}</HeaderWithBody>;
+        return (
+            <HeaderWithBody className={className} onContextMenu={this.props.onContextMenu}>
+                {this.props.children}
+            </HeaderWithBody>
+        );
     }
 }
 

@@ -740,9 +740,9 @@ DESIGNER
     }
 }
 
-@dock-switcher-size: 44px;
+.EezStudio_SideDockSwitch {
+    @dock-switcher-size: 44px;
 
-.EezStudio_VerticalDockSwitcher_Right {
     position: absolute;
     left: -@dock-switcher-size / 2 - @splitter-size;
     top: calc(50% - @dock-switcher-size / 2);
@@ -765,11 +765,105 @@ DESIGNER
         background-color: @border-color;
     }
 
-    &.EezStudio_VerticalDockSwitcher_Right_Closed {
+    &.EezStudio_SideDockSwitch_Closed {
         left: calc(100% - @dock-switcher-size / 2);
     }
 
-    &.EezStudio_VerticalDockSwitcher_Right_Closed::before {
+    &.EezStudio_SideDockSwitch_Closed::before {
         content: "chevron_left";
+    }
+}
+
+.EezStudio_SideDockView {
+    height: 100%;
+    overflow: auto;
+    padding: 10px;
+
+    .EezStudio_SideDockView_PropertyLabel:not(:last-child) {
+        margin-bottom: 5px;
+    }
+
+    .EezStudio_SideDockView_Property:not(:last-child) {
+        margin-bottom: 5px;
+    }
+
+    .EezStudio_SideDockView_Property {
+        margin-left: 16px;
+    }
+
+    table {
+        margin-left: 16px;
+        font-size: 80%;
+
+        td {
+            text-align: center;
+        }
+
+        td:first-child {
+            max-width: 120px;
+            text-align: left;
+            padding-right: 4px;
+        }
+
+        input {
+            padding: 0;
+            padding-left: 5px;
+        }
+    }
+
+    & > div {
+        padding-bottom: 10px;
+        border-bottom: 1px solid @border-color;
+        margin-bottom: 10px;
+    }
+
+    & > div:last-child {
+        padding-bottom: 0;
+        margin-bottom: 0;
+        border-bottom: none;
+    }
+
+    & > div.horizontal {
+        float: left;
+        padding-bottom: 0;
+        margin-left: 4px;
+        margin-bottom: 0;
+        border-bottom: none;
+    }
+}
+
+.EezStudio_MeasurementsSideDockView {
+    & > div {
+        border: none;
+    }
+
+    select {
+        width: 115px;
+    }
+
+    table {
+        td:first-child {
+            min-width: 120px;
+            max-width: none;
+        }
+
+        td:nth-child(2) {
+            width: 100%;
+        }
+    }
+}
+
+.EezStudio_ChartViewOptions {
+    .EezStudio_ChartViewOptions_DynamicAxisLines_Properties {
+        margin-bottom: 10px;
+        input {
+            width: 160px;
+        }
+    }
+
+    .EezStudio_ChartViewOptions_FixedAxisLines_Properties {
+        input {
+            width: 40px;
+        }
     }
 }

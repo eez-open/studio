@@ -11,11 +11,11 @@ import {
     IViewOptionsAxesLines,
     IViewOptionsAxesLinesType,
     ChartMode
-} from "shared/ui/chart";
+} from "shared/ui/chart/chart";
 
 import { AppStore } from "instrument/window/app-store";
 
-import { ChartsDisplayOption } from "instrument/window/lists/charts-view-options";
+import { ChartsDisplayOption } from "instrument/window/lists/common-tools";
 
 ////////////////////////////////////////////////////////////////////////////////
 

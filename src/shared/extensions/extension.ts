@@ -39,17 +39,47 @@ export interface IExtensionProperties {
     shortcuts?: IShortcut[];
 }
 
-export interface IExtension {
+export interface IMeasurementFunction {
     id: string;
-    preInstalled: boolean;
-    type?: string;
+    name: string;
+    script: string;
+}
+
+export interface IMeasureTask {
+    // x value of the first sample (at xStartIndex)
+    xStartValue: number;
+
+    // no. of samples per second
+    xSamplingRate: number;
+
+    // index of the first sample to use for measurement
+    xStartIndex: number;
+    // total number of samples to use for measurement
+    xNumSamples: number;
+
+    getSampleValueAtIndex(index: number): number;
+
+    // store measurement result to this property
+    result: number;
+}
+
+export interface IExtensionPropertiesFromJson {
+    id: string;
     name: string;
     description?: string;
     version: string;
     author: string;
-    image: string;
+}
+
+export interface IExtensionPropertiesFromMainJs {
+    preInstalled?: boolean;
+
+    type?: string;
+    image?: string;
+
     init?: () => void;
     destroy?: () => void;
+
     toolbarButtons?: IToolbarButton[];
     toolboxGroups?: IToolboxGroup[];
     objectTypes?: {
@@ -57,7 +87,11 @@ export interface IExtension {
     };
     loadExtension?: (extensionFolderPath: string) => Promise<IExtension>;
     renderPropertiesComponent?: () => Promise<JSX.Element>;
-    properties: IExtensionProperties;
+    properties?: IExtensionProperties;
     isEditable?: boolean;
     isDirty?: boolean;
+
+    measurementFunctions?: IMeasurementFunction[];
 }
+
+export type IExtension = IExtensionPropertiesFromJson & IExtensionPropertiesFromMainJs;

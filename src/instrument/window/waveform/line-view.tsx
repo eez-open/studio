@@ -3,16 +3,14 @@ import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { ILineController, globalViewOptions } from "shared/ui/chart";
-
-import { renderAlgorithm } from "instrument/window/chart-view-options";
+import { ILineController, globalViewOptions } from "shared/ui/chart/chart";
 
 import {
     IWaveform,
     IWaveformRenderJobSpecification,
     renderWaveformPath
-} from "instrument/window/waveform/render";
-import { drawWithWorker, releaseCanvas } from "instrument/window/waveform/worker-manager";
+} from "shared/ui/chart/render";
+import { drawWithWorker, releaseCanvas } from "shared/ui/chart/worker-manager";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +44,7 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
         }
 
         return {
-            renderAlgorithm: renderAlgorithm.get(),
+            renderAlgorithm: globalViewOptions.renderAlgorithm,
             waveform,
             xAxisController,
             yAxisController,
@@ -126,12 +124,22 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
 
         const chartsController = this.props.waveformLineController.yAxisController.chartsController;
 
+        let canvasKey;
+        if (this.props.useWorker) {
+            // Canvas has "key" because we want canvas to be recreated every time width or height change
+            // (apparently React recreates element if key is different).
+            // This is required because we are using transferControlToOffscreen to pass offscreen canvas to worker.
+            canvasKey = `${chartsController.chartWidth}_${chartsController.chartHeight}`;
+        }
+
         return (
             <foreignObject x={chartsController.chartLeft} y={chartsController.chartTop}>
                 <canvas
+                    key={canvasKey}
                     ref={ref => (this.canvas = ref)}
                     width={chartsController.chartWidth}
                     height={chartsController.chartHeight}
+                    style={{ pointerEvents: "none" }}
                 />
             </foreignObject>
         );

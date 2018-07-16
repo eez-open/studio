@@ -1,7 +1,7 @@
 import { observable } from "mobx";
 
 import { IUnit, TIME_UNIT } from "shared/units";
-import { IAxisModel, ZoomMode, ChartsController } from "shared/ui/chart";
+import { IAxisModel, ZoomMode, ChartsController } from "shared/ui/chart/chart";
 
 interface IWaveform {
     samplingRate: number;

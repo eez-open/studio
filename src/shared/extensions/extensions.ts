@@ -23,7 +23,12 @@ import { IActivityLogEntry } from "shared/activity-log";
 import * as notification from "shared/ui/notification";
 import { IToolboxGroup, IToolbarButton } from "shared/ui/designer/designer-interfaces";
 
-import { IExtension, IObject, IExtensionProperties } from "shared/extensions/extension";
+import {
+    IExtension,
+    IObject,
+    IExtensionProperties,
+    IMeasurementFunction
+} from "shared/extensions/extension";
 
 import {
     preInstalledExtensionsFolderPath,
@@ -36,15 +41,48 @@ import * as ShortcutsModule from "shortcuts/shortcuts";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const measurementFunctions = new Map<string, IMeasurementFunction>();
+
+function loadMeasurementFunctions(extensionFolderPath: string, functions: IMeasurementFunction[]) {
+    functions.forEach((extensionMeasurementFunction: any) => {
+        if (!measurementFunctions.has(extensionMeasurementFunction.id)) {
+            measurementFunctions.set(extensionMeasurementFunction.id, {
+                id: extensionMeasurementFunction.id,
+                name: extensionMeasurementFunction.name,
+                script: extensionFolderPath + "/" + extensionMeasurementFunction.script
+            });
+        }
+    });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 async function loadExtension(extensionFolderPath: string): Promise<IExtension | undefined> {
     let packageJsonFilePath = extensionFolderPath + "/" + "package.json";
     if (await fileExists(packageJsonFilePath)) {
         try {
-            let packageJson = await readJsObjectFromFile(packageJsonFilePath);
-            if (packageJson["eez-studio"]) {
-                let mainScript = packageJson["eez-studio"]["main"];
+            const packageJson = await readJsObjectFromFile(packageJsonFilePath);
+            const packageJsonEezStudio = packageJson["eez-studio"];
+            if (packageJsonEezStudio) {
+                const mainScript = packageJsonEezStudio.main;
                 if (mainScript) {
-                    return require(extensionFolderPath + "/" + mainScript).default;
+                    const extension: IExtension = require(extensionFolderPath + "/" + mainScript)
+                        .default;
+
+                    extension.id = packageJson.name;
+                    extension.name = packageJson.name;
+                    extension.description = packageJson.description;
+                    extension.version = packageJson.version;
+                    extension.author = packageJson.author;
+
+                    if (extension.measurementFunctions) {
+                        loadMeasurementFunctions(
+                            extensionFolderPath,
+                            extension.measurementFunctions
+                        );
+                    }
+
+                    return extension;
                 }
             }
         } catch (err) {
@@ -198,7 +236,7 @@ async function finishImportExtensionFromTempFolder({
 
         // fix image url from temp folder to extension folder
         let tmpUrl = localPathToFileUrl(tmpExtensionFolderPath);
-        if (extension.image.startsWith(tmpUrl)) {
+        if (extension.image && extension.image.startsWith(tmpUrl)) {
             extension.image = localPathToFileUrl(
                 extensionFolderPath + extension.image.slice(tmpUrl.length)
             );
@@ -316,7 +354,7 @@ export async function installExtension(
 
     await finishImportExtensionFromTempFolder(result);
 
-    if (result.extension.properties.shortcuts) {
+    if (result.extension.properties && result.extension.properties.shortcuts) {
         result.extension.properties.shortcuts.forEach(shortcut => {
             const {
                 addShortcut

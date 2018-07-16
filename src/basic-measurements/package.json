@@ -1,0 +1,8 @@
+{
+    "name": "eez-studio-basic-measurements",
+    "version": "1.0.0",
+    "author": "Envox",
+    "eez-studio": {
+        "main": "basic-measurements-extension.js"
+    }
+}
