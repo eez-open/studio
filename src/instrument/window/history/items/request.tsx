@@ -4,7 +4,6 @@ import { observer } from "mobx-react";
 import { formatDateTimeLong } from "shared/util";
 import { IActivityLogEntry } from "shared/activity-log";
 
-import { AppStore } from "instrument/window/app-store";
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,8 +30,8 @@ export class RequestHistoryItemComponent extends React.Component<
 }
 
 export class RequestHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore?: AppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry) {
+        super(activityLogEntry);
     }
 
     get listItemElement(): JSX.Element | null {

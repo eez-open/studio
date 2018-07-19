@@ -525,6 +525,8 @@ input[type="color"] {
     height: 100%;
     overflow: auto;
 
+    background: white;
+
     &.selectable {
         tr {
             cursor: pointer;
@@ -829,6 +831,17 @@ DESIGNER
         margin-left: 4px;
         margin-bottom: 0;
         border-bottom: none;
+    }
+}
+
+.EezStudio_SideDock_WithHeader {
+    overflow: visible;
+
+    & > .EezStudio_Header {
+        border-bottom: 1px solid @border-color;
+    }
+    & > .EezStudio_Body {
+        overflow: visible;
     }
 }
 

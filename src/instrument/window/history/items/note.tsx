@@ -12,10 +12,9 @@ import { PropertyList, StaticRichTextProperty } from "shared/ui/properties";
 import { Toolbar } from "shared/ui/toolbar";
 import { IconAction } from "shared/ui/action";
 
-import { AppStore } from "instrument/window/app-store";
-
 import { showEditNoteDialog } from "instrument/window/note-dialog";
 
+import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -23,7 +22,7 @@ import { HistoryItem } from "instrument/window/history/item";
 @observer
 export class NoteHistoryItemComponent extends React.Component<
     {
-        historyItem: HistoryItem;
+        historyItem: NoteHistoryItem;
     },
     {}
 > {
@@ -90,8 +89,8 @@ export class NoteHistoryItemComponent extends React.Component<
 }
 
 export class NoteHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore?: AppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry, public appStore?: IAppStore) {
+        super(activityLogEntry);
     }
 
     get info() {

@@ -30,10 +30,9 @@ import * as UiBalloonModule from "shared/ui/balloon";
 
 import { FileState } from "instrument/connection/file-state";
 
-import { AppStore } from "instrument/window/app-store";
-
 import { showAddNoteDialog, showEditNoteDialog } from "instrument/window/note-dialog";
 
+import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +95,7 @@ class ImagePreview extends React.Component<
 @observer
 export class FileHistoryItemComponent extends React.Component<
     {
-        appStore: AppStore;
+        appStore: IAppStore;
         historyItem: FileHistoryItem;
     },
     {}
@@ -373,8 +372,8 @@ export class FileHistoryItemComponent extends React.Component<
 }
 
 export class FileHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore?: AppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry, public appStore?: IAppStore) {
+        super(activityLogEntry);
     }
 
     get info() {

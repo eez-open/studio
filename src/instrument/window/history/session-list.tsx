@@ -11,9 +11,7 @@ import { IconAction } from "shared/ui/action";
 import { Dialog, showDialog } from "shared/ui/dialog";
 import { PropertyList, TextInputProperty } from "shared/ui/properties";
 
-import { AppStore } from "instrument/window/app-store";
-
-import { History, ISession } from "instrument/window/history/history";
+import { IAppStore, History, ISession } from "instrument/window/history/history";
 
 @observer
 class EditSessionNameDialog extends React.Component<
@@ -61,7 +59,7 @@ export function showEditSessionNameDialog(name: string, callback: (name: string)
 
 @observer
 export class SessionListItem extends React.Component<
-    { appStore: AppStore; history: History; session: ISession },
+    { appStore: IAppStore; history: History; session: ISession },
     {}
 > {
     constructor(props: any) {
@@ -167,7 +165,7 @@ export class SessionListItem extends React.Component<
 }
 
 @observer
-export class SessionList extends React.Component<{ appStore: AppStore; history: History }> {
+export class SessionList extends React.Component<{ appStore: IAppStore; history: History }> {
     render() {
         return (
             <div className="EezStudio_SessionList">

@@ -7,8 +7,7 @@ import { PanelTitle } from "shared/ui/panel";
 import { Splitter } from "shared/ui/splitter";
 
 import { IWorkbenchObject } from "home/designer/designer-store";
-
-import { History } from "home/history/history";
+import { HistorySection } from "home/history";
 
 @observer
 export class Properties extends React.Component<
@@ -29,8 +28,9 @@ export class Properties extends React.Component<
             <Box direction="column" background="panel-header" style={{ height: "100%" }}>
                 <PanelTitle title="History" />
                 <Box scrollable={true} background="white">
-                    <History
+                    <HistorySection
                         oids={this.props.selectedObjects.map(selectedObject => selectedObject.oid)}
+                        simple={true}
                     />
                 </Box>
             </Box>

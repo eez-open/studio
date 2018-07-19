@@ -104,7 +104,8 @@ export const activityLogStore = createStore({
 
         if (
             filterSpecification.oids &&
-            filterSpecification.oids.indexOf(message.object.oid) === -1
+            (filterSpecification.oids.length > 0 &&
+                filterSpecification.oids.indexOf(message.object.oid) === -1)
         ) {
             return false;
         }

@@ -1,4 +1,4 @@
-import { observable, action, runInAction, values } from "mobx";
+import { observable, action, runInAction } from "mobx";
 
 import { capitalize } from "shared/string";
 import { IUnit, VOLTAGE_UNIT, CURRENT_UNIT, POWER_UNIT } from "shared/units";
@@ -519,15 +519,4 @@ export function createInstrumentLists(appStore: AppStore) {
     });
 
     return instrumentLists;
-}
-
-export function findListIdByName(listName: string, appStore: AppStore) {
-    if (!appStore.instrumentLists) {
-        return undefined;
-    }
-    const list = values(appStore.instrumentLists).find(list => list.name === listName);
-    if (list) {
-        return list.id;
-    }
-    return undefined;
 }

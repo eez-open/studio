@@ -7,18 +7,16 @@ import { bind } from "bind-decorator";
 
 import { Icon } from "shared/ui/icon";
 
-import { AppStore } from "instrument/window/app-store";
-
 import { Waveform } from "instrument/window/waveform/generic";
 
-import { History } from "instrument/window/history/history";
+import { History, IAppStore } from "instrument/window/history/history";
 import { IHistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class HistoryItems extends React.Component<{
-    appStore: AppStore;
+    appStore: IAppStore;
     history: History;
     historyItems: IHistoryItem[];
 }> {
@@ -128,7 +126,7 @@ export class HistoryItems extends React.Component<{
 
 @observer
 export class HistoryListComponent extends React.Component<{
-    appStore: AppStore;
+    appStore: IAppStore;
     history: History;
 }> {
     animationFrameRequestId: any;

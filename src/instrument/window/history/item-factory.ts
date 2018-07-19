@@ -31,42 +31,42 @@ export function createHistoryItem(
         const {
             CreatedHistoryItem
         } = require("instrument/window/history/items/created") as typeof CreatedHistoryItemModule;
-        return new CreatedHistoryItem(activityLogEntry, appStore);
+        return new CreatedHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/connected") {
         const {
             ConnectedHistoryItem
         } = require("instrument/window/history/items/connected") as typeof ConnectedHistoryItemModule;
-        return new ConnectedHistoryItem(activityLogEntry, appStore);
+        return new ConnectedHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/connect-failed") {
         const {
             ConnectFailedHistoryItem
         } = require("instrument/window/history/items/connect-failed") as typeof ConnectFailedHistoryItemModule;
-        return new ConnectFailedHistoryItem(activityLogEntry, appStore);
+        return new ConnectFailedHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/disconnected") {
         const {
             DisconnectedHistoryItem
         } = require("instrument/window/history/items/disconnected") as typeof DisconnectedHistoryItemModule;
-        return new DisconnectedHistoryItem(activityLogEntry, appStore);
+        return new DisconnectedHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/request") {
         const {
             RequestHistoryItem
         } = require("instrument/window/history/items/request") as typeof RequestHistoryItemModule;
-        return new RequestHistoryItem(activityLogEntry, appStore);
+        return new RequestHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/answer") {
         const {
             AnswerHistoryItem
         } = require("instrument/window/history/items/answer") as typeof AnswerHistoryItemModule;
-        return new AnswerHistoryItem(activityLogEntry, appStore);
+        return new AnswerHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "activity-log/note") {
@@ -115,7 +115,7 @@ export function createHistoryItem(
             } = require("instrument/window/waveform/multi") as typeof MultiWaveformModule;
             return new MultiWaveform(activityLogEntry, appStore);
         } else {
-            return new HistoryItem(activityLogEntry, appStore);
+            return new HistoryItem(activityLogEntry);
         }
     }
 
@@ -123,7 +123,7 @@ export function createHistoryItem(
         const {
             ScriptHistoryItem
         } = require("instrument/window/history/items/script") as typeof ScriptHistoryItemModule;
-        return new ScriptHistoryItem(activityLogEntry, appStore);
+        return new ScriptHistoryItem(activityLogEntry);
     }
 
     throw "Unknown activity log entry";

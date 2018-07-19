@@ -9,7 +9,7 @@ import * as ShortcutsModule from "instrument/window/shortcuts";
 
 import * as TerminalModule from "instrument/window/terminal/terminal";
 
-import * as DeletedHistoryItemsModule from "instrument/window/history/deleted-history-items-section";
+import * as DeletedHistoryItemsModule from "instrument/window/history/deleted-history-items-view";
 
 import * as ListsModule from "instrument/window/lists/lists";
 
@@ -56,15 +56,20 @@ export class NavigationStore {
             title: "",
             renderContent: () => {
                 const {
-                    render
-                } = require("instrument/window/history/deleted-history-items-section") as typeof DeletedHistoryItemsModule;
-                return render(this.appStore);
+                    DeletedHistoryItemsView
+                } = require("instrument/window/history/deleted-history-items-view") as typeof DeletedHistoryItemsModule;
+                return (
+                    <DeletedHistoryItemsView
+                        appStore={this.appStore}
+                        persistId={"instrument/window/deleted-history-items"}
+                    />
+                );
             },
             renderToolbarButtons: () => {
                 const {
-                    renderToolbarButtons
-                } = require("instrument/window/history/deleted-history-items-section") as typeof DeletedHistoryItemsModule;
-                return renderToolbarButtons(this.appStore);
+                    DeletedHistoryItemsTools
+                } = require("instrument/window/history/deleted-history-items-view") as typeof DeletedHistoryItemsModule;
+                return <DeletedHistoryItemsTools appStore={this.appStore} />;
             }
         };
 
@@ -148,7 +153,7 @@ export class NavigationStore {
     }
 
     @action.bound
-    navigateToTerminal() {
+    navigateToHistory() {
         this.mainNavigationSelectedItem = this.terminalNavigationItem;
     }
 

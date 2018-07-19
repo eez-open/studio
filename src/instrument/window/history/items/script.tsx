@@ -7,7 +7,6 @@ import { IActivityLogEntry } from "shared/activity-log";
 
 import { Icon } from "shared/ui/icon";
 
-import { AppStore } from "instrument/window/app-store";
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,8 +81,8 @@ export interface IScriptHistoryItemMessage {
 }
 
 export class ScriptHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore?: AppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry) {
+        super(activityLogEntry);
     }
 
     @computed

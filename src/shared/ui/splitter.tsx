@@ -226,10 +226,13 @@ export class Splitter extends React.Component<SplitterProps, {}> {
 
         let childStyles: React.CSSProperties[] = [];
 
+        let childrenOverflow =
+            this.props.childrenOverflow && this.props.childrenOverflow.split("|");
+
         for (let i = 0; i < children.length; i++) {
             let style: React.CSSProperties = {
                 position: "absolute",
-                overflow: this.props.childrenOverflow || "auto",
+                overflow: (childrenOverflow && childrenOverflow[i]) || "auto",
                 boxSizing: "border-box",
                 left: (this.props.type === "horizontal" ? this.offsets[i] : 0) + "px",
                 top: (this.props.type === "vertical" ? this.offsets[i] : 0) + "px",

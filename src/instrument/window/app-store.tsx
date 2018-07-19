@@ -1,5 +1,5 @@
 import * as React from "react";
-import { observable, action, reaction, ObservableMap, autorun } from "mobx";
+import { observable, action, reaction, ObservableMap, autorun, values } from "mobx";
 import { bind } from "bind-decorator";
 
 import { scheduleTask, Priority } from "shared/scheduler";
@@ -19,10 +19,13 @@ import * as ScriptModule from "instrument/window/script";
 import { ShortcutsStore, GroupsStore } from "instrument/window/shortcuts";
 import { UndoManager } from "instrument/window/undo";
 
-import { History, DeletedItemsHistory } from "instrument/window/history/history";
-import { IHistoryItem } from "instrument/window/history/item";
+import {
+    History,
+    DeletedItemsHistory,
+    SelectHistoryItemsSpecification
+} from "instrument/window/history/history";
 
-import { Filters } from "instrument/window/search/filters";
+import { Filters } from "instrument/window/history/filters";
 
 import { Terminal } from "instrument/window/terminal/terminal";
 import { CommandsTree } from "instrument/window/terminal/commands-tree";
@@ -31,17 +34,6 @@ import { createInstrumentListStore } from "instrument/window/lists/store";
 import { BaseList, createInstrumentLists } from "instrument/window/lists/store-renderer";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-type SelectableHistoryItemTypes = "chart" | "all";
-
-interface SelectHistoryItemsSpecification {
-    historyItemType: SelectableHistoryItemTypes;
-    message: string;
-    alertDanger?: boolean;
-    okButtonText: string;
-    okButtonTitle: string;
-    onOk(): void;
-}
 
 export class AppStore implements IEditor {
     @observable instrument: InstrumentObject | undefined = undefined;
@@ -61,8 +53,8 @@ export class AppStore implements IEditor {
 
     commandsTree = new CommandsTree();
 
-    history = new History(this);
-    deletedItemsHistory = new DeletedItemsHistory(this);
+    history: History = new History(this);
+    deletedItemsHistory: DeletedItemsHistory = new DeletedItemsHistory(this);
 
     undoManager = new UndoManager();
 
@@ -269,21 +261,14 @@ export class AppStore implements IEditor {
         }
     }
 
-    moveToTopOfConnectionHistory() {
-        if (this.terminal) {
-            this.terminal.moveToTopOfConnectionHistory();
+    findListIdByName(listName: string) {
+        if (!this.instrumentLists) {
+            return undefined;
         }
-    }
-
-    moveToBottomOfConnectionHistory() {
-        if (this.terminal) {
-            this.terminal.moveToBottomOfConnectionHistory();
+        const list = values(this.instrumentLists).find(list => list.name === listName);
+        if (list) {
+            return list.id;
         }
-    }
-
-    showHistoryItem(historyItem: IHistoryItem) {
-        if (this.terminal) {
-            this.terminal.showHistoryItem(historyItem);
-        }
+        return undefined;
     }
 }

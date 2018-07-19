@@ -8,9 +8,7 @@ import { scheduleTask, Priority } from "shared/scheduler";
 
 import { PropertyList, BooleanProperty } from "shared/ui/properties";
 
-import { AppStore } from "instrument/window/app-store";
-
-import { History } from "instrument/window/history/history";
+import { IAppStore, History } from "instrument/window/history/history";
 import { IHistoryItem } from "instrument/window/history/item";
 
 export class Filters {
@@ -166,11 +164,11 @@ export class FilterStats {
                         FROM
                             activityLog
                         WHERE
-                            oid=? AND NOT deleted
+                            ${this.history.oidWhereClause} AND NOT deleted
                         GROUP BY
                             type`
                     )
-                    .all(this.history.appStore.instrument!.id);
+                    .all(...this.history.oidWhereClauseParam);
 
                 rows.forEach(row => {
                     this.add(row.type, row.count.toNumber());
@@ -219,12 +217,12 @@ export class FilterStats {
 }
 
 @observer
-export class FiltersComponent extends React.Component<{ appStore: AppStore }> {
+export class FiltersComponent extends React.Component<{ appStore: IAppStore }> {
     render() {
         const filterStats = this.props.appStore.history.filterStats;
 
         return (
-            <div className="EezStudio_HistroyFilters">
+            <div className="EezStudio_HistoryFilters">
                 <PropertyList>
                     <BooleanProperty
                         name={`Connects and disconnects (${filterStats.connectsAndDisconnects})`}

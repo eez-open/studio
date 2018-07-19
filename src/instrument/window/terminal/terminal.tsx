@@ -4,22 +4,17 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { Splitter } from "shared/ui/splitter";
-import { Toolbar } from "shared/ui/toolbar";
-import { IconAction, ButtonAction } from "shared/ui/action";
+import { IconAction } from "shared/ui/action";
 
 import { AppStore } from "instrument/window/app-store";
 import { executeShortcut } from "instrument/window/script";
 
 import { ISession } from "instrument/window/history/history";
-import { IHistoryItem } from "instrument/window/history/item";
-import { HistoryListComponent } from "instrument/window/history/list-component";
-
-import { Search } from "instrument/window/search/search";
+import { HistoryView, HistoryTools } from "instrument/window/history/history-view";
 
 import { ShortcutsToolbar } from "instrument/window/terminal/toolbar";
 import { CommandsBrowser } from "instrument/window/terminal/commands-browser";
 import { showFileUploadDialog } from "instrument/window/terminal/file-upload-dialog";
-import { TerminalToolbarButtons } from "instrument/window/terminal/terminal-toolbar-buttons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -241,26 +236,6 @@ class Input extends React.Component<
 
 @observer
 export class Terminal extends React.Component<{ appStore: AppStore }, {}> {
-    history: HistoryListComponent | null;
-
-    moveToTopOfConnectionHistory() {
-        if (this.history) {
-            this.history.moveToTop();
-        }
-    }
-
-    moveToBottomOfConnectionHistory() {
-        if (this.history) {
-            this.history.moveToBottom();
-        }
-    }
-
-    showHistoryItem(historyItem: IHistoryItem) {
-        if (this.history) {
-            this.history.showHistoryItem(historyItem);
-        }
-    }
-
     onSelectHistoryItemsOk() {
         this.props.appStore.selectHistoryItemsSpecification!.onOk();
     }
@@ -306,67 +281,10 @@ export class Terminal extends React.Component<{ appStore: AppStore }, {}> {
             >
                 <div className="EezStudio_Terminal">
                     <div className="EezStudio_TerminalBody">
-                        <Splitter
-                            type="horizontal"
-                            sizes={appStore.searchVisible ? "100%|240px" : "100%"}
-                            persistId={
-                                appStore.searchVisible
-                                    ? "instrument/window/terminal/splitter2"
-                                    : undefined
-                            }
-                        >
-                            <div className="EezStudio_History_Container" tabIndex={0}>
-                                {appStore.selectHistoryItemsSpecification && (
-                                    <div className="EezStudio_History_Header EezStudio_SlideInDownTransition">
-                                        <div>
-                                            {appStore.selectedHistoryItems.size > 0
-                                                ? `${appStore.selectedHistoryItems.size} selected`
-                                                : appStore.selectHistoryItemsSpecification.message}
-                                        </div>
-                                        <Toolbar>
-                                            {appStore.selectedHistoryItems.size > 0 && (
-                                                <ButtonAction
-                                                    text={
-                                                        appStore.selectHistoryItemsSpecification
-                                                            .okButtonText
-                                                    }
-                                                    title={
-                                                        appStore.selectHistoryItemsSpecification
-                                                            .okButtonTitle
-                                                    }
-                                                    className={
-                                                        appStore.selectHistoryItemsSpecification
-                                                            .alertDanger
-                                                            ? "btn-danger"
-                                                            : "btn-primary"
-                                                    }
-                                                    onClick={this.onSelectHistoryItemsOk}
-                                                />
-                                            )}
-                                            <ButtonAction
-                                                text="Cancel"
-                                                title="Cancel"
-                                                className="btn-secondary"
-                                                onClick={this.onSelectHistoryItemsCancel}
-                                            />
-                                        </Toolbar>
-                                    </div>
-                                )}
-                                <div className="EezStudio_History_Body">
-                                    <HistoryListComponent
-                                        appStore={this.props.appStore}
-                                        ref={ref => (this.history = ref)}
-                                        history={this.props.appStore.history}
-                                    />
-                                </div>
-                            </div>
-                            {appStore.searchVisible && (
-                                <Search
-                                    appStore={this.props.appStore}
-                                    history={this.props.appStore.history}
-                                />
-                            )}
-                        </Splitter>
+                        <HistoryView
+                            appStore={this.props.appStore}
+                            persistId={"instrument/window/history"}
+                        />
                     </div>
                     <Input
                         appStore={appStore}
@@ -397,5 +315,5 @@ export function render(appStore: AppStore) {
 }
 
 export function renderToolbarButtons(appStore: AppStore) {
-    return <TerminalToolbarButtons appStore={appStore} />;
+    return <HistoryTools appStore={appStore} />;
 }

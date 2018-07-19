@@ -10,13 +10,12 @@ import { Toolbar } from "shared/ui/toolbar";
 import { IconAction } from "shared/ui/action";
 import { Icon } from "shared/ui/icon";
 
-import { AppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
 import { createTableListFromData } from "instrument/window/lists/factory";
-import { findListIdByName } from "instrument/window/lists/store-renderer";
 import { saveTableListData } from "instrument/window/lists/lists";
 
+import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,7 +23,7 @@ import { HistoryItem } from "instrument/window/history/item";
 @observer
 export class ListHistoryItemComponent extends React.Component<
     {
-        historyItem: HistoryItem;
+        historyItem: ListHistoryItem;
     },
     {}
 > {
@@ -38,7 +37,7 @@ export class ListHistoryItemComponent extends React.Component<
         if (this.message.listData && this.message.listData.length > 0) {
             return createTableListFromData(
                 Object.assign({}, this.message.listData[0]),
-                this.props.historyItem.appStore!
+                this.props.historyItem.appStore! as any // @todo remove need for any
             );
         }
 
@@ -47,7 +46,7 @@ export class ListHistoryItemComponent extends React.Component<
 
     @computed
     get listId() {
-        return findListIdByName(this.message.listName, this.props.historyItem.appStore!);
+        return this.props.historyItem.appStore!.findListIdByName(this.message.listName);
     }
 
     @action.bound
@@ -61,7 +60,7 @@ export class ListHistoryItemComponent extends React.Component<
     onSave() {
         if (this.list) {
             saveTableListData(
-                this.props.historyItem.appStore!.instrument!,
+                this.props.historyItem.appStore!.instrument! as any, // @todo remove need for any
                 this.message.listName,
                 this.list.tableListData
             );
@@ -110,8 +109,8 @@ export class ListHistoryItemComponent extends React.Component<
 }
 
 export class ListHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore?: AppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry, public appStore?: IAppStore) {
+        super(activityLogEntry);
     }
 
     get listItemElement(): JSX.Element | null {

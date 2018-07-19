@@ -21,17 +21,72 @@ import { scheduleTask, Priority } from "shared/scheduler";
 import { confirm } from "shared/ui/dialog";
 import * as notification from "shared/ui/notification";
 
-import { AppStore } from "instrument/window/app-store";
-
-import { FilterStats } from "instrument/window/search/filters";
+import { Filters, FilterStats } from "instrument/window/history/filters";
 
 import { IHistoryItem } from "instrument/window/history/item";
 import { createHistoryItem, updateHistoryItemClass } from "instrument/window/history/item-factory";
+import {
+    moveToTopOfHistory,
+    moveToBottomOfHistory,
+    showHistoryItem
+} from "instrument/window/history/history-view";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_SINGLE_SEARCH_LIMIT = 100;
 const CONF_BLOCK_SIZE = 100;
+
+////////////////////////////////////////////////////////////////////////////////
+
+export type SelectableHistoryItemTypes = "chart" | "all";
+
+export interface SelectHistoryItemsSpecification {
+    historyItemType: SelectableHistoryItemTypes;
+    message: string;
+    alertDanger?: boolean;
+    okButtonText: string;
+    okButtonTitle: string;
+    onOk(): void;
+}
+
+export interface IAppStore {
+    selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
+    history: History;
+    deletedItemsHistory: DeletedItemsHistory;
+    isHistoryItemSelected(id: string): boolean;
+    selectHistoryItem(id: string, selected: boolean): void;
+
+    selectedHistoryItems: Map<string, boolean>;
+    selectHistoryItems(specification: SelectHistoryItemsSpecification | undefined): void;
+
+    oids?: string[];
+
+    instrument?: {
+        id: string;
+        connection: {
+            abortLongOperation(): void;
+        };
+        listsProperty?: any;
+    };
+
+    navigationStore: {
+        navigateToHistory(): void;
+        navigateToDeletedHistoryItems(): void;
+        selectedListId: string | undefined;
+    };
+
+    searchVisible: boolean;
+    toggleSearchVisible(): void;
+
+    filters: Filters;
+    filtersVisible: boolean;
+    toggleFiltersVisible(): void;
+
+    searchViewSection: "calendar" | "sessions";
+    setSearchViewSection(value: "calendar" | "sessions"): void;
+
+    findListIdByName(listName: string): string | undefined;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,14 +116,14 @@ class HistoryCalendar {
                         FROM
                             activityLog
                         WHERE
-                            oid=? ${this.history.getFilter()}
+                            ${this.history.oidWhereClause} ${this.history.getFilter()}
                     )
                     GROUP BY
                         date
                     ORDER BY
                         date`
                 )
-                .all(this.history.appStore.instrument!.id);
+                .all(...this.history.oidWhereClauseParam);
 
             if (rows.length > 0) {
                 rows.forEach(row => this.counters.set(row.date, row.count.toNumber()));
@@ -103,17 +158,17 @@ class HistoryCalendar {
                             FROM
                                 activityLog
                             WHERE
-                                oid=? AND date >= ? ${this.history.getFilter()}
+                            ${this.history.oidWhereClause} AND date >= ? ${this.history.getFilter()}
                             ORDER BY
                                 date
                         )
                     LIMIT ?`
                 )
-                .all(this.history.appStore.instrument!.id, selectedDay.getTime(), CONF_BLOCK_SIZE);
+                .all(...this.history.oidWhereClauseParam, selectedDay.getTime(), CONF_BLOCK_SIZE);
 
             this.history.displayRows(rows);
 
-            this.history.appStore.moveToTopOfConnectionHistory();
+            moveToTopOfHistory();
         } else {
             this.showFirstHistoryItemAsSelectedDay = false;
 
@@ -126,18 +181,18 @@ class HistoryCalendar {
                     FROM
                         activityLog
                     WHERE
-                        oid=? ${this.history.getFilter()}
+                        ${this.history.oidWhereClause} ${this.history.getFilter()}
                     ORDER BY
                         date DESC
                     LIMIT ?`
                 )
-                .all(this.history.appStore.instrument!.id, CONF_BLOCK_SIZE);
+                .all(...this.history.oidWhereClauseParam, CONF_BLOCK_SIZE);
 
             rows.reverse();
 
             this.history.displayRows(rows);
 
-            this.history.appStore.moveToBottomOfConnectionHistory();
+            moveToBottomOfHistory();
         }
     }
 
@@ -279,7 +334,7 @@ class HistorySearch {
                 FROM
                     activityLog
                 WHERE
-                    oid=? AND
+                    ${this.history.oidWhereClause} AND
                     date > ? AND
                     message LIKE ? ${this.history.getFilter()}
                 ORDER BY
@@ -288,7 +343,7 @@ class HistorySearch {
                     ?`
             )
             .all(
-                this.history.appStore.instrument!.id,
+                ...this.history.oidWhereClauseParam,
                 this.searchLastLogDate.getTime(),
                 "%" + this.searchText + "%",
                 CONF_SINGLE_SEARCH_LIMIT
@@ -353,7 +408,9 @@ class HistorySearch {
                                 id,
                                 ${activityLogStore.nonTransientAndNonLazyProperties}
                             FROM (
-                                SELECT * FROM activityLog WHERE oid=? ${this.history.getFilter()} ORDER BY date
+                                SELECT * FROM activityLog WHERE ${
+                                    this.history.oidWhereClause
+                                } ${this.history.getFilter()} ORDER BY date
                             )
                             WHERE
                                 date >= ?
@@ -367,7 +424,9 @@ class HistorySearch {
                                 id,
                                 ${activityLogStore.nonTransientAndNonLazyProperties}
                             FROM (
-                                SELECT * FROM activityLog WHERE oid=? ${this.history.getFilter()} ORDER BY date DESC
+                                SELECT * FROM activityLog WHERE ${
+                                    this.history.oidWhereClause
+                                } ${this.history.getFilter()} ORDER BY date DESC
                             )
                             WHERE
                                 date < ?
@@ -376,10 +435,10 @@ class HistorySearch {
                     ) ORDER BY date`
                 )
                 .all(
-                    this.history.appStore.instrument!.id,
+                    ...this.history.oidWhereClauseParam,
                     searchResult.logEntry.date.getTime(),
                     CONF_BLOCK_SIZE / 2,
-                    this.history.appStore.instrument!.id,
+                    ...this.history.oidWhereClauseParam,
                     searchResult.logEntry.date.getTime(),
                     CONF_BLOCK_SIZE / 2
                 );
@@ -389,7 +448,7 @@ class HistorySearch {
             const historyItem = this.history.map.get(searchResult.logEntry.id);
             if (historyItem) {
                 historyItem.selected = true;
-                this.history.appStore.showHistoryItem(historyItem);
+                showHistoryItem(historyItem);
             } else {
                 console.warn("History item not found", searchResult);
             }
@@ -415,9 +474,9 @@ class HistoryNavigator {
                     FROM
                         activityLog
                     WHERE
-                        oid=? AND date < ? ${this.history.getFilter()}`
+                        ${this.history.oidWhereClause} AND date < ? ${this.history.getFilter()}`
                 )
-                .get(this.history.appStore.instrument!.id, firstHistoryItem.date.getTime());
+                .get(...this.history.oidWhereClauseParam, firstHistoryItem.date.getTime());
 
             this.hasOlder = result && result.count.toNumber() > 0;
         } else {
@@ -433,9 +492,9 @@ class HistoryNavigator {
                     FROM
                         activityLog
                     WHERE
-                        oid=? AND date > ? ${this.history.getFilter()}`
+                        ${this.history.oidWhereClause} AND date > ? ${this.history.getFilter()}`
                 )
-                .get(this.history.appStore.instrument!.id, lastHistoryItem.date.getTime());
+                .get(...this.history.oidWhereClauseParam, lastHistoryItem.date.getTime());
 
             this.hasNewer = result && result.count.toNumber() > 0;
         } else {
@@ -481,14 +540,16 @@ class HistoryNavigator {
                             FROM
                                 activityLog
                             WHERE
-                                oid=? AND date < ? ${this.history.getFilter()}
+                                ${
+                                    this.history.oidWhereClause
+                                } AND date < ? ${this.history.getFilter()}
                             ORDER BY
                                 date DESC
                         )
                     LIMIT ?`
                 )
                 .all(
-                    this.history.appStore.instrument!.id,
+                    ...this.history.oidWhereClauseParam,
                     firstHistoryItem.date.getTime(),
                     CONF_BLOCK_SIZE
                 );
@@ -519,14 +580,16 @@ class HistoryNavigator {
                             FROM
                                 activityLog
                             WHERE
-                                oid=? AND date > ? ${this.history.getFilter()}
+                                ${
+                                    this.history.oidWhereClause
+                                } AND date > ? ${this.history.getFilter()}
                             ORDER BY
                                 date
                         )
                     LIMIT ?`
                 )
                 .all(
-                    this.history.appStore.instrument!.id,
+                    ...this.history.oidWhereClauseParam,
                     lastHistoryItem.date.getTime(),
                     CONF_BLOCK_SIZE
                 );
@@ -564,9 +627,9 @@ class HistorySessions {
                 FROM
                     activityLog
                 WHERE
-                    oid=? AND type = "instrument/connected"`
+                    ${this.history.oidWhereClause} AND type = "instrument/connected"`
             )
-            .all(this.history.appStore.instrument!.id);
+            .all(...this.history.oidWhereClauseParam);
         this.sessions = this.history.rowsToHistoryItems(rows).map(activityLogEntry => ({
             selected: false,
             id: activityLogEntry.id,
@@ -597,21 +660,23 @@ class HistorySessions {
                             FROM
                                 activityLog
                             WHERE
-                                oid=? AND date >= ? ${this.history.getFilter()}
+                                ${
+                                    this.history.oidWhereClause
+                                } AND date >= ? ${this.history.getFilter()}
                             ORDER BY
                                 date
                         )
                     LIMIT ?`
                 )
                 .all(
-                    this.history.appStore.instrument!.id,
+                    ...this.history.oidWhereClauseParam,
                     selectedSession.activityLogEntry.date.getTime(),
                     CONF_BLOCK_SIZE
                 );
 
             this.history.displayRows(rows);
 
-            this.history.appStore.moveToTopOfConnectionHistory();
+            moveToTopOfHistory();
         }
     }
 
@@ -683,11 +748,43 @@ export class History {
     reactionTimeout: any;
     reactionDisposer: any;
 
-    constructor(public appStore: AppStore, public isDeletedItemsHistory: boolean = false) {
+    _oidWhereClause: string;
+
+    constructor(public appStore: IAppStore, public isDeletedItemsHistory: boolean = false) {
+        if (this.appStore.oids) {
+            if (this.appStore.oids.length > 0) {
+                let qmarks;
+                for (let i = 0; i < this.appStore.oids.length; ++i) {
+                    if (!qmarks) {
+                        qmarks = "?";
+                    } else {
+                        qmarks += ",?";
+                    }
+                }
+                this._oidWhereClause = `oid IN(${qmarks})`;
+            } else {
+                this._oidWhereClause = "oid=oid";
+            }
+        }
+
         scheduleTask(
             "Watch activity log",
             isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
             () => {
+                let activityLogFilterSpecification: IActivityLogFilterSpecification;
+
+                if (this.appStore.oids) {
+                    activityLogFilterSpecification = {
+                        skipInitialQuery: true,
+                        oids: this.appStore.oids
+                    };
+                } else {
+                    activityLogFilterSpecification = {
+                        skipInitialQuery: true,
+                        oid: appStore.instrument!.id
+                    };
+                }
+
                 activityLogStore.watch(
                     {
                         createObject: (
@@ -712,10 +809,7 @@ export class History {
                             this.onDeleteActivityLogEntry(object, op, options);
                         }
                     },
-                    {
-                        skipInitialQuery: true,
-                        oid: appStore.instrument!.id
-                    } as IActivityLogFilterSpecification
+                    activityLogFilterSpecification
                 );
             }
         );
@@ -760,6 +854,22 @@ export class History {
                 }, 10);
             }
         );
+    }
+
+    get oidWhereClause() {
+        if (this.appStore.oids) {
+            return this._oidWhereClause;
+        } else {
+            return "oid=?";
+        }
+    }
+
+    get oidWhereClauseParam(): string[] {
+        if (this.appStore.oids) {
+            return this.appStore.oids;
+        } else {
+            return [this.appStore.instrument!.id];
+        }
     }
 
     onTerminate() {
@@ -945,7 +1055,7 @@ export class History {
                 this.addActivityLogEntryToBlocks(activityLogEntry);
             }
             // ... and scroll to the bottom of history list.
-            this.appStore.moveToBottomOfConnectionHistory();
+            moveToBottomOfHistory();
         }
     }
 
@@ -1002,7 +1112,7 @@ export class History {
             this.selection.items.forEach(historyItem =>
                 logDelete(
                     {
-                        oid: this.appStore.instrument!.id,
+                        oid: historyItem.oid,
                         id: historyItem.id
                     },
                     {
@@ -1023,7 +1133,7 @@ export class History {
 export class DeletedItemsHistory extends History {
     @observable deletedCount: number = 0;
 
-    constructor(public appStore: AppStore) {
+    constructor(public appStore: IAppStore) {
         super(appStore, true);
 
         scheduleTask(
@@ -1037,9 +1147,9 @@ export class DeletedItemsHistory extends History {
                         FROM
                             activityLog
                         WHERE
-                            oid=? AND deleted`
+                            ${this.oidWhereClause} AND deleted`
                     )
-                    .get(appStore.instrument!.id);
+                    .get(...this.oidWhereClauseParam);
 
                 this.deletedCount = result ? result.count : 0;
             })
@@ -1118,7 +1228,7 @@ export class DeletedItemsHistory extends History {
                     this.selection.items.forEach(historyItem =>
                         logDelete(
                             {
-                                oid: this.appStore.instrument!.id,
+                                oid: historyItem.oid,
                                 id: historyItem.id
                             },
                             {

@@ -7,7 +7,6 @@ import { IActivityLogEntry } from "shared/activity-log";
 
 import { getConnectionParametersInfo } from "instrument/window/connection";
 
-import { AppStore } from "instrument/window/app-store";
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,8 +56,8 @@ export class ConnectFailedHistoryItemComponent extends React.Component<
 }
 
 export class ConnectFailedHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore?: AppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry) {
+        super(activityLogEntry);
     }
 
     get listItemElement(): JSX.Element | null {

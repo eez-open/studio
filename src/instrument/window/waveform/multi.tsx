@@ -113,8 +113,8 @@ interface ILinkedWaveform {
 }
 
 export class MultiWaveform extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore: AppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry, public appStore: AppStore) {
+        super(activityLogEntry);
 
         // save viewOptions when changed
         reaction(

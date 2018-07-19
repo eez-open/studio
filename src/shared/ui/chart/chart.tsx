@@ -11,7 +11,8 @@ import { Point, pointDistance } from "shared/geometry";
 import { IUnit } from "shared/units";
 
 import { Draggable } from "shared/ui/draggable";
-import { Splitter } from "shared/ui/splitter";
+import { SideDock } from "shared/ui/side-dock";
+
 import { ChartViewOptionsProps, ChartViewOptions } from "shared/ui/chart/view-options";
 import { WaveformRenderAlgorithm } from "shared/ui/chart/render";
 import { WaveformModel } from "shared/ui/chart/waveform";
@@ -2729,211 +2730,6 @@ export class ChartView extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class SideDock extends React.Component<{
-    chartsController: ChartsController;
-}> {
-    static IS_OPEN_LOCAL_STORAGE_ITEM_ID = "shared/ui/chart/sideDock/isOpen";
-
-    static isOpen = observable.box<boolean>(
-        localStorage.getItem(SideDock.IS_OPEN_LOCAL_STORAGE_ITEM_ID) === "0" ? false : true
-    );
-
-    static toggleIsOpen() {
-        runInAction(() => {
-            SideDock.isOpen.set(!SideDock.isOpen.get());
-
-            localStorage.setItem(
-                SideDock.IS_OPEN_LOCAL_STORAGE_ITEM_ID,
-                SideDock.isOpen.get() ? "1" : "0"
-            );
-        });
-    }
-
-    containerDiv: HTMLDivElement | null;
-
-    goldenLayout: any;
-
-    lastWidth: number | undefined;
-    lastHeight: number | undefined;
-
-    get layoutLocalStorageItemId() {
-        return (
-            "shared/ui/chart/sideDock/layout/1" +
-            (this.props.chartsController.supportRulers ? "/with-rulers" : "")
-        );
-    }
-
-    get defaultLayoutConfig() {
-        var content = [];
-
-        if (this.props.chartsController.supportRulers) {
-            content.push(
-                {
-                    type: "component",
-                    componentName: "RulersDockView",
-                    componentState: {},
-                    title: "Rulers",
-                    isClosable: false
-                },
-                {
-                    type: "component",
-                    componentName: "MeasurementsDockView",
-                    componentState: {},
-                    title: "Measurements",
-                    isClosable: false
-                }
-            );
-        }
-
-        content.push({
-            type: "component",
-            componentName: "ChartViewOptions",
-            componentState: this.props.chartsController.chartViewOptionsProps,
-            title: "View Options",
-            isClosable: false
-        });
-
-        return {
-            settings: {
-                showPopoutIcon: false,
-                showMaximiseIcon: false,
-                showCloseIcon: false
-            },
-            dimensions: {
-                borderWidth: 8
-            },
-            content: [
-                {
-                    type: "column",
-                    content
-                }
-            ]
-        };
-    }
-
-    get layoutConfig() {
-        const savedStateJSON = localStorage.getItem(this.layoutLocalStorageItemId);
-        if (savedStateJSON) {
-            try {
-                return JSON.parse(savedStateJSON);
-            } catch (err) {
-                console.error(err);
-            }
-        }
-        return this.defaultLayoutConfig;
-    }
-
-    update() {
-        if (this.goldenLayout) {
-            if (!(this.props.chartsController.mode !== "preview" && this.containerDiv)) {
-                this.destroy();
-            }
-        } else {
-            if (this.props.chartsController.mode !== "preview" && this.containerDiv) {
-                const chartsController = this.props.chartsController;
-
-                this.goldenLayout = new GoldenLayout(this.layoutConfig, this.containerDiv);
-
-                this.goldenLayout.registerComponent("RulersDockView", function(
-                    container: any,
-                    props: any
-                ) {
-                    ReactDOM.render(
-                        <RulersDockView chartsController={chartsController} {...props} />,
-                        container.getElement()[0]
-                    );
-                });
-
-                this.goldenLayout.registerComponent("MeasurementsDockView", function(
-                    container: any,
-                    props: any
-                ) {
-                    ReactDOM.render(
-                        <MeasurementsDockView chartsController={chartsController} {...props} />,
-                        container.getElement()[0]
-                    );
-                });
-
-                this.goldenLayout.registerComponent("ChartViewOptions", function(
-                    container: any,
-                    props: ChartViewOptionsProps
-                ) {
-                    ReactDOM.render(
-                        <ChartViewOptions chartsController={chartsController} {...props} />,
-                        container.getElement()[0]
-                    );
-                });
-
-                this.goldenLayout.on("stateChanged", this.onStateChanged);
-
-                this.goldenLayout.init();
-            }
-        }
-    }
-
-    @bind
-    onStateChanged() {
-        const state = JSON.stringify(this.goldenLayout.toConfig());
-        localStorage.setItem(this.layoutLocalStorageItemId, state);
-    }
-
-    updateSize() {
-        if (this.goldenLayout) {
-            const rect = this.containerDiv!.parentElement!.getBoundingClientRect();
-            if (this.lastWidth !== rect.width || this.lastHeight !== rect.height) {
-                this.goldenLayout.updateSize(rect.width, rect.height);
-                this.lastWidth = rect.width;
-                this.lastHeight = rect.height;
-            }
-        }
-    }
-
-    destroy() {
-        if (this.goldenLayout) {
-            this.goldenLayout.destroy();
-            this.goldenLayout = undefined;
-            this.lastWidth = undefined;
-            this.lastHeight = undefined;
-        }
-    }
-
-    componentDidMount() {
-        this.update();
-    }
-
-    componentDidUpdate() {
-        this.update();
-    }
-
-    componentWillUnmount() {
-        this.destroy();
-    }
-
-    render() {
-        const isOpen = SideDock.isOpen.get();
-
-        const dockSwitcherClassName = classNames("EezStudio_SideDockSwitch", {
-            EezStudio_SideDockSwitch_Closed: !isOpen
-        });
-
-        const dockSwitcher = (
-            <div className={dockSwitcherClassName} onClick={SideDock.toggleIsOpen} />
-        );
-
-        if (isOpen) {
-            return (
-                <div ref={ref => (this.containerDiv = ref)} style={{ overflow: "visible" }}>
-                    {dockSwitcher}
-                </div>
-            );
-        } else {
-            return dockSwitcher;
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 interface ChartsViewInterface {
     chartsController: ChartsController;
     className?: string;
@@ -3065,32 +2861,99 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
         );
 
         if (this.sideDockAvailable) {
-            const sideDock = (
-                <SideDock
-                    chartsController={this.props.chartsController}
-                    ref={ref => (this.sideDock = ref)}
-                />
-            );
-            if (SideDock.isOpen.get()) {
-                return (
-                    <Splitter
-                        type="horizontal"
-                        sizes={"100%|240px"}
-                        persistId="shared/ui/chart"
-                        childrenOverflow="visible"
-                    >
-                        {div}
-                        {sideDock}
-                    </Splitter>
-                );
-            } else {
-                return (
-                    <React.Fragment>
-                        {div}
-                        {sideDock}
-                    </React.Fragment>
+            var content = [];
+
+            if (this.props.chartsController.supportRulers) {
+                content.push(
+                    {
+                        type: "component",
+                        componentName: "RulersDockView",
+                        componentState: {},
+                        title: "Rulers",
+                        isClosable: false
+                    },
+                    {
+                        type: "component",
+                        componentName: "MeasurementsDockView",
+                        componentState: {},
+                        title: "Measurements",
+                        isClosable: false
+                    }
                 );
             }
+
+            content.push({
+                type: "component",
+                componentName: "ChartViewOptions",
+                componentState: this.props.chartsController.chartViewOptionsProps,
+                title: "View Options",
+                isClosable: false
+            });
+
+            const defaultLayoutConfig = {
+                settings: {
+                    showPopoutIcon: false,
+                    showMaximiseIcon: false,
+                    showCloseIcon: false
+                },
+                dimensions: {
+                    borderWidth: 8
+                },
+                content: [
+                    {
+                        type: "column",
+                        content
+                    }
+                ]
+            };
+
+            return (
+                <SideDock
+                    ref={ref => (this.sideDock = ref)}
+                    persistId="shared/ui/chart/sideDock"
+                    layoutId={
+                        "layout/1" +
+                        (this.props.chartsController.supportRulers ? "/with-rulers" : "")
+                    }
+                    defaultLayoutConfig={defaultLayoutConfig}
+                    registerComponents={(goldenLayout: any) => {
+                        goldenLayout.registerComponent("RulersDockView", function(
+                            container: any,
+                            props: any
+                        ) {
+                            ReactDOM.render(
+                                <RulersDockView chartsController={chartsController} {...props} />,
+                                container.getElement()[0]
+                            );
+                        });
+
+                        goldenLayout.registerComponent("MeasurementsDockView", function(
+                            container: any,
+                            props: any
+                        ) {
+                            ReactDOM.render(
+                                <MeasurementsDockView
+                                    chartsController={chartsController}
+                                    {...props}
+                                />,
+                                container.getElement()[0]
+                            );
+                        });
+
+                        goldenLayout.registerComponent("ChartViewOptions", function(
+                            container: any,
+                            props: ChartViewOptionsProps
+                        ) {
+                            ReactDOM.render(
+                                <ChartViewOptions chartsController={chartsController} {...props} />,
+                                container.getElement()[0]
+                            );
+                        });
+                    }}
+                >
+                    {div}
+                </SideDock>
+            );
         } else {
             return div;
         }
