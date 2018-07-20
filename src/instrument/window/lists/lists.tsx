@@ -12,7 +12,6 @@ import { _range } from "shared/algorithm";
 import { validators } from "shared/model/validation";
 
 import { Icon } from "shared/ui/icon";
-import { Container } from "shared/ui/container";
 import { Splitter } from "shared/ui/splitter";
 import { VerticalHeaderWithBody, ToolbarHeader, Header, Body } from "shared/ui/header-with-body";
 import { IconAction, ButtonAction } from "shared/ui/action";
@@ -217,23 +216,17 @@ export class ListsEditor extends React.Component<{ appStore: AppStore }, {}> {
 
     render() {
         return (
-            <Container>
-                <Splitter
-                    type="horizontal"
-                    sizes="240px|100%"
-                    persistId="instrument/lists/splitter"
-                >
-                    <MasterView
-                        appStore={this.props.appStore}
-                        selectedList={this.selectedList}
-                        selectList={action(
-                            (list: BaseList) =>
-                                (this.props.appStore.navigationStore.selectedListId = list.id)
-                        )}
-                    />
-                    <DetailsView list={this.selectedList} />
-                </Splitter>
-            </Container>
+            <Splitter type="horizontal" sizes="240px|100%" persistId="instrument/lists/splitter">
+                <MasterView
+                    appStore={this.props.appStore}
+                    selectedList={this.selectedList}
+                    selectList={action(
+                        (list: BaseList) =>
+                            (this.props.appStore.navigationStore.selectedListId = list.id)
+                    )}
+                />
+                <DetailsView list={this.selectedList} />
+            </Splitter>
         );
     }
 }

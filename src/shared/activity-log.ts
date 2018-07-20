@@ -74,7 +74,31 @@ export const activityLogStore = createStore({
         UPDATE activityLog SET message == json_replace(message, '$.state', 'upload-finish') WHERE
             type = "instrument/file-upload" AND json_extract(message, '$.state') = 'download-finish';
 
-        UPDATE activityLogVersion SET version = 4;`
+        UPDATE activityLogVersion SET version = 4;`,
+
+        // version 5
+        `INSERT INTO activityLog(date, oid, type, message, data, deleted)
+            SELECT
+                date-1, '0', 'activity-log/session', json_set('{}', '$.sessionName', json_extract(message, '$.sessionName')), NULL, 0
+            FROM
+                activityLog
+            WHERE
+                type="instrument/connected" AND
+                json_valid(message) AND
+                json_extract(message, '$.sessionName') IS NOT NULL;
+
+        INSERT INTO activityLog(date, oid, type, message, data, deleted)
+            SELECT
+                date-1, '0', 'activity-log/session', json_set('{}', '$.sessionName', message), NULL, 0
+            FROM
+                activityLog
+            WHERE
+                type="instrument/connected" AND
+                message IS NOT NULL AND
+                message <> "" AND
+                NOT json_valid(message);
+
+        UPDATE activityLogVersion SET version = 5;`
     ],
 
     properties: {
@@ -95,6 +119,10 @@ export const activityLogStore = createStore({
         filterSpecification: IActivityLogFilterSpecification
     ) {
         if (Array.isArray(message.object)) {
+            return true;
+        }
+
+        if (message.object.oid === "0") {
             return true;
         }
 

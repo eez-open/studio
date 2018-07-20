@@ -15,6 +15,16 @@ export class SideDock extends React.Component<{
     registerComponents: (goldenLayout: any) => void;
     header?: JSX.Element;
 }> {
+    static DEFAULT_SETTINGS = {
+        showPopoutIcon: false,
+        showMaximiseIcon: false,
+        showCloseIcon: false
+    };
+    static DEFAULT_DIMENSIONS = {
+        borderWidth: 8,
+        headerHeight: 26
+    };
+
     @observable isOpen: boolean;
 
     constructor(props: any) {
@@ -128,18 +138,26 @@ export class SideDock extends React.Component<{
         let sideDock;
 
         if (this.isOpen) {
-            sideDock = (
-                <div ref={ref => (this.containerDiv = ref)} style={{ overflow: "visible" }}>
-                    {dockSwitcher}
-                </div>
+            const container = (
+                <div ref={ref => (this.containerDiv = ref)} style={{ overflow: "visible" }} />
             );
 
             if (this.props.header) {
                 sideDock = (
-                    <VerticalHeaderWithBody className="EezStudio_SideDock_WithHeader">
-                        <Header>{this.props.header}</Header>
-                        <Body>{sideDock}</Body>
-                    </VerticalHeaderWithBody>
+                    <React.Fragment>
+                        <VerticalHeaderWithBody className="EezStudio_SideDock_WithHeader">
+                            <Header>{this.props.header}</Header>
+                            <Body>{container}</Body>
+                        </VerticalHeaderWithBody>
+                        {dockSwitcher}
+                    </React.Fragment>
+                );
+            } else {
+                sideDock = (
+                    <React.Fragment>
+                        {container}
+                        {dockSwitcher}
+                    </React.Fragment>
                 );
             }
         } else {

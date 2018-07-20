@@ -237,7 +237,8 @@ export class Splitter extends React.Component<SplitterProps, {}> {
                 left: (this.props.type === "horizontal" ? this.offsets[i] : 0) + "px",
                 top: (this.props.type === "vertical" ? this.offsets[i] : 0) + "px",
                 width: (this.props.type === "horizontal" ? this.sizes[i] : this.width) + "px",
-                height: (this.props.type === "vertical" ? this.sizes[i] : this.height) + "px"
+                height: (this.props.type === "vertical" ? this.sizes[i] : this.height) + "px",
+                display: "flex"
             };
 
             childStyles.push(style);
@@ -281,11 +282,8 @@ export class Splitter extends React.Component<SplitterProps, {}> {
 
         let style: React.CSSProperties = {
             overflow: this.props.overflow || "hidden",
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: "100%",
-            height: "100%"
+            flexGrow: 1,
+            position: "relative"
         };
 
         const className = classNames(

@@ -5,7 +5,6 @@ import { observer } from "mobx-react";
 import { stringCompare } from "shared/string";
 
 import { AlertDanger } from "shared/ui/alert";
-import { Container } from "shared/ui/container";
 import { Splitter } from "shared/ui/splitter";
 import { List } from "shared/ui/list";
 import { ButtonAction } from "shared/ui/action";
@@ -202,23 +201,20 @@ export class ScriptsEditor extends React.Component<{ appStore: AppStore }> {
                 sizes={scriptsModel.terminalVisible ? "50%|50%" : "100%"}
                 persistId="instrument/window/scripts/splitter"
             >
-                <Container>
-                    <Splitter
-                        type="horizontal"
-                        sizes="240px|100%"
-                        persistId="instrument/lists/splitter"
-                    >
-                        <MasterView
-                            appStore={appStore}
-                            selectedScript={scriptsModel.selectedScript}
-                            selectScript={action(
-                                (script: IShortcut) =>
-                                    (navigationStore.selectedScriptId = script.id)
-                            )}
-                        />
-                        <ScriptView appStore={appStore} />
-                    </Splitter>
-                </Container>
+                <Splitter
+                    type="horizontal"
+                    sizes="240px|100%"
+                    persistId="instrument/lists/splitter"
+                >
+                    <MasterView
+                        appStore={appStore}
+                        selectedScript={scriptsModel.selectedScript}
+                        selectScript={action(
+                            (script: IShortcut) => (navigationStore.selectedScriptId = script.id)
+                        )}
+                    />
+                    <ScriptView appStore={appStore} />
+                </Splitter>
 
                 {scriptsModel.terminalVisible &&
                     appStore.instrument && <Terminal appStore={appStore} />}

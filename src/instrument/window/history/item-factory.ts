@@ -6,6 +6,7 @@ import * as DlogWaveformModule from "instrument/window/waveform/dlog";
 
 import { IHistoryItem, HistoryItem } from "instrument/window/history/item";
 
+import * as SessionHistoryItemModule from "instrument/window/history/items/session";
 import * as CreatedHistoryItemModule from "instrument/window/history/items/created";
 import * as ConnectedHistoryItemModule from "instrument/window/history/items/connected";
 import * as ConnectFailedHistoryItemModule from "instrument/window/history/items/connect-failed";
@@ -23,6 +24,13 @@ export function createHistoryItem(
     activityLogEntry: IActivityLogEntry,
     appStore?: any
 ): HistoryItem {
+    if (activityLogEntry.type === "activity-log/session") {
+        const {
+            SessionHistoryItem
+        } = require("instrument/window/history/items/session") as typeof SessionHistoryItemModule;
+        return new SessionHistoryItem(activityLogEntry);
+    }
+
     if (
         activityLogEntry.type === "instrument/created" ||
         activityLogEntry.type === "instrument/deleted" ||

@@ -2,14 +2,18 @@ import * as React from "react";
 import { observable, computed, action, toJS } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
+import { bind } from "bind-decorator";
 
 import { formatDateTimeLong } from "shared/util";
 import { beginTransaction, commitTransaction } from "shared/store";
-import { logUpdate } from "shared/activity-log";
+import { log, logUpdate, logDelete } from "shared/activity-log";
 
 import { IconAction } from "shared/ui/action";
 import { Dialog, showDialog } from "shared/ui/dialog";
 import { PropertyList, TextInputProperty } from "shared/ui/properties";
+import { VerticalHeaderWithBody, ToolbarHeader, Body } from "shared/ui/header-with-body";
+import { ButtonAction } from "shared/ui/action";
+import { confirm } from "shared/ui/dialog";
 
 import { IAppStore, History, ISession } from "instrument/window/history/history";
 
@@ -62,13 +66,6 @@ export class SessionListItem extends React.Component<
     { appStore: IAppStore; history: History; session: ISession },
     {}
 > {
-    constructor(props: any) {
-        super(props);
-        this.handleEditSessionName = this.handleEditSessionName.bind(this);
-        this.handleClearSessionName = this.handleClearSessionName.bind(this);
-        this.onClick = this.onClick.bind(this);
-    }
-
     @computed
     get message(): {
         connectionParameters?: any;
@@ -90,6 +87,7 @@ export class SessionListItem extends React.Component<
         }
     }
 
+    @bind
     handleEditSessionName() {
         showEditSessionNameDialog(this.message.sessionName || "", name => {
             let message = toJS(this.message);
@@ -110,24 +108,20 @@ export class SessionListItem extends React.Component<
         });
     }
 
+    @bind
     handleClearSessionName() {
-        let message = toJS(this.message);
-        message.sessionName = undefined;
+        confirm("Are you sure?", undefined, () => {
+            beginTransaction("Delete session");
 
-        beginTransaction("Clear session name");
-        logUpdate(
-            {
-                id: this.props.session.id,
-                oid: this.props.appStore.instrument!.id,
-                message: JSON.stringify(message)
-            },
-            {
-                undoable: true
-            }
-        );
-        commitTransaction();
+            logDelete(this.props.session.activityLogEntry, {
+                undoable: false
+            });
+
+            commitTransaction();
+        });
     }
 
+    @bind
     onClick() {
         this.props.history.sessions.selectSession(this.props.session);
     }
@@ -151,13 +145,11 @@ export class SessionListItem extends React.Component<
                         title="Edit session name"
                         onClick={this.handleEditSessionName}
                     />
-                    {this.message.sessionName && (
-                        <IconAction
-                            icon="material:clear"
-                            title="Clear session name"
-                            onClick={this.handleClearSessionName}
-                        />
-                    )}
+                    <IconAction
+                        icon="material:clear"
+                        title="Clear session name"
+                        onClick={this.handleClearSessionName}
+                    />
                 </td>
             </tr>
         );
@@ -166,22 +158,54 @@ export class SessionListItem extends React.Component<
 
 @observer
 export class SessionList extends React.Component<{ appStore: IAppStore; history: History }> {
+    @bind
+    newSession() {
+        showEditSessionNameDialog("", name => {
+            beginTransaction("New session");
+            log(
+                {
+                    oid: "0",
+                    type: "activity-log/session",
+                    message: JSON.stringify({
+                        sessionName: name
+                    })
+                },
+                {
+                    undoable: false
+                }
+            );
+            commitTransaction();
+        });
+    }
+
     render() {
         return (
-            <div className="EezStudio_SessionList">
-                <table>
-                    <tbody>
-                        {this.props.history.sessions.sessions.map(session => (
-                            <SessionListItem
-                                appStore={this.props.appStore}
-                                key={session.id}
-                                history={this.props.history}
-                                session={session}
-                            />
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            <VerticalHeaderWithBody>
+                <ToolbarHeader className="EezStudio_PanelHeader">
+                    <ButtonAction
+                        text="New Session"
+                        title="Create a new session"
+                        className="btn-success"
+                        onClick={this.newSession}
+                    />
+                </ToolbarHeader>
+                <Body className="EezStudio_HistoryTable selectable">
+                    <div className="EezStudio_SessionList">
+                        <table>
+                            <tbody>
+                                {this.props.history.sessions.sessions.map(session => (
+                                    <SessionListItem
+                                        appStore={this.props.appStore}
+                                        key={session.id}
+                                        history={this.props.history}
+                                        session={session}
+                                    />
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Body>
+            </VerticalHeaderWithBody>
         );
     }
 }

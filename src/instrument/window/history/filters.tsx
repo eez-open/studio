@@ -23,6 +23,10 @@ export class Filters {
     @observable launchedScripts: boolean = true;
 
     filterActivityLogEntry(activityLogEntry: IActivityLogEntry): boolean {
+        if (activityLogEntry.type === "activity-log/session") {
+            return true;
+        }
+
         if (this.connectsAndDisconnects) {
             if (
                 [
@@ -90,6 +94,8 @@ export class Filters {
 
     getFilter() {
         const types: string[] = [];
+
+        types.push("activity-log/session");
 
         if (this.connectsAndDisconnects) {
             types.push(

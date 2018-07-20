@@ -16,7 +16,6 @@ import {
 
 import { copyFile, getTempFilePath, getValidFileNameFromFileName } from "shared/util";
 import { stringCompare } from "shared/string";
-import { Container } from "shared/ui/container";
 import { Splitter } from "shared/ui/splitter";
 import { VerticalHeaderWithBody, Header, ToolbarHeader, Body } from "shared/ui/header-with-body";
 import { Toolbar } from "shared/ui/toolbar";
@@ -429,21 +428,19 @@ export class ExtensionsManager extends React.Component<{}, {}> {
 
     render() {
         return (
-            <Container>
-                <Splitter
-                    type="horizontal"
-                    sizes="240px|100%"
-                    persistId="home/extensions-manager/splitter"
-                >
-                    <MasterView
-                        selectedExtension={this.selectedExtension}
-                        selectExtension={action((extension: IExtension) =>
-                            selectedExtension.set(extension)
-                        )}
-                    />
-                    <DetailsView extension={this.selectedExtension} />
-                </Splitter>
-            </Container>
+            <Splitter
+                type="horizontal"
+                sizes="240px|100%"
+                persistId="home/extensions-manager/splitter"
+            >
+                <MasterView
+                    selectedExtension={this.selectedExtension}
+                    selectExtension={action((extension: IExtension) =>
+                        selectedExtension.set(extension)
+                    )}
+                />
+                <DetailsView extension={this.selectedExtension} />
+            </Splitter>
         );
     }
 }

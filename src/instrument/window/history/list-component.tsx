@@ -44,6 +44,8 @@ export class HistoryItems extends React.Component<{
                 `EezStudio_HistoryItemEnclosure`,
                 `EezStudio_HistoryItem_${historyItem.id}`,
                 {
+                    EezStudio_HistoryItemEnclosure_Session:
+                        historyItem.type === "activity-log/session",
                     selected:
                         !this.props.appStore.selectHistoryItemsSpecification && historyItem.selected
                 }

@@ -342,14 +342,8 @@ export class HistoryView extends React.Component<{
         }
 
         const defaultLayoutConfig = {
-            settings: {
-                showPopoutIcon: false,
-                showMaximiseIcon: false,
-                showCloseIcon: false
-            },
-            dimensions: {
-                borderWidth: 8
-            },
+            settings: SideDock.DEFAULT_SETTINGS,
+            dimensions: SideDock.DEFAULT_DIMENSIONS,
             content
         };
 
@@ -380,7 +374,16 @@ export class HistoryView extends React.Component<{
                         props: any
                     ) {
                         ReactDOM.render(
-                            <SearchResults history={appStore.history} />,
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    width: "100%",
+                                    height: "100%",
+                                    display: "flex"
+                                }}
+                            >
+                                <SearchResults history={appStore.history} />
+                            </div>,
                             container.getElement()[0]
                         );
                     });
@@ -400,8 +403,7 @@ export class HistoryView extends React.Component<{
                             <div
                                 style={{
                                     height: "100%",
-                                    overflow: "auto",
-                                    background: "white"
+                                    overflow: "auto"
                                 }}
                             >
                                 <Calendar history={appStore.history} />
@@ -417,9 +419,10 @@ export class HistoryView extends React.Component<{
                         ReactDOM.render(
                             <div
                                 style={{
+                                    position: "absolute",
+                                    width: "100%",
                                     height: "100%",
-                                    overflow: "auto",
-                                    background: "white"
+                                    display: "flex"
                                 }}
                             >
                                 <SessionList appStore={appStore} history={appStore.history} />

@@ -627,9 +627,12 @@ class HistorySessions {
                 FROM
                     activityLog
                 WHERE
-                    ${this.history.oidWhereClause} AND type = "instrument/connected"`
+                    type = "activity-log/session"
+                ORDER BY
+                    date`
             )
-            .all(...this.history.oidWhereClauseParam);
+            .all();
+
         this.sessions = this.history.rowsToHistoryItems(rows).map(activityLogEntry => ({
             selected: false,
             id: activityLogEntry.id,
@@ -670,7 +673,7 @@ class HistorySessions {
                 )
                 .all(
                     ...this.history.oidWhereClauseParam,
-                    selectedSession.activityLogEntry.date.getTime(),
+                    new Date(selectedSession.activityLogEntry.date).getTime(),
                     CONF_BLOCK_SIZE
                 );
 
@@ -681,7 +684,7 @@ class HistorySessions {
     }
 
     onActivityLogEntryCreated(activityLogEntry: IActivityLogEntry) {
-        if (activityLogEntry.type === "instrument/connected") {
+        if (activityLogEntry.type === "activity-log/session") {
             let i;
             for (i = 0; i < this.sessions.length; i++) {
                 if (activityLogEntry.id === this.sessions[i].activityLogEntry.id) {
@@ -700,7 +703,7 @@ class HistorySessions {
     }
 
     onActivityLogEntryRemoved(activityLogEntry: IActivityLogEntry) {
-        if (activityLogEntry.type === "instrument/connected") {
+        if (activityLogEntry.type === "activity-log/session") {
             for (let i = 0; i < this.sessions.length; i++) {
                 if (this.sessions[i].id === activityLogEntry.id) {
                     this.sessions.splice(i, 1);
@@ -761,7 +764,7 @@ export class History {
                         qmarks += ",?";
                     }
                 }
-                this._oidWhereClause = `oid IN(${qmarks})`;
+                this._oidWhereClause = `(oid='0' OR oid IN(${qmarks}))`;
             } else {
                 this._oidWhereClause = "oid=oid";
             }
@@ -860,7 +863,7 @@ export class History {
         if (this.appStore.oids) {
             return this._oidWhereClause;
         } else {
-            return "oid=?";
+            return "(oid='0' OR oid=?)";
         }
     }
 

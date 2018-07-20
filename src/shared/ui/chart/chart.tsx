@@ -2891,14 +2891,8 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             });
 
             const defaultLayoutConfig = {
-                settings: {
-                    showPopoutIcon: false,
-                    showMaximiseIcon: false,
-                    showCloseIcon: false
-                },
-                dimensions: {
-                    borderWidth: 8
-                },
+                settings: SideDock.DEFAULT_SETTINGS,
+                dimensions: SideDock.DEFAULT_DIMENSIONS,
                 content: [
                     {
                         type: "column",

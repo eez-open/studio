@@ -15,7 +15,6 @@ import {
 import { groups, addGroup, updateGroup, deleteGroup } from "shortcuts/groups-store";
 
 import { beginTransaction, commitTransaction } from "shared/store";
-import { Container } from "shared/ui/container";
 import { VerticalHeaderWithBody, ToolbarHeader, Body } from "shared/ui/header-with-body";
 
 import * as InstrumentObjectModule from "instrument/instrument-object";
@@ -123,31 +122,29 @@ const groupsStore = {
 export class ShortcutsAndGroups extends React.Component<{}, {}> {
     render() {
         return (
-            <Container>
-                <VerticalHeaderWithBody>
-                    <ToolbarHeader>
-                        {shortcutsOrGroups.get() ? (
-                            <ShortcutsToolbarButtons
-                                shortcutsOrGroups={shortcutsOrGroups}
-                                shortcutsStore={shortcutsStore}
-                                groupsStore={groupsStore}
-                            />
-                        ) : (
-                            <GroupsToolbarButtons
-                                shortcutsOrGroups={shortcutsOrGroups}
-                                groupsStore={groupsStore}
-                            />
-                        )}
-                    </ToolbarHeader>
-                    <Body tabIndex={0}>
-                        {shortcutsOrGroups.get() ? (
-                            <Shortcuts shortcutsStore={shortcutsStore} groupsStore={groupsStore} />
-                        ) : (
-                            <Groups shortcutsStore={shortcutsStore} groupsStore={groupsStore} />
-                        )}
-                    </Body>
-                </VerticalHeaderWithBody>
-            </Container>
+            <VerticalHeaderWithBody>
+                <ToolbarHeader>
+                    {shortcutsOrGroups.get() ? (
+                        <ShortcutsToolbarButtons
+                            shortcutsOrGroups={shortcutsOrGroups}
+                            shortcutsStore={shortcutsStore}
+                            groupsStore={groupsStore}
+                        />
+                    ) : (
+                        <GroupsToolbarButtons
+                            shortcutsOrGroups={shortcutsOrGroups}
+                            groupsStore={groupsStore}
+                        />
+                    )}
+                </ToolbarHeader>
+                <Body tabIndex={0}>
+                    {shortcutsOrGroups.get() ? (
+                        <Shortcuts shortcutsStore={shortcutsStore} groupsStore={groupsStore} />
+                    ) : (
+                        <Groups shortcutsStore={shortcutsStore} groupsStore={groupsStore} />
+                    )}
+                </Body>
+            </VerticalHeaderWithBody>
         );
     }
 }

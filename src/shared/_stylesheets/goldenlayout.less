@@ -74,14 +74,9 @@
 // .lm_header {
 //     height: 20px;
 // }
-.lm_header {
-    height: 28px;
-}
-
 // .lm_header.lm_selectable {
 //     cursor: pointer;
 // }
-
 // .lm_header .lm_tab {
 //     font-family: Arial, sans-serif;
 //     font-size: 12px;
@@ -93,8 +88,12 @@
 //     border-bottom: none;
 // }
 .lm_header .lm_tab {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: bold;
     background: @panel-header-color;
     border: 1px solid @border-color;
+    height: 26px - 6px;
 }
 
 // .lm_header .lm_tab .lm_title {

@@ -5,14 +5,12 @@ import { observer } from "mobx-react";
 import { formatDateTimeLong } from "shared/util";
 import { IActivityLogEntry } from "shared/activity-log";
 
-import { getConnectionParametersInfo } from "instrument/window/connection";
-
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class ConnectedHistoryItemComponent extends React.Component<
+export class SessionHistoryItemComponent extends React.Component<
     {
         historyItem: HistoryItem;
     },
@@ -38,16 +36,13 @@ export class ConnectedHistoryItemComponent extends React.Component<
 
     render() {
         return (
-            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Connected">
+            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Session">
                 <p>
                     <small className="EezStudio_HistoryItemDate text-muted">
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
-                    <span>
-                        CONNECTED{this.message.connectionParameters
-                            ? " to " +
-                              getConnectionParametersInfo(this.message.connectionParameters)
-                            : ""}
+                    <span className="EezStudio_HistoryItem_SessionName">
+                        {this.message.sessionName}
                     </span>
                 </p>
             </div>
@@ -55,12 +50,12 @@ export class ConnectedHistoryItemComponent extends React.Component<
     }
 }
 
-export class ConnectedHistoryItem extends HistoryItem {
+export class SessionHistoryItem extends HistoryItem {
     constructor(activityLogEntry: IActivityLogEntry) {
         super(activityLogEntry);
     }
 
     get listItemElement(): JSX.Element | null {
-        return <ConnectedHistoryItemComponent historyItem={this} />;
+        return <SessionHistoryItemComponent historyItem={this} />;
     }
 }

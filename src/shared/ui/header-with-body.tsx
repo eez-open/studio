@@ -43,7 +43,7 @@ export class Body extends React.Component<
 
         let style: React.CSSProperties = {};
         if (this.props.visible !== undefined) {
-            style.display = this.props.visible ? "block" : "none";
+            style.display = this.props.visible ? "flex" : "none";
         }
 
         return (

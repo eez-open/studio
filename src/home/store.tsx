@@ -20,7 +20,7 @@ import { ITab } from "shared/ui/tabs";
 
 import { instrumentStore } from "instrument/instrument-object";
 
-import { HomeComponent } from "home/home-component";
+import * as HomeComponentModule from "home/home-component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -260,7 +260,15 @@ class HomeTab implements IHomeTab {
         </React.Fragment>
     );
 
-    editor = <HomeComponent />;
+    _editor: JSX.Element;
+
+    get editor() {
+        if (!this._editor) {
+            const { HomeComponent } = require("home/home-component") as typeof HomeComponentModule;
+            this._editor = <HomeComponent />;
+        }
+        return this._editor;
+    }
 
     render() {
         return this.editor;
@@ -270,8 +278,6 @@ class HomeTab implements IHomeTab {
     makeActive(): void {
         this.tabs.makeActive(this);
     }
-
-    trt() {}
 }
 
 class ObjectEditorTab implements IHomeTab {

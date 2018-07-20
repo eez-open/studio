@@ -143,14 +143,8 @@ export class DeletedHistoryItemsView extends React.Component<{
         }
 
         const defaultLayoutConfig = {
-            settings: {
-                showPopoutIcon: false,
-                showMaximiseIcon: false,
-                showCloseIcon: false
-            },
-            dimensions: {
-                borderWidth: 8
-            },
+            settings: SideDock.DEFAULT_SETTINGS,
+            dimensions: SideDock.DEFAULT_DIMENSIONS,
             content
         };
 
@@ -181,7 +175,16 @@ export class DeletedHistoryItemsView extends React.Component<{
                         props: any
                     ) {
                         ReactDOM.render(
-                            <SearchResults history={appStore.deletedItemsHistory} />,
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    width: "100%",
+                                    height: "100%",
+                                    display: "flex"
+                                }}
+                            >
+                                <SearchResults history={appStore.history} />
+                            </div>,
                             container.getElement()[0]
                         );
                     });
@@ -194,8 +197,7 @@ export class DeletedHistoryItemsView extends React.Component<{
                             <div
                                 style={{
                                     height: "100%",
-                                    overflow: "auto",
-                                    background: "white"
+                                    overflow: "auto"
                                 }}
                             >
                                 <Calendar history={appStore.deletedItemsHistory} />
