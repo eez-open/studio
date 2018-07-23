@@ -10,6 +10,8 @@ import { Toolbar } from "shared/ui/toolbar";
 import { IconAction } from "shared/ui/action";
 import { Icon } from "shared/ui/icon";
 
+import { InstrumentObject, instruments } from "instrument/instrument-object";
+
 import { ChartPreview } from "instrument/window/chart-preview";
 
 import { createTableListFromData } from "instrument/window/lists/factory";
@@ -34,10 +36,15 @@ export class ListHistoryItemComponent extends React.Component<
 
     @computed
     get list() {
-        if (this.message.listData && this.message.listData.length > 0) {
+        if (
+            this.message.listData &&
+            this.message.listData.length > 0 &&
+            this.props.historyItem.instrument
+        ) {
             return createTableListFromData(
                 Object.assign({}, this.message.listData[0]),
-                this.props.historyItem.appStore! as any // @todo remove need for any
+                this.props.historyItem.appStore! as any, // @todo remove need for any
+                this.props.historyItem.instrument
             );
         }
 
@@ -109,8 +116,12 @@ export class ListHistoryItemComponent extends React.Component<
 }
 
 export class ListHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, public appStore?: IAppStore) {
+    instrument: InstrumentObject | undefined;
+
+    constructor(activityLogEntry: IActivityLogEntry, public appStore: IAppStore) {
         super(activityLogEntry);
+
+        this.instrument = instruments.get(activityLogEntry.oid);
     }
 
     get listItemElement(): JSX.Element | null {

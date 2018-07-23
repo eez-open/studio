@@ -55,7 +55,7 @@ export function createInstrumentListStore(appStore: AppStore | null) {
                 const {
                     createListObject
                 } = require("instrument/window/lists/factory") as typeof ListsFactoryModule;
-                props = createListObject(props, appStore);
+                props = createListObject(props, appStore, appStore.instrument!);
             }
             return props;
         }

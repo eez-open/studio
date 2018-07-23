@@ -126,7 +126,7 @@ class MasterView extends React.Component<
                             duration: result.values.duration,
                             numSamples: result.values.numSamples
                         },
-                        this.props.appStore
+                        this.props.appStore.instrument!
                     )
                 });
                 commitTransaction();
@@ -391,7 +391,11 @@ export class ListsButtons extends React.Component<{ appStore: AppStore }, {}> {
                         }
                     })
                         .then(result => {
-                            let list = createTableListFromData(data, this.props.appStore);
+                            let list = createTableListFromData(
+                                data,
+                                this.props.appStore,
+                                this.props.appStore.instrument!
+                            );
                             list.name = result.values.name;
                             list.description = result.values.description;
 
@@ -452,7 +456,11 @@ export class ListsButtons extends React.Component<{ appStore: AppStore }, {}> {
         }
 
         const tableListData = Object.assign({}, listData[0]);
-        const tableList = createTableListFromData(tableListData, this.props.appStore);
+        const tableList = createTableListFromData(
+            tableListData,
+            this.props.appStore,
+            this.props.appStore.instrument!
+        );
 
         showGenericDialog({
             dialogDefinition: {

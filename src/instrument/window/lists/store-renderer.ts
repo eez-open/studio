@@ -13,6 +13,8 @@ import {
     ChartMode
 } from "shared/ui/chart/chart";
 
+import { InstrumentObject } from "instrument/instrument-object";
+
 import { AppStore } from "instrument/window/app-store";
 
 import { ChartsDisplayOption } from "instrument/window/lists/common-tools";
@@ -22,49 +24,46 @@ import { ChartsDisplayOption } from "instrument/window/lists/common-tools";
 const CONF_MAX_VOLTAGE = 40;
 const CONF_MAX_CURRENT = 5;
 
-function getFirstChannel(appStore: AppStore) {
-    return appStore.instrument && appStore.instrument.firstChannel;
+function getFirstChannel(instrument: InstrumentObject) {
+    return instrument.firstChannel;
 }
 
-export function getMaxVoltage(appStore: AppStore): number {
+export function getMaxVoltage(instrument: InstrumentObject): number {
     let maxVoltage;
-    const channel = getFirstChannel(appStore);
+    const channel = getFirstChannel(instrument);
     if (channel) {
         maxVoltage = channel.maxVoltage;
     }
     return maxVoltage || CONF_MAX_VOLTAGE;
 }
 
-export function getMaxCurrent(appStore: AppStore): number {
+export function getMaxCurrent(instrument: InstrumentObject): number {
     let maxCurrent;
-    const channel = getFirstChannel(appStore);
+    const channel = getFirstChannel(instrument);
     if (channel) {
         maxCurrent = channel.maxCurrent;
     }
     return maxCurrent || CONF_MAX_CURRENT;
 }
 
-export function getMaxPower(appStore: AppStore): number {
+export function getMaxPower(instrument: InstrumentObject): number {
     let maxPower;
-    const channel = getFirstChannel(appStore);
+    const channel = getFirstChannel(instrument);
     if (channel) {
         maxPower = channel.maxPower;
     }
     return maxPower || CONF_MAX_VOLTAGE * CONF_MAX_CURRENT;
 }
 
-export function getPowerLimitErrorMessage(appStore: AppStore) {
+export function getPowerLimitErrorMessage(instrument: InstrumentObject) {
     return `Power limit of ${POWER_UNIT.formatValue(
-        getMaxPower(appStore),
-        Math.max(
-            appStore.instrument!.getDigits(VOLTAGE_UNIT),
-            appStore.instrument!.getDigits(CURRENT_UNIT)
-        )
+        getMaxPower(instrument),
+        Math.max(instrument.getDigits(VOLTAGE_UNIT), instrument.getDigits(CURRENT_UNIT))
     )} exceeded`;
 }
 
-export function checkVoltage(voltage: number, appStore: AppStore) {
-    const channel = getFirstChannel(appStore);
+export function checkVoltage(voltage: number, instrument: InstrumentObject) {
+    const channel = getFirstChannel(instrument);
     if (channel) {
         const maxVoltage = channel.maxVoltage;
         if (maxVoltage !== undefined) {
@@ -76,8 +75,8 @@ export function checkVoltage(voltage: number, appStore: AppStore) {
     return true;
 }
 
-export function checkCurrent(current: number, appStore: AppStore) {
-    const channel = getFirstChannel(appStore);
+export function checkCurrent(current: number, instrument: InstrumentObject) {
+    const channel = getFirstChannel(instrument);
     if (channel) {
         const maxCurrent = channel.maxCurrent;
         if (maxCurrent !== undefined) {
@@ -89,8 +88,8 @@ export function checkCurrent(current: number, appStore: AppStore) {
     return true;
 }
 
-export function checkPower(power: number, appStore: AppStore) {
-    const channel = getFirstChannel(appStore);
+export function checkPower(power: number, instrument: InstrumentObject) {
+    const channel = getFirstChannel(instrument);
     if (channel) {
         const maxPower = channel.maxPower;
         if (maxPower !== undefined) {
@@ -329,7 +328,7 @@ export class ListAxisModel implements IAxisModel {
 
     constructor(public $eez_noser_list: BaseList, unit: IUnit) {
         this.unit = unit.clone();
-        this.unit.precision = $eez_noser_list.$eez_noser_appStore.instrument!.getDigits(unit);
+        this.unit.precision = $eez_noser_list.$eez_noser_instrument.getDigits(unit);
 
         const props = $eez_noser_list.props.data[this.unit.name + "AxisModel"];
 
@@ -362,8 +361,8 @@ export class ListAxisModel implements IAxisModel {
 
     get maxValue(): number {
         return this.unit.name === "voltage"
-            ? getMaxVoltage(this.$eez_noser_list.$eez_noser_appStore)
-            : getMaxCurrent(this.$eez_noser_list.$eez_noser_appStore);
+            ? getMaxVoltage(this.$eez_noser_list.$eez_noser_instrument)
+            : getMaxCurrent(this.$eez_noser_list.$eez_noser_instrument);
     }
 
     get defaultFrom() {
@@ -460,7 +459,11 @@ export abstract class BaseList {
     type: string;
     abstract data: BaseListData;
 
-    constructor(public props: any, public $eez_noser_appStore: AppStore) {
+    constructor(
+        public props: any,
+        public $eez_noser_appStore: AppStore,
+        public $eez_noser_instrument: InstrumentObject
+    ) {
         this.id = props.id;
         this.name = props.name;
         this.description = props.description;

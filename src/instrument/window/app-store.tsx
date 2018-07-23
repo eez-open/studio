@@ -80,25 +80,24 @@ export class AppStore implements IEditor {
                 this.instrument = instruments.get(this.instrumentId);
 
                 this.helpVisible =
-                    localStorage.getItem(
-                        `instrument/${this.instrument!.id}/window/help-visible`
-                    ) === "1" || false;
+                    localStorage.getItem(`instrument/${this.instrumentId}/window/help-visible`) ===
+                        "1" || false;
 
                 this.searchVisible =
                     localStorage.getItem(
-                        `instrument/${this.instrument!.id}/window/search-visible`
+                        `instrument/${this.instrumentId}/window/search-visible`
                     ) === "1" || true;
 
                 this.filtersVisible =
                     localStorage.getItem(
-                        `instrument/${this.instrument!.id}/window/filters-visible`
+                        `instrument/${this.instrumentId}/window/filters-visible`
                     ) === "1" || true;
 
                 this.filters = this.getFiltersFromLocalStorage();
 
                 this.searchViewSection =
                     (localStorage.getItem(
-                        `instrument/${this.instrument!.id}/window/search/view-section`
+                        `instrument/${this.instrumentId}/window/search/view-section`
                     ) as any) || "calendar";
 
                 scheduleTask("Load commands tree", Priority.Low, () => {
@@ -127,7 +126,7 @@ export class AppStore implements IEditor {
         this.reactionDisposer = reaction(
             () => JSON.stringify(this.filters),
             filters => {
-                localStorage.setItem(`instrument/${this.instrument!.id}/window/filters`, filters);
+                localStorage.setItem(`instrument/${this.instrumentId}/window/filters`, filters);
             }
         );
 
@@ -197,7 +196,7 @@ export class AppStore implements IEditor {
     getFiltersFromLocalStorage(): Filters {
         const filters = new Filters();
 
-        let filtersJSON = localStorage.getItem(`instrument/${this.instrument!.id}/window/filters`);
+        let filtersJSON = localStorage.getItem(`instrument/${this.instrumentId}/window/filters`);
         if (filtersJSON) {
             try {
                 Object.assign(filters, JSON.parse(filtersJSON));
@@ -213,7 +212,7 @@ export class AppStore implements IEditor {
     toggleHelpVisible() {
         this.helpVisible = !this.helpVisible;
         localStorage.setItem(
-            `instrument/${this.instrument!.id}/window/help-visible`,
+            `instrument/${this.instrumentId}/window/help-visible`,
             this.helpVisible ? "1" : "0"
         );
     }
@@ -222,7 +221,7 @@ export class AppStore implements IEditor {
     toggleSearchVisible() {
         this.searchVisible = !this.searchVisible;
         localStorage.setItem(
-            `instrument/${this.instrument!.id}/window/search-visible`,
+            `instrument/${this.instrumentId}/window/search-visible`,
             this.searchVisible ? "1" : "0"
         );
     }
@@ -231,7 +230,7 @@ export class AppStore implements IEditor {
     toggleFiltersVisible() {
         this.filtersVisible = !this.filtersVisible;
         localStorage.setItem(
-            `instrument/${this.instrument!.id}/window/filters-visible`,
+            `instrument/${this.instrumentId}/window/filters-visible`,
             this.filtersVisible ? "1" : "0"
         );
     }
@@ -239,7 +238,7 @@ export class AppStore implements IEditor {
     @action
     setSearchViewSection(value: "calendar" | "sessions") {
         this.searchViewSection = value;
-        localStorage.setItem(`instrument/${this.instrument!.id}/window/search/view-section`, value);
+        localStorage.setItem(`instrument/${this.instrumentId}/window/search/view-section`, value);
     }
 
     @action

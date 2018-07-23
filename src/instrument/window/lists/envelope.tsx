@@ -33,6 +33,8 @@ import { Toolbar } from "shared/ui/toolbar";
 import { ButtonAction, DropdownButtonAction, DropdownItem } from "shared/ui/action";
 import { showGenericDialog } from "shared/ui/generic-dialog";
 
+import { InstrumentObject } from "instrument/instrument-object";
+
 import { AppStore } from "instrument/window/app-store";
 
 import { BaseList, BaseListData, ListAxisModel } from "instrument/window/lists/store-renderer";
@@ -59,9 +61,9 @@ const CONF_ENVELOPE_POINT_RADIUS = CONF_CURSOR_RADIUS;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getDefaultEnvelopeListData(appStore: AppStore) {
-    const voltage = getMaxVoltage(appStore) / 2;
-    const current = getMaxCurrent(appStore) / 2;
+function getDefaultEnvelopeListData(instrument: InstrumentObject) {
+    const voltage = getMaxVoltage(instrument) / 2;
+    const current = getMaxCurrent(instrument) / 2;
     return {
         voltage: [{ time: 0, value: voltage }, { time: 1, value: voltage }],
         current: [{ time: 0, value: current }, { time: 1, value: current }],
@@ -72,9 +74,9 @@ function getDefaultEnvelopeListData(appStore: AppStore) {
 
 export function createEmptyEnvelopeListData(
     props: { duration: number; numSamples: number },
-    appStore: AppStore
+    instrument: InstrumentObject
 ) {
-    const envelopeListData = objectClone(getDefaultEnvelopeListData(appStore));
+    const envelopeListData = objectClone(getDefaultEnvelopeListData(instrument));
     envelopeListData.duration = props.duration;
     envelopeListData.numSamples = props.numSamples;
     envelopeListData.voltage[1].time = props.duration;
@@ -97,7 +99,7 @@ export class EnvelopeListData extends BaseListData {
     constructor(list: BaseList, props: any) {
         super(list, props);
 
-        const defaultEnvelopeListData = getDefaultEnvelopeListData(list.$eez_noser_appStore);
+        const defaultEnvelopeListData = getDefaultEnvelopeListData(list.$eez_noser_instrument);
 
         this.duration = props.duration || defaultEnvelopeListData.duration;
         this.numSamples = props.numSamples || defaultEnvelopeListData.numSamples;
@@ -132,8 +134,8 @@ export class EnvelopeListData extends BaseListData {
 export class EnvelopeList extends BaseList {
     @observable data: EnvelopeListData;
 
-    constructor(props: any, appStore: AppStore) {
-        super(props, appStore);
+    constructor(props: any, appStore: AppStore, instrument: InstrumentObject) {
+        super(props, appStore, instrument);
         this.type = "envelope";
         this.data = new EnvelopeListData(this, props.data);
     }
@@ -328,8 +330,8 @@ export class EnvelopeList extends BaseList {
     get powerLimitError() {
         for (let i = 0; i < this.tableListData.dwell.length; i++) {
             let power = this.tableListData.voltage[i] * this.tableListData.current[i];
-            if (!checkPower(power, this.$eez_noser_appStore)) {
-                return getPowerLimitErrorMessage(this.$eez_noser_appStore);
+            if (!checkPower(power, this.$eez_noser_instrument)) {
+                return getPowerLimitErrorMessage(this.$eez_noser_instrument);
             }
         }
         return undefined;
@@ -1390,7 +1392,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
             const oldCurrent = this.list.data.current;
 
             const defaultEnvelopeListData = getDefaultEnvelopeListData(
-                this.list.$eez_noser_appStore
+                this.list.$eez_noser_instrument
             );
 
             const newVoltage = objectClone(defaultEnvelopeListData.voltage);
@@ -1430,7 +1432,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
             const oldVoltage = this.list.data.voltage;
 
             const defaultEnvelopeListData = getDefaultEnvelopeListData(
-                this.list.$eez_noser_appStore
+                this.list.$eez_noser_instrument
             );
 
             const newVoltage = defaultEnvelopeListData.voltage.slice();
@@ -1465,7 +1467,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
             const oldCurrent = this.list.data.current;
 
             const defaultEnvelopeListData = getDefaultEnvelopeListData(
-                this.list.$eez_noser_appStore
+                this.list.$eez_noser_instrument
             );
 
             const newCurrent = defaultEnvelopeListData.current.slice();

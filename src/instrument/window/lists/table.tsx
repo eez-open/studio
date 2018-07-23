@@ -33,6 +33,8 @@ import { Toolbar } from "shared/ui/toolbar";
 import { ButtonAction, DropdownButtonAction, DropdownItem } from "shared/ui/action";
 import { showGenericDialog } from "shared/ui/generic-dialog";
 
+import { InstrumentObject } from "instrument/instrument-object";
+
 import { AppStore } from "instrument/window/app-store";
 
 import { BaseList, BaseListData, ListAxisModel } from "instrument/window/lists/store-renderer";
@@ -97,8 +99,8 @@ export class TableListData extends BaseListData {
 export class TableList extends BaseList {
     @observable data: TableListData;
 
-    constructor(props: any, appStore: AppStore) {
-        super(props, appStore);
+    constructor(props: any, appStore: AppStore, instrument: InstrumentObject) {
+        super(props, appStore, instrument);
         this.type = "table";
         this.data = new TableListData(this, props.data);
     }
@@ -560,22 +562,22 @@ export class Table extends React.Component<
             if (key === "voltage" || key === "current") {
                 let power;
                 if (key === "voltage") {
-                    if (!checkVoltage(numValue, this.props.list.$eez_noser_appStore)) {
+                    if (!checkVoltage(numValue, this.props.list.$eez_noser_instrument)) {
                         $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
                         this.props.setError(
                             `Allowed range: 0 - ${unit.formatValue(
-                                getMaxVoltage(this.props.list.$eez_noser_appStore)
+                                getMaxVoltage(this.props.list.$eez_noser_instrument)
                             )}`
                         );
                         return;
                     }
                     power = numValue * this.props.list.data.current[index];
                 } else {
-                    if (!checkCurrent(numValue, this.props.list.$eez_noser_appStore)) {
+                    if (!checkCurrent(numValue, this.props.list.$eez_noser_instrument)) {
                         $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
                         this.props.setError(
                             `Allowed range: 0 - ${unit.formatValue(
-                                getMaxCurrent(this.props.list.$eez_noser_appStore)
+                                getMaxCurrent(this.props.list.$eez_noser_instrument)
                             )}`
                         );
                         return;
@@ -583,10 +585,10 @@ export class Table extends React.Component<
                     power = numValue * this.props.list.data.voltage[index];
                 }
 
-                if (!checkPower(power, this.props.list.$eez_noser_appStore)) {
+                if (!checkPower(power, this.props.list.$eez_noser_instrument)) {
                     $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
                     this.props.setError(
-                        getPowerLimitErrorMessage(this.props.list.$eez_noser_appStore)
+                        getPowerLimitErrorMessage(this.props.list.$eez_noser_instrument)
                     );
                     return;
                 }
