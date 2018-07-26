@@ -21,6 +21,14 @@ export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
     }
 
     render() {
+        const viewSessionsList = (
+            <IconAction
+                icon="material:list"
+                title="View sessions list"
+                onClick={this.props.appStore.navigationStore.navigateToSessionsList}
+            />
+        );
+
         let body;
 
         if (this.props.appStore.history.sessions.activeSession) {
@@ -28,9 +36,12 @@ export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
                 <React.Fragment>
                     <span>Active session:</span>
                     <span>{this.props.appStore.history.sessions.activeSession.sessionName}</span>
-                    <button className="btn" onClick={this.onClose}>
-                        Close
-                    </button>
+                    <ButtonAction
+                        text="Close"
+                        title="Close active session"
+                        onClick={this.onClose}
+                    />
+                    {viewSessionsList}
                 </React.Fragment>
             );
         } else {
@@ -41,11 +52,7 @@ export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
                         title="Start a new session"
                         onClick={this.props.appStore.history.sessions.startNewSession}
                     />
-                    <IconAction
-                        icon="material:list"
-                        title="View sessions list"
-                        onClick={this.props.appStore.navigationStore.navigateToSessionsList}
-                    />
+                    {viewSessionsList}
                 </React.Fragment>
             );
         }
