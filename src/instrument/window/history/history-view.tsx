@@ -13,13 +13,13 @@ import { IconAction, ButtonAction } from "shared/ui/action";
 import { Toolbar } from "shared/ui/toolbar";
 import { SideDock } from "shared/ui/side-dock";
 
-import { IAppStore } from "instrument/window/history/history";
+import { IAppStore, INavigationStore } from "instrument/window/history/history";
 import { HistoryListComponent } from "instrument/window/history/list-component";
 import { IHistoryItem } from "instrument/window/history/item";
 import { SearchResults } from "instrument/window/history/search-results";
 import { FiltersComponent } from "instrument/window/history/filters";
 import { Calendar } from "instrument/window/history/calendar";
-import { SessionList } from "instrument/window/history/session-list";
+import { SessionList } from "instrument/window/history/session/list-view";
 
 import { showAddNoteDialog } from "instrument/window/note-dialog";
 
@@ -142,7 +142,7 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
                 />
             );
 
-            if (appStore.history.selection.items.length > 0) {
+            if (appStore.history.selection.canDelete) {
                 actions.push(
                     <IconAction
                         key="delete"
@@ -164,6 +164,7 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
                         text={`Deleted Items (${appStore.deletedItemsHistory.deletedCount})`}
                         title="Show deleted items"
                         onClick={appStore.navigationStore.navigateToDeletedHistoryItems}
+                        className="btn-sm"
                         style={style}
                     />
                 );
@@ -182,8 +183,6 @@ export class HistoryView extends React.Component<{
     persistId: string;
     simple?: boolean;
 }> {
-    static mainHistoryView: HistoryView | undefined;
-
     animationFrameRequestId: any;
     history: HistoryListComponent | null;
     sideDock: SideDock | null;
@@ -201,14 +200,14 @@ export class HistoryView extends React.Component<{
     componentDidMount() {
         this.frameAnimation();
 
-        HistoryView.mainHistoryView = this;
+        this.props.appStore.navigationStore.mainHistoryView = this;
     }
 
     componentWillUnmount() {
         window.cancelAnimationFrame(this.animationFrameRequestId);
 
-        if (HistoryView.mainHistoryView === this) {
-            HistoryView.mainHistoryView = undefined;
+        if (this.props.appStore.navigationStore.mainHistoryView === this) {
+            this.props.appStore.navigationStore.mainHistoryView = undefined;
         }
     }
 
@@ -279,7 +278,8 @@ export class HistoryView extends React.Component<{
 
         let searchResultsVisible = appStore.history.search.searchActive;
 
-        let searchResultsComponent = searchResultsVisible && {
+        let searchResultsItem = searchResultsVisible && {
+            id: "searchResults",
             type: "component",
             componentName: "SearchResults",
             componentState: {},
@@ -287,7 +287,8 @@ export class HistoryView extends React.Component<{
             isClosable: false
         };
 
-        const filtersComponent = {
+        const filtersItem = {
+            id: "filters",
             type: "component",
             componentName: "Filters",
             componentState: {},
@@ -295,7 +296,8 @@ export class HistoryView extends React.Component<{
             isClosable: false
         };
 
-        const calendarComponent = {
+        const calendarItem = {
+            id: "calendar",
             type: "component",
             componentName: "Calendar",
             componentState: {},
@@ -303,7 +305,8 @@ export class HistoryView extends React.Component<{
             isClosable: false
         };
 
-        const sessionsComponent = {
+        const sessionsItem = {
+            id: "sessions",
             type: "component",
             componentName: "Sessions",
             componentState: {},
@@ -312,16 +315,16 @@ export class HistoryView extends React.Component<{
         };
 
         let content;
-        if (searchResultsComponent) {
+        if (searchResultsItem) {
             content = [
                 {
                     type: "column",
                     content: [
-                        searchResultsComponent,
-                        filtersComponent,
+                        searchResultsItem,
+                        filtersItem,
                         {
                             type: "stack",
-                            content: [calendarComponent, sessionsComponent]
+                            content: [calendarItem, sessionsItem]
                         }
                     ]
                 }
@@ -331,10 +334,10 @@ export class HistoryView extends React.Component<{
                 {
                     type: "column",
                     content: [
-                        filtersComponent,
+                        filtersItem,
                         {
                             type: "stack",
-                            content: [calendarComponent, sessionsComponent]
+                            content: [calendarItem, sessionsItem]
                         }
                     ]
                 }
@@ -366,7 +369,7 @@ export class HistoryView extends React.Component<{
             <SideDock
                 ref={ref => (this.sideDock = ref)}
                 persistId={this.props.persistId + "/side-dock"}
-                layoutId={"layout/1" + (searchResultsComponent ? "/with-search-results" : "")}
+                layoutId={"layout/2" + (searchResultsItem ? "/with-search-results" : "")}
                 defaultLayoutConfig={defaultLayoutConfig}
                 registerComponents={(goldenLayout: any) => {
                     goldenLayout.registerComponent("SearchResults", function(
@@ -439,20 +442,37 @@ export class HistoryView extends React.Component<{
     }
 }
 
-export function moveToTopOfHistory() {
-    if (HistoryView.mainHistoryView && HistoryView.mainHistoryView.history) {
-        HistoryView.mainHistoryView.history.moveToTop();
+export function moveToTopOfHistory(historyView: HistoryView | undefined) {
+    if (historyView && historyView.history) {
+        historyView.history.moveToTop();
     }
 }
 
-export function moveToBottomOfHistory() {
-    if (HistoryView.mainHistoryView && HistoryView.mainHistoryView.history) {
-        HistoryView.mainHistoryView.history.moveToBottom();
+export function moveToBottomOfHistory(historyView: HistoryView | undefined) {
+    if (historyView && historyView.history) {
+        historyView.history.moveToBottom();
     }
 }
 
-export function showHistoryItem(historyItem: IHistoryItem) {
-    if (HistoryView.mainHistoryView && HistoryView.mainHistoryView.history) {
-        HistoryView.mainHistoryView.history.showHistoryItem(historyItem);
+export function showHistoryItem(historyView: HistoryView | undefined, historyItem: IHistoryItem) {
+    if (historyView && historyView.history) {
+        historyView.history.showHistoryItem(historyItem);
     }
+}
+
+export function showSessionsList(navigationStore: INavigationStore) {
+    const sideDock = navigationStore.mainHistoryView && navigationStore.mainHistoryView.sideDock;
+    if (sideDock) {
+        if (!sideDock.isOpen) {
+            sideDock.toggleIsOpen();
+        } else {
+            const items = sideDock.goldenLayout.root.getItemsById("sessions");
+            if (items.length === 1) {
+                items[0].parent.setActiveContentItem(items[0]);
+            }
+            return;
+        }
+    }
+    // try again
+    setTimeout(() => showSessionsList(navigationStore), 0);
 }

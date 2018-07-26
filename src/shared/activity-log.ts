@@ -1,3 +1,5 @@
+import { observable, runInAction } from "mobx";
+
 import { db } from "shared/db";
 
 import { createStore, types, IFilterSpecification, IStoreOperationOptions } from "shared/store";
@@ -98,12 +100,105 @@ export const activityLogStore = createStore({
                 message <> "" AND
                 NOT json_valid(message);
 
-        UPDATE activityLogVersion SET version = 5;`
+        UPDATE activityLogVersion SET version = 5;`,
+
+        // version 6
+        `UPDATE activityLog SET type="activity-log/session-start" WHERE type="activity-log/session";
+
+        UPDATE activityLogVersion SET version = 6;`,
+
+        // version 7
+        `CREATE TABLE activityLog2(
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+            date INTEGER NOT NULL,
+            sid INTEGER,
+            oid INTEGER NOT NULL,
+            type TEXT NOT NULL,
+            message TEXT NOT NULL,
+            data TEXT,
+            deleted BOOLEAN
+        );
+        DROP INDEX activityLog_date;
+        DROP INDEX activityLog_oidAndDate;
+        INSERT INTO activityLog2(id, date, oid, type, message, data, deleted)
+            SELECT id, date, oid, type, message, data, deleted FROM activityLog;
+        DROP TABLE activityLog;
+        ALTER TABLE activityLog2 RENAME TO activityLog;
+        CREATE INDEX activityLog_date ON activityLog(date, deleted);
+        CREATE INDEX activityLog_oidAndDate ON activityLog(oid, date, deleted);
+        UPDATE activityLogVersion SET version = 7;`,
+
+        // version 8
+        `UPDATE activityLog
+        SET sid = (
+            SELECT s2.id
+            FROM activityLog AS s2
+            WHERE
+                s2.type = "activity-log/session-start" AND
+                (
+                    (
+                        json_valid(activityLog.message) AND
+                        json_extract(s2.message, '$.sessionName') = json_extract(activityLog.message, '$.sessionName')
+                    )
+
+                    OR
+
+                    (
+                        activityLog.message <> "" AND
+                        json_extract(s2.message, '$.sessionName') = activityLog.message
+                    )
+                )
+
+            )
+        WHERE type = "instrument/connected";
+
+        UPDATE activityLog
+        SET sid = (
+            SELECT s2.sid
+            FROM activityLog AS s2
+            WHERE
+                s2.type = "instrument/connected" AND
+                s2.oid = activityLog.oid AND
+                s2.date < activityLog.date
+            ORDER BY s2.date DESC
+            LIMIT 1
+        )
+        WHERE type <> "instrument/connected" AND type <> "activity-log/session-start";
+
+        UPDATE activityLogVersion SET version = 8;`,
+
+        // version 9
+        `INSERT INTO activityLog(date, sid, oid, type, message, data, deleted)
+            SELECT
+                date+1, sid, '0', 'activity-log/session-close', "", NULL, 0
+            FROM
+                activityLog
+            WHERE
+                type="instrument/disconnected" AND
+                sid IS NOT NULL;
+
+        UPDATE activityLog
+            SET
+                message = json_set(
+                    message,
+                    '$.sessionCloseId',
+                    (
+                        SELECT activityLog2.id FROM activityLog AS activityLog2 WHERE activityLog2.type = 'activity-log/session-close' AND activityLog2.sid = activityLog.id
+                    )
+                )
+            WHERE
+                type = 'activity-log/session-start' AND
+                EXISTS(
+                    SELECT * FROM activityLog AS activityLog2 WHERE activityLog2.type = 'activity-log/session-close' AND activityLog2.sid = activityLog.id
+                );
+
+        UPDATE activityLogVersion SET version = 9;`
     ],
 
     properties: {
         id: types.id,
         date: types.date,
+        sid: types.foreign,
         oid: types.foreign,
         type: types.string,
         message: types.string,
@@ -216,6 +311,7 @@ export interface IActivityLogFilterSpecification extends IFilterSpecification {
 export interface IActivityLogEntry {
     id: string;
     date: Date;
+    sid: string | null;
     oid: string;
     type: string;
     message: string;
@@ -225,6 +321,7 @@ export interface IActivityLogEntry {
 
 export function log(activityLogEntry: Partial<IActivityLogEntry>, options: IStoreOperationOptions) {
     activityLogEntry.date = new Date();
+    activityLogEntry.sid = activeSession.id;
 
     if (!activityLogEntry.message) {
         activityLogEntry.message = "";
@@ -267,3 +364,59 @@ export function loadData(id: string) {
 export function logGet(id: string) {
     return activityLogStore.findById(id);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+class ActiveSession {
+    @observable id: string | undefined;
+
+    constructor() {
+        activityLogStore.watch(
+            {
+                createObject: (object: any) => {
+                    if (object.type === "activity-log/session-start") {
+                        runInAction(() => (this.id = object.id));
+                    }
+                },
+                updateObject: (changes: any) => {
+                    if (changes.id === this.id && changes.message !== undefined) {
+                        try {
+                            const message = JSON.parse(changes.message);
+                            if (message.sessionCloseId) {
+                                runInAction(() => (this.id = undefined));
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }
+                },
+                deleteObject: (object: any) => {
+                    if (object.id === this.id) {
+                        runInAction(() => (this.id = undefined));
+                    }
+                }
+            },
+            {
+                skipInitialQuery: true
+            }
+        );
+
+        const result = db
+            .prepare(
+                `SELECT
+                    id
+                FROM
+                    activityLog
+                WHERE
+                    type = 'activity-log/session-start' AND
+                    json_extract(message, '$.sessionCloseId') IS NULL
+                ORDER BY date DESC
+                LIMIT 1`
+            )
+            .get();
+
+        this.id = result && result.id.toString();
+    }
+}
+
+export const activeSession = new ActiveSession();

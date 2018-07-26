@@ -28,10 +28,14 @@ export class Properties extends React.Component<
             <Box direction="column" background="panel-header" style={{ height: "100%" }}>
                 <PanelTitle title="History" />
                 <Box scrollable={true} background="white">
-                    <HistorySection
-                        oids={this.props.selectedObjects.map(selectedObject => selectedObject.oid)}
-                        simple={true}
-                    />
+                    <div>
+                        <HistorySection
+                            oids={this.props.selectedObjects.map(
+                                selectedObject => selectedObject.oid
+                            )}
+                            simple={true}
+                        />
+                    </div>
                 </Box>
             </Box>
         );

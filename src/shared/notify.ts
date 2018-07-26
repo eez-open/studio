@@ -156,7 +156,7 @@ if (isRenderer()) {
     ipc = require("electron").ipcMain;
 }
 
-ipc.on("notify/watch", function (event: any, args: INotifyWatchArgs) {
+ipc.on("notify/watch", function(event: any, args: INotifyWatchArgs) {
     targets.set(args.targetId, {
         sourceId: args.sourceId,
         filterSpecification: args.filterSpecification,
@@ -183,7 +183,7 @@ function sendSendMessage(
     target.send("notify/send-message", args);
 }
 
-ipc.on("notify/send-message", function (event: any, args: ISendMessageArgs) {
+ipc.on("notify/send-message", function(event: any, args: ISendMessageArgs) {
     targets.forEach((target, targetId) => {
         if (target.callback && targetId === args.targetId) {
             target.callback(args.message);
@@ -193,7 +193,7 @@ ipc.on("notify/send-message", function (event: any, args: ISendMessageArgs) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ipc.on("notify/get-targets", function (event: any, windowId: number) {
+ipc.on("notify/get-targets", function(event: any, windowId: number) {
     let targetWindowId: number;
     if (isRenderer()) {
         targetWindowId = EEZStudio.electron.remote.getCurrentWindow().id;

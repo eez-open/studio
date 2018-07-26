@@ -9,7 +9,7 @@ import { IconAction } from "shared/ui/action";
 import { AppStore } from "instrument/window/app-store";
 import { executeShortcut } from "instrument/window/script";
 
-import { ISession } from "instrument/window/history/history";
+import { ISession } from "instrument/window/history/session/store";
 import { HistoryView, HistoryTools } from "instrument/window/history/history-view";
 
 import { ShortcutsToolbar } from "instrument/window/terminal/toolbar";

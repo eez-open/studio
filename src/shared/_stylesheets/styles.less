@@ -409,7 +409,7 @@ input[type="color"] {
 }
 
 .EezStudio_PanelHeader {
-    padding: 10px;
+    padding: 6px 10px;
     border-bottom: 1px solid @border-color;
     background-color: @panel-header-color;
 }
@@ -599,10 +599,9 @@ TABS VIEW
 .EezStudio_TabsView {
     display: flex;
     background-color: @panel-header-color;
-    height: 38px;
+    height: 45px;
     border-bottom: 1px solid @border-color;
     margin: 0;
-    padding: 0;
     white-space: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
@@ -627,7 +626,7 @@ TABS VIEW
     }
 
     & > div {
-        height: 38px;
+        height: 45px;
         border-right: 1px solid @border-color;
         padding-left: 10px;
         padding-right: 10px;
@@ -886,5 +885,17 @@ DESIGNER
         input {
             width: 40px;
         }
+    }
+}
+
+.EezStudio_SessionInfo {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    span {
+        margin-right: 10px;
+    }
+    span:nth-child(2) {
+        font-weight: 500;
     }
 }

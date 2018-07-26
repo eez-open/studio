@@ -92,8 +92,10 @@ export class SideDock extends React.Component<{
 
     @bind
     onStateChanged() {
-        const state = JSON.stringify(this.goldenLayout.toConfig());
-        localStorage.setItem(this.layoutLocalStorageItemId, state);
+        if (this.goldenLayout) {
+            const state = JSON.stringify(this.goldenLayout.toConfig());
+            localStorage.setItem(this.layoutLocalStorageItemId, state);
+        }
     }
 
     updateSize() {

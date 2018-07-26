@@ -24,11 +24,11 @@ export function createHistoryItem(
     activityLogEntry: IActivityLogEntry,
     appStore?: any
 ): HistoryItem {
-    if (activityLogEntry.type === "activity-log/session") {
+    if (activityLogEntry.type.startsWith("activity-log/session")) {
         const {
             SessionHistoryItem
         } = require("instrument/window/history/items/session") as typeof SessionHistoryItemModule;
-        return new SessionHistoryItem(activityLogEntry);
+        return new SessionHistoryItem(activityLogEntry, appStore);
     }
 
     if (

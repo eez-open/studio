@@ -23,9 +23,12 @@ import * as notification from "shared/ui/notification";
 
 import { Filters, FilterStats } from "instrument/window/history/filters";
 
+import { HistorySessions } from "instrument/window/history/session/store";
+
 import { IHistoryItem } from "instrument/window/history/item";
 import { createHistoryItem, updateHistoryItemClass } from "instrument/window/history/item-factory";
 import {
+    HistoryView,
     moveToTopOfHistory,
     moveToBottomOfHistory,
     showHistoryItem
@@ -34,7 +37,7 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_SINGLE_SEARCH_LIMIT = 100;
-const CONF_BLOCK_SIZE = 100;
+export const CONF_BLOCK_SIZE = 100;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,6 +50,14 @@ export interface SelectHistoryItemsSpecification {
     okButtonText: string;
     okButtonTitle: string;
     onOk(): void;
+}
+
+export interface INavigationStore {
+    navigateToHistory(): void;
+    navigateToDeletedHistoryItems(): void;
+    navigateToSessionsList(): void;
+    mainHistoryView: HistoryView | undefined;
+    selectedListId: string | undefined;
 }
 
 export interface IAppStore {
@@ -69,11 +80,7 @@ export interface IAppStore {
         listsProperty?: any;
     };
 
-    navigationStore: {
-        navigateToHistory(): void;
-        navigateToDeletedHistoryItems(): void;
-        selectedListId: string | undefined;
-    };
+    navigationStore: INavigationStore;
 
     searchVisible: boolean;
     toggleSearchVisible(): void;
@@ -123,7 +130,7 @@ class HistoryCalendar {
                     ORDER BY
                         date`
                 )
-                .all(...this.history.oidWhereClauseParam);
+                .all();
 
             if (rows.length > 0) {
                 rows.forEach(row => this.counters.set(row.date, row.count.toNumber()));
@@ -164,11 +171,11 @@ class HistoryCalendar {
                         )
                     LIMIT ?`
                 )
-                .all(...this.history.oidWhereClauseParam, selectedDay.getTime(), CONF_BLOCK_SIZE);
+                .all(selectedDay.getTime(), CONF_BLOCK_SIZE);
 
             this.history.displayRows(rows);
 
-            moveToTopOfHistory();
+            moveToTopOfHistory(this.history.appStore.navigationStore.mainHistoryView);
         } else {
             this.showFirstHistoryItemAsSelectedDay = false;
 
@@ -186,13 +193,13 @@ class HistoryCalendar {
                         date DESC
                     LIMIT ?`
                 )
-                .all(...this.history.oidWhereClauseParam, CONF_BLOCK_SIZE);
+                .all(CONF_BLOCK_SIZE);
 
             rows.reverse();
 
             this.history.displayRows(rows);
 
-            moveToBottomOfHistory();
+            moveToBottomOfHistory(this.history.appStore.navigationStore.mainHistoryView);
         }
     }
 
@@ -343,7 +350,6 @@ class HistorySearch {
                     ?`
             )
             .all(
-                ...this.history.oidWhereClauseParam,
                 this.searchLastLogDate.getTime(),
                 "%" + this.searchText + "%",
                 CONF_SINGLE_SEARCH_LIMIT
@@ -435,10 +441,8 @@ class HistorySearch {
                     ) ORDER BY date`
                 )
                 .all(
-                    ...this.history.oidWhereClauseParam,
                     searchResult.logEntry.date.getTime(),
                     CONF_BLOCK_SIZE / 2,
-                    ...this.history.oidWhereClauseParam,
                     searchResult.logEntry.date.getTime(),
                     CONF_BLOCK_SIZE / 2
                 );
@@ -448,7 +452,7 @@ class HistorySearch {
             const historyItem = this.history.map.get(searchResult.logEntry.id);
             if (historyItem) {
                 historyItem.selected = true;
-                showHistoryItem(historyItem);
+                showHistoryItem(this.history.appStore.navigationStore.mainHistoryView, historyItem);
             } else {
                 console.warn("History item not found", searchResult);
             }
@@ -476,7 +480,7 @@ class HistoryNavigator {
                     WHERE
                         ${this.history.oidWhereClause} AND date < ? ${this.history.getFilter()}`
                 )
-                .get(...this.history.oidWhereClauseParam, firstHistoryItem.date.getTime());
+                .get(firstHistoryItem.date.getTime());
 
             this.hasOlder = result && result.count.toNumber() > 0;
         } else {
@@ -494,7 +498,7 @@ class HistoryNavigator {
                     WHERE
                         ${this.history.oidWhereClause} AND date > ? ${this.history.getFilter()}`
                 )
-                .get(...this.history.oidWhereClauseParam, lastHistoryItem.date.getTime());
+                .get(lastHistoryItem.date.getTime());
 
             this.hasNewer = result && result.count.toNumber() > 0;
         } else {
@@ -548,11 +552,7 @@ class HistoryNavigator {
                         )
                     LIMIT ?`
                 )
-                .all(
-                    ...this.history.oidWhereClauseParam,
-                    firstHistoryItem.date.getTime(),
-                    CONF_BLOCK_SIZE
-                );
+                .all(firstHistoryItem.date.getTime(), CONF_BLOCK_SIZE);
 
             rows.reverse();
 
@@ -588,11 +588,7 @@ class HistoryNavigator {
                         )
                     LIMIT ?`
                 )
-                .all(
-                    ...this.history.oidWhereClauseParam,
-                    lastHistoryItem.date.getTime(),
-                    CONF_BLOCK_SIZE
-                );
+                .all(lastHistoryItem.date.getTime(), CONF_BLOCK_SIZE);
 
             if (rows.length > 0) {
                 this.history.calendar.showFirstHistoryItemAsSelectedDay = false;
@@ -605,121 +601,25 @@ class HistoryNavigator {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface ISession {
-    selected: boolean;
-    id: string;
-    activityLogEntry: IActivityLogEntry;
-}
-
-class HistorySessions {
-    @observable sessions: ISession[] = [];
-    @observable selectedSession: ISession | undefined;
-
-    constructor(public history: History) {}
-
-    @action
-    load() {
-        const rows = db
-            .prepare(
-                `SELECT
-                    id,
-                    ${activityLogStore.nonTransientAndNonLazyProperties}
-                FROM
-                    activityLog
-                WHERE
-                    type = "activity-log/session"
-                ORDER BY
-                    date`
-            )
-            .all();
-
-        this.sessions = this.history.rowsToHistoryItems(rows).map(activityLogEntry => ({
-            selected: false,
-            id: activityLogEntry.id,
-            activityLogEntry
-        }));
-    }
-
-    @action.bound
-    selectSession(selectedSession: ISession | undefined) {
-        if (this.selectedSession) {
-            this.selectedSession.selected = false;
-        }
-        this.selectedSession = selectedSession;
-        if (this.selectedSession) {
-            this.selectedSession.selected = true;
-        }
-
-        if (selectedSession) {
-            const rows = db
-                .prepare(
-                    `SELECT
-                        id,
-                        ${activityLogStore.nonTransientAndNonLazyProperties}
-                    FROM
-                        (
-                            SELECT
-                                *
-                            FROM
-                                activityLog
-                            WHERE
-                                ${
-                                    this.history.oidWhereClause
-                                } AND date >= ? ${this.history.getFilter()}
-                            ORDER BY
-                                date
-                        )
-                    LIMIT ?`
-                )
-                .all(
-                    ...this.history.oidWhereClauseParam,
-                    new Date(selectedSession.activityLogEntry.date).getTime(),
-                    CONF_BLOCK_SIZE
-                );
-
-            this.history.displayRows(rows);
-
-            moveToTopOfHistory();
-        }
-    }
-
-    onActivityLogEntryCreated(activityLogEntry: IActivityLogEntry) {
-        if (activityLogEntry.type === "activity-log/session") {
-            let i;
-            for (i = 0; i < this.sessions.length; i++) {
-                if (activityLogEntry.id === this.sessions[i].activityLogEntry.id) {
-                    return;
-                }
-                if (activityLogEntry.date < this.sessions[i].activityLogEntry.date) {
-                    break;
-                }
-            }
-            this.sessions.splice(i, 0, {
-                selected: false,
-                id: activityLogEntry.id,
-                activityLogEntry
-            });
-        }
-    }
-
-    onActivityLogEntryRemoved(activityLogEntry: IActivityLogEntry) {
-        if (activityLogEntry.type === "activity-log/session") {
-            for (let i = 0; i < this.sessions.length; i++) {
-                if (this.sessions[i].id === activityLogEntry.id) {
-                    this.sessions.splice(i, 1);
-                    break;
-                }
-            }
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 class HistorySelection {
     @observable _items: IHistoryItem[] = [];
 
     constructor(public history: History) {}
+
+    @computed
+    get canDelete() {
+        if (this.items.length === 0) {
+            return false;
+        }
+
+        for (let i = 0; i < this.items.length; ++i) {
+            if (this.items[i].type.startsWith("activity-log/session")) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     @computed
     get items() {
@@ -743,7 +643,7 @@ export class History {
     calendar = new HistoryCalendar(this);
     search = new HistorySearch(this);
     navigator = new HistoryNavigator(this);
-    sessions = new HistorySessions(this);
+    sessions: HistorySessions;
     selection = new HistorySelection(this);
 
     filterStats: FilterStats = new FilterStats(this);
@@ -751,23 +651,9 @@ export class History {
     reactionTimeout: any;
     reactionDisposer: any;
 
-    _oidWhereClause: string;
-
     constructor(public appStore: IAppStore, public isDeletedItemsHistory: boolean = false) {
-        if (this.appStore.oids) {
-            if (this.appStore.oids.length > 0) {
-                let qmarks;
-                for (let i = 0; i < this.appStore.oids.length; ++i) {
-                    if (!qmarks) {
-                        qmarks = "?";
-                    } else {
-                        qmarks += ",?";
-                    }
-                }
-                this._oidWhereClause = `(oid='0' OR oid IN(${qmarks}))`;
-            } else {
-                this._oidWhereClause = "oid=oid";
-            }
+        if (!isDeletedItemsHistory) {
+            this.sessions = new HistorySessions(this);
         }
 
         scheduleTask(
@@ -859,20 +745,57 @@ export class History {
         );
     }
 
-    get oidWhereClause() {
+    get oid() {
+        return this.appStore.instrument!.id;
+    }
+
+    get oidCond() {
         if (this.appStore.oids) {
-            return this._oidWhereClause;
+            if (this.appStore.oids.length > 0) {
+                const oids = this.appStore.oids.map(oid => '"' + oid + '"').join(",");
+                return `oid IN(${oids})`;
+            } else {
+                return "oid=oid";
+            }
         } else {
-            return "(oid='0' OR oid=?)";
+            return `oid="${this.oid}"`;
         }
     }
 
-    get oidWhereClauseParam(): string[] {
-        if (this.appStore.oids) {
-            return this.appStore.oids;
-        } else {
-            return [this.appStore.instrument!.id];
+    get sessionStartCond() {
+        if (this.appStore.oids && this.appStore.oids.length === 0) {
+            return "1";
         }
+
+        return `(
+            type='activity-log/session-start' AND
+            EXISTS(
+                SELECT * FROM activityLog AS activityLog2
+                WHERE
+                    activityLog2.${this.oidCond} AND
+                    activityLog2.sid = activityLog.id
+            )
+        )`;
+    }
+
+    get sessionCloseCond() {
+        if (this.appStore.oids && this.appStore.oids.length === 0) {
+            return "1";
+        }
+
+        return `(
+            type='activity-log/session-close' AND
+            EXISTS(
+                SELECT * FROM activityLog AS activityLog2
+                WHERE
+                    activityLog2.${this.oidCond} AND
+                    activityLog2.sid = activityLog.sid
+            )
+        )`;
+    }
+
+    get oidWhereClause() {
+        return `(${this.sessionStartCond} OR ${this.sessionCloseCond} OR ${this.oidCond})`;
     }
 
     onTerminate() {
@@ -982,6 +905,8 @@ export class History {
                 historyItemBlock.splice(j, 0, historyItem);
             }
         }
+
+        return historyItem;
     }
 
     removeActivityLogEntryFromBlocks(activityLogEntry: IActivityLogEntry) {
@@ -1058,7 +983,7 @@ export class History {
                 this.addActivityLogEntryToBlocks(activityLogEntry);
             }
             // ... and scroll to the bottom of history list.
-            moveToBottomOfHistory();
+            moveToBottomOfHistory(this.appStore.navigationStore.mainHistoryView);
         }
     }
 
@@ -1152,7 +1077,7 @@ export class DeletedItemsHistory extends History {
                         WHERE
                             ${this.oidWhereClause} AND deleted`
                     )
-                    .get(...this.oidWhereClauseParam);
+                    .get();
 
                 this.deletedCount = result ? result.count : 0;
             })

@@ -9,6 +9,10 @@ import * as ShortcutsModule from "home/shortcuts";
 import * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
 import * as SettingsModule from "home/settings";
 
+import { HistoryView, showSessionsList } from "instrument/window/history/history-view";
+
+import { tabs } from "home/tabs-store";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class NavigationStore {
@@ -20,6 +24,8 @@ export class NavigationStore {
     settingsNavigationItem: IRootNavigationItem;
 
     @observable.ref private _mainNavigationSelectedItem: IRootNavigationItem;
+
+    mainHistoryView: HistoryView | undefined;
 
     constructor() {
         this.workbenchNavigationItem = {
@@ -123,17 +129,31 @@ export class NavigationStore {
         });
     }
 
+    @action
+    navigateToHomeTab() {
+        tabs.makeActive(tabs.homeTab);
+    }
+
     @action.bound
     navigateToHistory() {
+        this.navigateToHomeTab();
         this.mainNavigationSelectedItem = this.historyNavigationItem;
     }
 
     @action.bound
     navigateToDeletedHistoryItems() {
+        this.navigateToHomeTab();
         this.mainNavigationSelectedItem = this.deletedHistoryItemsNavigationItem;
     }
 
-    // @TODO remove this
+    @action.bound
+    navigateToSessionsList() {
+        this.navigateToHomeTab();
+        this.mainNavigationSelectedItem = this.historyNavigationItem;
+        showSessionsList(this);
+    }
+
+    // @TODO remove this, not requred in home
     selectedListId: string | undefined = undefined;
 }
 

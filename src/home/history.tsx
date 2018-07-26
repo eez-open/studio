@@ -90,7 +90,7 @@ class AppStore implements IAppStore {
 
 let appStore: AppStore | undefined;
 
-function getAppStore(oids?: string[]) {
+export function getAppStore(oids?: string[]) {
     if (!oids || oids.length === 0) {
         if (!appStore) {
             appStore = new AppStore([]);

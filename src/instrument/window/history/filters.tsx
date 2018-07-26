@@ -23,7 +23,7 @@ export class Filters {
     @observable launchedScripts: boolean = true;
 
     filterActivityLogEntry(activityLogEntry: IActivityLogEntry): boolean {
-        if (activityLogEntry.type === "activity-log/session") {
+        if (activityLogEntry.type.startsWith("activity-log/session")) {
             return true;
         }
 
@@ -95,7 +95,8 @@ export class Filters {
     getFilter() {
         const types: string[] = [];
 
-        types.push("activity-log/session");
+        types.push("activity-log/session-start");
+        types.push("activity-log/session-close");
 
         if (this.connectsAndDisconnects) {
             types.push(
@@ -174,7 +175,7 @@ export class FilterStats {
                         GROUP BY
                             type`
                     )
-                    .all(...this.history.oidWhereClauseParam);
+                    .all();
 
                 rows.forEach(row => {
                     this.add(row.type, row.count.toNumber());

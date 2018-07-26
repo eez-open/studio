@@ -10,6 +10,7 @@ import * as ShortcutsModule from "instrument/window/shortcuts";
 import * as TerminalModule from "instrument/window/terminal/terminal";
 
 import * as DeletedHistoryItemsModule from "instrument/window/history/deleted-history-items-view";
+import { HistoryView, showSessionsList } from "instrument/window/history/history-view";
 
 import * as ListsModule from "instrument/window/lists/lists";
 
@@ -29,6 +30,8 @@ export class NavigationStore {
     listsNavigationItem: IInstrumentWindowNavigationItem;
 
     @observable.ref private _mainNavigationSelectedItem: IInstrumentWindowNavigationItem;
+
+    mainHistoryView: HistoryView | undefined;
 
     constructor(public appStore: AppStore) {
         this.terminalNavigationItem = {
@@ -160,6 +163,12 @@ export class NavigationStore {
     @action.bound
     navigateToDeletedHistoryItems() {
         this.mainNavigationSelectedItem = this.deletedHistoryItemsNavigationItem;
+    }
+
+    @action.bound
+    navigateToSessionsList() {
+        this.mainNavigationSelectedItem = this.terminalNavigationItem;
+        showSessionsList(this);
     }
 
     @action.bound

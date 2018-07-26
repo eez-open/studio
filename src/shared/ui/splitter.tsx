@@ -238,7 +238,8 @@ export class Splitter extends React.Component<SplitterProps, {}> {
                 top: (this.props.type === "vertical" ? this.offsets[i] : 0) + "px",
                 width: (this.props.type === "horizontal" ? this.sizes[i] : this.width) + "px",
                 height: (this.props.type === "vertical" ? this.sizes[i] : this.height) + "px",
-                display: "flex"
+                display: "flex",
+                flexDirection: "column"
             };
 
             childStyles.push(style);

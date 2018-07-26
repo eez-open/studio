@@ -5,8 +5,10 @@ import { observer } from "mobx-react";
 
 import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
 import { TabsView } from "shared/ui/tabs";
+import { SessionInfo } from "instrument/window/history/session/info-view";
 
-import { tabs } from "home/store";
+import { tabs } from "home/tabs-store";
+import { getAppStore } from "home/history";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -16,7 +18,14 @@ class AppComponent extends React.Component<{}, {}> {
         return (
             <VerticalHeaderWithBody className="EezStudio_AppRootComponent">
                 <Header>
-                    <TabsView tabs={tabs.tabs} />
+                    <div style={{ display: "flex", flexDirection: "row" }}>
+                        <div style={{ flexGrow: 1 }}>
+                            <TabsView tabs={tabs.tabs} />
+                        </div>
+                        <div className="EezStudio_SessionInfoContainer">
+                            <SessionInfo appStore={getAppStore()} />
+                        </div>
+                    </div>
                 </Header>
                 <Body>{tabs.activeTab.render()}</Body>
             </VerticalHeaderWithBody>

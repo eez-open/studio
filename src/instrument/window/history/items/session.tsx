@@ -1,10 +1,12 @@
 import * as React from "react";
 import { computed } from "mobx";
 import { observer } from "mobx-react";
+import * as classNames from "classnames";
 
 import { formatDateTimeLong } from "shared/util";
 import { IActivityLogEntry } from "shared/activity-log";
 
+import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -12,37 +14,31 @@ import { HistoryItem } from "instrument/window/history/item";
 @observer
 export class SessionHistoryItemComponent extends React.Component<
     {
-        historyItem: HistoryItem;
+        historyItem: SessionHistoryItem;
     },
     {}
 > {
-    @computed
-    get message(): {
-        connectionParameters?: any;
-        sessionName?: string;
-    } {
-        if (!this.props.historyItem.message) {
-            return {};
-        }
-
-        try {
-            return JSON.parse(this.props.historyItem.message);
-        } catch (err) {
-            return {
-                sessionName: this.props.historyItem.message
-            };
-        }
-    }
-
     render() {
+        let className = classNames("EezStudio_HistoryItem EezStudio_HistoryItem_Session", {
+            EezStudio_HistoryItem_SessionStart:
+                this.props.historyItem.type === "activity-log/session-start",
+            EezStudio_HistoryItem_SessionClose:
+                this.props.historyItem.type === "activity-log/session-close"
+        });
+
         return (
-            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Session">
+            <div className={className}>
                 <p>
                     <small className="EezStudio_HistoryItemDate text-muted">
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
                     <span className="EezStudio_HistoryItem_SessionName">
-                        {this.message.sessionName}
+                        {this.props.historyItem.sessionName}
+                    </span>
+                    <span className="EezStudio_HistoryItem_SessionState">
+                        {this.props.historyItem.type === "activity-log/session-start"
+                            ? "started"
+                            : "closed"}
                     </span>
                 </p>
             </div>
@@ -51,11 +47,30 @@ export class SessionHistoryItemComponent extends React.Component<
 }
 
 export class SessionHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
+    constructor(activityLogEntry: IActivityLogEntry, private appStore: IAppStore) {
         super(activityLogEntry);
     }
 
     get listItemElement(): JSX.Element | null {
         return <SessionHistoryItemComponent historyItem={this} />;
+    }
+
+    @computed
+    get sessionName(): string {
+        if (this.type === "activity-log/session-start") {
+            try {
+                return JSON.parse(this.message).sessionName;
+            } catch (err) {
+                return "";
+            }
+        } else {
+            if (this.sid) {
+                const sessionStart = this.appStore.history.getHistoryItemById(this.sid);
+                if (sessionStart instanceof SessionHistoryItem) {
+                    return sessionStart.sessionName;
+                }
+            }
+            return "";
+        }
     }
 }

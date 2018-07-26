@@ -11,11 +11,11 @@ import { log, logUpdate, logDelete } from "shared/activity-log";
 import { IconAction } from "shared/ui/action";
 import { Dialog, showDialog } from "shared/ui/dialog";
 import { PropertyList, TextInputProperty } from "shared/ui/properties";
-import { VerticalHeaderWithBody, ToolbarHeader, Body } from "shared/ui/header-with-body";
-import { ButtonAction } from "shared/ui/action";
+import { Body } from "shared/ui/header-with-body";
 import { confirm } from "shared/ui/dialog";
 
-import { IAppStore, History, ISession } from "instrument/window/history/history";
+import { IAppStore, History } from "instrument/window/history/history";
+import { ISession } from "instrument/window/history/session/store";
 
 @observer
 class EditSessionNameDialog extends React.Component<
@@ -109,13 +109,34 @@ export class SessionListItem extends React.Component<
     }
 
     @bind
-    handleClearSessionName() {
+    handleDeleteSession() {
         confirm("Are you sure?", undefined, () => {
             beginTransaction("Delete session");
 
-            logDelete(this.props.session.activityLogEntry, {
-                undoable: false
-            });
+            logDelete(
+                {
+                    id: this.props.session.activityLogEntry.id,
+                    oid: "0",
+                    type: "activity-log/session-start"
+                },
+                {
+                    undoable: false
+                }
+            );
+
+            const message = JSON.parse(this.props.session.activityLogEntry.message);
+            if (message.sessionCloseId) {
+                logDelete(
+                    {
+                        id: message.sessionCloseId,
+                        oid: "0",
+                        type: "activity-log/session-close"
+                    },
+                    {
+                        undoable: false
+                    }
+                );
+            }
 
             commitTransaction();
         });
@@ -147,8 +168,8 @@ export class SessionListItem extends React.Component<
                     />
                     <IconAction
                         icon="material:clear"
-                        title="Clear session name"
-                        onClick={this.handleClearSessionName}
+                        title="Delete session"
+                        onClick={this.handleDeleteSession}
                     />
                 </td>
             </tr>
@@ -165,7 +186,7 @@ export class SessionList extends React.Component<{ appStore: IAppStore; history:
             log(
                 {
                     oid: "0",
-                    type: "activity-log/session",
+                    type: "activity-log/session-start",
                     message: JSON.stringify({
                         sessionName: name
                     })
@@ -180,32 +201,32 @@ export class SessionList extends React.Component<{ appStore: IAppStore; history:
 
     render() {
         return (
-            <VerticalHeaderWithBody>
-                <ToolbarHeader className="EezStudio_PanelHeader">
-                    <ButtonAction
-                        text="New Session"
-                        title="Create a new session"
-                        className="btn-success"
-                        onClick={this.newSession}
-                    />
-                </ToolbarHeader>
-                <Body className="EezStudio_HistoryTable selectable">
-                    <div className="EezStudio_SessionList">
-                        <table>
-                            <tbody>
-                                {this.props.history.sessions.sessions.map(session => (
-                                    <SessionListItem
-                                        appStore={this.props.appStore}
-                                        key={session.id}
-                                        history={this.props.history}
-                                        session={session}
-                                    />
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </Body>
-            </VerticalHeaderWithBody>
+            // <VerticalHeaderWithBody>
+            //     <ToolbarHeader className="EezStudio_PanelHeader">
+            //         <ButtonAction
+            //             text="New Session"
+            //             title="Create a new session"
+            //             className="btn-success"
+            //             onClick={this.newSession}
+            //         />
+            //     </ToolbarHeader>
+            <Body className="EezStudio_HistoryTable selectable">
+                <div className="EezStudio_SessionList">
+                    <table>
+                        <tbody>
+                            {this.props.history.sessions.sessions.map(session => (
+                                <SessionListItem
+                                    appStore={this.props.appStore}
+                                    key={session.id}
+                                    history={this.props.history}
+                                    session={session}
+                                />
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </Body>
+            // </VerticalHeaderWithBody>
         );
     }
 }

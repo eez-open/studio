@@ -8,6 +8,7 @@ import { IActivityLogEntry, loadData, logDelete } from "shared/activity-log";
 
 export interface IHistoryItem {
     id: string;
+    sid: string | null;
     oid: string;
     date: Date;
     type: string;
@@ -22,6 +23,7 @@ export interface IHistoryItem {
 
 export class HistoryItem implements IHistoryItem {
     id: string;
+    sid: string | null;
     oid: string;
     date: Date;
     type: string;
@@ -32,6 +34,7 @@ export class HistoryItem implements IHistoryItem {
 
     constructor(activityLogEntry: IActivityLogEntry) {
         this.id = activityLogEntry.id;
+        this.sid = activityLogEntry.sid;
         this.oid = activityLogEntry.oid;
         if (activityLogEntry.date instanceof Date) {
             this.date = activityLogEntry.date;

@@ -268,17 +268,43 @@
     }
 
     &.EezStudio_HistoryItem_Session {
-        margin-top: 50px;
-        margin-bottom: 20px;
-        padding: 10px;
-        background: green;
-        .EezStudio_HistoryItemDate {
-            color: #eee !important;
+        &.EezStudio_HistoryItem_SessionStart {
+            margin-top: 10px;
+            padding-top: 10px;
+            padding-bottom: 40px;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            background: linear-gradient(rgba(0, 255, 0, 0.1), rgba(0, 255, 0, 0));
         }
+
+        &.EezStudio_HistoryItem_SessionClose {
+            margin-bottom: 10px;
+            padding-top: 40px;
+            padding-bottom: 10px;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            background: linear-gradient(rgba(255, 0, 0, 0), rgba(255, 0, 0, 0.1));
+        }
+
+        .EezStudio_HistoryItemDate {
+            color: #333 !important;
+        }
+
         .EezStudio_HistoryItem_SessionName {
             padding-left: 10px;
-            color: white;
-            font-size: 120%;
+            color: #333;
+            font-size: 110%;
+            font-weight: bold;
+        }
+
+        .EezStudio_HistoryItem_SessionState {
+            display: inline-block;
+            margin-left: 10px;
+            background: #777;
+            border-radius: 10px;
+            padding: 1px 12px;
+            color: #eee;
+            text-transform: uppercase;
             font-weight: bold;
         }
     }
