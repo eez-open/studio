@@ -1,10 +1,10 @@
 import { createStore, types } from "shared/store";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 
 import * as ListsFactoryModule from "instrument/window/lists/factory";
 
-export function createInstrumentListStore(appStore: AppStore | null) {
+export function createInstrumentListStore(appStore: InstrumentAppStore | null) {
     return createStore({
         storeName: "instrument/list",
         versionTables: ["instrument/list/version"],

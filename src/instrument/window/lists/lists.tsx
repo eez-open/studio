@@ -26,7 +26,7 @@ import { InstrumentObject } from "instrument/instrument-object";
 
 import { getList, sendList } from "instrument/connection/list-operations";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 
 import { BaseList, ITableListData } from "instrument/window/lists/store-renderer";
 import { createEmptyListData, createTableListFromData } from "instrument/window/lists/factory";
@@ -40,7 +40,7 @@ const CONF_DEFAULT_ENVELOPE_LIST_DURATION = 1; // 1 second
 @observer
 class MasterView extends React.Component<
     {
-        appStore: AppStore;
+        appStore: InstrumentAppStore;
         selectedList: BaseList | undefined;
         selectList: (list: BaseList) => void;
     },
@@ -204,7 +204,7 @@ export class DetailsView extends React.Component<{ list: BaseList | undefined },
 }
 
 @observer
-export class ListsEditor extends React.Component<{ appStore: AppStore }, {}> {
+export class ListsEditor extends React.Component<{ appStore: InstrumentAppStore }, {}> {
     @computed
     get selectedList() {
         return this.props.appStore.navigationStore.selectedListId
@@ -331,7 +331,7 @@ export function saveTableListData(
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class ListsButtons extends React.Component<{ appStore: AppStore }, {}> {
+export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore }, {}> {
     @computed
     get selectedList() {
         return this.props.appStore.navigationStore.selectedListId
@@ -588,10 +588,10 @@ export class ListsButtons extends React.Component<{ appStore: AppStore }, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function render(appStore: AppStore) {
+export function render(appStore: InstrumentAppStore) {
     return <ListsEditor appStore={appStore} />;
 }
 
-export function toolbarButtonsRender(appStore: AppStore) {
+export function toolbarButtonsRender(appStore: InstrumentAppStore) {
     return <ListsButtons appStore={appStore} />;
 }

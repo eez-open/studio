@@ -147,6 +147,19 @@ export class HistorySessions {
         }
     }
 
+    onActivityLogEntryUpdated(activityLogEntry: IActivityLogEntry) {
+        if (activityLogEntry.message !== undefined) {
+            for (let i = 0; i < this.sessions.length; i++) {
+                if (this.sessions[i].id === activityLogEntry.id) {
+                    runInAction(() => {
+                        this.sessions[i].activityLogEntry.message = activityLogEntry.message;
+                    });
+                    break;
+                }
+            }
+        }
+    }
+
     onActivityLogEntryRemoved(activityLogEntry: IActivityLogEntry) {
         if (activityLogEntry.type === "activity-log/session-start") {
             for (let i = 0; i < this.sessions.length; i++) {

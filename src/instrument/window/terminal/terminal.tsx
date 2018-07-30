@@ -6,7 +6,7 @@ import { bind } from "bind-decorator";
 import { Splitter } from "shared/ui/splitter";
 import { IconAction } from "shared/ui/action";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 import { executeShortcut } from "instrument/window/script";
 
 import { ISession } from "instrument/window/history/session/store";
@@ -62,7 +62,7 @@ const terminalState = new TerminalState();
 @observer
 class Input extends React.Component<
     {
-        appStore: AppStore;
+        appStore: InstrumentAppStore;
         sendCommand: () => void;
         handleSendFileClick: (() => void) | undefined;
     },
@@ -235,7 +235,7 @@ class Input extends React.Component<
 }
 
 @observer
-export class Terminal extends React.Component<{ appStore: AppStore }, {}> {
+export class Terminal extends React.Component<{ appStore: InstrumentAppStore }, {}> {
     onSelectHistoryItemsOk() {
         this.props.appStore.selectHistoryItemsSpecification!.onOk();
     }
@@ -310,10 +310,10 @@ export class Terminal extends React.Component<{ appStore: AppStore }, {}> {
     }
 }
 
-export function render(appStore: AppStore) {
+export function render(appStore: InstrumentAppStore) {
     return <Terminal appStore={appStore} />;
 }
 
-export function renderToolbarButtons(appStore: AppStore) {
+export function renderToolbarButtons(appStore: InstrumentAppStore) {
     return <HistoryTools appStore={appStore} />;
 }

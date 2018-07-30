@@ -34,6 +34,8 @@ import {
     showHistoryItem
 } from "instrument/window/history/history-view";
 
+import { InstrumentAppStore } from "instrument/window/app-store";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_SINGLE_SEARCH_LIMIT = 100;
@@ -681,6 +683,12 @@ export class History {
                             op: StoreOperation,
                             options: IStoreOperationOptions
                         ) => {
+                            if (
+                                this.appStore instanceof InstrumentAppStore &&
+                                !this.isDeletedItemsHistory
+                            ) {
+                                console.log("createObject", object);
+                            }
                             this.onCreateActivityLogEntry(object, op, options);
                         },
                         updateObject: (
@@ -688,6 +696,12 @@ export class History {
                             op: StoreOperation,
                             options: IStoreOperationOptions
                         ) => {
+                            if (
+                                this.appStore instanceof InstrumentAppStore &&
+                                !this.isDeletedItemsHistory
+                            ) {
+                                console.log("updateObject", changes);
+                            }
                             this.onUpdateActivityLogEntry(changes, op, options);
                         },
                         deleteObject: (
@@ -695,6 +709,12 @@ export class History {
                             op: StoreOperation,
                             options: IStoreOperationOptions
                         ) => {
+                            if (
+                                this.appStore instanceof InstrumentAppStore &&
+                                !this.isDeletedItemsHistory
+                            ) {
+                                console.log("deleteObject", object);
+                            }
                             this.onDeleteActivityLogEntry(object, op, options);
                         }
                     },
@@ -745,6 +765,10 @@ export class History {
         );
     }
 
+    get isInstrumentHistory() {
+        return !this.appStore.oids;
+    }
+
     get oid() {
         return this.appStore.instrument!.id;
     }
@@ -769,11 +793,14 @@ export class History {
 
         return `(
             type='activity-log/session-start' AND
-            EXISTS(
-                SELECT * FROM activityLog AS activityLog2
-                WHERE
-                    activityLog2.${this.oidCond} AND
-                    activityLog2.sid = activityLog.id
+            (
+                json_extract(message, '$.sessionCloseId') IS NULL OR
+                EXISTS(
+                    SELECT * FROM activityLog AS activityLog2
+                    WHERE
+                        activityLog2.${this.oidCond} AND
+                        activityLog2.sid = activityLog.id
+                )
             )
         )`;
     }
@@ -965,11 +992,43 @@ export class History {
         op: StoreOperation,
         options: IStoreOperationOptions
     ) {
+        if (activityLogEntry.type === "activity-log/session-close") {
+            if (this.isInstrumentHistory) {
+                const result = db
+                    .prepare(
+                        `SELECT
+                            count(*) AS count
+                        FROM
+                            activityLog
+                        WHERE
+                            oid = ${this.oid} AND sid=${activityLogEntry.sid}`
+                    )
+                    .get();
+
+                // if instrument IS NOT used in this session ...
+                if (!(result && result.count.toNumber() > 0)) {
+                    // ... no need to show session close item and also remove session start item.
+                    const sessionStart: Partial<IActivityLogEntry> = {
+                        id: activityLogEntry.sid as string,
+                        oid: "0",
+                        type: "activity-log/session-start"
+                    };
+                    if (this.sessions) {
+                        this.sessions.onActivityLogEntryRemoved(sessionStart as IActivityLogEntry);
+                    }
+                    this.removeActivityLogEntryFromBlocks(sessionStart as IActivityLogEntry);
+                    return;
+                }
+            }
+        }
+
         if (this.map.get(activityLogEntry.id)) {
             return;
         }
 
-        this.sessions.onActivityLogEntryCreated(activityLogEntry);
+        if (this.sessions) {
+            this.sessions.onActivityLogEntryCreated(activityLogEntry);
+        }
 
         if (op === "restore") {
             // this item was restored from undo buffer,
@@ -994,6 +1053,10 @@ export class History {
         options: IStoreOperationOptions
     ) {
         let historyItem;
+
+        if (this.sessions) {
+            this.sessions.onActivityLogEntryUpdated(activityLogEntry);
+        }
 
         const foundItem = this.findHistoryItemById(activityLogEntry.id);
         if (foundItem) {
@@ -1028,7 +1091,9 @@ export class History {
         op: StoreOperation,
         options: IStoreOperationOptions
     ) {
-        this.sessions.onActivityLogEntryRemoved(activityLogEntry);
+        if (this.sessions) {
+            this.sessions.onActivityLogEntryRemoved(activityLogEntry);
+        }
         this.removeActivityLogEntryFromBlocks(activityLogEntry);
     }
 

@@ -21,7 +21,7 @@ import { navigationStore } from "home/navigation-store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class AppStore implements IAppStore {
+class HomeAppStore implements IAppStore {
     constructor(public oids?: string[]) {}
 
     @observable selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
@@ -88,16 +88,16 @@ class AppStore implements IAppStore {
     }
 }
 
-let appStore: AppStore | undefined;
+let appStore: HomeAppStore | undefined;
 
 export function getAppStore(oids?: string[]) {
     if (!oids || oids.length === 0) {
         if (!appStore) {
-            appStore = new AppStore([]);
+            appStore = new HomeAppStore([]);
         }
         return appStore;
     } else {
-        return new AppStore(oids);
+        return new HomeAppStore(oids);
     }
 }
 
@@ -108,7 +108,7 @@ export class HistorySection extends React.Component<{
     oids?: string[];
     simple?: boolean;
 }> {
-    appStore: AppStore;
+    appStore: HomeAppStore;
 
     constructor(props: any) {
         super(props);

@@ -9,7 +9,7 @@ import { ButtonAction } from "shared/ui/action";
 
 import { IShortcut } from "shortcuts/interfaces";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 
 @observer
 export class ShortcutButton extends React.Component<
@@ -47,7 +47,7 @@ export class ShortcutButton extends React.Component<
 @observer
 export class ShortcutsToolbar extends React.Component<
     {
-        appStore: AppStore;
+        appStore: InstrumentAppStore;
         executeShortcut: (shortcut: IShortcut) => void;
     },
     {}

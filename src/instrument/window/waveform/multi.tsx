@@ -19,7 +19,7 @@ import { IListNode, ListItem } from "shared/ui/list";
 import { ChartMode, ChartsController, IAxisModel } from "shared/ui/chart/chart";
 import { Icon } from "shared/ui/icon";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
 import { HistoryItem } from "instrument/window/history/item";
@@ -113,7 +113,7 @@ interface ILinkedWaveform {
 }
 
 export class MultiWaveform extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, public appStore: AppStore) {
+    constructor(activityLogEntry: IActivityLogEntry, public appStore: InstrumentAppStore) {
         super(activityLogEntry);
 
         // save viewOptions when changed

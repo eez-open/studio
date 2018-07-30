@@ -11,7 +11,7 @@ import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body
 
 import { ICommandSyntax, makeItShort, matchCommand } from "instrument/commands-tree";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 import { insertScpiCommandIntoCode, insertScpiQueryIntoCode } from "instrument/window/scripts";
 
 export interface ICommandNode extends ITreeNode {
@@ -22,7 +22,7 @@ export interface ICommandNode extends ITreeNode {
 @observer
 export class CommandSyntax extends React.Component<
     {
-        appStore: AppStore;
+        appStore: InstrumentAppStore;
         commandSyntax: ICommandSyntax;
         copyCommand: (command: ICommandSyntax) => void;
     },
@@ -66,7 +66,7 @@ export class CommandSyntax extends React.Component<
 @observer
 export class CommandsBrowser extends React.Component<
     {
-        appStore: AppStore;
+        appStore: InstrumentAppStore;
         host: {
             command: string;
         };

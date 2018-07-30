@@ -627,8 +627,8 @@ export class InstrumentObject {
     isEditable = true;
 
     getEditor() {
-        const { AppStore } = require("instrument/window/app-store") as typeof AppStoreModule;
-        return new AppStore(this.id);
+        const { InstrumentAppStore } = require("instrument/window/app-store") as typeof AppStoreModule;
+        return new InstrumentAppStore(this.id);
     }
 
     getEditorWindowArgs() {

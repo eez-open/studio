@@ -20,7 +20,7 @@ import { MeasurementsModel } from "shared/ui/chart/measurements";
 import { IWaveform } from "shared/ui/chart/render";
 import { WaveformFormat, initValuesAccesor } from "shared/ui/chart/buffer";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
 import { FileHistoryItem } from "instrument/window/history/items/file";
@@ -222,7 +222,7 @@ interface IChannel {
 }
 
 export class DlogWaveform extends FileHistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem, appStore: AppStore) {
+    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem, appStore: InstrumentAppStore) {
         super(activityLogEntry, appStore);
         if (activityLogEntry instanceof FileHistoryItem) {
             this.isVisible = activityLogEntry.isVisible;

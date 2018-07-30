@@ -33,7 +33,7 @@ import { initValuesAccesor, WaveformFormat } from "shared/ui/chart/buffer";
 
 import { checkMime } from "instrument/connection/file-type";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
 import { FileHistoryItem } from "instrument/window/history/items/file";
@@ -280,7 +280,7 @@ export class WaveformChartsController extends ChartsController {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Waveform extends FileHistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem, appStore: AppStore) {
+    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem, appStore: InstrumentAppStore) {
         super(activityLogEntry, appStore);
 
         const message = JSON.parse(this.message);

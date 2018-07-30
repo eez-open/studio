@@ -19,7 +19,7 @@ import {
     deleteGroupInInstruments
 } from "instrument/instrument-object";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 import * as ScriptModule from "instrument/window/script";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -27,7 +27,7 @@ import * as ScriptModule from "instrument/window/script";
 export const shortcutsOrGroups = observable.box<boolean>(true);
 
 export class ShortcutsStore {
-    constructor(public appStore: AppStore) {
+    constructor(public appStore: InstrumentAppStore) {
         bindShortcuts(this.instrumentShortcuts, (shortcut: IShortcut) => {
             const { executeShortcut } = require("instrument/window/script") as typeof ScriptModule;
             if (appStore.instrument) {
@@ -108,7 +108,7 @@ export class ShortcutsStore {
 }
 
 export class GroupsStore {
-    constructor(public appStore: AppStore) {}
+    constructor(public appStore: InstrumentAppStore) {}
 
     get groups() {
         return groups;
@@ -150,7 +150,7 @@ export class GroupsStore {
     }
 }
 
-export function render(appStore: AppStore) {
+export function render(appStore: InstrumentAppStore) {
     return shortcutsOrGroups.get() ? (
         <Shortcuts shortcutsStore={appStore.shortcutsStore} groupsStore={appStore.groupsStore} />
     ) : (
@@ -158,7 +158,7 @@ export function render(appStore: AppStore) {
     );
 }
 
-export function toolbarButtonsRender(appStore: AppStore) {
+export function toolbarButtonsRender(appStore: InstrumentAppStore) {
     return shortcutsOrGroups.get() ? (
         <ShortcutsToolbarButtons
             shortcutsOrGroups={shortcutsOrGroups}

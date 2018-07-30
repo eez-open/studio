@@ -35,7 +35,7 @@ import { showGenericDialog } from "shared/ui/generic-dialog";
 
 import { InstrumentObject } from "instrument/instrument-object";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 
 import { BaseList, BaseListData, ListAxisModel } from "instrument/window/lists/store-renderer";
 import {
@@ -99,7 +99,7 @@ export class TableListData extends BaseListData {
 export class TableList extends BaseList {
     @observable data: TableListData;
 
-    constructor(props: any, appStore: AppStore, instrument: InstrumentObject) {
+    constructor(props: any, appStore: InstrumentAppStore, instrument: InstrumentObject) {
         super(props, appStore, instrument);
         this.type = "table";
         this.data = new TableListData(this, props.data);

@@ -14,7 +14,7 @@ import { IShortcut } from "shortcuts/interfaces";
 
 import { InstrumentObject } from "instrument/instrument-object";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 import { getConnection } from "instrument/window/connection";
 import { showScriptError } from "instrument/window/scripts";
 
@@ -288,7 +288,7 @@ function prepareModules(instrument: InstrumentObject, shortcut: IShortcut) {
     }
 }
 
-function doExecuteShortcut(appStore: AppStore, shortcut: IShortcut) {
+function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
     let run;
 
     if (shortcut.action.type === "scpi-commands") {
@@ -322,7 +322,7 @@ function doExecuteShortcut(appStore: AppStore, shortcut: IShortcut) {
         });
 }
 
-export function executeShortcut(appStore: AppStore, shortcut: IShortcut) {
+export function executeShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
     if (!getConnection(appStore.instrument!).isConnected) {
         info("Not connected to the instrument.", undefined);
         return;

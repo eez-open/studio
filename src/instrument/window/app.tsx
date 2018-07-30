@@ -9,7 +9,7 @@ import { Loader } from "shared/ui/loader";
 import { Toolbar } from "shared/ui/toolbar";
 
 import { InstrumentObject } from "instrument/instrument-object";
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 import { getConnection } from "instrument/window/connection";
 import { IInstrumentWindowNavigationItem } from "instrument/window/navigation-store";
 
@@ -92,7 +92,7 @@ export class AppBar extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class App extends React.Component<{ appStore: AppStore }> {
+export class App extends React.Component<{ appStore: InstrumentAppStore }> {
     constructor(props: any) {
         super(props);
     }

@@ -35,7 +35,7 @@ import { BaseList, createInstrumentLists } from "instrument/window/lists/store-r
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class AppStore implements IEditor {
+export class InstrumentAppStore implements IEditor {
     @observable instrument: InstrumentObject | undefined = undefined;
     @observable helpVisible: boolean = false;
     @observable searchVisible: boolean = false;

@@ -15,7 +15,7 @@ import {
 
 import { InstrumentObject } from "instrument/instrument-object";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 
 import { ChartsDisplayOption } from "instrument/window/lists/common-tools";
 
@@ -461,7 +461,7 @@ export abstract class BaseList {
 
     constructor(
         public props: any,
-        public $eez_noser_appStore: AppStore,
+        public $eez_noser_appStore: InstrumentAppStore,
         public $eez_noser_instrument: InstrumentObject
     ) {
         this.id = props.id;
@@ -497,7 +497,7 @@ export abstract class BaseList {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function createInstrumentLists(appStore: AppStore) {
+export function createInstrumentLists(appStore: InstrumentAppStore) {
     const instrumentLists = observable.map<string, BaseList>();
 
     appStore.instrumentListStore.watch({

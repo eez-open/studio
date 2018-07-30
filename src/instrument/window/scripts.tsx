@@ -12,13 +12,13 @@ import { CodeEditor } from "shared/ui/code-editor";
 
 import { IShortcut } from "shortcuts/interfaces";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 import { IModel } from "instrument/window/undo";
 
 import { Terminal } from "instrument/window/terminal/terminal";
 
 export class ScriptsModel implements IModel {
-    constructor(private appStore: AppStore) {}
+    constructor(private appStore: InstrumentAppStore) {}
 
     @observable _newActionCode: string | undefined;
     get newActionCode() {
@@ -112,7 +112,7 @@ export class ScriptsModel implements IModel {
 }
 
 @observer
-export class ScriptView extends React.Component<{ appStore: AppStore }, {}> {
+export class ScriptView extends React.Component<{ appStore: InstrumentAppStore }, {}> {
     codeEditor: CodeEditor | null;
 
     componentDidMount() {
@@ -162,7 +162,7 @@ export class ScriptView extends React.Component<{ appStore: AppStore }, {}> {
 
 @observer
 class MasterView extends React.Component<{
-    appStore: AppStore;
+    appStore: InstrumentAppStore;
     selectedScript: IShortcut | undefined;
     selectScript: (script: IShortcut) => void;
 }> {
@@ -189,7 +189,7 @@ class MasterView extends React.Component<{
 }
 
 @observer
-export class ScriptsEditor extends React.Component<{ appStore: AppStore }> {
+export class ScriptsEditor extends React.Component<{ appStore: InstrumentAppStore }> {
     render() {
         const appStore = this.props.appStore;
         const scriptsModel = this.props.appStore.scriptsModel;
@@ -223,11 +223,11 @@ export class ScriptsEditor extends React.Component<{ appStore: AppStore }> {
     }
 }
 
-export function render(appStore: AppStore) {
+export function render(appStore: InstrumentAppStore) {
     return <ScriptsEditor appStore={appStore} />;
 }
 
-export function toolbarButtonsRender(appStore: AppStore) {
+export function toolbarButtonsRender(appStore: InstrumentAppStore) {
     const scriptsModel = appStore.scriptsModel;
     return (
         <React.Fragment>
@@ -254,7 +254,7 @@ export function toolbarButtonsRender(appStore: AppStore) {
 
 export const showScriptError = action(
     (
-        appStore: AppStore,
+        appStore: InstrumentAppStore,
         shortcut: IShortcut,
         errorMessage: string,
         errorLineNumber: number | undefined,
@@ -268,7 +268,7 @@ export const showScriptError = action(
     }
 );
 
-export function insertScpiCommandIntoCode(appStore: AppStore, scpiCommand: string) {
+export function insertScpiCommandIntoCode(appStore: InstrumentAppStore, scpiCommand: string) {
     const scriptsModel = appStore.scriptsModel;
 
     const codeEditor = appStore.scriptView && appStore.scriptView.codeEditor;
@@ -290,7 +290,7 @@ export function insertScpiCommandIntoCode(appStore: AppStore, scpiCommand: strin
     codeEditor.insertText(text);
 }
 
-export function insertScpiQueryIntoCode(appStore: AppStore, scpiQuery: string) {
+export function insertScpiQueryIntoCode(appStore: InstrumentAppStore, scpiQuery: string) {
     const scriptsModel = appStore.scriptsModel;
 
     const codeEditor = appStore.scriptView && appStore.scriptView.codeEditor;

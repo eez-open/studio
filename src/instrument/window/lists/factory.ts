@@ -2,7 +2,7 @@ import { IListType, BaseListData } from "instrument/window/lists/store-renderer"
 
 import { InstrumentObject } from "instrument/instrument-object";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 
 import { createEmptyTableListData, TableList, TableListData } from "instrument/window/lists/table";
 import { createEmptyEnvelopeListData, EnvelopeList } from "instrument/window/lists/envelope";
@@ -23,7 +23,7 @@ export function createEmptyListData(
 
 export function createTableListFromData(
     data: TableListData,
-    appStore: AppStore,
+    appStore: InstrumentAppStore,
     instrument: InstrumentObject
 ) {
     return new TableList(
@@ -39,7 +39,7 @@ export function createTableListFromData(
     );
 }
 
-export function createListObject(props: any, appStore: AppStore, instrument: InstrumentObject) {
+export function createListObject(props: any, appStore: InstrumentAppStore, instrument: InstrumentObject) {
     if (props.type === "table") {
         return new TableList(props, appStore, instrument);
     } else {

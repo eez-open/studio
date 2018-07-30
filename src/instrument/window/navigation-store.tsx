@@ -3,7 +3,7 @@ import { observable, computed, action } from "mobx";
 
 import { IRootNavigationItem } from "shared/ui/app";
 
-import { AppStore } from "instrument/window/app-store";
+import { InstrumentAppStore } from "instrument/window/app-store";
 import * as ScriptsModule from "instrument/window/scripts";
 import * as ShortcutsModule from "instrument/window/shortcuts";
 
@@ -33,7 +33,7 @@ export class NavigationStore {
 
     mainHistoryView: HistoryView | undefined;
 
-    constructor(public appStore: AppStore) {
+    constructor(public appStore: InstrumentAppStore) {
         this.terminalNavigationItem = {
             id: "terminal",
             icon: "material:navigate_next",
