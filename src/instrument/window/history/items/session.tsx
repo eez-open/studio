@@ -3,7 +3,7 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
 
-import { formatDateTimeLong } from "shared/util";
+import { formatDuration, formatDateTimeLong } from "shared/util";
 import { IActivityLogEntry } from "shared/activity-log";
 
 import { IAppStore } from "instrument/window/history/history";
@@ -37,8 +37,10 @@ export class SessionHistoryItemComponent extends React.Component<
                     </span>
                     <span className="EezStudio_HistoryItem_SessionState">
                         {this.props.historyItem.type === "activity-log/session-start"
-                            ? "started"
-                            : "closed"}
+                            ? ` - Started`
+                            : ` - Closed, Duration: ${formatDuration(
+                                  this.props.historyItem.duration
+                              )}`}
                     </span>
                 </p>
             </div>
@@ -72,5 +74,16 @@ export class SessionHistoryItem extends HistoryItem {
             }
             return "";
         }
+    }
+
+    @computed
+    get duration(): number {
+        if (this.sid) {
+            const sessionStart = this.appStore.history.getHistoryItemById(this.sid);
+            if (sessionStart instanceof SessionHistoryItem) {
+                return this.date.getTime() - sessionStart.date.getTime();
+            }
+        }
+        return 0;
     }
 }

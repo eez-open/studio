@@ -32,6 +32,7 @@ src/project-editor/_stylesheets/main.css
 
 src/test/**/*.js
 src/test/**/*.js.map
+src/test/_stylesheets/main.css
 
 src/basic-measurements/**/*.js
 src/basic-measurements/**/*.js.map
