@@ -43,8 +43,13 @@ export class HistorySessions {
                 newActiveSession = undefined;
             }
 
+            const newMessage = activeSession.message;
+
             runInAction(() => {
                 this.activeSession = newActiveSession;
+                if (this.activeSession && newMessage) {
+                    this.activeSession.message = newMessage;
+                }
             });
         });
     }

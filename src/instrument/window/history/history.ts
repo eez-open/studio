@@ -34,8 +34,6 @@ import {
     showHistoryItem
 } from "instrument/window/history/history-view";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
-
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_SINGLE_SEARCH_LIMIT = 100;
@@ -683,12 +681,6 @@ export class History {
                             op: StoreOperation,
                             options: IStoreOperationOptions
                         ) => {
-                            if (
-                                this.appStore instanceof InstrumentAppStore &&
-                                !this.isDeletedItemsHistory
-                            ) {
-                                console.log("createObject", object);
-                            }
                             this.onCreateActivityLogEntry(object, op, options);
                         },
                         updateObject: (
@@ -696,12 +688,6 @@ export class History {
                             op: StoreOperation,
                             options: IStoreOperationOptions
                         ) => {
-                            if (
-                                this.appStore instanceof InstrumentAppStore &&
-                                !this.isDeletedItemsHistory
-                            ) {
-                                console.log("updateObject", changes);
-                            }
                             this.onUpdateActivityLogEntry(changes, op, options);
                         },
                         deleteObject: (
@@ -709,12 +695,6 @@ export class History {
                             op: StoreOperation,
                             options: IStoreOperationOptions
                         ) => {
-                            if (
-                                this.appStore instanceof InstrumentAppStore &&
-                                !this.isDeletedItemsHistory
-                            ) {
-                                console.log("deleteObject", object);
-                            }
                             this.onDeleteActivityLogEntry(object, op, options);
                         }
                     },

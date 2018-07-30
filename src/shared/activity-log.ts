@@ -369,13 +369,17 @@ export function logGet(id: string) {
 
 class ActiveSession {
     @observable id: string | undefined;
+    @observable message: string | undefined;
 
     constructor() {
         activityLogStore.watch(
             {
                 createObject: (object: any) => {
                     if (object.type === "activity-log/session-start") {
-                        runInAction(() => (this.id = object.id));
+                        runInAction(() => {
+                            this.id = object.id;
+                            this.message = object.message;
+                        });
                     }
                 },
                 updateObject: (changes: any) => {
@@ -383,7 +387,14 @@ class ActiveSession {
                         try {
                             const message = JSON.parse(changes.message);
                             if (message.sessionCloseId) {
-                                runInAction(() => (this.id = undefined));
+                                runInAction(() => {
+                                    this.id = undefined;
+                                    this.message = undefined;
+                                });
+                            } else {
+                                runInAction(() => {
+                                    this.message = changes.message;
+                                });
                             }
                         } catch (err) {
                             console.error(err);
@@ -392,7 +403,10 @@ class ActiveSession {
                 },
                 deleteObject: (object: any) => {
                     if (object.id === this.id) {
-                        runInAction(() => (this.id = undefined));
+                        runInAction(() => {
+                            this.id = undefined;
+                            this.message = undefined;
+                        });
                     }
                 }
             },
