@@ -54,22 +54,22 @@ export class ShortcutsToolbar extends React.Component<
 > {
     @computed
     get shortcuts() {
-        return Array.from(
-            this.props.appStore.shortcutsStore.instrumentShortcuts.get().values()
-        ).sort((s1, s2) => {
-            if (s1.toolbarButtonPosition < s2.toolbarButtonPosition) {
-                return -1;
-            }
+        return Array.from(this.props.appStore.shortcutsStore.instrumentShortcuts.get().values())
+            .filter(s => s.showInToolbar)
+            .sort((s1, s2) => {
+                if (s1.toolbarButtonPosition < s2.toolbarButtonPosition) {
+                    return -1;
+                }
 
-            if (s1.toolbarButtonPosition > s2.toolbarButtonPosition) {
-                return 1;
-            }
+                if (s1.toolbarButtonPosition > s2.toolbarButtonPosition) {
+                    return 1;
+                }
 
-            let name1 = s1.name.toLocaleLowerCase();
-            let name2 = s2.name.toLocaleLowerCase();
+                let name1 = s1.name.toLocaleLowerCase();
+                let name2 = s2.name.toLocaleLowerCase();
 
-            return name1 < name2 ? -1 : name1 > name2 ? 1 : 0;
-        });
+                return name1 < name2 ? -1 : name1 > name2 ? 1 : 0;
+            });
     }
 
     render() {
