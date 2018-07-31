@@ -79,6 +79,7 @@ export const activityLogStore = createStore({
         UPDATE activityLogVersion SET version = 4;`,
 
         // version 5
+        // create activity-log/session's from instrument/connected with sessionName
         `INSERT INTO activityLog(date, oid, type, message, data, deleted)
             SELECT
                 date-1, '0', 'activity-log/session', json_set('{}', '$.sessionName', json_extract(message, '$.sessionName')), NULL, 0
@@ -103,11 +104,13 @@ export const activityLogStore = createStore({
         UPDATE activityLogVersion SET version = 5;`,
 
         // version 6
+        // rename activity-log/session to activity-log/session-start
         `UPDATE activityLog SET type="activity-log/session-start" WHERE type="activity-log/session";
 
         UPDATE activityLogVersion SET version = 6;`,
 
         // version 7
+        // add sid column
         `CREATE TABLE activityLog2(
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
             date INTEGER NOT NULL,
@@ -129,6 +132,7 @@ export const activityLogStore = createStore({
         UPDATE activityLogVersion SET version = 7;`,
 
         // version 8
+        // update sid column for history items
         `UPDATE activityLog
         SET sid = (
             SELECT s2.id
@@ -168,6 +172,7 @@ export const activityLogStore = createStore({
         UPDATE activityLogVersion SET version = 8;`,
 
         // version 9
+        // close sessions by searching for "instrument/disconnected"
         `INSERT INTO activityLog(date, sid, oid, type, message, data, deleted)
             SELECT
                 date+1, sid, '0', 'activity-log/session-close', "", NULL, 0
@@ -192,7 +197,56 @@ export const activityLogStore = createStore({
                     SELECT * FROM activityLog AS activityLog2 WHERE activityLog2.type = 'activity-log/session-close' AND activityLog2.sid = activityLog.id
                 );
 
-        UPDATE activityLogVersion SET version = 9;`
+        UPDATE activityLogVersion SET version = 9;`,
+
+        // version 10
+        // close sessions that are left unclosed by searching for another session-start
+        `INSERT INTO activityLog(date, sid, oid, type, message, data, deleted)
+            SELECT a2.date - 1, a1.id, '0', 'activity-log/session-close', "", NULL, 0
+            FROM
+                activityLog a1 JOIN activityLog a2 ON
+                    a2.id = (SELECT id FROM activityLog a3 WHERE a3.type="activity-log/session-start" AND a3.date > a1.date ORDER BY a3.date LIMIT 1)
+            WHERE
+                a1.type="activity-log/session-start" AND
+                json_extract(a1.message, "$.sessionCloseId") IS NULL;
+
+        UPDATE activityLog
+                SET
+                    message = json_set(
+                        message,
+                        '$.sessionCloseId',
+                        (
+                            SELECT activityLog2.id FROM activityLog AS activityLog2 WHERE activityLog2.type = 'activity-log/session-close' AND activityLog2.sid = activityLog.id
+                        )
+                    )
+                WHERE
+                    type = 'activity-log/session-start' AND
+                    json_extract(message, "$.sessionCloseId") IS NULL AND
+                    EXISTS(
+                        SELECT * FROM activityLog AS activityLog2 WHERE activityLog2.type = 'activity-log/session-close' AND activityLog2.sid = activityLog.id
+                    );
+
+        UPDATE activityLogVersion SET version = 10;`,
+
+        // version 11
+        // fix date of some activity-log/session-close items
+        `UPDATE activityLog
+            SET date = (
+                SELECT a2.date-1 FROM activityLog a2
+                WHERE a2.type = "activity-log/session-start" AND
+                a2.date < activityLog.date AND
+                a2.date > (SELECT a3.date FROM activityLog a3 WHERE a3.id = activityLog.sid)
+            )
+        WHERE
+            type = "activity-log/session-close" AND
+            EXISTS (
+                SELECT * FROM activityLog a2
+                WHERE a2.type = "activity-log/session-start" AND
+                a2.date < activityLog.date AND
+                a2.date > (SELECT a3.date FROM activityLog a3 WHERE a3.id = activityLog.sid)
+            );
+
+        UPDATE activityLogVersion SET version = 11;`
     ],
 
     properties: {
