@@ -246,7 +246,11 @@ export const activityLogStore = createStore({
                 a2.date > (SELECT a3.date FROM activityLog a3 WHERE a3.id = activityLog.sid)
             );
 
-        UPDATE activityLogVersion SET version = 11;`
+        UPDATE activityLogVersion SET version = 11;`,
+
+        // version 12
+        `UPDATE activityLog SET oid="0" WHERE type = "activity-log/session-start";
+        UPDATE activityLogVersion SET version = 12;`
     ],
 
     properties: {

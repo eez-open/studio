@@ -117,14 +117,10 @@ export function createHistoryItem(
     }
 
     if (activityLogEntry.type === "instrument/chart") {
-        if (EEZStudio.windowType === "instrument") {
-            const {
-                MultiWaveform
-            } = require("instrument/window/waveform/multi") as typeof MultiWaveformModule;
-            return new MultiWaveform(activityLogEntry, appStore);
-        } else {
-            return new HistoryItem(activityLogEntry);
-        }
+        const {
+            MultiWaveform
+        } = require("instrument/window/waveform/multi") as typeof MultiWaveformModule;
+        return new MultiWaveform(activityLogEntry, appStore);
     }
 
     if (activityLogEntry.type === "instrument/script") {
