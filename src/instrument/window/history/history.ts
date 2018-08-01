@@ -463,14 +463,18 @@ class HistorySearch {
 ////////////////////////////////////////////////////////////////////////////////
 
 class HistoryNavigator {
+    firstHistoryItemTime: number;
+    lastHistoryItemTime: number;
+
     @observable hasOlder = false;
     @observable hasNewer = false;
 
     constructor(public history: History) {}
 
     update() {
-        const firstHistoryItem = this.firstHistoryItem;
-        if (firstHistoryItem) {
+        if (this.firstHistoryItem) {
+            this.firstHistoryItemTime = this.firstHistoryItem.date.getTime();
+
             const result = db
                 .prepare(
                     `SELECT
@@ -480,15 +484,16 @@ class HistoryNavigator {
                     WHERE
                         ${this.history.oidWhereClause} AND date < ? ${this.history.getFilter()}`
                 )
-                .get(firstHistoryItem.date.getTime());
+                .get(this.firstHistoryItemTime);
 
             this.hasOlder = result && result.count.toNumber() > 0;
         } else {
             this.hasOlder = false;
         }
 
-        const lastHistoryItem = this.lastHistoryItem;
-        if (lastHistoryItem) {
+        if (this.lastHistoryItem) {
+            this.lastHistoryItemTime = this.lastHistoryItem.date.getTime();
+
             const result = db
                 .prepare(
                     `SELECT
@@ -498,7 +503,7 @@ class HistoryNavigator {
                     WHERE
                         ${this.history.oidWhereClause} AND date > ? ${this.history.getFilter()}`
                 )
-                .get(lastHistoryItem.date.getTime());
+                .get(this.lastHistoryItemTime);
 
             this.hasNewer = result && result.count.toNumber() > 0;
         } else {
@@ -508,6 +513,7 @@ class HistoryNavigator {
         this.history.selection.selectItems([]);
     }
 
+    @computed
     get firstHistoryItem() {
         if (this.history.blocks.length > 0) {
             const firstBlock = this.history.blocks[0];
@@ -518,6 +524,7 @@ class HistoryNavigator {
         return undefined;
     }
 
+    @computed
     get lastHistoryItem() {
         if (this.history.blocks.length > 0) {
             const lastBlock = this.history.blocks[this.history.blocks.length - 1];
@@ -530,8 +537,7 @@ class HistoryNavigator {
 
     @action.bound
     loadOlder() {
-        const firstHistoryItem = this.firstHistoryItem;
-        if (firstHistoryItem) {
+        if (this.hasOlder) {
             const rows = db
                 .prepare(
                     `SELECT
@@ -552,7 +558,7 @@ class HistoryNavigator {
                         )
                     LIMIT ?`
                 )
-                .all(firstHistoryItem.date.getTime(), CONF_BLOCK_SIZE);
+                .all(this.firstHistoryItemTime, CONF_BLOCK_SIZE);
 
             rows.reverse();
 
@@ -566,8 +572,7 @@ class HistoryNavigator {
 
     @action.bound
     loadNewer() {
-        const lastHistoryItem = this.lastHistoryItem;
-        if (lastHistoryItem) {
+        if (this.hasNewer) {
             const rows = db
                 .prepare(
                     `SELECT
@@ -588,7 +593,7 @@ class HistoryNavigator {
                         )
                     LIMIT ?`
                 )
-                .all(lastHistoryItem.date.getTime(), CONF_BLOCK_SIZE);
+                .all(this.lastHistoryItemTime, CONF_BLOCK_SIZE);
 
             if (rows.length > 0) {
                 this.history.calendar.showFirstHistoryItemAsSelectedDay = false;
@@ -674,6 +679,9 @@ export class History {
                     };
                 }
 
+                let objectsToDelete: any = [];
+                let deleteTimeout: any;
+
                 activityLogStore.watch(
                     {
                         createObject: (
@@ -695,7 +703,28 @@ export class History {
                             op: StoreOperation,
                             options: IStoreOperationOptions
                         ) => {
-                            this.onDeleteActivityLogEntry(object, op, options);
+                            // In case when multiple objects are deleted,
+                            // this function will be called one time for each object.
+                            // If we refresh UI immediatelly for each object that will be really slow.
+                            // So, we collect deleted objects and refresh UI for all objects at once.
+                            objectsToDelete.push(object);
+                            if (deleteTimeout) {
+                                clearTimeout(deleteTimeout);
+                            }
+                            deleteTimeout = setTimeout(
+                                action(() => {
+                                    deleteTimeout = undefined;
+                                    for (let i = 0; i < objectsToDelete.length; ++i) {
+                                        this.onDeleteActivityLogEntry(
+                                            objectsToDelete[i],
+                                            op,
+                                            options
+                                        );
+                                    }
+                                    objectsToDelete = [];
+                                }),
+                                10
+                            );
                         }
                     },
                     activityLogFilterSpecification
@@ -1099,6 +1128,50 @@ export class History {
             this.selection.selectItems([]);
         }
     }
+
+    /// Return all the history items between fromItem and toItem.
+    /// This is used during mouse selection with SHIFT key.
+    getAllItemsBetween(fromItem: IHistoryItem, toItem: IHistoryItem): IHistoryItem[] {
+        let direction: "normal" | "reversed" | undefined = undefined;
+        let done = false;
+
+        const items: IHistoryItem[] = [];
+
+        for (let blockIndex = 0; blockIndex < this.blocks.length; ++blockIndex) {
+            const block = this.blocks[blockIndex];
+            for (let itemIndex = 0; itemIndex < block.length; ++itemIndex) {
+                const item = block[itemIndex];
+
+                if (item === fromItem) {
+                    if (direction) {
+                        done = true;
+                    } else {
+                        direction = "normal";
+                    }
+                }
+
+                if (item === toItem) {
+                    if (direction) {
+                        done = true;
+                    } else {
+                        direction = "reversed";
+                    }
+                }
+
+                if (direction === "normal") {
+                    items.push(item);
+                } else if (direction === "reversed") {
+                    items.unshift(item);
+                }
+
+                if (done) {
+                    return items;
+                }
+            }
+        }
+
+        return [];
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1196,6 +1269,7 @@ export class DeletedItemsHistory extends History {
         if (this.selection.items.length > 0) {
             confirm("Are you sure?", "This will permanently delete selected history items.", () => {
                 if (this.selection.items.length > 0) {
+                    console.log("deleteSelectedHistoryItems STARTED");
                     beginTransaction("Purge history items");
 
                     this.selection.items.forEach(historyItem =>
@@ -1213,6 +1287,7 @@ export class DeletedItemsHistory extends History {
                     commitTransaction();
 
                     this.selection.selectItems([]);
+                    console.log("deleteSelectedHistoryItems FINISHED");
                 }
             });
         }

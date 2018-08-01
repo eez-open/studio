@@ -102,6 +102,14 @@ export class NavigationStore {
             } else {
                 document.title = `Home - EEZ Studio`;
             }
+
+            if (
+                this._mainNavigationSelectedItem === this.deletedHistoryItemsNavigationItem &&
+                this.mainHistoryView &&
+                this.mainHistoryView.props.appStore.deletedItemsHistory.deletedCount === 0
+            ) {
+                this.navigateToHistory();
+            }
         });
     }
 

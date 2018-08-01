@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { findDOMNode } from "react-dom";
 import { action } from "mobx";
 import { observer } from "mobx-react";
@@ -56,23 +57,44 @@ export class HistoryItems extends React.Component<{
                 <div
                     key={historyItem.id}
                     className={className}
-                    onClick={event => {
-                        let historyItems = [historyItem];
-                        if (event.ctrlKey || event.shiftKey) {
-                            historyItems = historyItems.concat(
-                                ...this.props.history.selection.items
-                            );
+                    onMouseDown={event => {
+                        // this is to prevent text selection with the SHIFT key
+                        if (event.shiftKey) {
+                            event.preventDefault();
                         }
+                    }}
+                    onClick={event => {
+                        let historyItems;
+                        if (event.ctrlKey) {
+                            if (historyItem.selected) {
+                                historyItems = this.props.history.selection.items.slice();
+                                historyItems.splice(historyItems.indexOf(historyItem), 1);
+                            } else {
+                                historyItems = this.props.history.selection.items.concat([
+                                    historyItem
+                                ]);
+                            }
+                        } else if (event.shiftKey) {
+                            if (this.props.history.selection.items.length > 0) {
+                                historyItems = this.props.history.getAllItemsBetween(
+                                    this.props.history.selection.items[0],
+                                    historyItem
+                                );
+                            } else {
+                                historyItems = [historyItem];
+                            }
+                        } else {
+                            historyItems = [historyItem];
+                        }
+
                         this.props.history.selection.selectItems(historyItems);
+
+                        event.preventDefault();
                     }}
                     onContextMenu={event => {
-                        let historyItems = [historyItem];
-                        if (event.ctrlKey || event.shiftKey) {
-                            historyItems = historyItems.concat(
-                                ...this.props.history.selection.items
-                            );
+                        if (!historyItem.selected) {
+                            this.props.history.selection.selectItems([historyItem]);
                         }
-                        this.props.history.selection.selectItems(historyItems);
 
                         const { Menu, MenuItem } = EEZStudio.electron.remote;
                         const menu = new Menu();
@@ -140,6 +162,7 @@ export class HistoryListComponent extends React.Component<{
     componentDidMount() {
         this.autoScroll();
         this.div.addEventListener("scroll", this.onScroll);
+        document.addEventListener("keydown", this.onKeyDown);
     }
 
     componentDidUpdate() {
@@ -152,8 +175,8 @@ export class HistoryListComponent extends React.Component<{
 
     componentWillUnmount() {
         window.cancelAnimationFrame(this.animationFrameRequestId);
-
         this.div.removeEventListener("scroll", this.onScroll);
+        document.removeEventListener("keydown", this.onKeyDown);
     }
 
     moveToTop() {
@@ -217,6 +240,31 @@ export class HistoryListComponent extends React.Component<{
 
         this.lastScrollHeight = this.div.scrollHeight;
         this.lastClientHeight = this.div.clientHeight;
+    }
+
+    selectAll() {
+        const allItems = this.props.history.blocks.reduce(
+            (previousValue: IHistoryItem[], currentValue: IHistoryItem[]) =>
+                currentValue.concat(previousValue),
+            []
+        );
+        this.props.history.selection.selectItems(allItems);
+    }
+
+    @bind
+    onKeyDown(event: KeyboardEvent) {
+        if (event.ctrlKey && event.keyCode == 65) {
+            // Ctrl+A
+            if (event.target instanceof HTMLInputElement) {
+                return;
+            }
+
+            const historyDomNode = ReactDOM.findDOMNode(this);
+            if (historyDomNode && $(historyDomNode).is(":visible")) {
+                event.preventDefault();
+                this.selectAll();
+            }
+        }
     }
 
     render() {

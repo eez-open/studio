@@ -1,5 +1,5 @@
 import * as React from "react";
-import { observable, computed, action, toJS } from "mobx";
+import { computed, toJS } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
@@ -8,57 +8,34 @@ import { formatDateTimeLong } from "shared/util";
 import { beginTransaction, commitTransaction } from "shared/store";
 import { log, logUpdate, logDelete } from "shared/activity-log";
 
+import { validators } from "shared/model/validation";
+
 import { IconAction } from "shared/ui/action";
-import { Dialog, showDialog } from "shared/ui/dialog";
-import { PropertyList, TextInputProperty } from "shared/ui/properties";
+import { showGenericDialog } from "shared/ui/generic-dialog";
 import { Body } from "shared/ui/header-with-body";
 import { confirm } from "shared/ui/dialog";
 
 import { IAppStore, History } from "instrument/window/history/history";
 import { ISession } from "instrument/window/history/session/store";
 
-@observer
-class EditSessionNameDialog extends React.Component<
-    {
-        name: string;
-        callback: (name: string) => void;
-    },
-    {}
-> {
-    constructor(props: any) {
-        super(props);
-
-        this.handleChange = this.handleChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
-
-        this.name = this.props.name;
-    }
-
-    @observable name: string;
-
-    @action
-    handleChange(value: string) {
-        this.name = value;
-    }
-
-    handleSubmit() {
-        this.props.callback(this.name);
-        return true;
-    }
-
-    render() {
-        return (
-            <Dialog onOk={this.handleSubmit}>
-                <PropertyList>
-                    <TextInputProperty value={this.name} onChange={this.handleChange} />
-                </PropertyList>
-            </Dialog>
-        );
-    }
-}
-
 export function showEditSessionNameDialog(name: string, callback: (name: string) => void) {
-    showDialog(<EditSessionNameDialog callback={callback} name={name} />);
+    showGenericDialog({
+        dialogDefinition: {
+            fields: [
+                {
+                    name: "Session name",
+                    type: "string",
+                    validators: [validators.required]
+                }
+            ]
+        },
+
+        values: {
+            name
+        }
+    })
+        .then(result => callback(result.values.name))
+        .catch(() => {});
 }
 
 @observer

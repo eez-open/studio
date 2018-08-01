@@ -39,8 +39,16 @@ export class DeletedHistoryItemsTools extends React.Component<{ appStore: IAppSt
         }
 
         actions.push(
+            <span key="deletedItems" style={{ paddingRight: 10 }}>
+                {`${this.props.appStore.deletedItemsHistory.deletedCount} deleted ${
+                    this.props.appStore.deletedItemsHistory.deletedCount !== 1 ? "items" : "item"
+                }`}
+            </span>
+        );
+
+        actions.push(
             <ButtonAction
-                key="deletedItems"
+                key="back"
                 icon="material:arrow_back"
                 text="Back"
                 title={"Go back to the terminal"}
@@ -105,6 +113,12 @@ export class DeletedHistoryItemsView extends React.Component<{
                 ref={ref => (this.history = ref)}
                 history={this.props.appStore.deletedItemsHistory}
             />
+        );
+
+        const historyComponentWithTools = (
+            <div className="EezStudio_History_Container" tabIndex={0}>
+                <div className="EezStudio_History_Body">{historyComponent}</div>
+            </div>
         );
 
         let searchResultsVisible = appStore.deletedItemsHistory.search.searchActive;
@@ -208,7 +222,7 @@ export class DeletedHistoryItemsView extends React.Component<{
                 }}
                 header={input}
             >
-                {historyComponent}
+                {historyComponentWithTools}
             </SideDock>
         );
     }

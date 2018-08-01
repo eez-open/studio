@@ -1,5 +1,5 @@
 import * as React from "react";
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, autorun } from "mobx";
 
 import { IRootNavigationItem } from "shared/ui/app";
 
@@ -125,6 +125,15 @@ export class NavigationStore {
         };
 
         this._mainNavigationSelectedItem = this.terminalNavigationItem;
+
+        autorun(() => {
+            if (
+                this.mainNavigationSelectedItem === this.deletedHistoryItemsNavigationItem &&
+                this.appStore.deletedItemsHistory.deletedCount === 0
+            ) {
+                this.navigateToHistory();
+            }
+        });
     }
 
     @computed

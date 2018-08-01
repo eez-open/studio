@@ -356,8 +356,6 @@ export function createStore({
                 db.prepare(`DELETE FROM "${storeName}" WHERE oid = ?`).run(object.oid);
             }
 
-            console.log("deleteObject", object.id);
-
             if (options && options.deletePermanently) {
                 undoManager.removeAllTransactionsReferencingObject(store, object);
             }

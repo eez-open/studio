@@ -200,13 +200,15 @@ export class HistoryView extends React.Component<{
     componentDidMount() {
         this.frameAnimation();
 
-        this.props.appStore.navigationStore.mainHistoryView = this;
+        if (!this.props.simple) {
+            this.props.appStore.navigationStore.mainHistoryView = this;
+        }
     }
 
     componentWillUnmount() {
         window.cancelAnimationFrame(this.animationFrameRequestId);
 
-        if (this.props.appStore.navigationStore.mainHistoryView === this) {
+        if (!this.props.simple) {
             this.props.appStore.navigationStore.mainHistoryView = undefined;
         }
     }

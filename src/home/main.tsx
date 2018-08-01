@@ -36,3 +36,10 @@ async function main() {
 main();
 
 //require("shared/module-stat");
+
+document.onselectstart = function(event) {
+    console.log(event);
+    console.log("New selection made");
+    const selection = document.getSelection();
+    console.log(selection);
+};
