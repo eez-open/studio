@@ -23,7 +23,7 @@ export function showEditSessionNameDialog(name: string, callback: (name: string)
         dialogDefinition: {
             fields: [
                 {
-                    name: "Session name",
+                    name: "sessionName",
                     type: "string",
                     validators: [validators.required]
                 }
@@ -34,7 +34,7 @@ export function showEditSessionNameDialog(name: string, callback: (name: string)
             name
         }
     })
-        .then(result => callback(result.values.name))
+        .then(result => callback(result.values.sessionName))
         .catch(() => {});
 }
 
