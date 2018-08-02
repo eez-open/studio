@@ -70,9 +70,7 @@ export class SideDock extends React.Component<{
     }
 
     update() {
-        if (this.goldenLayout && this.lastLayoutId !== this.props.layoutId) {
-            this.destroy();
-        }
+        this.destroy();
 
         if (this.goldenLayout) {
             if (!this.containerDiv) {
