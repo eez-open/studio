@@ -59,9 +59,19 @@ export class Measurement extends React.Component<{
         let a: number;
         let b: number;
         if (rulersModel.xAxisRulersEnabled) {
-            xStartValue = rulersModel.x1;
-            a = Math.max(Math.floor(xAxisValueToIndex(rulersModel.x1)), 0);
-            b = Math.min(Math.ceil(xAxisValueToIndex(rulersModel.x2)), length - 1);
+            let x1;
+            let x2;
+            if (rulersModel.x1 < rulersModel.x2) {
+                x1 = rulersModel.x1;
+                x2 = rulersModel.x2;
+            } else {
+                x1 = rulersModel.x2;
+                x2 = rulersModel.x1;
+            }
+
+            xStartValue = x1;
+            a = Math.max(Math.floor(xAxisValueToIndex(x1)), 0);
+            b = Math.min(Math.ceil(xAxisValueToIndex(x2)), length - 1);
         } else {
             xStartValue = 0;
             a = 0;

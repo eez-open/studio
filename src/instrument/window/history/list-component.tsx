@@ -64,6 +64,11 @@ export class HistoryItems extends React.Component<{
                         }
                     }}
                     onClick={event => {
+                        if ($(event.target).parents(".EezStudio_HistoryItem_Preview.zoom").length) {
+                            // ignore clicks on history items with preview in zoom mode
+                            return;
+                        }
+
                         let historyItems;
                         if (event.ctrlKey) {
                             if (historyItem.selected) {

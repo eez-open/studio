@@ -72,9 +72,9 @@ export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
     }
 
     render() {
-        let className = classNames("EezStudio_HistoryItem_Charts", {
+        let className = classNames("EezStudio_HistoryItem_Preview EezStudio_ChartPreview", {
             zoom: this.zoom,
-            EezStudio_HistoryItem_Charts_BlackBackground: globalViewOptions.blackBackground
+            EezStudio_ChartPreview_BlackBackground: globalViewOptions.blackBackground
         });
 
         if (this.zoom) {

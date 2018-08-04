@@ -44,7 +44,10 @@ class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOption
 
         this.yAxisSteps = chartsController.chartControllers.map(
             (chartController: ChartController, i: number) => {
-                const ySteps = viewOptions.axesLines.steps && viewOptions.axesLines.steps.y[i];
+                const ySteps =
+                    viewOptions.axesLines.steps &&
+                    i < viewOptions.axesLines.steps.y.length &&
+                    viewOptions.axesLines.steps.y[i];
                 return ySteps
                     ? ySteps
                           .map(step =>

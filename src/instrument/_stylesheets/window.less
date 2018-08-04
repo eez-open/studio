@@ -397,7 +397,7 @@
     }
 
     .EezStudio_ImagePreview,
-    .EezStudio_HistoryItem_Charts {
+    .EezStudio_ChartPreview {
         &.zoom {
             position: fixed;
             left: 0;
@@ -435,7 +435,7 @@
         }
     }
 
-    .EezStudio_HistoryItem_Charts {
+    .EezStudio_ChartPreview {
         &:not(.zoom) {
             background-color: white;
             padding: 8px;
@@ -459,13 +459,13 @@
         }
     }
 
-    .EezStudio_HistoryItem_Charts_BlackBackground {
+    .EezStudio_ChartPreview_BlackBackground {
         &:not(.zoom) {
             background-color: black;
         }
     }
 
-    .EezStudio_HistoryItem_Charts,
+    .EezStudio_ChartPreview,
     .EezStudio_ImagePreview {
         .EezStudio_Header {
             &:extend(.EezStudio_PanelHeader);
@@ -475,15 +475,12 @@
         }
     }
 
-    &.EezStudio_HistoryItem_Chart
-        .EezStudio_HistoryItem_Charts:not(.zoom)
-        .EezStudio_ListChartView
-        svg {
+    &.EezStudio_HistoryItem_Chart .EezStudio_ChartPreview:not(.zoom) .EezStudio_ListChartView svg {
         height: 162px;
     }
 
     &.EezStudio_HistoryItem_Chart
-        .EezStudio_HistoryItem_Charts:not(.zoom)
+        .EezStudio_ChartPreview:not(.zoom)
         .EezStudio_ListChartView
         svg.EezStudio_Chart_XAxis {
         height: 24px;

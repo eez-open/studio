@@ -54,17 +54,10 @@ class DragXRulerMouseHandler implements MouseHandler {
         x =
             (x / this.rulersController.chartController.xAxisController.range) *
             (this.rulersController.waveformModel.length - 1);
-        if (this.whichRuller === 2) {
-            return (
-                (Math.floor(x) * this.rulersController.chartController.xAxisController.range) /
-                (this.rulersController.waveformModel.length - 1)
-            );
-        } else {
-            return (
-                (Math.ceil(x) * this.rulersController.chartController.xAxisController.range) /
-                (this.rulersController.waveformModel.length - 1)
-            );
-        }
+        return (
+            (Math.round(x) * this.rulersController.chartController.xAxisController.range) /
+            (this.rulersController.waveformModel.length - 1)
+        );
     }
 
     @action
@@ -94,13 +87,9 @@ class DragXRulerMouseHandler implements MouseHandler {
                 x <= this.rulersController.chartController.xAxisController.maxValue
             ) {
                 if (this.whichRuller === 1) {
-                    if (x <= this.rulersController.rulersModel.x2) {
-                        this.rulersController.rulersModel.x1 = x;
-                    }
+                    this.rulersController.rulersModel.x1 = x;
                 } else {
-                    if (this.rulersController.rulersModel.x1 <= x) {
-                        this.rulersController.rulersModel.x2 = x;
-                    }
+                    this.rulersController.rulersModel.x2 = x;
                 }
             }
         }
@@ -160,13 +149,9 @@ class DragYRulerMouseHandler implements MouseHandler {
                 y <= this.rulersController.chartController.yAxisController.maxValue
             ) {
                 if (this.whichRuller === 1) {
-                    if (y <= this.rulersController.rulersModel.y2) {
-                        this.rulersController.rulersModel.y1 = y;
-                    }
+                    this.rulersController.rulersModel.y1 = y;
                 } else {
-                    if (this.rulersController.rulersModel.y1 <= y) {
-                        this.rulersController.rulersModel.y2 = y;
-                    }
+                    this.rulersController.rulersModel.y2 = y;
                 }
             }
         }
@@ -286,8 +271,13 @@ export class RulersController {
             return null;
         }
 
-        const x1 = this.x1;
-        const x2 = this.x2;
+        let x1 = this.x1;
+        let x2 = this.x2;
+        if (x1 > x2) {
+            const temp = x1;
+            x1 = x2;
+            x2 = temp;
+        }
 
         const y1 = this.chartController.chartsController.chartTop;
         const y2 = this.chartController.chartsController.chartBottom;
@@ -365,8 +355,13 @@ export class RulersController {
             return null;
         }
 
-        const y1 = this.y1;
-        const y2 = this.y2;
+        let y1 = this.y1;
+        let y2 = this.y2;
+        if (y1 < y2) {
+            const temp = y1;
+            y1 = y2;
+            y2 = temp;
+        }
 
         const x1 = this.chartController.chartsController.chartLeft;
         const x2 = this.chartController.chartsController.chartRight;
@@ -558,12 +553,6 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
             return;
         }
 
-        if (x1! > x2!) {
-            this.x1Error = true;
-            this.x2Error = true;
-            return;
-        }
-
         this.rulersModel.x1 = x1!;
         this.rulersModel.x2 = x2!;
     }
@@ -590,11 +579,18 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
 
     @bind
     zoomToFitXRulers() {
-        const dx = this.rulersModel.x2 - this.rulersModel.x1;
-        this.chartController.xAxisController.zoom(
-            this.rulersModel.x1 - 0.05 * dx,
-            this.rulersModel.x2 + 0.05 * dx
-        );
+        let x1;
+        let x2;
+        if (this.rulersModel.x1 < this.rulersModel.x2) {
+            x1 = this.rulersModel.x1;
+            x2 = this.rulersModel.x2;
+        } else {
+            x1 = this.rulersModel.x2;
+            x2 = this.rulersModel.x1;
+        }
+
+        const dx = x2 - x1;
+        this.chartController.xAxisController.zoom(x1 - 0.05 * dx, x2 + 0.05 * dx);
     }
 
     validateYRange() {
@@ -607,12 +603,6 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         this.y2Error = y2 == null || y2 < yAxisController.minValue || y2 > yAxisController.maxValue;
 
         if (this.y1Error || this.y2Error) {
-            return;
-        }
-
-        if (y1! > y2!) {
-            this.y1Error = true;
-            this.y2Error = true;
             return;
         }
 
@@ -642,11 +632,18 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
 
     @bind
     zoomToFitYRulers() {
-        const dy = this.rulersModel.y2 - this.rulersModel.y1;
-        this.chartController.yAxisController.zoom(
-            this.rulersModel.y1 - 0.05 * dy,
-            this.rulersModel.y2 + 0.05 * dy
-        );
+        let y1;
+        let y2;
+        if (this.rulersModel.y1 < this.rulersModel.y2) {
+            y1 = this.rulersModel.y1;
+            y2 = this.rulersModel.y2;
+        } else {
+            y1 = this.rulersModel.y2;
+            y2 = this.rulersModel.y1;
+        }
+
+        const dy = y2 - y1;
+        this.chartController.yAxisController.zoom(y1 - 0.05 * dy, y2 + 0.05 * dy);
     }
 
     render() {

@@ -65,7 +65,7 @@ class ImagePreview extends React.Component<
         if (this.zoom) {
             return (
                 <VerticalHeaderWithBody
-                    className="EezStudio_ImagePreview zoom"
+                    className="EezStudio_HistoryItem_Preview EezStudio_ImagePreview zoom"
                     onContextMenu={this.onContextMenu}
                 >
                     <Header>
@@ -84,7 +84,10 @@ class ImagePreview extends React.Component<
             );
         } else {
             return (
-                <div className="EezStudio_ImagePreview" onContextMenu={this.onContextMenu}>
+                <div
+                    className="EezStudio_HistoryItem_Preview EezStudio_ImagePreview"
+                    onContextMenu={this.onContextMenu}
+                >
                     {img}
                 </div>
             );
