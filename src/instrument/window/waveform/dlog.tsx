@@ -222,7 +222,10 @@ interface IChannel {
 }
 
 export class DlogWaveform extends FileHistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem, appStore: InstrumentAppStore) {
+    constructor(
+        activityLogEntry: IActivityLogEntry | FileHistoryItem,
+        appStore: InstrumentAppStore
+    ) {
         super(activityLogEntry, appStore);
         if (activityLogEntry instanceof FileHistoryItem) {
             this.isVisible = activityLogEntry.isVisible;
@@ -309,6 +312,12 @@ export class DlogWaveform extends FileHistoryItem {
                     );
                 }
             }
+        );
+
+        // make sure there is one Y ruler for each chart
+        reaction(
+            () => this.channels.length,
+            numCharts => this.rulers.initYRulers(this.channels.length)
         );
     }
 

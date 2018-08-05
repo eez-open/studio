@@ -280,7 +280,10 @@ export class WaveformChartsController extends ChartsController {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Waveform extends FileHistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem, appStore: InstrumentAppStore) {
+    constructor(
+        activityLogEntry: IActivityLogEntry | FileHistoryItem,
+        appStore: InstrumentAppStore
+    ) {
         super(activityLogEntry, appStore);
 
         const message = JSON.parse(this.message);

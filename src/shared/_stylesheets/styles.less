@@ -828,14 +828,6 @@ DESIGNER
         margin-bottom: 0;
         border-bottom: none;
     }
-
-    & > div.horizontal {
-        float: left;
-        padding-bottom: 0;
-        margin-left: 4px;
-        margin-bottom: 0;
-        border-bottom: none;
-    }
 }
 
 .EezStudio_SideDock_WithHeader {
@@ -850,15 +842,27 @@ DESIGNER
 }
 
 .EezStudio_MeasurementsSideDockView {
-    & > div {
+    & > div:not(.EezStudio_MeasurementsSideDockView_SelectedChartIndexProperty) {
         border: none;
     }
 
-    select {
-        width: 115px;
+    .EezStudio_MeasurementsSideDockView_SelectedChartIndexProperty
+        > .EezStudio_SideDockView_PropertyLabel
+        > span {
+        display: inline-block;
+        margin-right: 10px;
+    }
+
+    .EezStudio_MeasurementsSideDockView_SelectedChartIndexProperty
+        > .EezStudio_SideDockView_PropertyLabel
+        > select {
+        width: auto;
+        display: inline-block;
     }
 
     table {
+        margin-left: 0;
+
         td:first-child {
             min-width: 120px;
             max-width: none;
@@ -894,5 +898,23 @@ DESIGNER
     }
     span:nth-child(2) {
         font-weight: 500;
+    }
+}
+
+.EezStudio_SideDockView > .EezStudio_AxisRulersProperties {
+    border-bottom: 0;
+    margin-bottom: 0;
+
+    .EezStudio_SideDockView_Property {
+        margin-left: 0;
+    }
+
+    td:nth-child(1) {
+        padding-right: 0;
+    }
+
+    td:nth-child(3),
+    td:nth-child(5) {
+        padding-left: 5px;
     }
 }

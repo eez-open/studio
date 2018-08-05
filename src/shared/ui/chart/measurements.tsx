@@ -14,6 +14,7 @@ import { WaveformModel } from "shared/ui/chart/waveform";
 
 export class MeasurementsModel {
     @observable measurements: string[] = [];
+    @observable selectedChartIndex: number = 0;
 
     constructor(props?: any) {
         if (props) {
@@ -154,8 +155,15 @@ export class Measurement extends React.Component<{
 
 @observer
 export class MeasurementsDockView extends React.Component<{ chartsController: ChartsController }> {
+    get measurementModel() {
+        return this.props.chartsController.chartControllers[0].measurementsController
+            .measurementsModel;
+    }
+
     get chartController() {
-        return this.props.chartsController.chartControllers[0];
+        return this.props.chartsController.chartControllers[
+            this.measurementModel.selectedChartIndex
+        ];
     }
 
     get measurementsController() {
@@ -173,6 +181,34 @@ export class MeasurementsDockView extends React.Component<{ chartsController: Ch
     render() {
         return (
             <div className="EezStudio_MeasurementsSideDockView EezStudio_SideDockView">
+                {this.props.chartsController.chartControllers.length > 1 && (
+                    <div className="EezStudio_MeasurementsSideDockView_SelectedChartIndexProperty">
+                        <div className="EezStudio_SideDockView_PropertyLabel">
+                            <span>Measure:</span>
+                            <select
+                                className="form-control"
+                                title="Chart rendering algorithm"
+                                value={
+                                    this.measurementsController.measurementsModel.selectedChartIndex
+                                }
+                                onChange={action(
+                                    (event: React.ChangeEvent<HTMLSelectElement>) =>
+                                        (this.measurementsController.measurementsModel.selectedChartIndex = parseInt(
+                                            event.target.value
+                                        ))
+                                )}
+                            >
+                                {this.props.chartsController.chartControllers.map(
+                                    (chartController: ChartController, chartIndex: number) => (
+                                        <option key={chartIndex.toString()} value={chartIndex}>
+                                            {chartController.yAxisController.axisModel.label}
+                                        </option>
+                                    )
+                                )}
+                            </select>
+                        </div>
+                    </div>
+                )}
                 <div>
                     <table>
                         <tbody>

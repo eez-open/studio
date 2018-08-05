@@ -241,6 +241,45 @@ class TimeUnit extends Unit {
         return sign + result;
     }
 
+    parseValue(value: string) {
+        let result = super.parseValue(value);
+        if (result !== null) {
+            return result;
+        }
+
+        result = 0;
+
+        const suffixes: [string, number][] = [
+            ["d", 24 * 60 * 60],
+            ["h", 60 * 60],
+            ["m", 60],
+            ["s", 1]
+        ];
+        let suffixIndex = 0;
+
+        const parts = value.split(/\s+/);
+        for (let partIndex = 0; partIndex < parts.length; partIndex++) {
+            let part = parts[partIndex].trim().toLowerCase();
+
+            for (; suffixIndex < suffixes.length; suffixIndex++) {
+                if (part.endsWith(suffixes[suffixIndex][0])) {
+                    const partValue = filterFloat(part.substr(0, part.length - 1));
+                    if (isNaN(partValue)) {
+                        return null;
+                    }
+                    result += partValue * suffixes[suffixIndex][1];
+                    break;
+                }
+            }
+
+            if (suffixIndex == suffixes.length) {
+                return null;
+            }
+        }
+
+        return result;
+    }
+
     clone() {
         return new TimeUnit(this, this.customFormat);
     }
