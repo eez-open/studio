@@ -488,10 +488,23 @@ export function isValidPath(path: string, shortFileName: boolean) {
     return !parts.find(part => !isValidFileName(part, shortFileName));
 }
 
-export async function getTempFilePath() {
+export async function getTempFilePath(options?: any) {
     return new Promise<string>((resolve, reject) => {
         const tmp = require("tmp");
-        tmp.tmpName(function(err: any, path: string) {
+        tmp.tmpName(options, function(err: any, path: string) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(path);
+            }
+        });
+    });
+}
+
+export async function getTempDirPath(options?: any) {
+    return new Promise<string>((resolve, reject) => {
+        const tmp = require("tmp");
+        tmp.dir(options, function(err: any, path: string) {
             if (err) {
                 reject(err);
             } else {

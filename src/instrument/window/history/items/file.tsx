@@ -10,7 +10,9 @@ import {
     formatTransferSpeed,
     getFileName,
     formatBytes,
-    formatDateTimeLong
+    formatDateTimeLong,
+    getTempDirPath,
+    fileExists
 } from "shared/util";
 
 import * as notification from "shared/ui/notification";
@@ -94,6 +96,101 @@ class ImagePreview extends React.Component<
         }
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// TODO create temp dir in main process
+let getPdfTempDirPathPromise = getTempDirPath();
+
+@observer
+class PdfPreview extends React.Component<{ data: any; fileName: string }> {
+    @observable zoom: boolean = false;
+    @observable url: string;
+
+    @computed
+    get urlWithParams() {
+        if (!this.url) {
+            return "";
+        }
+
+        if (this.zoom) {
+            return this.url;
+        }
+
+        return this.url + "#view=FitV&toolbar=0&controls=0";
+    }
+
+    componentDidMount() {
+        (async () => {
+            const tempDirPath = await getPdfTempDirPathPromise;
+            const tempFilePath = tempDirPath + "/" + this.props.fileName;
+            let exists = await fileExists(tempFilePath);
+            if (!exists) {
+                await writeBinaryData(tempFilePath, this.props.data);
+            }
+            return new URL(`file:///${tempFilePath}`).href;
+        })().then(action((url: string) => (this.url = url)));
+    }
+
+    @action.bound
+    toggleZoom() {
+        this.zoom = !this.zoom;
+    }
+
+    @bind
+    onContextMenu(event: React.MouseEvent<HTMLDivElement>) {
+        if (this.zoom) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }
+
+    render() {
+        const pdf = (
+            <div onClick={this.toggleZoom}>
+                <iframe
+                    src={this.urlWithParams}
+                    width={this.zoom ? "100%" : 480}
+                    height={this.zoom ? "100%" : 640}
+                    style={{ pointerEvents: this.zoom ? "all" : "none" }}
+                />
+            </div>
+        );
+
+        if (this.zoom) {
+            return (
+                <VerticalHeaderWithBody
+                    className="EezStudio_HistoryItem_Preview EezStudio_PdfPreview zoom"
+                    onContextMenu={this.onContextMenu}
+                >
+                    <Header>
+                        <Toolbar />
+                        <Toolbar>
+                            <IconAction
+                                icon="material:close"
+                                iconSize={24}
+                                title="Leave full screen mode"
+                                onClick={this.toggleZoom}
+                            />
+                        </Toolbar>
+                    </Header>
+                    <Body>{pdf}</Body>
+                </VerticalHeaderWithBody>
+            );
+        } else {
+            return (
+                <div
+                    className="EezStudio_HistoryItem_Preview EezStudio_PdfPreview"
+                    onContextMenu={this.onContextMenu}
+                >
+                    {pdf}
+                </div>
+            );
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class FileHistoryItemComponent extends React.Component<
@@ -418,6 +515,13 @@ export class FileHistoryItem extends HistoryItem {
                 ";base64," +
                 Buffer.from(this.data, "binary").toString("base64");
             return <ImagePreview src={imageData} />;
+        } else if (this.isPdf) {
+            return (
+                <PdfPreview
+                    data={this.data}
+                    fileName={getFileName(this.fileState.sourceFilePath)}
+                />
+            );
         }
         return null;
     }
@@ -517,6 +621,19 @@ export class FileHistoryItem extends HistoryItem {
         }
 
         return this.fileType.mime.startsWith("image");
+    }
+
+    @computed
+    get isPdf() {
+        if (!this.fileType) {
+            return false;
+        }
+
+        if (typeof this.fileType === "string") {
+            return this.fileType.startsWith("application/pdf");
+        }
+
+        return this.fileType.mime.startsWith("application/pdf");
     }
 
     @computed
