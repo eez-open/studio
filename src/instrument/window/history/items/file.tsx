@@ -117,7 +117,7 @@ class PdfPreview extends React.Component<{ data: any; fileName: string }> {
             return this.url;
         }
 
-        return this.url + "#view=FitV&toolbar=0&controls=0";
+        return this.url + "#view=FitV&toolbar=0";
     }
 
     componentDidMount() {
@@ -150,8 +150,8 @@ class PdfPreview extends React.Component<{ data: any; fileName: string }> {
             <div onClick={this.toggleZoom}>
                 <iframe
                     src={this.urlWithParams}
-                    width={this.zoom ? "100%" : 480}
-                    height={this.zoom ? "100%" : 640}
+                    width={this.zoom ? "100%" : 240}
+                    height={this.zoom ? "100%" : 300}
                     style={{ pointerEvents: this.zoom ? "all" : "none" }}
                 />
             </div>
