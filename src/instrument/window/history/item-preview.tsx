@@ -46,7 +46,7 @@ class ZoomedPreview extends React.Component<{
         return ReactDOM.createPortal(
             <VerticalHeaderWithBody className={className} onContextMenu={this.onContextMenu}>
                 <Header>
-                    {this.props.toolbar}
+                    {this.props.toolbar || <Toolbar />}
                     <Toolbar>
                         <IconAction
                             icon="material:close"
