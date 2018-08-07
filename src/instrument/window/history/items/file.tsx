@@ -26,7 +26,6 @@ import { Balloon } from "shared/ui/balloon";
 import { PropertyList, StaticRichTextProperty } from "shared/ui/properties";
 import { Toolbar } from "shared/ui/toolbar";
 import { IconAction, TextAction } from "shared/ui/action";
-import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
 import { Icon } from "shared/ui/icon";
 import * as UiBalloonModule from "shared/ui/balloon";
 
@@ -36,64 +35,32 @@ import { showAddNoteDialog, showEditNoteDialog } from "instrument/window/note-di
 
 import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
+import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class ImagePreview extends React.Component<
-    {
-        src: string;
-    },
-    {}
-> {
-    @observable zoom: boolean = false;
-
-    @action.bound
-    toggleZoom() {
-        this.zoom = !this.zoom;
-    }
+class ImagePreview extends React.Component<{
+    src: string;
+}> {
+    preview: HistoryItemPreview | null;
 
     @bind
-    onContextMenu(event: React.MouseEvent<HTMLDivElement>) {
-        if (this.zoom) {
-            event.preventDefault();
-            event.stopPropagation();
+    toggleZoom(event: React.MouseEvent<HTMLElement>) {
+        if (this.preview) {
+            this.preview.toggleZoom(event);
         }
     }
 
     render() {
-        const img = <img src={this.props.src} onClick={this.toggleZoom} />;
-
-        if (this.zoom) {
-            return (
-                <VerticalHeaderWithBody
-                    className="EezStudio_HistoryItem_Preview EezStudio_ImagePreview zoom"
-                    onContextMenu={this.onContextMenu}
-                >
-                    <Header>
-                        <Toolbar />
-                        <Toolbar>
-                            <IconAction
-                                icon="material:close"
-                                iconSize={24}
-                                title="Leave full screen mode"
-                                onClick={this.toggleZoom}
-                            />
-                        </Toolbar>
-                    </Header>
-                    <Body>{img}</Body>
-                </VerticalHeaderWithBody>
-            );
-        } else {
-            return (
-                <div
-                    className="EezStudio_HistoryItem_Preview EezStudio_ImagePreview"
-                    onContextMenu={this.onContextMenu}
-                >
-                    {img}
-                </div>
-            );
-        }
+        return (
+            <HistoryItemPreview
+                ref={ref => (this.preview = ref)}
+                className="EezStudio_ImagePreview"
+            >
+                <img src={this.props.src} onClick={this.toggleZoom} />
+            </HistoryItemPreview>
+        );
     }
 }
 
@@ -103,9 +70,17 @@ class ImagePreview extends React.Component<
 let getPdfTempDirPathPromise = getTempDirPath();
 
 @observer
-class PdfPreview extends React.Component<{ data: any; fileName: string }> {
-    @observable zoom: boolean = false;
+class PdfPreview extends React.Component<{
+    data: any;
+    fileName: string;
+}> {
     @observable url: string;
+    preview: HistoryItemPreview | null;
+    iframe: HTMLIFrameElement | null;
+
+    get zoom() {
+        return this.preview && this.preview.zoom;
+    }
 
     @computed
     get urlWithParams() {
@@ -130,63 +105,28 @@ class PdfPreview extends React.Component<{ data: any; fileName: string }> {
             }
             return new URL(`file:///${tempFilePath}`).href;
         })().then(action((url: string) => (this.url = url)));
+
+        if (this.zoom && this.iframe) {
+            this.iframe.focus();
+        }
     }
 
-    @action.bound
-    toggleZoom() {
-        this.zoom = !this.zoom;
-    }
-
-    @bind
-    onContextMenu(event: React.MouseEvent<HTMLDivElement>) {
-        if (this.zoom) {
-            event.preventDefault();
-            event.stopPropagation();
+    componentDidUpdate() {
+        if (this.zoom && this.iframe) {
+            this.iframe.focus();
         }
     }
 
     render() {
-        const pdf = (
-            <div onClick={this.toggleZoom}>
+        return (
+            <HistoryItemPreview ref={ref => (this.preview = ref)} className="EezStudio_PdfPreview">
                 <iframe
+                    ref={ref => (this.iframe = ref)}
                     src={this.urlWithParams}
-                    width={this.zoom ? "100%" : 240}
-                    height={this.zoom ? "100%" : 300}
-                    style={{ pointerEvents: this.zoom ? "all" : "none" }}
+                    tabIndex={this.zoom ? 0 : undefined}
                 />
-            </div>
+            </HistoryItemPreview>
         );
-
-        if (this.zoom) {
-            return (
-                <VerticalHeaderWithBody
-                    className="EezStudio_HistoryItem_Preview EezStudio_PdfPreview zoom"
-                    onContextMenu={this.onContextMenu}
-                >
-                    <Header>
-                        <Toolbar />
-                        <Toolbar>
-                            <IconAction
-                                icon="material:close"
-                                iconSize={24}
-                                title="Leave full screen mode"
-                                onClick={this.toggleZoom}
-                            />
-                        </Toolbar>
-                    </Header>
-                    <Body>{pdf}</Body>
-                </VerticalHeaderWithBody>
-            );
-        } else {
-            return (
-                <div
-                    className="EezStudio_HistoryItem_Preview EezStudio_PdfPreview"
-                    onContextMenu={this.onContextMenu}
-                >
-                    {pdf}
-                </div>
-            );
-        }
     }
 }
 

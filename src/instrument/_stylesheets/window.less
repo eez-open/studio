@@ -396,110 +396,6 @@
         flex-direction: row;
     }
 
-    .EezStudio_HistoryItem_Preview {
-        &.zoom {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            border-top: 1px solid @border-color;
-            z-index: 1000;
-            .EezStudio_Toolbar {
-                margin-top: 0;
-            }
-        }
-
-        .EezStudio_Header {
-            &:extend(.EezStudio_PanelHeader);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-    }
-
-    .EezStudio_ImagePreview {
-        .EezStudio_Body {
-            display: flex;
-        }
-
-        &.zoom {
-            img {
-                cursor: zoom-out;
-                background-color: black;
-                object-fit: contain;
-                width: 100%;
-            }
-        }
-
-        &:not(.zoom) {
-            img {
-                cursor: zoom-in;
-                background-color: black;
-                width: 480px;
-            }
-        }
-    }
-
-    .EezStudio_PdfPreview {
-        .EezStudio_Body > div {
-            background-color: #525659;
-        }
-
-        &:not(.zoom) {
-            & > div {
-                cursor: zoom-in;
-            }
-        }
-
-        &.zoom {
-            .EezStudio_Body > div {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                overflow: hidden;
-            }
-        }
-
-        iframe {
-            border: 0;
-        }
-    }
-
-    .EezStudio_ChartPreview {
-        &:not(.zoom) {
-            background-color: white;
-            padding: 8px;
-
-            cursor: zoom-in;
-
-            svg {
-                pointer-events: none;
-            }
-
-            .EezStudio_ListChartView {
-                position: static;
-                width: 640px;
-                /*svg {
-                    height: 200px;
-                }*/
-                svg.EezStudio_Chart_XAxis {
-                    height: 24px;
-                }
-            }
-        }
-    }
-
-    .EezStudio_ChartPreview_BlackBackground {
-        &:not(.zoom) {
-            background-color: black;
-        }
-    }
-
-    &.EezStudio_HistoryItem_Chart .EezStudio_ChartPreview:not(.zoom) .EezStudio_ListChartView svg {
-        height: 162px;
-    }
-
     &.EezStudio_HistoryItem_Chart
         .EezStudio_ChartPreview:not(.zoom)
         .EezStudio_ListChartView
@@ -512,6 +408,98 @@
         padding: 10px;
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+.EezStudio_HistoryItem_ZoomedPreview {
+    .EezStudio_Toolbar {
+        margin-top: 0;
+    }
+
+    .EezStudio_Header {
+        &:extend(.EezStudio_PanelHeader);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    &.EezStudio_ImagePreview {
+        img {
+            object-fit: contain;
+            flex-grow: 1;
+            background-color: black;
+            cursor: zoom-out;
+        }
+    }
+
+    &.EezStudio_PdfPreview {
+        .EezStudio_Body {
+            background-color: #525659;
+            overflow: hidden;
+        }
+
+        iframe {
+            flex-grow: 1;
+        }
+    }
+}
+
+.EezStudio_HistoryItem_UnzoomedPreview {
+    cursor: zoom-in;
+
+    &.EezStudio_ImagePreview {
+        img {
+            background-color: black;
+            width: 480px;
+        }
+    }
+
+    &.EezStudio_PdfPreview {
+        iframe {
+            pointer-events: none;
+            width: 240px;
+            height: 300px;
+        }
+    }
+
+    &.EezStudio_ChartPreview {
+        background-color: white;
+        padding: 8px;
+
+        cursor: zoom-in;
+
+        svg {
+            pointer-events: none;
+        }
+
+        .EezStudio_ListChartView {
+            position: static;
+            width: 640px;
+            /*svg {
+                height: 200px;
+            }*/
+            svg.EezStudio_Chart_XAxis {
+                height: 24px;
+            }
+        }
+
+        &.EezStudio_ChartPreview_BlackBackground {
+            background-color: black;
+        }
+
+        .EezStudio_ListChartView svg {
+            height: 162px;
+        }
+    }
+}
+
+.EezStudio_PdfPreview {
+    iframe {
+        border: 0;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 .EezStudio_HistoryItemDate {
     padding-right: 10px;

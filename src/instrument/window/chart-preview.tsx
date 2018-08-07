@@ -2,12 +2,10 @@ import * as React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
-import { bind } from "bind-decorator";
 
-import { Toolbar } from "shared/ui/toolbar";
-import { IconAction } from "shared/ui/action";
-import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
 import { ChartsView, globalViewOptions, ChartsController, ChartMode } from "shared/ui/chart/chart";
+
+import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
 import { ChartsDisplayOption } from "instrument/window/lists/common-tools";
 import { TableList } from "instrument/window/lists/table";
@@ -46,11 +44,10 @@ interface ChartPreviewProps {
 @observer
 export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
     @observable data: ChartData = this.props.data;
-    @observable zoom: boolean = false;
+    preview: HistoryItemPreview | null;
 
-    @action.bound
-    toggleZoom() {
-        this.zoom = !this.zoom;
+    get zoom() {
+        return this.preview && this.preview.zoom;
     }
 
     @computed
@@ -63,60 +60,33 @@ export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
         this.data = nextProps.data;
     }
 
-    @bind
-    onContextMenu(event: React.MouseEvent<HTMLDivElement>) {
-        if (this.zoom) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-    }
-
     render() {
-        let className = classNames("EezStudio_HistoryItem_Preview EezStudio_ChartPreview", {
-            zoom: this.zoom,
+        const className = classNames("EezStudio_ChartPreview", {
             EezStudio_ChartPreview_BlackBackground: globalViewOptions.blackBackground
         });
 
+        let toolbarWhenZoomed;
         if (this.zoom) {
-            let toolbar;
             if (
                 this.props.data instanceof Waveform ||
                 this.props.data instanceof MultiWaveform ||
                 this.props.data instanceof DlogWaveform
             ) {
-                toolbar = this.props.data.renderToolbar(this.chartsController);
-            } else {
-                toolbar = <Toolbar />;
+                toolbarWhenZoomed = this.props.data.renderToolbar(this.chartsController);
             }
-
-            return (
-                <VerticalHeaderWithBody className={className} onContextMenu={this.onContextMenu}>
-                    <Header>
-                        {toolbar}
-                        <Toolbar>
-                            <IconAction
-                                icon="material:close"
-                                iconSize={24}
-                                title="Leave full screen mode"
-                                onClick={this.toggleZoom}
-                            />
-                        </Toolbar>
-                    </Header>
-                    <Body>
-                        <ChartsView chartsController={this.chartsController} tabIndex={0} />
-                    </Body>
-                </VerticalHeaderWithBody>
-            );
-        } else {
-            return (
-                <div
-                    className={className}
-                    onClick={this.toggleZoom}
-                    onContextMenu={this.onContextMenu}
-                >
-                    <ChartsView chartsController={this.chartsController} />
-                </div>
-            );
         }
+
+        return (
+            <HistoryItemPreview
+                ref={ref => (this.preview = ref)}
+                className={className}
+                toolbarWhenZoomed={toolbarWhenZoomed}
+            >
+                <ChartsView
+                    chartsController={this.chartsController}
+                    tabIndex={this.zoom ? 0 : undefined}
+                />
+            </HistoryItemPreview>
+        );
     }
 }

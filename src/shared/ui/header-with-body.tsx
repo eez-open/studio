@@ -35,6 +35,7 @@ export class Body extends React.Component<
         className?: string;
         tabIndex?: number;
         visible?: boolean;
+        onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
     },
     {}
 > {
@@ -47,7 +48,12 @@ export class Body extends React.Component<
         }
 
         return (
-            <div className={className} style={style} tabIndex={this.props.tabIndex}>
+            <div
+                className={className}
+                style={style}
+                tabIndex={this.props.tabIndex}
+                onClick={this.props.onClick}
+            >
                 {this.props.children}
             </div>
         );
