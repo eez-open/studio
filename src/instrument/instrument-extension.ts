@@ -1,7 +1,7 @@
 import { observable, computed, values } from "mobx";
 
 import {
-    IExtensionPropertiesFromMainJs,
+    IExtensionDefinition,
     IExtension,
     IExtensionProperties
 } from "shared/extensions/extension";
@@ -74,7 +74,7 @@ const instrumentToolboxGroup = computed(() => ({
     )
 }));
 
-const instrumentExtension: IExtensionPropertiesFromMainJs = {
+const instrumentExtension: IExtensionDefinition = {
     preInstalled: true,
 
     init() {

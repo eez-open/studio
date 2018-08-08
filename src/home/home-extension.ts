@@ -1,8 +1,8 @@
-import { IExtensionPropertiesFromMainJs } from "shared/extensions/extension";
+import { IExtensionDefinition } from "shared/extensions/extension";
 
 import "home/store";
 
-const homeExtension: IExtensionPropertiesFromMainJs = {
+const homeExtension: IExtensionDefinition = {
     preInstalled: true
 };
 

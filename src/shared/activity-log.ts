@@ -1,8 +1,13 @@
 import { observable, runInAction } from "mobx";
 
 import { db } from "shared/db";
+import { IActivityLogEntry } from "shared/activity-log-interfaces";
 
 import { createStore, types, IFilterSpecification, IStoreOperationOptions } from "shared/store";
+
+////////////////////////////////////////////////////////////////////////////////
+
+export { IActivityLogEntry } from "shared/activity-log-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -364,17 +369,6 @@ export interface IActivityLogFilterSpecification extends IFilterSpecification {
     oid?: string;
     oids?: string[];
     types?: string[];
-}
-
-export interface IActivityLogEntry {
-    id: string;
-    date: Date;
-    sid: string | null;
-    oid: string;
-    type: string;
-    message: string;
-    data: any;
-    deleted: boolean;
 }
 
 export function log(activityLogEntry: Partial<IActivityLogEntry>, options: IStoreOperationOptions) {

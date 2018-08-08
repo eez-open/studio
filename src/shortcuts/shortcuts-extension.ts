@@ -1,9 +1,9 @@
-import { IExtensionPropertiesFromMainJs } from "shared/extensions/extension";
+import { IExtensionDefinition } from "shared/extensions/extension";
 
 import "shortcuts/shortcuts-store";
 import "shortcuts/groups-store";
 
-const shortcutsExtension: IExtensionPropertiesFromMainJs = {
+const shortcutsExtension: IExtensionDefinition = {
     preInstalled: true
 };
 

@@ -1,5 +1,3 @@
-import { ObservableMap } from "mobx";
-
 export type IActionType = "scpi-commands" | "javascript";
 
 export interface IAction {
@@ -23,7 +21,7 @@ export interface IShortcut {
 }
 
 export interface IShortcutsStore {
-    shortcuts: ObservableMap<string, IShortcut>;
+    shortcuts: Map<string, IShortcut>;
     newShortcutGroupName?: string;
     addShortcut?(shortcut: Partial<IShortcut>): string;
     updateShortcut?(shortcut: Partial<IShortcut>): void;
@@ -37,7 +35,7 @@ export interface IGroup {
 }
 
 export interface IGroupsStore {
-    groups: ObservableMap<string, IGroup>;
+    groups: Map<string, IGroup>;
     addGroup(group: Partial<IGroup>): string;
     updateGroup(group: Partial<IGroup>): void;
     deleteGroup(group: Partial<IGroup>): void;

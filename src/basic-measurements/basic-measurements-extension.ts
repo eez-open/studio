@@ -1,6 +1,6 @@
-import { IExtensionPropertiesFromMainJs } from "shared/extensions/extension";
+import { IExtensionDefinition } from "shared/extensions/extension";
 
-const basicMeasurementsExtension: IExtensionPropertiesFromMainJs = {
+const basicMeasurementsExtension: IExtensionDefinition = {
     preInstalled: true,
 
     measurementFunctions: [

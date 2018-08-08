@@ -1,5 +1,5 @@
 import { IToolbarButton, IToolboxGroup } from "shared/ui/designer/designer-interfaces";
-import { IActivityLogEntry } from "shared/activity-log";
+import { IActivityLogEntry } from "shared/activity-log-interfaces";
 
 import { IShortcut } from "shortcuts/interfaces";
 
@@ -63,19 +63,19 @@ export interface IMeasureTask {
     result: number;
 }
 
-export interface IExtensionPropertiesFromJson {
+export interface IExtensionDescription {
     id: string;
     name: string;
-    description?: string;
     version: string;
     author: string;
+    description?: string;
+    image?: string;
 }
 
-export interface IExtensionPropertiesFromMainJs {
+export interface IExtensionDefinition {
     preInstalled?: boolean;
 
     type?: string;
-    image?: string;
 
     init?: () => void;
     destroy?: () => void;
@@ -94,4 +94,4 @@ export interface IExtensionPropertiesFromMainJs {
     measurementFunctions?: IMeasurementFunction[];
 }
 
-export type IExtension = IExtensionPropertiesFromJson & IExtensionPropertiesFromMainJs;
+export type IExtension = IExtensionDescription & IExtensionDefinition;

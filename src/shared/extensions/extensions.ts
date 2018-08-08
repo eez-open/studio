@@ -69,11 +69,19 @@ async function loadExtension(extensionFolderPath: string): Promise<IExtension | 
                     const extension: IExtension = require(extensionFolderPath + "/" + mainScript)
                         .default;
 
-                    extension.id = packageJson.name;
+                    extension.id = packageJson.id || packageJson.name;
                     extension.name = packageJson.name;
-                    extension.description = packageJson.description;
                     extension.version = packageJson.version;
                     extension.author = packageJson.author;
+                    extension.description = packageJson.description;
+
+                    extension.image = packageJson.image;
+                    if (extension.image) {
+                        const imageFilePath = extensionFolderPath + "/" + extension.image;
+                        if (await fileExists(imageFilePath)) {
+                            extension.image = localPathToFileUrl(imageFilePath);
+                        }
+                    }
 
                     if (extension.measurementFunctions) {
                         loadMeasurementFunctions(

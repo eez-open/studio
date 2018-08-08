@@ -37,6 +37,12 @@ src/test/_stylesheets/main.css
 src/basic-measurements/**/*.js
 src/basic-measurements/**/*.js.map
 
+extensions/advanced-measurements/**/*.js
+extensions/advanced-measurements/**/*.js.map
+
+extensions/build-catalog.js
+extensions/build-catalog.js.map
+
 TODO.txt
 
 .cache-require-paths.json

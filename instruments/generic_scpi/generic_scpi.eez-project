@@ -27,7 +27,7 @@
       "idfShortName": "Generic SCPI",
       "idfFirmwareVersion": "1.0",
       "idfGuid": "12ef0990-36b6-4282-8048-ddb88039f7e9",
-      "idfRevisionNumber": "0",
+      "idfRevisionNumber": "1.0.0",
       "idfDescription": "Generic SCPI instrument",
       "idfSupportedModels": "Any",
       "idfRevisionComments": "No comment",

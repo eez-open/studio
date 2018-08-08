@@ -29,7 +29,7 @@
       "idfShortName": "DS1074B",
       "idfFirmwareVersion": "(unknown)",
       "idfGuid": "71303c17-99a9-4107-f086-a8c6f4b66a29",
-      "idfRevisionNumber": "0",
+      "idfRevisionNumber": "1.0.0",
       "idfDescription": "70 MHz Digital Oscilloscope",
       "idfSupportedModels": "DS1074B",
       "idfRevisionComments": "No comment",
@@ -47,7 +47,7 @@
       "idfShortName": "DS1104B",
       "idfFirmwareVersion": "(unknown)",
       "idfGuid": "3438aeba-103a-49aa-aa5d-d36e66872423",
-      "idfRevisionNumber": "0",
+      "idfRevisionNumber": "1.0.0",
       "idfDescription": "100 MHz Digital Oscilloscope",
       "idfSupportedModels": "DS1104B",
       "idfRevisionComments": "No comment",
@@ -65,7 +65,7 @@
       "idfShortName": "DS1204B",
       "idfFirmwareVersion": "(unknown)",
       "idfGuid": "96bb98ad-7545-4d76-96db-28c61869d5c6",
-      "idfRevisionNumber": "0",
+      "idfRevisionNumber": "1.0.0",
       "idfDescription": "200 MHz Digital Oscilloscope",
       "idfSupportedModels": "DS1204B",
       "idfRevisionComments": "No comment",
@@ -297,8 +297,7 @@
         "showInToolbar": true,
         "toolbarButtonPosition": 1,
         "toolbarButtonColor": "#7BC3D4",
-        "requiresConfirmation": false,
-        "selected": true
+        "requiresConfirmation": false
       }
     ]
   }

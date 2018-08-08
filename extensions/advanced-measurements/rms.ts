@@ -7,9 +7,9 @@ export default function(task: IMeasureTask) {
     for (let i = task.xStartIndex; i < xEndIndex; ++i) {
         const sample = task.getSampleValueAtIndex(i);
         if (!isNaN(sample)) {
-            sum += sample;
+            sum += sample * sample;
         }
     }
 
-    task.result = sum / task.xNumSamples;
+    task.result = Math.sqrt(sum / task.xNumSamples);
 }

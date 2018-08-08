@@ -28,7 +28,7 @@
       "idfShortName": "DS1052D",
       "idfFirmwareVersion": "(unknown)",
       "idfGuid": "a4f5ba9e-e587-433e-db79-4b3a410a9240",
-      "idfRevisionNumber": "0",
+      "idfRevisionNumber": "1.0.0",
       "idfDescription": "50 MHz MHz Digital Oscilloscope with 16 channel logic analyzer",
       "idfSupportedModels": "DS1052D",
       "idfRevisionComments": "No comment",
@@ -46,7 +46,7 @@
       "idfShortName": "DS1052E",
       "idfFirmwareVersion": "(unknown)",
       "idfGuid": "33cd2e45-3b93-4b0e-b3ff-6cc468c79074",
-      "idfRevisionNumber": "0",
+      "idfRevisionNumber": "1.0.0",
       "idfDescription": "50 MHz MHz Digital Oscilloscope",
       "idfSupportedModels": "DS1052E",
       "idfRevisionComments": "No comment",
@@ -64,7 +64,7 @@
       "idfShortName": "DS1102D",
       "idfFirmwareVersion": "(unknown)",
       "idfGuid": "248e99d6-2254-4391-8c7e-e76288c7af11",
-      "idfRevisionNumber": "0",
+      "idfRevisionNumber": "1.0.0",
       "idfDescription": "100 MHz MHz Digital Oscilloscope with 16 channel logic analyzer",
       "idfSupportedModels": "DS1102D",
       "idfRevisionComments": "No comment",
@@ -82,7 +82,7 @@
       "idfShortName": "DS1102E",
       "idfFirmwareVersion": "(unknown)",
       "idfGuid": "fb439495-7cb1-4959-dbd1-d175d7a76da7",
-      "idfRevisionNumber": "0",
+      "idfRevisionNumber": "1.0.0",
       "idfDescription": "100 MHz MHz Digital Oscilloscope",
       "idfSupportedModels": "DS1102E",
       "idfRevisionComments": "No comment",
@@ -168,8 +168,7 @@
         "showInToolbar": true,
         "toolbarButtonPosition": 1,
         "toolbarButtonColor": "#7BC3D4",
-        "requiresConfirmation": false,
-        "selected": true
+        "requiresConfirmation": false
       }
     ]
   }

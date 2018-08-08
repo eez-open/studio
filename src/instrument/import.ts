@@ -264,7 +264,9 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
 
                 let packageJsonFilePath = extensionFolderPath + "/package.json";
                 if (await fileExists(packageJsonFilePath)) {
-                    properties = (await readPackageJson(packageJsonFilePath))["eez-studio"];
+                    const packageJson = await readPackageJson(packageJsonFilePath);
+                    version = packageJson.version;
+                    properties = packageJson["eez-studio"];
                     isEditable = await fileExists(extensionFolderPath + "/.editable");
                 } else {
                     properties = EMPTY_INSTRUMENT_PROPERTIES;

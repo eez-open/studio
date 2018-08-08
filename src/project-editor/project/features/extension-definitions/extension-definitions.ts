@@ -173,7 +173,7 @@ export const extensionDefinitionMetaData = registerMetaData({
         },
         {
             name: "idfRevisionNumber",
-            displayName: "IDF revision number",
+            displayName: "IDF revision number (extension version)",
             type: "string",
             defaultValue: undefined
         },
