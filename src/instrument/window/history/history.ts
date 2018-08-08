@@ -36,7 +36,8 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const CONF_SINGLE_SEARCH_LIMIT = 100;
+const CONF_START_SEARCH_TIMEOUT = 250;
+const CONF_SINGLE_SEARCH_LIMIT = 1;
 export const CONF_BLOCK_SIZE = 100;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -288,6 +289,7 @@ class HistorySearch {
     searchLastLogDate: any;
     searchLoopTimeout: any;
     @observable selectedSearchResult: SearchResult | undefined;
+    startSearchTimeout: any;
 
     constructor(public history: History) {}
 
@@ -298,6 +300,20 @@ class HistorySearch {
     @action
     search(searchText: string) {
         this.stopSearch();
+
+        if (this.startSearchTimeout) {
+            clearTimeout(this.startSearchTimeout);
+        }
+
+        this.startSearchTimeout = setTimeout(() => {
+            this.startSearchTimeout = undefined;
+            this.doSearch(searchText);
+        }, CONF_START_SEARCH_TIMEOUT);
+    }
+
+    @action
+    private doSearch(searchText: string) {
+        this.clearSearch();
 
         if (searchText.length < 1) {
             return;
@@ -377,17 +393,24 @@ class HistorySearch {
     stopSearch() {
         if (this.searchActive) {
             runInAction(() => {
-                this.searchActive = false;
                 this.searchInProgress = false;
-                this.searchResults.splice(0, this.searchResults.length);
             });
-
-            this.selectSearchResult(undefined);
 
             if (this.searchLoopTimeout) {
                 clearTimeout(this.searchLoopTimeout);
             }
         }
+    }
+
+    clearSearch() {
+        this.stopSearch();
+
+        runInAction(() => {
+            this.searchActive = false;
+            this.searchResults.splice(0, this.searchResults.length);
+        });
+
+        this.selectSearchResult(undefined);
     }
 
     @action

@@ -4,6 +4,8 @@ import * as classNames from "classnames";
 
 import { formatDateTimeLong } from "shared/util";
 import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
+import { Loader } from "shared/ui/loader";
+import { ButtonAction } from "shared/ui/action";
 
 import { findObjectByActivityLogEntry } from "shared/extensions/extensions";
 
@@ -65,7 +67,26 @@ export class SearchResults extends React.Component<{ history: History }> {
 
         return (
             <VerticalHeaderWithBody>
-                <Header className="EezStudio_PanelHeader">{info}</Header>
+                <Header className="EezStudio_PanelHeader">
+                    <div className="EezStudio_SearchResultsInfo">
+                        {info}
+                        {this.props.history.search.searchInProgress && (
+                            <div className="EezStudio_SearchResultsInfo_LoaderContainer">
+                                <Loader size={24} />
+                            </div>
+                        )}
+                        {this.props.history.search.searchInProgress && (
+                            <div className="EezStudio_SearchResultsInfo_StopButtonContainer">
+                                <ButtonAction
+                                    text="Stop"
+                                    title="Stop search"
+                                    className="btn-sm"
+                                    onClick={() => this.props.history.search.stopSearch()}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </Header>
                 <Body className="EezStudio_HistoryTable selectable">
                     <table className="table">
                         <tbody>

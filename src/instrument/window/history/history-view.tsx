@@ -363,7 +363,6 @@ export class HistoryView extends React.Component<{
                 className={inputClassName}
                 value={this.searchText}
                 onChange={this.onSearchChange}
-                //onKeyDown={this.onSearchChange}
             />
         );
 
