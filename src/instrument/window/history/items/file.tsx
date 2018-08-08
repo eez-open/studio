@@ -459,7 +459,7 @@ export class FileHistoryItem extends HistoryItem {
             return (
                 <PdfPreview
                     data={this.data}
-                    fileName={getFileName(this.fileState.sourceFilePath)}
+                    fileName={this.fileState.sourceFilePath && getFileName(this.fileState.sourceFilePath) || "unknown.pdf"}
                 />
             );
         }
