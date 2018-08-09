@@ -19,6 +19,7 @@ export class ExtensionDefinitionProperties extends EezObject {
     @observable description: string;
     @observable doNotBuild: boolean;
     @observable buildConfiguration: string;
+    @observable buildFolder: string;
     @observable image: string;
     @observable extensionName: string;
     @observable idn: string;
@@ -124,6 +125,11 @@ export const extensionDefinitionMetaData = registerMetaData({
             name: "buildConfiguration",
             type: "object-reference",
             referencedObjectCollectionPath: ["settings", "build", "configurations"],
+            defaultValue: undefined
+        },
+        {
+            name: "buildFolder",
+            type: "string",
             defaultValue: undefined
         },
         {

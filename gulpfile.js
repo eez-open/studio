@@ -1,6 +1,6 @@
-var gulp = require("gulp");
-var uglify = require("gulp-uglify-es").default;
-var pump = require("pump");
+const gulp = require("gulp");
+const uglify = require("gulp-uglify-es").default;
+const pump = require("pump");
 
 function minify(folder, cb) {
     pump([gulp.src(folder + "/**/*.js"), uglify(), gulp.dest(folder)], cb);

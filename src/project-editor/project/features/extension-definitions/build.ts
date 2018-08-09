@@ -1,5 +1,7 @@
 import { toJS } from "mobx";
 
+import { makeFolder } from "shared/util";
+
 import {
     buildInstrumentExtension,
     IdfProperties as InstrumentIdfProperties
@@ -85,8 +87,20 @@ export async function extensionDefinitionBuild() {
                     );
 
                     if (instrumentIdf.extensionName && instrumentIdf.idn && instrumentIdf.idfGuid) {
-                        let idfFileName = instrumentIdf.extensionName + ".zip";
-                        let idfFilePath = ProjectStore.getAbsoluteFilePath(idfFileName);
+                        let idfFileName = `${instrumentIdf.extensionName}-${
+                            instrumentIdf.idfRevisionNumber
+                        }.zip`;
+
+                        let idfFilePath;
+                        if (extensionDefinition.buildFolder) {
+                            let buildFolderPath = ProjectStore.getAbsoluteFilePath(
+                                extensionDefinition.buildFolder
+                            );
+                            await makeFolder(buildFolderPath);
+                            idfFilePath = buildFolderPath + "/" + idfFileName;
+                        } else {
+                            idfFilePath = ProjectStore.getAbsoluteFilePath(idfFileName);
+                        }
 
                         await buildInstrumentExtension(
                             instrumentIdf,

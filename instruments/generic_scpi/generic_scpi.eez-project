@@ -21,6 +21,7 @@
       "name": "Generic SCPI",
       "description": "An example instrument with serial and Ethernet connection",
       "buildConfiguration": "Generic SCPI instrument",
+      "buildFolder": "",
       "extensionName": "generic_scpi",
       "idn": "\"SCPI\"",
       "idfName": "Generic SCPI",

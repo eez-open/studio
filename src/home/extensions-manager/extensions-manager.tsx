@@ -369,7 +369,7 @@ export class DetailsView extends React.Component<{ extension: IExtension | undef
             <VerticalHeaderWithBody>
                 <Header className="EezStudio_Extension_Details_Header">
                     <div className="EezStudio_Extension_Details_Header_ImageContainer">
-                        <img src={this.props.extension.image} width={196} />
+                        <img src={this.props.extension.image} width={256} />
                         <a href="#" style={{ cursor: "pointer" }} onClick={this.handleChangeImage}>
                             Change image
                         </a>

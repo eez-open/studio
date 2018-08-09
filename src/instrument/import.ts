@@ -284,7 +284,7 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                 const isDirty =
                     isEditable &&
                     ((await fileExists(extensionFolderPath + "/package.json")) ||
-                        (await fileExists(extensionFolderPath + "/image.ong")));
+                        (await fileExists(extensionFolderPath + "/image.png")));
 
                 const extension: IExtension = observable(
                     {
