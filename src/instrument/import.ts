@@ -261,6 +261,7 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
 
                 let properties: IInstrumentExtensionProperties;
                 let isEditable: boolean;
+                let downloadUrl: string | undefined;
 
                 let packageJsonFilePath = extensionFolderPath + "/package.json";
                 if (await fileExists(packageJsonFilePath)) {
@@ -268,6 +269,7 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                     version = packageJson.version;
                     properties = packageJson["eez-studio"];
                     isEditable = await fileExists(extensionFolderPath + "/.editable");
+                    downloadUrl = packageJson.download;
                 } else {
                     properties = EMPTY_INSTRUMENT_PROPERTIES;
                     isEditable = true;
@@ -279,6 +281,8 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                         version,
                         "eez-studio": properties
                     });
+
+                    downloadUrl = undefined;
                 }
 
                 const isDirty =
@@ -320,6 +324,10 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                 } else {
                     extension.image = INSTRUMENT_NO_IMAGE;
                 }
+
+                extension.download = downloadUrl;
+
+                extension.installationFolderPath = extensionFolderPath;
 
                 return extension;
             }

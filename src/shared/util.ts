@@ -277,7 +277,7 @@ export async function writeJsObjectToFile(filePath: string, jsObject: any) {
     await writeTextFile(filePath, JSON.stringify(jsObject, undefined, 4));
 }
 
-export async function writeBinaryData(filePath: string, data: string) {
+export async function writeBinaryData(filePath: string, data: string | Buffer) {
     await makeFolder(path.dirname(filePath));
     return new Promise<void>((resolve, reject) => {
         fs.writeFile(filePath, data, "binary", (err: any) => {
@@ -791,4 +791,32 @@ export function confirmSave({
 
 export async function delay(time: number) {
     return new Promise(resolve => setTimeout(resolve, time));
+}
+
+export function compareVersions(v1: string, v2: string) {
+    const v1Parts = v1.split(".").map(x => parseInt(x));
+    const v2Parts = v2.split(".").map(x => parseInt(x));
+
+    for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); ++i) {
+        if (isNaN(v1Parts[i])) {
+            if (isNaN(v2Parts[i])) {
+                return 0;
+            }
+            return -1;
+        }
+
+        if (isNaN(v2Parts[i])) {
+            return 1;
+        }
+
+        if (v1Parts[i] < v2Parts[i]) {
+            return -1;
+        }
+
+        if (v1Parts[i] > v2Parts[i]) {
+            return 1;
+        }
+    }
+
+    return 0;
 }

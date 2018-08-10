@@ -2,7 +2,7 @@
     "id": "b278d8da-1c17-4baa-9837-1761b2481c2b",
     "name": "eez-studio-advanced-measurements",
     "displayName": "Advanced measurements",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "author": "Envox",
     "description": "Advanced measurement operations for EEZ Studio",
     "image": "image.png",

@@ -1,4 +1,4 @@
-import { observable, action } from "mobx";
+import { observable, computed, action } from "mobx";
 
 import { IExtension } from "shared/extensions/extension";
 
@@ -19,8 +19,10 @@ class ExtensionsCatalog {
     @observable
     catalog: IExtension[] = [];
 
+    @action
     download() {
         this.status = ExtensionsCatalogStatus.DOWNLOADING;
+
         fetch(DEFAULT_EXTENSIONS_CATALOG_DOWNLOAD_URL)
             .then(response => response.json())
             .then(
@@ -37,6 +39,14 @@ class ExtensionsCatalog {
                     this.status = ExtensionsCatalogStatus.DOWNLOAD_ERROR;
                 })
             );
+    }
+
+    @computed
+    get isDownloadFinished() {
+        return (
+            this.status === ExtensionsCatalogStatus.DOWNLOAD_SUCCESS ||
+            this.status === ExtensionsCatalogStatus.DOWNLOAD_ERROR
+        );
     }
 }
 

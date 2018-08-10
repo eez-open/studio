@@ -29,16 +29,20 @@ function getToast() {
     return toastModule.toast;
 }
 
-export function info(message: string) {
-    getToast().info(message);
+export function info(message: string, options?: ToastModule.UpdateOptions) {
+    return getToast().info(message);
 }
 
-export function success(message: string) {
-    getToast().success(message);
+export function success(message: string, options?: ToastModule.UpdateOptions) {
+    return getToast().success(message);
 }
 
-export function error(message: string) {
-    getToast().error(message);
+export function error(message: string, options?: ToastModule.UpdateOptions) {
+    return getToast().error(message);
+}
+
+export function update(toastId: number, options: ToastModule.UpdateOptions) {
+    return getToast().update(toastId, options);
 }
 
 export const container = observable.box<JSX.Element | undefined>(undefined, { deep: false });

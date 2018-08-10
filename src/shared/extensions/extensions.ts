@@ -76,6 +76,9 @@ async function loadExtension(extensionFolderPath: string): Promise<IExtension | 
                     extension.author = packageJson.author;
                     extension.description = packageJson.description;
 
+                    extension.download = packageJson.download;
+                    extension.installationFolderPath = extensionFolderPath;
+
                     extension.image = packageJson.image;
                     if (extension.image) {
                         const imageFilePath = extensionFolderPath + "/" + extension.image;
@@ -242,6 +245,8 @@ async function finishImportExtensionFromTempFolder({
             await delay(100);
             await renameFile(tmpExtensionFolderPath, extensionFolderPath);
         }
+
+        extension.installationFolderPath = extensionFolderPath;
 
         // fix image url from temp folder to extension folder
         let tmpUrl = localPathToFileUrl(tmpExtensionFolderPath);

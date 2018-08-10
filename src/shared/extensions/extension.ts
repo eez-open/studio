@@ -71,6 +71,8 @@ export interface IExtensionDescription {
     author: string;
     description?: string;
     image?: string;
+    download?: string;
+    installationFolderPath?: string;
 }
 
 export interface IExtensionDefinition {
