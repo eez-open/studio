@@ -22,6 +22,7 @@
       "description": "An example instrument with serial and Ethernet connection",
       "buildConfiguration": "Generic SCPI instrument",
       "buildFolder": "",
+      "image": "image.png",
       "extensionName": "generic_scpi",
       "idn": "\"SCPI\"",
       "idfName": "Generic SCPI",
