@@ -1,5 +1,5 @@
 import * as React from "react";
-import { observable, computed, action, runInAction } from "mobx";
+import { observable, computed, action, runInAction, autorun } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
@@ -63,8 +63,20 @@ class ExtensionsVersionsCatalogBuilder {
 
     addVersion(extensionVersions: IExtensionVersions, extension: IExtension) {
         for (let i = 0; i < extensionVersions.allVersions.length; ++i) {
-            if (compareVersions(extension.version, extensionVersions.allVersions[i].version) <= 0) {
+            const compareResult = compareVersions(
+                extension.version,
+                extensionVersions.allVersions[i].version
+            );
+
+            if (compareResult > 0) {
                 extensionVersions.allVersions.splice(i, 0, extension);
+                return;
+            }
+
+            if (compareResult === 0) {
+                if (this.isInstalled(extension)) {
+                    extensionVersions.allVersions[i] = extension;
+                }
                 return;
             }
         }
@@ -128,7 +140,7 @@ class ExtensionsVersionsCatalogBuilder {
                     compareVersions(
                         extensionVersions.latestVersion.version,
                         extensionVersions.installedVersion.version
-                    ) > 1
+                    ) > 0
             );
         }
     }
@@ -144,14 +156,16 @@ class ExtensionsManagerStore {
     viewFilter: ViewFilter = ViewFilter.ALL;
 
     @computed
-    get extensionNodes() {
+    get extensionsVersionsCatalogBuilder() {
         const builder = new ExtensionsVersionsCatalogBuilder();
-
         installedExtensions.get().forEach(extension => builder.addExtension(extension));
-
         extensionsCatalog.catalog.forEach(extension => builder.addExtension(extension));
+        return builder;
+    }
 
-        return builder
+    @computed
+    get extensionNodes() {
+        return this.extensionsVersionsCatalogBuilder
             .get(extensionsManagerStore.viewFilter)
             .sort((a, b) =>
                 stringCompare(
@@ -172,6 +186,26 @@ class ExtensionsManagerStore {
     selectExtensionById(id: string) {
         const extensionNode = this.extensionNodes.find(extensionNode => extensionNode.id === id);
         this.selectedExtension = (extensionNode && extensionNode.data) || undefined;
+    }
+
+    @computed
+    get selectedExtensionVersions() {
+        if (!this.selectedExtension) {
+            return undefined;
+        }
+        const selectedExtensionId = this.selectedExtension.id;
+        return this.extensionsVersionsCatalogBuilder
+            .get(ViewFilter.ALL)
+            .find(extensionVersions => extensionVersions.versionInFocus.id === selectedExtensionId);
+    }
+
+    getSelectedExtensionByVersion(version: string) {
+        return (
+            this.selectedExtensionVersions &&
+            this.selectedExtensionVersions.allVersions.find(
+                extension => extension.version === version
+            )
+        );
     }
 }
 
@@ -361,7 +395,8 @@ class MasterView extends React.Component {
             );
         } else {
             return (
-                <div style={{ flexGrow: 1, display: "flex", overflow: "hidden" }}>
+                <div className="EezStudio_Extensions_CatalogDownloadInfo">
+                    <div>Downloading the latest extensions catalog...</div>
                     <Loader />
                 </div>
             );
@@ -484,9 +519,62 @@ export class ExtensionSections extends React.Component<ExtensionSectionsProps, {
 
 @observer
 export class DetailsView extends React.Component {
+    @observable
+    selectedVersion: string;
+
+    constructor(props: any) {
+        super(props);
+
+        autorun(() => {
+            const selectedExtensionVersions = extensionsManagerStore.selectedExtensionVersions;
+            if (selectedExtensionVersions) {
+                runInAction(
+                    () => (this.selectedVersion = selectedExtensionVersions.versionInFocus.version)
+                );
+            }
+        });
+    }
+
     @computed
-    get extension() {
-        return extensionsManagerStore.selectedExtension;
+    get displayedExtension() {
+        return extensionsManagerStore.getSelectedExtensionByVersion(this.selectedVersion);
+    }
+
+    @computed
+    get extensionVersions() {
+        return extensionsManagerStore.selectedExtensionVersions;
+    }
+
+    @computed
+    get installEnabled() {
+        return !(this.extensionVersions && this.extensionVersions.installedVersion);
+    }
+
+    @computed
+    get updateEnabled() {
+        return (
+            this.extensionVersions &&
+            this.extensionVersions.installedVersion &&
+            this.displayedExtension === this.extensionVersions.installedVersion &&
+            compareVersions(
+                this.extensionVersions.latestVersion.version,
+                this.extensionVersions.installedVersion.version
+            ) > 0
+        );
+    }
+
+    @computed
+    get replaceEnabled() {
+        return (
+            this.extensionVersions &&
+            this.extensionVersions.installedVersion &&
+            this.displayedExtension !== this.extensionVersions.installedVersion
+        );
+    }
+
+    @computed
+    get uninstallEnabled() {
+        return this.extensionVersions && this.extensionVersions.installedVersion;
     }
 
     async finishInstall(extensionZipPackageData: any, progressToastId: number) {
@@ -534,7 +622,24 @@ export class DetailsView extends React.Component {
 
     @bind
     handleInstall() {
-        if (!this.extension || !this.extension.download) {
+        if (!this.extensionVersions) {
+            return;
+        }
+
+        let extensionToInstall = this.displayedExtension;
+        if (!extensionToInstall) {
+            return;
+        }
+
+        if (extensionToInstall === this.extensionVersions.installedVersion) {
+            // if already installed then install latest version
+            extensionToInstall = this.extensionVersions.latestVersion;
+            if (!extensionToInstall) {
+                return;
+            }
+        }
+
+        if (!extensionToInstall.download) {
             return;
         }
 
@@ -542,7 +647,7 @@ export class DetailsView extends React.Component {
 
         req.responseType = "arraybuffer";
 
-        req.open("GET", this.extension.download);
+        req.open("GET", extensionToInstall.download);
 
         req.addEventListener("progress", event => {
             notification.update(progressToastId, {
@@ -580,7 +685,11 @@ export class DetailsView extends React.Component {
 
     @bind
     handleUninstall() {
-        const extension = this.extension;
+        if (!this.extensionVersions) {
+            return;
+        }
+
+        const extension = this.extensionVersions.installedVersion;
         if (!extension) {
             return;
         }
@@ -596,6 +705,15 @@ export class DetailsView extends React.Component {
 
     @bind
     handleExport() {
+        if (!this.extensionVersions) {
+            return;
+        }
+
+        const extension = this.extensionVersions.installedVersion;
+        if (!extension) {
+            return;
+        }
+
         EEZStudio.electron.remote.dialog.showSaveDialog(
             EEZStudio.electron.remote.getCurrentWindow(),
             {
@@ -603,13 +721,13 @@ export class DetailsView extends React.Component {
                     { name: "Extension files", extensions: ["zip"] },
                     { name: "All Files", extensions: ["*"] }
                 ],
-                defaultPath: getValidFileNameFromFileName(this.extension!.name + ".zip")
+                defaultPath: getValidFileNameFromFileName(extension.name + ".zip")
             },
             async filePath => {
                 if (filePath) {
                     try {
                         const tempFilePath = await getTempFilePath();
-                        await exportExtension(this.extension!, tempFilePath);
+                        await exportExtension(extension, tempFilePath);
                         await copyFile(tempFilePath, filePath);
                         notification.success(`Saved to "${filePath}"`);
                     } catch (err) {
@@ -622,6 +740,15 @@ export class DetailsView extends React.Component {
 
     @bind
     handleChangeImage() {
+        if (!this.extensionVersions) {
+            return;
+        }
+
+        const extension = this.extensionVersions.installedVersion;
+        if (!extension) {
+            return;
+        }
+
         EEZStudio.electron.remote.dialog.showOpenDialog(
             EEZStudio.electron.remote.getCurrentWindow(),
             {
@@ -633,14 +760,15 @@ export class DetailsView extends React.Component {
             },
             filePaths => {
                 if (filePaths && filePaths[0]) {
-                    changeExtensionImage(this.extension!, filePaths[0]);
+                    changeExtensionImage(extension, filePaths[0]);
                 }
             }
         );
     }
 
     render() {
-        if (!this.extension) {
+        const extension = this.displayedExtension;
+        if (!extension) {
             return null;
         }
 
@@ -648,23 +776,46 @@ export class DetailsView extends React.Component {
             <VerticalHeaderWithBody>
                 <Header className="EezStudio_Extension_Details_Header">
                     <div className="EezStudio_Extension_Details_Header_ImageContainer">
-                        <img src={this.extension.image} width={256} />
+                        <img src={extension.image} width={256} />
                         <a href="#" style={{ cursor: "pointer" }} onClick={this.handleChangeImage}>
                             Change image
                         </a>
                     </div>
                     <div className="EezStudio_Extension_Details_Header_Properties">
                         <div className="EezStudio_Extension_Details_Header_Properties_Name_And_Version">
-                            <h5>{this.extension.displayName || this.extension.name}</h5>
-                            <div>Version {this.extension.version}</div>
+                            <h5>{extension.displayName || extension.name}</h5>
+                            <div className="form-inline">
+                                <label
+                                    className="my-1 mr-2"
+                                    htmlFor="EezStudio_Extension_Details_VersionSelect"
+                                >
+                                    Versions:
+                                </label>
+                                <select
+                                    id="EezStudio_Extension_Details_VersionSelect"
+                                    className="custom-select my-1 mr-sm-2"
+                                    value={this.selectedVersion}
+                                    onChange={action(
+                                        (event: React.ChangeEvent<HTMLSelectElement>) => {
+                                            this.selectedVersion = event.currentTarget.value;
+                                        }
+                                    )}
+                                >
+                                    {this.extensionVersions!.allVersions.map(extension => (
+                                        <option key={extension.version} value={extension.version}>
+                                            {extension.version}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
-                        <div>{this.extension.description}</div>
-                        <div>{this.extension.author}</div>
+                        <div>{extension.description}</div>
+                        <div>{extension.author}</div>
                         <div style={{ marginBottom: "10px" }}>
-                            <small>{this.extension.id}</small>
+                            <small>{extension.id}</small>
                         </div>
                         <Toolbar>
-                            {!this.extension.installationFolderPath && (
+                            {this.installEnabled && (
                                 <ButtonAction
                                     text="Install"
                                     title="Install extension"
@@ -672,7 +823,23 @@ export class DetailsView extends React.Component {
                                     onClick={this.handleInstall}
                                 />
                             )}
-                            {this.extension.installationFolderPath && (
+                            {this.updateEnabled && (
+                                <ButtonAction
+                                    text="Update"
+                                    title="Update extension to the latest version"
+                                    className="btn-success"
+                                    onClick={this.handleInstall}
+                                />
+                            )}
+                            {this.replaceEnabled && (
+                                <ButtonAction
+                                    text="Replace"
+                                    title="Replace installed extension with selected version"
+                                    className="btn-success"
+                                    onClick={this.handleInstall}
+                                />
+                            )}
+                            {this.uninstallEnabled && (
                                 <ButtonAction
                                     text="Uninstall"
                                     title="Uninstall extension"
@@ -680,8 +847,8 @@ export class DetailsView extends React.Component {
                                     onClick={this.handleUninstall}
                                 />
                             )}
-                            {this.extension.isEditable &&
-                                this.extension.isDirty && (
+                            {extension.isEditable &&
+                                extension.isDirty && (
                                     <ButtonAction
                                         text="Export"
                                         title="Export extension"
@@ -693,7 +860,7 @@ export class DetailsView extends React.Component {
                     </div>
                 </Header>
                 <Body>
-                    <ExtensionSections extension={this.extension} />
+                    <ExtensionSections extension={extension} />
                 </Body>
             </VerticalHeaderWithBody>
         );
