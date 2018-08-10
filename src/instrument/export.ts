@@ -98,10 +98,12 @@ interface Command {
 function buildPackageJson(idf: IdfProperties, properties: any) {
     return JSON.stringify(
         {
+            id: idf.idfGuid,
             name: idf.extensionName,
             displayName: idf.idfName,
             version: idf.idfRevisionNumber,
-            id: idf.idfGuid,
+            author: idf.idfAuthor,
+            description: idf.idfDescription,
             "eez-studio": properties
         },
         undefined,
