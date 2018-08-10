@@ -49,7 +49,8 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
         this.shortcut = objectClone(props.shortcut);
     }
 
-    @observable shortcut: Partial<IShortcut>;
+    @observable
+    shortcut: Partial<IShortcut>;
     wasValidated: boolean = false;
 
     validator = makeValidator({
@@ -123,7 +124,8 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
         ]
     });
 
-    @observable codeError: string | undefined = this.props.codeError;
+    @observable
+    codeError: string | undefined = this.props.codeError;
 
     @computed
     get codeErrors() {
@@ -195,7 +197,7 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
                 return FROM_EXTENSION_GROUP_NAME;
             }
             if (this.extension) {
-                return "Extension: " + this.extension.name;
+                return "Extension: " + (this.extension.displayName + this.extension.name);
             }
         }
 

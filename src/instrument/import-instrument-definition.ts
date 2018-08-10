@@ -4,9 +4,8 @@ import { confirmWithButtons, info } from "shared/ui/dialog";
 import * as notification from "shared/ui/notification";
 
 function confirmMessage(extension: IExtension) {
-    return `You are about to install version ${extension.version} of the '${
-        extension.name
-    }' instrument definition extension.`;
+    return `You are about to install version ${extension.version} of the '${extension.displayName ||
+        extension.name}' instrument definition extension.`;
 }
 
 const BUTTON_INSTRUCTIONS = `
@@ -71,7 +70,9 @@ export async function importInstrumentDefinition(filePath: string) {
         });
 
         if (extension) {
-            notification.success(`Instrument definition "${extension.name}" imported`);
+            notification.success(
+                `Instrument definition "${extension.displayName || extension.name}" imported`
+            );
         }
     } catch (err) {
         notification.error(err.toString());

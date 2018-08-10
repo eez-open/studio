@@ -47,6 +47,7 @@
     "@types/react-dnd-html5-backend": "^2.1.9",
     "@types/react-dom": "^16.0.6",
     "@types/react-transition-group": "^2.0.11",
+    "@types/sharp": "^0.17.9",
     "@types/tinycolor2": "^1.4.0",
     "@types/usb": "^1.1.6",
     "concurrently": "^3.6.0",
@@ -64,10 +65,10 @@
     "node-abi": "^2.4.3",
     "node-watch": "^0.5.8",
     "pump": "^3.0.0",
+    "sharp": "^0.20.5",
     "typescript": "^2.9.2"
   },
   "dependencies": {
-    "@types/sharp": "^0.17.9",
     "app-module-path": "^2.2.0",
     "archiver": "^2.1.1",
     "better-sqlite3": "^4.1.4",
@@ -101,7 +102,6 @@
     "react-visibility-sensor": "^3.11.0",
     "rimraf": "^2.6.2",
     "serialport": "^6.2.1",
-    "sharp": "^0.20.5",
     "tinycolor2": "^1.4.1",
     "tmp": "0.0.33",
     "update-immutable": "^1.4.0",

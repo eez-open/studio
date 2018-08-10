@@ -3,7 +3,10 @@ import { observable, computed, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
 
+import { _uniqBy } from "shared/algorithm";
 import { humanize } from "shared/string";
+
+import { scheduleTask, Priority } from "shared/scheduler";
 
 import { IExtension } from "shared/extensions/extension";
 import {
@@ -13,6 +16,7 @@ import {
     changeExtensionImage,
     exportExtension
 } from "shared/extensions/extensions";
+import { extensionsCatalog } from "shared/extensions/catalog";
 
 import { copyFile, getTempFilePath, getValidFileNameFromFileName } from "shared/util";
 import { stringCompare } from "shared/string";
@@ -20,7 +24,7 @@ import { Splitter } from "shared/ui/splitter";
 import { VerticalHeaderWithBody, Header, ToolbarHeader, Body } from "shared/ui/header-with-body";
 import { Toolbar } from "shared/ui/toolbar";
 import { ButtonAction } from "shared/ui/action";
-import { List, ListItem } from "shared/ui/list";
+import { List, ListItem, IListNode } from "shared/ui/list";
 import { confirm, confirmWithButtons, info } from "shared/ui/dialog";
 import * as notification from "shared/ui/notification";
 
@@ -50,7 +54,7 @@ export class ExtensionInMasterView extends React.Component<
                             }}
                         >
                             <h5 className="EezStudio_NoWrap" style={{ marginBottom: 0 }}>
-                                {this.props.extension.name}
+                                {this.props.extension.displayName || this.props.extension.name}
                             </h5>
                             <small>{this.props.extension.version}</small>
                         </div>
@@ -66,9 +70,8 @@ export class ExtensionInMasterView extends React.Component<
 }
 
 function confirmMessage(extension: IExtension) {
-    return `You are about to install version ${extension.version} of the '${
-        extension.name
-    }' extension.`;
+    return `You are about to install version ${extension.version} of the '${extension.displayName ||
+        extension.name}' extension.`;
 }
 
 const BUTTON_INSTRUCTIONS = `
@@ -80,25 +83,12 @@ const BUTTONS = ["OK", "Cancel"];
 @observer
 class MasterView extends React.Component<
     {
+        extensions: IListNode<IExtension>[];
         selectedExtension: IExtension | undefined;
         selectExtension: (extension: IExtension) => void;
     },
     {}
 > {
-    @computed
-    get sortedInstalledExtensions() {
-        return installedExtensions
-            .get()
-            .sort((a, b) => stringCompare(a.name, b.name))
-            .map(extension => ({
-                id: extension.id,
-                data: extension,
-                selected:
-                    this.props.selectedExtension !== undefined &&
-                    extension.id === this.props.selectedExtension.id
-            }));
-    }
-
     installExtension() {
         EEZStudio.electron.remote.dialog.showOpenDialog(
             {
@@ -161,7 +151,9 @@ class MasterView extends React.Component<
 
                         if (extension) {
                             action(() => selectedExtension.set(extension))();
-                            notification.success(`Extension "${extension.name}" installed`);
+                            notification.success(
+                                `Extension "${extension.displayName || extension.name}" installed`
+                            );
                         }
                     } catch (err) {
                         notification.error(err.toString());
@@ -184,7 +176,7 @@ class MasterView extends React.Component<
                 </ToolbarHeader>
                 <Body tabIndex={0}>
                     <List
-                        nodes={this.sortedInstalledExtensions}
+                        nodes={this.props.extensions}
                         renderNode={node => <ExtensionInMasterView extension={node.data} />}
                         selectNode={node => this.props.selectExtension(node.data)}
                     />
@@ -202,8 +194,10 @@ interface ExtensionSectionsProps {
 
 @observer
 export class ExtensionSections extends React.Component<ExtensionSectionsProps, {}> {
-    @observable activeSection: SectionType = "properties";
-    @observable propertiesComponent: JSX.Element | undefined;
+    @observable
+    activeSection: SectionType = "properties";
+    @observable
+    propertiesComponent: JSX.Element | undefined;
 
     constructor(props: ExtensionSectionsProps) {
         super(props);
@@ -376,7 +370,7 @@ export class DetailsView extends React.Component<{ extension: IExtension | undef
                     </div>
                     <div className="EezStudio_Extension_Details_Header_Properties">
                         <div className="EezStudio_Extension_Details_Header_Properties_Name_And_Version">
-                            <h5>{this.props.extension.name}</h5>
+                            <h5>{this.props.extension.displayName || this.props.extension.name}</h5>
                             <div>Version {this.props.extension.version}</div>
                         </div>
                         <div>{this.props.extension.description}</div>
@@ -412,18 +406,30 @@ export class DetailsView extends React.Component<{ extension: IExtension | undef
 }
 
 @observer
-export class ExtensionsManager extends React.Component<{}, {}> {
+export class ExtensionsManager extends React.Component {
     selectExtension(extension: IExtension) {
         selectedExtension.set(extension);
     }
 
     @computed
+    get extensions() {
+        return _uniqBy(
+            extensionsCatalog.catalog.concat(installedExtensions.get()),
+            extension => extension.id
+        )
+            .sort((a, b) => stringCompare(a.displayName || a.name, b.displayName || b.name))
+            .map(extension => ({
+                id: extension.id,
+                data: extension,
+                selected:
+                    this.selectedExtension !== undefined &&
+                    extension.id === this.selectedExtension.id
+            }));
+    }
+
+    @computed
     get selectedExtension() {
-        let extension = selectedExtension.get();
-        if (installedExtensions.get().indexOf(extension) === -1) {
-            return undefined;
-        }
-        return extension;
+        return selectedExtension.get();
     }
 
     render() {
@@ -434,6 +440,7 @@ export class ExtensionsManager extends React.Component<{}, {}> {
                 persistId="home/extensions-manager/splitter"
             >
                 <MasterView
+                    extensions={this.extensions}
                     selectedExtension={this.selectedExtension}
                     selectExtension={action((extension: IExtension) =>
                         selectedExtension.set(extension)
@@ -444,3 +451,7 @@ export class ExtensionsManager extends React.Component<{}, {}> {
         );
     }
 }
+
+scheduleTask("Download extensions catalog", Priority.Lowest, () => {
+    extensionsCatalog.download();
+});

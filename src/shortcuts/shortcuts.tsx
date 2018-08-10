@@ -196,7 +196,7 @@ class Shortcut extends React.Component<
             }
             const extension = this.getExtension(shortcut);
             if (extension) {
-                return extension.name;
+                return extension.displayName || extension.name;
             }
         }
 
@@ -213,7 +213,9 @@ class Shortcut extends React.Component<
             return this.props.shortcut
                 .map(shortcut => this.getExtension(shortcut))
                 .filter(extension => !!extension)
-                .map(extension => <div key={extension!.id}>{extension!.name}</div>);
+                .map(extension => (
+                    <div key={extension!.id}>{extension!.displayName || extension!.name}</div>
+                ));
         } else {
             return this.getGroupName(this.props.shortcut);
         }

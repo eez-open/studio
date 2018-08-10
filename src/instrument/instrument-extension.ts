@@ -33,7 +33,7 @@ export interface IInstrumentExtensionProperties extends IExtensionProperties {
 export const instrumentExtensions = computed(() => {
     return values(extensions)
         .filter(extension => extension.type === "instrument")
-        .sort((a, b) => stringCompare(a.name, b.name));
+        .sort((a, b) => stringCompare(a.displayName || a.name, b.displayName || b.name));
 });
 
 function createInstrument(extension: IExtension) {
@@ -61,8 +61,8 @@ const instrumentToolboxGroup = computed(() => ({
             id: extension.id,
             icon: extension.image || "",
             iconSize: 48,
-            label: extension.name,
-            title: extension.name,
+            label: extension.displayName || extension.name,
+            title: extension.displayName || extension.name,
             selected: false,
             toolHandler: createCreateObjectToolHandler(() => {
                 beginTransaction("Add instrument");

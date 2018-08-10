@@ -99,6 +99,7 @@ function buildPackageJson(idf: IdfProperties, properties: any) {
     return JSON.stringify(
         {
             name: idf.extensionName,
+            displayName: idf.idfName,
             version: idf.idfRevisionNumber,
             id: idf.idfGuid,
             "eez-studio": properties

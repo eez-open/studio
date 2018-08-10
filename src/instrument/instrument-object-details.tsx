@@ -34,7 +34,10 @@ class Properties extends React.Component<
 
         return (
             <PropertyList>
-                <StaticProperty name="Instrument" value={extension!.name} />
+                <StaticProperty
+                    name="Instrument"
+                    value={extension!.displayName || extension!.name}
+                />
                 <TextInputProperty
                     name="Label"
                     value={this.props.instrument.label || ""}

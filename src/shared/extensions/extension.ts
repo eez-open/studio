@@ -66,6 +66,7 @@ export interface IMeasureTask {
 export interface IExtensionDescription {
     id: string;
     name: string;
+    displayName?: string;
     version: string;
     author: string;
     description?: string;

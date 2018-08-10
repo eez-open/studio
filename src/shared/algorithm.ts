@@ -17,6 +17,7 @@ export const _minBy = _.minBy;
 export const _pickBy = _.pickBy;
 export const _range = _.range;
 export const _uniqWith = _.uniqWith;
+export const _uniqBy = _.uniqBy;
 export const _zipObject = _.zipObject;
 export const _max = _.max;
 export const _difference = _.difference;

@@ -4,10 +4,10 @@ import * as classNames from "classnames";
 
 import { Icon } from "shared/ui/icon";
 
-export interface IListNode {
+export interface IListNode<T = any> {
     id: string;
     label?: string;
-    data?: any;
+    data?: T;
     selected: boolean;
 }
 

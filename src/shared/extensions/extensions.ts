@@ -71,6 +71,7 @@ async function loadExtension(extensionFolderPath: string): Promise<IExtension | 
 
                     extension.id = packageJson.id || packageJson.name;
                     extension.name = packageJson.name;
+                    extension.displayName = packageJson.displayName;
                     extension.version = packageJson.version;
                     extension.author = packageJson.author;
                     extension.description = packageJson.description;
