@@ -19,6 +19,9 @@ import { IListNode, ListItem } from "shared/ui/list";
 import { ChartMode, ChartsController, IAxisModel } from "shared/ui/chart/chart";
 import { Icon } from "shared/ui/icon";
 
+import { RulersModel } from "shared/ui/chart/rulers";
+import { MeasurementsModel } from "shared/ui/chart/measurements";
+
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
@@ -49,7 +52,7 @@ type IMultiWaveformHistoryItemMessage = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MultiWaveformChartsController extends ChartsController {
+export class MultiWaveformChartsController extends ChartsController {
     constructor(
         public multiWaveform: MultiWaveform,
         mode: ChartMode,
@@ -116,6 +119,13 @@ export class MultiWaveform extends HistoryItem {
     constructor(activityLogEntry: IActivityLogEntry, public appStore: InstrumentAppStore) {
         super(activityLogEntry);
 
+        const message = JSON.parse(this.message);
+
+        this.rulers = new RulersModel(message.rulers);
+        this.rulers.initYRulers(this.waveformLinks.length);
+
+        this.measurements = new MeasurementsModel(message.measurements);
+
         // save viewOptions when changed
         reaction(
             () => ({
@@ -142,9 +152,65 @@ export class MultiWaveform extends HistoryItem {
                 }
             }
         );
+
+        // save rulers when changed
+        reaction(
+            () => toJS(this.rulers),
+            rulers => {
+                if (rulers.pauseDbUpdate) {
+                    return;
+                }
+                delete rulers.pauseDbUpdate;
+
+                const message = JSON.parse(this.message);
+                if (!objectEqual(message.rulers, rulers)) {
+                    logUpdate(
+                        {
+                            id: this.id,
+                            oid: this.oid,
+                            message: JSON.stringify(
+                                Object.assign(message, {
+                                    rulers
+                                })
+                            )
+                        },
+                        {
+                            undoable: false
+                        }
+                    );
+                }
+            }
+        );
+
+        // save measurements when changed
+        reaction(
+            () => toJS(this.measurements),
+            measurements => {
+                const message = JSON.parse(this.message);
+                if (!objectEqual(message.measurements, measurements)) {
+                    logUpdate(
+                        {
+                            id: this.id,
+                            oid: this.oid,
+                            message: JSON.stringify(
+                                Object.assign(message, {
+                                    measurements
+                                })
+                            )
+                        },
+                        {
+                            undoable: false
+                        }
+                    );
+                }
+            }
+        );
     }
 
     xAxisModel = new WaveformTimeAxisModel(this);
+
+    rulers: RulersModel;
+    measurements: MeasurementsModel;
 
     @computed
     get parsedMessage() {
@@ -224,11 +290,19 @@ export class MultiWaveform extends HistoryItem {
 
         chartsController.chartControllers = this.linkedWaveforms.map(
             (linkedWaveform: ILinkedWaveform, i: number) => {
-                return linkedWaveform.waveform.createChartController(
+                const chartController = linkedWaveform.waveform.createChartController(
                     chartsController,
                     linkedWaveform.waveform.id,
                     linkedWaveform.yAxisModel
                 );
+
+                chartController.createRulersController(
+                    linkedWaveform.waveform,
+                    this.rulers,
+                    this.measurements
+                );
+
+                return chartController;
             }
         );
 
@@ -274,8 +348,10 @@ class WaveformLinkProperties {
         );
     }
 
-    @observable props: IWaveformLink;
-    @observable errors: boolean = false;
+    @observable
+    props: IWaveformLink;
+    @observable
+    errors: boolean = false;
 
     async checkValidity() {
         return true;

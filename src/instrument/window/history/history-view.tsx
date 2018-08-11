@@ -186,7 +186,9 @@ export class HistoryView extends React.Component<{
     animationFrameRequestId: any;
     history: HistoryListComponent | null;
     sideDock: SideDock | null;
-    @observable searchText: string = "";
+
+    @observable
+    searchText: string = "";
 
     @bind
     frameAnimation() {
@@ -213,6 +215,7 @@ export class HistoryView extends React.Component<{
         }
     }
 
+    @bind
     onSelectHistoryItemsOk() {
         this.props.appStore.selectHistoryItemsSpecification!.onOk();
     }
@@ -234,8 +237,8 @@ export class HistoryView extends React.Component<{
         const historyComponent = (
             <HistoryListComponent
                 ref={ref => (this.history = ref)}
-                appStore={this.props.appStore}
-                history={this.props.appStore.history}
+                appStore={appStore}
+                history={appStore.history}
             />
         );
 

@@ -222,11 +222,11 @@ export class RulersController {
     yRect: SVGRectElement | null;
     y2Rect: SVGRectElement | null;
 
-    constructor(public chartController: ChartController, public waveformModel: WaveformModel) {}
-
-    get rulersModel() {
-        return this.waveformModel.rulers;
-    }
+    constructor(
+        public chartController: ChartController,
+        public waveformModel: WaveformModel,
+        public rulersModel: RulersModel
+    ) {}
 
     get chartIndex() {
         return this.chartController.chartsController.chartControllers.indexOf(this.chartController);

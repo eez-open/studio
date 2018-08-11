@@ -70,7 +70,8 @@ export class DeletedHistoryItemsView extends React.Component<{
     animationFrameRequestId: any;
     history: HistoryListComponent | null;
     sideDock: SideDock | null;
-    @observable searchText: string = "";
+    @observable
+    searchText: string = "";
 
     @bind
     frameAnimation() {
@@ -87,10 +88,6 @@ export class DeletedHistoryItemsView extends React.Component<{
 
     componentWillUnmount() {
         window.cancelAnimationFrame(this.animationFrameRequestId);
-    }
-
-    onSelectHistoryItemsOk() {
-        this.props.appStore.selectHistoryItemsSpecification!.onOk();
     }
 
     @bind

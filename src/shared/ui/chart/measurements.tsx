@@ -13,8 +13,11 @@ import { ChartsController, ChartController } from "shared/ui/chart/chart";
 import { WaveformModel } from "shared/ui/chart/waveform";
 
 export class MeasurementsModel {
-    @observable measurements: string[] = [];
-    @observable selectedChartIndex: number = 0;
+    @observable
+    measurements: string[] = [];
+
+    @observable
+    selectedChartIndex: number = 0;
 
     constructor(props?: any) {
         if (props) {
@@ -24,11 +27,11 @@ export class MeasurementsModel {
 }
 
 export class MeasurementsController {
-    constructor(public chartController: ChartController, public waveformModel: WaveformModel) {}
-
-    get measurementsModel() {
-        return this.waveformModel.measurements;
-    }
+    constructor(
+        public chartController: ChartController,
+        public waveformModel: WaveformModel,
+        public measurementsModel: MeasurementsModel
+    ) {}
 }
 
 @observer
@@ -36,7 +39,8 @@ export class Measurement extends React.Component<{
     chartController: ChartController;
     measurementFunction: IMeasurementFunction;
 }> {
-    @observable value: string = "";
+    @observable
+    value: string = "";
     lastTask: any;
     worker: Worker | undefined;
     workerReady: boolean;
@@ -162,7 +166,10 @@ export class MeasurementsDockView extends React.Component<{ chartsController: Ch
 
     get chartController() {
         return this.props.chartsController.chartControllers[
-            this.measurementModel.selectedChartIndex
+            Math.min(
+                this.measurementModel.selectedChartIndex,
+                this.props.chartsController.chartControllers.length - 1
+            )
         ];
     }
 

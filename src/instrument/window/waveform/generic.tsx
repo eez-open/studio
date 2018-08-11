@@ -38,7 +38,7 @@ import { ChartPreview } from "instrument/window/chart-preview";
 
 import { FileHistoryItem } from "instrument/window/history/items/file";
 
-import { IWaveformLink } from "instrument/window/waveform/multi";
+import { IWaveformLink, MultiWaveformChartsController } from "instrument/window/waveform/multi";
 import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
 import { WaveformLineView } from "instrument/window/waveform/line-view";
 import { WaveformToolbar } from "instrument/window/waveform/toolbar";
@@ -107,8 +107,10 @@ export class ViewOptions implements IViewOptions {
         snapToGrid: true
     };
 
-    @observable showAxisLabels: boolean = true;
-    @observable showZoomButtons: boolean = true;
+    @observable
+    showAxisLabels: boolean = true;
+    @observable
+    showZoomButtons: boolean = true;
 
     setAxesLinesType(type: IViewOptionsAxesLinesType) {
         this.axesLines.type = type;
@@ -532,9 +534,11 @@ export class Waveform extends FileHistoryItem {
         return JSON.parse(this.message);
     }
 
-    @observable.shallow waveformDefinition = this.getDefaultWaveformDefinition();
+    @observable.shallow
+    waveformDefinition = this.getDefaultWaveformDefinition();
 
-    @observable length: number = 0;
+    @observable
+    length: number = 0;
 
     get format() {
         return this.waveformDefinition.format;
@@ -592,7 +596,9 @@ export class Waveform extends FileHistoryItem {
             )
         );
 
-        chartController.createRulersController(this);
+        if (!(chartsController instanceof MultiWaveformChartsController)) {
+            chartController.createRulersController(this, this.rulers, this.measurements);
+        }
 
         return chartController;
     }
@@ -737,7 +743,8 @@ export class WaveformDefinitionProperties {
 
     propsValidated: IWaveformDefinition;
 
-    @observable errors: boolean;
+    @observable
+    errors: boolean;
 
     validator = makeValidator({
         samplingRate: [

@@ -24,8 +24,11 @@ import { navigationStore } from "home/navigation-store";
 class HomeAppStore implements IAppStore {
     constructor(public oids?: string[]) {}
 
-    @observable selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
-    @observable selectedHistoryItems: Map<string, boolean> = new Map<string, boolean>();
+    @observable
+    selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
+
+    @observable
+    selectedHistoryItems = new Map<string, boolean>();
 
     instrument: {
         id: string;
@@ -51,6 +54,7 @@ class HomeAppStore implements IAppStore {
         return this.selectedHistoryItems.has(id);
     }
 
+    @action
     selectHistoryItem(id: string, selected: boolean): void {
         if (selected) {
             this.selectedHistoryItems.set(id, true);

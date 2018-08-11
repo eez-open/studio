@@ -16,8 +16,12 @@ import { SideDock } from "shared/ui/side-dock";
 import { ChartViewOptionsProps, ChartViewOptions } from "shared/ui/chart/view-options";
 import { WaveformRenderAlgorithm } from "shared/ui/chart/render";
 import { WaveformModel } from "shared/ui/chart/waveform";
-import { RulersController, RulersDockView } from "shared/ui/chart/rulers";
-import { MeasurementsDockView, MeasurementsController } from "shared/ui/chart/measurements";
+import { RulersController, RulersDockView, RulersModel } from "shared/ui/chart/rulers";
+import {
+    MeasurementsDockView,
+    MeasurementsController,
+    MeasurementsModel
+} from "shared/ui/chart/measurements";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -159,10 +163,13 @@ export abstract class AxisController {
 
     unit: IUnit = this.axisModel.unit;
 
-    @observable labelTextsWidth: number = 0;
-    @observable labelTextsHeight: number = 0;
+    @observable
+    labelTextsWidth: number = 0;
+    @observable
+    labelTextsHeight: number = 0;
 
-    @observable isAnimationActive: boolean;
+    @observable
+    isAnimationActive: boolean;
     animationController = new AnimationController();
 
     abstract get from(): number;
@@ -310,8 +317,10 @@ class DynamicAxisController extends AxisController {
         super(position, chartsController, chartController, axisModel);
     }
 
-    @observable animationFrom: number;
-    @observable animationTo: number;
+    @observable
+    animationFrom: number;
+    @observable
+    animationTo: number;
 
     @computed
     get from() {
@@ -711,11 +720,14 @@ class FixedAxisController extends AxisController {
         super(position, chartsController, chartController, axisModel);
     }
 
-    @observable isAnimationActive: boolean;
+    @observable
+    isAnimationActive: boolean;
     animationController = new AnimationController();
 
-    @observable animationSubdivisionOffset: number;
-    @observable animationSubdivisionScale: number;
+    @observable
+    animationSubdivisionOffset: number;
+    @observable
+    animationSubdivisionScale: number;
 
     get majorSubdivison() {
         return this.position === "x"
@@ -1233,9 +1245,13 @@ export class ChartController {
     rulersController: RulersController;
     measurementsController: MeasurementsController;
 
-    createRulersController(waveformModel: WaveformModel) {
-        this.rulersController = new RulersController(this, waveformModel);
-        this.measurementsController = new MeasurementsController(this, waveformModel);
+    createRulersController(
+        waveformModel: WaveformModel,
+        rulersModel: RulersModel,
+        measurementsModel: MeasurementsModel
+    ) {
+        this.rulersController = new RulersController(this, waveformModel, rulersModel);
+        this.measurementsController = new MeasurementsController(this, waveformModel, measurementsModel);
     }
 }
 
@@ -1285,10 +1301,14 @@ export interface IViewOptions {
 export class GlobalViewOptions {
     static LOCAL_STORAGE_ITEM_ID = "shared/ui/chart/globalViewOptions";
 
-    @observable enableZoomAnimations: boolean = true;
-    @observable blackBackground: boolean = false;
-    @observable renderAlgorithm: WaveformRenderAlgorithm = "minmax";
-    @observable showSampledData: boolean = false;
+    @observable
+    enableZoomAnimations: boolean = true;
+    @observable
+    blackBackground: boolean = false;
+    @observable
+    renderAlgorithm: WaveformRenderAlgorithm = "minmax";
+    @observable
+    showSampledData: boolean = false;
 
     constructor() {
         const globalViewOptionsJSON = localStorage.getItem(GlobalViewOptions.LOCAL_STORAGE_ITEM_ID);
@@ -1339,8 +1359,10 @@ export abstract class ChartsController {
         );
     }
 
-    @observable chartViewWidth: number | undefined;
-    @observable chartViewHeight: number | undefined;
+    @observable
+    chartViewWidth: number | undefined;
+    @observable
+    chartViewHeight: number | undefined;
 
     @computed
     get xAxisLabelTextsHeight() {
@@ -2099,9 +2121,12 @@ class PanMouseHandler implements MouseHandler {
 class ZoomToRectMouseHandler implements MouseHandler {
     constructor(private chartController: ChartController) {}
 
-    @observable startPoint: Point;
-    @observable endPoint: Point;
-    @observable orientation: "x" | "y" | "both" | undefined = undefined;
+    @observable
+    startPoint: Point;
+    @observable
+    endPoint: Point;
+    @observable
+    orientation: "x" | "y" | "both" | undefined = undefined;
 
     cursor: "default";
 
@@ -2236,13 +2261,20 @@ class CursorPopover extends React.Component<{ cursor: ICursor }, {}> {
 }
 
 class Cursor implements ICursor {
-    @observable visible: boolean = false;
-    @observable lineController: ILineController;
-    @observable time: number;
-    @observable value: number;
-    @observable valueIndex: number;
-    @observable addPoint: boolean;
-    @observable error: string | undefined;
+    @observable
+    visible: boolean = false;
+    @observable
+    lineController: ILineController;
+    @observable
+    time: number;
+    @observable
+    value: number;
+    @observable
+    valueIndex: number;
+    @observable
+    addPoint: boolean;
+    @observable
+    error: string | undefined;
     cursorElement: EventTarget | null;
     cursorPopover: any;
 
@@ -2455,7 +2487,8 @@ export class ChartView extends React.Component<
     svg: SVGSVGElement;
     deltaY: number = 0;
     cursor = new Cursor(this);
-    @observable mouseHandler: MouseHandler | undefined;
+    @observable
+    mouseHandler: MouseHandler | undefined;
     clipId = "c_" + guid();
     draggable = new Draggable(this);
 

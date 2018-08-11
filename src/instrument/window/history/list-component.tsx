@@ -58,12 +58,20 @@ export class HistoryItems extends React.Component<{
                     key={historyItem.id}
                     className={className}
                     onMouseDown={event => {
+                        if (this.props.appStore.selectHistoryItemsSpecification) {
+                            return;
+                        }
+
                         // this is to prevent text selection with the SHIFT key
                         if (event.shiftKey) {
                             event.preventDefault();
                         }
                     }}
                     onClick={event => {
+                        if (this.props.appStore.selectHistoryItemsSpecification) {
+                            return;
+                        }
+
                         if ($(event.target).parents("#EezStudio_ModalContent").length) {
                             // ignore clicks on history items with preview in zoom mode
                             return;
@@ -97,6 +105,10 @@ export class HistoryItems extends React.Component<{
                         event.preventDefault();
                     }}
                     onContextMenu={event => {
+                        if (this.props.appStore.selectHistoryItemsSpecification) {
+                            return;
+                        }
+
                         if (!historyItem.selected) {
                             this.props.history.selection.selectItems([historyItem]);
                         }

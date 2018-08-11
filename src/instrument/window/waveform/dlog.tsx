@@ -460,12 +460,11 @@ export class DlogWaveform extends FileHistoryItem {
 
         chartController.lineControllers.push(lineController);
 
-        const waveformModel = Object.assign({}, lineController.waveform, {
-            rulers: this.rulers,
-            measurements: this.measurements
-        });
-
-        chartController.createRulersController(waveformModel);
+        chartController.createRulersController(
+            lineController.waveform as any, // TODO this is dangerous
+            this.rulers,
+            this.measurements
+        );
 
         return chartController;
     }

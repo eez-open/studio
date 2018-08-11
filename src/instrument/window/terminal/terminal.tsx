@@ -29,9 +29,11 @@ export interface ITerminalState {
 }
 
 class TerminalState {
-    @observable _command: string = "";
+    @observable
+    _command: string = "";
 
-    @observable selectedSession: ISession | undefined;
+    @observable
+    selectedSession: ISession | undefined;
 
     get command() {
         return this._command;
@@ -236,10 +238,6 @@ class Input extends React.Component<
 
 @observer
 export class Terminal extends React.Component<{ appStore: InstrumentAppStore }, {}> {
-    onSelectHistoryItemsOk() {
-        this.props.appStore.selectHistoryItemsSpecification!.onOk();
-    }
-
     @bind
     onSelectHistoryItemsCancel() {
         this.props.appStore.selectHistoryItems(undefined);
