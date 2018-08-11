@@ -285,7 +285,7 @@ export const activityLogStore = createStore({
         }
 
         if (filterSpecification.oid && message.object.oid !== filterSpecification.oid) {
-            return false;
+            return true;
         }
 
         if (
@@ -420,8 +420,10 @@ export function logGet(id: string) {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ActiveSession {
-    @observable id: string | undefined;
-    @observable message: string | undefined;
+    @observable
+    id: string | undefined;
+    @observable
+    message: string | undefined;
 
     constructor() {
         activityLogStore.watch(

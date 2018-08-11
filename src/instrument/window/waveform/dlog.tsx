@@ -425,7 +425,8 @@ export class DlogWaveform extends FileHistoryItem {
         return (this.values.length - rowOffset) / rowBytes;
     }
 
-    @observable charts: IDlogChart = [];
+    @observable
+    charts: IDlogChart = [];
 
     @computed
     get description() {
@@ -435,10 +436,9 @@ export class DlogWaveform extends FileHistoryItem {
 
         return (
             <div>
-                `Start time: ${formatDateTimeLong(this.startTime)}, Period: ${TIME_UNIT.formatValue(
-                    this.period,
-                    4
-                )}, Duration: ${TIME_UNIT.formatValue(this.time)}`
+                `Start time: ${formatDateTimeLong(this.startTime)}, Period: $
+                {TIME_UNIT.formatValue(this.period, 4)}, Duration: $
+                {TIME_UNIT.formatValue(this.time)}`
             </div>
         );
     }

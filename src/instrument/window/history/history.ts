@@ -99,10 +99,14 @@ export interface IAppStore {
 ////////////////////////////////////////////////////////////////////////////////
 
 class HistoryCalendar {
-    @observable minDate: Date;
-    @observable maxDate: Date;
-    @observable counters = new Map<string, number>();
-    @observable showFirstHistoryItemAsSelectedDay: boolean = false;
+    @observable
+    minDate: Date;
+    @observable
+    maxDate: Date;
+    @observable
+    counters = new Map<string, number>();
+    @observable
+    showFirstHistoryItemAsSelectedDay: boolean = false;
 
     constructor(public history: History) {}
 
@@ -278,17 +282,22 @@ class HistoryCalendar {
 export class SearchResult {
     constructor(public logEntry: IActivityLogEntry) {}
 
-    @observable selected = false;
+    @observable
+    selected = false;
 }
 
 class HistorySearch {
-    @observable searchActive: boolean = false;
-    @observable searchResults: SearchResult[] = [];
-    @observable searchInProgress: boolean = false;
+    @observable
+    searchActive: boolean = false;
+    @observable
+    searchResults: SearchResult[] = [];
+    @observable
+    searchInProgress: boolean = false;
     searchText: string;
     searchLastLogDate: any;
     searchLoopTimeout: any;
-    @observable selectedSearchResult: SearchResult | undefined;
+    @observable
+    selectedSearchResult: SearchResult | undefined;
     startSearchTimeout: any;
 
     constructor(public history: History) {}
@@ -489,8 +498,10 @@ class HistoryNavigator {
     firstHistoryItemTime: number;
     lastHistoryItemTime: number;
 
-    @observable hasOlder = false;
-    @observable hasNewer = false;
+    @observable
+    hasOlder = false;
+    @observable
+    hasNewer = false;
 
     constructor(public history: History) {}
 
@@ -630,7 +641,8 @@ class HistoryNavigator {
 ////////////////////////////////////////////////////////////////////////////////
 
 class HistorySelection {
-    @observable _items: IHistoryItem[] = [];
+    @observable
+    _items: IHistoryItem[] = [];
 
     constructor(public history: History) {}
 
@@ -666,7 +678,8 @@ class HistorySelection {
 
 export class History {
     map = new Map<string, IHistoryItem>();
-    @observable blocks: IHistoryItem[][] = [];
+    @observable
+    blocks: IHistoryItem[][] = [];
 
     calendar = new HistoryCalendar(this);
     search = new HistorySearch(this);
@@ -1098,9 +1111,6 @@ export class History {
         }
 
         if (!historyItem) {
-            if (!this.isDeletedItemsHistory) {
-                console.warn("history item not found");
-            }
             return;
         }
 
@@ -1200,7 +1210,8 @@ export class History {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DeletedItemsHistory extends History {
-    @observable deletedCount: number = 0;
+    @observable
+    deletedCount: number = 0;
 
     constructor(public appStore: IAppStore) {
         super(appStore, true);

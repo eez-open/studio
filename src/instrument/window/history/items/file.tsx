@@ -74,7 +74,8 @@ class PdfPreview extends React.Component<{
     data: any;
     fileName: string;
 }> {
-    @observable url: string;
+    @observable
+    url: string;
     preview: HistoryItemPreview | null;
     iframe: HTMLIFrameElement | null;
 
@@ -144,7 +145,9 @@ export class FileHistoryItemComponent extends React.Component<
 
     @action.bound
     onVisibilityChange(isVisible: boolean) {
-        this.props.historyItem.isVisible = isVisible;
+        if (!this.props.historyItem.isVisible && isVisible) {
+            this.props.historyItem.isVisible = isVisible;
+        }
     }
 
     @bind
@@ -669,5 +672,6 @@ export class FileHistoryItem extends HistoryItem {
         );
     }
 
-    @observable isVisible: boolean;
+    @observable
+    isVisible: boolean;
 }
