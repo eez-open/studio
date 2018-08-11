@@ -59,7 +59,6 @@
     "gulp": "^4.0.0",
     "gulp-cli": "^2.0.1",
     "gulp-uglify-es": "^1.0.4",
-    "gulp-unzip": "^1.0.0",
     "less": "^3.5.2",
     "less-plugin-clean-css": "^1.5.1",
     "node-abi": "^2.4.3",
