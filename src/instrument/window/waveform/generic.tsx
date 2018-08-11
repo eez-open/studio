@@ -289,7 +289,10 @@ export class Waveform extends FileHistoryItem {
         const message = JSON.parse(this.message);
 
         this.viewOptions = new ViewOptions(message.viewOptions);
+
         this.rulers = new RulersModel(message.rulers);
+        this.rulers.initYRulers(1);
+
         this.measurements = new MeasurementsModel(message.measurements);
 
         when(

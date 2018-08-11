@@ -27,7 +27,6 @@ class ExtensionsCatalog {
             .then(response => response.json())
             .then(
                 action((catalog: any) => {
-                    console.log("ExtensionsCatalog download success", catalog);
                     this.catalog = catalog;
                     this.status = ExtensionsCatalogStatus.DOWNLOAD_SUCCESS;
                 })

@@ -21,15 +21,22 @@ import {
 import { WaveformModel } from "shared/ui/chart/waveform";
 
 export class RulersModel {
-    @observable xAxisRulersEnabled: boolean = false;
-    @observable x1: number = 0;
-    @observable x2: number = 0;
+    @observable
+    xAxisRulersEnabled: boolean = false;
+    @observable
+    x1: number = 0;
+    @observable
+    x2: number = 0;
 
-    @observable yAxisRulersEnabled: boolean[] = [];
-    @observable y1: number[] = [];
-    @observable y2: number[] = [];
+    @observable
+    yAxisRulersEnabled: boolean[] = [];
+    @observable
+    y1: number[] = [];
+    @observable
+    y2: number[] = [];
 
-    @observable pauseDbUpdate: boolean = false;
+    @observable
+    pauseDbUpdate: boolean = false;
 
     constructor(props: any) {
         if (props) {
@@ -395,7 +402,7 @@ export class RulersController {
     }
 
     renderYRulersRect(clipId: string) {
-        if (!this.rulersModel.yAxisRulersEnabled) {
+        if (!this.rulersModel.yAxisRulersEnabled[this.chartIndex]) {
             return null;
         }
 
@@ -427,7 +434,7 @@ export class RulersController {
     }
 
     renderYRulersLines(clipId: string) {
-        if (!this.rulersModel.yAxisRulersEnabled) {
+        if (!this.rulersModel.yAxisRulersEnabled[this.chartIndex]) {
             return null;
         }
 
@@ -496,17 +503,25 @@ interface RulersDockViewProps {
 
 @observer
 export class RulersDockView extends React.Component<RulersDockViewProps> {
-    @observable x1: string;
-    @observable x1Error: boolean;
+    @observable
+    x1: string;
+    @observable
+    x1Error: boolean;
 
-    @observable x2: string;
-    @observable x2Error: boolean;
+    @observable
+    x2: string;
+    @observable
+    x2Error: boolean;
 
-    @observable y1: string[] = [];
-    @observable y1Error: boolean[] = [];
+    @observable
+    y1: string[] = [];
+    @observable
+    y1Error: boolean[] = [];
 
-    @observable y2: string[] = [];
-    @observable y2Error: boolean[] = [];
+    @observable
+    y2: string[] = [];
+    @observable
+    y2Error: boolean[] = [];
 
     outsideChangeInXRulersSubscriptionDisposer: any;
     outsideChangeInYRulersSubscriptionDisposer: any;
@@ -776,7 +791,8 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                                           this.props.chartsController.chartControllers[chartIndex]
                                               .yAxisController.axisModel.label
                                       }" `
-                                    : ""}Y axis rulers
+                                    : ""}
+                                Y axis rulers
                             </Checkbox>
                         </div>
                         {this.rulersModel.yAxisRulersEnabled[chartIndex] && (

@@ -45,13 +45,11 @@ export const measurementFunctions = new Map<string, IMeasurementFunction>();
 
 function loadMeasurementFunctions(extensionFolderPath: string, functions: IMeasurementFunction[]) {
     functions.forEach((extensionMeasurementFunction: any) => {
-        if (!measurementFunctions.has(extensionMeasurementFunction.id)) {
-            measurementFunctions.set(extensionMeasurementFunction.id, {
-                id: extensionMeasurementFunction.id,
-                name: extensionMeasurementFunction.name,
-                script: extensionFolderPath + "/" + extensionMeasurementFunction.script
-            });
-        }
+        measurementFunctions.set(extensionMeasurementFunction.id, {
+            id: extensionMeasurementFunction.id,
+            name: extensionMeasurementFunction.name,
+            script: extensionFolderPath + "/" + extensionMeasurementFunction.script
+        });
     });
 }
 
@@ -246,17 +244,14 @@ async function finishImportExtensionFromTempFolder({
             await renameFile(tmpExtensionFolderPath, extensionFolderPath);
         }
 
-        extension.installationFolderPath = extensionFolderPath;
-
-        // fix image url from temp folder to extension folder
-        let tmpUrl = localPathToFileUrl(tmpExtensionFolderPath);
-        if (extension.image && extension.image.startsWith(tmpUrl)) {
-            extension.image = localPathToFileUrl(
-                extensionFolderPath + extension.image.slice(tmpUrl.length)
-            );
+        // reload extension from real folder
+        const reloadedExtension = await loadExtension(extensionFolderPath);
+        if (!reloadedExtension) {
+            await removeFolder(extensionFolderPath);
+            throw "Import failed";
         }
 
-        return registerExtension(extension);
+        return registerExtension(reloadedExtension);
     } catch (err) {
         await removeFolder(tmpExtensionFolderPath);
         throw err;
