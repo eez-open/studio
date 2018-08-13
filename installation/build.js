@@ -76,7 +76,7 @@ const options = {
     dir: ".",
     platform: os.platform(),
     arch: "x64",
-    asar: false,
+    asar: true,
     prune: true,
     overwrite: true,
     icon: "icon.ico",
