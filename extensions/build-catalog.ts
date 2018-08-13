@@ -2,7 +2,8 @@ import * as globby from "globby";
 import * as decompress from "decompress";
 import * as sharp from "sharp";
 import { extname } from "path";
-import { writeFile } from "fs";
+import { writeFile, createWriteStream } from "fs";
+import * as archiver from "archiver";
 
 const EXTENSION_REPOSITORIES = [
     {
@@ -66,6 +67,30 @@ const EXTENSION_REPOSITORIES = [
     writeFile("catalog.json", JSON.stringify(catalog, undefined, 4), "utf8", err => {
         if (err) {
             console.error(err);
+        } else {
+            var output = createWriteStream("catalog.zip");
+
+            var archive = archiver("zip", {
+                zlib: {
+                    level: 9
+                }
+            });
+
+            archive.on("warning", function(err: any) {
+                console.warn(err);
+            });
+
+            archive.on("error", function(err: any) {
+                console.error(err);
+            });
+
+            archive.pipe(output);
+
+            archive.file("catalog.json", {
+                name: "catalog.json"
+            });
+
+            archive.finalize();
         }
     });
 })();
