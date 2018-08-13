@@ -90,11 +90,15 @@ export interface IEnvelopePoint {
 }
 
 export class EnvelopeListData extends BaseListData {
-    @observable duration: number;
-    @observable numSamples: number;
+    @observable
+    duration: number;
+    @observable
+    numSamples: number;
 
-    @observable voltage: IEnvelopePoint[];
-    @observable current: IEnvelopePoint[];
+    @observable
+    voltage: IEnvelopePoint[];
+    @observable
+    current: IEnvelopePoint[];
 
     constructor(list: BaseList, props: any) {
         super(list, props);
@@ -132,7 +136,8 @@ export class EnvelopeListData extends BaseListData {
 }
 
 export class EnvelopeList extends BaseList {
-    @observable data: EnvelopeListData;
+    @observable
+    data: EnvelopeListData;
 
     constructor(props: any, appStore: InstrumentAppStore, instrument: InstrumentObject) {
         super(props, appStore, instrument);
@@ -384,13 +389,19 @@ class EditEnvelopeValue extends React.Component<
         this.onValueChange = this.onValueChange.bind(this);
     }
 
-    @observable time = this.props.time && this.props.timeUnit.formatValue(this.props.time);
-    @observable timeError: string | undefined;
-    @observable value = this.props.valueUnit.formatValue(this.props.value);
-    @observable valueError: string | undefined;
+    @observable
+    time = this.props.time && this.props.timeUnit.formatValue(this.props.time);
+    @observable
+    timeError: string | undefined;
+    @observable
+    value = this.props.valueUnit.formatValue(this.props.value);
+    @observable
+    valueError: string | undefined;
 
-    @observable lastTime: number | undefined = this.props.time;
-    @observable lastValue: number = this.props.value;
+    @observable
+    lastTime: number | undefined = this.props.time;
+    @observable
+    lastValue: number = this.props.value;
 
     @computed
     get canSave() {
@@ -1503,7 +1514,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                         <DropdownButtonAction
                             text="Clear Points"
                             title="Clear points"
-                            className="btn btn-secondary"
+                            className="btn-secondary"
                         >
                             <DropdownItem
                                 text="Clear All Points"
@@ -1537,7 +1548,8 @@ interface EnvelopeDetailsViewProps {
 
 @observer
 export class EnvelopeDetailsView extends React.Component<EnvelopeDetailsViewProps, {}> {
-    @observable list: EnvelopeList = this.props.list;
+    @observable
+    list: EnvelopeList = this.props.list;
 
     @computed
     get chartsController() {

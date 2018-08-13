@@ -30,8 +30,10 @@ function getExtensions() {
     return extensions;
 }
 
-const extensions = getExtensions();
-const extraResource = ["installation/init_storage.db"].concat(extensions);
+const extensions = []; // getExtensions();
+const extraResource = ["installation/init_storage.db", "extensions/catalog.json"].concat(
+    extensions
+);
 
 const ignore = [
     "\\.vscode",
@@ -51,8 +53,12 @@ const ignore = [
 
     ".*.pdb",
 
+    "docs/.*",
+    "extensions/.*",
+    "images/.*",
     "instruments/.*",
     "installation/.*",
+    "help/.*",
     "test/.*",
 
     "src/tsconfig\\.dev\\.json",

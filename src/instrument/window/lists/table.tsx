@@ -65,9 +65,12 @@ export function createEmptyTableListData() {
 }
 
 export class TableListData extends BaseListData {
-    @observable dwell: number[];
-    @observable voltage: number[];
-    @observable current: number[];
+    @observable
+    dwell: number[];
+    @observable
+    voltage: number[];
+    @observable
+    current: number[];
 
     constructor(list: BaseList, props: any) {
         super(list, props);
@@ -97,7 +100,8 @@ export class TableListData extends BaseListData {
 }
 
 export class TableList extends BaseList {
-    @observable data: TableListData;
+    @observable
+    data: TableListData;
 
     constructor(props: any, appStore: InstrumentAppStore, instrument: InstrumentObject) {
         super(props, appStore, instrument);
@@ -389,7 +393,8 @@ interface CellProps {
 
 @observer
 class Cell extends React.Component<CellProps, {}> {
-    @observable value: string = Cell.getValue(this.props);
+    @observable
+    value: string = Cell.getValue(this.props);
 
     static getValue(props: CellProps): string {
         if (props.value === undefined) {
@@ -524,7 +529,8 @@ export class Table extends React.Component<
     },
     {}
 > {
-    @observable error: string | undefined;
+    @observable
+    error: string | undefined;
 
     @computed
     get data() {
@@ -692,7 +698,8 @@ interface TableDetailsViewProps {
 
 @observer
 export class TableDetailsView extends React.Component<TableDetailsViewProps, {}> {
-    @observable list: TableList = this.props.list;
+    @observable
+    list: TableList = this.props.list;
 
     @computed
     get chartsController() {
@@ -847,7 +854,8 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
         }
     }
 
-    @observable error: string | undefined;
+    @observable
+    error: string | undefined;
 
     @action.bound
     setError(error: string | undefined) {
@@ -876,7 +884,7 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
                         <DropdownButtonAction
                             text="Insert"
                             title="Insert rows"
-                            className="btn btn-secondary"
+                            className="btn-secondary"
                         >
                             <DropdownItem
                                 text="Insert row above"
@@ -892,7 +900,7 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
                         <DropdownButtonAction
                             text="Delete"
                             title="Delete cells"
-                            className="btn btn-secondary"
+                            className="btn-secondary"
                         >
                             <DropdownItem
                                 text="Delete row"

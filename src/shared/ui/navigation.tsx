@@ -9,6 +9,7 @@ export interface INavigationItem {
     icon: string;
     title: string;
     position?: string;
+    attention?: boolean;
 }
 
 @observer
@@ -40,6 +41,9 @@ export class NavigationItem extends React.Component<
             <li className={className}>
                 <a href="#" title={this.props.item.title} onClick={this.handleClick}>
                     <Icon icon={this.props.item.icon!} />
+                    {this.props.item.attention && (
+                        <div className="EezStudio_NavigationItemNeedsAttention" />
+                    )}
                 </a>
             </li>
         );
@@ -71,16 +75,14 @@ export class Navigation extends React.Component<
                         ))}
                 </ul>
                 <ul className="list-unstyled">
-                    {this.props.items
-                        .filter(item => item.position === "bottom")
-                        .map(item => (
-                            <NavigationItem
-                                key={item.id}
-                                item={item}
-                                selected={item === this.props.selectedItem}
-                                selectItem={this.props.selectItem}
-                            />
-                        ))}
+                    {this.props.items.filter(item => item.position === "bottom").map(item => (
+                        <NavigationItem
+                            key={item.id}
+                            item={item}
+                            selected={item === this.props.selectedItem}
+                            selectItem={this.props.selectItem}
+                        />
+                    ))}
                 </ul>
             </div>
         );

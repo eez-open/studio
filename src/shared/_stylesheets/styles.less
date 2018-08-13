@@ -94,6 +94,7 @@ input[type="color"] {
     .EezStudio_NavigationItem {
         width: 24px;
         margin-bottom: 7px;
+        position: relative;
     }
 }
 
@@ -119,6 +120,17 @@ input[type="color"] {
             color: #333;
         }
     }
+}
+
+.EezStudio_NavigationItemNeedsAttention {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    bottom: -3px;
+    right: -3px;
+    background-color: red;
+    border-radius: 3px;
+    box-shadow: 0px 0px 6px 2px rgba(255, 0, 0, 0.3);
 }
 
 .EezStudio_ListContainer {

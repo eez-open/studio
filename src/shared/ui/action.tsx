@@ -121,7 +121,6 @@ export class DropdownButtonAction extends React.Component<
         enabled?: boolean;
         className?: string;
         style?: React.CSSProperties;
-        dropdown?: boolean;
     },
     {}
 > {
@@ -158,9 +157,51 @@ export class DropdownButtonAction extends React.Component<
 }
 
 @observer
+export class DropdownIconAction extends React.Component<
+    {
+        icon: string;
+        iconSize?: number;
+        title: string;
+        onClick?: (event: any) => void;
+        enabled?: boolean;
+        className?: string;
+        style?: React.CSSProperties;
+    },
+    {}
+> {
+    render() {
+        const { style, icon, iconSize, title, onClick, enabled } = this.props;
+        let className = classNames("EezStudio_IconAction", this.props.className);
+
+        let buttonProps = {
+            className,
+            title,
+            onClick: onClick,
+            disabled: enabled === false,
+            style: style
+        };
+
+        return (
+            <div className="dropdown">
+                <button
+                    {...buttonProps}
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                >
+                    <Icon icon={icon} size={iconSize} />
+                </button>
+                <div className="dropdown-menu">{this.props.children}</div>
+            </div>
+        );
+    }
+}
+
+@observer
 export class DropdownItem extends React.Component<
     {
         text: string;
+        title?: string;
         onClick: () => void;
         disabled?: boolean;
     },
@@ -182,7 +223,7 @@ export class DropdownItem extends React.Component<
         });
 
         return (
-            <a className={className} href="#" onClick={this.onClick}>
+            <a className={className} title={this.props.title} href="#" onClick={this.onClick}>
                 {text}
             </a>
         );

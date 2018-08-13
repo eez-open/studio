@@ -3,13 +3,17 @@ import { observable, computed, action, runInAction, autorun } from "mobx";
 
 import { IRootNavigationItem } from "shared/ui/app";
 
+import { HistoryView, showSessionsList } from "instrument/window/history/history-view";
+
+import {
+    ExtensionsManager,
+    extensionsManagerStore
+} from "home/extensions-manager/extensions-manager";
+
 import * as DesignerModule from "home/designer/designer";
 import * as HistoryModule from "home/history";
 import * as ShortcutsModule from "home/shortcuts";
-import * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
 import * as SettingsModule from "home/settings";
-
-import { HistoryView, showSessionsList } from "instrument/window/history/history-view";
 
 import { tabs } from "home/tabs-store";
 
@@ -20,10 +24,10 @@ export class NavigationStore {
     historyNavigationItem: IRootNavigationItem;
     deletedHistoryItemsNavigationItem: IRootNavigationItem;
     shortcutsAndGroupsNavigationItem: IRootNavigationItem;
-    extensionsNavigationItem: IRootNavigationItem;
     settingsNavigationItem: IRootNavigationItem;
 
-    @observable.ref private _mainNavigationSelectedItem: IRootNavigationItem;
+    @observable
+    private _mainNavigationSelectedItemId: string;
 
     mainHistoryView: HistoryView | undefined;
 
@@ -71,18 +75,6 @@ export class NavigationStore {
             }
         };
 
-        this.extensionsNavigationItem = {
-            id: "extensions",
-            icon: "material:extension",
-            title: "Extensions Manager",
-            renderContent: () => {
-                const {
-                    ExtensionsManager
-                } = require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
-                return <ExtensionsManager />;
-            }
-        };
-
         this.settingsNavigationItem = {
             id: "settings",
             icon: "material:settings",
@@ -94,23 +86,45 @@ export class NavigationStore {
             }
         };
 
-        this._mainNavigationSelectedItem = this.workbenchNavigationItem;
+        this._mainNavigationSelectedItemId = this.workbenchNavigationItem.id;
 
         autorun(() => {
-            if (this._mainNavigationSelectedItem) {
-                document.title = `${this._mainNavigationSelectedItem.title} - Home - EEZ Studio`;
+            if (this.mainNavigationSelectedItem) {
+                document.title = `${this.mainNavigationSelectedItem.title} - Home - EEZ Studio`;
             } else {
                 document.title = `Home - EEZ Studio`;
             }
 
             if (
-                this._mainNavigationSelectedItem === this.deletedHistoryItemsNavigationItem &&
+                this.mainNavigationSelectedItem === this.deletedHistoryItemsNavigationItem &&
                 this.mainHistoryView &&
                 this.mainHistoryView.props.appStore.deletedItemsHistory.deletedCount === 0
             ) {
                 this.navigateToHistory();
             }
         });
+    }
+
+    @computed
+    get extensionsNavigationItem(): IRootNavigationItem {
+        let numNewVersions = extensionsManagerStore.newVersions.length;
+
+        let title = "Extension Manager";
+        if (numNewVersions > 1) {
+            title += ` (${extensionsManagerStore.newVersions.length} new versions)`;
+        } else if (numNewVersions === 1) {
+            title += " (1 new version)";
+        }
+
+        return {
+            id: "extensions",
+            icon: "material:extension",
+            title: title,
+            attention: numNewVersions > 0,
+            renderContent: () => {
+                return <ExtensionsManager />;
+            }
+        };
     }
 
     @computed
@@ -128,12 +142,16 @@ export class NavigationStore {
     }
 
     get mainNavigationSelectedItem() {
-        return this._mainNavigationSelectedItem;
+        return (
+            this.navigationItems.find(
+                navigationItem => navigationItem.id === this._mainNavigationSelectedItemId
+            ) || this.workbenchNavigationItem
+        );
     }
 
     set mainNavigationSelectedItem(value: IRootNavigationItem) {
         runInAction(() => {
-            this._mainNavigationSelectedItem = value;
+            this._mainNavigationSelectedItemId = value.id;
         });
     }
 
