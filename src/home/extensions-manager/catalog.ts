@@ -13,12 +13,20 @@ import * as notification from "shared/ui/notification";
 
 import { IExtension } from "shared/extensions/extension";
 
+const DEFAULT_EXTENSIONS_CATALOG_VERSION_DOWNLOAD_URL =
+    "https://github.com/eez-open/studio/raw/master/extensions/catalog-version.json";
+
 const DEFAULT_EXTENSIONS_CATALOG_DOWNLOAD_URL =
     "https://github.com/eez-open/studio/raw/master/extensions/catalog.zip";
+
+interface ICatalogVersion {
+    lastModifed: Date;
+}
 
 class ExtensionsCatalog {
     @observable
     catalog: IExtension[] = [];
+    catalogVersion: ICatalogVersion;
 
     constructor() {
         this.loadCatalog()
@@ -26,6 +34,13 @@ class ExtensionsCatalog {
                 runInAction(() => (this.catalog = catalog));
             })
             .catch(error => notification.error(`Failed to load catalog (${error})`));
+
+        this.loadCatalogVersion()
+            .then(catalogVersion => {
+                runInAction(() => (this.catalogVersion = catalogVersion));
+                this.checkNewVersionOfCatalog();
+            })
+            .catch(error => notification.error(`Failed to load catalog version (${error})`));
     }
 
     get catalogPath() {
@@ -44,7 +59,62 @@ class ExtensionsCatalog {
         return (await readJsObjectFromFile(catalogPath)) as IExtension[];
     }
 
-    update() {
+    get catalogVersionPath() {
+        return getUserDataPath("catalog-version.json");
+    }
+
+    async loadCatalogVersion() {
+        let catalogVersionPath = this.catalogVersionPath;
+        if (!(await fileExists(catalogVersionPath))) {
+            if (isDev) {
+                catalogVersionPath = path.resolve(
+                    `${__dirname}/../../../extensions/catalog-version.json`
+                );
+            } else {
+                catalogVersionPath = process.resourcesPath! + "/catalog-version.json";
+            }
+        }
+        const catalogVersion = await readJsObjectFromFile(catalogVersionPath);
+
+        catalogVersion.lastModifed = new Date(catalogVersion.lastModifed);
+
+        return catalogVersion;
+    }
+
+    checkNewVersionOfCatalog() {
+        this.downloadCatalogVersion()
+            .then(catalogVersion => {
+                if (catalogVersion.lastModifed > this.catalogVersion.lastModifed) {
+                    runInAction(() => (this.catalogVersion = catalogVersion));
+                    this.downloadCatalog();
+                }
+            })
+            .catch(error => notification.error(`Failed to download catalog version (${error})`));
+    }
+
+    downloadCatalogVersion() {
+        return new Promise<ICatalogVersion>((resolve, reject) => {
+            var req = new XMLHttpRequest();
+            req.responseType = "json";
+            req.open("GET", DEFAULT_EXTENSIONS_CATALOG_VERSION_DOWNLOAD_URL);
+
+            req.addEventListener("load", async () => {
+                const catalogVersion = req.response;
+                catalogVersion.lastModifed = new Date(catalogVersion.lastModifed);
+                await writeJsObjectToFile(this.catalogVersionPath, catalogVersion);
+                resolve(catalogVersion);
+            });
+
+            req.addEventListener("error", error => {
+                console.error("Failed to download catalog-version.json", error);
+                reject(error);
+            });
+
+            req.send();
+        });
+    }
+
+    downloadCatalog() {
         var req = new XMLHttpRequest();
         req.responseType = "arraybuffer";
         req.open("GET", DEFAULT_EXTENSIONS_CATALOG_DOWNLOAD_URL);

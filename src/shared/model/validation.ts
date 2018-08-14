@@ -128,7 +128,7 @@ export function makeValidator<T extends Rules>(rules: T) {
                         if (existingError) {
                             existingError.push(error);
                         } else {
-                            errors[ruleName] = [error];
+                            errors[ruleName] = [error] as any;
                         }
                     }
                 }

@@ -378,7 +378,7 @@ class MasterView extends React.Component {
     }
 
     updateCatalog() {
-        extensionsCatalog.update();
+        extensionsCatalog.downloadCatalog();
     }
 
     async updateAll() {
