@@ -302,6 +302,9 @@ const BUTTONS = ["OK", "Cancel"];
 
 @observer
 class MasterView extends React.Component {
+    @observable
+    isUpdatingAll: boolean = false;
+
     installExtension() {
         EEZStudio.electron.remote.dialog.showOpenDialog(
             {
@@ -384,6 +387,8 @@ class MasterView extends React.Component {
     }
 
     async updateAll() {
+        runInAction(() => (this.isUpdatingAll = true));
+
         const extensionsToUpdate = extensionsManagerStore.extensionNodes.map(
             extensionNode =>
                 extensionsManagerStore.getExtensionVersionsById(extensionNode.data.id)!
@@ -403,6 +408,8 @@ class MasterView extends React.Component {
             type: "success",
             autoClose: 5000
         });
+
+        runInAction(() => (this.isUpdatingAll = false));
     }
 
     render() {
@@ -446,7 +453,8 @@ class MasterView extends React.Component {
 
                     <Toolbar>
                         {extensionsManagerStore.viewFilter === ViewFilter.NEW_VERSIONS &&
-                            extensionsManagerStore.extensionNodes.length > 0 && (
+                            extensionsManagerStore.extensionNodes.length > 0 &&
+                            !this.isUpdatingAll && (
                                 <ButtonAction
                                     text="Update All"
                                     title=""
