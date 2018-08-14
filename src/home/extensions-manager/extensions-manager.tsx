@@ -386,6 +386,7 @@ class MasterView extends React.Component {
         }
     }
 
+    @bind
     async updateAll() {
         runInAction(() => (this.isUpdatingAll = true));
 
