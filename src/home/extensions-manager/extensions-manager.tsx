@@ -377,8 +377,10 @@ class MasterView extends React.Component {
         );
     }
 
-    updateCatalog() {
-        extensionsCatalog.downloadCatalog();
+    async updateCatalog() {
+        if (!(await extensionsCatalog.checkNewVersionOfCatalog())) {
+            notification.info("There is currently no new version of catalog available.");
+        }
     }
 
     async updateAll() {

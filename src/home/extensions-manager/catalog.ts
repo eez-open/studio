@@ -81,15 +81,22 @@ class ExtensionsCatalog {
         return catalogVersion;
     }
 
-    checkNewVersionOfCatalog() {
-        this.downloadCatalogVersion()
-            .then(catalogVersion => {
-                if (catalogVersion.lastModified > this.catalogVersion.lastModified) {
-                    runInAction(() => (this.catalogVersion = catalogVersion));
-                    this.downloadCatalog();
-                }
-            })
-            .catch(error => notification.error(`Failed to download catalog version (${error})`));
+    async checkNewVersionOfCatalog() {
+        try {
+            const catalogVersion = await this.downloadCatalogVersion();
+
+            if (catalogVersion.lastModified > this.catalogVersion.lastModified) {
+                runInAction(() => (this.catalogVersion = catalogVersion));
+                this.downloadCatalog();
+            } else {
+                // no new version
+                return false;
+            }
+        } catch (error) {
+            notification.error(`Failed to download catalog version (${error})`);
+        }
+
+        return true;
     }
 
     downloadCatalogVersion() {
