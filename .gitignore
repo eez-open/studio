@@ -43,6 +43,16 @@ extensions/advanced-measurements/**/*.js.map
 extensions/build-catalog.js
 extensions/build-catalog.js.map
 
+extensions/catalog-enum.js
+extensions/catalog-enum.js.map
+
+installation/build-installation.js
+installation/build-installation.js.map
+
+installation/extra-resource.js
+installation/extra-resource.js.map
+installation/extra-resource.json
+
 TODO.txt
 
 .cache-require-paths.json

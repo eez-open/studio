@@ -23,8 +23,8 @@
     "watch-less": "node watch-less.js",
     "abc": "cd test/abc && tsc && browserify --debug main.js -o bundle.js",
     "update:packages": "node wipe-dependencies.js && rm -rf node_modules && npm update --save-dev && npm update --save",
-    "build-installation": "node installation/build.js",
-    "build-catalog": "cd extensions && tsc && node build-catalog.js"
+    "build-catalog": "cd extensions && tsc && node build-catalog.js",
+    "build-installation": "cd installation && tsc && electron extra-resource.js && cd .. && node installation/build-installation.js"
   },
   "prettier": {
     "printWidth": 100,
@@ -53,9 +53,9 @@
     "@types/usb": "^1.1.6",
     "concurrently": "^3.6.0",
     "decompress": "^4.2.0",
-    "electron": "2.0.4",
+    "electron": "2.0.7",
     "electron-packager": "^12.1.0",
-    "electron-rebuild": "^1.8.1",
+    "electron-rebuild": "^1.8.2",
     "globby": "^8.0.1",
     "gulp": "^4.0.0",
     "gulp-cli": "^2.0.1",

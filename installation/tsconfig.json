@@ -12,8 +12,7 @@
         "noUnusedLocals": true,
         "strictNullChecks": true,
         "baseUrl": "../src",
-        "sourceMap": true,
-        "pretty": true,
-        "watch": true
+        "sourceMap": false,
+        "pretty": false
     }
 }
