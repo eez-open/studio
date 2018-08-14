@@ -20,7 +20,7 @@ const DEFAULT_EXTENSIONS_CATALOG_DOWNLOAD_URL =
     "https://github.com/eez-open/studio/raw/master/extensions/catalog.zip";
 
 interface ICatalogVersion {
-    lastModifed: Date;
+    lastModified: Date;
 }
 
 class ExtensionsCatalog {
@@ -76,7 +76,7 @@ class ExtensionsCatalog {
         }
         const catalogVersion = await readJsObjectFromFile(catalogVersionPath);
 
-        catalogVersion.lastModifed = new Date(catalogVersion.lastModifed);
+        catalogVersion.lastModified = new Date(catalogVersion.lastModified);
 
         return catalogVersion;
     }
@@ -84,7 +84,7 @@ class ExtensionsCatalog {
     checkNewVersionOfCatalog() {
         this.downloadCatalogVersion()
             .then(catalogVersion => {
-                if (catalogVersion.lastModifed > this.catalogVersion.lastModifed) {
+                if (catalogVersion.lastModified > this.catalogVersion.lastModified) {
                     runInAction(() => (this.catalogVersion = catalogVersion));
                     this.downloadCatalog();
                 }
@@ -100,7 +100,7 @@ class ExtensionsCatalog {
 
             req.addEventListener("load", async () => {
                 const catalogVersion = req.response;
-                catalogVersion.lastModifed = new Date(catalogVersion.lastModifed);
+                catalogVersion.lastModified = new Date(catalogVersion.lastModified);
                 await writeJsObjectToFile(this.catalogVersionPath, catalogVersion);
                 resolve(catalogVersion);
             });

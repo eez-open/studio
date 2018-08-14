@@ -25,40 +25,37 @@ function getRepositoryCatalogs() {
         EXTENSION_REPOSITORIES.map(async repository => {
             const paths = await globby(repository.local + "/**/*.zip");
 
-            return await Promise.all(
-                paths
-                    .map(async path => {
-                        const files = await decompress(path);
+            return (await Promise.all(
+                paths.map(async path => {
+                    const files = await decompress(path);
 
-                        const packageJsonFile = files.find(file => file.path === "package.json");
-                        if (!packageJsonFile) {
-                            return undefined;
-                        }
+                    const packageJsonFile = files.find(file => file.path === "package.json");
+                    if (!packageJsonFile) {
+                        return undefined;
+                    }
 
-                        const packageJson = JSON.parse(packageJsonFile.data.toString());
+                    const packageJson = JSON.parse(packageJsonFile.data.toString());
 
-                        if (!packageJson["eez-studio"]) {
-                            return undefined;
-                        }
+                    if (!packageJson["eez-studio"]) {
+                        return undefined;
+                    }
 
-                        const imagePath = packageJson.image || "image.png";
-                        const imageFile = files.find(file => file.path === imagePath);
-                        if (imageFile) {
-                            const ext = extname(imagePath).substr(1);
-                            const imageData = await sharp(imageFile.data)
-                                .resize(256)
-                                .toBuffer();
-                            const base64 = imageData.toString("base64");
-                            packageJson.image = `data:image/${ext};base64,${base64}`;
-                        }
+                    const imagePath = packageJson.image || "image.png";
+                    const imageFile = files.find(file => file.path === imagePath);
+                    if (imageFile) {
+                        const ext = extname(imagePath).substr(1);
+                        const imageData = await sharp(imageFile.data)
+                            .resize(256)
+                            .toBuffer();
+                        const base64 = imageData.toString("base64");
+                        packageJson.image = `data:image/${ext};base64,${base64}`;
+                    }
 
-                        packageJson.download =
-                            repository.remote + path.substr(repository.local.length);
+                    packageJson.download = repository.remote + path.substr(repository.local.length);
 
-                        return packageJson;
-                    })
-                    .filter(x => !!x)
-            );
+                    return packageJson;
+                })
+            )).filter(x => !!x);
         })
     );
 }
