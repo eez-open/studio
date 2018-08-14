@@ -3,6 +3,34 @@ import * as Database from "better-sqlite3";
 
 import { getCatalog } from "../extensions/catalog-enum";
 
+export function compareVersions(v1: string, v2: string) {
+    const v1Parts = v1.split(".").map(x => parseInt(x));
+    const v2Parts = v2.split(".").map(x => parseInt(x));
+
+    for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); ++i) {
+        if (isNaN(v1Parts[i])) {
+            if (isNaN(v2Parts[i])) {
+                return 0;
+            }
+            return -1;
+        }
+
+        if (isNaN(v2Parts[i])) {
+            return 1;
+        }
+
+        if (v1Parts[i] < v2Parts[i]) {
+            return -1;
+        }
+
+        if (v1Parts[i] > v2Parts[i]) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 async function getExtraResource() {
     const catalog = await getCatalog(true);
 
@@ -11,15 +39,31 @@ async function getExtraResource() {
 
     const extensions: string[] = [];
 
+    rows.push({
+        instrumentExtensionId: "b278d8da-1c17-4baa-9837-1761b2481c2b"
+    });
+
     rows.forEach(row => {
         const instrumentExtensionId = row.instrumentExtensionId;
 
-        const extension = catalog.find((extension: any) => extension.id === instrumentExtensionId);
-        if (!extension) {
+        let foundExtension: any;
+
+        catalog.forEach((extension: any) => {
+            if (extension.id === instrumentExtensionId) {
+                if (
+                    !foundExtension ||
+                    compareVersions(extension.version, foundExtension.version) > 0
+                ) {
+                    foundExtension = extension;
+                }
+            }
+        });
+
+        if (!foundExtension) {
             throw `Can't find extension ${instrumentExtensionId}`;
         }
 
-        extensions.push(extension.localPath);
+        extensions.push(foundExtension.localPath);
     });
 
     db.close();
