@@ -66,7 +66,7 @@
     "node-watch": "^0.5.8",
     "pump": "^3.0.0",
     "sharp": "^0.20.5",
-    "typescript": "^2.9.2"
+    "typescript": "^3.0.1"
   },
   "dependencies": {
     "app-module-path": "^2.2.0",
