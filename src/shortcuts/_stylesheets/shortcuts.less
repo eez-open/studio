@@ -1,56 +1,8 @@
-.EezStudio_ShortcutsOrGroupsTable {
-    cursor: default;
-
-    tbody > tr.selected {
-        background-color: @non-focused-selection-background-color;
-        color: @non-focused-selection-color;
-    }
-
-    .EezStudio_Toolbar {
-        visibility: hidden;
-    }
-
-    > tbody > tr:hover {
-        .EezStudio_Toolbar {
-            visibility: visible;
-        }
-    }
-
-    > tbody > tr.selected {
-        .EezStudio_Toolbar {
-            visibility: visible;
-        }
-
-        .EezStudio_Action {
-            color: white;
-        }
-
-        .EezStudio_Action:hover {
-            color: #aaa;
-        }
-    }
-
-    &:focus {
-        > tbody > tr:hover {
-            background-color: @hover-background-color;
-            color: @hover-color;
-        }
-
-        > tbody > tr.selected {
-            background-color: @selection-background-color;
-            color: @selection-color;
-        }
-    }
-
-    th,
-    td {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-}
-
 .EezStudio_ShortcutsTable {
+    th.colColor {
+        background-position: center center;
+    }
+
     .colAction {
         white-space: normal;
         pre {
@@ -69,8 +21,9 @@
     }
 }
 
+.EezStudio_ShortcutsTable,
 .EezStudio_GroupsTable {
-    td:nth-child(2) {
-        width: 100%;
+    .colActions {
+        white-space: nowrap;
     }
 }

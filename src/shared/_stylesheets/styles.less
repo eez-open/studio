@@ -471,58 +471,6 @@ input[type="color"] {
     text-overflow: ellipsis;
 }
 
-.EezStudio_Table {
-    cursor: default;
-
-    tbody > tr.selected {
-        background-color: @non-focused-selection-background-color;
-        color: @non-focused-selection-color;
-    }
-
-    .EezStudio_Toolbar {
-        visibility: hidden;
-    }
-
-    > tbody > tr:hover {
-        .EezStudio_Toolbar {
-            visibility: visible;
-        }
-    }
-
-    > tbody > tr.selected {
-        .EezStudio_Toolbar {
-            visibility: visible;
-        }
-
-        .EezStudio_Action {
-            color: white;
-        }
-
-        .EezStudio_Action:hover {
-            color: #aaa;
-        }
-    }
-
-    &:focus {
-        > tbody > tr:hover {
-            background-color: @hover-background-color;
-            color: @hover-color;
-        }
-
-        > tbody > tr.selected {
-            background-color: @selection-background-color;
-            color: @selection-color;
-        }
-    }
-
-    th,
-    td {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-}
-
 .EezStudio_Splitter {
     background-color: @splitter-background-color;
 
@@ -955,5 +903,73 @@ DESIGNER
     td:nth-child(3),
     td:nth-child(5) {
         padding-left: 5px;
+    }
+}
+
+.EezStudio_Table {
+    cursor: default;
+
+    tbody > tr.selected {
+        background-color: @non-focused-selection-background-color;
+        color: @non-focused-selection-color;
+    }
+
+    .EezStudio_Toolbar {
+        visibility: hidden;
+    }
+
+    > tbody > tr:hover {
+        .EezStudio_Toolbar {
+            visibility: visible;
+        }
+    }
+
+    > tbody > tr.selected {
+        .EezStudio_Toolbar {
+            visibility: visible;
+        }
+
+        .EezStudio_Action {
+            color: white;
+        }
+
+        .EezStudio_Action:hover {
+            color: #aaa;
+        }
+    }
+
+    &:focus {
+        > tbody > tr:hover {
+            background-color: @hover-background-color;
+            color: @hover-color;
+        }
+
+        > tbody > tr.selected {
+            background-color: @selection-background-color;
+            color: @selection-color;
+        }
+    }
+
+    th,
+    td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    th.sort-enabled {
+        background-repeat: no-repeat;
+        background-position: center left;
+        background-image: url("../../shared/_images/col_sort_enabled.png");
+        padding-left: 20px;
+        cursor: pointer;
+    }
+
+    th.sort-asc {
+        background-image: url("../../shared/_images/col_sort_asc.png");
+    }
+
+    th.sort-desc {
+        background-image: url("../../shared/_images/col_sort_desc.png");
     }
 }

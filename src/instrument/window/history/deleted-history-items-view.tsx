@@ -31,9 +31,21 @@ export class DeletedHistoryItemsTools extends React.Component<{ appStore: IAppSt
                 />,
                 <IconAction
                     key="purge"
+                    color="#dc3545"
                     icon="material:delete_forever"
                     title="Purge selected history items"
                     onClick={this.props.appStore.deletedItemsHistory.deleteSelectedHistoryItems}
+                />
+            );
+        } else {
+            actions.push(
+                <ButtonAction
+                    key="emptyTrash"
+                    text="Empty Trash"
+                    icon="material:delete_forever"
+                    title="Purge all deleted history items"
+                    className="btn-sm btn-danger"
+                    onClick={this.props.appStore.deletedItemsHistory.emptyTrash}
                 />
             );
         }

@@ -285,7 +285,7 @@ export const activityLogStore = createStore({
         }
 
         if (filterSpecification.oid && message.object.oid !== filterSpecification.oid) {
-            return true;
+            return false;
         }
 
         if (

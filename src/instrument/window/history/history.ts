@@ -1216,24 +1216,23 @@ export class DeletedItemsHistory extends History {
     constructor(public appStore: IAppStore) {
         super(appStore, true);
 
-        scheduleTask(
-            "Get deleted history items count",
-            Priority.Lowest,
-            action(() => {
-                const result = db
-                    .prepare(
-                        `SELECT
-                            count(*) AS count
-                        FROM
-                            activityLog
-                        WHERE
-                            ${this.oidWhereClause} AND deleted`
-                    )
-                    .get();
+        scheduleTask("Get deleted history items count", Priority.Lowest, this.refreshDeletedCount);
+    }
 
-                this.deletedCount = result ? result.count : 0;
-            })
-        );
+    @action.bound
+    refreshDeletedCount() {
+        const result = db
+            .prepare(
+                `SELECT
+                    count(*) AS count
+                FROM
+                    activityLog
+                WHERE
+                    ${this.oidWhereClause} AND deleted`
+            )
+            .get();
+
+        this.deletedCount = result ? result.count.toNumber() : 0;
     }
 
     filterActivityLogEntry(activityLogEntry: IActivityLogEntry) {
@@ -1325,5 +1324,22 @@ export class DeletedItemsHistory extends History {
                 }
             });
         }
+    }
+
+    @action.bound
+    emptyTrash() {
+        confirm(
+            "Are you sure?",
+            "This will permanently delete all history items from trash.",
+            () => {
+                db.prepare(
+                    `DELETE FROM activityLog WHERE ${this.oidWhereClause} AND deleted`
+                ).run();
+
+                this.selection.selectItems([]);
+                this.displayRows([]);
+                this.refreshDeletedCount();
+            }
+        );
     }
 }

@@ -1,12 +1,14 @@
 import * as React from "react";
-import { observable, computed, action, IObservableValue, values } from "mobx";
+import { observable, computed, action, runInAction, IObservableValue, values } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
+import { bind } from "bind-decorator";
 
 import { _countBy } from "shared/algorithm";
 import { Toolbar } from "shared/ui/toolbar";
 import { IconAction, ButtonAction } from "shared/ui/action";
 import { showDialog, confirm } from "shared/ui/dialog";
+import { Table, IColumn, IRow } from "shared/ui/table";
 
 import { IGroup, IGroupsStore, IShortcutsStore } from "shortcuts/interfaces";
 import { GroupDialog } from "shortcuts/group-dialog";
@@ -43,7 +45,7 @@ export class GroupsToolbarButtons extends React.Component<
                 callback={(group: IGroup) => {
                     let groupId = this.props.groupsStore.addGroup(group);
 
-                    action(() => selectedGroupId.set(groupId))();
+                    runInAction(() => selectedGroupId.set(groupId));
 
                     setTimeout(() => {
                         let element = document.querySelector(`.group-${groupId}`);
@@ -83,30 +85,81 @@ export class GroupsToolbarButtons extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class Group extends React.Component<
-    {
-        groupsStore: IGroupsStore;
-        group: IGroup;
-        numShortcuts: number;
-    },
-    {}
-> {
-    constructor(props: any) {
-        super(props);
+class GroupRow implements IRow {
+    constructor(
+        private props: {
+            groupsStore: IGroupsStore;
+            group: IGroup;
+            numShortcuts: number;
+        }
+    ) {}
 
-        this.selectGroup = this.selectGroup.bind(this);
-        this.editGroup = this.editGroup.bind(this);
-        this.deleteGroup = this.deleteGroup.bind(this);
+    get id() {
+        return this.props.group.id;
     }
 
-    @observable selected: boolean;
+    @computed
+    get selected() {
+        return selectedGroupId.get() === this.id;
+    }
+
+    get isGroupEnabled() {
+        return this.props.groupsStore.isGroupEnabled ? 1 : 0;
+    }
+
+    @computed
+    get isGroupEnabledComponent() {
+        return (
+            this.props.groupsStore.isGroupEnabled && (
+                <input
+                    type="checkbox"
+                    checked={
+                        this.props.groupsStore.isGroupEnabled &&
+                        this.props.groupsStore.isGroupEnabled(this.props.group)
+                    }
+                    onChange={event =>
+                        this.props.groupsStore.enableGroup!(this.props.group, event.target.checked)
+                    }
+                />
+            )
+        );
+    }
+
+    get name() {
+        return this.props.group.name;
+    }
+
+    get numShortcuts() {
+        return this.props.numShortcuts;
+    }
+
+    @computed
+    get actions() {
+        return (
+            <Toolbar>
+                <IconAction icon="material:edit" title="Edit group" onClick={this.editGroup} />
+                <IconAction
+                    icon="material:delete"
+                    title="Delete group"
+                    onClick={this.deleteGroup}
+                />
+            </Toolbar>
+        );
+    }
+
+    @computed
+    get className() {
+        return classNames(`group-${this.id}`, {
+            selected: this.selected
+        });
+    }
 
     @action
     selectGroup() {
-        selectedGroupId.set(this.props.group.id);
+        selectedGroupId.set(this.id);
     }
 
+    @bind
     editGroup() {
         showDialog(
             <GroupDialog
@@ -119,6 +172,7 @@ class Group extends React.Component<
         );
     }
 
+    @bind
     deleteGroup() {
         confirm(
             "Are you sure?",
@@ -131,61 +185,53 @@ class Group extends React.Component<
         );
     }
 
-    render() {
-        const { group, numShortcuts } = this.props;
+    @bind
+    onClick() {
+        this.selectGroup();
+    }
 
-        let className = classNames(`group-${group.id}`, {
-            selected: selectedGroupId.get() === group.id
-        });
-
-        return (
-            <tr className={className} onClick={this.selectGroup} onDoubleClick={this.editGroup}>
-                {this.props.groupsStore.isGroupEnabled && (
-                    <td>
-                        <input
-                            type="checkbox"
-                            checked={
-                                this.props.groupsStore.isGroupEnabled &&
-                                this.props.groupsStore.isGroupEnabled(group)
-                            }
-                            onChange={event =>
-                                this.props.groupsStore.enableGroup!(group, event.target.checked)
-                            }
-                        />
-                    </td>
-                )}
-                <td>{group.name}</td>
-                <td>{numShortcuts}</td>
-                <td>
-                    <Toolbar>
-                        <IconAction
-                            icon="material:edit"
-                            title="Edit group"
-                            onClick={this.editGroup}
-                        />
-                        <IconAction
-                            icon="material:delete"
-                            title="Delete group"
-                            onClick={this.deleteGroup}
-                        />
-                    </Toolbar>
-                </td>
-            </tr>
-        );
+    @bind
+    onDoubleClick() {
+        this.editGroup();
     }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class Groups extends React.Component<
-    {
-        groupsStore: IGroupsStore;
-        shortcutsStore: IShortcutsStore;
-    },
-    {}
-> {
-    constructor(props: any) {
-        super(props);
+export class Groups extends React.Component<{
+    groupsStore: IGroupsStore;
+    shortcutsStore: IShortcutsStore;
+}> {
+    @computed
+    get columns() {
+        let result: IColumn[] = [];
+
+        if (this.props.groupsStore.isGroupEnabled) {
+            result.push({
+                name: "isGroupEnabled",
+                title: "",
+                sortEnabled: true
+            });
+        }
+
+        result.push({
+            name: "name",
+            title: "Name",
+            sortEnabled: true
+        });
+        result.push({
+            name: "numShortcuts",
+            title: "# Shortcuts",
+            sortEnabled: true
+        });
+        result.push({
+            name: "actions",
+            title: "",
+            sortEnabled: false
+        });
+
+        return result;
     }
 
     @computed
@@ -196,57 +242,27 @@ export class Groups extends React.Component<
         );
     }
 
-    addGroup() {
-        showDialog(
-            <GroupDialog
-                groupsStore={this.props.groupsStore}
-                group={{
-                    id: "",
-                    name: ""
-                }}
-                callback={(group: IGroup) => {
-                    let groupId = this.props.groupsStore.addGroup(group);
-
-                    action(() => selectedGroupId.set(groupId))();
-
-                    setTimeout(() => {
-                        let element = document.querySelector(`.group-${groupId}`);
-                        if (element) {
-                            element.scrollIntoView();
-                        }
-                    }, 10);
-                }}
-            />
+    @computed
+    get rows() {
+        return values(this.props.groupsStore.groups).map(
+            group =>
+                new GroupRow({
+                    groupsStore: this.props.groupsStore,
+                    group,
+                    numShortcuts: this.numShortcuts[group.name] || 0
+                })
         );
     }
 
     render() {
         return (
-            <table
-                className="EezStudio_ShortcutsOrGroupsTable EezStudio_GroupsTable table"
-                tabIndex={-1}
-            >
-                <thead>
-                    <tr>
-                        {this.props.groupsStore.isGroupEnabled && <th />}
-                        <th>Name</th>
-                        <th># Shortcuts</th>
-                        <th />
-                    </tr>
-                </thead>
-                <tbody>
-                    {values(this.props.groupsStore.groups).map(group => {
-                        return (
-                            <Group
-                                key={group.id}
-                                groupsStore={this.props.groupsStore}
-                                group={group}
-                                numShortcuts={this.numShortcuts[group.name] || 0}
-                            />
-                        );
-                    })}
-                </tbody>
-            </table>
+            <Table
+                persistId="shortcuts/groups"
+                className="EezStudio_GroupsTable"
+                columns={this.columns}
+                rows={this.rows}
+                defaultSortColumn="name"
+            />
         );
     }
 }

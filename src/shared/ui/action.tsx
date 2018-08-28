@@ -75,9 +75,14 @@ export class IconAction extends React.Component<
     {}
 > {
     render() {
+        let style;
+        if (this.props.color) {
+            style = { color: this.props.color };
+        }
+
         return (
             <Action className="EezStudio_IconAction" {...this.props}>
-                <Icon icon={this.props.icon} size={this.props.iconSize} />
+                <Icon icon={this.props.icon} size={this.props.iconSize} style={style} />
             </Action>
         );
     }
