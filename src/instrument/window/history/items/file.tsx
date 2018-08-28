@@ -58,7 +58,7 @@ class ImagePreview extends React.Component<{
                 zoom={this.zoom}
                 toggleZoom={this.toggleZoom}
             >
-                <img src={this.props.src} onClick={this.toggleZoom} />
+                <img src={this.props.src} onClick={this.zoom ? this.toggleZoom : undefined} />
             </HistoryItemPreview>
         );
     }
@@ -458,6 +458,7 @@ export class FileHistoryItem extends HistoryItem {
         return <FileHistoryItemComponent appStore={this.appStore!} historyItem={this} />;
     }
 
+    @computed
     get previewElement(): JSX.Element | null {
         if (this.isImage) {
             let imageData =
