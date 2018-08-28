@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "EEZ Studio"
-#define MyAppVersion "M1"
+#define MyAppVersion "M2"
 #define MyAppPublisher "Envox d.o.o."
 #define MyAppURL "http://www.envox.hr/eez/studio/studio-introduction.html"
 #define MyAppExeName "eezstudio.exe"

@@ -52,7 +52,10 @@ export class RulersModel {
 
     initYRulers(numCharts: number) {
         for (let chartIndex = 0; chartIndex < numCharts; chartIndex++) {
-            if (this.yAxisRulersEnabled[chartIndex] === undefined) {
+            if (
+                chartIndex >= this.yAxisRulersEnabled.length ||
+                this.yAxisRulersEnabled[chartIndex] === undefined
+            ) {
                 this.yAxisRulersEnabled[chartIndex] = false;
                 this.y1[chartIndex] = 0;
                 this.y2[chartIndex] = 0;

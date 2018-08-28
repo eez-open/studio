@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
-import { compareVersions } from "shared/util";
+import { compareVersions, studioVersion } from "shared/util";
 import { humanize } from "shared/string";
 
 import { IExtension } from "shared/extensions/extension";
@@ -172,8 +172,20 @@ class ExtensionsManagerStore {
     @computed
     get extensionsVersionsCatalogBuilder() {
         const builder = new ExtensionsVersionsCatalogBuilder();
+
         installedExtensions.get().forEach(extension => builder.addExtension(extension));
-        extensionsCatalog.catalog.forEach(extension => builder.addExtension(extension));
+
+        extensionsCatalog.catalog.forEach(extension => {
+            const extensionMinStudioVersion = (extension as any)["eez-studio"].minVersion;
+            if (extensionMinStudioVersion !== undefined) {
+                if (compareVersions(studioVersion, extensionMinStudioVersion) < 0) {
+                    return;
+                }
+            }
+
+            builder.addExtension(extension);
+        });
+
         return builder;
     }
 

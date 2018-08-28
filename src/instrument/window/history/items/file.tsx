@@ -43,20 +43,20 @@ import { HistoryItemPreview } from "instrument/window/history/item-preview";
 class ImagePreview extends React.Component<{
     src: string;
 }> {
-    preview: HistoryItemPreview | null;
+    @observable
+    zoom: boolean = false;
 
-    @bind
-    toggleZoom(event: React.MouseEvent<HTMLElement>) {
-        if (this.preview) {
-            this.preview.toggleZoom(event);
-        }
+    @action.bound
+    toggleZoom() {
+        this.zoom = !this.zoom;
     }
 
     render() {
         return (
             <HistoryItemPreview
-                ref={ref => (this.preview = ref)}
                 className="EezStudio_ImagePreview"
+                zoom={this.zoom}
+                toggleZoom={this.toggleZoom}
             >
                 <img src={this.props.src} onClick={this.toggleZoom} />
             </HistoryItemPreview>
@@ -76,11 +76,15 @@ class PdfPreview extends React.Component<{
 }> {
     @observable
     url: string;
-    preview: HistoryItemPreview | null;
+
     iframe: HTMLIFrameElement | null;
 
-    get zoom() {
-        return this.preview && this.preview.zoom;
+    @observable
+    zoom: boolean = false;
+
+    @action.bound
+    toggleZoom() {
+        this.zoom = !this.zoom;
     }
 
     @computed
@@ -120,7 +124,11 @@ class PdfPreview extends React.Component<{
 
     render() {
         return (
-            <HistoryItemPreview ref={ref => (this.preview = ref)} className="EezStudio_PdfPreview">
+            <HistoryItemPreview
+                className="EezStudio_PdfPreview"
+                zoom={this.zoom}
+                toggleZoom={this.toggleZoom}
+            >
                 <iframe
                     ref={ref => (this.iframe = ref)}
                     src={this.urlWithParams}

@@ -793,6 +793,8 @@ export async function delay(time: number) {
     return new Promise(resolve => setTimeout(resolve, time));
 }
 
+export const studioVersion = require("../../package.json").version;
+
 export function compareVersions(v1: string, v2: string) {
     const v1Parts = v1.split(".").map(x => parseInt(x));
     const v2Parts = v2.split(".").map(x => parseInt(x));

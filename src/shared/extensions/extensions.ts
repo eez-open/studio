@@ -26,8 +26,7 @@ import { IToolboxGroup, IToolbarButton } from "shared/ui/designer/designer-inter
 import {
     IExtension,
     IObject,
-    IExtensionProperties,
-    IMeasurementFunction
+    IExtensionProperties
 } from "shared/extensions/extension";
 
 import {
@@ -38,20 +37,6 @@ import {
 
 import * as ShortcutsStoreModule from "shortcuts/shortcuts-store";
 import * as ShortcutsModule from "shortcuts/shortcuts";
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const measurementFunctions = new Map<string, IMeasurementFunction>();
-
-function loadMeasurementFunctions(extensionFolderPath: string, functions: IMeasurementFunction[]) {
-    functions.forEach((extensionMeasurementFunction: any) => {
-        measurementFunctions.set(extensionMeasurementFunction.id, {
-            id: extensionMeasurementFunction.id,
-            name: extensionMeasurementFunction.name,
-            script: extensionFolderPath + "/" + extensionMeasurementFunction.script
-        });
-    });
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -83,13 +68,6 @@ async function loadExtension(extensionFolderPath: string): Promise<IExtension | 
                         if (await fileExists(imageFilePath)) {
                             extension.image = localPathToFileUrl(imageFilePath);
                         }
-                    }
-
-                    if (extension.measurementFunctions) {
-                        loadMeasurementFunctions(
-                            extensionFolderPath,
-                            extension.measurementFunctions
-                        );
                     }
 
                     return extension;

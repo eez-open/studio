@@ -5,12 +5,44 @@ import { observer } from "mobx-react";
 import { _map, _difference } from "shared/algorithm";
 
 import { IMeasurementFunction } from "shared/extensions/extension";
-import { measurementFunctions } from "shared/extensions/extensions";
+import { extensions } from "shared/extensions/extensions";
 
 import { IconAction } from "shared/ui/action";
 
 import { ChartsController, ChartController } from "shared/ui/chart/chart";
 import { WaveformModel } from "shared/ui/chart/waveform";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const measurementFunctions = computed(() => {
+    const allFunctions = new Map<string, IMeasurementFunction>();
+
+    function loadMeasurementFunctions(
+        extensionFolderPath: string,
+        functions: IMeasurementFunction[]
+    ) {
+        functions.forEach((extensionMeasurementFunction: any) => {
+            allFunctions.set(extensionMeasurementFunction.id, {
+                id: extensionMeasurementFunction.id,
+                name: extensionMeasurementFunction.name,
+                script: extensionFolderPath + "/" + extensionMeasurementFunction.script
+            });
+        });
+    }
+
+    extensions.forEach(extension => {
+        if (extension.measurementFunctions) {
+            loadMeasurementFunctions(
+                extension.installationFolderPath!,
+                extension.measurementFunctions
+            );
+        }
+    });
+
+    return allFunctions;
+});
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class MeasurementsModel {
     @observable
@@ -26,6 +58,8 @@ export class MeasurementsModel {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 export class MeasurementsController {
     constructor(
         public chartController: ChartController,
@@ -33,6 +67,8 @@ export class MeasurementsController {
         public measurementsModel: MeasurementsModel
     ) {}
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class Measurement extends React.Component<{
@@ -157,6 +193,8 @@ export class Measurement extends React.Component<{
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 @observer
 export class MeasurementsDockView extends React.Component<{ chartsController: ChartsController }> {
     get measurementModel() {
@@ -180,7 +218,7 @@ export class MeasurementsDockView extends React.Component<{ chartsController: Ch
     @computed
     get availableMeasurements() {
         return _difference(
-            Array.from(measurementFunctions.keys()),
+            Array.from(measurementFunctions.get().keys()),
             this.measurementsController.measurementsModel.measurements
         );
     }
@@ -222,9 +260,9 @@ export class MeasurementsDockView extends React.Component<{ chartsController: Ch
                             {_map(
                                 this.measurementsController.measurementsModel.measurements,
                                 measurementId => {
-                                    const measurementFunction = measurementFunctions.get(
-                                        measurementId
-                                    );
+                                    const measurementFunction = measurementFunctions
+                                        .get()
+                                        .get(measurementId);
 
                                     return (
                                         <tr key={measurementId}>
@@ -289,7 +327,7 @@ export class MeasurementsDockView extends React.Component<{ chartsController: Ch
                                             );
                                         })}
                                     >
-                                        {measurementFunctions.get(measurementId)!.name}
+                                        {measurementFunctions.get().get(measurementId)!.name}
                                     </a>
                                 );
                             })}

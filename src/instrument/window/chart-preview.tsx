@@ -43,11 +43,15 @@ interface ChartPreviewProps {
 
 @observer
 export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
-    @observable data: ChartData = this.props.data;
-    preview: HistoryItemPreview | null;
+    @observable
+    data: ChartData = this.props.data;
 
-    get zoom() {
-        return this.preview && this.preview.zoom;
+    @observable
+    zoom: boolean = false;
+
+    @action.bound
+    toggleZoom() {
+        this.zoom = !this.zoom;
     }
 
     @computed
@@ -78,9 +82,10 @@ export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
 
         return (
             <HistoryItemPreview
-                ref={ref => (this.preview = ref)}
                 className={className}
                 toolbarWhenZoomed={toolbarWhenZoomed}
+                zoom={this.zoom}
+                toggleZoom={this.toggleZoom}
             >
                 <ChartsView
                     chartsController={this.chartsController}

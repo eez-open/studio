@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
@@ -82,18 +81,19 @@ class UnzoomedPreview extends React.Component<{
 export class HistoryItemPreview extends React.Component<{
     className: string;
     toolbarWhenZoomed?: JSX.Element;
+    zoom: boolean;
+    toggleZoom: () => void;
 }> {
-    @observable zoom: boolean = false;
-
-    @action.bound
+    @bind
     toggleZoom(event: React.MouseEvent<HTMLElement>) {
-        this.zoom = !this.zoom;
         event.preventDefault();
         event.stopPropagation();
+
+        this.props.toggleZoom();
     }
 
     render() {
-        if (this.zoom) {
+        if (this.props.zoom) {
             return (
                 <ZoomedPreview
                     className={this.props.className}
