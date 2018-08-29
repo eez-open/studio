@@ -39,9 +39,6 @@ async function setupExtensions(
 
         try {
             const extension = await installExtension(filePath, {
-                checkExtensionType(type: string) {
-                    return true;
-                },
                 notFound() {},
                 async confirmReplaceNewerVersion(
                     newExtension: IExtension,
