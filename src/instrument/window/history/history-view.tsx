@@ -247,7 +247,7 @@ export class HistoryView extends React.Component<{
         }
 
         const historyComponentWithTools = (
-            <div className="EezStudio_History_Container" tabIndex={0}>
+            <div className="EezStudio_History_Container">
                 {appStore.selectHistoryItemsSpecification && (
                     <div className="EezStudio_History_Header EezStudio_SlideInDownTransition">
                         <div>
@@ -277,7 +277,9 @@ export class HistoryView extends React.Component<{
                         </Toolbar>
                     </div>
                 )}
-                <div className="EezStudio_History_Body">{historyComponent}</div>
+                <div className="EezStudio_History_Body" tabIndex={0}>
+                    {historyComponent}
+                </div>
             </div>
         );
 

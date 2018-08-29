@@ -588,26 +588,36 @@ export function clamp(value: number, min: number, max: number) {
 var moment: typeof MomentModule | undefined;
 var localeData: MomentModule.Locale;
 var localeWeekdays: string[];
+var defaultDateFormat: string;
+var defaultTimeFormat: string;
+var defaultDateTimeFormat: string;
 
 export function getMoment() {
     if (!moment) {
         moment = require("moment") as typeof MomentModule;
         require("moment-duration-format")(moment);
-        const { getLocale } = require("shared/i10n") as typeof I10nModule;
+        const {
+            getLocale,
+            getDateFormat,
+            getTimeFormat
+        } = require("shared/i10n") as typeof I10nModule;
         const locale = getLocale();
         localeData = getMoment().localeData(locale);
         localeWeekdays = localeData.weekdays();
         moment.locale(locale);
+        defaultDateFormat = getDateFormat();
+        defaultTimeFormat = getTimeFormat();
+        defaultDateTimeFormat = defaultDateFormat + " " + defaultTimeFormat;
     }
     return moment;
 }
 
 export function formatDateTimeLong(date: Date) {
-    return getMoment()(date).format("L LTS");
+    return getMoment()(date).format(defaultDateTimeFormat);
 }
 
 export function formatDate(date: Date, format?: string) {
-    return getMoment()(date).format(format || "L");
+    return getMoment()(date).format(format || defaultDateFormat);
 }
 
 export function formatDuration(duration: number) {

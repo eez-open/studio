@@ -2,12 +2,23 @@ import * as React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
+import * as moment from "moment";
 
 const shell = require("electron").shell;
 import { app, createEmptyFile } from "shared/util";
 import { stringCompare } from "shared/string";
 import { getDbPath, setDbPath } from "shared/db";
-import { getLocale, setLocale, LOCALES } from "shared/i10n";
+import {
+    LOCALES,
+    getLocale,
+    setLocale,
+    DATE_FORMATS,
+    getDateFormat,
+    setDateFormat,
+    TIME_FORMATS,
+    getTimeFormat,
+    setTimeFormat
+} from "shared/i10n";
 
 import { PropertyList, FileInputProperty, SelectProperty } from "shared/ui/properties";
 import * as notification from "shared/ui/notification";
@@ -16,15 +27,31 @@ import * as notification from "shared/ui/notification";
 
 const activeDatabasePath = getDbPath();
 const activetLocale = getLocale();
+const activeDateFormat = getDateFormat();
+const activeTimeFormat = getTimeFormat();
 
 @observer
 export class Settings extends React.Component<{}, {}> {
-    @observable databasePath: string = getDbPath();
-    @observable locale: string = getLocale();
+    @observable
+    databasePath: string = getDbPath();
+
+    @observable
+    locale: string = getLocale();
+
+    @observable
+    dateFormat: string = getDateFormat();
+
+    @observable
+    timeFormat: string = getTimeFormat();
 
     @computed
     get restartRequired() {
-        return this.databasePath !== activeDatabasePath || this.locale !== activetLocale;
+        return (
+            this.databasePath !== activeDatabasePath ||
+            this.locale !== activetLocale ||
+            this.dateFormat !== activeDateFormat ||
+            this.timeFormat !== activeTimeFormat
+        );
     }
 
     @action.bound
@@ -34,9 +61,21 @@ export class Settings extends React.Component<{}, {}> {
     }
 
     @action.bound
-    onLocaleChange(locale: string) {
-        this.locale = locale;
-        setLocale(this.locale);
+    onLocaleChange(value: string) {
+        this.locale = value;
+        setLocale(value);
+    }
+
+    @action.bound
+    onDateFormatChanged(value: string) {
+        this.dateFormat = value;
+        setDateFormat(value);
+    }
+
+    @action.bound
+    onTimeFormatChanged(value: string) {
+        this.timeFormat = value;
+        setTimeFormat(value);
     }
 
     @bind
@@ -118,6 +157,32 @@ export class Settings extends React.Component<{}, {}> {
                                         {(LOCALES as any)[locale]}
                                     </option>
                                 ))}
+                        </SelectProperty>
+                        <SelectProperty
+                            name="Date format"
+                            value={this.dateFormat}
+                            onChange={this.onDateFormatChanged}
+                        >
+                            {DATE_FORMATS.map(dateFormat => (
+                                <option key={dateFormat.format} value={dateFormat.format}>
+                                    {moment(new Date())
+                                        .locale(this.locale)
+                                        .format(dateFormat.format)}
+                                </option>
+                            ))}
+                        </SelectProperty>
+                        <SelectProperty
+                            name="Time format"
+                            value={this.timeFormat}
+                            onChange={this.onTimeFormatChanged}
+                        >
+                            {TIME_FORMATS.map(timeFormat => (
+                                <option key={timeFormat.format} value={timeFormat.format}>
+                                    {moment(new Date())
+                                        .locale(this.locale)
+                                        .format(timeFormat.format)}
+                                </option>
+                            ))}
                         </SelectProperty>
                     </PropertyList>
                 </div>

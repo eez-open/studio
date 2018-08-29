@@ -125,8 +125,10 @@ export class DeletedHistoryItemsView extends React.Component<{
         );
 
         const historyComponentWithTools = (
-            <div className="EezStudio_History_Container" tabIndex={0}>
-                <div className="EezStudio_History_Body">{historyComponent}</div>
+            <div className="EezStudio_History_Container">
+                <div className="EezStudio_History_Body" tabIndex={0}>
+                    {historyComponent}
+                </div>
             </div>
         );
 

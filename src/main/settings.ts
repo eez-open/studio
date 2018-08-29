@@ -4,6 +4,7 @@ import { observable, action } from "mobx";
 
 import { getUserDataPath } from "shared/util";
 import { SETTINGS_FILE_NAME, DEFAULT_DB_NAME } from "shared/conf";
+import { DATE_FORMATS, TIME_FORMATS } from "shared/i10n";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -19,7 +20,8 @@ interface IMruItem {
 }
 
 class Settings {
-    @observable mru: IMruItem[];
+    @observable
+    mru: IMruItem[];
 
     @observable
     windowStates: {
@@ -27,7 +29,10 @@ class Settings {
     };
 
     dbPath: string;
+
     locale: string;
+    dateFormat: string;
+    timeFormat: string;
 }
 
 export const settings = new Settings();
@@ -63,6 +68,8 @@ export function loadSettings() {
 
                 settings.dbPath = settingsJs.dbPath;
                 settings.locale = settingsJs.locale;
+                settings.dateFormat = settingsJs.dateFormat;
+                settings.timeFormat = settingsJs.timeFormat;
             } catch (parseError) {
                 console.log(data);
                 console.error(parseError);
@@ -219,8 +226,26 @@ export function getLocale() {
     return settings.locale || app.getLocale();
 }
 
-export function setLocale(locale: string) {
-    settings.locale = locale;
+export function setLocale(value: string) {
+    settings.locale = value;
+    saveSettings();
+}
+
+export function getDateFormat() {
+    return settings.dateFormat || DATE_FORMATS[0].format;
+}
+
+export function setDateFormat(value: string) {
+    settings.dateFormat = value;
+    saveSettings();
+}
+
+export function getTimeFormat() {
+    return settings.timeFormat || TIME_FORMATS[0].format;
+}
+
+export function setTimeFormat(value: string) {
+    settings.timeFormat = value;
     saveSettings();
 }
 
@@ -240,6 +265,22 @@ ipcMain.on("getLocale", function(event: any) {
     event.returnValue = getLocale();
 });
 
-ipcMain.on("setLocale", function(event: any, locale: string) {
-    setLocale(locale);
+ipcMain.on("setLocale", function(event: any, value: string) {
+    setLocale(value);
+});
+
+ipcMain.on("getDateFormat", function(event: any) {
+    event.returnValue = getDateFormat();
+});
+
+ipcMain.on("setDateFormat", function(event: any, value: string) {
+    setDateFormat(value);
+});
+
+ipcMain.on("getTimeFormat", function(event: any) {
+    event.returnValue = getTimeFormat();
+});
+
+ipcMain.on("setTimeFormat", function(event: any, value: string) {
+    setTimeFormat(value);
 });
