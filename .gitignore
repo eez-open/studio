@@ -5,37 +5,14 @@ node_modules
 npm-debug.log
 typings
 
-src/home/**/*.js
-src/home/**/*.js.map
-src/home/_stylesheets/main.css
+src/**/*.js
+src/**/*.js.map
 
-src/instrument/**/*.js
-src/instrument/**/*.js.map
+src/home/_stylesheets/main.css
 src/instrument/_stylesheets/instrument.css
 src/instrument/_stylesheets/window.css
-
-src/main/**/*.js
-src/main/**/*.js.map
-
-src/setup/**/*.js
-src/setup/**/*.js.map
-
-src/shared/**/*.js
-src/shared/**/*.js.map
-
-src/shortcuts/**/*.js
-src/shortcuts/**/*.js.map
-
-src/project-editor/**/*.js
-src/project-editor/**/*.js.map
 src/project-editor/_stylesheets/main.css
-
-src/test/**/*.js
-src/test/**/*.js.map
 src/test/_stylesheets/main.css
-
-src/basic-measurements/**/*.js
-src/basic-measurements/**/*.js.map
 
 extensions/advanced-measurements/**/*.js
 extensions/advanced-measurements/**/*.js.map
