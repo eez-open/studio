@@ -1,6 +1,8 @@
 import * as React from "react";
 import { observable, computed, action, runInAction, autorun } from "mobx";
 
+import { extensions } from "shared/extensions/extensions";
+
 import { IRootNavigationItem } from "shared/ui/app";
 
 import { HistoryView, showSessionsList } from "instrument/window/history/history-view";
@@ -132,17 +134,36 @@ export class NavigationStore {
     }
 
     @computed
+    get navigationItemsFromExtensions() {
+        const navigationItems: IRootNavigationItem[] = [];
+
+        extensions.forEach(extension => {
+            if (extension.homeSections) {
+                extension.homeSections.forEach(homeSection => {
+                    navigationItems.push({
+                        id: homeSection.id,
+                        icon: homeSection.icon,
+                        title: homeSection.title,
+                        renderContent: homeSection.render
+                    });
+                });
+            }
+        });
+
+        return navigationItems;
+    }
+
+    @computed
     get navigationItems() {
-        let navigationItems = [
+        return [
             this.workbenchNavigationItem,
             this.historyNavigationItem,
             this.deletedHistoryItemsNavigationItem,
             this.shortcutsAndGroupsNavigationItem,
-            this.extensionsNavigationItem,
-            this.settingsNavigationItem
-        ];
-
-        return navigationItems;
+            this.extensionsNavigationItem
+        ]
+            .concat(this.navigationItemsFromExtensions)
+            .concat([this.settingsNavigationItem]);
     }
 
     get mainNavigationSelectedItem() {

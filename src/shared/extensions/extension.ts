@@ -47,13 +47,17 @@ export interface IHomeSection {
     render: () => JSX.Element;
 }
 
+export interface IActivityLogController {
+    selection: IActivityLogEntry[];
+}
+
 export interface IActivityLogTool {
     id: string;
     name?: string;
     title: string;
     icon: string;
-    isEnabled: (logEntries: IActivityLogEntry[]) => boolean;
-    handler: (logEntries: IActivityLogEntry[]) => void;
+    isEnabled: (controller: IActivityLogController) => boolean;
+    handler: (controller: IActivityLogController) => void;
 }
 
 export interface IMeasurementFunction {
