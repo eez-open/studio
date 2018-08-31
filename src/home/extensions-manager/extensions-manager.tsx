@@ -408,9 +408,10 @@ class MasterView extends React.Component {
                     .latestVersion
         );
 
-        const progressToastId = notification.info("", {
+        const progressToastId = notification.info("Updating...", {
             autoClose: false
         });
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         for (let i = 0; i < extensionsToUpdate.length; ++i) {
             await downloadAndInstallExtension(extensionsToUpdate[i], progressToastId);
@@ -781,9 +782,10 @@ export class DetailsView extends React.Component {
             }
         }
 
-        const progressToastId = notification.info("", {
+        const progressToastId = notification.info("Updating...", {
             autoClose: false
         });
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         const extension = await downloadAndInstallExtension(extensionToInstall, progressToastId);
 

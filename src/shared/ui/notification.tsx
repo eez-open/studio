@@ -30,15 +30,19 @@ function getToast() {
 }
 
 export function info(message: string, options?: ToastModule.UpdateOptions) {
-    return getToast().info(message);
+    return getToast().info(message, options);
 }
 
 export function success(message: string, options?: ToastModule.UpdateOptions) {
-    return getToast().success(message);
+    return getToast().success(message, options);
+}
+
+export function warn(message: string, options?: ToastModule.UpdateOptions) {
+    return getToast().warn(message, options);
 }
 
 export function error(message: string, options?: ToastModule.UpdateOptions) {
-    return getToast().error(message);
+    return getToast().error(message, options);
 }
 
 export function update(toastId: number, options: ToastModule.UpdateOptions) {

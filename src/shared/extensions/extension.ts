@@ -39,6 +39,23 @@ export interface IExtensionProperties {
     shortcuts?: IShortcut[];
 }
 
+export interface IHomeSection {
+    id: string;
+    name?: string;
+    title: string;
+    icon: string;
+    render: () => JSX.Element;
+}
+
+export interface IActivityLogTool {
+    id: string;
+    name?: string;
+    title: string;
+    icon: string;
+    isEnabled: (logEntries: IActivityLogEntry[]) => boolean;
+    handler: (logEntries: IActivityLogEntry[]) => void;
+}
+
 export interface IMeasurementFunction {
     id: string;
     name: string;
@@ -93,6 +110,10 @@ export interface IExtensionDefinition {
     properties?: IExtensionProperties;
     isEditable?: boolean;
     isDirty?: boolean;
+
+    homeSections?: IHomeSection[];
+
+    activityLogTools?: IActivityLogTool[];
 
     measurementFunctions?: IMeasurementFunction[];
 }
