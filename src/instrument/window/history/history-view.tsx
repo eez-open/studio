@@ -342,14 +342,20 @@ export class HistoryView extends React.Component<{
             isClosable: false
         };
 
-        const sessionsItem = {
-            id: "sessions",
-            type: "component",
-            componentName: "Sessions",
-            componentState: {},
-            title: "Sessions",
-            isClosable: false
-        };
+        const content2 = [calendarItem];
+
+        if (this.props.appStore.history.isSessionsSupported) {
+            const sessionsItem = {
+                id: "sessions",
+                type: "component",
+                componentName: "Sessions",
+                componentState: {},
+                title: "Sessions",
+                isClosable: false
+            };
+
+            content2.push(sessionsItem);
+        }
 
         let content;
         if (searchResultsItem) {
@@ -361,7 +367,7 @@ export class HistoryView extends React.Component<{
                         filtersItem,
                         {
                             type: "stack",
-                            content: [calendarItem, sessionsItem]
+                            content: content2
                         }
                     ]
                 }
@@ -374,7 +380,7 @@ export class HistoryView extends React.Component<{
                         filtersItem,
                         {
                             type: "stack",
-                            content: [calendarItem, sessionsItem]
+                            content: content2
                         }
                     ]
                 }
@@ -401,11 +407,19 @@ export class HistoryView extends React.Component<{
             />
         );
 
+        let layoutId = "layout/2";
+        if (searchResultsItem) {
+            layoutId += "/with-search-results";
+        }
+        if (!this.props.appStore.history.isSessionsSupported) {
+            layoutId += "/without-sessions";
+        }
+
         return (
             <SideDock
                 ref={ref => (this.sideDock = ref)}
                 persistId={this.props.persistId + "/side-dock"}
-                layoutId={"layout/2" + (searchResultsItem ? "/with-search-results" : "")}
+                layoutId={layoutId}
                 defaultLayoutConfig={defaultLayoutConfig}
                 registerComponents={(goldenLayout: any) => {
                     goldenLayout.registerComponent("SearchResults", function(

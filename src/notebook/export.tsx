@@ -1,3 +1,6 @@
+import * as fsModule from "fs";
+import * as pathModule from "path";
+import * as archiverModule from "archiver";
 import * as React from "react";
 import { loadData } from "shared/activity-log";
 import { db } from "shared/db";
@@ -16,8 +19,9 @@ function doExport(items: IActivityLogEntry[], filePath: string, progressToastId:
             )
             .all();
 
-        const fs = EEZStudio.electron.remote.require("fs");
-        const archiver = EEZStudio.electron.remote.require("archiver");
+        const fs = EEZStudio.electron.remote.require("fs") as typeof fsModule;
+        const path = EEZStudio.electron.remote.require("path") as typeof pathModule;
+        const archiver = EEZStudio.electron.remote.require("archiver") as typeof archiverModule;
 
         var output = fs.createWriteStream(filePath);
         var archive = archiver("zip", {
@@ -54,19 +58,17 @@ function doExport(items: IActivityLogEntry[], filePath: string, progressToastId:
             });
         });
 
-        archive.append(
-            JSON.stringify(
-                rows.map(row => ({
-                    id: row.id.toString(),
-                    date: new Date(row.date),
-                    type: row.type,
-                    message: row.message
-                })),
-                undefined,
-                2
-            ),
-            { name: "items.json" }
-        );
+        const notebook = {
+            name: path.basename(filePath, ".eez-notebook"),
+            items: rows.map(row => ({
+                id: row.id.toString(),
+                date: new Date(row.date),
+                type: row.type,
+                message: row.message
+            }))
+        };
+
+        archive.append(JSON.stringify(notebook, undefined, 2), { name: "notebook.json" });
 
         const rowsWithData = rows.filter(row => row.dataLength > 0);
 
@@ -109,17 +111,14 @@ function doExport(items: IActivityLogEntry[], filePath: string, progressToastId:
 }
 
 export function exportActivityLogItems(items: IActivityLogEntry[]) {
-    let filters = [];
-
-    filters.push({ name: "All Files", extensions: ["*"] });
-
-    let options: Electron.SaveDialogOptions = {
-        filters: filters
-    };
-
     EEZStudio.electron.remote.dialog.showSaveDialog(
         EEZStudio.electron.remote.getCurrentWindow(),
-        options,
+        {
+            filters: [
+                { name: "EEZ Notebook files", extensions: ["eez-notebook"] },
+                { name: "All Files", extensions: ["*"] }
+            ]
+        },
         (filePath: any) => {
             if (filePath) {
                 const progressToastId = notification.info("Exporting...", {

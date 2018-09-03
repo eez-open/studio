@@ -3,6 +3,8 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { configure } from "mobx";
 
+import { handleDragAndDrop } from "home/drag-and-drop";
+
 configure({ enforceActions: true });
 
 EEZStudio.electron.ipcRenderer.on("beforeClose", () => {
@@ -24,33 +26,6 @@ EEZStudio.electron.ipcRenderer.on(
         importInstrumentDefinition(filePath);
     }
 );
-
-function handleDragAndDrop() {
-    function removeDragData(ev: DragEvent) {
-        console.log("Removing drag data");
-
-        if (ev.dataTransfer.items) {
-            // Use DataTransferItemList interface to remove the drag data
-            ev.dataTransfer.items.clear();
-        } else {
-            // Use DataTransfer interface to remove the drag data
-            ev.dataTransfer.clearData();
-        }
-    }
-
-    $(document).on("dragover", $ev => {
-        $ev.preventDefault();
-        const ev = $ev.originalEvent as DragEvent;
-        ev.dataTransfer.dropEffect = "copy";
-    });
-
-    $(document).on("drop", $ev => {
-        $ev.preventDefault();
-        const ev = $ev.originalEvent as DragEvent;
-        console.log(ev);
-        removeDragData(ev);
-    });
-}
 
 async function main() {
     const { App } = await import("home/app");

@@ -4,6 +4,8 @@ import { observable } from "mobx";
 import { formatDuration } from "shared/util";
 import { IActivityLogEntry, loadData, logDelete } from "shared/activity-log";
 
+import { IAppStore } from "instrument/window/history/history";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IHistoryItem {
@@ -27,12 +29,14 @@ export class HistoryItem implements IHistoryItem {
     oid: string;
     date: Date;
     type: string;
-    @observable message: string;
+    @observable
+    message: string;
     _data: any;
-    @observable selected: boolean;
+    @observable
+    selected: boolean;
     deleted: boolean;
 
-    constructor(activityLogEntry: IActivityLogEntry) {
+    constructor(activityLogEntry: IActivityLogEntry, public appStore: IAppStore) {
         this.id = activityLogEntry.id;
         this.sid = activityLogEntry.sid;
         this.oid = activityLogEntry.oid;
@@ -58,7 +62,7 @@ export class HistoryItem implements IHistoryItem {
         if (this._data !== undefined) {
             return this._data;
         }
-        this._data = loadData(this.id);
+        this._data = loadData(this.id, this.appStore.history.table);
         return this._data;
     }
 

@@ -49,8 +49,8 @@ export class SessionHistoryItemComponent extends React.Component<
 }
 
 export class SessionHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, private appStore: IAppStore) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
+        super(activityLogEntry, appStore);
     }
 
     get listItemElement(): JSX.Element | null {

@@ -89,8 +89,8 @@ export class NoteHistoryItemComponent extends React.Component<
 }
 
 export class NoteHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, public appStore?: IAppStore) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
+        super(activityLogEntry, appStore);
     }
 
     get info() {

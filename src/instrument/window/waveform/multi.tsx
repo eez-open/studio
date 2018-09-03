@@ -116,8 +116,8 @@ interface ILinkedWaveform {
 }
 
 export class MultiWaveform extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, public appStore: InstrumentAppStore) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry, appStore: InstrumentAppStore) {
+        super(activityLogEntry, appStore);
 
         const message = JSON.parse(this.message);
 

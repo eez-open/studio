@@ -7,6 +7,7 @@ import { IActivityLogEntry } from "shared/activity-log";
 
 import { getConnectionParametersInfo } from "instrument/window/connection";
 
+import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +45,8 @@ export class ConnectedHistoryItemComponent extends React.Component<
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
                     <span>
-                        CONNECTED{this.message.connectionParameters
+                        CONNECTED
+                        {this.message.connectionParameters
                             ? " to " +
                               getConnectionParametersInfo(this.message.connectionParameters)
                             : ""}
@@ -56,8 +58,8 @@ export class ConnectedHistoryItemComponent extends React.Component<
 }
 
 export class ConnectedHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
+        super(activityLogEntry, appStore);
     }
 
     get listItemElement(): JSX.Element | null {

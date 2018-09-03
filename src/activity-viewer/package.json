@@ -1,8 +1,0 @@
-{
-    "name": "eez-studio-activity-viewer",
-    "version": "1.0.0",
-    "author": "Envox",
-    "eez-studio": {
-        "main": "activity-viewer-extension.js"
-    }
-}

@@ -1,0 +1,8 @@
+{
+    "name": "eez-studio-notebook",
+    "version": "1.0.0",
+    "author": "Envox",
+    "eez-studio": {
+        "main": "extension.js"
+    }
+}

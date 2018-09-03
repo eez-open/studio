@@ -126,7 +126,7 @@ class HistoryCalendar {
                         SELECT
                             date(date / 1000, "unixepoch", "localtime") AS date
                         FROM
-                            activityLog
+                            ${this.history.table} AS T1
                         WHERE
                             ${this.history.oidWhereClause} ${this.history.getFilter()}
                     )
@@ -168,9 +168,11 @@ class HistoryCalendar {
                             SELECT
                                 *
                             FROM
-                                activityLog
+                                ${this.history.table} AS T1
                             WHERE
-                            ${this.history.oidWhereClause} AND date >= ? ${this.history.getFilter()}
+                                ${
+                                    this.history.oidWhereClause
+                                } AND date >= ? ${this.history.getFilter()}
                             ORDER BY
                                 date
                         )
@@ -191,7 +193,7 @@ class HistoryCalendar {
                         id,
                         ${activityLogStore.nonTransientAndNonLazyProperties}
                     FROM
-                        activityLog
+                        ${this.history.table} AS T1
                     WHERE
                         ${this.history.oidWhereClause} ${this.history.getFilter()}
                     ORDER BY
@@ -364,7 +366,7 @@ class HistorySearch {
                     id,
                     ${activityLogStore.nonTransientAndNonLazyProperties}
                 FROM
-                    activityLog
+                    ${this.history.table} AS T1
                 WHERE
                     ${this.history.oidWhereClause} AND
                     date > ? AND
@@ -446,9 +448,9 @@ class HistorySearch {
                                 id,
                                 ${activityLogStore.nonTransientAndNonLazyProperties}
                             FROM (
-                                SELECT * FROM activityLog WHERE ${
-                                    this.history.oidWhereClause
-                                } ${this.history.getFilter()} ORDER BY date
+                                SELECT * FROM ${this.history.table} AS T1
+                                WHERE ${this.history.oidWhereClause} ${this.history.getFilter()}
+                                ORDER BY date
                             )
                             WHERE
                                 date >= ?
@@ -462,9 +464,9 @@ class HistorySearch {
                                 id,
                                 ${activityLogStore.nonTransientAndNonLazyProperties}
                             FROM (
-                                SELECT * FROM activityLog WHERE ${
-                                    this.history.oidWhereClause
-                                } ${this.history.getFilter()} ORDER BY date DESC
+                                SELECT * FROM ${this.history.table} AS T1
+                                WHERE ${this.history.oidWhereClause} ${this.history.getFilter()}
+                                ORDER BY date DESC
                             )
                             WHERE
                                 date < ?
@@ -514,7 +516,7 @@ class HistoryNavigator {
                     `SELECT
                         count(*) AS count
                     FROM
-                        activityLog
+                        ${this.history.table} AS T1
                     WHERE
                         ${this.history.oidWhereClause} AND date < ? ${this.history.getFilter()}`
                 )
@@ -533,7 +535,7 @@ class HistoryNavigator {
                     `SELECT
                         count(*) AS count
                     FROM
-                        activityLog
+                        ${this.history.table} AS T1
                     WHERE
                         ${this.history.oidWhereClause} AND date > ? ${this.history.getFilter()}`
                 )
@@ -582,7 +584,7 @@ class HistoryNavigator {
                             SELECT
                                 *
                             FROM
-                                activityLog
+                                ${this.history.table} AS T1
                             WHERE
                                 ${
                                     this.history.oidWhereClause
@@ -617,7 +619,7 @@ class HistoryNavigator {
                             SELECT
                                 *
                             FROM
-                                activityLog
+                                ${this.history.table} AS T1
                             WHERE
                                 ${
                                     this.history.oidWhereClause
@@ -676,7 +678,22 @@ class HistorySelection {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+interface IHistoryOptions {
+    isDeletedItemsHistory: boolean;
+    table: string;
+    isSessionsSupported: boolean;
+}
+
 export class History {
+    options: IHistoryOptions = Object.assign(
+        {
+            isDeletedItemsHistory: false,
+            table: "activityLog",
+            isSessionsSupported: true
+        },
+        this.optionsArg
+    );
+
     map = new Map<string, IHistoryItem>();
     @observable
     blocks: IHistoryItem[][] = [];
@@ -692,14 +709,18 @@ export class History {
     reactionTimeout: any;
     reactionDisposer: any;
 
-    constructor(public appStore: IAppStore, public isDeletedItemsHistory: boolean = false) {
-        if (!isDeletedItemsHistory) {
+    get isSessionsSupported() {
+        return !this.isDeletedItemsHistory && this.options.isSessionsSupported;
+    }
+
+    constructor(public appStore: IAppStore, private optionsArg?: Partial<IHistoryOptions>) {
+        if (this.isSessionsSupported) {
             this.sessions = new HistorySessions(this);
         }
 
         scheduleTask(
             "Watch activity log",
-            isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
+            this.isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
             () => {
                 let activityLogFilterSpecification: IActivityLogFilterSpecification;
 
@@ -770,7 +791,7 @@ export class History {
 
         scheduleTask(
             "Show most recent log items",
-            isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
+            this.isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
             action(() => {
                 this.calendar.update();
             })
@@ -778,13 +799,13 @@ export class History {
 
         scheduleTask(
             "Load calendar",
-            isDeletedItemsHistory ? Priority.Lowest : Priority.Low,
+            this.isDeletedItemsHistory ? Priority.Lowest : Priority.Low,
             action(() => {
                 this.calendar.load();
             })
         );
 
-        if (!isDeletedItemsHistory) {
+        if (this.isSessionsSupported) {
             scheduleTask(
                 "Load sessions",
                 Priority.Low,
@@ -808,6 +829,14 @@ export class History {
                 }, 10);
             }
         );
+    }
+
+    get isDeletedItemsHistory() {
+        return this.options.isDeletedItemsHistory;
+    }
+
+    get table() {
+        return this.options.table;
     }
 
     get isInstrumentHistory() {
@@ -841,10 +870,10 @@ export class History {
             (
                 json_extract(message, '$.sessionCloseId') IS NULL OR
                 EXISTS(
-                    SELECT * FROM activityLog AS activityLog2
+                    SELECT * FROM ${this.table} AS T2
                     WHERE
-                        activityLog2.${this.oidCond} AND
-                        activityLog2.sid = activityLog.id
+                        T2.${this.oidCond} AND
+                        T2.sid = T1.id
                 )
             )
         )`;
@@ -858,10 +887,10 @@ export class History {
         return `(
             type='activity-log/session-close' AND
             EXISTS(
-                SELECT * FROM activityLog AS activityLog2
+                SELECT * FROM ${this.table} AS T2
                 WHERE
-                    activityLog2.${this.oidCond} AND
-                    activityLog2.sid = activityLog.sid
+                    T2.${this.oidCond} AND
+                    T2.sid = T1.sid
             )
         )`;
     }
@@ -1213,8 +1242,13 @@ export class DeletedItemsHistory extends History {
     @observable
     deletedCount: number = 0;
 
-    constructor(public appStore: IAppStore) {
-        super(appStore, true);
+    constructor(public appStore: IAppStore, options?: Partial<IHistoryOptions>) {
+        super(
+            appStore,
+            Object.assign({}, options, {
+                isDeletedItemsHistory: true
+            })
+        );
 
         scheduleTask("Get deleted history items count", Priority.Lowest, this.refreshDeletedCount);
     }
@@ -1226,7 +1260,7 @@ export class DeletedItemsHistory extends History {
                 `SELECT
                     count(*) AS count
                 FROM
-                    activityLog
+                    ${this.table} AS T1
                 WHERE
                     ${this.oidWhereClause} AND deleted`
             )
@@ -1333,7 +1367,7 @@ export class DeletedItemsHistory extends History {
             "This will permanently delete all history items from trash.",
             () => {
                 db.prepare(
-                    `DELETE FROM activityLog WHERE ${this.oidWhereClause} AND deleted`
+                    `DELETE FROM ${this.table} AS T1 WHERE ${this.oidWhereClause} AND deleted`
                 ).run();
 
                 this.selection.selectItems([]);

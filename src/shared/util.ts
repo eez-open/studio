@@ -502,13 +502,13 @@ export async function getTempFilePath(options?: any) {
 }
 
 export async function getTempDirPath(options?: any) {
-    return new Promise<string>((resolve, reject) => {
+    return new Promise<[string, () => void]>((resolve, reject) => {
         const tmp = require("tmp");
-        tmp.dir(options, function(err: any, path: string) {
+        tmp.dir(options, function(err: any, path: string, cleanupCallback: () => void) {
             if (err) {
                 reject(err);
             } else {
-                resolve(path);
+                resolve([path, cleanupCallback] as [string, () => void]);
             }
         });
     });

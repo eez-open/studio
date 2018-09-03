@@ -102,7 +102,7 @@ class PdfPreview extends React.Component<{
 
     componentDidMount() {
         (async () => {
-            const tempDirPath = await getPdfTempDirPathPromise;
+            const [tempDirPath] = await getPdfTempDirPathPromise;
             const tempFilePath = tempDirPath + "/" + this.props.fileName;
             let exists = await fileExists(tempFilePath);
             if (!exists) {
@@ -423,8 +423,8 @@ export class FileHistoryItemComponent extends React.Component<
 }
 
 export class FileHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, public appStore?: IAppStore) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
+        super(activityLogEntry, appStore);
     }
 
     get info() {

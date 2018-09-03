@@ -118,8 +118,8 @@ export class ListHistoryItemComponent extends React.Component<
 export class ListHistoryItem extends HistoryItem {
     instrument: InstrumentObject | undefined;
 
-    constructor(activityLogEntry: IActivityLogEntry, public appStore: IAppStore) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
+        super(activityLogEntry, appStore);
 
         this.instrument = instruments.get(activityLogEntry.oid);
     }

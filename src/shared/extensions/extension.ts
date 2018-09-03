@@ -120,6 +120,8 @@ export interface IExtensionDefinition {
     activityLogTools?: IActivityLogTool[];
 
     measurementFunctions?: IMeasurementFunction[];
+
+    handleDragAndDropFile?(filePath: string): Promise<boolean>;
 }
 
 export type IExtension = IExtensionDescription & IExtensionDefinition;

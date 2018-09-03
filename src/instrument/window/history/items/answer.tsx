@@ -5,6 +5,7 @@ import { observer } from "mobx-react";
 import { formatDateTimeLong } from "shared/util";
 import { IActivityLogEntry } from "shared/activity-log";
 
+import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -16,7 +17,8 @@ export class AnswerHistoryItemComponent extends React.Component<
     },
     {}
 > {
-    @observable showAll: boolean = false;
+    @observable
+    showAll: boolean = false;
 
     render() {
         let message = this.props.historyItem.message.trim();
@@ -61,8 +63,8 @@ export class AnswerHistoryItemComponent extends React.Component<
 }
 
 export class AnswerHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
+        super(activityLogEntry, appStore);
     }
 
     get listItemElement(): JSX.Element | null {

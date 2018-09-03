@@ -403,9 +403,9 @@ export function logUndelete(
     activityLogStore.undeleteObject(activityLogEntry, options);
 }
 
-export function loadData(id: string) {
+export function loadData(id: string, table: string = "activityLog") {
     try {
-        let result = db.prepare(`SELECT data FROM activityLog WHERE id = ?`).get(id);
+        let result = db.prepare(`SELECT data FROM ${table} WHERE id = ?`).get(id);
         return result && result.data;
     } catch (err) {
         console.error(err);

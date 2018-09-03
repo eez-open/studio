@@ -7,6 +7,7 @@ import { IActivityLogEntry } from "shared/activity-log";
 
 import { getConnectionParametersInfo } from "instrument/window/connection";
 
+import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,7 +43,8 @@ export class ConnectFailedHistoryItemComponent extends React.Component<
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
                     <span className="text-danger">
-                        CONNECT{this.message.connectionParameters
+                        CONNECT
+                        {this.message.connectionParameters
                             ? " to " +
                               getConnectionParametersInfo(this.message.connectionParameters)
                             : " "}{" "}
@@ -56,8 +58,8 @@ export class ConnectFailedHistoryItemComponent extends React.Component<
 }
 
 export class ConnectFailedHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
+    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
+        super(activityLogEntry, appStore);
     }
 
     get listItemElement(): JSX.Element | null {

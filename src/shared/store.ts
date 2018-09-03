@@ -744,9 +744,11 @@ interface ITransaction {
 }
 
 class UndoManager {
-    @observable.shallow undoStack: ITransaction[] = [];
+    @observable.shallow
+    undoStack: ITransaction[] = [];
 
-    @observable.shallow redoStack: ITransaction[] = [];
+    @observable.shallow
+    redoStack: ITransaction[] = [];
 
     currentTransaction: ITransaction | undefined;
     pendingTransactions: (() => void)[] = [];

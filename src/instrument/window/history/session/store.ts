@@ -54,10 +54,13 @@ export class HistorySessions {
         });
     }
 
-    @observable sessions: ISession[] = [];
-    @observable selectedSession: ISession | undefined;
+    @observable
+    sessions: ISession[] = [];
+    @observable
+    selectedSession: ISession | undefined;
 
-    @observable activeSession: SessionHistoryItem | undefined;
+    @observable
+    activeSession: SessionHistoryItem | undefined;
 
     @action
     load() {
@@ -67,16 +70,14 @@ export class HistorySessions {
                     id,
                     ${activityLogStore.nonTransientAndNonLazyProperties}
                 FROM
-                    activityLog AS activityLogX
+                    ${this.history.table} AS T3
                 WHERE
                     type = "activity-log/session-start" AND
                     (
                         json_extract(message, "$.sessionCloseId") IS NULL OR
                         EXISTS(
-                            SELECT * FROM activityLog
-                            WHERE ${
-                                this.history.oidWhereClause
-                            } AND activityLog.sid = activityLogX.id
+                            SELECT * FROM ${this.history.table} AS T1
+                            WHERE ${this.history.oidWhereClause} AND T1.sid = T3.id
                         )
                     )
                 ORDER BY
@@ -112,7 +113,7 @@ export class HistorySessions {
                             SELECT
                                 *
                             FROM
-                                activityLog
+                                ${this.history.table} as T1
                             WHERE
                                 ${
                                     this.history.oidWhereClause

@@ -46,12 +46,6 @@ class MasterView extends React.Component<
     },
     {}
 > {
-    constructor(props: any) {
-        super(props);
-
-        this.removeList = this.removeList.bind(this);
-    }
-
     @computed
     get sortedLists() {
         return Array.from(this.props.appStore.instrumentLists.values())
@@ -64,6 +58,7 @@ class MasterView extends React.Component<
             }));
     }
 
+    @bind
     addList() {
         showGenericDialog({
             dialogDefinition: {
@@ -143,6 +138,7 @@ class MasterView extends React.Component<
             .catch(() => {});
     }
 
+    @bind
     removeList() {
         confirm("Are you sure?", undefined, () => {
             beginTransaction("Remove instrument list");
@@ -242,7 +238,8 @@ export class SelectChannelDialog extends React.Component<
     },
     {}
 > {
-    @observable channelIndex: number = 0;
+    @observable
+    channelIndex: number = 0;
 
     @bind
     handleSubmit() {
