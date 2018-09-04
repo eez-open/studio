@@ -16,6 +16,7 @@ import * as notification from "shared/ui/notification";
 
 export interface IRootNavigationItem extends INavigationItem {
     renderContent: () => JSX.Element;
+    selectItem?: (itemId: string) => void;
 }
 
 @observer

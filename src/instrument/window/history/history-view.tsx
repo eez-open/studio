@@ -153,20 +153,32 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
                             selection: appStore.history.selection.items
                         };
 
-                        if (activityLogTool.isEnabled(controller)) {
-                            tools.push(
-                                <IconAction
-                                    key={activityLogTool.id}
-                                    icon={activityLogTool.icon}
-                                    title={activityLogTool.title}
-                                    style={
-                                        numToolsBefore === tools.length
-                                            ? { marginLeft: 10 }
-                                            : undefined
-                                    }
-                                    onClick={() => activityLogTool.handler(controller)}
-                                />
-                            );
+                        let tool;
+
+                        if (typeof activityLogTool === "function") {
+                            tool = activityLogTool(controller);
+                        } else {
+                            if (activityLogTool.isEnabled(controller)) {
+                                tool = (
+                                    <IconAction
+                                        key={activityLogTool.id}
+                                        icon={activityLogTool.icon}
+                                        title={activityLogTool.title}
+                                        onClick={() => activityLogTool.handler(controller)}
+                                    />
+                                );
+                            }
+                        }
+                        if (tool) {
+                            if (numToolsBefore === tools.length) {
+                                tools.push(
+                                    <div
+                                        key={`separator_${numToolsBefore}`}
+                                        style={{ width: 10 }}
+                                    />
+                                );
+                            }
+                            tools.push(tool);
                         }
                     });
                 }

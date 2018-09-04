@@ -1,6 +1,6 @@
 import * as React from "react";
-import * as classNames from "classnames";
 import { observer } from "mobx-react";
+import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import { Icon } from "shared/ui/icon";
@@ -69,19 +69,22 @@ export class IconAction extends React.Component<
         onClick?: (event: any) => void;
         selected?: boolean;
         enabled?: boolean;
+        className?: string;
         style?: React.CSSProperties;
         color?: string;
     },
     {}
 > {
     render() {
+        let className = classNames("EezStudio_IconAction", this.props.className);
+
         let style;
         if (this.props.color) {
             style = { color: this.props.color };
         }
 
         return (
-            <Action className="EezStudio_IconAction" {...this.props}>
+            <Action className={className} {...this.props}>
                 <Icon icon={this.props.icon} size={this.props.iconSize} style={style} />
             </Action>
         );

@@ -1,6 +1,8 @@
 import * as React from "react";
 import { observable, computed, action, runInAction, autorun } from "mobx";
 
+import { onSimpleMessage } from "shared/util";
+
 import { extensions } from "shared/extensions/extensions";
 
 import { IRootNavigationItem } from "shared/ui/app";
@@ -109,6 +111,10 @@ export class NavigationStore {
                 this.navigateToHistory();
             }
         });
+
+        onSimpleMessage("home/show-section", (args: { sectionId: string; itemId?: string }) => {
+            navigationStore.navigateToSection(args.sectionId, args.itemId);
+        });
     }
 
     @computed
@@ -144,7 +150,8 @@ export class NavigationStore {
                         id: homeSection.id,
                         icon: homeSection.icon,
                         title: homeSection.title,
-                        renderContent: homeSection.render
+                        renderContent: homeSection.renderContent,
+                        selectItem: homeSection.selectItem
                     });
                 });
             }
@@ -202,6 +209,20 @@ export class NavigationStore {
         this.navigateToHomeTab();
         this.mainNavigationSelectedItem = this.historyNavigationItem;
         showSessionsList(this);
+    }
+
+    navigateToSection(sectionId: string, itemId?: string) {
+        const section = this.navigationItems.find(
+            navigationItem => navigationItem.id === sectionId
+        );
+
+        if (section) {
+            this.navigateToHomeTab();
+            this.mainNavigationSelectedItem = section;
+            if (itemId && section.selectItem) {
+                section.selectItem(itemId);
+            }
+        }
     }
 
     // @TODO remove this, not requred in home

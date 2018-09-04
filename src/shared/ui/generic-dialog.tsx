@@ -19,12 +19,17 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+interface EnumItem {
+    id: string;
+    label: string;
+}
+
 export interface FieldProperties {
     name: string;
     displayName?: string;
     type?: "integer" | "number" | "string" | "boolean" | "enum" | typeof FieldComponent;
     unit?: keyof typeof UNITS;
-    enumItems?: string[];
+    enumItems?: (string | EnumItem)[];
     visible?: (values: any) => boolean;
     options?: any;
     validators?: Rule[];
@@ -247,8 +252,15 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             } else if (fieldProperties.type === "enum") {
                                 FieldComponent = SelectProperty;
                                 children = fieldProperties.enumItems!.map(enumItem => (
-                                    <option key={enumItem} value={enumItem}>
-                                        {humanize(enumItem)}
+                                    <option
+                                        key={typeof enumItem === "string" ? enumItem : enumItem.id}
+                                        value={
+                                            typeof enumItem === "string" ? enumItem : enumItem.id
+                                        }
+                                    >
+                                        {typeof enumItem === "string"
+                                            ? humanize(enumItem)
+                                            : enumItem.label}
                                     </option>
                                 ));
                             } else if (fieldProperties.type === "boolean") {

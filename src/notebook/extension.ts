@@ -16,27 +16,21 @@ const notebookExtension: IExtensionDefinition = {
             id: "notebooks",
             title: "Notebooks",
             icon: "material:library_books",
-            render: () => {
-                const {
-                    renderNotebooksHomeSection
-                } = require("notebook/section") as typeof SectionModule;
-                return renderNotebooksHomeSection();
+            renderContent: () => {
+                const { renderContent } = require("notebook/section") as typeof SectionModule;
+                return renderContent();
+            },
+            selectItem: (itemId: string) => {
+                const { selectItem } = require("notebook/section") as typeof SectionModule;
+                return selectItem(itemId);
             }
         }
     ],
 
     activityLogTools: [
-        {
-            id: "activity-viewer/export",
-            title: "Export selected history items as notebook",
-            icon: "material:library_add",
-            isEnabled: (controller: IActivityLogController) => controller.selection.length > 0,
-            handler: (controller: IActivityLogController) => {
-                const {
-                    exportActivityLogItems
-                } = require("notebook/export") as typeof ExportModule;
-                exportActivityLogItems(controller.selection);
-            }
+        (controller: IActivityLogController) => {
+            const { exportTool } = require("notebook/export") as typeof ExportModule;
+            return exportTool(controller);
         }
     ],
 

@@ -44,14 +44,15 @@ export interface IHomeSection {
     name?: string;
     title: string;
     icon: string;
-    render: () => JSX.Element;
+    renderContent: () => JSX.Element;
+    selectItem?: (itemId: string) => void;
 }
 
 export interface IActivityLogController {
     selection: IActivityLogEntry[];
 }
 
-export interface IActivityLogTool {
+interface IActivityLogTool1 {
     id: string;
     name?: string;
     title: string;
@@ -59,6 +60,10 @@ export interface IActivityLogTool {
     isEnabled: (controller: IActivityLogController) => boolean;
     handler: (controller: IActivityLogController) => void;
 }
+
+type IActivityLogTool2 = (controller: IActivityLogController) => JSX.Element | null;
+
+type IActivityLogTool = IActivityLogTool1 | IActivityLogTool2;
 
 export interface IMeasurementFunction {
     id: string;

@@ -75,7 +75,7 @@ export const validators = {
         };
     },
 
-    unique: (origObject: any, collection: any) => {
+    unique: (origObject: any, collection: any, message?: string) => {
         return function(object: any, ruleName: string) {
             const value = object[ruleName];
             if (
@@ -83,7 +83,7 @@ export const validators = {
                     (element: any) => element !== origObject && element[ruleName] === value
                 )
             ) {
-                return VALIDATION_MESSAGE_NOT_UNIQUE;
+                return message || VALIDATION_MESSAGE_NOT_UNIQUE;
             }
             return null;
         };

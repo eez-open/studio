@@ -832,3 +832,31 @@ export function compareVersions(v1: string, v2: string) {
 
     return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function sendSimpleMessage(message: string, args: any) {
+    EEZStudio.electron.remote.BrowserWindow.getAllWindows().forEach(window => {
+        window.webContents.send("shared/simple-message", {
+            message,
+            args
+        });
+    });
+}
+
+export function onSimpleMessage(message: string, callback: (args: any) => void) {
+    EEZStudio.electron.ipcRenderer.on(
+        "shared/simple-message",
+        (
+            event: any,
+            args: {
+                message: string;
+                args: any;
+            }
+        ) => {
+            if (args.message === message) {
+                callback(args.args);
+            }
+        }
+    );
+}
