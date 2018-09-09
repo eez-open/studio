@@ -1,5 +1,6 @@
-import { IToolbarButton, IToolboxGroup } from "shared/ui/designer/designer-interfaces";
+import { IStore } from "shared/store";
 import { IActivityLogEntry } from "shared/activity-log-interfaces";
+import { IToolbarButton, IToolboxGroup } from "shared/ui/designer/designer-interfaces";
 
 import { IShortcut } from "shortcuts/interfaces";
 
@@ -49,6 +50,7 @@ export interface IHomeSection {
 }
 
 export interface IActivityLogController {
+    store: IStore;
     selection: IActivityLogEntry[];
 }
 

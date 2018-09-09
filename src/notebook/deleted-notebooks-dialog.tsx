@@ -3,68 +3,62 @@ import { findDOMNode } from "react-dom";
 import { computed, values } from "mobx";
 import { observer } from "mobx-react";
 
-import { formatDateTimeLong } from "shared/util";
-
-import { createStoreObjectsCollection } from "shared/store";
-
 import { Dialog, showDialog, confirm } from "shared/ui/dialog";
 import { ListContainer, List, IListNode, ListItem } from "shared/ui/list";
 import { ButtonAction } from "shared/ui/action";
 
-import { InstrumentObject, store } from "instrument/instrument-object";
-
-////////////////////////////////////////////////////////////////////////////////
-
-const deletedInstrumentCollection = createStoreObjectsCollection<InstrumentObject>(true);
-store.watch(deletedInstrumentCollection, {
-    deletedOption: "only"
-});
-export const deletedInstruments = deletedInstrumentCollection.objects;
+import { INotebook, notebooksStore, deletedNotebooks, itemsStore } from "notebook/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class DeletedInstrumentsDialog extends React.Component<{}, {}> {
+class DeletedNotebooksDialog extends React.Component {
     element: Element;
 
     renderNode(node: IListNode) {
-        let instrument = node.data as InstrumentObject;
+        let notebook = node.data as INotebook;
         return (
             <ListItem
-                leftIcon={instrument.image}
-                leftIconSize={48}
                 label={
-                    <div>
-                        <div>{instrument.name}</div>
-                        <div>
-                            {"Creation date: " +
-                                (instrument.creationDate
-                                    ? formatDateTimeLong(instrument.creationDate)
-                                    : "unknown")}
-                        </div>
-                        <div style={{ paddingBottom: "5px" }}>
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            marginBottom: "5px"
+                        }}
+                    >
+                        <div>{notebook.name}</div>
+                        <div className="EezStudio_NoWrap">
                             <ButtonAction
                                 className="btn-sm btn-outline-success"
                                 text="Restore"
                                 title="Restore"
                                 onClick={() => {
-                                    instrument.restore();
+                                    notebooksStore.undeleteObject(notebook);
                                 }}
-                                style={{ marginRight: "5px" }}
+                                style={{ marginRight: "5px", display: "inline" }}
                             />
                             <ButtonAction
                                 className="btn-sm btn-outline-danger"
                                 text="Delete Permanently"
-                                title="Delete instrument permanently including all the history"
+                                title="Delete notebook permanently including all the items"
                                 onClick={() => {
                                     confirm(
                                         "Are you sure?",
-                                        "It will also delete all the history.",
+                                        "It will also delete all the items in the notebbok.",
                                         () => {
-                                            instrument.deletePermanently();
+                                            itemsStore.deleteObject(
+                                                { oid: notebook.id },
+                                                { deletePermanently: true }
+                                            );
+                                            notebooksStore.deleteObject(notebook, {
+                                                deletePermanently: true
+                                            });
                                         }
                                     );
                                 }}
+                                style={{ display: "inline" }}
                             />
                         </div>
                     </div>
@@ -74,25 +68,31 @@ class DeletedInstrumentsDialog extends React.Component<{}, {}> {
     }
 
     @computed
-    get deletedInstruments() {
-        return values(deletedInstruments).map(instrument => ({
-            id: instrument.id,
-            data: instrument,
+    get deletedNotebooks() {
+        return values(deletedNotebooks).map(notebook => ({
+            id: notebook.id,
+            data: notebook,
             selected: false
         }));
     }
 
     deleteAllPermanently() {
-        confirm("Are you sure?", "It will also delete all the history.", () => {
-            let deletedInstruments = this.deletedInstruments.slice();
-            for (let i = 0; i < deletedInstruments.length; i++) {
-                deletedInstruments[i].data.deletePermanently();
+        confirm("Are you sure?", "It will also delete all the items.", () => {
+            let deletedNotebooks = this.deletedNotebooks.slice();
+            for (let i = 0; i < deletedNotebooks.length; i++) {
+                itemsStore.deleteObject(
+                    { oid: deletedNotebooks[i].id },
+                    { deletePermanently: true }
+                );
+                notebooksStore.deleteObject(deletedNotebooks[i], {
+                    deletePermanently: true
+                });
             }
         });
     }
 
     componentDidUpdate() {
-        if (this.deletedInstruments.length === 0) {
+        if (this.deletedNotebooks.length === 0) {
             $(this.element).modal("hide");
         }
     }
@@ -117,13 +117,13 @@ class DeletedInstrumentsDialog extends React.Component<{}, {}> {
                 additionalButton={deleteAllPermanentlyButton}
             >
                 <ListContainer tabIndex={0} minHeight={240} maxHeight={400}>
-                    <List nodes={this.deletedInstruments} renderNode={this.renderNode} />
+                    <List nodes={this.deletedNotebooks} renderNode={this.renderNode} />
                 </ListContainer>
             </Dialog>
         );
     }
 }
 
-export function showDeletedInstrumentsDialog() {
-    showDialog(<DeletedInstrumentsDialog />);
+export function showDeletedNotebooksDialog() {
+    showDialog(<DeletedNotebooksDialog />);
 }

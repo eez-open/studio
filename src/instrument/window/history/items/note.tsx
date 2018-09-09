@@ -31,9 +31,10 @@ export class NoteHistoryItemComponent extends React.Component<
         showEditNoteDialog(this.props.historyItem.message, note => {
             beginTransaction("Edit note");
             logUpdate(
+                this.props.historyItem.appStore.history.options.store,
                 {
                     id: this.props.historyItem.id,
-                    oid: this.props.historyItem.appStore!.instrument!.id,
+                    oid: this.props.historyItem.appStore!.history.oid,
                     message: note
                 },
                 {
@@ -48,9 +49,13 @@ export class NoteHistoryItemComponent extends React.Component<
     handleDeleteNote() {
         confirm("Are you sure?", undefined, () => {
             beginTransaction("Delete note");
-            logDelete(this.props.historyItem, {
-                undoable: true
-            });
+            logDelete(
+                this.props.historyItem.appStore.history.options.store,
+                this.props.historyItem,
+                {
+                    undoable: true
+                }
+            );
             commitTransaction();
         });
     }
@@ -67,6 +72,7 @@ export class NoteHistoryItemComponent extends React.Component<
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>
                     </p>
+                    {this.props.historyItem.sourceDescriptionElement}
                     <PropertyList>
                         <StaticRichTextProperty value={this.props.historyItem.message} />
                     </PropertyList>

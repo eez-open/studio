@@ -8,9 +8,9 @@ import { instruments } from "instrument/instrument-object";
 
 configure({ enforceActions: true });
 
-import { loadPreinstalledExtension } from "shared/extensions/extensions";
+import { loadExtensions } from "shared/extensions/extensions";
 
-loadPreinstalledExtension("instrument").then(() => {
+loadExtensions().then(() => {
     const instrumentId = EEZStudio.electron.ipcRenderer.sendSync("getWindowArgs");
 
     const instrument = instruments.get(instrumentId);

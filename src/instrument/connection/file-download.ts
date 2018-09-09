@@ -1,4 +1,4 @@
-import { log, logUpdate, IActivityLogEntry } from "shared/activity-log";
+import { activityLogStore, log, logUpdate, IActivityLogEntry } from "shared/activity-log";
 
 import { FileState } from "instrument/connection/file-state";
 import { FileTransfer } from "instrument/connection/file-transfer";
@@ -28,7 +28,7 @@ export class FileDownload extends FileTransfer {
             this.logEntry.data = new Buffer(this.data, "binary");
         }
 
-        this.logId = log(this.logEntry, {
+        this.logId = log(activityLogStore, this.logEntry, {
             undoable: false
         });
     }
@@ -70,7 +70,7 @@ export class FileDownload extends FileTransfer {
             logEntryChanges.data = this.logEntry.data;
         }
 
-        logUpdate(logEntryChanges, {
+        logUpdate(activityLogStore, logEntryChanges, {
             undoable: false
         });
     }

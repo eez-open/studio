@@ -78,7 +78,7 @@ class Input extends React.Component<
         super(props);
 
         const commandsHistoryJSON = window.localStorage.getItem(
-            `instrument/${this.props.appStore.instrument!.id}/window/terminal/commands-history`
+            `instrument/${this.props.appStore.history.oid}/window/terminal/commands-history`
         );
         if (commandsHistoryJSON) {
             try {
@@ -125,7 +125,7 @@ class Input extends React.Component<
                 this.commandsHistory.splice(0, 1);
             }
             window.localStorage.setItem(
-                `instrument/${this.props.appStore.instrument!.id}/window/terminal/commands-history`,
+                `instrument/${this.props.appStore.history.oid}/window/terminal/commands-history`,
                 JSON.stringify(this.commandsHistory)
             );
 

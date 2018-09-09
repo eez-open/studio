@@ -29,6 +29,7 @@ export class ScriptHistoryItemComponent extends React.Component<
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>
                     </p>
+                    {this.props.historyItem.sourceDescriptionElement}
                     <table className="table">
                         <tbody>
                             <tr>

@@ -52,6 +52,7 @@ export class ConnectFailedHistoryItemComponent extends React.Component<
                         {this.message.error && ": " + this.message.error}
                     </span>
                 </p>
+                {this.props.historyItem.sourceDescriptionElement}
             </div>
         );
     }

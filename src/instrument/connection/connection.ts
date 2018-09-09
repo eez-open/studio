@@ -1,7 +1,7 @@
 import { observable, computed, action, autorun, toJS } from "mobx";
 import { bind } from "bind-decorator";
 
-import { IActivityLogEntry, log } from "shared/activity-log";
+import { IActivityLogEntry, activityLogStore, log } from "shared/activity-log";
 import { registerSource, unregisterSource, sendMessage, watch } from "shared/notify";
 import { isRenderer } from "shared/util";
 
@@ -90,7 +90,8 @@ export interface LongOperation {
 }
 
 export class Connection extends ConnectionBase implements CommunicationInterfaceHost {
-    @observable _state: ConnectionState = ConnectionState.IDLE;
+    @observable
+    _state: ConnectionState = ConnectionState.IDLE;
     get state() {
         return this._state;
     }
@@ -100,7 +101,8 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         })();
     }
 
-    @observable _errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
+    @observable
+    _errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
     get errorCode() {
         return this._errorCode;
     }
@@ -110,7 +112,8 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         })();
     }
 
-    @observable _error: string | undefined;
+    @observable
+    _error: string | undefined;
     get error() {
         return this._error;
     }
@@ -206,6 +209,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         this.state = ConnectionState.CONNECTED;
 
         log(
+            activityLogStore,
             {
                 oid: this.instrument.id,
                 type: "instrument/connected",
@@ -229,6 +233,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     logRequest(data: string) {
         if (this.traceEnabled) {
             log(
+                activityLogStore,
                 {
                     oid: this.instrument.id,
                     type: "instrument/request",
@@ -244,6 +249,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     logAnswer(data: string) {
         if (this.traceEnabled && data.trim().length > 0) {
             log(
+                activityLogStore,
                 {
                     oid: this.instrument.id,
                     type: "instrument/answer",
@@ -473,6 +479,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
             let duration = new Date().getTime() - this.connectedStartTime;
 
             log(
+                activityLogStore,
                 {
                     oid: this.instrument.id,
                     type: "instrument/disconnected",
@@ -488,6 +495,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
             this.wasConnected = false;
         } else {
             log(
+                activityLogStore,
                 {
                     oid: this.instrument.id,
                     type: "instrument/connect-failed",
@@ -524,9 +532,12 @@ export class Connection extends ConnectionBase implements CommunicationInterface
 }
 
 export class IpcConnection extends ConnectionBase {
-    @observable state: ConnectionState = ConnectionState.IDLE;
-    @observable errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
-    @observable error: string | undefined;
+    @observable
+    state: ConnectionState = ConnectionState.IDLE;
+    @observable
+    errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
+    @observable
+    error: string | undefined;
 
     constructor(instrument: InstrumentObject) {
         super(instrument);

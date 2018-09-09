@@ -6,6 +6,8 @@ import { IActivityLogEntry, loadData, logDelete } from "shared/activity-log";
 
 import { IAppStore } from "instrument/window/history/history";
 
+import { itemsStore, getSource } from "notebook/store";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IHistoryItem {
@@ -53,7 +55,7 @@ export class HistoryItem implements IHistoryItem {
     }
 
     deleteLog() {
-        logDelete(this, {
+        logDelete(this.appStore.history.options.store, this, {
             undoable: false
         });
     }
@@ -62,7 +64,7 @@ export class HistoryItem implements IHistoryItem {
         if (this._data !== undefined) {
             return this._data;
         }
-        this._data = loadData(this.id, this.appStore.history.table);
+        this._data = loadData(this.appStore.history.options.store, this.id);
         return this._data;
     }
 
@@ -94,6 +96,23 @@ export class HistoryItem implements IHistoryItem {
     }
 
     get listItemElement(): JSX.Element | null {
+        return null;
+    }
+
+    get sourceDescriptionElement() {
+        if (this.appStore.history.options.store === itemsStore && this.sid) {
+            const source = getSource(this.sid);
+            if (source) {
+                const prefix = source.type === "external" ? "EXTERNAL - " : "";
+                return (
+                    <p>
+                        <small className="EezStudio_HistoryItemDate text-muted">
+                            {`Source: ${prefix}${source.description}`}
+                        </small>
+                    </p>
+                );
+            }
+        }
         return null;
     }
 }

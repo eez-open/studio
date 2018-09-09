@@ -35,6 +35,7 @@ export class CreatedHistoryItemComponent extends React.Component<
                     </small>
                     <span>Instrument {this.type}!</span>
                 </p>
+                {this.props.historyItem.sourceDescriptionElement}
             </div>
         );
     }

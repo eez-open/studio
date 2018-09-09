@@ -413,7 +413,7 @@ export class FileHistoryItemComponent extends React.Component<
                                 {formatDateTimeLong(this.props.historyItem.date)}
                             </small>
                         </p>
-
+                        {this.props.historyItem.sourceDescriptionElement}
                         {body}
                     </div>
                 </div>
@@ -460,6 +460,10 @@ export class FileHistoryItem extends HistoryItem {
 
     @computed
     get previewElement(): JSX.Element | null {
+        if (!this.data) {
+            return null;
+        }
+
         if (this.isImage) {
             let imageData =
                 "data:image/" +
@@ -511,9 +515,10 @@ export class FileHistoryItem extends HistoryItem {
         fileState.note = value;
 
         logUpdate(
+            this.appStore.history.options.store,
             {
                 id: this.id,
-                oid: this.appStore!.instrument!.id,
+                oid: this.appStore!.history.oid,
                 message: JSON.stringify(fileState)
             },
             {

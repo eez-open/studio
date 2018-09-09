@@ -74,7 +74,7 @@ export class ShortcutsStore {
             }
         } else {
             shortcut = Object.assign({}, shortcut, {
-                groupName: SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX + this.appStore.instrument!.id
+                groupName: SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX + this.appStore.history.oid
             });
         }
         let id = addShortcut(shortcut);

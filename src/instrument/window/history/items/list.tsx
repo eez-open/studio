@@ -84,6 +84,7 @@ export class ListHistoryItemComponent extends React.Component<
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>
                     </p>
+                    {this.props.historyItem.sourceDescriptionElement}
                     <div>
                         {this.message.operation === "get"
                             ? `Instrument list saved as "${this.message.listName}"`

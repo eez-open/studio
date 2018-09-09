@@ -11,6 +11,7 @@ import {
     logUndelete
 } from "shared/activity-log";
 import {
+    IStore,
     StoreOperation,
     IStoreOperationOptions,
     beginTransaction,
@@ -162,7 +163,7 @@ class HistoryCalendar {
                 .prepare(
                     `SELECT
                         id,
-                        ${activityLogStore.nonTransientAndNonLazyProperties}
+                        ${this.history.options.store.nonTransientAndNonLazyProperties}
                     FROM
                         (
                             SELECT
@@ -191,7 +192,7 @@ class HistoryCalendar {
                 .prepare(
                     `SELECT
                         id,
-                        ${activityLogStore.nonTransientAndNonLazyProperties}
+                        ${this.history.options.store.nonTransientAndNonLazyProperties}
                     FROM
                         ${this.history.table} AS T1
                     WHERE
@@ -364,7 +365,7 @@ class HistorySearch {
             .prepare(
                 `SELECT
                     id,
-                    ${activityLogStore.nonTransientAndNonLazyProperties}
+                    ${this.history.options.store.nonTransientAndNonLazyProperties}
                 FROM
                     ${this.history.table} AS T1
                 WHERE
@@ -384,7 +385,7 @@ class HistorySearch {
 
         runInAction(() => {
             rows.forEach(row => {
-                const activityLogEntry = activityLogStore.dbRowToObject(row);
+                const activityLogEntry = this.history.options.store.dbRowToObject(row);
                 this.searchResults.push(new SearchResult(activityLogEntry));
                 if (activityLogEntry.date > this.searchLastLogDate) {
                     this.searchLastLogDate = activityLogEntry.date;
@@ -446,7 +447,7 @@ class HistorySearch {
                         SELECT * FROM (
                             SELECT
                                 id,
-                                ${activityLogStore.nonTransientAndNonLazyProperties}
+                                ${this.history.options.store.nonTransientAndNonLazyProperties}
                             FROM (
                                 SELECT * FROM ${this.history.table} AS T1
                                 WHERE ${this.history.oidWhereClause} ${this.history.getFilter()}
@@ -462,7 +463,7 @@ class HistorySearch {
                         SELECT * FROM (
                             SELECT
                                 id,
-                                ${activityLogStore.nonTransientAndNonLazyProperties}
+                                ${this.history.options.store.nonTransientAndNonLazyProperties}
                             FROM (
                                 SELECT * FROM ${this.history.table} AS T1
                                 WHERE ${this.history.oidWhereClause} ${this.history.getFilter()}
@@ -578,7 +579,7 @@ class HistoryNavigator {
                 .prepare(
                     `SELECT
                         id,
-                        ${activityLogStore.nonTransientAndNonLazyProperties}
+                        ${this.history.options.store.nonTransientAndNonLazyProperties}
                     FROM
                         (
                             SELECT
@@ -613,7 +614,7 @@ class HistoryNavigator {
                 .prepare(
                     `SELECT
                         id,
-                        ${activityLogStore.nonTransientAndNonLazyProperties}
+                        ${this.history.options.store.nonTransientAndNonLazyProperties}
                     FROM
                         (
                             SELECT
@@ -680,15 +681,16 @@ class HistorySelection {
 
 interface IHistoryOptions {
     isDeletedItemsHistory: boolean;
-    table: string;
+    store: IStore;
     isSessionsSupported: boolean;
+    oid?: string;
 }
 
 export class History {
     options: IHistoryOptions = Object.assign(
         {
             isDeletedItemsHistory: false,
-            table: "activityLog",
+            store: activityLogStore,
             isSessionsSupported: true
         },
         this.optionsArg
@@ -732,14 +734,14 @@ export class History {
                 } else {
                     activityLogFilterSpecification = {
                         skipInitialQuery: true,
-                        oid: appStore.instrument!.id
+                        oid: appStore.history.oid
                     };
                 }
 
                 let objectsToDelete: any = [];
                 let deleteTimeout: any;
 
-                activityLogStore.watch(
+                this.options.store.watch(
                     {
                         createObject: (
                             object: any,
@@ -836,7 +838,7 @@ export class History {
     }
 
     get table() {
-        return this.options.table;
+        return '"' + this.options.store.storeName + '"';
     }
 
     get isInstrumentHistory() {
@@ -844,7 +846,7 @@ export class History {
     }
 
     get oid() {
-        return this.appStore.instrument!.id;
+        return this.options.oid || this.appStore.instrument!.id;
     }
 
     get oidCond() {
@@ -923,7 +925,7 @@ export class History {
             return historyItem;
         }
 
-        const activityLogEntry = activityLogStore.findById(id);
+        const activityLogEntry = this.options.store.findById(id);
         if (activityLogEntry) {
             const historyItem = createHistoryItem(activityLogEntry, this.appStore);
             this.map.set(historyItem.id, historyItem);
@@ -1045,7 +1047,7 @@ export class History {
         rows.forEach(row => {
             let historyItem = this.map.get(row.id.toString());
             if (!historyItem) {
-                const activityLogEntry = activityLogStore.dbRowToObject(row);
+                const activityLogEntry = this.options.store.dbRowToObject(row);
                 historyItem = createHistoryItem(activityLogEntry, this.appStore);
                 this.map.set(historyItem.id, historyItem);
             }
@@ -1073,7 +1075,7 @@ export class History {
                         `SELECT
                             count(*) AS count
                         FROM
-                            activityLog
+                            ${this.table}
                         WHERE
                             oid = ${this.oid} AND sid=${activityLogEntry.sid}`
                     )
@@ -1175,6 +1177,7 @@ export class History {
 
             this.selection.items.forEach(historyItem =>
                 logDelete(
+                    this.options.store,
                     {
                         oid: historyItem.oid,
                         id: historyItem.id
@@ -1300,7 +1303,7 @@ export class DeletedItemsHistory extends History {
             this.deletedCount--;
         } else {
             // we need all properties here since only id is guaranteed from store notification when deleting object
-            activityLogEntry = activityLogStore.findById(activityLogEntry.id);
+            activityLogEntry = this.options.store.findById(activityLogEntry.id);
             if (activityLogEntry) {
                 this.addActivityLogEntryToBlocks(activityLogEntry);
                 this.deletedCount++;
@@ -1315,8 +1318,9 @@ export class DeletedItemsHistory extends History {
 
             this.selection.items.forEach(historyItem =>
                 logUndelete(
+                    this.options.store,
                     {
-                        oid: this.appStore.instrument!.id,
+                        oid: this.appStore.history.oid,
                         id: historyItem.id
                     },
                     {
@@ -1341,6 +1345,7 @@ export class DeletedItemsHistory extends History {
 
                     this.selection.items.forEach(historyItem =>
                         logDelete(
+                            this.options.store,
                             {
                                 oid: historyItem.oid,
                                 id: historyItem.id

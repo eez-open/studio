@@ -1,7 +1,7 @@
 import { autorun } from "mobx";
 
 import { isRenderer, roundNumber } from "shared/util";
-import { IActivityLogEntry, log } from "shared/activity-log";
+import { activityLogStore, IActivityLogEntry, log } from "shared/activity-log";
 
 import { Connection, connections } from "instrument/connection/connection";
 
@@ -54,7 +54,7 @@ abstract class ListOperation {
             };
 
             if (!this.connection.callbackWindowId) {
-                this.logId = log(logEntry, {
+                this.logId = log(activityLogStore, logEntry, {
                     undoable: false
                 });
 
@@ -191,7 +191,7 @@ export class GetListOperation extends ListOperation {
             };
 
             if (!this.connection.callbackWindowId) {
-                let logId = log(logEntry, {
+                let logId = log(activityLogStore, logEntry, {
                     undoable: false
                 });
 
@@ -279,7 +279,7 @@ export class SendListOperation extends ListOperation {
         };
 
         if (!this.connection.callbackWindowId) {
-            log(logEntry, {
+            log(activityLogStore, logEntry, {
                 undoable: false
             });
 

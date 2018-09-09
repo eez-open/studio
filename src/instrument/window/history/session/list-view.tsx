@@ -72,9 +72,10 @@ export class SessionListItem extends React.Component<
 
             beginTransaction("Edit session name");
             logUpdate(
+                this.props.appStore.history.options.store,
                 {
                     id: this.props.session.id,
-                    oid: this.props.appStore.instrument!.id,
+                    oid: this.props.appStore.history.oid,
                     message: JSON.stringify(message)
                 },
                 {
@@ -91,6 +92,7 @@ export class SessionListItem extends React.Component<
             beginTransaction("Delete session");
 
             logDelete(
+                this.props.appStore.history.options.store,
                 {
                     id: this.props.session.activityLogEntry.id,
                     oid: "0",
@@ -104,6 +106,7 @@ export class SessionListItem extends React.Component<
             const message = JSON.parse(this.props.session.activityLogEntry.message);
             if (message.sessionCloseId) {
                 logDelete(
+                    this.props.appStore.history.options.store,
                     {
                         id: message.sessionCloseId,
                         oid: "0",
@@ -161,6 +164,7 @@ export class SessionList extends React.Component<{ appStore: IAppStore; history:
         showEditSessionNameDialog("", name => {
             beginTransaction("New session");
             log(
+                this.props.appStore.history.options.store,
                 {
                     oid: "0",
                     type: "activity-log/session-start",

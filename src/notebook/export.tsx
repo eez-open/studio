@@ -4,9 +4,11 @@ import * as archiverModule from "archiver";
 import * as React from "react";
 import { values } from "mobx";
 
-import { db } from "shared/db";
-import { IActivityLogEntry, loadData } from "shared/activity-log";
 import { stringCompare } from "shared/string";
+import { _flatten } from "shared/algorithm";
+import { db } from "shared/db";
+import { IStore } from "shared/store";
+import { IActivityLogEntry, activityLogStore, logGet, loadData } from "shared/activity-log";
 
 import { DropdownIconAction, DropdownItem } from "shared/ui/action";
 import * as notification from "shared/ui/notification";
@@ -16,20 +18,70 @@ import { validators } from "shared/model/validation";
 
 import { IActivityLogController } from "shared/extensions/extension";
 
-import { notebooks, addNotebook } from "notebook/store";
+import { store as instrumentsStore } from "instrument/instrument-object";
+import {
+    getReferencedItemIds,
+    remapReferencedItemIds
+} from "instrument/window/history/item-factory";
+
+import {
+    notebooks,
+    addNotebook,
+    getInstrumentDescription,
+    getSource,
+    insertSource
+} from "notebook/store";
 import { showNotebook } from "notebook/section";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function doExport(items: IActivityLogEntry[], filePath: string, progressToastId: number) {
-    return new Promise((resolve, reject) => {
-        const ids = items.map(item => item.id).join(",");
+function getExternalSourceDescription(store: IStore, item: IActivityLogEntry) {
+    let oid;
 
-        const rows = db
-            .prepare(
-                `SELECT id, date, type, message, length(data) as dataLength FROM activityLog WHERE id IN (${ids})`
-            )
-            .all();
+    if (store === activityLogStore) {
+        oid = item.oid;
+    } else {
+        if (!item.sid) {
+            return "";
+        }
+
+        const source = getSource(item.sid);
+
+        if (!source) {
+            return "";
+        }
+
+        if (source.type === "external") {
+            return source.description;
+        }
+
+        oid = source.oid;
+    }
+
+    try {
+        let result = db
+            .prepare(`SELECT * FROM "${instrumentsStore.storeName}" WHERE id = ?`)
+            .get([oid]);
+
+        if (result) {
+            return getInstrumentDescription(result.instrumentExtensionId, result.label, result.idn);
+        }
+
+        return "";
+    } catch (err) {
+        console.error(err);
+        return "";
+    }
+}
+
+function doExport(
+    store: IStore,
+    items: IActivityLogEntry[],
+    filePath: string,
+    progressToastId: number
+) {
+    return new Promise((resolve, reject) => {
+        const rows = items;
 
         const fs = EEZStudio.electron.remote.require("fs") as typeof fsModule;
         const path = EEZStudio.electron.remote.require("path") as typeof pathModule;
@@ -76,53 +128,43 @@ function doExport(items: IActivityLogEntry[], filePath: string, progressToastId:
                 id: row.id.toString(),
                 date: new Date(row.date),
                 type: row.type,
-                message: row.message
+                message: row.message,
+                source: getExternalSourceDescription(store, row)
             }))
         };
 
         archive.append(JSON.stringify(notebook, undefined, 2), { name: "notebook.json" });
 
-        const rowsWithData = rows.filter(row => row.dataLength > 0);
-
         let index = 0;
 
         function appendData() {
-            if (index === rowsWithData.length) {
+            if (index === rows.length) {
                 archive.finalize();
                 return;
             }
 
             notification.update(progressToastId, {
-                render: `Exporting item ${index + 1} of ${rowsWithData.length} ...`,
+                render: `Exporting item ${index + 1} of ${rows.length} ...`,
                 type: "info"
             });
 
-            const row = rowsWithData[index];
+            const row = rows[index];
 
-            const data = loadData(row.id);
+            let data = loadData(store, row.id);
 
             if (data) {
                 archive.append(data, { name: `${row.id}.data` });
-                ++index;
-                setTimeout(appendData, 10);
-            } else {
-                const error = `Failed to load data for item ${row.id}`;
-                console.error(error);
-                failed = true;
-                archive.abort();
-                notification.update(progressToastId, {
-                    render: error,
-                    type: "error",
-                    autoClose: 5000
-                });
             }
+
+            ++index;
+            setTimeout(appendData, 10);
         }
 
         setTimeout(appendData, 500);
     });
 }
 
-export function exportActivityLogItems(items: IActivityLogEntry[]) {
+export function exportActivityLogItems(store: IStore, items: IActivityLogEntry[]) {
     EEZStudio.electron.remote.dialog.showSaveDialog(
         EEZStudio.electron.remote.getCurrentWindow(),
         {
@@ -137,7 +179,7 @@ export function exportActivityLogItems(items: IActivityLogEntry[]) {
                     autoClose: false
                 });
 
-                doExport(items, filePath, progressToastId)
+                doExport(store, items, filePath, progressToastId)
                     .then(() => {
                         notification.update(progressToastId, {
                             render: (
@@ -165,7 +207,7 @@ export function exportActivityLogItems(items: IActivityLogEntry[]) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-async function addItemsToNotebook(items: IActivityLogEntry[], notebookId: string) {
+async function addItemsToNotebook(store: IStore, items: IActivityLogEntry[], notebookId: string) {
     const progressToastId = notification.info("Exporting items to notebook...", {
         autoClose: false
     });
@@ -173,24 +215,37 @@ async function addItemsToNotebook(items: IActivityLogEntry[], notebookId: string
     db.exec(`BEGIN EXCLUSIVE TRANSACTION`);
 
     try {
-        for (let item of items) {
-            let data: any = null;
+        const oldToNewId = new Map<string, string>();
 
-            data = await new Promise(resolve => {
-                setTimeout(() => resolve(loadData(item.id)), 10);
+        for (let item of items) {
+            let sourceId;
+            if (store === activityLogStore) {
+                sourceId = insertSource("internal", item.oid);
+            } else {
+                sourceId = item.sid;
+            }
+
+            const message = remapReferencedItemIds(item, oldToNewId);
+
+            const data = await new Promise(resolve => {
+                setTimeout(() => resolve(loadData(store, item.id)), 10);
             });
 
-            db.prepare(
-                `INSERT INTO "notebook/items" (date, oid, sid, type, message, data, deleted) VALUES(?, ?, ?, ?, ?, ?, ?)`
-            ).run([
-                new Date(item.date).getTime(),
-                notebookId,
-                null,
-                item.type,
-                item.message,
-                data,
-                0
-            ]);
+            let info = db
+                .prepare(
+                    `INSERT INTO "notebook/items" (date, oid, sid, type, message, data, deleted) VALUES(?, ?, ?, ?, ?, ?, ?)`
+                )
+                .run([
+                    new Date(item.date).getTime(),
+                    notebookId,
+                    sourceId,
+                    item.type,
+                    message,
+                    data,
+                    0
+                ]);
+
+            oldToNewId.set(item.id, info.lastInsertROWID.toString());
         }
 
         db.exec(`COMMIT TRANSACTION`);
@@ -223,7 +278,7 @@ async function addItemsToNotebook(items: IActivityLogEntry[], notebookId: string
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function addToNewNotebook(items: IActivityLogEntry[]) {
+function addToNewNotebook(store: IStore, items: IActivityLogEntry[]) {
     showGenericDialog({
         dialogDefinition: {
             fields: [
@@ -248,14 +303,21 @@ function addToNewNotebook(items: IActivityLogEntry[]) {
     })
         .then(result => {
             const notebookId = addNotebook(result.values);
-            addItemsToNotebook(items, notebookId);
+            addItemsToNotebook(store, items, notebookId);
         })
         .catch(() => {});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function addToExistingNotebook(items: IActivityLogEntry[]) {
+function addToExistingNotebook(store: IStore, items: IActivityLogEntry[]) {
+    const sortedNotebooks = Array.from(notebooks.values())
+        .sort((a, b) => stringCompare(a.name, b.name))
+        .map(notebook => ({
+            id: notebook.id,
+            label: notebook.name
+        }));
+
     showGenericDialog({
         dialogDefinition: {
             fields: [
@@ -263,21 +325,16 @@ function addToExistingNotebook(items: IActivityLogEntry[]) {
                     name: "id",
                     displayName: "Notebook",
                     type: "enum",
-                    enumItems: Array.from(notebooks.values())
-                        .sort((a, b) => stringCompare(a.name, b.name))
-                        .map(notebook => ({
-                            id: notebook.id,
-                            label: notebook.name
-                        }))
+                    enumItems: sortedNotebooks
                 }
             ]
         },
         values: {
-            id: ""
+            id: sortedNotebooks[0].id
         }
     })
         .then(result => {
-            addItemsToNotebook(items, result.values.id);
+            addItemsToNotebook(store, items, result.values.id);
         })
         .catch(() => {});
 }
@@ -285,17 +342,30 @@ function addToExistingNotebook(items: IActivityLogEntry[]) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function exportTool(controller: IActivityLogController) {
+    let items: IActivityLogEntry[] = [];
+
     // check if there is at least 1 item that is not "activity-log/session" item ...
     let i;
     for (i = 0; i < controller.selection.length; ++i) {
         if (!controller.selection[i].type.startsWith("activity-log/session")) {
-            break;
+            items.push(controller.selection[i]);
         }
     }
-    if (i === controller.selection.length) {
+
+    if (items.length === 0) {
         // ... if not then there is nothing to export
         return null;
     }
+
+    const referencedItemIds = _flatten(
+        controller.selection.map(item => getReferencedItemIds(item))
+    );
+
+    const referencedItems = referencedItemIds
+        .map(id => logGet(activityLogStore, id))
+        .filter(item => !!item);
+
+    items = referencedItems.concat(items);
 
     return (
         <DropdownIconAction
@@ -305,16 +375,16 @@ export function exportTool(controller: IActivityLogController) {
         >
             <DropdownItem
                 text="Export as notebook file"
-                onClick={() => exportActivityLogItems(controller.selection)}
+                onClick={() => exportActivityLogItems(controller.store, items)}
             />
             <DropdownItem
                 text="Export to a new notebook"
-                onClick={() => addToNewNotebook(controller.selection)}
+                onClick={() => addToNewNotebook(controller.store, items)}
             />
             {notebooks.size > 0 && (
                 <DropdownItem
                     text="Export to an existing notebook"
-                    onClick={() => addToExistingNotebook(controller.selection)}
+                    onClick={() => addToExistingNotebook(controller.store, items)}
                 />
             )}
         </DropdownIconAction>

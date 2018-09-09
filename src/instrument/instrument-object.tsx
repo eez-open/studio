@@ -10,11 +10,10 @@ import {
 } from "shared/store";
 import { IExtension } from "shared/extensions/extension";
 import { loadExtensionById } from "shared/extensions/extensions";
-import { log, IActivityLogEntry } from "shared/activity-log";
+import { activityLogStore, log, IActivityLogEntry } from "shared/activity-log";
 import { objectEqual, isRenderer } from "shared/util";
 import { IUnit } from "shared/units";
 import { db } from "shared/db";
-import { activityLogStore } from "shared/activity-log";
 import { _defer } from "shared/algorithm";
 
 import * as MainWindowModule from "main/window";
@@ -588,6 +587,7 @@ export class InstrumentObject {
     afterCreate() {
         if (!isRenderer()) {
             log(
+                activityLogStore,
                 {
                     oid: this.id,
                     type: "instrument/created"
@@ -602,6 +602,7 @@ export class InstrumentObject {
     afterRestore() {
         if (!isRenderer()) {
             log(
+                activityLogStore,
                 {
                     oid: this.id,
                     type: "instrument/restored"
@@ -618,6 +619,7 @@ export class InstrumentObject {
             this.connection.destroy();
 
             log(
+                activityLogStore,
                 {
                     oid: this.id,
                     type: "instrument/deleted"

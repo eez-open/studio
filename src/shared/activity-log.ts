@@ -1,6 +1,7 @@
 import { observable, runInAction } from "mobx";
 
 import { db } from "shared/db";
+import { IStore } from "shared/store";
 import { IActivityLogEntry } from "shared/activity-log-interfaces";
 
 import { createStore, types, IFilterSpecification, IStoreOperationOptions } from "shared/store";
@@ -371,41 +372,51 @@ export interface IActivityLogFilterSpecification extends IFilterSpecification {
     types?: string[];
 }
 
-export function log(activityLogEntry: Partial<IActivityLogEntry>, options: IStoreOperationOptions) {
+export function log(
+    store: IStore,
+    activityLogEntry: Partial<IActivityLogEntry>,
+    options: IStoreOperationOptions
+) {
     activityLogEntry.date = new Date();
-    activityLogEntry.sid = activeSession.id;
+
+    if (store === activityLogStore) {
+        activityLogEntry.sid = activeSession.id;
+    }
 
     if (!activityLogEntry.message) {
         activityLogEntry.message = "";
     }
 
-    return activityLogStore.createObject(activityLogEntry, options);
+    return store.createObject(activityLogEntry, options);
 }
 
 export function logUpdate(
+    store: IStore,
     activityLogEntry: Partial<IActivityLogEntry>,
     options: IStoreOperationOptions
 ) {
-    activityLogStore.updateObject(activityLogEntry, options);
+    store.updateObject(activityLogEntry, options);
 }
 
 export function logDelete(
+    store: IStore,
     activityLogEntry: Partial<IActivityLogEntry>,
     options: IStoreOperationOptions
 ) {
-    activityLogStore.deleteObject(activityLogEntry, options);
+    store.deleteObject(activityLogEntry, options);
 }
 
 export function logUndelete(
+    store: IStore,
     activityLogEntry: Partial<IActivityLogEntry>,
     options: IStoreOperationOptions
 ) {
-    activityLogStore.undeleteObject(activityLogEntry, options);
+    store.undeleteObject(activityLogEntry, options);
 }
 
-export function loadData(id: string, table: string = "activityLog") {
+export function loadData(store: IStore, id: string) {
     try {
-        let result = db.prepare(`SELECT data FROM ${table} WHERE id = ?`).get(id);
+        let result = db.prepare(`SELECT data FROM "${store.storeName}" WHERE id = ?`).get(id);
         return result && result.data;
     } catch (err) {
         console.error(err);
@@ -413,8 +424,8 @@ export function loadData(id: string, table: string = "activityLog") {
     return undefined;
 }
 
-export function logGet(id: string) {
-    return activityLogStore.findById(id);
+export function logGet(store: IStore, id: string) {
+    return store.findById(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

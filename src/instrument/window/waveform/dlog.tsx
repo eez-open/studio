@@ -244,6 +244,7 @@ export class DlogWaveform extends FileHistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.viewOptions, viewOptions)) {
                     logUpdate(
+                        this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -273,6 +274,7 @@ export class DlogWaveform extends FileHistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.rulers, rulers)) {
                     logUpdate(
+                        this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -297,6 +299,7 @@ export class DlogWaveform extends FileHistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.measurements, measurements)) {
                     logUpdate(
+                        this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,

@@ -446,7 +446,7 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
 
         let listData, logId: string;
         try {
-            ({ listData, logId } = await getList(this.props.appStore.instrument!.id, channelIndex));
+            ({ listData, logId } = await getList(this.props.appStore.history.oid, channelIndex));
         } catch (err) {
             notification.error(`Failed to get list: ${err.toString()}`);
             return;
@@ -500,13 +500,13 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                 }, 10);
 
                 // set list name in activity log
-                let activityLog = logGet(logId);
+                let activityLog = logGet(this.props.appStore.history.options.store, logId);
 
                 let message = JSON.parse(activityLog.message);
                 message.listName = tableList.name;
                 activityLog.message = JSON.stringify(message);
 
-                logUpdate(activityLog, {
+                logUpdate(this.props.appStore.history.options.store, activityLog, {
                     undoable: false
                 });
             })
@@ -520,7 +520,7 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
             const channel = this.selectedList.tableListData;
             try {
                 await sendList(
-                    this.props.appStore.instrument!.id,
+                    this.props.appStore.history.oid,
                     channelIndex,
                     this.selectedList.name,
                     toJS(channel)

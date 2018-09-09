@@ -11,7 +11,9 @@ import { db } from "shared/db";
 
 import * as notification from "shared/ui/notification";
 
-import { notebooks, addNotebook } from "notebook/store";
+import { remapReferencedItemIds } from "instrument/window/history/item-factory";
+
+import { notebooks, addNotebook, insertSource } from "notebook/store";
 import { showNotebook } from "notebook/section";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,6 +43,7 @@ export async function importNotebook(
             date: string;
             type: string;
             message: string;
+            source: string;
         }[];
     } = await readJsObjectFromFile(tempDir + "/notebook.json");
 
@@ -65,26 +68,34 @@ export async function importNotebook(
         db.exec(`BEGIN EXCLUSIVE TRANSACTION`);
 
         try {
+            const oldToNewId = new Map<string, string>();
+
             for (let item of notebook.items) {
+                const sourceId = insertSource("external", item.source);
+
+                const message = remapReferencedItemIds(item, oldToNewId);
+
                 let data: any = null;
-
                 const dataFilePath = `${tempDir}/${item.id}.data`;
-
                 if (await fileExists(dataFilePath)) {
                     data = await readBinaryFile(dataFilePath);
                 }
 
-                db.prepare(
-                    `INSERT INTO "notebook/items" (date, oid, sid, type, message, data, deleted) VALUES(?, ?, ?, ?, ?, ?, ?)`
-                ).run([
-                    new Date(item.date).getTime(),
-                    notebookId,
-                    null,
-                    item.type,
-                    item.message,
-                    data,
-                    0
-                ]);
+                const info = db
+                    .prepare(
+                        `INSERT INTO "notebook/items" (date, oid, sid, type, message, data, deleted) VALUES(?, ?, ?, ?, ?, ?, ?)`
+                    )
+                    .run([
+                        new Date(item.date).getTime(),
+                        notebookId,
+                        sourceId,
+                        item.type,
+                        message,
+                        data,
+                        0
+                    ]);
+
+                oldToNewId.set(item.id, info.lastInsertROWID.toString());
             }
 
             db.exec(`COMMIT TRANSACTION`);

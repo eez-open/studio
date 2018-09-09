@@ -113,6 +113,7 @@ export class NavigationStore {
         });
 
         onSimpleMessage("home/show-section", (args: { sectionId: string; itemId?: string }) => {
+            EEZStudio.electron.remote.getCurrentWindow().show();
             navigationStore.navigateToSection(args.sectionId, args.itemId);
         });
     }

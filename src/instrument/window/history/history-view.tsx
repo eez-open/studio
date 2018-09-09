@@ -36,8 +36,9 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
         showAddNoteDialog(note => {
             beginTransaction("Add note");
             log(
+                this.props.appStore.history.options.store,
                 {
-                    oid: this.props.appStore.instrument!.id,
+                    oid: this.props.appStore.history.oid,
                     type: "activity-log/note",
                     message: note
                 },
@@ -63,8 +64,9 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
 
                         beginTransaction("Attach file");
                         log(
+                            this.props.appStore.history.options.store,
                             {
-                                oid: this.props.appStore.instrument!.id,
+                                oid: this.props.appStore.history.oid,
                                 type: "instrument/file-attachment",
                                 message: JSON.stringify({
                                     sourceFilePath: filePath,
@@ -103,8 +105,9 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
 
                 beginTransaction("Add chart");
                 log(
+                    this.props.appStore.history.options.store,
                     {
-                        oid: this.props.appStore.instrument!.id,
+                        oid: this.props.appStore.history.oid,
                         type: "instrument/chart",
                         message: JSON.stringify(multiWaveformDefinition)
                     },
@@ -150,6 +153,7 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
                 if (extension.activityLogTools) {
                     extension.activityLogTools.forEach(activityLogTool => {
                         const controller = {
+                            store: appStore.history.options.store,
                             selection: appStore.history.selection.items
                         };
 

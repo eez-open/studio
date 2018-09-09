@@ -1,4 +1,4 @@
-import { log, logUpdate, IActivityLogEntry } from "shared/activity-log";
+import { activityLogStore, log, logUpdate, IActivityLogEntry } from "shared/activity-log";
 import { getFileSizeInBytes, openFile, readFile, closeFile } from "shared/util";
 import { Buffer } from "buffer";
 
@@ -41,7 +41,7 @@ export class FileUpload extends FileTransfer {
             message: this.serializeState()
         };
 
-        this.logId = log(this.logEntry, {
+        this.logId = log(activityLogStore, this.logEntry, {
             undoable: false
         });
 
@@ -253,7 +253,7 @@ export class FileUpload extends FileTransfer {
             logEntryChanges.data = this.logEntry.data;
         }
 
-        logUpdate(logEntryChanges, {
+        logUpdate(activityLogStore, logEntryChanges, {
             undoable: false
         });
     }

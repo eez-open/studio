@@ -313,6 +313,7 @@ export class Waveform extends FileHistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.waveformDefinition, waveformDefinition)) {
                     logUpdate(
+                        this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -337,6 +338,7 @@ export class Waveform extends FileHistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.viewOptions, viewOptions)) {
                     logUpdate(
+                        this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -366,6 +368,7 @@ export class Waveform extends FileHistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.rulers, rulers)) {
                     logUpdate(
+                        this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -390,6 +393,7 @@ export class Waveform extends FileHistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.measurements, measurements)) {
                     logUpdate(
+                        this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -900,6 +904,7 @@ class WaveformConfigurationDialog extends React.Component<
 
             beginTransaction("Edit waveform configuration");
             logUpdate(
+                this.props.waveform.appStore.history.options.store,
                 {
                     id: this.props.waveform.id,
                     oid: this.props.waveform.oid,

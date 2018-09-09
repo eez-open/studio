@@ -186,6 +186,7 @@ export class HistorySessions {
                 if (!this.activeSession) {
                     beginTransaction("New session");
                     log(
+                        activityLogStore,
                         {
                             oid: "0",
                             type: "activity-log/session-start",
@@ -211,6 +212,7 @@ export class HistorySessions {
             beginTransaction("Close session");
 
             const sessionCloseId = log(
+                activityLogStore,
                 {
                     oid: "0",
                     type: "activity-log/session-close"
@@ -223,6 +225,7 @@ export class HistorySessions {
             let message: any = JSON.parse(this.activeSession.message);
             message.sessionCloseId = sessionCloseId;
             logUpdate(
+                activityLogStore,
                 {
                     id: this.activeSession.id,
                     oid: this.activeSession.oid,

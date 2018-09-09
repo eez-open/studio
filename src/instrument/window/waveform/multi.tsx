@@ -134,8 +134,8 @@ export class MultiWaveform extends HistoryItem {
             }),
             arg => {
                 if (!objectEqual(arg.message.viewOptions, arg.viewOptions)) {
-                    console.log("UPDATED viewOptions");
                     logUpdate(
+                        this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -165,6 +165,7 @@ export class MultiWaveform extends HistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.rulers, rulers)) {
                     logUpdate(
+                        this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -189,6 +190,7 @@ export class MultiWaveform extends HistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.measurements, measurements)) {
                     logUpdate(
+                        this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -527,9 +529,13 @@ class MultiWaveformConfigurationDialog extends React.Component<
             beginTransaction("Edit chart configuration");
 
             changedHistoryItems.forEach(changedHistoryItem => {
-                logUpdate(changedHistoryItem, {
-                    undoable: true
-                });
+                logUpdate(
+                    this.props.multiWaveform.appStore.history.options.store,
+                    changedHistoryItem,
+                    {
+                        undoable: true
+                    }
+                );
             });
 
             commitTransaction();

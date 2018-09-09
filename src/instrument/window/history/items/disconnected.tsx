@@ -52,6 +52,7 @@ export class DisconnectedHistoryItemComponent extends React.Component<
                         <span className="text-danger">/ {this.message.error}</span>
                     )}
                 </p>
+                {this.props.historyItem.sourceDescriptionElement}
             </div>
         );
     }

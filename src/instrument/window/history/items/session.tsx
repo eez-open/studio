@@ -43,6 +43,7 @@ export class SessionHistoryItemComponent extends React.Component<
                               )}`}
                     </span>
                 </p>
+                {this.props.historyItem.sourceDescriptionElement}
             </div>
         );
     }

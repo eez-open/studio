@@ -145,3 +145,42 @@ export function updateHistoryItemClass(historyItem: IHistoryItem, appStore: any)
     }
     return historyItem;
 }
+
+export function getReferencedItemIds(item: IActivityLogEntry): string[] {
+    if (item.type === "instrument/chart") {
+        const message = JSON.parse(item.message);
+        const waveformLinks: MultiWaveformModule.IWaveformLink[] = message.waveformLinks || message;
+        return waveformLinks.map(waveformLink => waveformLink.id);
+    }
+
+    return [];
+}
+
+export function remapReferencedItemIds(
+    item: {
+        type: string;
+        message: string;
+    },
+    oldToNewId: Map<string, string>
+) {
+    if (item.type === "instrument/chart") {
+        const oldMessage = JSON.parse(item.message);
+
+        const oldWaveformLinks: MultiWaveformModule.IWaveformLink[] =
+            oldMessage.waveformLinks || oldMessage;
+
+        const newWaveformLinks = oldWaveformLinks
+            .map(waveformLink =>
+                Object.assign({}, waveformLink, { id: oldToNewId.get(waveformLink.id) })
+            )
+            .filter(waveformLink => !!waveformLink.id);
+
+        const newMessage = Object.assign(oldMessage, {
+            waveformLinks: newWaveformLinks
+        });
+
+        return JSON.stringify(newMessage);
+    }
+
+    return item.message;
+}

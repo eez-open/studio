@@ -1,5 +1,11 @@
 import { format } from "shared/units";
-import { IActivityLogEntry, log, logUpdate, logDelete } from "shared/activity-log";
+import {
+    IActivityLogEntry,
+    activityLogStore,
+    log,
+    logUpdate,
+    logDelete
+} from "shared/activity-log";
 
 import * as NotificationModule from "shared/ui/notification";
 import { confirm, info } from "shared/ui/dialog";
@@ -83,6 +89,7 @@ class JavaScriptSession {
         };
 
         this.scriptLogId = log(
+            activityLogStore,
             {
                 oid: this.instrument.id,
                 type: "instrument/script",
@@ -164,6 +171,7 @@ class JavaScriptSession {
         message.dataLength = data.length;
 
         log(
+            activityLogStore,
             {
                 oid: this.instrument.id,
                 type: "instrument/file-download",
@@ -178,6 +186,7 @@ class JavaScriptSession {
 
     add(logEntry: IActivityLogEntry) {
         log(
+            activityLogStore,
             {
                 id: logEntry.id,
                 oid: logEntry.oid,
@@ -194,6 +203,7 @@ class JavaScriptSession {
     private _updateLog() {
         if (this.scriptLogId) {
             logUpdate(
+                activityLogStore,
                 {
                     id: this.scriptLogId,
                     oid: this.instrument.id,
@@ -223,6 +233,7 @@ class JavaScriptSession {
 
     deleteScriptLogEntry() {
         logDelete(
+            activityLogStore,
             {
                 id: this.scriptLogId,
                 oid: this.instrument.id
