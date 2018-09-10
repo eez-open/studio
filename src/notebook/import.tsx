@@ -1,4 +1,5 @@
 import * as React from "react";
+import { values } from "mobx";
 
 import {
     getTempDirPath,
@@ -9,7 +10,11 @@ import {
 } from "shared/util";
 import { db } from "shared/db";
 
+import { showGenericDialog } from "shared/ui/generic-dialog";
+import { confirm } from "shared/ui/dialog";
 import * as notification from "shared/ui/notification";
+
+import { validators } from "shared/model/validation";
 
 import { remapReferencedItemIds } from "instrument/window/history/item-factory";
 
@@ -21,9 +26,10 @@ import { IExportedNotebook } from "notebook/export";
 
 export async function importNotebook(
     filePath: string,
-    options?: {
+    options?: Partial<{
         showNotebook: boolean;
-    }
+        notebookName: string;
+    }>
 ) {
     if (!filePath.toLowerCase().endsWith(".eez-notebook")) {
         return false;
@@ -39,22 +45,61 @@ export async function importNotebook(
 
     const notebook: IExportedNotebook = await readJsObjectFromFile(tempDir + "/notebook.json");
 
+    const notebookName = (options && options.notebookName) || notebook.name;
+
     let found = false;
     for (let existingNotebook of notebooks.values()) {
-        if (existingNotebook.name === notebook.name) {
+        if (existingNotebook.name === notebookName) {
             found = true;
         }
     }
 
     if (found) {
         notification.update(progressToastId, {
-            render: `Notebook with the name "${notebook.name}" already exists!`,
-            type: "error",
-            autoClose: 5000
+            autoClose: 1
         });
+
+        confirm(
+            `Notebook with the name "${notebookName}" already exists.`,
+            "Do you want to enter a different name?",
+            () => {
+                showGenericDialog({
+                    dialogDefinition: {
+                        fields: [
+                            {
+                                name: "name",
+                                displayName: "Notebook name",
+                                type: "string",
+                                validators: [
+                                    validators.required,
+                                    validators.unique(
+                                        {},
+                                        values(notebooks),
+                                        "Notebook with the same name already exists"
+                                    )
+                                ]
+                            }
+                        ]
+                    },
+                    values: {
+                        name: ""
+                    }
+                })
+                    .then(result => {
+                        console.log(result.values.name);
+                        importNotebook(
+                            filePath,
+                            Object.assign({}, options, {
+                                notebookName: result.values.name
+                            })
+                        );
+                    })
+                    .catch(() => {});
+            }
+        );
     } else {
         const notebookId = addNotebook({
-            name: notebook.name
+            name: notebookName
         });
 
         db.exec(`BEGIN EXCLUSIVE TRANSACTION`);
