@@ -15,6 +15,7 @@ import { remapReferencedItemIds } from "instrument/window/history/item-factory";
 
 import { notebooks, addNotebook, insertSource } from "notebook/store";
 import { showNotebook } from "notebook/section";
+import { IExportedNotebook } from "notebook/export";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,16 +37,7 @@ export async function importNotebook(
 
     await zipExtract(filePath, tempDir);
 
-    const notebook: {
-        name: string;
-        items: {
-            id: string;
-            date: string;
-            type: string;
-            message: string;
-            source: string;
-        }[];
-    } = await readJsObjectFromFile(tempDir + "/notebook.json");
+    const notebook: IExportedNotebook = await readJsObjectFromFile(tempDir + "/notebook.json");
 
     let found = false;
     for (let existingNotebook of notebooks.values()) {
@@ -71,7 +63,16 @@ export async function importNotebook(
             const oldToNewId = new Map<string, string>();
 
             for (let item of notebook.items) {
-                const sourceId = insertSource("external", item.source);
+                let sourceId: string | null = null;
+                if (item.source) {
+                    const source = notebook.sources[item.source];
+                    if (source) {
+                        sourceId = insertSource(
+                            source.instrumentName,
+                            source.instrumentExtensionId
+                        );
+                    }
+                }
 
                 const message = remapReferencedItemIds(item, oldToNewId);
 

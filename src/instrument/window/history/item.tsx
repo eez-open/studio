@@ -103,11 +103,10 @@ export class HistoryItem implements IHistoryItem {
         if (this.appStore.history.options.store === itemsStore && this.sid) {
             const source = getSource(this.sid);
             if (source) {
-                const prefix = source.type === "external" ? "EXTERNAL - " : "";
                 return (
                     <p>
                         <small className="EezStudio_HistoryItemDate text-muted">
-                            {`Source: ${prefix}${source.description}`}
+                            {`Source: ${source.instrumentName}`}
                         </small>
                     </p>
                 );

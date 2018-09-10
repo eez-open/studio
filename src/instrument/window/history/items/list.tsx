@@ -4,11 +4,13 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { formatDateTimeLong } from "shared/util";
-import { IActivityLogEntry } from "shared/activity-log";
+import { IActivityLogEntry, activityLogStore } from "shared/activity-log";
 
 import { Toolbar } from "shared/ui/toolbar";
 import { IconAction } from "shared/ui/action";
 import { Icon } from "shared/ui/icon";
+
+import { getSource } from "notebook/store";
 
 import { InstrumentObject, instruments } from "instrument/instrument-object";
 
@@ -122,7 +124,22 @@ export class ListHistoryItem extends HistoryItem {
     constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
         super(activityLogEntry, appStore);
 
-        this.instrument = instruments.get(activityLogEntry.oid);
+        if (appStore.history.options.store === activityLogStore) {
+            this.instrument = instruments.get(activityLogEntry.oid);
+        } else {
+            if (activityLogEntry.sid) {
+                const source = getSource(activityLogEntry.sid);
+                if (source) {
+                    this.instrument = new InstrumentObject({
+                        id: "0",
+                        instrumentExtensionId: source.instrumentExtensionId,
+                        label: source.instrumentName,
+                        autoConnect: false,
+                        selectedShortcutGroups: []
+                    });
+                }
+            }
+        }
     }
 
     get listItemElement(): JSX.Element | null {

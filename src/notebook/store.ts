@@ -68,8 +68,8 @@ export const deletedNotebooks = deletedNotebookCollection.objects;
 
 export interface INotebookItemSource {
     id: string;
-    type: "internal" | "external";
-    description: string; // "oid" if internal, "instrument label - instrument name" if external
+    instrumentName: string;
+    instrumentExtensionId: string;
 }
 
 export const notebookItemSourcesStore = createStore({
@@ -81,26 +81,26 @@ export const notebookItemSourcesStore = createStore({
         INSERT INTO "notebook/sources/version"(version) VALUES (1);
         CREATE TABLE "notebook/sources"(
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-            type TEXT NOT NULL,
-            description TEXT NOT NULL
+            instrumentName TEXT NOT NULL,
+            instrumentExtensionId TEXT NOT NULL
         );`
     ],
     properties: {
         id: types.id,
-        type: types.string,
-        description: types.string
+        instrumentName: types.string,
+        instrumentExtensionId: types.string
     }
 });
 
-export function insertSource(type: "internal" | "external", description: string) {
+export function insertSource(instrumentName: string, instrumentExtensionId: string) {
     try {
         let result = db
             .prepare(
                 `SELECT * FROM
                     "${notebookItemSourcesStore.storeName}"
-                WHERE type = ? AND description = ?`
+                WHERE instrumentName = ? AND instrumentExtensionId = ?`
             )
-            .get([type, description]);
+            .get([instrumentName, instrumentExtensionId]);
 
         const existingSourceId = result && result.id;
 
@@ -109,10 +109,43 @@ export function insertSource(type: "internal" | "external", description: string)
         }
 
         const info = db
-            .prepare(`INSERT INTO "notebook/sources" (type, description) VALUES(?, ?)`)
-            .run([type, description]);
+            .prepare(
+                `INSERT INTO "notebook/sources" (instrumentName, instrumentExtensionId) VALUES(?, ?)`
+            )
+            .run([instrumentName, instrumentExtensionId]);
 
         return info.lastInsertROWID.toString();
+    } catch (err) {
+        console.error(err);
+    }
+    return null;
+}
+
+export function insertSourceFromInstrumentId(instrumentId: string) {
+    try {
+        let result = db
+            .prepare(`SELECT * FROM "${instrumentsStore.storeName}" WHERE id = ?`)
+            .get([instrumentId]);
+
+        if (result && result.id) {
+            return insertSource(
+                getInstrumentDescription(result.instrumentExtensionId, result.label, result.idn),
+                result.instrumentExtensionId
+            );
+        }
+    } catch (err) {
+        console.error(err);
+    }
+    return null;
+}
+
+export function getSource(sourceId: string): INotebookItemSource | null {
+    try {
+        let source = db
+            .prepare(`SELECT * FROM "${notebookItemSourcesStore.storeName}" WHERE id = ? `)
+            .get([sourceId]);
+
+        return source;
     } catch (err) {
         console.error(err);
     }
@@ -124,64 +157,20 @@ export function getInstrumentDescription(
     label: string,
     idn: string
 ) {
+    if (label) {
+        return label;
+    }
+
+    if (idn) {
+        return idn;
+    }
+
     const extension = extensions.get(instrumentExtensionId);
     if (extension) {
-        if (label || idn) {
-            return `${label || idn} - ${extension.name}`;
-        } else {
-            return extension.name;
-        }
-    } else {
-        return label || idn || "";
+        return extension.name;
     }
-}
 
-export function getSource(
-    sourceId: string
-): {
-    type: "external" | "internal";
-    oid: string;
-    description: string;
-} | null {
-    try {
-        let result = db
-            .prepare(
-                `
-                SELECT
-                    T1.type AS type,
-                    T1.description AS description,
-                    T2.id AS oid,
-                    T2.label AS label,
-                    T2.idn AS idn,
-                    T2.instrumentExtensionId AS instrumentExtensionId
-                FROM
-                    "${notebookItemSourcesStore.storeName}" AS T1 LEFT JOIN
-                    "${instrumentsStore.storeName}" AS T2 ON T1.description = T2.id
-                WHERE T1.id = ?
-                `
-            )
-            .get([sourceId]);
-
-        let description;
-        if (result.oid) {
-            description = getInstrumentDescription(
-                result.instrumentExtensionId,
-                result.label,
-                result.idn
-            );
-        } else {
-            description = result.description;
-        }
-
-        return {
-            type: result.type,
-            oid: result.oid,
-            description: description
-        };
-    } catch (err) {
-        console.error(err);
-    }
-    return null;
+    return "";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,7 +201,7 @@ export const itemsStore = createStore({
         CREATE TABLE "notebook/items"(
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
             date INTEGER NOT NULL,
-            sid INTEGER, // in this table this is source ID, not session ID like in activityLog
+            sid INTEGER,
             oid INTEGER NOT NULL,
             type TEXT NOT NULL,
             message TEXT NOT NULL,
@@ -223,7 +212,7 @@ export const itemsStore = createStore({
     properties: {
         id: types.id,
         date: types.date,
-        sid: types.foreign,
+        sid: types.foreign, // in this table this is source ID, not session ID like in activityLog
         oid: types.foreign,
         type: types.string,
         message: types.string,

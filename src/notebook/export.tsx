@@ -29,60 +29,93 @@ import {
     addNotebook,
     getInstrumentDescription,
     getSource,
-    insertSource
+    insertSourceFromInstrumentId
 } from "notebook/store";
 import { showNotebook } from "notebook/section";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getExternalSourceDescription(store: IStore, item: IActivityLogEntry) {
-    let oid;
+export interface IExportedNotebook {
+    name: string;
+    sources: IExportedNotebookSources;
+    items: IExportedNotebookItem[];
+}
 
+interface IExportedNotebookSources {
+    [id: string]: IExportedNotebookSource;
+}
+
+interface IExportedNotebookSource {
+    instrumentName: string;
+    instrumentExtensionId: string;
+}
+
+interface IExportedNotebookItem {
+    id: string;
+    date: Date;
+    type: string;
+    message: string;
+    source?: string;
+}
+
+function getExternalSourceDescription(
+    store: IStore,
+    item: IActivityLogEntry,
+    sources: IExportedNotebookSources
+): string | undefined {
     if (store === activityLogStore) {
-        oid = item.oid;
+        try {
+            let result = db
+                .prepare(`SELECT * FROM "${instrumentsStore.storeName}" WHERE id = ?`)
+                .get([item.oid]);
+
+            if (result && result.id) {
+                const id = item.oid.toString();
+                if (!(id in sources)) {
+                    sources[id] = {
+                        instrumentName: getInstrumentDescription(
+                            result.instrumentExtensionId,
+                            result.label,
+                            result.idn
+                        ),
+                        instrumentExtensionId: result.instrumentExtensionId
+                    };
+                }
+
+                return id;
+            }
+        } catch (err) {
+            console.error(err);
+        }
     } else {
-        if (!item.sid) {
-            return "";
+        if (item.sid) {
+            const source = getSource(item.sid);
+
+            if (source && source.id) {
+                const id = source.id.toString();
+
+                if (!(id in sources)) {
+                    sources[id] = {
+                        instrumentName: source.instrumentName,
+                        instrumentExtensionId: source.instrumentExtensionId
+                    };
+                }
+
+                return id;
+            }
         }
-
-        const source = getSource(item.sid);
-
-        if (!source) {
-            return "";
-        }
-
-        if (source.type === "external") {
-            return source.description;
-        }
-
-        oid = source.oid;
     }
 
-    try {
-        let result = db
-            .prepare(`SELECT * FROM "${instrumentsStore.storeName}" WHERE id = ?`)
-            .get([oid]);
-
-        if (result) {
-            return getInstrumentDescription(result.instrumentExtensionId, result.label, result.idn);
-        }
-
-        return "";
-    } catch (err) {
-        console.error(err);
-        return "";
-    }
+    return undefined;
 }
 
 function doExport(
     store: IStore,
-    items: IActivityLogEntry[],
+    itemsToExport: IActivityLogEntry[],
     filePath: string,
     progressToastId: number
 ) {
     return new Promise((resolve, reject) => {
-        const rows = items;
-
         const fs = EEZStudio.electron.remote.require("fs") as typeof fsModule;
         const path = EEZStudio.electron.remote.require("path") as typeof pathModule;
         const archiver = EEZStudio.electron.remote.require("archiver") as typeof archiverModule;
@@ -122,15 +155,20 @@ function doExport(
             });
         });
 
-        const notebook = {
+        const sources: IExportedNotebookSources = {};
+
+        const items: IExportedNotebookItem[] = itemsToExport.map(row => ({
+            id: row.id.toString(),
+            date: new Date(row.date),
+            type: row.type,
+            message: row.message,
+            source: getExternalSourceDescription(store, row, sources)
+        }));
+
+        const notebook: IExportedNotebook = {
             name: path.basename(filePath, ".eez-notebook"),
-            items: rows.map(row => ({
-                id: row.id.toString(),
-                date: new Date(row.date),
-                type: row.type,
-                message: row.message,
-                source: getExternalSourceDescription(store, row)
-            }))
+            sources,
+            items
         };
 
         archive.append(JSON.stringify(notebook, undefined, 2), { name: "notebook.json" });
@@ -138,17 +176,17 @@ function doExport(
         let index = 0;
 
         function appendData() {
-            if (index === rows.length) {
+            if (index === itemsToExport.length) {
                 archive.finalize();
                 return;
             }
 
             notification.update(progressToastId, {
-                render: `Exporting item ${index + 1} of ${rows.length} ...`,
+                render: `Exporting item ${index + 1} of ${itemsToExport.length} ...`,
                 type: "info"
             });
 
-            const row = rows[index];
+            const row = itemsToExport[index];
 
             let data = loadData(store, row.id);
 
@@ -220,7 +258,7 @@ async function addItemsToNotebook(store: IStore, items: IActivityLogEntry[], not
         for (let item of items) {
             let sourceId;
             if (store === activityLogStore) {
-                sourceId = insertSource("internal", item.oid);
+                sourceId = insertSourceFromInstrumentId(item.oid);
             } else {
                 sourceId = item.sid;
             }
