@@ -91,7 +91,6 @@ class DragXRulerMouseHandler implements MouseHandler {
 
             this.rulersController.rulersModel.x1 = x;
             this.rulersController.rulersModel.x2 = x;
-        } else {
         }
 
         this.x1 = this.rulersController.rulersModel.x1;
@@ -160,17 +159,26 @@ class DragYRulerMouseHandler implements MouseHandler {
     constructor(
         private rulersController: RulersController,
         private chartIndex: number,
-        private whichRuller: "y1" | "y2" | "both"
+        private whichRuller: "y1" | "y2" | "both" | "none"
     ) {}
 
     down(point: SVGPoint, event: PointerEvent) {
         this.rulersController.rulersModel.pauseDbUpdate = true;
 
+        this.yStart = this.rulersController.chartController.yAxisController.pxToValue(point.y);
+
+        if (this.whichRuller === "none") {
+            let y = this.rulersController.chartController.yAxisController.pxToValue(point.y);
+            y = getSnapToValue(event, y, this.rulersController.chartController.yAxisController);
+
+            this.rulersController.rulersModel.y1[this.chartIndex] = y;
+            this.rulersController.rulersModel.y2[this.chartIndex] = y;
+        }
+
         this.y1 = this.rulersController.rulersModel.y1[this.chartIndex];
         this.dy =
             this.rulersController.rulersModel.y2[this.chartIndex] -
             this.rulersController.rulersModel.y1[this.chartIndex];
-        this.yStart = this.rulersController.chartController.yAxisController.pxToValue(point.y);
     }
 
     @action
@@ -314,6 +322,8 @@ export class RulersController {
 
         if (this.rulersModel.xAxisRulersEnabled) {
             return new DragXRulerMouseHandler(this, "none");
+        } else if (this.rulersModel.yAxisRulersEnabled) {
+            return new DragYRulerMouseHandler(this, this.chartIndex, "none");
         }
 
         return undefined;
