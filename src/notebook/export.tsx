@@ -400,7 +400,7 @@ export function exportTool(controller: IActivityLogController) {
     );
 
     const referencedItems = referencedItemIds
-        .map(id => logGet(activityLogStore, id))
+        .map(id => logGet(controller.store, id))
         .filter(item => !!item);
 
     items = referencedItems.concat(items);

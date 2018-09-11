@@ -43,16 +43,7 @@ export class InstrumentAppStore implements IEditor {
     helpVisible: boolean = false;
 
     @observable
-    searchVisible: boolean = false;
-
-    @observable
-    filtersVisible: boolean = false;
-
-    @observable
     filters: Filters = new Filters();
-
-    @observable
-    searchViewSection: "calendar" | "sessions" = "calendar";
 
     @observable
     selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined = undefined;
@@ -97,22 +88,7 @@ export class InstrumentAppStore implements IEditor {
                     localStorage.getItem(`instrument/${this.instrumentId}/window/help-visible`) ===
                         "1" || false;
 
-                this.searchVisible =
-                    localStorage.getItem(
-                        `instrument/${this.instrumentId}/window/search-visible`
-                    ) === "1" || true;
-
-                this.filtersVisible =
-                    localStorage.getItem(
-                        `instrument/${this.instrumentId}/window/filters-visible`
-                    ) === "1" || true;
-
                 this.filters = this.getFiltersFromLocalStorage();
-
-                this.searchViewSection =
-                    (localStorage.getItem(
-                        `instrument/${this.instrumentId}/window/search/view-section`
-                    ) as any) || "calendar";
 
                 scheduleTask("Load commands tree", Priority.Low, () => {
                     this.commandsTree.load(this.instrument!.instrumentExtensionId);
@@ -229,30 +205,6 @@ export class InstrumentAppStore implements IEditor {
             `instrument/${this.instrumentId}/window/help-visible`,
             this.helpVisible ? "1" : "0"
         );
-    }
-
-    @action
-    toggleSearchVisible() {
-        this.searchVisible = !this.searchVisible;
-        localStorage.setItem(
-            `instrument/${this.instrumentId}/window/search-visible`,
-            this.searchVisible ? "1" : "0"
-        );
-    }
-
-    @action
-    toggleFiltersVisible() {
-        this.filtersVisible = !this.filtersVisible;
-        localStorage.setItem(
-            `instrument/${this.instrumentId}/window/filters-visible`,
-            this.filtersVisible ? "1" : "0"
-        );
-    }
-
-    @action
-    setSearchViewSection(value: "calendar" | "sessions") {
-        this.searchViewSection = value;
-        localStorage.setItem(`instrument/${this.instrumentId}/window/search/view-section`, value);
     }
 
     @action

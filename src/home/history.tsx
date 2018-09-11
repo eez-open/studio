@@ -71,21 +71,6 @@ class HomeAppStore implements IAppStore {
 
     navigationStore = navigationStore;
 
-    searchVisible: boolean;
-    toggleSearchVisible(): void {
-        // @todo
-    }
-
-    filtersVisible: boolean;
-    toggleFiltersVisible(): void {
-        // @todo
-    }
-
-    searchViewSection: "calendar" | "sessions" = "calendar";
-    setSearchViewSection(value: "calendar" | "sessions"): void {
-        // @todo
-    }
-
     findListIdByName(listName: string): string | undefined {
         // @todo
         return undefined;

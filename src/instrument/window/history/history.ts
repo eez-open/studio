@@ -84,15 +84,7 @@ export interface IAppStore {
 
     navigationStore: INavigationStore;
 
-    searchVisible: boolean;
-    toggleSearchVisible(): void;
-
     filters: Filters;
-    filtersVisible: boolean;
-    toggleFiltersVisible(): void;
-
-    searchViewSection: "calendar" | "sessions";
-    setSearchViewSection(value: "calendar" | "sessions"): void;
 
     findListIdByName(listName: string): string | undefined;
 }
