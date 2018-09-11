@@ -1,5 +1,5 @@
 import * as React from "react";
-import { observable, computed, action, reaction, toJS } from "mobx";
+import { observable, computed, action, runInAction, reaction, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import * as VisibilitySensor from "react-visibility-sensor";
@@ -121,10 +121,24 @@ export class MultiWaveform extends HistoryItem {
 
         const message = JSON.parse(this.message);
 
-        this.rulers = new RulersModel(message.rulers);
-        this.rulers.initYRulers(this.waveformLinks.length);
+        this.waveformLinks = message.waveformLinks || message;
 
-        this.measurements = new MeasurementsModel(message.measurements);
+        // update waveformLinks when message changes
+        reaction(
+            () => ({
+                message: JSON.parse(this.message),
+                waveformLinks: toJS(this.waveformLinks)
+            }),
+            arg => {
+                if (!objectEqual(arg.message.waveformLinks, arg.waveformLinks)) {
+                    runInAction(() => (this.waveformLinks = arg.message.waveformLinks));
+                }
+            }
+        );
+
+        this.viewOptions = new ViewOptions(
+            message.viewOptions || this.linkedWaveforms[0].waveform.viewOptions
+        );
 
         // save viewOptions when changed
         reaction(
@@ -152,6 +166,9 @@ export class MultiWaveform extends HistoryItem {
                 }
             }
         );
+
+        this.rulers = new RulersModel(message.rulers);
+        this.rulers.initYRulers(this.waveformLinks.length);
 
         // save rulers when changed
         reaction(
@@ -183,6 +200,8 @@ export class MultiWaveform extends HistoryItem {
             }
         );
 
+        this.measurements = new MeasurementsModel(message.measurements);
+
         // save measurements when changed
         reaction(
             () => toJS(this.measurements),
@@ -211,18 +230,13 @@ export class MultiWaveform extends HistoryItem {
 
     xAxisModel = new WaveformTimeAxisModel(this);
 
+    @observable
+    waveformLinks: IWaveformLink[];
+
+    viewOptions: ViewOptions;
+
     rulers: RulersModel;
     measurements: MeasurementsModel;
-
-    @computed
-    get parsedMessage() {
-        return JSON.parse(this.message);
-    }
-
-    @computed
-    get waveformLinks(): IWaveformLink[] {
-        return this.parsedMessage.waveformLinks || this.parsedMessage;
-    }
 
     @computed
     get linkedWaveforms() {
@@ -238,13 +252,6 @@ export class MultiWaveform extends HistoryItem {
                 };
             })
             .filter(waveformLink => !!waveformLink.waveform);
-    }
-
-    @computed
-    get viewOptions(): ViewOptions {
-        return new ViewOptions(
-            this.parsedMessage.viewOptions || this.linkedWaveforms[0].waveform.viewOptions
-        );
     }
 
     @computed

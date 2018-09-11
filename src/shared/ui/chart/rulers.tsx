@@ -70,36 +70,44 @@ class DragXRulerMouseHandler implements MouseHandler {
     x1: number;
     dx: number;
 
-    constructor(private rulersController: RulersController, private whichRuller: 0 | 1 | 2) {}
+    constructor(
+        private rulersController: RulersController,
+        private whichRuller: "x1" | "x2" | "both" | "none"
+    ) {}
 
+    @action
     down(point: SVGPoint, event: PointerEvent) {
         this.rulersController.rulersModel.pauseDbUpdate = true;
 
+        this.xStart = this.rulersController.chartController.xAxisController.pxToValue(point.x);
+
+        if (this.whichRuller === "none") {
+            let x = getSnapToValue(
+                event,
+                this.xStart,
+                this.rulersController.chartController.xAxisController
+            );
+            x = this.rulersController.snapToSample(x);
+
+            this.rulersController.rulersModel.x1 = x;
+            this.rulersController.rulersModel.x2 = x;
+        } else {
+        }
+
         this.x1 = this.rulersController.rulersModel.x1;
         this.dx = this.rulersController.rulersModel.x2 - this.rulersController.rulersModel.x1;
-        this.xStart = this.rulersController.chartController.xAxisController.pxToValue(point.x);
-    }
-
-    snapToSample(x: number) {
-        x =
-            (x / this.rulersController.chartController.xAxisController.range) *
-            (this.rulersController.waveformModel.length - 1);
-        return (
-            (Math.round(x) * this.rulersController.chartController.xAxisController.range) /
-            (this.rulersController.waveformModel.length - 1)
-        );
     }
 
     @action
     move(point: SVGPoint, event: PointerEvent) {
         let x = this.rulersController.chartController.xAxisController.pxToValue(point.x);
-        if (this.whichRuller === 0) {
+        if (this.whichRuller === "both") {
             x = getSnapToValue(
                 event,
                 this.x1 + x - this.xStart,
                 this.rulersController.chartController.xAxisController
             );
-            x = this.snapToSample(x);
+            x = this.rulersController.snapToSample(x);
 
             if (x < this.rulersController.chartController.xAxisController.minValue) {
                 x = this.rulersController.chartController.xAxisController.minValue;
@@ -114,7 +122,7 @@ class DragXRulerMouseHandler implements MouseHandler {
             this.rulersController.rulersModel.x2 = x + this.dx;
         } else {
             x = getSnapToValue(event, x, this.rulersController.chartController.xAxisController);
-            x = this.snapToSample(x);
+            x = this.rulersController.snapToSample(x);
 
             if (x < this.rulersController.chartController.xAxisController.minValue) {
                 x = this.rulersController.chartController.xAxisController.minValue;
@@ -122,7 +130,7 @@ class DragXRulerMouseHandler implements MouseHandler {
                 x = this.rulersController.chartController.xAxisController.maxValue;
             }
 
-            if (this.whichRuller === 1) {
+            if (this.whichRuller === "x1") {
                 this.rulersController.rulersModel.x1 = x;
             } else {
                 this.rulersController.rulersModel.x2 = x;
@@ -152,7 +160,7 @@ class DragYRulerMouseHandler implements MouseHandler {
     constructor(
         private rulersController: RulersController,
         private chartIndex: number,
-        private whichRuller: 0 | 1 | 2
+        private whichRuller: "y1" | "y2" | "both"
     ) {}
 
     down(point: SVGPoint, event: PointerEvent) {
@@ -168,7 +176,7 @@ class DragYRulerMouseHandler implements MouseHandler {
     @action
     move(point: SVGPoint, event: PointerEvent) {
         let y = this.rulersController.chartController.yAxisController.pxToValue(point.y);
-        if (this.whichRuller === 0) {
+        if (this.whichRuller === "both") {
             y = getSnapToValue(
                 event,
                 this.y1 + y - this.yStart,
@@ -195,7 +203,7 @@ class DragYRulerMouseHandler implements MouseHandler {
                 y = this.rulersController.chartController.yAxisController.maxValue;
             }
 
-            if (this.whichRuller === 1) {
+            if (this.whichRuller === "y1") {
                 this.rulersController.rulersModel.y1[this.chartIndex] = y;
             } else {
                 this.rulersController.rulersModel.y2[this.chartIndex] = y;
@@ -281,27 +289,31 @@ export class RulersController {
 
     onDragStart(chartView: ChartView, event: PointerEvent): MouseHandler | undefined {
         if (event.target === this.x1Rect) {
-            return new DragXRulerMouseHandler(this, 1);
+            return new DragXRulerMouseHandler(this, "x1");
         }
 
         if (event.target === this.x2Rect) {
-            return new DragXRulerMouseHandler(this, 2);
+            return new DragXRulerMouseHandler(this, "x2");
         }
 
         if (event.target === this.y1Rect) {
-            return new DragYRulerMouseHandler(this, this.chartIndex, 1);
+            return new DragYRulerMouseHandler(this, this.chartIndex, "y1");
         }
 
         if (event.target === this.y2Rect) {
-            return new DragYRulerMouseHandler(this, this.chartIndex, 2);
+            return new DragYRulerMouseHandler(this, this.chartIndex, "y2");
         }
 
         if (event.target === this.xRect) {
-            return new DragXRulerMouseHandler(this, 0);
+            return new DragXRulerMouseHandler(this, "both");
         }
 
         if (event.target === this.yRect) {
-            return new DragYRulerMouseHandler(this, this.chartIndex, 0);
+            return new DragYRulerMouseHandler(this, this.chartIndex, "both");
+        }
+
+        if (this.rulersModel.xAxisRulersEnabled) {
+            return new DragXRulerMouseHandler(this, "none");
         }
 
         return undefined;
@@ -498,6 +510,14 @@ export class RulersController {
             </React.Fragment>
         );
     }
+
+    snapToSample(x: number) {
+        x = (x / this.chartController.xAxisController.range) * (this.waveformModel.length - 1);
+        return (
+            (Math.round(x) * this.chartController.xAxisController.range) /
+            (this.waveformModel.length - 1)
+        );
+    }
 }
 
 interface RulersDockViewProps {
@@ -594,8 +614,12 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         });
     }
 
+    get rulersController() {
+        return this.props.chartsController.chartControllers[0].rulersController;
+    }
+
     get rulersModel() {
-        return this.props.chartsController.chartControllers[0].rulersController.rulersModel!;
+        return this.rulersController.rulersModel!;
     }
 
     validateXRange() {
@@ -613,6 +637,25 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
 
         this.rulersModel.x1 = x1!;
         this.rulersModel.x2 = x2!;
+    }
+
+    @action.bound
+    enableXAxisRulers(checked: boolean) {
+        if (checked) {
+            this.rulersModel.xAxisRulersEnabled = true;
+
+            const xAxisController = this.props.chartsController.xAxisController;
+
+            this.rulersModel.x1 = this.rulersController.snapToSample(
+                xAxisController.from + 0.1 * xAxisController.distance
+            );
+
+            this.rulersModel.x2 = this.rulersController.snapToSample(
+                xAxisController.to - 0.1 * xAxisController.distance
+            );
+        } else {
+            this.rulersModel.xAxisRulersEnabled = false;
+        }
     }
 
     @bind
@@ -671,6 +714,21 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         this.rulersModel.y2[chartIndex] = y2!;
     }
 
+    @action.bound
+    enableYAxisRulers(chartIndex: number, checked: boolean) {
+        if (checked) {
+            this.rulersModel.yAxisRulersEnabled[chartIndex] = true;
+
+            const yAxisController = this.props.chartsController.chartControllers[chartIndex]
+                .yAxisController;
+
+            this.rulersModel.y1[chartIndex] = yAxisController.from + 0.1 * yAxisController.distance;
+            this.rulersModel.y2[chartIndex] = yAxisController.to - 0.1 * yAxisController.distance;
+        } else {
+            this.rulersModel.yAxisRulersEnabled[chartIndex] = false;
+        }
+    }
+
     @bind
     setY1(chartIndex: number, event: React.ChangeEvent<HTMLInputElement>) {
         this.isInsideChange = true;
@@ -717,10 +775,7 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                     <div className="EezStudio_SideDockView_PropertyLabel">
                         <Checkbox
                             checked={this.rulersModel.xAxisRulersEnabled}
-                            onChange={action(
-                                (checked: boolean) =>
-                                    (this.rulersModel.xAxisRulersEnabled = checked)
-                            )}
+                            onChange={this.enableXAxisRulers}
                         >
                             Enable X axis rulers
                         </Checkbox>
@@ -783,10 +838,9 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                         <div className="EezStudio_SideDockView_PropertyLabel">
                             <Checkbox
                                 checked={this.rulersModel.yAxisRulersEnabled[chartIndex]}
-                                onChange={action(
-                                    (checked: boolean) =>
-                                        (this.rulersModel.yAxisRulersEnabled[chartIndex] = checked)
-                                )}
+                                onChange={(checked: boolean) =>
+                                    this.enableYAxisRulers(chartIndex, checked)
+                                }
                             >
                                 Enable{" "}
                                 {this.props.chartsController.chartControllers.length > 1
