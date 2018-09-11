@@ -322,7 +322,7 @@ export class RulersController {
 
         if (this.rulersModel.xAxisRulersEnabled) {
             return new DragXRulerMouseHandler(this, "none");
-        } else if (this.rulersModel.yAxisRulersEnabled) {
+        } else if (this.rulersModel.yAxisRulersEnabled[this.chartIndex]) {
             return new DragYRulerMouseHandler(this, this.chartIndex, "none");
         }
 

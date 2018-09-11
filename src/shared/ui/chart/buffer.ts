@@ -53,12 +53,7 @@ export function initValuesAccesor(object: {
     if (format === WaveformFormat.UINT8_ARRAY_OF_FLOATS) {
         length = Math.floor(values.length / 4);
         value = (index: number) => {
-            const buffer = Buffer.allocUnsafe(4);
-            buffer[0] = values[4 * index + 0];
-            buffer[1] = values[4 * index + 1];
-            buffer[2] = values[4 * index + 2];
-            buffer[3] = values[4 * index + 3];
-            return buffer.readFloatLE(0);
+            return readFloat(values, 4 * index);
         };
         waveformData = value;
     } else if (format === WaveformFormat.RIGOL_BYTE) {
