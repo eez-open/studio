@@ -15,7 +15,7 @@ function getToast() {
         runInAction(() => {
             container.set(
                 <ToastContainer
-                    position="top-right"
+                    position={ToastModule.ToastPosition.TOP_RIGHT}
                     autoClose={5000}
                     hideProgressBar={true}
                     newestOnTop={false}
@@ -50,3 +50,8 @@ export function update(toastId: number, options: ToastModule.UpdateOptions) {
 }
 
 export const container = observable.box<JSX.Element | undefined>(undefined, { deep: false });
+
+export const INFO = ToastModule.ToastType.INFO;
+export const SUCCESS = ToastModule.ToastType.SUCCESS;
+export const WARNING = ToastModule.ToastType.WARNING;
+export const ERROR = ToastModule.ToastType.ERROR;

@@ -14,7 +14,10 @@ export class SideDock extends React.Component<{
     defaultLayoutConfig: any;
     registerComponents: (goldenLayout: any) => void;
     header?: JSX.Element;
+    width: number;
 }> {
+    static defaultProps = { width: 240 };
+
     static DEFAULT_SETTINGS = {
         showPopoutIcon: false,
         showMaximiseIcon: false,
@@ -25,7 +28,8 @@ export class SideDock extends React.Component<{
         headerHeight: 26
     };
 
-    @observable isOpen: boolean;
+    @observable
+    isOpen: boolean;
 
     constructor(props: any) {
         super(props);
@@ -168,7 +172,7 @@ export class SideDock extends React.Component<{
             return (
                 <Splitter
                     type="horizontal"
-                    sizes={"100%|240px"}
+                    sizes={`100%|${this.props.width}px`}
                     persistId="shared/ui/chart"
                     childrenOverflow="auto|visible"
                 >

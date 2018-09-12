@@ -142,7 +142,7 @@ function doExport(
         archive.on("warning", function(warning: any) {
             notification.update(progressToastId, {
                 render: warning,
-                type: "warning"
+                type: notification.WARNING
             });
         });
 
@@ -150,7 +150,7 @@ function doExport(
             failed = true;
             notification.update(progressToastId, {
                 render: error,
-                type: "error",
+                type: notification.ERROR,
                 autoClose: 5000
             });
         });
@@ -183,7 +183,7 @@ function doExport(
 
             notification.update(progressToastId, {
                 render: `Exporting item ${index + 1} of ${itemsToExport.length} ...`,
-                type: "info"
+                type: notification.INFO
             });
 
             const row = itemsToExport[index];
@@ -233,7 +233,7 @@ export function exportActivityLogItems(store: IStore, items: IActivityLogEntry[]
                                     </button>
                                 </div>
                             ),
-                            type: "success",
+                            type: notification.SUCCESS,
                             autoClose: 8000
                         });
                     })
@@ -297,7 +297,7 @@ async function addItemsToNotebook(store: IStore, items: IActivityLogEntry[], not
                     </button>
                 </div>
             ),
-            type: "success",
+            type: notification.SUCCESS,
             autoClose: 8000
         });
 
@@ -308,7 +308,7 @@ async function addItemsToNotebook(store: IStore, items: IActivityLogEntry[], not
 
         notification.update(progressToastId, {
             render: `Failed to add items to notebook (${err})`,
-            type: "error",
+            type: notification.ERROR,
             autoClose: 5000
         });
     }

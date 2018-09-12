@@ -419,7 +419,7 @@ class MasterView extends React.Component {
 
         notification.update(progressToastId, {
             render: "All extensions successfully updated!",
-            type: "success",
+            type: notification.SUCCESS,
             autoClose: 5000
         });
 
@@ -647,14 +647,14 @@ function downloadAndInstallExtension(extensionToInstall: IExtension, progressToa
         notification.update(progressToastId, {
             render: `Downloading "${extensionToInstall.displayName ||
                 extensionToInstall.name}" extension package ...`,
-            type: "info"
+            type: notification.INFO
         });
 
         req.addEventListener("progress", event => {
             notification.update(progressToastId, {
                 render: `Downloading "${extensionToInstall.displayName ||
                     extensionToInstall.name}" extension package: ${event.loaded} of ${event.total}`,
-                type: "info"
+                type: notification.INFO
             });
         });
 
@@ -665,13 +665,13 @@ function downloadAndInstallExtension(extensionToInstall: IExtension, progressToa
                         notification.update(progressToastId, {
                             render: `Extension "${extension.displayName ||
                                 extension.name}" installed`,
-                            type: "success"
+                            type: notification.SUCCESS
                         });
                     } else {
                         notification.update(progressToastId, {
                             render: `Failed to install "${extensionToInstall.displayName ||
                                 extensionToInstall.name}" extension`,
-                            type: "error"
+                            type: notification.ERROR
                         });
                     }
                     resolve(extension);
@@ -681,7 +681,7 @@ function downloadAndInstallExtension(extensionToInstall: IExtension, progressToa
                     notification.update(progressToastId, {
                         render: `Failed to install "${extensionToInstall.displayName ||
                             extensionToInstall.name}" extension.`,
-                        type: "error"
+                        type: notification.ERROR
                     });
                     reject();
                 })
@@ -692,7 +692,7 @@ function downloadAndInstallExtension(extensionToInstall: IExtension, progressToa
             notification.update(progressToastId, {
                 render: `Failed to download "${extensionToInstall.displayName ||
                     extensionToInstall.name}" extension package.`,
-                type: "error"
+                type: notification.ERROR
             });
             reject();
         });

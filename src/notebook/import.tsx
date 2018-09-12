@@ -157,7 +157,7 @@ export async function importNotebook(
                         )}
                     </div>
                 ),
-                type: "success",
+                type: notification.SUCCESS,
                 autoClose: 8000
             });
 
@@ -170,7 +170,7 @@ export async function importNotebook(
 
             notification.update(progressToastId, {
                 render: `Import failed (${err})`,
-                type: "error",
+                type: notification.ERROR,
                 autoClose: 5000
             });
         }

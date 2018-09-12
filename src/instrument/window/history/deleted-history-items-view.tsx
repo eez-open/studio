@@ -113,9 +113,90 @@ export class DeletedHistoryItemsView extends React.Component<{
         this.props.appStore.deletedItemsHistory.search.search(this.searchText);
     }
 
-    render() {
+    @bind
+    registerComponents(goldenLayout: any) {
         const appStore = this.props.appStore;
 
+        goldenLayout.registerComponent("SearchResults", function(container: any, props: any) {
+            ReactDOM.render(
+                <div
+                    style={{
+                        position: "absolute",
+                        width: "100%",
+                        height: "100%",
+                        display: "flex"
+                    }}
+                >
+                    <SearchResults history={appStore.deletedItemsHistory} />
+                </div>,
+                container.getElement()[0]
+            );
+        });
+
+        goldenLayout.registerComponent("Calendar", function(container: any, props: any) {
+            ReactDOM.render(
+                <div
+                    style={{
+                        height: "100%",
+                        overflow: "auto"
+                    }}
+                >
+                    <Calendar history={appStore.deletedItemsHistory} />
+                </div>,
+                container.getElement()[0]
+            );
+        });
+    }
+
+    get searchResultsComponent() {
+        return {
+            type: "component",
+            componentName: "SearchResults",
+            componentState: {},
+            title: "Search results",
+            isClosable: false
+        };
+    }
+
+    get calendarComponent() {
+        return {
+            type: "component",
+            componentName: "Calendar",
+            componentState: {},
+            title: "Calendar",
+            isClosable: false
+        };
+    }
+
+    get defaultLayoutConfig() {
+        let content;
+
+        if (this.props.appStore.deletedItemsHistory.search.searchActive) {
+            content = [
+                {
+                    type: "stack",
+                    content: [this.searchResultsComponent, this.calendarComponent]
+                }
+            ];
+        } else {
+            content = [
+                {
+                    type: "stack",
+                    content: [this.calendarComponent]
+                }
+            ];
+        }
+
+        const defaultLayoutConfig = {
+            settings: SideDock.DEFAULT_SETTINGS,
+            dimensions: SideDock.DEFAULT_DIMENSIONS,
+            content
+        };
+
+        return defaultLayoutConfig;
+    }
+
+    render() {
         const historyComponent = (
             <HistoryListComponent
                 appStore={this.props.appStore}
@@ -132,47 +213,6 @@ export class DeletedHistoryItemsView extends React.Component<{
             </div>
         );
 
-        let searchResultsVisible = appStore.deletedItemsHistory.search.searchActive;
-
-        let searchResultsComponent = searchResultsVisible && {
-            type: "component",
-            componentName: "SearchResults",
-            componentState: {},
-            title: "Search results",
-            isClosable: false
-        };
-
-        const calendarComponent = {
-            type: "component",
-            componentName: "Calendar",
-            componentState: {},
-            title: "Calendar",
-            isClosable: false
-        };
-
-        let content;
-        if (searchResultsComponent) {
-            content = [
-                {
-                    type: "column",
-                    content: [searchResultsComponent, calendarComponent]
-                }
-            ];
-        } else {
-            content = [
-                {
-                    type: "column",
-                    content: [calendarComponent]
-                }
-            ];
-        }
-
-        const defaultLayoutConfig = {
-            settings: SideDock.DEFAULT_SETTINGS,
-            dimensions: SideDock.DEFAULT_DIMENSIONS,
-            content
-        };
-
         let inputClassName = classNames("EezStudio_SearchInput", {
             empty: !this.searchText
         });
@@ -187,50 +227,21 @@ export class DeletedHistoryItemsView extends React.Component<{
             />
         );
 
+        let layoutId =
+            "layout/2" +
+            (this.props.appStore.deletedItemsHistory.search.searchActive
+                ? "/with-search-results"
+                : "");
+
         return (
             <SideDock
                 ref={ref => (this.sideDock = ref)}
                 persistId={this.props.persistId + "/side-dock"}
-                layoutId={"layout/1" + (searchResultsComponent ? "/with-search-results" : "")}
-                defaultLayoutConfig={defaultLayoutConfig}
-                registerComponents={(goldenLayout: any) => {
-                    goldenLayout.registerComponent("SearchResults", function(
-                        container: any,
-                        props: any
-                    ) {
-                        ReactDOM.render(
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    width: "100%",
-                                    height: "100%",
-                                    display: "flex"
-                                }}
-                            >
-                                <SearchResults history={appStore.history} />
-                            </div>,
-                            container.getElement()[0]
-                        );
-                    });
-
-                    goldenLayout.registerComponent("Calendar", function(
-                        container: any,
-                        props: any
-                    ) {
-                        ReactDOM.render(
-                            <div
-                                style={{
-                                    height: "100%",
-                                    overflow: "auto"
-                                }}
-                            >
-                                <Calendar history={appStore.deletedItemsHistory} />
-                            </div>,
-                            container.getElement()[0]
-                        );
-                    });
-                }}
+                layoutId={layoutId}
+                defaultLayoutConfig={this.defaultLayoutConfig}
+                registerComponents={this.registerComponents}
                 header={input}
+                width={420}
             >
                 {historyComponentWithTools}
             </SideDock>

@@ -151,7 +151,7 @@ class ExtensionsCatalog {
             await writeJsObjectToFile(this.catalogPath, this.catalog);
 
             notification.update(progressToastId, {
-                type: "success",
+                type: notification.SUCCESS,
                 render: `The latest catalog successfully downloaded.`,
                 autoClose: 5000
             });
@@ -160,7 +160,7 @@ class ExtensionsCatalog {
         req.addEventListener("error", error => {
             console.error("ExtensionsCatalog download error", error);
             notification.update(progressToastId, {
-                type: "error",
+                type: notification.ERROR,
                 render: `Failed to download catalog.`,
                 autoClose: 5000
             });

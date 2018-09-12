@@ -277,22 +277,158 @@ export class HistoryView extends React.Component<{
         this.props.appStore.history.search.search(this.searchText);
     }
 
-    render() {
+    @bind
+    registerComponents(goldenLayout: any) {
         const appStore = this.props.appStore;
 
-        const historyComponent = (
-            <HistoryListComponent
-                ref={ref => (this.history = ref)}
-                appStore={appStore}
-                history={appStore.history}
-            />
-        );
+        goldenLayout.registerComponent("SearchResults", function(container: any, props: any) {
+            ReactDOM.render(
+                <div
+                    style={{
+                        position: "absolute",
+                        width: "100%",
+                        height: "100%",
+                        display: "flex"
+                    }}
+                >
+                    <SearchResults history={appStore.history} />
+                </div>,
+                container.getElement()[0]
+            );
+        });
 
-        if (this.props.simple) {
-            return historyComponent;
+        goldenLayout.registerComponent("Filters", function(container: any, props: any) {
+            ReactDOM.render(<FiltersComponent appStore={appStore} />, container.getElement()[0]);
+        });
+
+        goldenLayout.registerComponent("Calendar", function(container: any, props: any) {
+            ReactDOM.render(
+                <div
+                    style={{
+                        height: "100%",
+                        overflow: "auto"
+                    }}
+                >
+                    <Calendar history={appStore.history} />
+                </div>,
+                container.getElement()[0]
+            );
+        });
+
+        goldenLayout.registerComponent("Sessions", function(container: any, props: any) {
+            ReactDOM.render(
+                <div
+                    style={{
+                        position: "absolute",
+                        width: "100%",
+                        height: "100%",
+                        display: "flex"
+                    }}
+                >
+                    <SessionList appStore={appStore} history={appStore.history} />
+                </div>,
+                container.getElement()[0]
+            );
+        });
+    }
+
+    get searchResultsItem() {
+        return {
+            id: "searchResults",
+            type: "component",
+            componentName: "SearchResults",
+            componentState: {},
+            title: "Search results",
+            isClosable: false
+        };
+    }
+
+    get filtersItem() {
+        return {
+            id: "filters",
+            type: "component",
+            componentName: "Filters",
+            componentState: {},
+            title: "Filters",
+            isClosable: false
+        };
+    }
+
+    get calendarItem() {
+        return {
+            id: "calendar",
+            type: "component",
+            componentName: "Calendar",
+            componentState: {},
+            title: "Calendar",
+            isClosable: false
+        };
+    }
+
+    get sessionsItem() {
+        return {
+            id: "sessions",
+            type: "component",
+            componentName: "Sessions",
+            componentState: {},
+            title: "Sessions",
+            isClosable: false
+        };
+    }
+
+    get defaultLayoutConfig() {
+        let content;
+        if (this.props.appStore.history.search.searchActive) {
+            if (this.props.appStore.history.isSessionsSupported) {
+                content = [
+                    {
+                        type: "stack",
+                        content: [
+                            this.searchResultsItem,
+                            this.calendarItem,
+                            this.filtersItem,
+                            this.sessionsItem
+                        ]
+                    }
+                ];
+            } else {
+                content = [
+                    {
+                        type: "stack",
+                        content: [this.searchResultsItem, this.calendarItem, this.filtersItem]
+                    }
+                ];
+            }
+        } else {
+            if (this.props.appStore.history.isSessionsSupported) {
+                content = [
+                    {
+                        type: "stack",
+                        content: [this.calendarItem, this.sessionsItem, this.filtersItem]
+                    }
+                ];
+            } else {
+                content = [
+                    {
+                        type: "stack",
+                        content: [this.calendarItem, this.filtersItem]
+                    }
+                ];
+            }
         }
 
-        const historyComponentWithTools = (
+        const defaultLayoutConfig = {
+            settings: SideDock.DEFAULT_SETTINGS,
+            dimensions: SideDock.DEFAULT_DIMENSIONS,
+            content
+        };
+
+        return defaultLayoutConfig;
+    }
+
+    renderHistoryComponentWithTools(historyComponent: JSX.Element) {
+        const appStore = this.props.appStore;
+        return (
             <div className="EezStudio_History_Container">
                 {appStore.selectHistoryItemsSpecification && (
                     <div className="EezStudio_History_Header EezStudio_SlideInDownTransition">
@@ -328,86 +464,24 @@ export class HistoryView extends React.Component<{
                 </div>
             </div>
         );
+    }
 
-        let searchResultsVisible = appStore.history.search.searchActive;
+    render() {
+        const appStore = this.props.appStore;
 
-        let searchResultsItem = searchResultsVisible && {
-            id: "searchResults",
-            type: "component",
-            componentName: "SearchResults",
-            componentState: {},
-            title: "Search results",
-            isClosable: false
-        };
+        const historyComponent = (
+            <HistoryListComponent
+                ref={ref => (this.history = ref)}
+                appStore={appStore}
+                history={appStore.history}
+            />
+        );
 
-        const filtersItem = {
-            id: "filters",
-            type: "component",
-            componentName: "Filters",
-            componentState: {},
-            title: "Filters",
-            isClosable: false
-        };
-
-        const calendarItem = {
-            id: "calendar",
-            type: "component",
-            componentName: "Calendar",
-            componentState: {},
-            title: "Calendar",
-            isClosable: false
-        };
-
-        const content2 = [calendarItem];
-
-        if (this.props.appStore.history.isSessionsSupported) {
-            const sessionsItem = {
-                id: "sessions",
-                type: "component",
-                componentName: "Sessions",
-                componentState: {},
-                title: "Sessions",
-                isClosable: false
-            };
-
-            content2.push(sessionsItem);
+        if (this.props.simple) {
+            return historyComponent;
         }
 
-        let content;
-        if (searchResultsItem) {
-            content = [
-                {
-                    type: "column",
-                    content: [
-                        searchResultsItem,
-                        filtersItem,
-                        {
-                            type: "stack",
-                            content: content2
-                        }
-                    ]
-                }
-            ];
-        } else {
-            content = [
-                {
-                    type: "column",
-                    content: [
-                        filtersItem,
-                        {
-                            type: "stack",
-                            content: content2
-                        }
-                    ]
-                }
-            ];
-        }
-
-        const defaultLayoutConfig = {
-            settings: SideDock.DEFAULT_SETTINGS,
-            dimensions: SideDock.DEFAULT_DIMENSIONS,
-            content
-        };
+        const historyComponentWithTools = this.renderHistoryComponentWithTools(historyComponent);
 
         let inputClassName = classNames("EezStudio_SearchInput", {
             empty: !this.searchText
@@ -423,8 +497,8 @@ export class HistoryView extends React.Component<{
             />
         );
 
-        let layoutId = "layout/2";
-        if (searchResultsItem) {
+        let layoutId = "layout/3";
+        if (this.props.appStore.history.search.searchActive) {
             layoutId += "/with-search-results";
         }
         if (!this.props.appStore.history.isSessionsSupported) {
@@ -436,71 +510,10 @@ export class HistoryView extends React.Component<{
                 ref={ref => (this.sideDock = ref)}
                 persistId={this.props.persistId + "/side-dock"}
                 layoutId={layoutId}
-                defaultLayoutConfig={defaultLayoutConfig}
-                registerComponents={(goldenLayout: any) => {
-                    goldenLayout.registerComponent("SearchResults", function(
-                        container: any,
-                        props: any
-                    ) {
-                        ReactDOM.render(
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    width: "100%",
-                                    height: "100%",
-                                    display: "flex"
-                                }}
-                            >
-                                <SearchResults history={appStore.history} />
-                            </div>,
-                            container.getElement()[0]
-                        );
-                    });
-
-                    goldenLayout.registerComponent("Filters", function(container: any, props: any) {
-                        ReactDOM.render(
-                            <FiltersComponent appStore={appStore} />,
-                            container.getElement()[0]
-                        );
-                    });
-
-                    goldenLayout.registerComponent("Calendar", function(
-                        container: any,
-                        props: any
-                    ) {
-                        ReactDOM.render(
-                            <div
-                                style={{
-                                    height: "100%",
-                                    overflow: "auto"
-                                }}
-                            >
-                                <Calendar history={appStore.history} />
-                            </div>,
-                            container.getElement()[0]
-                        );
-                    });
-
-                    goldenLayout.registerComponent("Sessions", function(
-                        container: any,
-                        props: any
-                    ) {
-                        ReactDOM.render(
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    width: "100%",
-                                    height: "100%",
-                                    display: "flex"
-                                }}
-                            >
-                                <SessionList appStore={appStore} history={appStore.history} />
-                            </div>,
-                            container.getElement()[0]
-                        );
-                    });
-                }}
+                defaultLayoutConfig={this.defaultLayoutConfig}
+                registerComponents={this.registerComponents}
                 header={input}
+                width={420}
             >
                 {historyComponentWithTools}
             </SideDock>
