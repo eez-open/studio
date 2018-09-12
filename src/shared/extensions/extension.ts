@@ -1,3 +1,4 @@
+import { UNITS } from "shared/units";
 import { IStore } from "shared/store";
 import { IActivityLogEntry } from "shared/activity-log-interfaces";
 import { IToolbarButton, IToolboxGroup } from "shared/ui/designer/designer-interfaces";
@@ -73,6 +74,17 @@ export interface IMeasurementFunction {
     script: string;
 }
 
+export interface IChart {
+    data: number[];
+    samplingRate: number;
+    xAxes: {
+        unit: keyof typeof UNITS;
+    };
+    yAxes: {
+        unit: keyof typeof UNITS;
+    };
+}
+
 export interface IMeasureTask {
     // x value of the first sample (at xStartIndex)
     xStartValue: number;
@@ -88,7 +100,7 @@ export interface IMeasureTask {
     getSampleValueAtIndex(index: number): number;
 
     // store measurement result to this property
-    result: number;
+    result: number | IChart | null;
 }
 
 export interface IExtensionDescription {

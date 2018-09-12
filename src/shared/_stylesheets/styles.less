@@ -850,7 +850,11 @@ DESIGNER
     table {
         margin-left: 0;
 
-        td:first-child {
+        td {
+            padding-bottom: 5px;
+        }
+
+        td:nth-child(1) {
             min-width: 120px;
             max-width: none;
         }
@@ -858,6 +862,17 @@ DESIGNER
         td:nth-child(2) {
             width: 100%;
         }
+    }
+
+    .EezStudio_MeasurementCol {
+        position: relative;
+    }
+
+    .EezStudio_MeasurementChartContainer {
+        position: relative;
+        width: 100%;
+        height: 240px;
+        display: flex;
     }
 }
 

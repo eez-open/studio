@@ -1056,8 +1056,8 @@ export function createTableChartsController(
     if (displayOption === "both") {
         const chartController = new TableChartController(chartsController, displayOption);
 
-        chartController.createYAxisController(VOLTAGE_UNIT, list.data.voltageAxisModel);
-        chartController.createYAxisControllerOnRightSide(CURRENT_UNIT, list.data.currentAxisModel);
+        chartController.createYAxisController(list.data.voltageAxisModel);
+        chartController.createYAxisControllerOnRightSide(list.data.currentAxisModel);
 
         chartController.lineControllers.push(
             new TableLineController(
@@ -1076,7 +1076,7 @@ export function createTableChartsController(
     } else {
         if (displayOption === "voltage" || displayOption === "split") {
             const chartController = new TableChartController(chartsController, "voltage");
-            chartController.createYAxisController(VOLTAGE_UNIT, list.data.voltageAxisModel);
+            chartController.createYAxisController(list.data.voltageAxisModel);
             chartController.lineControllers.push(
                 new TableLineController(
                     "envelope-sample-data-" + chartController.yAxisController.position,
@@ -1088,7 +1088,7 @@ export function createTableChartsController(
 
         if (displayOption === "current" || displayOption === "split") {
             const chartController = new TableChartController(chartsController, "current");
-            chartController.createYAxisController(CURRENT_UNIT, list.data.currentAxisModel);
+            chartController.createYAxisController(list.data.currentAxisModel);
             chartController.lineControllers.push(
                 new TableLineController(
                     "envelope-sample-data-" + chartController.yAxisController.position,

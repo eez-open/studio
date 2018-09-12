@@ -1082,7 +1082,7 @@ export class ChartController {
 
     yAxisController: AxisController;
 
-    createYAxisController(unit: IUnit, model: IAxisModel) {
+    createYAxisController(model: IAxisModel) {
         if (this.chartsController.viewOptions.axesLines.type === "dynamic") {
             this.yAxisController = new DynamicAxisController(
                 "y",
@@ -1097,7 +1097,7 @@ export class ChartController {
 
     yAxisControllerOnRightSide?: AxisController;
 
-    createYAxisControllerOnRightSide(unit: IUnit, model: IAxisModel) {
+    createYAxisControllerOnRightSide(model: IAxisModel) {
         if (this.chartsController.viewOptions.axesLines.type === "dynamic") {
             this.yAxisControllerOnRightSide = new DynamicAxisController(
                 "yRight",
@@ -1251,7 +1251,11 @@ export class ChartController {
         measurementsModel: MeasurementsModel
     ) {
         this.rulersController = new RulersController(this, waveformModel, rulersModel);
-        this.measurementsController = new MeasurementsController(this, waveformModel, measurementsModel);
+        this.measurementsController = new MeasurementsController(
+            this,
+            waveformModel,
+            measurementsModel
+        );
     }
 }
 
@@ -2767,6 +2771,7 @@ interface ChartsViewInterface {
     chartsController: ChartsController;
     className?: string;
     tabIndex?: number;
+    sideDockAvailable?: boolean;
 }
 
 @observer
@@ -2776,7 +2781,9 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
     sideDock: SideDock | null;
 
     get sideDockAvailable() {
-        return this.props.chartsController.mode !== "preview";
+        return this.props.sideDockAvailable !== undefined
+            ? this.props.sideDockAvailable
+            : this.props.chartsController.mode !== "preview";
     }
 
     @action
@@ -2857,6 +2864,102 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
         }
     }
 
+    @bind
+    registerComponents(goldenLayout: any) {
+        const chartsController = this.props.chartsController;
+
+        goldenLayout.registerComponent("RulersDockView", function(container: any, props: any) {
+            ReactDOM.render(
+                <RulersDockView chartsController={chartsController} {...props} />,
+                container.getElement()[0]
+            );
+        });
+
+        goldenLayout.registerComponent("MeasurementsDockView", function(
+            container: any,
+            props: any
+        ) {
+            ReactDOM.render(
+                <MeasurementsDockView chartsController={chartsController} {...props} />,
+                container.getElement()[0]
+            );
+        });
+
+        goldenLayout.registerComponent("ChartViewOptions", function(
+            container: any,
+            props: ChartViewOptionsProps
+        ) {
+            ReactDOM.render(
+                <ChartViewOptions chartsController={chartsController} {...props} />,
+                container.getElement()[0]
+            );
+        });
+    }
+
+    get chartViewOptionsItem() {
+        return {
+            type: "component",
+            componentName: "ChartViewOptions",
+            componentState: this.props.chartsController.chartViewOptionsProps,
+            title: "View Options",
+            isClosable: false
+        };
+    }
+
+    get rulersItem() {
+        return {
+            type: "component",
+            componentName: "RulersDockView",
+            componentState: {},
+            title: "Rulers",
+            isClosable: false
+        };
+    }
+
+    get measurementsItem() {
+        return {
+            type: "component",
+            componentName: "MeasurementsDockView",
+            componentState: {},
+            title: "Measurements",
+            isClosable: false
+        };
+    }
+
+    get defaultLayoutConfig() {
+        let content;
+
+        if (this.props.chartsController.supportRulers) {
+            content = [
+                {
+                    type: "column",
+                    content: [
+                        {
+                            type: "stack",
+                            content: [this.chartViewOptionsItem, this.rulersItem]
+                        },
+                        this.measurementsItem
+                    ]
+                }
+            ];
+        } else {
+            content = [
+                {
+                    type: "column",
+                    content: [this.chartViewOptionsItem]
+                }
+            ];
+        }
+
+        const defaultLayoutConfig = {
+            settings: SideDock.DEFAULT_SETTINGS,
+            dimensions: SideDock.DEFAULT_DIMENSIONS,
+            content: content
+        };
+
+        return defaultLayoutConfig;
+    }
+
     render() {
         const chartsController = this.props.chartsController;
         const mode = chartsController.mode;
@@ -2894,89 +2997,17 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
         );
 
         if (this.sideDockAvailable) {
-            var content = [];
-
-            if (this.props.chartsController.supportRulers) {
-                content.push(
-                    {
-                        type: "component",
-                        componentName: "RulersDockView",
-                        componentState: {},
-                        title: "Rulers",
-                        isClosable: false
-                    },
-                    {
-                        type: "component",
-                        componentName: "MeasurementsDockView",
-                        componentState: {},
-                        title: "Measurements",
-                        isClosable: false
-                    }
-                );
-            }
-
-            content.push({
-                type: "component",
-                componentName: "ChartViewOptions",
-                componentState: this.props.chartsController.chartViewOptionsProps,
-                title: "View Options",
-                isClosable: false
-            });
-
-            const defaultLayoutConfig = {
-                settings: SideDock.DEFAULT_SETTINGS,
-                dimensions: SideDock.DEFAULT_DIMENSIONS,
-                content: [
-                    {
-                        type: "column",
-                        content
-                    }
-                ]
-            };
+            const layoutId =
+                "layout/2" + (this.props.chartsController.supportRulers ? "/with-rulers" : "");
 
             return (
                 <SideDock
                     ref={ref => (this.sideDock = ref)}
                     persistId="shared/ui/chart/sideDock"
-                    layoutId={
-                        "layout/1" +
-                        (this.props.chartsController.supportRulers ? "/with-rulers" : "")
-                    }
-                    defaultLayoutConfig={defaultLayoutConfig}
-                    registerComponents={(goldenLayout: any) => {
-                        goldenLayout.registerComponent("RulersDockView", function(
-                            container: any,
-                            props: any
-                        ) {
-                            ReactDOM.render(
-                                <RulersDockView chartsController={chartsController} {...props} />,
-                                container.getElement()[0]
-                            );
-                        });
-
-                        goldenLayout.registerComponent("MeasurementsDockView", function(
-                            container: any,
-                            props: any
-                        ) {
-                            ReactDOM.render(
-                                <MeasurementsDockView
-                                    chartsController={chartsController}
-                                    {...props}
-                                />,
-                                container.getElement()[0]
-                            );
-                        });
-
-                        goldenLayout.registerComponent("ChartViewOptions", function(
-                            container: any,
-                            props: ChartViewOptionsProps
-                        ) {
-                            ReactDOM.render(
-                                <ChartViewOptions chartsController={chartsController} {...props} />,
-                                container.getElement()[0]
-                            );
-                        });
-                    }}
+                    layoutId={layoutId}
+                    defaultLayoutConfig={this.defaultLayoutConfig}
+                    registerComponents={this.registerComponents}
+                    width={420}
                 >
                     {div}
                 </SideDock>

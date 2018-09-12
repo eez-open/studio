@@ -590,7 +590,7 @@ export class Waveform extends FileHistoryItem {
     createChartController(chartsController: ChartsController, id: string, axisModel: IAxisModel) {
         const chartController = new ChartController(chartsController, id);
 
-        chartController.createYAxisController(UNITS[this.waveformDefinition.unitName], axisModel);
+        chartController.createYAxisController(axisModel);
 
         chartController.lineControllers.push(
             new WaveformLineController(

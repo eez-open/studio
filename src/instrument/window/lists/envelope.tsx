@@ -7,7 +7,7 @@ import { clamp, objectClone } from "shared/util";
 import { _max, _range } from "shared/algorithm";
 import { Point, pointDistance, closestPointOnSegment } from "shared/geometry";
 import { capitalize } from "shared/string";
-import { IUnit, TIME_UNIT, VOLTAGE_UNIT, CURRENT_UNIT } from "shared/units";
+import { IUnit, TIME_UNIT } from "shared/units";
 
 import { validators } from "shared/model/validation";
 
@@ -1663,8 +1663,8 @@ export function createEnvelopeChartsController(
     if (displayOption === "both") {
         const chartController = new EnvelopeChartController(chartsController, displayOption);
 
-        chartController.createYAxisController(VOLTAGE_UNIT, list.data.voltageAxisModel);
-        chartController.createYAxisControllerOnRightSide(CURRENT_UNIT, list.data.currentAxisModel);
+        chartController.createYAxisController(list.data.voltageAxisModel);
+        chartController.createYAxisControllerOnRightSide(list.data.currentAxisModel);
 
         chartController.lineControllers.push(
             ...getLineControllers(list, chartController.yAxisController)
@@ -1677,7 +1677,7 @@ export function createEnvelopeChartsController(
     } else {
         if (displayOption === "voltage" || displayOption === "split") {
             const chartController = new EnvelopeChartController(chartsController, "voltage");
-            chartController.createYAxisController(VOLTAGE_UNIT, list.data.voltageAxisModel);
+            chartController.createYAxisController(list.data.voltageAxisModel);
             chartController.lineControllers.push(
                 ...getLineControllers(list, chartController.yAxisController)
             );
@@ -1686,7 +1686,7 @@ export function createEnvelopeChartsController(
 
         if (displayOption === "current" || displayOption === "split") {
             const chartController = new EnvelopeChartController(chartsController, "current");
-            chartController.createYAxisController(CURRENT_UNIT, list.data.currentAxisModel);
+            chartController.createYAxisController(list.data.currentAxisModel);
             chartController.lineControllers.push(
                 ...getLineControllers(list, chartController.yAxisController)
             );

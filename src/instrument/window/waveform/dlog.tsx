@@ -451,7 +451,7 @@ export class DlogWaveform extends FileHistoryItem {
 
         const chartController = new ChartController(chartsController, id);
 
-        chartController.createYAxisController(channel.unit, channel.axisModel);
+        chartController.createYAxisController(channel.axisModel);
 
         const lineController = new DlogWaveformLineController(
             "waveform-" + chartController.yAxisController.position,

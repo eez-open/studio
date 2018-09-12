@@ -12,6 +12,10 @@ import { IconAction } from "shared/ui/action";
 import { ChartsController, ChartController } from "shared/ui/chart/chart";
 import { WaveformModel } from "shared/ui/chart/waveform";
 
+import * as GenericChartModule from "shared/ui/chart/generic-chart";
+
+import { IChart } from "shared/extensions/extension";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const measurementFunctions = computed(() => {
@@ -76,7 +80,8 @@ export class Measurement extends React.Component<{
     measurementFunction: IMeasurementFunction;
 }> {
     @observable
-    value: string = "";
+    value: number | IChart | undefined = undefined;
+
     lastTask: any;
     worker: Worker | undefined;
     workerReady: boolean;
@@ -89,6 +94,10 @@ export class Measurement extends React.Component<{
         const xAxisController = this.props.chartController.xAxisController;
 
         const length: number = measurementsController.waveformModel.length;
+
+        if (length === 0) {
+            return null;
+        }
 
         function xAxisValueToIndex(value: number) {
             return (value / xAxisController.range) * (length - 1);
@@ -116,7 +125,7 @@ export class Measurement extends React.Component<{
         } else {
             xStartValue = 0;
             a = 0;
-            b = length;
+            b = length - 1;
         }
 
         return {
@@ -138,44 +147,42 @@ export class Measurement extends React.Component<{
         if (this.task != this.lastTask) {
             this.lastTask = this.task;
 
-            if (!this.worker) {
-                this.worker = new Worker("../shared/ui/chart/measurement-worker.js");
+            if (this.task) {
+                if (!this.worker) {
+                    this.worker = new Worker("../shared/ui/chart/measurement-worker.js");
 
-                this.worker.onmessage = (e: any) => {
-                    if (!this.worker) {
-                        // worker already terminated
-                        return;
-                    }
+                    this.worker.onmessage = (e: any) => {
+                        if (!this.worker) {
+                            // worker already terminated
+                            return;
+                        }
 
-                    if (!this.workerReady) {
-                        this.workerReady = true;
-                    } else {
-                        runInAction(() => {
-                            // @TODO precision of 4 decimal places is hardcoded
-                            this.value = this.props.chartController.yAxisController.unit.formatValue(
-                                e.data,
-                                4
-                            );
-                        });
-                    }
+                        if (!this.workerReady) {
+                            this.workerReady = true;
+                        } else {
+                            runInAction(() => {
+                                this.value = e.data;
+                            });
+                        }
 
-                    if (this.nextTask) {
-                        this.workerBusy = true;
-                        this.worker.postMessage(this.nextTask);
-                        this.nextTask = undefined;
-                    } else {
-                        this.workerBusy = false;
-                    }
-                };
+                        if (this.nextTask) {
+                            this.workerBusy = true;
+                            this.worker.postMessage(this.nextTask);
+                            this.nextTask = undefined;
+                        } else {
+                            this.workerBusy = false;
+                        }
+                    };
 
-                this.workerReady = false;
-            }
+                    this.workerReady = false;
+                }
 
-            if (this.workerReady && !this.workerBusy) {
-                this.workerBusy = true;
-                this.worker.postMessage(this.lastTask);
-            } else {
-                this.nextTask = this.lastTask;
+                if (this.workerReady && !this.workerBusy) {
+                    this.workerBusy = true;
+                    this.worker.postMessage(this.lastTask);
+                } else {
+                    this.nextTask = this.lastTask;
+                }
             }
         }
     }
@@ -189,7 +196,29 @@ export class Measurement extends React.Component<{
 
     render() {
         this.measureValue();
-        return <input type="text" className="form-control" value={this.value} readOnly={true} />;
+
+        if (!this.value) {
+            return null;
+        }
+
+        if (typeof this.value === "number") {
+            const strValue = this.props.chartController.yAxisController.unit.formatValue(
+                this.value,
+                4
+            );
+
+            return <input type="text" className="form-control" value={strValue} readOnly={true} />;
+        }
+
+        const {
+            GenericChart
+        } = require("shared/ui/chart/generic-chart") as typeof GenericChartModule;
+
+        return (
+            <div className="EezStudio_MeasurementChartContainer">
+                <GenericChart chart={this.value} />
+            </div>
+        );
     }
 }
 
@@ -271,7 +300,7 @@ export class MeasurementsDockView extends React.Component<{ chartsController: Ch
                                                     ? measurementFunction.name
                                                     : measurementId}
                                             </td>
-                                            <td>
+                                            <td className="EezStudio_MeasurementCol">
                                                 {measurementFunction ? (
                                                     <Measurement
                                                         chartController={this.chartController}

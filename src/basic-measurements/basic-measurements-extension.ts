@@ -23,6 +23,11 @@ const basicMeasurementsExtension: IExtensionDefinition = {
             id: "average",
             name: "Average",
             script: "average.js"
+        },
+        {
+            id: "fft",
+            name: "FFT",
+            script: "fft.js"
         }
     ]
 };

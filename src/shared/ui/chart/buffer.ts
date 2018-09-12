@@ -4,7 +4,8 @@ export enum WaveformFormat {
     RIGOL_BYTE,
     RIGOL_WORD,
     CSV_STRING,
-    EEZ_DLOG
+    EEZ_DLOG,
+    FLOATS
 }
 
 function getCsvValues(valuesArray: any) {
@@ -83,6 +84,12 @@ export function initValuesAccesor(object: {
         length = object.length;
         value = (index: number) => {
             return readFloat(values, offset + index * scale);
+        };
+        waveformData = value;
+    } else if (format === WaveformFormat.FLOATS) {
+        length = object.length;
+        value = (index: number) => {
+            return values[offset + index * scale];
         };
         waveformData = value;
     } else {
