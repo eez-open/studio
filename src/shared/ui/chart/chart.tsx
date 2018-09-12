@@ -541,12 +541,12 @@ class DynamicAxisController extends AxisController {
         this.animate(() => (this.axisModel.dynamic.zoomMode = "default"));
     }
 
-    @action.bound
+    @bind
     zoomIn() {
         this.zoom(this.from, this.from + this.distance / CONF_ZOOM_STEP);
     }
 
-    @action.bound
+    @bind
     zoomOut() {
         this.zoom(this.from, this.from + this.distance * CONF_ZOOM_STEP);
     }
@@ -627,7 +627,7 @@ class DynamicAxisController extends AxisController {
 
     animate(set: () => void) {
         if (!globalViewOptions.enableZoomAnimations) {
-            set();
+            runInAction(set);
             return;
         }
 
@@ -636,7 +636,7 @@ class DynamicAxisController extends AxisController {
         const oldFrom = this.from;
         const oldTo = this.to;
 
-        set();
+        runInAction(set);
 
         const newFrom = this.from;
         const newTo = this.to;
@@ -891,7 +891,7 @@ class FixedAxisController extends AxisController {
         this.animate(() => (this.axisModel.fixed.zoomMode = "default"));
     }
 
-    @action.bound
+    @bind
     zoomIn() {
         if (!this.zoomInEnabled) {
             return;
@@ -906,7 +906,7 @@ class FixedAxisController extends AxisController {
         });
     }
 
-    @action.bound
+    @bind
     zoomOut() {
         if (!this.zoomOutEnabled) {
             return;
@@ -985,7 +985,7 @@ class FixedAxisController extends AxisController {
 
     animate(set: () => void) {
         if (!globalViewOptions.enableZoomAnimations) {
-            set();
+            runInAction(set);
             return;
         }
 
@@ -994,7 +994,7 @@ class FixedAxisController extends AxisController {
         const oldOffset = this.subdivisionOffset;
         const oldScale = this.subdivisionScale;
 
-        set();
+        runInAction(set);
 
         const newOffset = this.subdivisionOffset;
         const newScale = this.subdivisionScale;
@@ -2659,7 +2659,7 @@ export class ChartView extends React.Component<
             ? chartController.yAxisController.axisModel.color
             : chartController.yAxisController.axisModel.colorInverse;
 
-        let chartTitle = (
+        let chartTitle = chartController.yAxisController.axisModel.label && (
             <div
                 className="EezStudio_Chart_Title"
                 style={{

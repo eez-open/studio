@@ -32,16 +32,38 @@ class GenericChartWaveform implements IWaveform {
             unit: UNITS[this.chartData.xAxes.unit]
         };
 
-        let min = this.chartData.data[0];
-        let max = this.chartData.data[0];
-        for (let i = 1; i < this.chartData.data.length; ++i) {
-            min = Math.min(min, this.chartData.data[i]);
-            max = Math.max(max, this.chartData.data[i]);
+        let min = chartData.yAxes.minValue;
+        let max = chartData.yAxes.maxValue;
+
+        if (min === undefined && max === undefined) {
+            min = this.chartData.data[0];
+            max = this.chartData.data[0];
+            for (let i = 1; i < this.chartData.data.length; ++i) {
+                min = Math.min(min, this.chartData.data[i]);
+                max = Math.max(max, this.chartData.data[i]);
+            }
+            const d = (max - min) * 0.1;
+            min -= d;
+            max += d;
+        } else if (min === undefined) {
+            min = this.chartData.data[0];
+            for (let i = 1; i < this.chartData.data.length; ++i) {
+                min = Math.min(min, this.chartData.data[i]);
+            }
+            const d = (max! - min) * 0.1;
+            min -= d;
+        } else {
+            max = this.chartData.data[0];
+            for (let i = 1; i < this.chartData.data.length; ++i) {
+                max = Math.max(max, this.chartData.data[i]);
+            }
+            const d = (max - min) * 0.1;
+            max += d;
         }
 
         this.yAxes = {
-            minValue: min,
-            maxValue: max,
+            minValue: min!,
+            maxValue: max!,
             unit: UNITS[this.chartData.yAxes.unit]
         };
     }
@@ -221,7 +243,7 @@ class GenericChartYAxisModel implements IAxisModel {
     }
 
     get label() {
-        return "Trt mrt";
+        return "";
     }
 
     get color() {

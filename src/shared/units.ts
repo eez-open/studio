@@ -535,6 +535,41 @@ export const SAMPLING_RATE_UNIT = new Unit({
     precision: 12
 });
 
+export const DECIBEL_UNIT = new Unit({
+    name: "decibel",
+    color: "white",
+    colorInverse: "black",
+    unitSymbol: "dB",
+    units: [
+        0.000000000001,
+        0.00000000001,
+        0.0000000001,
+        0.000000001,
+        0.00000001,
+        0.0000001,
+        0.000001,
+        0.00001,
+        0.0001,
+        0.001,
+        0.01,
+        0.1,
+        1,
+        10,
+        100,
+        1000,
+        10000,
+        100000,
+        1000000,
+        10000000,
+        100000000,
+        1000000000,
+        10000000000,
+        100000000000,
+        1000000000000
+    ],
+    precision: 12
+});
+
 export const UNKNOWN_UNIT = new Unit({
     name: "unknown",
     color: "#a0a0a0",
@@ -591,6 +626,8 @@ export const UNITS = {
     frequency: FREQUENCY_UNIT,
 
     "sampling rate": SAMPLING_RATE_UNIT,
+
+    decibel: DECIBEL_UNIT,
 
     unknown: UNKNOWN_UNIT,
     unkn: UNKNOWN_UNIT

@@ -81,6 +81,8 @@ export interface IChart {
         unit: keyof typeof UNITS;
     };
     yAxes: {
+        minValue?: number;
+        maxValue?: number;
         unit: keyof typeof UNITS;
     };
 }
