@@ -200,10 +200,15 @@ class Measurement {
             b = waveformModel.length - 1;
         }
 
+        const xNumSamples = b - a + 1;
+        if (xNumSamples <= 0) {
+            return null;
+        }
+
         return {
             xStartValue: xStartValue,
             xStartIndex: a,
-            xNumSamples: b - a + 1,
+            xNumSamples,
 
             format: waveformModel.format,
             values: waveformModel.values,
