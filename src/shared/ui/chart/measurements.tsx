@@ -1,20 +1,23 @@
 import * as React from "react";
-import { observable, computed, action, runInAction } from "mobx";
+import * as ReactDOM from "react-dom";
+import { observable, computed, action, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react";
+import { bind } from "bind-decorator";
 
-import { _map, _difference } from "shared/algorithm";
+import { _map, _difference, _range } from "shared/algorithm";
+import { guid, clamp } from "shared/util";
+import { stringCompare } from "shared/string";
 
-import { IMeasurementFunction } from "shared/extensions/extension";
+import { IMeasurementFunction, IChart } from "shared/extensions/extension";
 import { extensions } from "shared/extensions/extensions";
 
 import { IconAction } from "shared/ui/action";
+import { DockablePanels } from "shared/ui/side-dock";
+import { GenericDialog, IFieldProperties, FieldComponent } from "shared/ui/generic-dialog";
 
 import { ChartsController, ChartController } from "shared/ui/chart/chart";
-import { WaveformModel } from "shared/ui/chart/waveform";
-
 import * as GenericChartModule from "shared/ui/chart/generic-chart";
-
-import { IChart } from "shared/extensions/extension";
+import { WaveformFormat } from "shared/ui/chart/buffer";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -26,11 +29,12 @@ const measurementFunctions = computed(() => {
         functions: IMeasurementFunction[]
     ) {
         functions.forEach((extensionMeasurementFunction: any) => {
-            allFunctions.set(extensionMeasurementFunction.id, {
-                id: extensionMeasurementFunction.id,
-                name: extensionMeasurementFunction.name,
-                script: extensionFolderPath + "/" + extensionMeasurementFunction.script
-            });
+            allFunctions.set(
+                extensionMeasurementFunction.id,
+                Object.assign({}, extensionMeasurementFunction, {
+                    script: extensionFolderPath + "/" + extensionMeasurementFunction.script
+                })
+            );
         });
     }
 
@@ -48,62 +52,130 @@ const measurementFunctions = computed(() => {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class MeasurementsModel {
-    @observable
-    measurements: string[] = [];
-
-    @observable
-    selectedChartIndex: number = 0;
-
-    constructor(props?: any) {
-        if (props) {
-            Object.assign(this, props);
-        }
-    }
+interface IMeasurementDefinition {
+    measurementId: string;
+    measurementFunctionId: string;
+    chartIndex?: number;
+    chartIndexes?: number[];
+    parameters?: any;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+interface ISingleInputMeasurementTaskSpecification {
+    xStartValue: number;
+    xStartIndex: number;
+    xNumSamples: number;
 
-export class MeasurementsController {
+    format: WaveformFormat;
+    values: any;
+    offset: number;
+    scale: number;
+    samplingRate: number;
+
+    parameters: any;
+
+    measureFunctionScript: string;
+}
+
+class Measurement {
     constructor(
-        public chartController: ChartController,
-        public waveformModel: WaveformModel,
-        public measurementsModel: MeasurementsModel
+        public measurementsController: MeasurementsController,
+        public measurementDefinition: IMeasurementDefinition,
+        public measurementFunction: IMeasurementFunction | undefined
     ) {}
-}
 
-////////////////////////////////////////////////////////////////////////////////
+    get measurementId() {
+        return this.measurementDefinition.measurementId;
+    }
 
-@observer
-export class Measurement extends React.Component<{
-    chartController: ChartController;
-    measurementFunction: IMeasurementFunction;
-}> {
-    @observable
-    value: number | IChart | undefined = undefined;
+    get name() {
+        return (
+            (this.measurementFunction && this.measurementFunction.name) ||
+            this.measurementDefinition.measurementFunctionId
+        );
+    }
 
-    lastTask: any;
-    worker: Worker | undefined;
-    workerReady: boolean;
-    workerBusy: boolean;
-    nextTask: any;
+    get arity() {
+        return (this.measurementFunction && this.measurementFunction.arity) || 1;
+    }
 
-    @computed
-    get task() {
-        const measurementsController = this.props.chartController.measurementsController;
-        const xAxisController = this.props.chartController.xAxisController;
+    get parametersDescription() {
+        return this.measurementFunction && this.measurementFunction.parametersDescription;
+    }
 
-        const length: number = measurementsController.waveformModel.length;
+    get parameters() {
+        if (this.measurementDefinition.parameters) {
+            return this.measurementDefinition.parameters;
+        }
+
+        const parameters: any = {};
+
+        if (this.parametersDescription) {
+            this.parametersDescription.forEach(parameter => {
+                if (parameter.defaultValue) {
+                    parameters[parameter.name] = parameter.defaultValue;
+                }
+            });
+        }
+
+        return parameters;
+    }
+
+    set parameters(value: any) {
+        runInAction(() => (this.measurementDefinition.parameters = value));
+    }
+
+    get resultType() {
+        return (this.measurementFunction && this.measurementFunction.resultType) || "value";
+    }
+
+    get script() {
+        return this.measurementFunction && this.measurementFunction.script;
+    }
+
+    get chartIndex() {
+        return this.measurementDefinition.chartIndex || 0;
+    }
+
+    set chartIndex(value: number) {
+        runInAction(() => (this.measurementDefinition.chartIndex = value));
+    }
+
+    get chartIndexes() {
+        if (this.measurementDefinition.chartIndexes) {
+            return this.measurementDefinition.chartIndexes;
+        }
+        return _range(this.arity);
+    }
+
+    set chartIndexes(value: number[]) {
+        runInAction(() => (this.measurementDefinition.chartIndexes = value));
+    }
+
+    getChartTask(chartIndex: number): ISingleInputMeasurementTaskSpecification | null {
+        if (!this.script) {
+            return null;
+        }
+
+        const waveformModel = this.measurementsController.chartsController.getWaveformModel(
+            chartIndex
+        );
+
+        if (!waveformModel) {
+            return null;
+        }
+
+        const length: number = waveformModel.length;
 
         if (length === 0) {
             return null;
         }
 
         function xAxisValueToIndex(value: number) {
-            return (value / xAxisController.range) * (length - 1);
+            return value * waveformModel!.samplingRate;
         }
 
-        const rulersModel = this.props.chartController.rulersController!.rulersModel;
+        const rulersModel = this.measurementsController.chartsController.rulersController!
+            .rulersModel;
 
         let xStartValue: number;
         let a: number;
@@ -120,92 +192,253 @@ export class Measurement extends React.Component<{
             }
 
             xStartValue = x1;
-            a = Math.max(Math.floor(xAxisValueToIndex(x1)), 0);
-            b = Math.min(Math.ceil(xAxisValueToIndex(x2)), length - 1);
+            a = clamp(Math.floor(xAxisValueToIndex(x1)), 0, waveformModel.length);
+            b = clamp(Math.ceil(xAxisValueToIndex(x2)), 0, waveformModel.length - 1);
         } else {
             xStartValue = 0;
             a = 0;
-            b = length - 1;
+            b = waveformModel.length - 1;
         }
 
         return {
-            format: this.props.chartController.measurementsController.waveformModel.format,
-            values: measurementsController.waveformModel.values,
-            offset: measurementsController.waveformModel.offset,
-            scale: measurementsController.waveformModel.scale,
-
             xStartValue: xStartValue,
-            xSamplingRate: measurementsController.waveformModel.samplingRate,
             xStartIndex: a,
             xNumSamples: b - a + 1,
 
-            measureFunctionScript: this.props.measurementFunction.script
+            format: waveformModel.format,
+            values: waveformModel.values,
+            offset: waveformModel.offset,
+            scale: waveformModel.scale,
+            samplingRate: waveformModel.samplingRate,
+
+            parameters: toJS(this.parameters),
+
+            measureFunctionScript: this.script
         };
     }
 
-    measureValue() {
-        if (this.task != this.lastTask) {
-            this.lastTask = this.task;
+    @computed
+    get task() {
+        if (this.arity === 1) {
+            return this.getChartTask(this.chartIndex);
+        }
 
-            if (this.task) {
+        const tasks = this.chartIndexes
+            .map(chartIndex => this.getChartTask(chartIndex))
+            .filter(task => task) as ISingleInputMeasurementTaskSpecification[];
+
+        if (tasks.length < this.arity) {
+            return null;
+        }
+
+        const task = tasks[0];
+        let xStartValue = task.xStartValue;
+        let xStartIndex = task.xStartIndex;
+        let xEndIndex = task.xStartIndex + task.xNumSamples;
+
+        for (let i = 1; i < tasks.length; ++i) {
+            const task = tasks[i];
+
+            if (task.xStartIndex > xStartIndex) {
+                xStartIndex = task.xStartIndex;
+            }
+
+            if (task.xStartIndex + task.xNumSamples < xEndIndex) {
+                xEndIndex = task.xStartIndex + task.xNumSamples;
+            }
+        }
+
+        const xNumSamples = xEndIndex - xStartIndex;
+        if (xNumSamples <= 0) {
+            return null;
+        }
+
+        return {
+            xStartValue,
+            xStartIndex,
+            xNumSamples,
+
+            inputs: tasks.map(task => ({
+                format: task.format,
+                values: task.values,
+                offset: task.offset,
+                scale: task.scale,
+                samplingRate: task.samplingRate
+            })),
+
+            parameters: toJS(this.parameters),
+
+            measureFunctionScript: this.script
+        };
+    }
+
+    @observable
+    _value: number | string | IChart | null = null;
+
+    lastTask: any;
+
+    worker: Worker | null = null;
+    workerReadyReceived: boolean;
+    workerIdle: boolean;
+    workerIdleTimeout: any;
+    workerTask: any;
+
+    sendTaskToWorker() {
+        this.workerTask = this.lastTask;
+        this.worker!.postMessage(this.workerTask);
+        this.workerIdle = false;
+        if (this.workerIdleTimeout) {
+            clearTimeout(this.workerIdleTimeout);
+        }
+    }
+
+    setWorkerIdle() {
+        this.workerTask = null;
+        this.workerIdle = true;
+        this.workerIdleTimeout = setTimeout(() => {
+            this.workerIdleTimeout = undefined;
+            this.worker!.terminate();
+            this.worker = null;
+        }, 10000);
+    }
+
+    measureValue(task: any) {
+        if (task != this.lastTask) {
+            this.lastTask = task;
+
+            if (this.lastTask) {
                 if (!this.worker) {
                     this.worker = new Worker("../shared/ui/chart/measurement-worker.js");
 
+                    this.workerReadyReceived = false;
+
                     this.worker.onmessage = (e: any) => {
-                        if (!this.worker) {
-                            // worker already terminated
-                            return;
-                        }
+                        if (this.worker) {
+                            if (!this.workerReadyReceived) {
+                                this.workerReadyReceived = true;
 
-                        if (!this.workerReady) {
-                            this.workerReady = true;
-                        } else {
-                            runInAction(() => {
-                                this.value = e.data;
-                            });
-                        }
+                                // worker is now ready
+                                if (this.lastTask) {
+                                    this.sendTaskToWorker();
+                                } else {
+                                    this.setWorkerIdle();
+                                }
+                            } else {
+                                // worker done
+                                runInAction(() => {
+                                    this._value = e.data;
+                                });
 
-                        if (this.nextTask) {
-                            this.workerBusy = true;
-                            this.worker.postMessage(this.nextTask);
-                            this.nextTask = undefined;
-                        } else {
-                            this.workerBusy = false;
+                                // is there a newer task?
+                                if (this.lastTask !== this.workerTask) {
+                                    this.sendTaskToWorker();
+                                } else {
+                                    this.setWorkerIdle();
+                                }
+                            }
                         }
                     };
-
-                    this.workerReady = false;
-                }
-
-                if (this.workerReady && !this.workerBusy) {
-                    this.workerBusy = true;
-                    this.worker.postMessage(this.lastTask);
                 } else {
-                    this.nextTask = this.lastTask;
+                    if (this.workerReadyReceived && this.workerIdle) {
+                        this.sendTaskToWorker();
+                    }
                 }
+            } else {
+                runInAction(() => {
+                    this._value = null;
+                });
             }
         }
     }
 
-    componentWillUnmount() {
-        if (this.worker) {
-            this.worker.terminate();
-            this.worker = undefined;
+    @computed
+    get value(): number | string | IChart | null {
+        const task = this.task;
+        setTimeout(() => this.measureValue(task), 0);
+        return this._value;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class MeasurementsModel {
+    @observable
+    measurements: IMeasurementDefinition[] = [];
+
+    constructor(props?: { measurements?: (string | IMeasurementDefinition)[] }) {
+        if (props) {
+            if (props.measurements) {
+                this.measurements = props.measurements.map(measurement => {
+                    if (typeof measurement === "string") {
+                        return {
+                            measurementId: guid(),
+                            measurementFunctionId: measurement
+                        };
+                    } else {
+                        return measurement;
+                    }
+                });
+            }
         }
     }
+}
 
+////////////////////////////////////////////////////////////////////////////////
+
+export class MeasurementsController {
+    constructor(
+        public chartsController: ChartsController,
+        public measurementsModel: MeasurementsModel
+    ) {}
+
+    @computed
+    get measurements() {
+        return this.measurementsModel.measurements.map(measurement => {
+            const measurementFunction = measurementFunctions
+                .get()
+                .get(measurement.measurementFunctionId);
+
+            return new Measurement(this, measurement, measurementFunction);
+        });
+    }
+
+    getValue(measurementIndex: number) {}
+
+    @computed
+    get isThereAnyMeasurementChart() {
+        return this.measurements.find(measurement => measurement.resultType === "chart");
+    }
+
+    findMeasurementById(measurementId: string) {
+        return this.measurements.find(measurement => measurement.measurementId === measurementId);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class MeasurementValue extends React.Component<{
+    measurement: Measurement;
+}> {
     render() {
-        this.measureValue();
+        if (!this.props.measurement.script) {
+            return "?";
+        }
 
-        if (!this.value) {
+        const value = this.props.measurement.value;
+
+        if (value === null) {
             return null;
         }
 
-        if (typeof this.value === "number") {
-            const strValue = this.props.chartController.yAxisController.unit.formatValue(
-                this.value,
-                4
-            );
+        if (typeof value === "string") {
+            return value;
+        }
+
+        if (typeof value === "number") {
+            const strValue = this.props.measurement.measurementsController.chartsController.chartControllers[
+                this.props.measurement.chartIndex
+            ].yAxisController.unit.formatValue(value, 4);
 
             return <input type="text" className="form-control" value={strValue} readOnly={true} />;
         }
@@ -216,7 +449,9 @@ export class Measurement extends React.Component<{
 
         return (
             <div className="EezStudio_MeasurementChartContainer">
-                <GenericChart chart={this.value} />
+                <div>
+                    <GenericChart chart={value} />
+                </div>
             </div>
         );
     }
@@ -225,112 +460,223 @@ export class Measurement extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class MeasurementsDockView extends React.Component<{ chartsController: ChartsController }> {
+class MeasurementInputField extends FieldComponent {
+    render() {
+        const measurement = this.props.dialogContext;
+        const inputIndex = parseInt(this.props.fieldProperties.name.slice(INPUT_FILED_NAME.length));
+        return (
+            <select
+                className="form-control"
+                title="Chart rendering algorithm"
+                value={
+                    measurement.arity === 1
+                        ? measurement.chartIndex
+                        : measurement.chartIndexes[inputIndex]
+                }
+                onChange={action((event: React.ChangeEvent<HTMLSelectElement>) => {
+                    const newChartIndex = parseInt(event.target.value);
+
+                    if (measurement.arity === 1) {
+                        measurement.chartIndex = newChartIndex;
+                    } else {
+                        const newChartIndexes = measurement.chartIndexes.slice();
+                        newChartIndexes[inputIndex] = newChartIndex;
+                        measurement.chartIndexes = newChartIndexes;
+                    }
+                })}
+            >
+                {measurement.measurementsController.chartsController.chartControllers.map(
+                    (chartController: ChartController, chartIndex: number) => (
+                        <option key={chartIndex.toString()} value={chartIndex}>
+                            {chartController.yAxisController.axisModel.label}
+                        </option>
+                    )
+                )}
+            </select>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+class MeasurementResultField extends FieldComponent {
+    render() {
+        const measurement = this.props.dialogContext;
+        return <MeasurementValue measurement={measurement} />;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const INPUT_FILED_NAME = "___input___";
+const RESULT_FILED_NAME = "___result___";
+
+class MeasurementComponent extends React.Component<{
+    measurement: Measurement;
+}> {
+    get numCharts() {
+        return this.props.measurement.measurementsController.chartsController.chartControllers
+            .length;
+    }
+
+    get isResultVisible() {
+        return this.props.measurement.resultType !== "chart";
+    }
+
+    get deleteAction() {
+        const measurement = this.props.measurement;
+        const measurements = measurement.measurementsController.measurementsModel.measurements;
+        const index = measurements.indexOf(measurement.measurementDefinition);
+        return (
+            <IconAction
+                icon="material:delete"
+                title="Remove measurement"
+                style={{ color: "#333" }}
+                onClick={() => {
+                    runInAction(() => {
+                        measurements.splice(index, 1);
+                    });
+                }}
+            />
+        );
+    }
+
+    get dialogDefinition() {
+        const { measurement } = this.props;
+
+        let fields: IFieldProperties[] = [];
+
+        if (this.numCharts > 1) {
+            fields = fields.concat(
+                _range(measurement.arity).map(inputIndex => {
+                    return {
+                        name: `${INPUT_FILED_NAME}${inputIndex}`,
+                        displayName: measurement.arity === 1 ? "Input" : `Input ${inputIndex + 1}`,
+                        type: MeasurementInputField
+                    } as IFieldProperties;
+                })
+            );
+        }
+
+        if (measurement.parametersDescription) {
+            fields = fields.concat(measurement.parametersDescription);
+        }
+
+        if (this.isResultVisible) {
+            fields.push({
+                name: RESULT_FILED_NAME,
+                displayName: "Result",
+                type: MeasurementResultField,
+                enclosureClassName: "EezStudio_MeasurementsSideDockView_MeasurementResult_Enclosure"
+            });
+        }
+
+        return {
+            fields
+        };
+    }
+
+    get dialogValues() {
+        return this.props.measurement.parameters;
+    }
+
+    @action.bound
+    onValueChange(name: string, value: string) {
+        this.props.measurement.parameters = Object.assign({}, this.props.measurement.parameters, {
+            [name]: value
+        });
+    }
+
+    render() {
+        const { measurement } = this.props;
+
+        let content;
+
+        if (this.numCharts > 1 || this.props.measurement.parametersDescription) {
+            content = (
+                <td>
+                    <GenericDialog
+                        dialogDefinition={this.dialogDefinition}
+                        dialogContext={measurement}
+                        values={this.dialogValues}
+                        modal={false}
+                        onValueChange={this.onValueChange}
+                    />
+                </td>
+            );
+        } else {
+            // simplify in case of single chart and no measurement function parameters
+            content = (
+                <td>
+                    {this.isResultVisible && (
+                        <MeasurementValue measurement={this.props.measurement} />
+                    )}
+                </td>
+            );
+        }
+
+        return (
+            <React.Fragment>
+                <tr key={measurement.measurementId}>
+                    <td>{measurement.name}</td>
+                    {content}
+                    <td>{this.deleteAction}</td>
+                </tr>
+            </React.Fragment>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class MeasurementsDockView extends React.Component<{
+    measurementsController: MeasurementsController;
+}> {
     get measurementModel() {
-        return this.props.chartsController.chartControllers[0].measurementsController
-            .measurementsModel;
+        return this.props.measurementsController.measurementsModel;
     }
 
-    get chartController() {
-        return this.props.chartsController.chartControllers[
-            Math.min(
-                this.measurementModel.selectedChartIndex,
-                this.props.chartsController.chartControllers.length - 1
-            )
-        ];
-    }
-
-    get measurementsController() {
-        return this.chartController.measurementsController;
+    get numCharts() {
+        return this.props.measurementsController.chartsController.chartControllers.length;
     }
 
     @computed
     get availableMeasurements() {
-        return _difference(
-            Array.from(measurementFunctions.get().keys()),
-            this.measurementsController.measurementsModel.measurements
-        );
+        const availableMeasurements = [];
+        for (const [measurementFunctionId, measurementFunction] of measurementFunctions.get()) {
+            if ((measurementFunction.arity || 1) > this.numCharts) {
+                continue;
+            }
+
+            if (
+                !measurementFunction.parametersDescription &&
+                this.numCharts === 1 &&
+                this.measurementModel.measurements.find(
+                    measurement => measurement.measurementFunctionId === measurementFunctionId
+                )
+            ) {
+                continue;
+            }
+
+            availableMeasurements.push(measurementFunctionId);
+        }
+        return availableMeasurements.sort(stringCompare);
     }
 
     render() {
         return (
             <div className="EezStudio_MeasurementsSideDockView EezStudio_SideDockView">
-                {this.props.chartsController.chartControllers.length > 1 && (
-                    <div className="EezStudio_MeasurementsSideDockView_SelectedChartIndexProperty">
-                        <div className="EezStudio_SideDockView_PropertyLabel">
-                            <span>Measure:</span>
-                            <select
-                                className="form-control"
-                                title="Chart rendering algorithm"
-                                value={
-                                    this.measurementsController.measurementsModel.selectedChartIndex
-                                }
-                                onChange={action(
-                                    (event: React.ChangeEvent<HTMLSelectElement>) =>
-                                        (this.measurementsController.measurementsModel.selectedChartIndex = parseInt(
-                                            event.target.value
-                                        ))
-                                )}
-                            >
-                                {this.props.chartsController.chartControllers.map(
-                                    (chartController: ChartController, chartIndex: number) => (
-                                        <option key={chartIndex.toString()} value={chartIndex}>
-                                            {chartController.yAxisController.axisModel.label}
-                                        </option>
-                                    )
-                                )}
-                            </select>
-                        </div>
-                    </div>
-                )}
                 <div>
                     <table>
                         <tbody>
-                            {_map(
-                                this.measurementsController.measurementsModel.measurements,
-                                measurementId => {
-                                    const measurementFunction = measurementFunctions
-                                        .get()
-                                        .get(measurementId);
-
-                                    return (
-                                        <tr key={measurementId}>
-                                            <td>
-                                                {measurementFunction
-                                                    ? measurementFunction.name
-                                                    : measurementId}
-                                            </td>
-                                            <td className="EezStudio_MeasurementCol">
-                                                {measurementFunction ? (
-                                                    <Measurement
-                                                        chartController={this.chartController}
-                                                        measurementFunction={measurementFunction}
-                                                    />
-                                                ) : (
-                                                    "?"
-                                                )}
-                                            </td>
-                                            <td>
-                                                <IconAction
-                                                    icon="material:delete"
-                                                    title="Remove measurement"
-                                                    style={{ color: "#333" }}
-                                                    onClick={() => {
-                                                        runInAction(() => {
-                                                            this.measurementsController.measurementsModel.measurements.splice(
-                                                                this.measurementsController.measurementsModel.measurements.indexOf(
-                                                                    measurementId
-                                                                ),
-                                                                1
-                                                            );
-                                                        });
-                                                    }}
-                                                />
-                                            </td>
-                                        </tr>
-                                    );
-                                }
-                            )}
+                            {_map(this.props.measurementsController.measurements, measurement => (
+                                <MeasurementComponent
+                                    key={measurement.measurementId}
+                                    measurement={measurement}
+                                />
+                            ))}
                         </tbody>
                     </table>
                 </div>
@@ -344,19 +690,25 @@ export class MeasurementsDockView extends React.Component<{ chartsController: Ch
                             Add Measurement
                         </button>
                         <div className="dropdown-menu">
-                            {_map(this.availableMeasurements, measurementId => {
+                            {_map(this.availableMeasurements, measurementFunctionId => {
                                 return (
                                     <a
-                                        key={measurementId}
+                                        key={measurementFunctionId}
                                         className="dropdown-item"
                                         href="#"
                                         onClick={action(() => {
-                                            this.measurementsController.measurementsModel.measurements.push(
-                                                measurementId
+                                            this.props.measurementsController.measurementsModel.measurements.push(
+                                                {
+                                                    measurementId: guid(),
+                                                    measurementFunctionId
+                                                }
                                             );
                                         })}
                                     >
-                                        {measurementFunctions.get().get(measurementId)!.name}
+                                        {
+                                            measurementFunctions.get().get(measurementFunctionId)!
+                                                .name
+                                        }
                                     </a>
                                 );
                             })}
@@ -364,6 +716,103 @@ export class MeasurementsDockView extends React.Component<{ chartsController: Ch
                     </div>
                 )}
             </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class ChartMeasurements extends React.Component<{
+    measurementsController: MeasurementsController;
+}> {
+    dockablePanels: DockablePanels | null;
+
+    get measurementModel() {
+        return this.props.measurementsController.measurementsModel;
+    }
+
+    @bind
+    registerComponents(factory: any) {
+        const measurementsController = this.props.measurementsController;
+
+        factory.registerComponent("MeasurementValue", function(container: any, props: any) {
+            const measurement = measurementsController.findMeasurementById(props.measurementId);
+            if (measurement) {
+                ReactDOM.render(
+                    <MeasurementValue measurement={measurement} />,
+                    container.getElement()[0]
+                );
+            }
+        });
+    }
+
+    @computed
+    get defaultLayoutConfig() {
+        const content = [
+            {
+                type: "stack",
+                content: this.props.measurementsController.measurements
+                    .filter(measurement => measurement.resultType === "chart")
+                    .map(measurement => {
+                        let title;
+
+                        const chartControllers = this.props.measurementsController.chartsController
+                            .chartControllers;
+                        if (chartControllers.length > 1) {
+                            if (measurement.arity === 1) {
+                                title = `${measurement.name} (${
+                                    chartControllers[measurement.chartIndex].yAxisController
+                                        .axisModel.label
+                                })`;
+                            } else {
+                                title = `${measurement.name} (${measurement.chartIndexes
+                                    .map(
+                                        chartIndex =>
+                                            chartControllers[chartIndex].yAxisController.axisModel
+                                                .label
+                                    )
+                                    .join(", ")})`;
+                            }
+                        } else {
+                            title = measurement.name;
+                        }
+
+                        return {
+                            type: "component",
+                            componentName: "MeasurementValue",
+                            componentState: {
+                                measurementId: measurement.measurementId
+                            },
+                            title,
+                            isClosable: false
+                        };
+                    })
+            }
+        ];
+
+        const defaultLayoutConfig = {
+            settings: DockablePanels.DEFAULT_SETTINGS,
+            dimensions: DockablePanels.DEFAULT_DIMENSIONS,
+            content: content
+        };
+
+        return defaultLayoutConfig;
+    }
+
+    updateSize() {
+        if (this.dockablePanels) {
+            this.dockablePanels.updateSize();
+        }
+    }
+
+    render() {
+        return (
+            <DockablePanels
+                ref={ref => (this.dockablePanels = ref)}
+                defaultLayoutConfig={this.defaultLayoutConfig}
+                registerComponents={this.registerComponents}
+            />
         );
     }
 }

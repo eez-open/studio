@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { observable, action, keys } from "mobx";
+import { observable, computed, action, keys } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
@@ -11,7 +11,7 @@ import { log } from "shared/activity-log";
 
 import { IconAction, ButtonAction } from "shared/ui/action";
 import { Toolbar } from "shared/ui/toolbar";
-import { SideDock } from "shared/ui/side-dock";
+import { SideDock, DockablePanels } from "shared/ui/side-dock";
 
 import { extensions } from "shared/extensions/extensions";
 
@@ -278,10 +278,10 @@ export class HistoryView extends React.Component<{
     }
 
     @bind
-    registerComponents(goldenLayout: any) {
+    registerComponents(factory: any) {
         const appStore = this.props.appStore;
 
-        goldenLayout.registerComponent("SearchResults", function(container: any, props: any) {
+        factory.registerComponent("SearchResults", function(container: any, props: any) {
             ReactDOM.render(
                 <div
                     style={{
@@ -297,11 +297,11 @@ export class HistoryView extends React.Component<{
             );
         });
 
-        goldenLayout.registerComponent("Filters", function(container: any, props: any) {
+        factory.registerComponent("Filters", function(container: any, props: any) {
             ReactDOM.render(<FiltersComponent appStore={appStore} />, container.getElement()[0]);
         });
 
-        goldenLayout.registerComponent("Calendar", function(container: any, props: any) {
+        factory.registerComponent("Calendar", function(container: any, props: any) {
             ReactDOM.render(
                 <div
                     style={{
@@ -315,7 +315,7 @@ export class HistoryView extends React.Component<{
             );
         });
 
-        goldenLayout.registerComponent("Sessions", function(container: any, props: any) {
+        factory.registerComponent("Sessions", function(container: any, props: any) {
             ReactDOM.render(
                 <div
                     style={{
@@ -376,6 +376,7 @@ export class HistoryView extends React.Component<{
         };
     }
 
+    @computed
     get defaultLayoutConfig() {
         let content;
         if (this.props.appStore.history.search.searchActive) {
@@ -418,8 +419,8 @@ export class HistoryView extends React.Component<{
         }
 
         const defaultLayoutConfig = {
-            settings: SideDock.DEFAULT_SETTINGS,
-            dimensions: SideDock.DEFAULT_DIMENSIONS,
+            settings: DockablePanels.DEFAULT_SETTINGS,
+            dimensions: DockablePanels.DEFAULT_DIMENSIONS,
             content
         };
 
@@ -545,9 +546,11 @@ export function showSessionsList(navigationStore: INavigationStore) {
         if (!sideDock.isOpen) {
             sideDock.toggleIsOpen();
         } else {
-            const items = sideDock.goldenLayout.root.getItemsById("sessions");
-            if (items.length === 1) {
-                items[0].parent.setActiveContentItem(items[0]);
+            if (sideDock.dockablePanels) {
+                const items = sideDock.dockablePanels.goldenLayout.root.getItemsById("sessions");
+                if (items.length === 1) {
+                    items[0].parent.setActiveContentItem(items[0]);
+                }
             }
             return;
         }

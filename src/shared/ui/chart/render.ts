@@ -106,7 +106,7 @@ export function renderWaveformPath(
     let xToPx = xAxisController.valueToPx(xAxisController.to);
 
     function xAxisPxToIndex(px: number) {
-        return (xAxisController.pxToValue(px) / xAxisController.range) * (waveform.length - 1);
+        return xAxisController.pxToValue(px) * waveform.samplingRate;
     }
 
     function renderSparse() {
@@ -222,7 +222,7 @@ export function renderWaveformPath(
 
             const x = xFromPx + offsets[offset];
             const y = valueAt(x);
-            if (!isNaN(y)) {
+            if (isFinite(y)) {
                 ctx.beginPath();
                 ctx.arc(x, canvas.height - y, 1, 0, 2 * Math.PI);
                 ctx.fill();

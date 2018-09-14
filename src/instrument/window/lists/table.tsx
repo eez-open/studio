@@ -951,6 +951,10 @@ class TableChartsController extends ChartsController {
             showShowSampledDataOption: false
         };
     }
+
+    getWaveformModel(chartIndex: number) {
+        return null;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

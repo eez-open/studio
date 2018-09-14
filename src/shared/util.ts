@@ -325,13 +325,13 @@ export function closest(element: any, predicate: (element: any) => boolean) {
 }
 
 export function closestByClass(element: any, className: string) {
-    return closest(
-        element,
-        (element: any) =>
-            element.className &&
-            typeof element.className === "string" &&
-            element.className.indexOf(className) !== -1
-    );
+    return closest(element, (element: any) => {
+        const elementClassName = element.getAttribute && element.getAttribute("class");
+        if (!elementClassName) {
+            return false;
+        }
+        return elementClassName.indexOf(className) !== -1;
+    });
 }
 
 export function addScript(src: string) {

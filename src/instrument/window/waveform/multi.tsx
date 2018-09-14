@@ -72,6 +72,10 @@ export class MultiWaveformChartsController extends ChartsController {
     get supportRulers() {
         return true;
     }
+
+    getWaveformModel(chartIndex: number) {
+        return this.multiWaveform.linkedWaveforms[chartIndex].waveform;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -305,15 +309,12 @@ export class MultiWaveform extends HistoryItem {
                     linkedWaveform.yAxisModel
                 );
 
-                chartController.createRulersController(
-                    linkedWaveform.waveform,
-                    this.rulers,
-                    this.measurements
-                );
-
                 return chartController;
             }
         );
+
+        chartsController.createRulersController(this.rulers);
+        chartsController.createMeasurementsController(this.measurements);
 
         return chartsController;
     }

@@ -8,41 +8,21 @@ import { Splitter } from "shared/ui/splitter";
 import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
 
 @observer
-export class SideDock extends React.Component<{
-    persistId: string;
-    layoutId: string;
+export class DockablePanels extends React.Component<{
+    layoutId?: string;
     defaultLayoutConfig: any;
-    registerComponents: (goldenLayout: any) => void;
-    header?: JSX.Element;
-    width: number;
+    registerComponents: (factory: any) => void;
 }> {
-    static defaultProps = { width: 240 };
-
     static DEFAULT_SETTINGS = {
         showPopoutIcon: false,
         showMaximiseIcon: false,
         showCloseIcon: false
     };
+
     static DEFAULT_DIMENSIONS = {
         borderWidth: 8,
         headerHeight: 26
     };
-
-    @observable
-    isOpen: boolean;
-
-    constructor(props: any) {
-        super(props);
-
-        this.isOpen =
-            localStorage.getItem(this.props.persistId + "/is-open") === "0" ? false : true;
-    }
-
-    @action.bound
-    toggleIsOpen() {
-        this.isOpen = !this.isOpen;
-        localStorage.setItem(this.props.persistId + "/is-open", this.isOpen ? "1" : "0");
-    }
 
     containerDiv: HTMLDivElement | null;
 
@@ -51,26 +31,20 @@ export class SideDock extends React.Component<{
     lastWidth: number | undefined;
     lastHeight: number | undefined;
 
-    lastLayoutId: string;
-
-    get layoutLocalStorageItemId() {
-        return this.props.persistId + "/" + this.props.layoutId;
-    }
-
-    get defaultLayoutConfig() {
-        return this.props.defaultLayoutConfig;
-    }
+    lastLayoutId: string | undefined;
 
     get layoutConfig() {
-        const savedStateJSON = localStorage.getItem(this.layoutLocalStorageItemId);
-        if (savedStateJSON) {
-            try {
-                return JSON.parse(savedStateJSON);
-            } catch (err) {
-                console.error(err);
+        if (this.props.layoutId) {
+            const savedStateJSON = localStorage.getItem(this.props.layoutId);
+            if (savedStateJSON) {
+                try {
+                    return JSON.parse(savedStateJSON);
+                } catch (err) {
+                    console.error(err);
+                }
             }
         }
-        return this.defaultLayoutConfig;
+        return this.props.defaultLayoutConfig;
     }
 
     update() {
@@ -96,7 +70,9 @@ export class SideDock extends React.Component<{
     onStateChanged() {
         if (this.goldenLayout) {
             const state = JSON.stringify(this.goldenLayout.toConfig());
-            localStorage.setItem(this.layoutLocalStorageItemId, state);
+            if (this.props.layoutId) {
+                localStorage.setItem(this.props.layoutId, state);
+            }
         }
     }
 
@@ -133,6 +109,46 @@ export class SideDock extends React.Component<{
     }
 
     render() {
+        return <div ref={ref => (this.containerDiv = ref)} style={{ overflow: "visible" }} />;
+    }
+}
+
+@observer
+export class SideDock extends React.Component<{
+    persistId: string;
+    layoutId: string;
+    defaultLayoutConfig: any;
+    registerComponents: (factory: any) => void;
+    header?: JSX.Element;
+    width: number;
+}> {
+    static defaultProps = { width: 240 };
+
+    @observable
+    isOpen: boolean;
+
+    dockablePanels: DockablePanels | null;
+
+    constructor(props: any) {
+        super(props);
+
+        this.isOpen =
+            localStorage.getItem(this.props.persistId + "/is-open") === "0" ? false : true;
+    }
+
+    @action.bound
+    toggleIsOpen() {
+        this.isOpen = !this.isOpen;
+        localStorage.setItem(this.props.persistId + "/is-open", this.isOpen ? "1" : "0");
+    }
+
+    updateSize() {
+        if (this.dockablePanels) {
+            this.dockablePanels.updateSize();
+        }
+    }
+
+    render() {
         const dockSwitcherClassName = classNames("EezStudio_SideDockSwitch", {
             EezStudio_SideDockSwitch_Closed: !this.isOpen
         });
@@ -143,7 +159,12 @@ export class SideDock extends React.Component<{
 
         if (this.isOpen) {
             const container = (
-                <div ref={ref => (this.containerDiv = ref)} style={{ overflow: "visible" }} />
+                <DockablePanels
+                    ref={ref => (this.dockablePanels = ref)}
+                    layoutId={this.props.persistId + "/" + this.props.layoutId}
+                    defaultLayoutConfig={this.props.defaultLayoutConfig}
+                    registerComponents={this.props.registerComponents}
+                />
             );
 
             if (this.props.header) {
@@ -165,6 +186,7 @@ export class SideDock extends React.Component<{
                 );
             }
         } else {
+            this.dockablePanels = null;
             sideDock = dockSwitcher;
         }
 
@@ -173,7 +195,7 @@ export class SideDock extends React.Component<{
                 <Splitter
                     type="horizontal"
                     sizes={`100%|${this.props.width}px`}
-                    persistId="shared/ui/chart"
+                    persistId={`${this.props.persistId}/splitter`}
                     childrenOverflow="auto|visible"
                 >
                     {this.props.children}

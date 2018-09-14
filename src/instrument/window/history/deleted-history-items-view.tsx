@@ -1,12 +1,12 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { observable, action } from "mobx";
+import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import { IconAction, ButtonAction } from "shared/ui/action";
-import { SideDock } from "shared/ui/side-dock";
+import { SideDock, DockablePanels } from "shared/ui/side-dock";
 
 import { IAppStore } from "instrument/window/history/history";
 import { HistoryListComponent } from "instrument/window/history/list-component";
@@ -114,10 +114,10 @@ export class DeletedHistoryItemsView extends React.Component<{
     }
 
     @bind
-    registerComponents(goldenLayout: any) {
+    registerComponents(factory: any) {
         const appStore = this.props.appStore;
 
-        goldenLayout.registerComponent("SearchResults", function(container: any, props: any) {
+        factory.registerComponent("SearchResults", function(container: any, props: any) {
             ReactDOM.render(
                 <div
                     style={{
@@ -133,7 +133,7 @@ export class DeletedHistoryItemsView extends React.Component<{
             );
         });
 
-        goldenLayout.registerComponent("Calendar", function(container: any, props: any) {
+        factory.registerComponent("Calendar", function(container: any, props: any) {
             ReactDOM.render(
                 <div
                     style={{
@@ -168,6 +168,7 @@ export class DeletedHistoryItemsView extends React.Component<{
         };
     }
 
+    @computed
     get defaultLayoutConfig() {
         let content;
 
@@ -188,8 +189,8 @@ export class DeletedHistoryItemsView extends React.Component<{
         }
 
         const defaultLayoutConfig = {
-            settings: SideDock.DEFAULT_SETTINGS,
-            dimensions: SideDock.DEFAULT_DIMENSIONS,
+            settings: DockablePanels.DEFAULT_SETTINGS,
+            dimensions: DockablePanels.DEFAULT_DIMENSIONS,
             content
         };
 

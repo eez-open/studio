@@ -1590,6 +1590,10 @@ export class EnvelopeChartsController extends ChartsController {
             showShowSampledDataOption: true
         };
     }
+
+    getWaveformModel(chartIndex: number) {
+        return null;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

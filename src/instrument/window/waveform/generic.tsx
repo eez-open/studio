@@ -277,6 +277,10 @@ export class WaveformChartsController extends ChartsController {
     get supportRulers() {
         return true;
     }
+
+    getWaveformModel(chartIndex: number) {
+        return this.waveform;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -584,6 +588,11 @@ export class Waveform extends FileHistoryItem {
             this.createChartController(chartsController, "unknown", this.yAxisModel)
         ];
 
+        if (!(chartsController instanceof MultiWaveformChartsController)) {
+            chartsController.createRulersController(this.rulers);
+            chartsController.createMeasurementsController(this.measurements);
+        }
+
         return chartsController;
     }
 
@@ -599,10 +608,6 @@ export class Waveform extends FileHistoryItem {
                 chartController.yAxisController
             )
         );
-
-        if (!(chartsController instanceof MultiWaveformChartsController)) {
-            chartController.createRulersController(this, this.rulers, this.measurements);
-        }
 
         return chartController;
     }

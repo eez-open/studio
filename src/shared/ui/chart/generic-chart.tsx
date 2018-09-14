@@ -52,7 +52,7 @@ class GenericChartWaveform implements IWaveform {
             }
             const d = (max! - min) * 0.1;
             min -= d;
-        } else {
+        } else if (max === undefined) {
             max = this.chartData.data[0];
             for (let i = 1; i < this.chartData.data.length; ++i) {
                 max = Math.max(max, this.chartData.data[i]);
@@ -375,6 +375,10 @@ class GenericChartChartsController extends ChartsController {
 
     get supportRulers() {
         return false;
+    }
+
+    getWaveformModel(chartIndex: number) {
+        return null;
     }
 }
 

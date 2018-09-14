@@ -11,7 +11,8 @@ import { Point, pointDistance } from "shared/geometry";
 import { IUnit } from "shared/units";
 
 import { Draggable } from "shared/ui/draggable";
-import { SideDock } from "shared/ui/side-dock";
+import { SideDock, DockablePanels } from "shared/ui/side-dock";
+import { Splitter } from "shared/ui/splitter";
 
 import { ChartViewOptionsProps, ChartViewOptions } from "shared/ui/chart/view-options";
 import { WaveformRenderAlgorithm } from "shared/ui/chart/render";
@@ -20,7 +21,8 @@ import { RulersController, RulersDockView, RulersModel } from "shared/ui/chart/r
 import {
     MeasurementsDockView,
     MeasurementsController,
-    MeasurementsModel
+    MeasurementsModel,
+    ChartMeasurements
 } from "shared/ui/chart/measurements";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -302,6 +304,17 @@ export abstract class AxisController {
 
     end() {
         this.panTo(this.maxValue - this.distance);
+    }
+
+    get numSamples() {
+        let numSamples = 0;
+        for (let i = 0; i < this.chartsController.chartControllers.length; ++i) {
+            let waveformModel = this.chartsController.getWaveformModel(i);
+            if (waveformModel && waveformModel.length > numSamples) {
+                numSamples = waveformModel.length;
+            }
+        }
+        return numSamples;
     }
 }
 
@@ -1080,6 +1093,10 @@ export class ChartController {
         return this.chartsController.xAxisController;
     }
 
+    get chartIndex() {
+        return this.chartsController.chartControllers.indexOf(this);
+    }
+
     yAxisController: AxisController;
 
     createYAxisController(model: IAxisModel) {
@@ -1129,8 +1146,11 @@ export class ChartController {
     }
 
     onDragStart(chartView: ChartView, event: PointerEvent): MouseHandler | undefined {
-        if (this.rulersController) {
-            const mouseHandler = this.rulersController.onDragStart(chartView, event);
+        if (this.chartsController.rulersController) {
+            const mouseHandler = this.chartsController.rulersController.onDragStart(
+                chartView,
+                event
+            );
             if (mouseHandler) {
                 return mouseHandler;
             }
@@ -1240,22 +1260,6 @@ export class ChartController {
 
     customRender(): JSX.Element | null {
         return null;
-    }
-
-    rulersController: RulersController;
-    measurementsController: MeasurementsController;
-
-    createRulersController(
-        waveformModel: WaveformModel,
-        rulersModel: RulersModel,
-        measurementsModel: MeasurementsModel
-    ) {
-        this.rulersController = new RulersController(this, waveformModel, rulersModel);
-        this.measurementsController = new MeasurementsController(
-            this,
-            waveformModel,
-            measurementsModel
-        );
     }
 }
 
@@ -1612,6 +1616,23 @@ export abstract class ChartsController {
 
     get supportRulers() {
         return false;
+    }
+
+    abstract getWaveformModel(chartIndex: number): WaveformModel | null;
+
+    rulersController: RulersController;
+    measurementsController: MeasurementsController;
+
+    createRulersController(rulersModel: RulersModel) {
+        if (this.supportRulers && this.mode !== "preview") {
+            this.rulersController = new RulersController(this, rulersModel);
+        }
+    }
+
+    createMeasurementsController(measurementsModel: MeasurementsModel) {
+        if (this.supportRulers && this.mode !== "preview") {
+            this.measurementsController = new MeasurementsController(this, measurementsModel);
+        }
     }
 }
 
@@ -2753,8 +2774,8 @@ export class ChartView extends React.Component<
                         {this.cursor.render()}
 
                         {this.props.mode !== "preview" &&
-                            chartController.rulersController &&
-                            chartController.rulersController.render(this.clipId)}
+                            chartsController.rulersController &&
+                            chartsController.rulersController.render(this)}
 
                         {this.mouseHandler && this.mouseHandler.render()}
                     </g>
@@ -2779,6 +2800,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
     animationFrameRequestId: any;
     div: HTMLDivElement | null;
     sideDock: SideDock | null;
+    chartMeasurements: ChartMeasurements | null;
 
     get sideDockAvailable() {
         return this.props.sideDockAvailable !== undefined
@@ -2829,6 +2851,10 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             this.sideDock.updateSize();
         }
 
+        if (this.chartMeasurements) {
+            this.chartMeasurements.updateSize();
+        }
+
         this.animationFrameRequestId = window.requestAnimationFrame(this.frameAnimation);
     }
 
@@ -2865,27 +2891,27 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
     }
 
     @bind
-    registerComponents(goldenLayout: any) {
+    registerComponents(factory: any) {
         const chartsController = this.props.chartsController;
 
-        goldenLayout.registerComponent("RulersDockView", function(container: any, props: any) {
+        factory.registerComponent("RulersDockView", function(container: any, props: any) {
             ReactDOM.render(
                 <RulersDockView chartsController={chartsController} {...props} />,
                 container.getElement()[0]
             );
         });
 
-        goldenLayout.registerComponent("MeasurementsDockView", function(
-            container: any,
-            props: any
-        ) {
+        factory.registerComponent("MeasurementsDockView", function(container: any, props: any) {
             ReactDOM.render(
-                <MeasurementsDockView chartsController={chartsController} {...props} />,
+                <MeasurementsDockView
+                    measurementsController={chartsController.measurementsController}
+                    {...props}
+                />,
                 container.getElement()[0]
             );
         });
 
-        goldenLayout.registerComponent("ChartViewOptions", function(
+        factory.registerComponent("ChartViewOptions", function(
             container: any,
             props: ChartViewOptionsProps
         ) {
@@ -2926,6 +2952,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
         };
     }
 
+    @computed
     get defaultLayoutConfig() {
         let content;
 
@@ -2952,8 +2979,8 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
         }
 
         const defaultLayoutConfig = {
-            settings: SideDock.DEFAULT_SETTINGS,
-            dimensions: SideDock.DEFAULT_DIMENSIONS,
+            settings: DockablePanels.DEFAULT_SETTINGS,
+            dimensions: DockablePanels.DEFAULT_DIMENSIONS,
             content: content
         };
 
@@ -2982,7 +3009,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             />
         ));
 
-        const div = (
+        let div = (
             <div
                 ref={ref => (this.div = ref)}
                 className={className}
@@ -2995,6 +3022,26 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
                 </svg>
             </div>
         );
+
+        if (
+            chartsController.measurementsController &&
+            chartsController.measurementsController.isThereAnyMeasurementChart
+        ) {
+            div = (
+                <Splitter
+                    type="vertical"
+                    sizes={`50%|50%`}
+                    persistId="shared/ui/chart/splitter-chart-measurements"
+                    childrenOverflow="auto|visible"
+                >
+                    {div}
+                    <ChartMeasurements
+                        ref={ref => (this.chartMeasurements = ref)}
+                        measurementsController={chartsController.measurementsController}
+                    />
+                </Splitter>
+            );
+        }
 
         if (this.sideDockAvailable) {
             const layoutId =

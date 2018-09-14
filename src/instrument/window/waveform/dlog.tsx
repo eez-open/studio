@@ -185,6 +185,11 @@ class DlogWaveformChartsController extends ChartsController {
     get supportRulers() {
         return true;
     }
+
+    getWaveformModel(chartIndex: number) {
+        return (this.chartControllers[0].lineControllers[0] as DlogWaveformLineController)
+            .waveform as any;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -463,12 +468,6 @@ export class DlogWaveform extends FileHistoryItem {
 
         chartController.lineControllers.push(lineController);
 
-        chartController.createRulersController(
-            lineController.waveform as any, // TODO this is dangerous
-            this.rulers,
-            this.measurements
-        );
-
         return chartController;
     }
 
@@ -486,6 +485,9 @@ export class DlogWaveform extends FileHistoryItem {
         chartsController.chartControllers = this.channels.map(channel =>
             this.createChartController(chartsController, channel)
         );
+
+        chartsController.createRulersController(this.rulers);
+        chartsController.createMeasurementsController(this.measurements);
 
         return chartsController;
     }

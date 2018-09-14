@@ -11,11 +11,16 @@ import { ListContainer, List, IListNode } from "shared/ui/list";
 
 @observer
 export class PropertyEnclosure extends React.Component<
-    { advanced: boolean; errors?: string[]; style?: React.CSSProperties },
+    {
+        advanced: boolean; // show this property in "Advanced properties" section
+        errors?: string[];
+        style?: React.CSSProperties;
+        className?: string;
+    },
     {}
 > {
     render() {
-        let className = classNames({
+        let className = classNames(this.props.className, {
             advanced: this.props.errors ? false : this.props.advanced
         });
 
@@ -697,7 +702,8 @@ export class PropertyList extends React.Component<
     { className?: string; withAdvancedProperties?: boolean },
     {}
 > {
-    @observable showAdvanced = false;
+    @observable
+    showAdvanced = false;
 
     constructor(props: any) {
         super(props);

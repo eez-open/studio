@@ -5,6 +5,10 @@ import { IToolbarButton, IToolboxGroup } from "shared/ui/designer/designer-inter
 
 import { IShortcut } from "shortcuts/interfaces";
 
+import { IFieldProperties } from "shared/ui/generic-dialog";
+
+export { IFieldProperties } from "shared/ui/generic-dialog";
+
 export interface IActivityLogEntryInfo {
     name: string;
     content: JSX.Element | string;
@@ -68,10 +72,21 @@ type IActivityLogTool2 = (controller: IActivityLogController) => JSX.Element | n
 
 type IActivityLogTool = IActivityLogTool1 | IActivityLogTool2;
 
+export type IMeasurementFunctionResultType = "value" | "chart";
+
 export interface IMeasurementFunction {
     id: string;
     name: string;
     script: string;
+
+    // On how much channels function operates?
+    // Usually only 1, but some functions like add or sub operates on 2.
+    // Default value is 1.
+    arity?: number;
+
+    parametersDescription?: IFieldProperties[];
+
+    resultType?: IMeasurementFunctionResultType;
 }
 
 export interface IChart {
@@ -87,22 +102,27 @@ export interface IChart {
     };
 }
 
-export interface IMeasureTask {
+interface IInput {
+    // no. of samples per second
+    samplingRate: number;
+    getSampleValueAtIndex(index: number): number;
+}
+
+export interface IMeasureTask extends IInput {
     // x value of the first sample (at xStartIndex)
     xStartValue: number;
-
-    // no. of samples per second
-    xSamplingRate: number;
-
     // index of the first sample to use for measurement
     xStartIndex: number;
     // total number of samples to use for measurement
     xNumSamples: number;
 
-    getSampleValueAtIndex(index: number): number;
+    // inputs in case when arity is > 1
+    inputs: IInput[];
+
+    parameters?: any;
 
     // store measurement result to this property
-    result: number | IChart | null;
+    result: number | string | IChart | null;
 }
 
 export interface IExtensionDescription {

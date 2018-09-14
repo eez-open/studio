@@ -19,25 +19,28 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface EnumItem {
+interface IEnumItem {
     id: string;
     label: string;
 }
 
-export interface FieldProperties {
+export interface IFieldProperties {
     name: string;
     displayName?: string;
     type?: "integer" | "number" | "string" | "boolean" | "enum" | typeof FieldComponent;
     unit?: keyof typeof UNITS;
-    enumItems?: (string | EnumItem)[];
+    enumItems?: (number | string | IEnumItem)[];
+    defaultValue?: number | string | boolean;
     visible?: (values: any) => boolean;
     options?: any;
     validators?: Rule[];
     fullLine?: boolean;
+    enclosureClassName?: string;
 }
 
 export interface FieldComponentProps {
-    fieldProperties: FieldProperties;
+    dialogContext: any;
+    fieldProperties: IFieldProperties;
     values: any;
     fieldContext: any;
     onChange: (event: any) => void;
@@ -75,7 +78,7 @@ export class TableField extends FieldComponent {
 interface DialogDefinition {
     id?: string;
     title?: string;
-    fields: FieldProperties[];
+    fields: IFieldProperties[];
 }
 
 interface GenericDialogResult {
@@ -85,9 +88,12 @@ interface GenericDialogResult {
 
 interface GenericDialogProps {
     dialogDefinition: DialogDefinition;
+    dialogContext: any;
     values: any;
+    modal: boolean;
     onOk?: (result: GenericDialogResult) => void;
-    onCancel: () => void;
+    onCancel?: () => void;
+    onValueChange?: (name: string, value: string) => void;
 }
 
 interface GenericDialogState {
@@ -147,6 +153,12 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                 values: this.state.values,
                 errorMessages: this.validate()
             });
+        } else {
+            if (!this.props.modal) {
+                if (this.props.onValueChange) {
+                    this.props.onValueChange(fieldProperties.name, value);
+                }
+            }
         }
 
         this.forceUpdate();
@@ -215,97 +227,106 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
     }
 
     render() {
-        return (
-            <Dialog
-                title={this.props.dialogDefinition.title}
-                onOk={this.props.onOk && this.onOk}
-                onCancel={this.props.onCancel}
-            >
-                <PropertyList>
-                    {this.props.dialogDefinition.fields
-                        .filter(fieldProperties => {
-                            return (
-                                !fieldProperties.visible ||
-                                fieldProperties.visible(this.state.values)
-                            );
-                        })
-                        .map(fieldProperties => {
-                            const name =
-                                fieldProperties.displayName || humanize(fieldProperties.name);
-                            const value = this.state.values[fieldProperties.name] || "";
-                            const onChange = this.onChange.bind(this, fieldProperties);
-                            const errors =
-                                this.state.errorMessages &&
-                                this.state.errorMessages[fieldProperties.name];
+        const properties = (
+            <PropertyList>
+                {this.props.dialogDefinition.fields
+                    .filter(fieldProperties => {
+                        return (
+                            !fieldProperties.visible || fieldProperties.visible(this.state.values)
+                        );
+                    })
+                    .map(fieldProperties => {
+                        const name = fieldProperties.displayName || humanize(fieldProperties.name);
+                        const value = this.state.values[fieldProperties.name] || "";
+                        const onChange = this.onChange.bind(this, fieldProperties);
+                        const errors =
+                            this.state.errorMessages &&
+                            this.state.errorMessages[fieldProperties.name];
 
-                            let FieldComponent;
-                            let children: JSX.Element | JSX.Element[] | null = null;
+                        let FieldComponent;
+                        let children: JSX.Element | JSX.Element[] | null = null;
 
-                            if (
-                                fieldProperties.type === "integer" ||
-                                fieldProperties.type === "number" ||
-                                fieldProperties.type === "string" ||
-                                !fieldProperties.type ||
-                                fieldProperties.unit
-                            ) {
-                                FieldComponent = TextInputProperty;
-                            } else if (fieldProperties.type === "enum") {
-                                FieldComponent = SelectProperty;
-                                children = fieldProperties.enumItems!.map(enumItem => (
-                                    <option
-                                        key={typeof enumItem === "string" ? enumItem : enumItem.id}
-                                        value={
-                                            typeof enumItem === "string" ? enumItem : enumItem.id
-                                        }
-                                    >
-                                        {typeof enumItem === "string"
-                                            ? humanize(enumItem)
-                                            : enumItem.label}
-                                    </option>
-                                ));
-                            } else if (fieldProperties.type === "boolean") {
-                                FieldComponent = BooleanProperty;
-                            } else {
-                                return (
-                                    <PropertyEnclosure
-                                        key={fieldProperties.name}
-                                        advanced={false}
-                                        errors={errors}
-                                    >
-                                        {!fieldProperties.fullLine && <td>{name}</td>}
-                                        <td>
-                                            {
-                                                <fieldProperties.type
-                                                    key={fieldProperties.name}
-                                                    fieldProperties={fieldProperties}
-                                                    values={this.state.values}
-                                                    fieldContext={this.fieldContext}
-                                                    onChange={this.onChange.bind(
-                                                        this,
-                                                        fieldProperties
-                                                    )}
-                                                />
-                                            }
-                                        </td>
-                                    </PropertyEnclosure>
-                                );
-                            }
-
-                            return (
-                                <FieldComponent
-                                    key={fieldProperties.name}
-                                    name={name}
-                                    value={value}
-                                    onChange={onChange}
-                                    errors={errors}
+                        if (
+                            fieldProperties.type === "integer" ||
+                            fieldProperties.type === "number" ||
+                            fieldProperties.type === "string" ||
+                            !fieldProperties.type ||
+                            fieldProperties.unit
+                        ) {
+                            FieldComponent = TextInputProperty;
+                        } else if (fieldProperties.type === "enum") {
+                            FieldComponent = SelectProperty;
+                            children = fieldProperties.enumItems!.map(enumItem => (
+                                <option
+                                    key={
+                                        typeof enumItem === "string" || typeof enumItem === "number"
+                                            ? enumItem
+                                            : enumItem.id
+                                    }
+                                    value={
+                                        typeof enumItem === "string" || typeof enumItem === "number"
+                                            ? enumItem
+                                            : enumItem.id
+                                    }
                                 >
-                                    {children}
-                                </FieldComponent>
+                                    {typeof enumItem === "string" || typeof enumItem === "number"
+                                        ? humanize(enumItem)
+                                        : enumItem.label}
+                                </option>
+                            ));
+                        } else if (fieldProperties.type === "boolean") {
+                            FieldComponent = BooleanProperty;
+                        } else {
+                            return (
+                                <PropertyEnclosure
+                                    key={fieldProperties.name}
+                                    advanced={false}
+                                    errors={errors}
+                                    className={fieldProperties.enclosureClassName}
+                                >
+                                    {!fieldProperties.fullLine && <td>{name}</td>}
+                                    <td>
+                                        {
+                                            <fieldProperties.type
+                                                key={fieldProperties.name}
+                                                dialogContext={this.props.dialogContext}
+                                                fieldProperties={fieldProperties}
+                                                values={this.state.values}
+                                                fieldContext={this.fieldContext}
+                                                onChange={this.onChange.bind(this, fieldProperties)}
+                                            />
+                                        }
+                                    </td>
+                                </PropertyEnclosure>
                             );
-                        })}
-                </PropertyList>
-            </Dialog>
+                        }
+
+                        return (
+                            <FieldComponent
+                                key={fieldProperties.name}
+                                name={name}
+                                value={value}
+                                onChange={onChange}
+                                errors={errors}
+                            >
+                                {children}
+                            </FieldComponent>
+                        );
+                    })}
+            </PropertyList>
         );
+
+        if (this.props.modal) {
+            return (
+                <Dialog
+                    title={this.props.dialogDefinition.title}
+                    onOk={this.props.onOk && this.onOk}
+                    onCancel={this.props.onCancel}
+                />
+            );
+        } else {
+            return properties;
+        }
     }
 }
 
@@ -320,7 +341,9 @@ export function showGenericDialog(conf: {
         showDialog(
             <GenericDialog
                 dialogDefinition={conf.dialogDefinition}
+                dialogContext={undefined}
                 values={conf.values}
+                modal={true}
                 onOk={conf.showOkButton === undefined || conf.showOkButton ? resolve : undefined}
                 onCancel={reject}
             />
