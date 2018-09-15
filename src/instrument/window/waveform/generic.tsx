@@ -579,8 +579,15 @@ export class Waveform extends FileHistoryItem {
 
     xAxisModel = new WaveformTimeAxisModel(this);
 
+    chartsController: ChartsController;
+
     createChartsController(mode: ChartMode): ChartsController {
+        if (this.chartsController && this.chartsController.mode === mode) {
+            return this.chartsController;
+        }
+
         const chartsController = new WaveformChartsController(this, mode, this.xAxisModel);
+        this.chartsController = chartsController;
 
         this.xAxisModel.chartsController = chartsController;
 

@@ -9,9 +9,10 @@ import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body
 
 @observer
 export class DockablePanels extends React.Component<{
-    layoutId?: string;
     defaultLayoutConfig: any;
     registerComponents: (factory: any) => void;
+    layoutId?: string;
+    onStateChanged?: (state: any) => void;
 }> {
     static DEFAULT_SETTINGS = {
         showPopoutIcon: false,
@@ -56,22 +57,32 @@ export class DockablePanels extends React.Component<{
             }
         } else {
             if (this.containerDiv) {
-                this.goldenLayout = new GoldenLayout(this.layoutConfig, this.containerDiv);
-                this.props.registerComponents(this.goldenLayout);
-                this.goldenLayout.on("stateChanged", this.onStateChanged);
-                this.goldenLayout.init();
+                try {
+                    this.goldenLayout = new GoldenLayout(this.layoutConfig, this.containerDiv);
+                    this.props.registerComponents(this.goldenLayout);
+                    this.goldenLayout.on("stateChanged", this.onStateChanged);
+                    this.goldenLayout.init();
 
-                this.lastLayoutId = this.props.layoutId;
+                    this.lastLayoutId = this.props.layoutId;
+                } catch (err) {
+                    console.error(err);
+                    this.destroy();
+                }
             }
         }
+    }
+
+    get layoutState() {
+        return this.goldenLayout.toConfig();
     }
 
     @bind
     onStateChanged() {
         if (this.goldenLayout) {
-            const state = JSON.stringify(this.goldenLayout.toConfig());
-            if (this.props.layoutId) {
-                localStorage.setItem(this.props.layoutId, state);
+            if (this.props.onStateChanged) {
+                this.props.onStateChanged(this.goldenLayout.toConfig());
+            } else if (this.props.layoutId) {
+                localStorage.setItem(this.props.layoutId, JSON.stringify(this.layoutState));
             }
         }
     }

@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { observable, computed, action, runInAction, toJS } from "mobx";
+import { observable, computed, action, reaction, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -362,6 +362,36 @@ class Measurement {
         setTimeout(() => this.measureValue(task), 0);
         return this._value;
     }
+
+    get chartPanelTitle() {
+        const chartControllers = this.measurementsController.chartsController.chartControllers;
+        if (chartControllers.length > 1) {
+            if (this.arity === 1) {
+                return `${this.name} (${
+                    chartControllers[this.chartIndex].yAxisController.axisModel.label
+                })`;
+            } else {
+                return `${this.name} (${this.chartIndexes
+                    .map(chartIndex => chartControllers[chartIndex].yAxisController.axisModel.label)
+                    .join(", ")})`;
+            }
+        } else {
+            return this.name;
+        }
+    }
+
+    get chartPanelConfiguration() {
+        return {
+            type: "component",
+            componentName: "MeasurementValue",
+            id: this.measurementId,
+            componentState: {
+                measurementId: this.measurementId
+            },
+            title: this.chartPanelTitle,
+            isClosable: false
+        };
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -370,7 +400,13 @@ export class MeasurementsModel {
     @observable
     measurements: IMeasurementDefinition[] = [];
 
-    constructor(props?: { measurements?: (string | IMeasurementDefinition)[] }) {
+    @observable
+    chartPanelsViewState: string | undefined;
+
+    constructor(props?: {
+        measurements?: (string | IMeasurementDefinition)[];
+        chartPanelsViewState?: string;
+    }) {
         if (props) {
             if (props.measurements) {
                 this.measurements = props.measurements.map(measurement => {
@@ -384,6 +420,10 @@ export class MeasurementsModel {
                     }
                 });
             }
+
+            if (props.chartPanelsViewState) {
+                this.chartPanelsViewState = props.chartPanelsViewState;
+            }
         }
     }
 }
@@ -394,28 +434,159 @@ export class MeasurementsController {
     constructor(
         public chartsController: ChartsController,
         public measurementsModel: MeasurementsModel
-    ) {}
+    ) {
+        reaction(
+            () => toJS(this.measurementsModel.measurements),
+            () => {
+                const measurements = this.measurementsModel.measurements.map(
+                    measurementDefinition => {
+                        // reuse existing Measurement object if exists
+                        const measurement = this.measurements.find(
+                            measurement =>
+                                measurementDefinition.measurementId === measurement.measurementId
+                        );
+                        if (measurement) {
+                            return measurement;
+                        }
+
+                        // create a new Measurement object
+                        return new Measurement(
+                            this,
+                            measurementDefinition,
+                            measurementFunctions
+                                .get()
+                                .get(measurementDefinition.measurementFunctionId)
+                        );
+                    }
+                );
+
+                this.measurements = measurements;
+            }
+        );
+
+        this.measurements = this.measurementsModel.measurements.map(
+            measurementDefinition =>
+                new Measurement(
+                    this,
+                    measurementDefinition,
+                    measurementFunctions.get().get(measurementDefinition.measurementFunctionId)
+                )
+        );
+
+        //////////
+
+        reaction(
+            () => toJS(this.chartMeasurements),
+            () => {
+                let newChartPanelsViewState: string | undefined;
+
+                if (this.chartMeasurements.length > 0) {
+                    if (this.chartPanelsViewState) {
+                        const goldenLayout: any = new GoldenLayout(
+                            {
+                                content: JSON.parse(this.measurementsModel.chartPanelsViewState!)
+                            },
+                            document.createElement("div")
+                        );
+                        goldenLayout.registerComponent("MeasurementValue", function() {});
+                        goldenLayout.init();
+
+                        const existingChartMeasurementIds = goldenLayout.root
+                            .getItemsByType("component")
+                            .map((contentItem: any) => contentItem.config.id);
+
+                        const chartMeasurementIds = this.chartMeasurements.map(
+                            measurement => measurement.measurementId
+                        );
+
+                        const removed = _difference(
+                            existingChartMeasurementIds,
+                            chartMeasurementIds
+                        );
+                        const added = _difference(chartMeasurementIds, existingChartMeasurementIds);
+
+                        removed.forEach(id => {
+                            const item = goldenLayout.root.getItemsById(id)[0];
+                            if (item.parent.type === "stack") {
+                                item.parent.setActiveContentItem(item);
+                            }
+                            item.remove();
+                        });
+
+                        added.forEach(id => {
+                            const measurement = this.findMeasurementById(id);
+                            goldenLayout.root.contentItems[0].addChild(
+                                measurement!.chartPanelConfiguration,
+                                goldenLayout.root
+                            );
+                        });
+
+                        goldenLayout.root.getItemsByType("component").map((contentItem: any) => {
+                            const measurement = this.findMeasurementById(contentItem.config.id);
+                            contentItem.setTitle(measurement!.chartPanelTitle);
+                        });
+
+                        newChartPanelsViewState = JSON.stringify(goldenLayout.config.content);
+                    } else {
+                        newChartPanelsViewState = JSON.stringify(this.defaultChartPanelViewState);
+                    }
+                } else {
+                    newChartPanelsViewState = undefined;
+                }
+
+                if (newChartPanelsViewState != this.chartPanelsViewState) {
+                    runInAction(() => {
+                        this.chartPanelsViewState = newChartPanelsViewState;
+                        this.measurementsModel.chartPanelsViewState = newChartPanelsViewState;
+                    });
+                }
+            }
+        );
+
+        if (this.measurementsModel.chartPanelsViewState) {
+            this.chartPanelsViewState = this.measurementsModel.chartPanelsViewState;
+        } else {
+            this.chartPanelsViewState = JSON.stringify(this.defaultChartPanelViewState);
+        }
+    }
+
+    @observable
+    measurements: Measurement[];
 
     @computed
-    get measurements() {
-        return this.measurementsModel.measurements.map(measurement => {
-            const measurementFunction = measurementFunctions
-                .get()
-                .get(measurement.measurementFunctionId);
-
-            return new Measurement(this, measurement, measurementFunction);
+    get chartMeasurements() {
+        return this.measurements.filter(measurement => {
+            return (
+                measurement.measurementFunction &&
+                measurement.measurementFunction.resultType === "chart"
+            );
         });
     }
 
-    getValue(measurementIndex: number) {}
-
     @computed
     get isThereAnyMeasurementChart() {
-        return this.measurements.find(measurement => measurement.resultType === "chart");
+        return this.chartMeasurements.length > 0;
     }
 
     findMeasurementById(measurementId: string) {
         return this.measurements.find(measurement => measurement.measurementId === measurementId);
+    }
+
+    @observable
+    chartPanelsViewState: string | undefined;
+
+    get defaultChartPanelViewState() {
+        const charts = this.measurements.filter(measurement => measurement.resultType === "chart");
+        if (charts.length === 0) {
+            return undefined;
+        }
+
+        return [
+            {
+                type: "stack",
+                content: charts.map(measurement => measurement.chartPanelConfiguration)
+            }
+        ];
     }
 }
 
@@ -733,7 +904,7 @@ export class ChartMeasurements extends React.Component<{
 }> {
     dockablePanels: DockablePanels | null;
 
-    get measurementModel() {
+    get measurementsModel() {
         return this.props.measurementsController.measurementsModel;
     }
 
@@ -754,52 +925,10 @@ export class ChartMeasurements extends React.Component<{
 
     @computed
     get defaultLayoutConfig() {
-        const content = [
-            {
-                type: "stack",
-                content: this.props.measurementsController.measurements
-                    .filter(measurement => measurement.resultType === "chart")
-                    .map(measurement => {
-                        let title;
-
-                        const chartControllers = this.props.measurementsController.chartsController
-                            .chartControllers;
-                        if (chartControllers.length > 1) {
-                            if (measurement.arity === 1) {
-                                title = `${measurement.name} (${
-                                    chartControllers[measurement.chartIndex].yAxisController
-                                        .axisModel.label
-                                })`;
-                            } else {
-                                title = `${measurement.name} (${measurement.chartIndexes
-                                    .map(
-                                        chartIndex =>
-                                            chartControllers[chartIndex].yAxisController.axisModel
-                                                .label
-                                    )
-                                    .join(", ")})`;
-                            }
-                        } else {
-                            title = measurement.name;
-                        }
-
-                        return {
-                            type: "component",
-                            componentName: "MeasurementValue",
-                            componentState: {
-                                measurementId: measurement.measurementId
-                            },
-                            title,
-                            isClosable: false
-                        };
-                    })
-            }
-        ];
-
         const defaultLayoutConfig = {
             settings: DockablePanels.DEFAULT_SETTINGS,
             dimensions: DockablePanels.DEFAULT_DIMENSIONS,
-            content: content
+            content: JSON.parse(this.props.measurementsController.chartPanelsViewState!)
         };
 
         return defaultLayoutConfig;
@@ -811,12 +940,29 @@ export class ChartMeasurements extends React.Component<{
         }
     }
 
+    debounceTimeout: any;
+
+    @bind
+    onStateChanged(state: any) {
+        const chartPanelsViewState = JSON.stringify(state.content);
+
+        if (this.debounceTimeout) {
+            clearTimeout(this.debounceTimeout);
+        }
+
+        this.debounceTimeout = setTimeout(() => {
+            this.debounceTimeout = undefined;
+            runInAction(() => (this.measurementsModel.chartPanelsViewState = chartPanelsViewState));
+        }, 1000);
+    }
+
     render() {
         return (
             <DockablePanels
                 ref={ref => (this.dockablePanels = ref)}
                 defaultLayoutConfig={this.defaultLayoutConfig}
                 registerComponents={this.registerComponents}
+                onStateChanged={this.onStateChanged}
             />
         );
     }

@@ -34,7 +34,7 @@ class Connection {
     resolveCallback: ((result: any) => void) | undefined;
     rejectCallback: ((result: any) => void) | undefined;
 
-    constructor(private instrument: InstrumentObject) {
+    constructor(private instrument: InstrumentObject, private appStore?: any) {
         EEZStudio.electron.ipcRenderer.on(
             "instrument/connection/value",
             (event: any, value: any) => {
@@ -100,7 +100,7 @@ class Connection {
 
     onValue(value: any) {
         if (value.logEntry !== undefined) {
-            value = createHistoryItem(value.logEntry);
+            value = createHistoryItem(value.logEntry, this.appStore);
         }
 
         if (value.error) {
@@ -126,10 +126,10 @@ class Connection {
 
 const connections = new Map<InstrumentObject, Connection>();
 
-export function getConnection(instrument: InstrumentObject) {
+export function getConnection(instrument: InstrumentObject, appStore?: any) {
     let connection = connections.get(instrument);
     if (!connection) {
-        connection = new Connection(instrument);
+        connection = new Connection(instrument, appStore);
         connections.set(instrument, connection);
     }
     return connection;

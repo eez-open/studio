@@ -55,8 +55,8 @@ class ScpiSession {
     }
 }
 
-function prepareScpiModules(instrument: InstrumentObject, shortcut: IShortcut) {
-    const connection = getConnection(instrument);
+function prepareScpiModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
+    const connection = getConnection(appStore.instrument!, appStore);
 
     return {
         session: new ScpiSession(shortcut),
@@ -246,11 +246,13 @@ class JavaScriptSession {
     }
 }
 
-function prepareJavaScriptModules(instrument: InstrumentObject, shortcut: IShortcut) {
+function prepareJavaScriptModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
+    const instrument = appStore.instrument!;
+
     return {
         session: new JavaScriptSession(instrument, shortcut),
 
-        connection: getConnection(instrument),
+        connection: getConnection(instrument, appStore),
 
         instrument: {
             get properties() {
@@ -291,11 +293,11 @@ function prepareJavaScriptModules(instrument: InstrumentObject, shortcut: IShort
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function prepareModules(instrument: InstrumentObject, shortcut: IShortcut) {
+function prepareModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
     if (shortcut.action.type === "scpi-commands") {
-        return prepareScpiModules(instrument, shortcut);
+        return prepareScpiModules(appStore, shortcut);
     } else {
-        return prepareJavaScriptModules(instrument, shortcut);
+        return prepareJavaScriptModules(appStore, shortcut);
     }
 }
 
@@ -308,7 +310,7 @@ function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
         run = runJavaScript;
     }
 
-    const modules = prepareModules(appStore.instrument!, shortcut);
+    const modules = prepareModules(appStore, shortcut);
 
     run(shortcut.action.data, modules)
         .then(() => {

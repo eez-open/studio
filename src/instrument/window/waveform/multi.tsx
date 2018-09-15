@@ -291,13 +291,20 @@ export class MultiWaveform extends HistoryItem {
         return this.longestWaveform ? this.longestWaveform.length : 0;
     }
 
+    chartsController: ChartsController;
+
     createChartsController(mode: ChartMode): ChartsController {
+        if (this.chartsController && this.chartsController.mode === mode) {
+            return this.chartsController;
+        }
+
         const chartsController = new MultiWaveformChartsController(
             this,
             mode,
             this.xAxisModel,
             this.viewOptions
         );
+        this.chartsController = chartsController;
 
         this.xAxisModel.chartsController = chartsController;
 
