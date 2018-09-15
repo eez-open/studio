@@ -56,7 +56,7 @@ class ScpiSession {
 }
 
 function prepareScpiModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
-    const connection = getConnection(appStore.instrument!, appStore);
+    const connection = getConnection(appStore);
 
     return {
         session: new ScpiSession(shortcut),
@@ -252,7 +252,7 @@ function prepareJavaScriptModules(appStore: InstrumentAppStore, shortcut: IShort
     return {
         session: new JavaScriptSession(instrument, shortcut),
 
-        connection: getConnection(instrument, appStore),
+        connection: getConnection(appStore),
 
         instrument: {
             get properties() {
@@ -336,7 +336,7 @@ function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
 }
 
 export function executeShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
-    if (!getConnection(appStore.instrument!).isConnected) {
+    if (!getConnection(appStore).isConnected) {
         info("Not connected to the instrument.", undefined);
         return;
     }

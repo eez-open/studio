@@ -8,7 +8,6 @@ import { AlertDanger } from "shared/ui/alert";
 import { Loader } from "shared/ui/loader";
 import { Toolbar } from "shared/ui/toolbar";
 
-import { InstrumentObject } from "instrument/instrument-object";
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { getConnection } from "instrument/window/connection";
 import { IInstrumentWindowNavigationItem } from "instrument/window/navigation-store";
@@ -18,13 +17,17 @@ import { IInstrumentWindowNavigationItem } from "instrument/window/navigation-st
 @observer
 export class AppBar extends React.Component<
     {
-        instrument: InstrumentObject;
+        appStore: InstrumentAppStore;
         selectedItem: IInstrumentWindowNavigationItem;
     },
     {}
 > {
+    get instrument() {
+        return this.props.appStore.instrument!;
+    }
+
     get connection() {
-        return getConnection(this.props.instrument);
+        return getConnection(this.props.appStore);
     }
 
     @bind
@@ -34,12 +37,12 @@ export class AppBar extends React.Component<
 
     @bind
     handleDisconnectClick() {
-        this.props.instrument.connection.disconnect();
+        this.instrument.connection.disconnect();
     }
 
     render() {
         let connectionStatus;
-        if (this.props.instrument.connection.isIdle) {
+        if (this.instrument.connection.isIdle) {
             connectionStatus = (
                 <div>
                     <button className="btn btn-success btn-sm" onClick={this.handleConnectClick}>
@@ -47,7 +50,7 @@ export class AppBar extends React.Component<
                     </button>
                 </div>
             );
-        } else if (this.props.instrument.connection.isConnected) {
+        } else if (this.instrument.connection.isConnected) {
             connectionStatus = (
                 <div>
                     <div>{this.connection.interfaceInfo}</div>
@@ -75,11 +78,11 @@ export class AppBar extends React.Component<
         return (
             <div className="EezStudio_ConnectionBar">
                 <div>
-                    <img src={this.props.instrument.image} draggable={false} />
+                    <img src={this.instrument.image} draggable={false} />
                 </div>
 
                 <div>
-                    <div>{this.props.instrument.name}</div>
+                    <div>{this.instrument.name}</div>
                     {connectionStatus}
                 </div>
 
@@ -121,7 +124,7 @@ export class App extends React.Component<{ appStore: InstrumentAppStore }> {
                 )}
                 {
                     <AppBar
-                        instrument={instrument}
+                        appStore={this.props.appStore}
                         selectedItem={
                             this.props.appStore.navigationStore.mainNavigationSelectedItem
                         }

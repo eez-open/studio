@@ -8,6 +8,8 @@ import { showConnectionDialog } from "instrument/window/connection-dialog";
 
 import { createHistoryItem } from "instrument/window/history/item-factory";
 
+import { InstrumentAppStore } from "instrument/window/app-store";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getConnectionParametersInfo(connectionParameters: ConnectionParameters) {
@@ -34,13 +36,17 @@ class Connection {
     resolveCallback: ((result: any) => void) | undefined;
     rejectCallback: ((result: any) => void) | undefined;
 
-    constructor(private instrument: InstrumentObject, private appStore?: any) {
+    constructor(private appStore: InstrumentAppStore) {
         EEZStudio.electron.ipcRenderer.on(
             "instrument/connection/value",
             (event: any, value: any) => {
                 this.onValue(value);
             }
         );
+    }
+
+    get instrument() {
+        return this.appStore.instrument!;
     }
 
     get isConnected() {
@@ -126,10 +132,11 @@ class Connection {
 
 const connections = new Map<InstrumentObject, Connection>();
 
-export function getConnection(instrument: InstrumentObject, appStore?: any) {
+export function getConnection(appStore: InstrumentAppStore) {
+    const instrument = appStore.instrument!;
     let connection = connections.get(instrument);
     if (!connection) {
-        connection = new Connection(instrument, appStore);
+        connection = new Connection(appStore);
         connections.set(instrument, connection);
     }
     return connection;
