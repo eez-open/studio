@@ -925,13 +925,11 @@ export class ChartMeasurements extends React.Component<{
 
     @computed
     get defaultLayoutConfig() {
-        const defaultLayoutConfig = {
+        return {
             settings: DockablePanels.DEFAULT_SETTINGS,
             dimensions: DockablePanels.DEFAULT_DIMENSIONS,
             content: JSON.parse(this.props.measurementsController.chartPanelsViewState!)
         };
-
-        return defaultLayoutConfig;
     }
 
     updateSize() {
@@ -944,7 +942,7 @@ export class ChartMeasurements extends React.Component<{
 
     @bind
     onStateChanged(state: any) {
-        const chartPanelsViewState = JSON.stringify(state.content);
+        const newStateContent = state.content;
 
         if (this.debounceTimeout) {
             clearTimeout(this.debounceTimeout);
@@ -952,6 +950,30 @@ export class ChartMeasurements extends React.Component<{
 
         this.debounceTimeout = setTimeout(() => {
             this.debounceTimeout = undefined;
+
+            // workaround for the possible golden-layout BUG,
+            // make sure activeItemIndex is not out of bounds
+            const goldenLayout: any = new GoldenLayout(
+                {
+                    content: newStateContent
+                },
+                document.createElement("div")
+            );
+            goldenLayout.registerComponent("MeasurementValue", function() {});
+            goldenLayout.init();
+
+            goldenLayout.root
+                .getItemsByType("stack")
+                .map(
+                    (contentItem: any) =>
+                        (contentItem.config.activeItemIndex = Math.min(
+                            contentItem.config.activeItemIndex,
+                            contentItem.config.content.length - 1
+                        ))
+                );
+
+            const chartPanelsViewState = JSON.stringify(goldenLayout.config.content);
+
             runInAction(() => (this.measurementsModel.chartPanelsViewState = chartPanelsViewState));
         }, 1000);
     }
