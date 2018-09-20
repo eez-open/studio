@@ -13,6 +13,8 @@ import { IHistoryItem } from "instrument/window/history/item";
 
 export class Filters {
     @observable
+    session: boolean = true;
+    @observable
     connectsAndDisconnects: boolean = true;
     @observable
     scpi: boolean = true;
@@ -32,8 +34,10 @@ export class Filters {
     launchedScripts: boolean = true;
 
     filterActivityLogEntry(activityLogEntry: IActivityLogEntry): boolean {
-        if (activityLogEntry.type.startsWith("activity-log/session")) {
-            return true;
+        if (this.session) {
+            if (activityLogEntry.type.startsWith("activity-log/session")) {
+                return true;
+            }
         }
 
         if (this.connectsAndDisconnects) {
@@ -104,8 +108,9 @@ export class Filters {
     getFilter() {
         const types: string[] = [];
 
-        types.push("activity-log/session-start");
-        types.push("activity-log/session-close");
+        if (this.session) {
+            types.push("activity-log/session-start", "activity-log/session-close");
+        }
 
         if (this.connectsAndDisconnects) {
             types.push(
@@ -159,6 +164,8 @@ export class Filters {
 
 export class FilterStats {
     @observable
+    session = 0;
+    @observable
     connectsAndDisconnects = 0;
     @observable
     scpi = 0;
@@ -203,7 +210,9 @@ export class FilterStats {
     }
 
     add(type: string, amount: number) {
-        if (
+        if (["activity-log/session-start", "activity-log/session-close"].indexOf(type) !== -1) {
+            this.session += amount;
+        } else if (
             [
                 "instrument/created",
                 "instrument/restored",
@@ -249,6 +258,13 @@ export class FiltersComponent extends React.Component<{ appStore: IAppStore }> {
         return (
             <div className="EezStudio_HistoryFilters">
                 <PropertyList>
+                    <BooleanProperty
+                        name={`Session start and close (${filterStats.session})`}
+                        value={this.props.appStore.filters.session}
+                        onChange={action(
+                            (value: boolean) => (this.props.appStore.filters.session = value)
+                        )}
+                    />
                     <BooleanProperty
                         name={`Connects and disconnects (${filterStats.connectsAndDisconnects})`}
                         value={this.props.appStore.filters.connectsAndDisconnects}
