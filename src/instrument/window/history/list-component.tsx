@@ -208,17 +208,19 @@ export class HistoryListComponent extends React.Component<{
 
     @action
     showHistoryItem(historyItem: IHistoryItem) {
-        setTimeout(() => {
+        let c = 0;
+
+        const scrollIntoView = (() => {
             const element = $(this.div).find(`.EezStudio_HistoryItem_${historyItem.id}`)[0];
             if (element) {
                 element.scrollIntoView({ block: "center" });
-                setTimeout(() => {
-                    element.scrollIntoView({ block: "center" });
-                }, 0);
-            } else {
-                console.warn("History item not found", historyItem);
             }
-        }, 0);
+            if (++c < 5) {
+                setTimeout(scrollIntoView, 10);
+            }
+        }).bind(this);
+
+        scrollIntoView();
     }
 
     @bind
