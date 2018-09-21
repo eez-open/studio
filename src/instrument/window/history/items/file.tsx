@@ -1,9 +1,11 @@
 import * as React from "react";
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { clipboard, nativeImage, SaveDialogOptions } from "electron";
 import * as VisibilitySensor from "react-visibility-sensor";
 import { bind } from "bind-decorator";
+
+const WebView = require("react-electron-web-view");
 
 import {
     writeBinaryData,
@@ -12,7 +14,8 @@ import {
     formatBytes,
     formatDateTimeLong,
     getTempDirPath,
-    fileExists
+    fileExists,
+    guid
 } from "shared/util";
 
 import * as notification from "shared/ui/notification";
@@ -75,9 +78,12 @@ class PdfPreview extends React.Component<{
     fileName: string;
 }> {
     @observable
+    thumbnail: string;
+
+    @observable
     url: string;
 
-    iframe: HTMLIFrameElement | null;
+    webView: any;
 
     @observable
     zoom: boolean = false;
@@ -89,51 +95,99 @@ class PdfPreview extends React.Component<{
 
     @computed
     get urlWithParams() {
-        if (!this.url) {
-            return "";
-        }
+        return this.url && "../../libs/pdfjs/web/viewer.html?file=" + encodeURIComponent(this.url);
+    }
 
+    update() {
         if (this.zoom) {
-            return this.url;
-        }
+            if (!this.url) {
+                (async () => {
+                    const [tempDirPath] = await getPdfTempDirPathPromise;
+                    const tempFilePath = tempDirPath + "/" + this.props.fileName;
+                    let exists = await fileExists(tempFilePath);
+                    if (!exists) {
+                        await writeBinaryData(tempFilePath, this.props.data);
+                    }
+                    return new URL(`file:///${tempFilePath}`).href;
+                })().then(
+                    action((url: string) => {
+                        this.url = url;
+                    })
+                );
+            }
+        } else {
+            if (!this.thumbnail) {
+                const taskId = guid();
 
-        return this.url + "#view=FitV&toolbar=0";
+                EEZStudio.electron.ipcRenderer.send("pdf-to-png", {
+                    taskId,
+                    data: this.props.data
+                });
+
+                EEZStudio.electron.ipcRenderer.once(
+                    taskId,
+                    (
+                        sender: any,
+                        params: {
+                            taskId: string;
+                            result?: string;
+                            error?: string;
+                        }
+                    ) => {
+                        if (params.result) {
+                            runInAction(() => (this.thumbnail = params.result!));
+                        } else {
+                            console.error("PDF to PNG error", params.error);
+                        }
+                    }
+                );
+            }
+        }
+    }
+
+    @bind
+    bringToFocus() {
+        if (this.zoom && this.webView) {
+            if (this.webView.isReady()) {
+                this.webView.focus();
+            } else {
+                setTimeout(this.bringToFocus);
+            }
+        }
     }
 
     componentDidMount() {
-        (async () => {
-            const [tempDirPath] = await getPdfTempDirPathPromise;
-            const tempFilePath = tempDirPath + "/" + this.props.fileName;
-            let exists = await fileExists(tempFilePath);
-            if (!exists) {
-                await writeBinaryData(tempFilePath, this.props.data);
-            }
-            return new URL(`file:///${tempFilePath}`).href;
-        })().then(action((url: string) => (this.url = url)));
-
-        if (this.zoom && this.iframe) {
-            this.iframe.focus();
-        }
+        this.update();
+        this.bringToFocus();
     }
 
     componentDidUpdate() {
-        if (this.zoom && this.iframe) {
-            this.iframe.focus();
-        }
+        this.update();
+        this.bringToFocus();
     }
 
     render() {
+        let content;
+
+        if (this.zoom) {
+            content = this.urlWithParams && (
+                <WebView
+                    ref={(ref: any) => (this.webView = ref)}
+                    src={this.urlWithParams}
+                    tabIndex={this.zoom ? 0 : undefined}
+                />
+            );
+        } else {
+            content = this.thumbnail && <img src={this.thumbnail} />;
+        }
+
         return (
             <HistoryItemPreview
                 className="EezStudio_PdfPreview"
                 zoom={this.zoom}
                 toggleZoom={this.toggleZoom}
             >
-                <iframe
-                    ref={ref => (this.iframe = ref)}
-                    src={this.urlWithParams}
-                    tabIndex={this.zoom ? 0 : undefined}
-                />
+                {content}
             </HistoryItemPreview>
         );
     }

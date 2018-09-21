@@ -45,6 +45,7 @@ export function createWindow(params: IWindowParams) {
             experimentalCanvasFeatures: true,
             // webSecurity: false,
             // allowRunningInsecureContent: true,
+            webviewTag: true,
             nodeIntegrationInWorker: true,
             plugins: true
         },
