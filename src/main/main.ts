@@ -15,20 +15,23 @@ configure({ enforceActions: true });
 let setupFinished: boolean = false;
 
 app.on("ready", async function() {
-    var shouldQuit = app.makeSingleInstance(function(commandLine, workingDirectory) {
-        const { bringHomeWindowToFocus } = require("main/home-window") as typeof HomeWindowModule;
-        bringHomeWindowToFocus();
-    });
-
-    if (shouldQuit) {
+    // make sure there is only one instance of this application
+    var gotTheLock = app.requestSingleInstanceLock();
+    if (!gotTheLock) {
         app.quit();
         return;
     }
+    app.on("second-instance", function(commandLine, workingDirectory) {
+        const { bringHomeWindowToFocus } = require("main/home-window") as typeof HomeWindowModule;
+        bringHomeWindowToFocus();
+    });
 
     const { loadSettings } = require("main/settings") as typeof SettingsModule;
     loadSettings();
 
     await setup();
+
+    require("main/pdf-to-png");
 
     const { openHomeWindow } = require("main/home-window") as typeof HomeWindowModule;
     openHomeWindow();
