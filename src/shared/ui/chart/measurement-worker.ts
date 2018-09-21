@@ -9,11 +9,11 @@ namespace MeasurementWorker {
 
         if (e.data.inputs) {
             e.data.inputs.forEach((input: any) => {
-                initValuesAccesor(input);
+                initValuesAccesor(input, true);
                 input.getSampleValueAtIndex = input.value;
             });
         } else {
-            initValuesAccesor(e.data);
+            initValuesAccesor(e.data, true);
             e.data.getSampleValueAtIndex = e.data.value;
         }
 

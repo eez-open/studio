@@ -610,16 +610,16 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         this.outsideChangeInYRulersSubscriptionDisposer = autorun(() => {
             for (let i = 0; i < this.props.chartsController.chartControllers.length; ++i) {
                 const chartController = this.props.chartsController.chartControllers[i];
+                if (this.rulersModel.yAxisRulersEnabled[i] && !this.isInsideChange) {
+                    const y1 = chartController.yAxisController.unit.formatValue(
+                        this.rulersModel.y1[i],
+                        4
+                    );
+                    const y2 = chartController.yAxisController.unit.formatValue(
+                        this.rulersModel.y2[i],
+                        4
+                    );
 
-                const y1 = chartController.yAxisController.unit.formatValue(
-                    this.rulersModel.y1[i],
-                    4
-                );
-                const y2 = chartController.yAxisController.unit.formatValue(
-                    this.rulersModel.y2[i],
-                    4
-                );
-                if (!this.isInsideChange) {
                     runInAction(() => {
                         this.y1[i] = y1;
                         this.y1Error[i] = false;

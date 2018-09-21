@@ -727,7 +727,7 @@ class WaveformLineController extends LineController {
     }
 
     render(): JSX.Element {
-        return <WaveformLineView key={this.id} waveformLineController={this} useWorker={true} />;
+        return <WaveformLineView key={this.id} waveformLineController={this} useWorker={false} />;
     }
 }
 

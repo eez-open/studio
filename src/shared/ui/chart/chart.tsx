@@ -2992,8 +2992,8 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
         const mode = chartsController.mode;
 
         const className = classNames(
-            "EezStudio_ListChartView",
-            `EezStudio_ListChartView_${capitalize(mode)}`,
+            "EezStudio_ChartView",
+            `EezStudio_ChartView_${capitalize(mode)}`,
             this.props.className,
             {
                 EezStudio_ListChartView_BlackBackground: globalViewOptions.blackBackground

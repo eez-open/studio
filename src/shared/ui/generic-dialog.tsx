@@ -322,7 +322,9 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                     title={this.props.dialogDefinition.title}
                     onOk={this.props.onOk && this.onOk}
                     onCancel={this.props.onCancel}
-                />
+                >
+                    {properties}
+                </Dialog>
             );
         } else {
             return properties;

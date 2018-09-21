@@ -211,7 +211,7 @@
     padding: 8px;
     display: flex;
     flex-direction: column;
-    align-items: left;
+    align-items: flex-start;
 }
 
 .EezStudio_HistoryItemEnclosure {
@@ -398,7 +398,7 @@
 
     &.EezStudio_HistoryItem_Chart
         .EezStudio_ChartPreview:not(.zoom)
-        .EezStudio_ListChartView
+        .EezStudio_ChartView
         svg.EezStudio_Chart_XAxis {
         height: 24px;
     }
@@ -436,10 +436,14 @@
         .EezStudio_Body {
             background-color: #525659;
             overflow: hidden;
-        }
 
-        iframe {
-            flex-grow: 1;
+            & > div {
+                flex-grow: 1;
+                display: flex;
+                & > WebView {
+                    flex-grow: 1;
+                }
+            }
         }
     }
 }
@@ -455,10 +459,15 @@
     }
 
     &.EezStudio_PdfPreview {
-        iframe {
+        & > img {
             pointer-events: none;
             width: 240px;
-            height: 300px;
+        }
+        & > div > WebView {
+            pointer-events: none;
+            width: 300px;
+            height: 400px;
+            overflow: hidden;
         }
     }
 
@@ -472,7 +481,7 @@
             pointer-events: none;
         }
 
-        .EezStudio_ListChartView {
+        .EezStudio_ChartView {
             position: static;
             width: 640px;
             /*svg {
@@ -487,15 +496,9 @@
             background-color: black;
         }
 
-        .EezStudio_ListChartView svg {
+        .EezStudio_ChartView svg {
             height: 162px;
         }
-    }
-}
-
-.EezStudio_PdfPreview {
-    iframe {
-        border: 0;
     }
 }
 

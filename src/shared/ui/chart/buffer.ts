@@ -31,17 +31,20 @@ function readFloat(data: any, i: number) {
     return buffer.readFloatLE(0);
 }
 
-export function initValuesAccesor(object: {
-    // input
-    format: WaveformFormat;
-    values: any;
-    offset: number;
-    scale: number;
-    // output
-    length: number;
-    value(value: number): number;
-    waveformData(value: number): number;
-}) {
+export function initValuesAccesor(
+    object: {
+        // input
+        format: WaveformFormat;
+        values: any;
+        offset: number;
+        scale: number;
+        // output
+        length: number;
+        value(value: number): number;
+        waveformData(value: number): number;
+    },
+    disableNaNs: boolean = false
+) {
     const values = object.values;
     const format = object.format;
     const offset = object.offset;
@@ -82,6 +85,9 @@ export function initValuesAccesor(object: {
         waveformData = value;
     } else if (format === WaveformFormat.EEZ_DLOG) {
         length = object.length;
+        if (length === undefined) {
+            length = values.length;
+        }
         value = (index: number) => {
             return readFloat(values, offset + index * scale);
         };
@@ -97,6 +103,61 @@ export function initValuesAccesor(object: {
     }
 
     object.length = length;
-    object.value = value;
+
+    if (format === WaveformFormat.EEZ_DLOG && disableNaNs) {
+        object.value = (index: number) => {
+            let x = value(index);
+            if (!isNaN(x)) {
+                return x;
+            }
+
+            // find first non NaN on left or right
+            const nLeft = index;
+            const nRight = length - index - 1;
+
+            const n = Math.min(nLeft, nRight);
+
+            let k;
+            for (k = 1; k <= n; ++k) {
+                // check left
+                x = value(index - k);
+                if (!isNaN(x)) {
+                    return x;
+                }
+
+                // check right
+                x = value(index + k);
+                if (!isNaN(x)) {
+                    return x;
+                }
+            }
+
+            if (nLeft > nRight) {
+                index -= k;
+                for (; index >= 0; --index) {
+                    // check left
+                    x = value(index);
+                    if (!isNaN(x)) {
+                        return x;
+                    }
+                }
+            } else if (nLeft < nRight) {
+                index += k;
+                for (; index < length; ++index) {
+                    // check right
+                    x = value(index);
+                    if (!isNaN(x)) {
+                        return x;
+                    }
+                }
+            }
+
+            // give up
+            return NaN;
+        };
+    } else {
+        object.value = value;
+    }
+
     object.waveformData = waveformData;
 }

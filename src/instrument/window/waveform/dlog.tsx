@@ -164,7 +164,7 @@ class DlogWaveformLineController extends LineController {
     }
 
     render(): JSX.Element {
-        return <WaveformLineView key={this.id} waveformLineController={this} useWorker={true} />;
+        return <WaveformLineView key={this.id} waveformLineController={this} useWorker={false} />;
     }
 }
 
@@ -480,7 +480,11 @@ export class DlogWaveform extends FileHistoryItem {
     chartsController: ChartsController;
 
     createChartsController(mode: ChartMode): ChartsController {
-        if (this.chartsController && this.chartsController.mode === mode) {
+        if (
+            this.chartsController &&
+            this.chartsController.mode === mode &&
+            this.chartsController.chartControllers.length === this.channels.length
+        ) {
             return this.chartsController;
         }
 
