@@ -14,8 +14,7 @@ import {
     formatBytes,
     formatDateTimeLong,
     getTempDirPath,
-    fileExists,
-    guid
+    fileExists
 } from "shared/util";
 
 import * as notification from "shared/ui/notification";
@@ -31,6 +30,8 @@ import { Toolbar } from "shared/ui/toolbar";
 import { IconAction, TextAction } from "shared/ui/action";
 import { Icon } from "shared/ui/icon";
 import * as UiBalloonModule from "shared/ui/balloon";
+
+import pdfToPng from "pdf-services/pdf-to-png";
 
 import { FileState } from "instrument/connection/file-state";
 
@@ -117,30 +118,13 @@ class PdfPreview extends React.Component<{
             }
         } else {
             if (!this.thumbnail) {
-                const taskId = guid();
-
-                EEZStudio.electron.ipcRenderer.send("pdf-to-png", {
-                    taskId,
-                    data: this.props.data
-                });
-
-                EEZStudio.electron.ipcRenderer.once(
-                    taskId,
-                    (
-                        sender: any,
-                        params: {
-                            taskId: string;
-                            result?: string;
-                            error?: string;
-                        }
-                    ) => {
-                        if (params.result) {
-                            runInAction(() => (this.thumbnail = params.result!));
-                        } else {
-                            console.error("PDF to PNG error", params.error);
-                        }
-                    }
-                );
+                pdfToPng(this.props.data)
+                    .then(result => {
+                        runInAction(() => (this.thumbnail = result));
+                    })
+                    .catch(error => {
+                        console.error("PDF to PNG error", error);
+                    });
             }
         }
     }

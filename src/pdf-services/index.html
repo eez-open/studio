@@ -12,12 +12,12 @@
             var EEZStudio = {
                 title: document.title,
                 electron: require("electron"),
-                windowType: "pdf-to-png"
+                windowType: "pdf-services"
             };
             const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(process.execPath)
             process.env.NODE_ENV = isDev ? "development" : "production";
             require("app-module-path").addPath(__dirname + "/..");
-            require('pdf-to-png/main.js');
+            require('pdf-services/main.js');
         </script>
 
 </body>

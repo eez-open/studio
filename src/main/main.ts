@@ -31,7 +31,7 @@ app.on("ready", async function() {
 
     await setup();
 
-    require("main/pdf-to-png");
+    require("shared/service");
 
     const { openHomeWindow } = require("main/home-window") as typeof HomeWindowModule;
     openHomeWindow();

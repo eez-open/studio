@@ -98,8 +98,9 @@ export function createWindow(params: IWindowParams) {
             windows.splice(windows.findIndex(win => win.browserWindow === browserWindow), 1)
         )();
 
-        if (windows.length === 1 && !windows[0].browserWindow.isVisible()) {
-            windows[0].browserWindow.close();
+        // if no visible window left, app can quit
+        if (!windows.find(window => window.browserWindow.isVisible())) {
+            app.quit();
         }
     });
 }
