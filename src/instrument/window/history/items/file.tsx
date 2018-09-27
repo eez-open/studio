@@ -75,7 +75,8 @@ let getPdfTempDirPathPromise = getTempDirPath();
 
 @observer
 class PdfPreview extends React.Component<{
-    historyItem: HistoryItem;
+    data: any;
+    fileName: string;
 }> {
     @observable
     thumbnail: string;
@@ -93,15 +94,20 @@ class PdfPreview extends React.Component<{
         this.zoom = !this.zoom;
     }
 
+    @computed
+    get urlWithParams() {
+        return this.url && "../../libs/pdfjs/web/viewer.html?file=" + encodeURIComponent(this.url);
+    }
+
     update() {
         if (this.zoom) {
             if (!this.url) {
                 (async () => {
                     const [tempDirPath] = await getPdfTempDirPathPromise;
-                    const tempFilePath = tempDirPath + "/" + this.props.historyItem.id + ".pdf";
+                    const tempFilePath = tempDirPath + "/" + this.props.fileName;
                     let exists = await fileExists(tempFilePath);
                     if (!exists) {
-                        await writeBinaryData(tempFilePath, this.props.historyItem.data);
+                        await writeBinaryData(tempFilePath, this.props.data);
                     }
                     return new URL(`file:///${tempFilePath}`).href;
                 })().then(
@@ -112,7 +118,7 @@ class PdfPreview extends React.Component<{
             }
         } else {
             if (!this.thumbnail) {
-                pdfToPng(this.props.historyItem.data)
+                pdfToPng(this.props.data)
                     .then(result => {
                         runInAction(() => (this.thumbnail = result));
                     })
@@ -148,10 +154,10 @@ class PdfPreview extends React.Component<{
         let content;
 
         if (this.zoom) {
-            content = this.url && (
+            content = this.urlWithParams && (
                 <WebView
                     ref={(ref: any) => (this.webView = ref)}
-                    src={"../../libs/pdfjs/web/viewer.html?file=" + encodeURIComponent(this.url)}
+                    src={this.urlWithParams}
                     tabIndex={this.zoom ? 0 : undefined}
                 />
             );
@@ -504,7 +510,16 @@ export class FileHistoryItem extends HistoryItem {
                 Buffer.from(this.data, "binary").toString("base64");
             return <ImagePreview src={imageData} />;
         } else if (this.isPdf) {
-            return <PdfPreview historyItem={this} />;
+            return (
+                <PdfPreview
+                    data={this.data}
+                    fileName={
+                        (this.fileState.sourceFilePath &&
+                            getFileName(this.fileState.sourceFilePath)) ||
+                        `${this.id}.pdf`
+                    }
+                />
+            );
         }
         return null;
     }
