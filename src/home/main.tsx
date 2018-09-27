@@ -3,6 +3,9 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { configure } from "mobx";
 
+import { theme } from "shared/ui/theme";
+import { ThemeProvider } from "shared/ui/styled-components";
+
 import { handleDragAndDrop } from "home/drag-and-drop";
 
 configure({ enforceActions: true });
@@ -29,7 +32,12 @@ EEZStudio.electron.ipcRenderer.on(
 
 async function main() {
     const { App } = await import("home/app");
-    ReactDOM.render(<App />, document.getElementById("EezStudio_Content"));
+    ReactDOM.render(
+        <ThemeProvider theme={theme}>
+            <App />
+        </ThemeProvider>,
+        document.getElementById("EezStudio_Content")
+    );
 
     const { loadExtensions } = await import("shared/extensions/extensions");
     loadExtensions();

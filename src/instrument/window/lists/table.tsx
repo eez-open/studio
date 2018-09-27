@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import * as classNames from "classnames";
 
-import { objectClone } from "shared/util";
+import { objectClone, addAlphaToColor } from "shared/util";
 import { _range } from "shared/algorithm";
 import {
     IUnit,
@@ -16,7 +16,9 @@ import {
 
 import { validators } from "shared/model/validation";
 
-import { VerticalHeaderWithBody, Header, Body, ToolbarHeader } from "shared/ui/header-with-body";
+import { theme } from "shared/ui/theme";
+import styled from "shared/ui/styled-components";
+import { VerticalHeaderWithBody, Body, ToolbarHeader } from "shared/ui/header-with-body";
 import { Splitter } from "shared/ui/splitter";
 import {
     AxisController,
@@ -27,7 +29,8 @@ import {
     IAxisModel,
     LineController,
     ChartView,
-    MouseHandler
+    MouseHandler,
+    globalViewOptions
 } from "shared/ui/chart/chart";
 import { Toolbar } from "shared/ui/toolbar";
 import { ButtonAction, DropdownButtonAction, DropdownItem } from "shared/ui/action";
@@ -37,8 +40,10 @@ import { InstrumentObject } from "instrument/instrument-object";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 
-import { BaseList, BaseListData, ListAxisModel } from "instrument/window/lists/store-renderer";
 import {
+    BaseList,
+    BaseListData,
+    ListAxisModel,
     checkVoltage,
     getMaxVoltage,
     checkCurrent,
@@ -51,6 +56,7 @@ import {
     ChartsDisplayOption,
     CommonTools
 } from "instrument/window/lists/common-tools";
+import { ListChartViewHeader } from "instrument/window/lists/lists";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -257,11 +263,13 @@ export class TableLineView extends React.Component<
 
         return (
             <path
-                className="EezStudio_ListChartView_Sampling"
                 d={path}
                 style={{ pointerEvents: "none" }}
                 stroke={yAxisController.axisModel.color}
                 clipPath={`url(#${this.props.clipId})`}
+                strokeWidth={1}
+                strokeOpacity={1}
+                fillOpacity={0}
             />
         );
     }
@@ -367,7 +375,7 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
 
     render() {
         return (
-            <Header className="EezStudio_ListChartView_Header">
+            <ListChartViewHeader>
                 <Toolbar>
                     <ButtonAction
                         text="Edit Properties"
@@ -377,7 +385,7 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
                     />
                     <CommonTools chartsController={this.props.chartsController} />
                 </Toolbar>
-            </Header>
+            </ListChartViewHeader>
         );
     }
 }
@@ -390,6 +398,12 @@ interface CellProps {
     onFocus: () => void;
     setError(error: string | undefined): void;
 }
+
+const CellTd = styled.td`
+    &.selected {
+        background-color: ${props => addAlphaToColor(props.theme.selectionBackgroundColor, 0.1)};
+    }
+`;
 
 @observer
 class Cell extends React.Component<CellProps, {}> {
@@ -498,14 +512,13 @@ class Cell extends React.Component<CellProps, {}> {
     render() {
         const { index, unit, onFocus } = this.props;
         const className = classNames(
-            "EezStudio_TableListEditor_Cell",
             `EezStudio_TableListEditor_Cell_${index}_${cellKeyFromUnit(unit)}`,
             {
                 selected: index === selectedCell.index && cellKeyFromUnit(unit) === selectedCell.key
             }
         );
         return (
-            <td
+            <CellTd
                 className={className}
                 contentEditable
                 suppressContentEditableWarning
@@ -514,7 +527,7 @@ class Cell extends React.Component<CellProps, {}> {
                 onKeyDown={this.onKeyDown}
             >
                 {this.value}
-            </td>
+            </CellTd>
         );
     }
 }
@@ -523,7 +536,7 @@ class Cell extends React.Component<CellProps, {}> {
 export class Table extends React.Component<
     {
         list: TableList;
-        className: string;
+        className?: string;
         onCellFocus: (index: number, key: CellKey) => void;
         setError(error: string | undefined): void;
     },
@@ -691,6 +704,61 @@ export class Table extends React.Component<
         );
     }
 }
+
+const TableListEditorToolbarHeader = styled(ToolbarHeader)`
+    justify-content: flex-start;
+    background-color: white;
+`;
+
+const TableListEditorBody = styled(Body)`
+    overflow-x: hidden !important;
+`;
+
+const TableListEditorTable = styled(Table)`
+    border-bottom: 1px solid ${props => props.theme.tableBorderColor};
+    border-collapse: collapse;
+
+    width: 100%;
+
+    th,
+    td:first-child {
+        background-color: ${props => props.theme.panelHeaderColor};
+    }
+
+    th:not(:first-child),
+    td:not(:first-child) {
+        width: 33%;
+    }
+
+    td,
+    th {
+        text-align: center;
+        border: 1px solid ${props => props.theme.tableBorderColor};
+        padding: 2px 2px;
+    }
+
+    td:first-child {
+        padding: 2px 10px;
+    }
+
+    th {
+        border-top: none;
+    }
+
+    th:first-child,
+    td:first-child {
+        border-left: none;
+    }
+
+    th:last-child,
+    td:last-child {
+        border-right: none;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+`;
 
 interface TableDetailsViewProps {
     list: TableList;
@@ -880,7 +948,7 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
                 </VerticalHeaderWithBody>
 
                 <VerticalHeaderWithBody>
-                    <ToolbarHeader className="EezStudio_TableListEditor_Toolbar">
+                    <TableListEditorToolbarHeader>
                         <DropdownButtonAction
                             text="Insert"
                             title="Insert rows"
@@ -923,15 +991,14 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
                             <div className="text-success">Max no. of points reached.</div>
                         )}
                         {<div className="text-danger">{this.error}</div>}
-                    </ToolbarHeader>
-                    <Body className="EezStudio_TableListEditor_TableContainer">
-                        <Table
-                            className="EezStudio_TableListEditor_Table"
+                    </TableListEditorToolbarHeader>
+                    <TableListEditorBody>
+                        <TableListEditorTable
                             list={list}
                             onCellFocus={this.onCellFocus}
                             setError={this.setError}
                         />
-                    </Body>
+                    </TableListEditorBody>
                 </VerticalHeaderWithBody>
             </Splitter>
         );
@@ -1034,15 +1101,12 @@ class TableChartController extends ChartController {
         let y = this.chartsController.chartTop;
         let height = this.chartsController.chartHeight;
 
-        return (
-            <rect
-                className="EezStudio_TableListEditor_SelectedCellRect"
-                x={x}
-                y={y}
-                width={width}
-                height={height}
-            />
+        const fill = addAlphaToColor(
+            theme.selectionBackgroundColor,
+            globalViewOptions.blackBackground ? 0.4 : 0.1
         );
+
+        return <rect x={x} y={y} width={width} height={height} fill={fill} />;
     }
 }
 

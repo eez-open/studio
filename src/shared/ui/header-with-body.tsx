@@ -1,6 +1,8 @@
 import * as React from "react";
 import * as classNames from "classnames";
 
+import styled from "shared/ui/styled-components";
+
 export class Header extends React.Component<
     {
         className?: string;
@@ -12,6 +14,13 @@ export class Header extends React.Component<
         return <div className={className}>{this.props.children}</div>;
     }
 }
+
+export const PanelHeader = styled(Header)`
+    padding: 6px 10px;
+    border: 0 solid ${props => props.theme.borderColor};
+    border-bottom-width: 1px;
+    background-color: ${props => props.theme.panelHeaderColor};
+`;
 
 export class ToolbarHeader extends React.Component<
     {

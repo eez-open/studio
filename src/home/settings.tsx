@@ -20,10 +20,27 @@ import {
     setTimeFormat
 } from "shared/i10n";
 
+import styled from "shared/ui/styled-components";
 import { PropertyList, FileInputProperty, SelectProperty } from "shared/ui/properties";
 import * as notification from "shared/ui/notification";
+import { PanelHeader } from "shared/ui/header-with-body";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const HomeSettingsBody = styled.div`
+    padding: 50px 0;
+    margin: auto;
+    max-width: 640px;
+`;
+
+const HomeSettingsBar = styled(PanelHeader)`
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: right;
+    border-bottom-width: 0;
+    border-top-width: 1px;
+`;
 
 const activeDatabasePath = getDbPath();
 const activetLocale = getLocale();
@@ -109,8 +126,8 @@ export class Settings extends React.Component<{}, {}> {
 
     render() {
         return (
-            <div className="EezStudio_Home_Settings">
-                <div className="EezStudio_Home_Settings_Body">
+            <div>
+                <HomeSettingsBody>
                     <PropertyList>
                         <FileInputProperty
                             name="Database location"
@@ -185,10 +202,10 @@ export class Settings extends React.Component<{}, {}> {
                             ))}
                         </SelectProperty>
                     </PropertyList>
-                </div>
+                </HomeSettingsBody>
 
                 {this.restartRequired && (
-                    <div className="EezStudio_Home_Settings_Bar">
+                    <HomeSettingsBar>
                         <div className="btn-group mr-2">
                             <button
                                 className="btn btn-primary EezStudio_PulseTransition"
@@ -197,7 +214,7 @@ export class Settings extends React.Component<{}, {}> {
                                 Restart
                             </button>
                         </div>
-                    </div>
+                    </HomeSettingsBar>
                 )}
             </div>
         );

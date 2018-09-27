@@ -1,9 +1,13 @@
+import * as React from "react";
 import * as ReactDOM from "react-dom";
+
+import { theme } from "shared/ui/theme";
+import { ThemeProvider } from "shared/ui/styled-components";
 
 export function showPopup(targetElement: Element, popupElement: JSX.Element) {
     let content = document.createElement("div");
     content.tabIndex = 0;
-    ReactDOM.render(popupElement, content);
+    ReactDOM.render(<ThemeProvider theme={theme}>{popupElement}</ThemeProvider>, content);
 
     $(targetElement)
         .popover({

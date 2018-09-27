@@ -1,6 +1,5 @@
 import * as React from "react";
 import { observer } from "mobx-react";
-import * as classNames from "classnames";
 
 import { Box } from "shared/ui/box";
 import { PanelTitle } from "shared/ui/panel";
@@ -18,7 +17,7 @@ export class Properties extends React.Component<
     {}
 > {
     render() {
-        let className = classNames("EezStudio_Workbench_Designer_Properties", this.props.className);
+        let className = this.props.className;
 
         if (this.props.selectedObjects.length === 0) {
             return <div className={className} />;

@@ -3,6 +3,7 @@ import { observer } from "mobx-react";
 //import { DragDropContext } from "react-dnd";
 //import HTML5Backend from "react-dnd-html5-backend";
 
+import styled from "shared/ui/styled-components";
 import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
 import { TabsView } from "shared/ui/tabs";
 import { SessionInfo } from "instrument/window/history/session/info-view";
@@ -12,19 +13,26 @@ import { getAppStore } from "home/history";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const SessionInfoContainer = styled.div`
+    flex-grow: 0;
+    border-bottom: 1px solid ${props => props.theme.borderColor};
+    padding: 5px 10px;
+    background: ${props => props.theme.panelHeaderColor};
+`;
+
 @observer
 class AppComponent extends React.Component<{}, {}> {
     render() {
         return (
-            <VerticalHeaderWithBody className="EezStudio_AppRootComponent">
+            <VerticalHeaderWithBody>
                 <Header>
                     <div style={{ display: "flex", flexDirection: "row" }}>
                         <div style={{ flexGrow: 1 }}>
                             <TabsView tabs={tabs.tabs} />
                         </div>
-                        <div className="EezStudio_SessionInfoContainer">
+                        <SessionInfoContainer>
                             <SessionInfo appStore={getAppStore()} />
-                        </div>
+                        </SessionInfoContainer>
                     </div>
                 </Header>
                 <Body>{tabs.activeTab.render()}</Body>

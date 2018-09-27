@@ -11,6 +11,8 @@ import { stringCompare } from "shared/string";
 import { IMeasurementFunction, IChart } from "shared/extensions/extension";
 import { extensions } from "shared/extensions/extensions";
 
+import { theme } from "shared/ui/theme";
+import { ThemeProvider } from "shared/ui/styled-components";
 import { IconAction } from "shared/ui/action";
 import { DockablePanels } from "shared/ui/side-dock";
 import { GenericDialog, IFieldProperties, FieldComponent } from "shared/ui/generic-dialog";
@@ -916,7 +918,9 @@ export class ChartMeasurements extends React.Component<{
             const measurement = measurementsController.findMeasurementById(props.measurementId);
             if (measurement) {
                 ReactDOM.render(
-                    <MeasurementValue measurement={measurement} />,
+                    <ThemeProvider theme={theme}>
+                        <MeasurementValue measurement={measurement} />
+                    </ThemeProvider>,
                     container.getElement()[0]
                 );
             }

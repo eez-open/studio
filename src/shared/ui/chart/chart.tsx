@@ -10,6 +10,9 @@ import { capitalize } from "shared/string";
 import { Point, pointDistance } from "shared/geometry";
 import { IUnit } from "shared/units";
 
+import { theme } from "shared/ui/theme";
+import { ThemeProvider } from "shared/ui/styled-components";
+import styled from "shared/ui/styled-components";
 import { Draggable } from "shared/ui/draggable";
 import { SideDock, DockablePanels } from "shared/ui/side-dock";
 import { Splitter } from "shared/ui/splitter";
@@ -1724,6 +1727,19 @@ const SVG_ICON_ZOOM_IN: SvgIcon = {
     viewBox: "0 0 12.759932518005371 13.592938423156738"
 };
 
+const SvgButtonGroup = styled.g`
+    fill: #999;
+
+    :hover {
+        fill: #333;
+    }
+
+    :active {
+        transition: transform 100ms;
+        transform: scale(0.9);
+    }
+`;
+
 @observer
 class SvgButton extends React.Component<
     {
@@ -1757,7 +1773,7 @@ class SvgButton extends React.Component<
 
         return (
             <g transform={`translate(${tx}, ${ty}) scale(${sx}, ${sy})`}>
-                <g className="svgButton" onClick={onClick}>
+                <SvgButtonGroup onClick={onClick}>
                     <rect
                         x={viewBox.x}
                         y={viewBox.y}
@@ -1766,7 +1782,7 @@ class SvgButton extends React.Component<
                         fillOpacity="0"
                     />
                     <path d={icon.path} />
-                </g>
+                </SvgButtonGroup>
             </g>
         );
     }
@@ -1827,7 +1843,7 @@ class AxisLabels extends React.Component<{ axisController: AxisController }, {}>
                         this.props.axisController.labelTextsHeight = rect.height;
                     })
                 }
-                className="EezStudio_ListChartView_Labels"
+                className="EezStudio_ChartView_Labels"
             >
                 {labels}
             </g>
@@ -2397,7 +2413,12 @@ class Cursor implements ICursor {
     showPopover() {
         if (this.cursorElement) {
             let content = document.createElement("div");
-            ReactDOM.render(<CursorPopover cursor={this} />, content);
+            ReactDOM.render(
+                <ThemeProvider theme={theme}>
+                    <CursorPopover cursor={this} />
+                </ThemeProvider>,
+                content
+            );
             this.cursorPopover = $(this.cursorElement)
                 .popover({
                     content,
@@ -2455,8 +2476,8 @@ class Cursor implements ICursor {
                 ) + 0.5
         };
 
-        const className = classNames("EezStudio_ListChartView_Cursor", {
-            EezStudio_ListChartView_Cursor_AddPoint: this.addPoint,
+        const className = classNames("EezStudio_ChartView_Cursor", {
+            EezStudio_ChartView_Cursor_AddPoint: this.addPoint,
             error: !!this.error
         });
 
@@ -2896,17 +2917,21 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
 
         factory.registerComponent("RulersDockView", function(container: any, props: any) {
             ReactDOM.render(
-                <RulersDockView chartsController={chartsController} {...props} />,
+                <ThemeProvider theme={theme}>
+                    <RulersDockView chartsController={chartsController} {...props} />
+                </ThemeProvider>,
                 container.getElement()[0]
             );
         });
 
         factory.registerComponent("MeasurementsDockView", function(container: any, props: any) {
             ReactDOM.render(
-                <MeasurementsDockView
-                    measurementsController={chartsController.measurementsController}
-                    {...props}
-                />,
+                <ThemeProvider theme={theme}>
+                    <MeasurementsDockView
+                        measurementsController={chartsController.measurementsController}
+                        {...props}
+                    />
+                </ThemeProvider>,
                 container.getElement()[0]
             );
         });
@@ -2916,7 +2941,9 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             props: ChartViewOptionsProps
         ) {
             ReactDOM.render(
-                <ChartViewOptions chartsController={chartsController} {...props} />,
+                <ThemeProvider theme={theme}>
+                    <ChartViewOptions chartsController={chartsController} {...props} />
+                </ThemeProvider>,
                 container.getElement()[0]
             );
         });
@@ -2996,7 +3023,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             `EezStudio_ChartView_${capitalize(mode)}`,
             this.props.className,
             {
-                EezStudio_ListChartView_BlackBackground: globalViewOptions.blackBackground
+                EezStudio_ChartView_BlackBackground: globalViewOptions.blackBackground
             }
         );
 

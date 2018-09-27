@@ -5,12 +5,20 @@ import { observer } from "mobx-react";
 import { formatDateTimeLong } from "shared/util";
 import { IActivityLogEntry } from "shared/activity-log";
 
+import styled from "shared/ui/styled-components";
 import { Icon } from "shared/ui/icon";
 
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem } from "instrument/window/history/item";
+import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const ScriptHistoryItemDiv = styled(HistoryItemDiv)`
+    background-color: #f5f5f5;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+`;
 
 @observer
 export class ScriptHistoryItemComponent extends React.Component<
@@ -21,13 +29,13 @@ export class ScriptHistoryItemComponent extends React.Component<
 > {
     render() {
         return (
-            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Script">
+            <ScriptHistoryItemDiv>
                 <Icon className="mr-3" icon={"material:slideshow"} size={48} />
                 <div>
                     <p>
-                        <small className="EezStudio_HistoryItemDate text-muted">
+                        <HistoryItemDate>
                             {formatDateTimeLong(this.props.historyItem.date)}
-                        </small>
+                        </HistoryItemDate>
                     </p>
                     {this.props.historyItem.sourceDescriptionElement}
                     <table className="table">
@@ -69,7 +77,7 @@ export class ScriptHistoryItemComponent extends React.Component<
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </ScriptHistoryItemDiv>
         );
     }
 }

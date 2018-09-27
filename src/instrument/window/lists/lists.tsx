@@ -11,15 +11,22 @@ import { _range } from "shared/algorithm";
 
 import { validators } from "shared/model/validation";
 
+import styled from "shared/ui/styled-components";
 import { Icon } from "shared/ui/icon";
 import { Splitter } from "shared/ui/splitter";
-import { VerticalHeaderWithBody, ToolbarHeader, Header, Body } from "shared/ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    ToolbarHeader,
+    PanelHeader,
+    Body
+} from "shared/ui/header-with-body";
 import { IconAction, ButtonAction } from "shared/ui/action";
 import { List as ListComponent } from "shared/ui/list";
 import { Dialog, showDialog, error, confirm } from "shared/ui/dialog";
 import { showGenericDialog } from "shared/ui/generic-dialog";
 import * as notification from "shared/ui/notification";
 import { PropertyList, SelectProperty } from "shared/ui/properties";
+import { Header } from "shared/ui/header-with-body";
 
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/import";
 import { InstrumentObject } from "instrument/instrument-object";
@@ -34,6 +41,51 @@ import { createEmptyListData, createTableListFromData } from "instrument/window/
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_DEFAULT_ENVELOPE_LIST_DURATION = 1; // 1 second
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const ListChartViewHeader = styled(Header)`
+    padding: 10px;
+    border-bottom: 1px solid ${props => props.theme.borderColor};
+
+    & > div {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    td {
+        padding-top: 2px;
+        padding-bottom: 2px;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    td:first-child {
+        padding-left: 0;
+    }
+
+    td:last-child {
+        padding-right: 0;
+    }
+
+    .form-check-label input {
+        margin-right: 4px;
+    }
+
+    .form-check-label {
+        padding-left: 0;
+    }
+
+    label {
+        white-space: nowrap;
+        margin-bottom: 0;
+    }
+
+    input[type="text"] {
+        width: 100px;
+    }
+`;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -189,9 +241,9 @@ export class DetailsView extends React.Component<{ list: BaseList | undefined },
         return (
             <VerticalHeaderWithBody>
                 {description && (
-                    <Header className="EezStudio_ListEditor_ListDescription">
+                    <PanelHeader>
                         <Icon icon="material:comment" /> {description}
-                    </Header>
+                    </PanelHeader>
                 )}
                 <Body>{list && list.renderDetailsView()}</Body>
             </VerticalHeaderWithBody>

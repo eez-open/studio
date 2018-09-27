@@ -11,6 +11,8 @@ import {
     getWeekNumber
 } from "shared/util";
 
+import styled from "shared/ui/styled-components";
+
 import { History } from "instrument/window/history/history";
 
 @observer
@@ -145,6 +147,93 @@ export class Month extends React.Component<{ history: History; month: Date }> {
     }
 }
 
+const HistoryCalendar = styled.div`
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    & > div {
+        margin: 1px;
+        margin-bottom: 11px;
+        padding: 5px;
+        border: 1px solid ${props => props.theme.borderColor};
+        background: white;
+
+        &.selected {
+            margin: 0px;
+            margin-bottom: 10px;
+            border: 2px solid ${props => props.theme.selectionBackgroundColor};
+        }
+    }
+
+    & > div:last-child {
+        margin-bottom: 1px;
+
+        &.selected {
+            margin-bottom: 0px;
+        }
+    }
+
+    & > div > div:nth-child(1) {
+        font-weight: bold;
+    }
+
+    & > div > div:nth-child(2) {
+        line-height: 20px;
+        display: grid;
+        grid-template-columns: 28px 28px 28px 28px 28px 28px 28px 35px;
+        grid-template-rows: 33px;
+        padding-left: 33px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    & > div > div:nth-child(2) > div {
+        display: inline-block;
+        padding: 2px;
+        border: 2px solid white;
+        text-align: center;
+        font-size: 12px;
+
+        &.WeekNumber {
+            justify-self: right;
+        }
+
+        &.selected {
+            border: 2px solid ${props => props.theme.selectionBackgroundColor};
+        }
+
+        & > div {
+            width: 20px;
+            height: 20px;
+            cursor: default;
+        }
+
+        &.activity-level-0 > div {
+            background-color: #ebedf0;
+        }
+
+        &.activity-level-1 > div {
+            background-color: #c6e48b;
+        }
+
+        &.activity-level-2 > div {
+            background-color: #7bc96f;
+        }
+
+        &.activity-level-3 > div {
+            background-color: #239a3b;
+            color: white;
+        }
+
+        &.activity-level-4 > div {
+            background-color: #196127;
+            color: white;
+        }
+    }
+`;
+
 @observer
 export class Calendar extends React.Component<{ history: History }> {
     render() {
@@ -169,6 +258,6 @@ export class Calendar extends React.Component<{ history: History }> {
             month.setMonth(month.getMonth() + 1);
         }
 
-        return <div className="EezStudio_HistoryCalendar">{months}</div>;
+        return <HistoryCalendar>{months}</HistoryCalendar>;
     }
 }

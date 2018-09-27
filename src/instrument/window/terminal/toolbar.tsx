@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 
 import { capitalize } from "shared/string";
 
+import styled from "shared/ui/styled-components";
 import { Toolbar } from "shared/ui/toolbar";
 import { ButtonAction } from "shared/ui/action";
 
@@ -44,6 +45,19 @@ export class ShortcutButton extends React.Component<
     }
 }
 
+const ShortcutsToolbarContainer = styled(Toolbar)`
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    padding: 5px 5px;
+    border-top: 1px solid ${props => props.theme.borderColor};
+    background-color: ${props => props.theme.panelHeaderColor};
+
+    & > button {
+        margin: 5px 5px;
+    }
+`;
+
 @observer
 export class ShortcutsToolbar extends React.Component<
     {
@@ -78,7 +92,7 @@ export class ShortcutsToolbar extends React.Component<
         }
 
         return (
-            <Toolbar className="EezStudio_Instrument_ShortcutsToolbar">
+            <ShortcutsToolbarContainer>
                 {this.shortcuts.map(shortcut => (
                     <ShortcutButton
                         key={shortcut.id}
@@ -86,7 +100,7 @@ export class ShortcutsToolbar extends React.Component<
                         executeShortcut={() => this.props.executeShortcut(shortcut)}
                     />
                 ))}
-            </Toolbar>
+            </ShortcutsToolbarContainer>
         );
     }
 }

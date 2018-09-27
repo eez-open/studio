@@ -6,6 +6,7 @@ import { bind } from "bind-decorator";
 import { formatDateTimeLong } from "shared/util";
 import { IActivityLogEntry, activityLogStore } from "shared/activity-log";
 
+import styled from "shared/ui/styled-components";
 import { Toolbar } from "shared/ui/toolbar";
 import { IconAction } from "shared/ui/action";
 import { Icon } from "shared/ui/icon";
@@ -20,9 +21,16 @@ import { createTableListFromData } from "instrument/window/lists/factory";
 import { saveTableListData } from "instrument/window/lists/lists";
 
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem } from "instrument/window/history/item";
+import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const ListHistoryItemDiv = styled(HistoryItemDiv)`
+    background-color: #f5f5f5;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+`;
 
 @observer
 export class ListHistoryItemComponent extends React.Component<
@@ -78,13 +86,13 @@ export class ListHistoryItemComponent extends React.Component<
 
     render() {
         return (
-            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_List">
+            <ListHistoryItemDiv>
                 <Icon className="mr-3" icon={"material:timeline"} size={48} />
                 <div>
                     <p>
-                        <small className="EezStudio_HistoryItemDate text-muted">
+                        <HistoryItemDate>
                             {formatDateTimeLong(this.props.historyItem.date)}
-                        </small>
+                        </HistoryItemDate>
                     </p>
                     {this.props.historyItem.sourceDescriptionElement}
                     <div>
@@ -113,7 +121,7 @@ export class ListHistoryItemComponent extends React.Component<
                         </Toolbar>
                     }
                 </div>
-            </div>
+            </ListHistoryItemDiv>
         );
     }
 }

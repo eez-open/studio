@@ -10,6 +10,7 @@ import { log, logUpdate, logDelete } from "shared/activity-log";
 
 import { validators } from "shared/model/validation";
 
+import styled from "shared/ui/styled-components";
 import { IconAction } from "shared/ui/action";
 import { showGenericDialog } from "shared/ui/generic-dialog";
 import { Body } from "shared/ui/header-with-body";
@@ -157,6 +158,58 @@ export class SessionListItem extends React.Component<
     }
 }
 
+const SessionListTableContainer = styled.div`
+    padding: 5px;
+
+    tbody > tr {
+        cursor: pointer;
+        font-size: 90%;
+
+        &.selected {
+            background-color: ${props => props.theme.selectionBackgroundColor};
+            color: white;
+            .text-muted {
+                color: #ccc !important;
+            }
+            .EezStudio_Action {
+                color: white;
+            }
+            .EezStudio_Action:hover {
+                color: #aaa;
+            }
+        }
+
+        table {
+            width: 100%;
+        }
+
+        td {
+            position: relative;
+        }
+
+        td:nth-child(1) {
+            padding-right: 10px;
+            white-space: nowrap;
+        }
+
+        td:nth-child(2) {
+            width: 100%;
+        }
+
+        td:nth-child(3) {
+            white-space: nowrap;
+        }
+
+        .EezStudio_Icon {
+            visibility: hidden;
+        }
+
+        &:hover .EezStudio_Icon {
+            visibility: visible;
+        }
+    }
+`;
+
 @observer
 export class SessionList extends React.Component<{ appStore: IAppStore; history: History }> {
     @bind
@@ -182,17 +235,8 @@ export class SessionList extends React.Component<{ appStore: IAppStore; history:
 
     render() {
         return (
-            // <VerticalHeaderWithBody>
-            //     <ToolbarHeader className="EezStudio_PanelHeader">
-            //         <ButtonAction
-            //             text="New Session"
-            //             title="Create a new session"
-            //             className="btn-success"
-            //             onClick={this.newSession}
-            //         />
-            //     </ToolbarHeader>
             <Body className="EezStudio_HistoryTable selectable">
-                <div className="EezStudio_SessionList">
+                <SessionListTableContainer>
                     <table>
                         <tbody>
                             {this.props.history.sessions.sessions.map(session => (
@@ -205,9 +249,8 @@ export class SessionList extends React.Component<{ appStore: IAppStore; history:
                             ))}
                         </tbody>
                     </table>
-                </div>
+                </SessionListTableContainer>
             </Body>
-            // </VerticalHeaderWithBody>
         );
     }
 }

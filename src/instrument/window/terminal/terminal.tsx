@@ -3,6 +3,7 @@ import { observable, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
+import styled from "shared/ui/styled-components";
 import { Splitter } from "shared/ui/splitter";
 import { IconAction } from "shared/ui/action";
 
@@ -60,6 +61,34 @@ class TerminalState {
 const terminalState = new TerminalState();
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const InputContainer = styled.div`
+    background-color: ${props => props.theme.panelHeaderColor};
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    flex-grow: 0;
+    flex-shrink: 0;
+
+    div:nth-child(1) {
+        flex-shrink: 0;
+    }
+
+    div:nth-child(2) {
+        flex-grow: 1;
+        padding-left: 7px;
+
+        input {
+            padding-left: 5px;
+            padding-right: 5px;
+            width: 100%;
+        }
+    }
+
+    div:nth-child(3) {
+        flex-shrink: 0;
+    }
+`;
 
 @observer
 class Input extends React.Component<
@@ -194,7 +223,7 @@ class Input extends React.Component<
 
     render() {
         return (
-            <div className="EezStudio_Input">
+            <InputContainer>
                 <div>
                     <IconAction
                         icon="material:help"
@@ -231,10 +260,26 @@ class Input extends React.Component<
                         />
                     </div>
                 )}
-            </div>
+            </InputContainer>
         );
     }
 }
+
+const TerminalBodyContainer = styled.div`
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+`;
+
+const TerminalBody = styled.div`
+    border-bottom: 1px solid ${props => props.theme.borderColor};
+    flex-grow: 1;
+    overflow: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+`;
 
 @observer
 export class Terminal extends React.Component<{ appStore: InstrumentAppStore }, {}> {
@@ -277,13 +322,13 @@ export class Terminal extends React.Component<{ appStore: InstrumentAppStore }, 
                     appStore.helpVisible ? "instrument/window/terminal/splitter1" : undefined
                 }
             >
-                <div className="EezStudio_Terminal">
-                    <div className="EezStudio_TerminalBody">
+                <TerminalBodyContainer>
+                    <TerminalBody>
                         <HistoryView
                             appStore={this.props.appStore}
                             persistId={"instrument/window/history"}
                         />
-                    </div>
+                    </TerminalBody>
                     <Input
                         appStore={appStore}
                         sendCommand={() => {
@@ -298,7 +343,7 @@ export class Terminal extends React.Component<{ appStore: InstrumentAppStore }, 
                             executeShortcut(this.props.appStore, shortcut);
                         }}
                     />
-                </div>
+                </TerminalBodyContainer>
 
                 {appStore.helpVisible && (
                     <CommandsBrowser appStore={this.props.appStore} host={terminalState} />

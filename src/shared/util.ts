@@ -6,6 +6,8 @@ import * as GeometryModule from "shared/geometry";
 
 import * as I10nModule from "shared/i10n";
 
+import * as tinycolor from "tinycolor2";
+
 export let app: Electron.App;
 if (isRenderer()) {
     app = EEZStudio.electron.remote.app;
@@ -859,4 +861,10 @@ export function onSimpleMessage(message: string, callback: (args: any) => void) 
             }
         }
     );
+}
+
+export function addAlphaToColor(color: string, alpha: number) {
+    return tinycolor(color)
+        .setAlpha(alpha)
+        .toRgbString();
 }

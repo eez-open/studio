@@ -5,10 +5,18 @@ import { observer } from "mobx-react";
 import { formatDateTimeLong } from "shared/util";
 import { IActivityLogEntry } from "shared/activity-log";
 
+import styled from "shared/ui/styled-components";
+
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem } from "instrument/window/history/item";
+import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const AnswerHistoryItemDiv = styled(HistoryItemDiv)`
+    background-color: lightblue;
+    margin-left: 40px;
+    max-width: calc(100% - 40px);
+`;
 
 @observer
 export class AnswerHistoryItemComponent extends React.Component<
@@ -50,15 +58,15 @@ export class AnswerHistoryItemComponent extends React.Component<
         }
 
         return (
-            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Answer">
+            <AnswerHistoryItemDiv>
                 <p>
-                    <small className="EezStudio_HistoryItemDate text-muted">
+                    <HistoryItemDate>
                         {formatDateTimeLong(this.props.historyItem.date)}
-                    </small>
+                    </HistoryItemDate>
                 </p>
                 {this.props.historyItem.sourceDescriptionElement}
                 {content}
-            </div>
+            </AnswerHistoryItemDiv>
         );
     }
 }

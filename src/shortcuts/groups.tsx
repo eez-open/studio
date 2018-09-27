@@ -5,6 +5,8 @@ import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import { _countBy } from "shared/algorithm";
+
+import styled from "shared/ui/styled-components";
 import { Toolbar } from "shared/ui/toolbar";
 import { IconAction, ButtonAction } from "shared/ui/action";
 import { showDialog, confirm } from "shared/ui/dialog";
@@ -198,6 +200,12 @@ class GroupRow implements IRow {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const GroupsTable = styled(Table)`
+    .colActions {
+        white-space: nowrap;
+    }
+`;
+
 @observer
 export class Groups extends React.Component<{
     groupsStore: IGroupsStore;
@@ -256,9 +264,8 @@ export class Groups extends React.Component<{
 
     render() {
         return (
-            <Table
+            <GroupsTable
                 persistId="shortcuts/groups"
-                className="EezStudio_GroupsTable"
                 columns={this.columns}
                 rows={this.rows}
                 defaultSortColumn="name"

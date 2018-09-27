@@ -6,6 +6,7 @@ import { IActivityLogEntry } from "shared/activity-log";
 import { db } from "shared/db";
 import { scheduleTask, Priority } from "shared/scheduler";
 
+import styled from "shared/ui/styled-components";
 import { PropertyList, BooleanProperty } from "shared/ui/properties";
 
 import { IAppStore, History } from "instrument/window/history/history";
@@ -250,13 +251,21 @@ export class FilterStats {
     }
 }
 
+const FiltersComponentContainer = styled.div`
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    overflow: auto;
+`;
+
 @observer
 export class FiltersComponent extends React.Component<{ appStore: IAppStore }> {
     render() {
         const filterStats = this.props.appStore.history.filterStats;
 
         return (
-            <div className="EezStudio_HistoryFilters">
+            <FiltersComponentContainer>
                 <PropertyList>
                     <BooleanProperty
                         name={`Session start and close (${filterStats.session})`}
@@ -336,7 +345,7 @@ export class FiltersComponent extends React.Component<{ appStore: IAppStore }> {
                         )}
                     />
                 </PropertyList>
-            </div>
+            </FiltersComponentContainer>
         );
     }
 }

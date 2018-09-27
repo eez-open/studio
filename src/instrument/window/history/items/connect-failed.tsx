@@ -8,7 +8,7 @@ import { IActivityLogEntry } from "shared/activity-log";
 import { getConnectionParametersInfo } from "instrument/window/connection";
 
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem } from "instrument/window/history/item";
+import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,11 +37,11 @@ export class ConnectFailedHistoryItemComponent extends React.Component<
 
     render() {
         return (
-            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Disconnected">
+            <HistoryItemDiv className="EezStudio_HistoryItem_Disconnected">
                 <p>
-                    <small className="EezStudio_HistoryItemDate text-muted">
+                    <HistoryItemDate>
                         {formatDateTimeLong(this.props.historyItem.date)}
-                    </small>
+                    </HistoryItemDate>
                     <span className="text-danger">
                         CONNECT
                         {this.message.connectionParameters
@@ -53,7 +53,7 @@ export class ConnectFailedHistoryItemComponent extends React.Component<
                     </span>
                 </p>
                 {this.props.historyItem.sourceDescriptionElement}
-            </div>
+            </HistoryItemDiv>
         );
     }
 }

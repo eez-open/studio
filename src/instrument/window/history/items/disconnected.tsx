@@ -5,10 +5,31 @@ import { observer } from "mobx-react";
 import { formatDuration, formatDateTimeLong } from "shared/util";
 import { IActivityLogEntry } from "shared/activity-log";
 
+import styled from "shared/ui/styled-components";
+
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem } from "instrument/window/history/item";
+import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const DisconnectedHistoryItemDiv = styled(HistoryItemDiv)`
+    padding: 0;
+
+    p {
+        position: relative;
+        padding: 0px 10px;
+        display: inline-block;
+    }
+
+    &:before {
+        border-top: none;
+        top: calc(50% - 15px);
+    }
+
+    & > p > span {
+        color: orange;
+    }
+`;
 
 @observer
 export class DisconnectedHistoryItemComponent extends React.Component<
@@ -37,11 +58,11 @@ export class DisconnectedHistoryItemComponent extends React.Component<
 
     render() {
         return (
-            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Disconnected">
+            <DisconnectedHistoryItemDiv>
                 <p>
-                    <small className="EezStudio_HistoryItemDate text-muted">
+                    <HistoryItemDate>
                         {formatDateTimeLong(this.props.historyItem.date)}
-                    </small>
+                    </HistoryItemDate>
                     <span>
                         DISCONNECTED
                         {this.message.duration !== undefined
@@ -53,7 +74,7 @@ export class DisconnectedHistoryItemComponent extends React.Component<
                     )}
                 </p>
                 {this.props.historyItem.sourceDescriptionElement}
-            </div>
+            </DisconnectedHistoryItemDiv>
         );
     }
 }

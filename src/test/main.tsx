@@ -3,6 +3,9 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { configure } from "mobx";
 
+import { theme } from "shared/ui/theme";
+import { ThemeProvider } from "shared/ui/styled-components";
+
 configure({ enforceActions: true });
 
 EEZStudio.electron.ipcRenderer.on("beforeClose", () => {});
@@ -13,7 +16,12 @@ EEZStudio.electron.ipcRenderer.on("reload", () => {
 
 async function main() {
     const { App } = await import("test/app");
-    ReactDOM.render(<App />, document.getElementById("EezStudio_Content"));
+    ReactDOM.render(
+        <ThemeProvider theme={theme}>
+            <App />
+        </ThemeProvider>,
+        document.getElementById("EezStudio_Content")
+    );
 }
 
 main();

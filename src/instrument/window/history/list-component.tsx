@@ -6,6 +6,7 @@ import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
+import styled from "shared/ui/styled-components";
 import { Icon } from "shared/ui/icon";
 
 import { Waveform } from "instrument/window/waveform/generic";
@@ -14,6 +15,29 @@ import { History, IAppStore } from "instrument/window/history/history";
 import { IHistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const HistoryItemEnclosure = styled.div`
+    margin-bottom: 5px;
+
+    & > input {
+        float: left;
+        margin-top: 3px;
+        margin-right: 5px;
+        width: 15px;
+        height: 15px;
+    }
+
+    border: 2px solid transparent;
+    padding: 1px;
+
+    &.selected {
+        border: 2px solid ${props => props.theme.selectionBackgroundColor};
+    }
+
+    &.EezStudio_HistoryItemEnclosure_Session {
+        width: 100%;
+    }
+`;
 
 @observer
 export class HistoryItems extends React.Component<{
@@ -41,20 +65,16 @@ export class HistoryItems extends React.Component<{
                 }
             }
 
-            let className = classNames(
-                `EezStudio_HistoryItemEnclosure`,
-                `EezStudio_HistoryItem_${historyItem.id}`,
-                {
-                    EezStudio_HistoryItemEnclosure_Session: historyItem.type.startsWith(
-                        "activity-log/session"
-                    ),
-                    selected:
-                        !this.props.appStore.selectHistoryItemsSpecification && historyItem.selected
-                }
-            );
+            let className = classNames(`EezStudio_HistoryItem_${historyItem.id}`, {
+                EezStudio_HistoryItemEnclosure_Session: historyItem.type.startsWith(
+                    "activity-log/session"
+                ),
+                selected:
+                    !this.props.appStore.selectHistoryItemsSpecification && historyItem.selected
+            });
 
             return (
-                <div
+                <HistoryItemEnclosure
                     key={historyItem.id}
                     className={className}
                     onMouseDown={event => {
@@ -160,11 +180,18 @@ export class HistoryItems extends React.Component<{
                         />
                     )}
                     {element}
-                </div>
+                </HistoryItemEnclosure>
             );
         });
     }
 }
+
+const HistoryListComponentContainer = styled.div`
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+`;
 
 @observer
 export class HistoryListComponent extends React.Component<{
@@ -288,14 +315,13 @@ export class HistoryListComponent extends React.Component<{
 
     render() {
         return (
-            <div
+            <HistoryListComponentContainer
                 ref={(ref: any) => {
                     let div = findDOMNode(ref);
                     if (div && div.parentElement) {
                         this.div = div.parentElement;
                     }
                 }}
-                className={"EezStudio_History"}
                 onClick={event => {
                     if ($(event.target).closest(".EezStudio_HistoryItemEnclosure").length === 0) {
                         this.props.history.selection.selectItems([]);
@@ -344,7 +370,7 @@ export class HistoryListComponent extends React.Component<{
                         <Icon icon="material:expand_more" /> More
                     </button>
                 )}
-            </div>
+            </HistoryListComponentContainer>
         );
     }
 }

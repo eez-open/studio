@@ -21,7 +21,8 @@ const navigationItems = [
 
 @observer
 export class App extends React.Component {
-    @observable.ref selectedItem = navigationItems[0];
+    @observable.ref
+    selectedItem = navigationItems[0];
 
     @action.bound
     selectItem(item: any) {
@@ -37,7 +38,6 @@ export class App extends React.Component {
     render() {
         return (
             <AppRootComponent
-                className="EezStudio_AppRootComponent"
                 navigationItems={navigationItems}
                 selectedItem={this.selectedItem}
                 onSelectionChange={this.selectItem}

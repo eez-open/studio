@@ -3,14 +3,60 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
+import styled from "shared/ui/styled-components";
 import { AppRootComponent } from "shared/ui/app";
 import { AlertDanger } from "shared/ui/alert";
 import { Loader } from "shared/ui/loader";
 import { Toolbar } from "shared/ui/toolbar";
+import { PanelHeader } from "shared/ui/header-with-body";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { getConnection } from "instrument/window/connection";
 import { IInstrumentWindowNavigationItem } from "instrument/window/navigation-store";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const ConnectionBar = styled(PanelHeader)`
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    > div:nth-child(1) {
+        /* Instrument image */
+        > img {
+            object-fit: contain;
+            height: 46px;
+            margin-right: 10px;
+        }
+    }
+
+    > div:nth-child(2) {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+
+        /* Instrument name */
+        > div:nth-child(1) {
+            font-weight: bold;
+        }
+
+        > div:nth-child(2) {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            /* connection info */
+            > div:nth-child(1) {
+                font-size: 90%;
+                margin-right: 10px;
+            }
+
+            button {
+                padding: 1px 4px;
+            }
+        }
+    }
+`;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,7 +122,7 @@ export class AppBar extends React.Component<
             this.props.selectedItem && this.props.selectedItem.renderToolbarButtons();
 
         return (
-            <div className="EezStudio_ConnectionBar">
+            <ConnectionBar>
                 <div>
                     <img src={this.instrument.image} draggable={false} />
                 </div>
@@ -87,7 +133,7 @@ export class AppBar extends React.Component<
                 </div>
 
                 <Toolbar>{toolbarButtons}</Toolbar>
-            </div>
+            </ConnectionBar>
         );
     }
 }
@@ -137,7 +183,6 @@ export class App extends React.Component<{ appStore: InstrumentAppStore }> {
     render() {
         return (
             <AppRootComponent
-                className="EezStudio_AppRootComponent"
                 navigationItems={this.props.appStore.navigationStore.navigationItems}
                 appBar={this.appBar}
                 selectedItem={this.props.appStore.navigationStore.mainNavigationSelectedItem}

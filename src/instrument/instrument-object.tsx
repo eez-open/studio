@@ -16,6 +16,8 @@ import { IUnit } from "shared/units";
 import { db } from "shared/db";
 import { _defer } from "shared/algorithm";
 
+import styled from "shared/ui/styled-components";
+
 import * as MainWindowModule from "main/window";
 
 import { store as workbenchObjectsStore } from "home/store";
@@ -43,14 +45,6 @@ const CONF_LISTS_DWELL_DIGITS = 4;
 const CONF_LISTS_VOLTAGE_DIGITS = 3;
 const CONF_LISTS_CURRENT_DIGITS = 3;
 
-if (isRenderer()) {
-    const { addCssStylesheet } = require("shared/util");
-    addCssStylesheet(
-        "EezStudio_Instrument_Css",
-        `file://${__dirname.replace(/\\/g, "/")}/_stylesheets/instrument.css`
-    );
-}
-
 export interface IInstrumentObjectProps {
     id: string;
     instrumentExtensionId: string;
@@ -70,6 +64,55 @@ const UNKNOWN_INSTRUMENT_EXTENSION: IExtension = {
     image: "../shared/_images/object-implementation-not-found.svg",
     properties: {}
 };
+
+const InstrumentContent = styled.div`
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    & > * {
+        flex-grow: 0;
+        flex-shrink: 0;
+
+        white-space: nowrap;
+    }
+
+    img {
+        display: block;
+        object-fit: contain;
+        width: 100%;
+    }
+`;
+
+const NotFoundInstrumentContent = styled.div`
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: red;
+`;
+
+const InstrumentConnectionState = styled.div`
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+
+    span:nth-child(1) {
+        border-radius: 8px;
+        width: 16px;
+        height: 16px;
+        margin-right: 5px;
+    }
+`;
+
+const InstrumentLabel = styled.div`
+    font-weight: bold;
+`;
 
 export class InstrumentObject {
     constructor(props: IInstrumentObjectProps) {
@@ -523,10 +566,10 @@ export class InstrumentObject {
 
         if (this.extension) {
             return (
-                <div className="EezStudio_Instrument">
+                <InstrumentContent>
                     <img src={this.extension.image} draggable={false} />
-                    <div className="EezStudio_Instrument_Label">{this.name}</div>
-                    <div className="EezStudio_Instrument_ConnectionState">
+                    <InstrumentLabel>{this.name}</InstrumentLabel>
+                    <InstrumentConnectionState>
                         <span
                             style={{
                                 backgroundColor: this.connectionState.color
@@ -536,11 +579,11 @@ export class InstrumentObject {
                         {this.connectionState.error && (
                             <Icon className="text-danger" icon="material:error" />
                         )}
-                    </div>
-                </div>
+                    </InstrumentConnectionState>
+                </InstrumentContent>
             );
         } else {
-            return <div className="EezStudio_NotFoundObject" />;
+            return <NotFoundInstrumentContent />;
         }
     }
 

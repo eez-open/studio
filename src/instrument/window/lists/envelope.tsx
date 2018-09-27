@@ -11,7 +11,8 @@ import { IUnit, TIME_UNIT } from "shared/units";
 
 import { validators } from "shared/model/validation";
 
-import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
+import styled from "shared/ui/styled-components";
+import { VerticalHeaderWithBody, Body } from "shared/ui/header-with-body";
 import {
     AxisController,
     ChartMode,
@@ -37,8 +38,10 @@ import { InstrumentObject } from "instrument/instrument-object";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 
-import { BaseList, BaseListData, ListAxisModel } from "instrument/window/lists/store-renderer";
 import {
+    BaseList,
+    BaseListData,
+    ListAxisModel,
     getMaxVoltage,
     getMaxCurrent,
     checkPower,
@@ -49,6 +52,7 @@ import {
     ChartsDisplayOption,
     CommonTools
 } from "instrument/window/lists/common-tools";
+import { ListChartViewHeader } from "instrument/window/lists/lists";
 import { TableLineController } from "instrument/window/lists/table";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -362,6 +366,27 @@ class EnveloperListTimeAxisModel extends ListAxisModel {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const EditEnvelopeValueContainer = styled.div`
+    pointer-events: all;
+
+    td {
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+
+    .separator {
+        border-top: 1px solid ${props => props.theme.borderColor};
+    }
+
+    td:not(:first-child) {
+        padding-left: 10px;
+    }
+
+    label {
+        white-space: nowrap;
+    }
+`;
+
 @observer
 class EditEnvelopeValue extends React.Component<
     {
@@ -456,7 +481,7 @@ class EditEnvelopeValue extends React.Component<
 
     render() {
         return (
-            <div className="EezStudio_EditEnvelopeValue">
+            <EditEnvelopeValueContainer>
                 <table>
                     <tbody>
                         <tr>
@@ -534,7 +559,7 @@ class EditEnvelopeValue extends React.Component<
                         </tr>
                     </tbody>
                 </table>
-            </div>
+            </EditEnvelopeValueContainer>
         );
     }
 }
@@ -1154,6 +1179,8 @@ class EnvelopeLine extends React.Component<
                 x2={chartLeft + (to.time - xFrom) * xScale}
                 y2={chartBottom - (to.value - yFrom) * yScale}
                 stroke={axisModel.color}
+                strokeWidth={1}
+                strokeOpacity={1}
             />
         );
     }
@@ -1175,7 +1202,7 @@ class EnvelopeLines extends React.Component<
         const { chartLeft, chartBottom } = chartsController;
 
         return (
-            <g className="EezStudio_ListChartView_Lines">
+            <g>
                 {_range(values.length - 1).map(i => (
                     <EnvelopeLine
                         key={i}
@@ -1194,6 +1221,13 @@ class EnvelopeLines extends React.Component<
         );
     }
 }
+
+const EnvelopeValueCircle = styled.circle`
+    stroke-width: 2;
+    stroke-opacity: 0.8;
+    fill-opacity: 0;
+    cursor: move;
+`;
 
 @observer
 class EnvelopeValue extends React.Component<
@@ -1225,7 +1259,7 @@ class EnvelopeValue extends React.Component<
             axisModel
         } = this.props;
         return (
-            <circle
+            <EnvelopeValueCircle
                 data-value-index={index}
                 cx={chartLeft + (value.time - xFrom) * xScale}
                 cy={chartBottom - (value.value - yFrom) * yScale}
@@ -1253,10 +1287,7 @@ class EnvelopeValues extends React.Component<
         const { chartLeft, chartBottom } = chartsController;
 
         return (
-            <g
-                data-line-controller-id={envelopeLineController.id}
-                className="EezStudio_ListChartView_Values"
-            >
+            <g data-line-controller-id={envelopeLineController.id}>
                 {values.map((value, i) => (
                     <EnvelopeValue
                         key={i}
@@ -1502,7 +1533,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
 
     render() {
         return (
-            <Header className="EezStudio_ListChartView_Header">
+            <ListChartViewHeader>
                 <Toolbar>
                     <Toolbar>
                         <ButtonAction
@@ -1535,7 +1566,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                     </Toolbar>
                     <CommonTools chartsController={this.props.chartsController} />
                 </Toolbar>
-            </Header>
+            </ListChartViewHeader>
         );
     }
 }
@@ -1618,14 +1649,9 @@ class EnvelopeChartController extends ChartController {
                 let y = this.chartsController.chartTop;
                 let height = this.chartsController.chartHeight;
 
+                // render invalid region
                 return (
-                    <rect
-                        className="EezStudio_Envelope_InvalidRegion"
-                        x={x}
-                        y={y}
-                        width={width}
-                        height={height}
-                    />
+                    <rect x={x} y={y} width={width} height={height} fill="rgba(255, 0, 0, 0.1)" />
                 );
             }
         }

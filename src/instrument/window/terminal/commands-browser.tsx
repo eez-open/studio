@@ -1,13 +1,14 @@
 import * as React from "react";
 import { observable, action, computed } from "mobx";
 import { observer } from "mobx-react";
-import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
+import styled from "shared/ui/styled-components";
 import { IListNode, List } from "shared/ui/list";
 import { ITreeNode, Tree } from "shared/ui/tree";
 import { Splitter } from "shared/ui/splitter";
-import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
+import { VerticalHeaderWithBody, Header, PanelHeader, Body } from "shared/ui/header-with-body";
+import { SearchInput } from "shared/ui/search-input";
 
 import { ICommandSyntax, makeItShort, matchCommand } from "instrument/commands-tree";
 
@@ -63,6 +64,34 @@ export class CommandSyntax extends React.Component<
     }
 }
 
+const CommandsBrowserLeft = styled(VerticalHeaderWithBody)`
+    > div:nth-child(1) {
+        padding: 1px;
+        padding-top: 2px;
+        border-bottom: 1px solid ${props => props.theme.borderColor};
+    }
+`;
+
+const CommandsBrowserRight = styled(VerticalHeaderWithBody)`
+    > div:nth-child(1) {
+        td {
+            padding: 5px;
+
+            p {
+                margin-bottom: 0;
+            }
+        }
+    }
+
+    > div:nth-child(2) {
+        display: flex;
+        iframe {
+            border: 0;
+            flex-grow: 1;
+        }
+    }
+`;
+
 @observer
 export class CommandsBrowser extends React.Component<
     {
@@ -73,8 +102,10 @@ export class CommandsBrowser extends React.Component<
     },
     {}
 > {
-    @observable selectedNode: ICommandNode;
-    @observable searchText: string = "";
+    @observable
+    selectedNode: ICommandNode;
+    @observable
+    searchText: string = "";
 
     @computed
     get foundNodes(): IListNode[] {
@@ -141,10 +172,6 @@ export class CommandsBrowser extends React.Component<
     }
 
     render() {
-        let inputClassName = classNames("EezStudio_SearchInput", {
-            empty: !this.searchText
-        });
-
         let leftSideBody;
         if (this.searchText) {
             leftSideBody = <List nodes={this.foundNodes} selectNode={this.selectNode} />;
@@ -164,29 +191,31 @@ export class CommandsBrowser extends React.Component<
                 (this.selectedNode.commandSyntax && this.selectedNode.commandSyntax.url) ||
                 (this.selectedNode.querySyntax && this.selectedNode.querySyntax.url);
 
-            selectedNodeDetails = [
-                <Header key="top">
-                    <table>
-                        <tbody>
-                            {this.selectedNode.commandSyntax && (
-                                <CommandSyntax
-                                    appStore={this.props.appStore}
-                                    commandSyntax={this.selectedNode.commandSyntax}
-                                    copyCommand={this.copyCommand}
-                                />
-                            )}
-                            {this.selectedNode.querySyntax && (
-                                <CommandSyntax
-                                    appStore={this.props.appStore}
-                                    commandSyntax={this.selectedNode.querySyntax}
-                                    copyCommand={this.copyCommand}
-                                />
-                            )}
-                        </tbody>
-                    </table>
-                </Header>,
-                <Body key="bottom">{helpLink && <iframe src={helpLink} />}</Body>
-            ];
+            selectedNodeDetails = (
+                <React.Fragment>
+                    <PanelHeader>
+                        <table>
+                            <tbody>
+                                {this.selectedNode.commandSyntax && (
+                                    <CommandSyntax
+                                        appStore={this.props.appStore}
+                                        commandSyntax={this.selectedNode.commandSyntax}
+                                        copyCommand={this.copyCommand}
+                                    />
+                                )}
+                                {this.selectedNode.querySyntax && (
+                                    <CommandSyntax
+                                        appStore={this.props.appStore}
+                                        commandSyntax={this.selectedNode.querySyntax}
+                                        copyCommand={this.copyCommand}
+                                    />
+                                )}
+                            </tbody>
+                        </table>
+                    </PanelHeader>
+                    <Body>{helpLink && <iframe src={helpLink} />}</Body>
+                </React.Fragment>
+            );
         }
 
         return (
@@ -195,22 +224,17 @@ export class CommandsBrowser extends React.Component<
                 sizes="240px|100%"
                 persistId="instrument/window/commands-browser/splitter"
             >
-                <VerticalHeaderWithBody className="EezStudio_Left">
+                <CommandsBrowserLeft>
                     <Header>
-                        <input
-                            type="text"
-                            placeholder="&#xe8b6;"
-                            className={inputClassName}
-                            value={this.searchText}
+                        <SearchInput
+                            searchText={this.searchText}
                             onChange={this.onSearchChange}
                             onKeyDown={this.onSearchChange}
                         />
                     </Header>
                     <Body tabIndex={0}>{leftSideBody}</Body>
-                </VerticalHeaderWithBody>
-                <VerticalHeaderWithBody className="EezStudio_Right">
-                    {selectedNodeDetails}
-                </VerticalHeaderWithBody>
+                </CommandsBrowserLeft>
+                <CommandsBrowserRight>{selectedNodeDetails}</CommandsBrowserRight>
             </Splitter>
         );
     }

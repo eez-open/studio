@@ -5,12 +5,28 @@ import { observer } from "mobx-react";
 import { formatDateTimeLong } from "shared/util";
 import { IActivityLogEntry } from "shared/activity-log";
 
+import styled from "shared/ui/styled-components";
+
 import { getConnectionParametersInfo } from "instrument/window/connection";
 
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem } from "instrument/window/history/item";
+import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const ConnectedHistoryItemDiv = styled(HistoryItemDiv)`
+    padding: 0;
+
+    p {
+        position: relative;
+        padding: 0px 10px;
+        display: inline-block;
+    }
+
+    & > p > span {
+        color: darkgreen;
+    }
+`;
 
 @observer
 export class ConnectedHistoryItemComponent extends React.Component<
@@ -39,11 +55,11 @@ export class ConnectedHistoryItemComponent extends React.Component<
 
     render() {
         return (
-            <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Connected">
+            <ConnectedHistoryItemDiv>
                 <p>
-                    <small className="EezStudio_HistoryItemDate text-muted">
+                    <HistoryItemDate>
                         {formatDateTimeLong(this.props.historyItem.date)}
-                    </small>
+                    </HistoryItemDate>
                     <span>
                         CONNECTED
                         {this.message.connectionParameters
@@ -53,7 +69,7 @@ export class ConnectedHistoryItemComponent extends React.Component<
                     </span>
                 </p>
                 {this.props.historyItem.sourceDescriptionElement}
-            </div>
+            </ConnectedHistoryItemDiv>
         );
     }
 }

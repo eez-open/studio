@@ -44,10 +44,7 @@ export class Designer extends React.Component<{}, {}> {
                             selectDefaultTool={workbenchDocument.selectDefaultTool}
                         />
 
-                        <Properties
-                            selectedObjects={workbenchDocument.selectedObjects}
-                            className="EezStudio_DesignerProperties"
-                        />
+                        <Properties selectedObjects={workbenchDocument.selectedObjects} />
                     </Splitter>
                 </Body>
             </VerticalHeaderWithBody>

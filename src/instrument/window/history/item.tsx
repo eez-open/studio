@@ -4,6 +4,8 @@ import { observable } from "mobx";
 import { formatDuration } from "shared/util";
 import { IActivityLogEntry, loadData, logDelete } from "shared/activity-log";
 
+import styled from "shared/ui/styled-components";
+
 import { IAppStore } from "instrument/window/history/history";
 
 import { itemsStore, getSource } from "notebook/store";
@@ -105,9 +107,7 @@ export class HistoryItem implements IHistoryItem {
             if (source) {
                 return (
                     <p>
-                        <small className="EezStudio_HistoryItemDate text-muted">
-                            {`Source: ${source.instrumentName}`}
-                        </small>
+                        <HistoryItemDate>{`Source: ${source.instrumentName}`}</HistoryItemDate>
                     </p>
                 );
             }
@@ -115,3 +115,27 @@ export class HistoryItem implements IHistoryItem {
         return null;
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const HistoryItemDiv = styled.div`
+    border-radius: 8px;
+    padding: 0px 10px;
+    overflow: visible;
+
+    p,
+    pre {
+        margin-bottom: 0;
+    }
+
+    pre {
+        user-select: auto;
+    }
+`;
+
+export const HistoryItemDate = styled.small.attrs({
+    className: "EezStudio_HistoryItemDate text-muted"
+})`
+    padding-right: 10px;
+    user-select: auto;
+`;

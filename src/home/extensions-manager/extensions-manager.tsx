@@ -24,6 +24,7 @@ import {
 } from "shared/util";
 import { stringCompare } from "shared/string";
 
+import styled from "shared/ui/styled-components";
 import { Splitter } from "shared/ui/splitter";
 import { VerticalHeaderWithBody, Header, ToolbarHeader, Body } from "shared/ui/header-with-body";
 import { Toolbar } from "shared/ui/toolbar";
@@ -703,6 +704,37 @@ function downloadAndInstallExtension(extensionToInstall: IExtension, progressToa
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ExtensionDetailsHeader = styled(Header)`
+    display: flex;
+    flex-direction: row;
+    padding: 10px;
+    border-bottom: 1px solid ${props => props.theme.borderColor};
+    * {
+        user-select: auto;
+    }
+`;
+
+const ExtensionDetailsHeaderImageContainer = styled.div`
+    flex-grow: 0;
+    flex-shrink: 0;
+    padding-right: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+`;
+
+const ExtensionDetailsHeaderProperties = styled.div`
+    flex-grow: 1;
+    flex-shrink: 0;
+`;
+
+const ExtensionDetailsHeaderPropertiesNameAndVersion = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+`;
+
 @observer
 export class DetailsView extends React.Component {
     @observable
@@ -885,15 +917,15 @@ export class DetailsView extends React.Component {
 
         return (
             <VerticalHeaderWithBody>
-                <Header className="EezStudio_Extension_Details_Header">
-                    <div className="EezStudio_Extension_Details_Header_ImageContainer">
+                <ExtensionDetailsHeader>
+                    <ExtensionDetailsHeaderImageContainer>
                         <img src={extension.image} width={256} />
                         <a href="#" style={{ cursor: "pointer" }} onClick={this.handleChangeImage}>
                             Change image
                         </a>
-                    </div>
-                    <div className="EezStudio_Extension_Details_Header_Properties">
-                        <div className="EezStudio_Extension_Details_Header_Properties_Name_And_Version">
+                    </ExtensionDetailsHeaderImageContainer>
+                    <ExtensionDetailsHeaderProperties>
+                        <ExtensionDetailsHeaderPropertiesNameAndVersion>
                             <h5>{extension.displayName || extension.name}</h5>
                             <div className="form-inline">
                                 <label
@@ -919,7 +951,7 @@ export class DetailsView extends React.Component {
                                     ))}
                                 </select>
                             </div>
-                        </div>
+                        </ExtensionDetailsHeaderPropertiesNameAndVersion>
                         <div>{extension.description}</div>
                         <div>{extension.author}</div>
                         <div style={{ marginBottom: "10px" }}>
@@ -968,8 +1000,8 @@ export class DetailsView extends React.Component {
                                     />
                                 )}
                         </Toolbar>
-                    </div>
-                </Header>
+                    </ExtensionDetailsHeaderProperties>
+                </ExtensionDetailsHeader>
                 <Body>
                     <ExtensionSections extension={extension} />
                 </Body>

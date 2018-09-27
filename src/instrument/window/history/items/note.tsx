@@ -4,9 +4,9 @@ import { bind } from "bind-decorator";
 
 import { formatDateTimeLong } from "shared/util";
 import { beginTransaction, commitTransaction } from "shared/store";
-import { IActivityLogEntry, logDelete, logUpdate } from "shared/activity-log";
+import { IActivityLogEntry, logUpdate } from "shared/activity-log";
 
-import { confirm } from "shared/ui/dialog";
+import styled from "shared/ui/styled-components";
 import { Balloon } from "shared/ui/balloon";
 import { PropertyList, StaticRichTextProperty } from "shared/ui/properties";
 import { Toolbar } from "shared/ui/toolbar";
@@ -15,9 +15,29 @@ import { IconAction } from "shared/ui/action";
 import { showEditNoteDialog } from "instrument/window/note-dialog";
 
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem } from "instrument/window/history/item";
+import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const NoteHistoryItemDiv = styled(HistoryItemDiv)`
+    position: relative;
+    margin: auto;
+    overflow: visible;
+    border-radius: 0;
+    padding: 0;
+    min-width: 240px;
+
+    .EezStudio_Toolbar {
+        position: absolute;
+        display: none;
+        top: 5px;
+        right: 5px;
+    }
+
+    &:hover .EezStudio_Toolbar {
+        display: block;
+    }
+`;
 
 @observer
 export class NoteHistoryItemComponent extends React.Component<
@@ -45,32 +65,14 @@ export class NoteHistoryItemComponent extends React.Component<
         });
     }
 
-    @bind
-    handleDeleteNote() {
-        confirm("Are you sure?", undefined, () => {
-            beginTransaction("Delete note");
-            logDelete(
-                this.props.historyItem.appStore.history.options.store,
-                this.props.historyItem,
-                {
-                    undoable: true
-                }
-            );
-            commitTransaction();
-        });
-    }
-
     render() {
         return (
-            <div
-                className="EezStudio_HistoryItem EezStudio_HistoryItem_Note"
-                onDoubleClick={this.handleEditNote}
-            >
+            <NoteHistoryItemDiv onDoubleClick={this.handleEditNote}>
                 <Balloon>
                     <p>
-                        <small className="EezStudio_HistoryItemDate text-muted">
+                        <HistoryItemDate>
                             {formatDateTimeLong(this.props.historyItem.date)}
-                        </small>
+                        </HistoryItemDate>
                     </p>
                     {this.props.historyItem.sourceDescriptionElement}
                     <PropertyList>
@@ -83,13 +85,8 @@ export class NoteHistoryItemComponent extends React.Component<
                         title="Edit note"
                         onClick={this.handleEditNote}
                     />
-                    <IconAction
-                        icon="material:delete"
-                        title="Delete note"
-                        onClick={this.handleDeleteNote}
-                    />
                 </Toolbar>
-            </div>
+            </NoteHistoryItemDiv>
         );
     }
 }

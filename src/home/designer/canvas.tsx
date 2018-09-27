@@ -4,6 +4,8 @@ import { observer } from "mobx-react";
 
 import { getBoundingClientRectOfChildNodes } from "shared/util";
 import { rectScale, Transform } from "shared/geometry";
+
+import styled from "shared/ui/styled-components";
 import { ITool } from "shared/ui/designer/designer-interfaces";
 
 import {
@@ -86,6 +88,15 @@ interface DndWorkbenchDocumentProps {
     //isOver: boolean;
 }
 
+const WorkbenchCanvas = styled(Canvas)`
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+`;
+
 @observer
 class DndWorkbenchDocument extends React.Component<DndWorkbenchDocumentProps, {}> {
     render() {
@@ -94,11 +105,7 @@ class DndWorkbenchDocument extends React.Component<DndWorkbenchDocumentProps, {}
 
         return (
             /*this.props.connectDropTarget*/
-            <Canvas
-                className="EezStudio_WorkbenchDocumentCanvas"
-                document={this.props.document}
-                toolHandler={toolHandler}
-            >
+            <WorkbenchCanvas document={this.props.document} toolHandler={toolHandler}>
                 <TransitionGroup
                     component="g"
                     className="EezStudio_Layer"
@@ -110,7 +117,7 @@ class DndWorkbenchDocument extends React.Component<DndWorkbenchDocumentProps, {}
                         </BounceEntranceTransition>
                     ))}
                 </TransitionGroup>
-            </Canvas>
+            </WorkbenchCanvas>
         );
     }
 }

@@ -5,6 +5,9 @@ import * as classNames from "classnames";
 import { observer } from "mobx-react";
 import bind from "bind-decorator";
 
+import { theme } from "shared/ui/theme";
+import { ThemeProvider } from "shared/ui/styled-components";
+
 @observer
 export class Dialog extends React.Component<
     {
@@ -22,7 +25,8 @@ export class Dialog extends React.Component<
         form: HTMLFormElement;
     };
 
-    @observable disableButtons = false;
+    @observable
+    disableButtons = false;
 
     componentDidMount() {
         $(this.refs.div).modal({
@@ -145,7 +149,7 @@ export function showDialog(dialog: JSX.Element, id?: string) {
     if (id) {
         element.id = id;
     }
-    ReactDOM.render(dialog, element);
+    ReactDOM.render(<ThemeProvider theme={theme}>{dialog}</ThemeProvider>, element);
     document.body.appendChild(element);
 }
 

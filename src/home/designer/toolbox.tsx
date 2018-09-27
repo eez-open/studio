@@ -5,12 +5,14 @@ import * as classNames from "classnames";
 
 import { Icon } from "shared/ui/icon";
 import { IToolboxGroup, ITool } from "shared/ui/designer/designer-interfaces";
+import styled from "shared/ui/styled-components";
 
 @observer
 export class DndTool extends React.Component<
     {
         tool: ITool;
         selectTool: (tool: ITool | undefined) => void;
+        className?: string;
         //connectDragSource: any;
         //isDragging: boolean;
     },
@@ -33,12 +35,14 @@ export class DndTool extends React.Component<
     }
 
     render() {
+        let className = classNames(this.props.className, "d-flex flex-row align-items-center");
+
         let aClassName = classNames("list-group-item-action", {
             EezStudio_Selected: this.props.tool.selected
         });
 
         return (
-            /*this.props.connectDragSource*/ <li className="EezStudio_Tool d-flex flex-row align-items-center">
+            /*this.props.connectDragSource*/ <li className={className}>
                 <a
                     href="#"
                     className={aClassName}
@@ -75,7 +79,15 @@ export class DndTool extends React.Component<
 //         };
 //     }
 // )(DndTool);
-const Tool = DndTool;
+const Tool = styled(DndTool)`
+    white-space: nowrap;
+    overflow: hidden;
+
+    .EezStudio_Selected {
+        background-color: ${props => props.theme.selectionBackgroundColor};
+        color: @selection-color;
+    }
+`;
 
 @observer
 export class ToolboxGroup extends React.Component<
@@ -86,10 +98,8 @@ export class ToolboxGroup extends React.Component<
     {}
 > {
     render() {
-        let className = classNames("EezStudio_ToolboxGroup", "p-2");
-
         return (
-            <div className={className}>
+            <div className="p-2">
                 {this.props.toolboxGroup.label && <h5>{this.props.toolboxGroup.label}</h5>}
                 <ul className="list-unstyled">
                     {this.props.toolboxGroup.tools.map(tool => (
@@ -101,20 +111,27 @@ export class ToolboxGroup extends React.Component<
     }
 }
 
+const ToolboxContainer = styled.div`
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: ${props => props.theme.panelHeaderColor};
+    pointer-events: all;
+`;
+
 @observer
 export class Toolbox extends React.Component<
     {
         toolboxGroups: IToolboxGroup[];
         selectTool: (tool: ITool | undefined) => void;
-        className: string;
     },
     {}
 > {
     render() {
-        let className = classNames("EezStudio_Toolbox", this.props.className);
-
         return (
-            <div className={className}>
+            <ToolboxContainer>
                 {this.props.toolboxGroups.map(toolboxGroup => (
                     <ToolboxGroup
                         key={toolboxGroup.id}
@@ -122,7 +139,7 @@ export class Toolbox extends React.Component<
                         selectTool={this.props.selectTool}
                     />
                 ))}
-            </div>
+            </ToolboxContainer>
         );
     }
 }

@@ -1,6 +1,10 @@
 /// <reference path="./globals.d.ts"/>
+import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { configure } from "mobx";
+
+import { theme } from "shared/ui/theme";
+import { ThemeProvider } from "shared/ui/styled-components";
 
 import { instruments } from "instrument/instrument-object";
 
@@ -20,7 +24,10 @@ loadExtensions().then(() => {
         instrumentEditor.onCreate();
         instrumentEditor.onActivate();
 
-        ReactDOM.render(instrumentEditor.render(), document.getElementById("EezStudio_Content"));
+        ReactDOM.render(
+            <ThemeProvider theme={theme}>{instrumentEditor.render()}</ThemeProvider>,
+            document.getElementById("EezStudio_Content")
+        );
     } else {
         console.error("instrument not found");
     }

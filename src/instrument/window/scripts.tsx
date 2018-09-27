@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 
 import { stringCompare } from "shared/string";
 
+import styled from "shared/ui/styled-components";
 import { AlertDanger } from "shared/ui/alert";
 import { Splitter } from "shared/ui/splitter";
 import { List } from "shared/ui/list";
@@ -20,7 +21,8 @@ import { Terminal } from "instrument/window/terminal/terminal";
 export class ScriptsModel implements IModel {
     constructor(private appStore: InstrumentAppStore) {}
 
-    @observable _newActionCode: string | undefined;
+    @observable
+    _newActionCode: string | undefined;
     get newActionCode() {
         return this._newActionCode;
     }
@@ -35,10 +37,14 @@ export class ScriptsModel implements IModel {
         }
     }
 
-    @observable errorMessage: string | undefined;
-    @observable errorLineNumber: number | undefined;
-    @observable errorColumnNumber: number | undefined;
-    @observable terminalVisible: boolean;
+    @observable
+    errorMessage: string | undefined;
+    @observable
+    errorLineNumber: number | undefined;
+    @observable
+    errorColumnNumber: number | undefined;
+    @observable
+    terminalVisible: boolean;
 
     @computed
     get selectedScript() {
@@ -111,6 +117,20 @@ export class ScriptsModel implements IModel {
     }
 }
 
+const ScriptsContainer = styled.div`
+    position: relative;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    & > .ace_editor {
+        flex-grow: 1;
+    }
+`;
+
 @observer
 export class ScriptView extends React.Component<{ appStore: InstrumentAppStore }, {}> {
     codeEditor: CodeEditor | null;
@@ -148,14 +168,14 @@ export class ScriptView extends React.Component<{ appStore: InstrumentAppStore }
         }
 
         return (
-            <div className="EezStudio_Scripts">
+            <ScriptsContainer>
                 {scriptsModel.errorMessage && (
                     <AlertDanger className="mb-0" onDismiss={scriptsModel.dismissError}>
                         {scriptsModel.errorMessage}
                     </AlertDanger>
                 )}
                 {codeEditor}
-            </div>
+            </ScriptsContainer>
         );
     }
 }

@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
+import styled from "shared/ui/styled-components";
 import { Toolbar } from "shared/ui/toolbar";
 import { IconAction, ButtonAction } from "shared/ui/action";
 import { confirm } from "shared/ui/dialog";
@@ -393,6 +394,33 @@ export function isSameShortcutFromDifferentExtension(s1: IShortcut, s2: IShortcu
     return JSON.stringify(s1js) === JSON.stringify(s2js);
 }
 
+const ShortcutsTable = styled(Table)`
+    th.colColor {
+        background-position: 12px center;
+    }
+
+    .colAction {
+        white-space: normal;
+        pre {
+            margin-bottom: 0;
+        }
+    }
+
+    .colColor {
+        div {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+        padding-right: 0;
+    }
+
+    .colActions {
+        white-space: nowrap;
+    }
+`;
+
 @observer
 export class Shortcuts extends React.Component<
     {
@@ -507,9 +535,8 @@ export class Shortcuts extends React.Component<
 
     render() {
         return (
-            <Table
+            <ShortcutsTable
                 persistId="shortcuts/shortcuts"
-                className="EezStudio_ShortcutsTable"
                 columns={this.columns}
                 rows={this.rows}
                 defaultSortColumn="name"

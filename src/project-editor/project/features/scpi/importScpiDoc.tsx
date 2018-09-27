@@ -3,6 +3,9 @@ import * as ReactDOM from "react-dom";
 import { observable, computed, action, autorun, Lambda, toJS } from "mobx";
 import { observer } from "mobx-react";
 
+import { theme } from "shared/ui/theme";
+import { ThemeProvider } from "shared/ui/styled-components";
+
 import { ProjectStore, UndoManager } from "project-editor/core/store";
 import { loadObject, addObject, deleteObject, getProperty } from "project-editor/core/store";
 
@@ -387,7 +390,8 @@ export class ImportScpiDocDialog extends React.Component<
         movedSelectAllCheckbox: HTMLInputElement;
     };
 
-    @observable changes: Changes;
+    @observable
+    changes: Changes;
     @observable
     selectedChanges: Changes = {
         subsystems: [],
@@ -395,8 +399,10 @@ export class ImportScpiDocDialog extends React.Component<
         deleted: [],
         moved: []
     };
-    @observable error: any;
-    @observable activeTab: Section;
+    @observable
+    error: any;
+    @observable
+    activeTab: Section;
     selectAllCheckboxDisposers: {
         added?: Lambda;
         deleted?: Lambda;
@@ -851,5 +857,10 @@ export class ImportScpiDocDialog extends React.Component<
 export function showImportScpiDocDialog() {
     let el = document.createElement("div");
     document.body.appendChild(el);
-    ReactDOM.render(<ImportScpiDocDialog onHidden={() => el.remove()} />, el);
+    ReactDOM.render(
+        <ThemeProvider theme={theme}>
+            <ImportScpiDocDialog onHidden={() => el.remove()} />
+        </ThemeProvider>,
+        el
+    );
 }

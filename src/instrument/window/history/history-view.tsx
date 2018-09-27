@@ -2,16 +2,19 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { observable, computed, action, keys } from "mobx";
 import { observer } from "mobx-react";
-import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import { readBinaryFile } from "shared/util";
 import { beginTransaction, commitTransaction } from "shared/store";
 import { log } from "shared/activity-log";
 
+import styled from "shared/ui/styled-components";
+import { theme } from "shared/ui/theme";
+import { ThemeProvider } from "shared/ui/styled-components";
 import { IconAction, ButtonAction } from "shared/ui/action";
 import { Toolbar } from "shared/ui/toolbar";
 import { SideDock, DockablePanels } from "shared/ui/side-dock";
+import { SearchInput } from "shared/ui/search-input";
 
 import { extensions } from "shared/extensions/extensions";
 
@@ -223,6 +226,31 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const HistoryContainer = styled.div`
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+`;
+
+const HistoryHeader = styled.div`
+    flex-shrink: 0;
+    flex-grow: 0;
+    padding: 10px;
+    border-bottom: 1px solid ${props => props.theme.borderColor};
+    background-color: #d7f8da;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+`;
+
+export const HistoryBody = styled.div`
+    flex-grow: 1;
+    overflow: auto;
+`;
+
 @observer
 export class HistoryView extends React.Component<{
     appStore: IAppStore;
@@ -283,50 +311,61 @@ export class HistoryView extends React.Component<{
 
         factory.registerComponent("SearchResults", function(container: any, props: any) {
             ReactDOM.render(
-                <div
-                    style={{
-                        position: "absolute",
-                        width: "100%",
-                        height: "100%",
-                        display: "flex"
-                    }}
-                >
-                    <SearchResults history={appStore.history} />
-                </div>,
+                <ThemeProvider theme={theme}>
+                    <div
+                        style={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            display: "flex"
+                        }}
+                    >
+                        <SearchResults history={appStore.history} />
+                    </div>
+                </ThemeProvider>,
                 container.getElement()[0]
             );
         });
 
         factory.registerComponent("Filters", function(container: any, props: any) {
-            ReactDOM.render(<FiltersComponent appStore={appStore} />, container.getElement()[0]);
+            ReactDOM.render(
+                <ThemeProvider theme={theme}>
+                    <FiltersComponent appStore={appStore} />
+                </ThemeProvider>,
+                container.getElement()[0]
+            );
         });
 
         factory.registerComponent("Calendar", function(container: any, props: any) {
             ReactDOM.render(
-                <div
-                    style={{
-                        height: "100%",
-                        overflow: "auto"
-                    }}
-                >
-                    <Calendar history={appStore.history} />
-                </div>,
+                <ThemeProvider theme={theme}>
+                    <div
+                        style={{
+                            height: "100%",
+                            overflow: "auto"
+                        }}
+                    >
+                        <Calendar history={appStore.history} />
+                    </div>
+                </ThemeProvider>,
                 container.getElement()[0]
             );
         });
 
         factory.registerComponent("Sessions", function(container: any, props: any) {
             ReactDOM.render(
-                <div
-                    style={{
-                        position: "absolute",
-                        width: "100%",
-                        height: "100%",
-                        display: "flex"
-                    }}
-                >
-                    <SessionList appStore={appStore} history={appStore.history} />
-                </div>,
+                <ThemeProvider theme={theme}>
+                    <div
+                        style={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            display: "flex"
+                        }}
+                    >
+                        <SessionList appStore={appStore} history={appStore.history} />
+                    </div>
+                </ThemeProvider>,
                 container.getElement()[0]
             );
         });
@@ -430,9 +469,9 @@ export class HistoryView extends React.Component<{
     renderHistoryComponentWithTools(historyComponent: JSX.Element) {
         const appStore = this.props.appStore;
         return (
-            <div className="EezStudio_History_Container">
+            <HistoryContainer className="EezStudio_History_Container">
                 {appStore.selectHistoryItemsSpecification && (
-                    <div className="EezStudio_History_Header EezStudio_SlideInDownTransition">
+                    <HistoryHeader className="EezStudio_SlideInDownTransition">
                         <div>
                             {appStore.selectedHistoryItems.size > 0
                                 ? `${appStore.selectedHistoryItems.size} selected`
@@ -458,12 +497,10 @@ export class HistoryView extends React.Component<{
                                 onClick={this.onSelectHistoryItemsCancel}
                             />
                         </Toolbar>
-                    </div>
+                    </HistoryHeader>
                 )}
-                <div className="EezStudio_History_Body" tabIndex={0}>
-                    {historyComponent}
-                </div>
-            </div>
+                <HistoryBody tabIndex={0}>{historyComponent}</HistoryBody>
+            </HistoryContainer>
         );
     }
 
@@ -484,19 +521,7 @@ export class HistoryView extends React.Component<{
 
         const historyComponentWithTools = this.renderHistoryComponentWithTools(historyComponent);
 
-        let inputClassName = classNames("EezStudio_SearchInput", {
-            empty: !this.searchText
-        });
-
-        let input = (
-            <input
-                type="text"
-                placeholder="&#xe8b6;"
-                className={inputClassName}
-                value={this.searchText}
-                onChange={this.onSearchChange}
-            />
-        );
+        let input = <SearchInput searchText={this.searchText} onChange={this.onSearchChange} />;
 
         let layoutId = "layout/3";
         if (this.props.appStore.history.search.searchActive) {

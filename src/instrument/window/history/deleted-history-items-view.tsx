@@ -2,16 +2,19 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
-import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
+import { theme } from "shared/ui/theme";
+import { ThemeProvider } from "shared/ui/styled-components";
 import { IconAction, ButtonAction } from "shared/ui/action";
 import { SideDock, DockablePanels } from "shared/ui/side-dock";
+import { SearchInput } from "shared/ui/search-input";
 
 import { IAppStore } from "instrument/window/history/history";
 import { HistoryListComponent } from "instrument/window/history/list-component";
 import { SearchResults } from "instrument/window/history/search-results";
 import { Calendar } from "instrument/window/history/calendar";
+import { HistoryContainer, HistoryBody } from "instrument/window/history/history-view";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -119,30 +122,34 @@ export class DeletedHistoryItemsView extends React.Component<{
 
         factory.registerComponent("SearchResults", function(container: any, props: any) {
             ReactDOM.render(
-                <div
-                    style={{
-                        position: "absolute",
-                        width: "100%",
-                        height: "100%",
-                        display: "flex"
-                    }}
-                >
-                    <SearchResults history={appStore.deletedItemsHistory} />
-                </div>,
+                <ThemeProvider theme={theme}>
+                    <div
+                        style={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            display: "flex"
+                        }}
+                    >
+                        <SearchResults history={appStore.deletedItemsHistory} />
+                    </div>
+                </ThemeProvider>,
                 container.getElement()[0]
             );
         });
 
         factory.registerComponent("Calendar", function(container: any, props: any) {
             ReactDOM.render(
-                <div
-                    style={{
-                        height: "100%",
-                        overflow: "auto"
-                    }}
-                >
-                    <Calendar history={appStore.deletedItemsHistory} />
-                </div>,
+                <ThemeProvider theme={theme}>
+                    <div
+                        style={{
+                            height: "100%",
+                            overflow: "auto"
+                        }}
+                    >
+                        <Calendar history={appStore.deletedItemsHistory} />
+                    </div>
+                </ThemeProvider>,
                 container.getElement()[0]
             );
         });
@@ -207,26 +214,12 @@ export class DeletedHistoryItemsView extends React.Component<{
         );
 
         const historyComponentWithTools = (
-            <div className="EezStudio_History_Container">
-                <div className="EezStudio_History_Body" tabIndex={0}>
-                    {historyComponent}
-                </div>
-            </div>
+            <HistoryContainer className="EezStudio_DeletedHistory_Container">
+                <HistoryBody tabIndex={0}>{historyComponent}</HistoryBody>
+            </HistoryContainer>
         );
 
-        let inputClassName = classNames("EezStudio_SearchInput", {
-            empty: !this.searchText
-        });
-
-        let input = (
-            <input
-                type="text"
-                placeholder="&#xe8b6;"
-                className={inputClassName}
-                value={this.searchText}
-                onChange={this.onSearchChange}
-            />
-        );
+        let input = <SearchInput searchText={this.searchText} onChange={this.onSearchChange} />;
 
         let layoutId =
             "layout/2" +

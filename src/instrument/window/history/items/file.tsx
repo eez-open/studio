@@ -23,6 +23,7 @@ import { beginTransaction, commitTransaction } from "shared/store";
 import { SAMPLING_RATE_UNIT } from "shared/units";
 import { IActivityLogEntry, logUpdate } from "shared/activity-log";
 
+import styled from "shared/ui/styled-components";
 import * as UiPropertiesModule from "shared/ui/properties";
 import { Balloon } from "shared/ui/balloon";
 import { PropertyList, StaticRichTextProperty } from "shared/ui/properties";
@@ -38,10 +39,50 @@ import { FileState } from "instrument/connection/file-state";
 import { showAddNoteDialog, showEditNoteDialog } from "instrument/window/note-dialog";
 
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem } from "instrument/window/history/item";
+import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const FileHistoryItemDiv = styled(HistoryItemDiv)`
+    display: flex;
+    flex-direction: row;
+    background-color: lightsteelblue;
+    padding: 10px;
+
+    .EezStudio_Toolbar {
+        margin-top: 5px;
+    }
+
+    .EezStudio_HistoryItem_File_Note {
+        position: relative;
+        margin: auto;
+        overflow: visible;
+        border-radius: 0;
+        padding: 0;
+        margin-top: 10px;
+        min-width: 240px;
+
+        .EezStudio_Toolbar {
+            position: absolute;
+            display: none;
+            top: 5px;
+            right: 5px;
+        }
+
+        &:hover .EezStudio_Toolbar {
+            display: block;
+        }
+    }
+
+    .EezStudio_HistoryItem_File_NoNote {
+        margin-bottom: 10px;
+    }
+
+    .EezStudio_HistoryItemText * {
+        user-select: auto;
+    }
+`;
 
 @observer
 class ImagePreview extends React.Component<{
@@ -75,8 +116,7 @@ let getPdfTempDirPathPromise = getTempDirPath();
 
 @observer
 class PdfPreview extends React.Component<{
-    data: any;
-    fileName: string;
+    historyItem: HistoryItem;
 }> {
     @observable
     thumbnail: string;
@@ -94,20 +134,15 @@ class PdfPreview extends React.Component<{
         this.zoom = !this.zoom;
     }
 
-    @computed
-    get urlWithParams() {
-        return this.url && "../../libs/pdfjs/web/viewer.html?file=" + encodeURIComponent(this.url);
-    }
-
     update() {
         if (this.zoom) {
             if (!this.url) {
                 (async () => {
                     const [tempDirPath] = await getPdfTempDirPathPromise;
-                    const tempFilePath = tempDirPath + "/" + this.props.fileName;
+                    const tempFilePath = tempDirPath + "/" + this.props.historyItem.id + ".pdf";
                     let exists = await fileExists(tempFilePath);
                     if (!exists) {
-                        await writeBinaryData(tempFilePath, this.props.data);
+                        await writeBinaryData(tempFilePath, this.props.historyItem.data);
                     }
                     return new URL(`file:///${tempFilePath}`).href;
                 })().then(
@@ -118,7 +153,7 @@ class PdfPreview extends React.Component<{
             }
         } else {
             if (!this.thumbnail) {
-                pdfToPng(this.props.data)
+                pdfToPng(this.props.historyItem.data)
                     .then(result => {
                         runInAction(() => (this.thumbnail = result));
                     })
@@ -154,10 +189,10 @@ class PdfPreview extends React.Component<{
         let content;
 
         if (this.zoom) {
-            content = this.urlWithParams && (
+            content = this.url && (
                 <WebView
                     ref={(ref: any) => (this.webView = ref)}
-                    src={this.urlWithParams}
+                    src={"../../libs/pdfjs/web/viewer.html?file=" + encodeURIComponent(this.url)}
                     tabIndex={this.zoom ? 0 : undefined}
                 />
             );
@@ -187,8 +222,6 @@ export class FileHistoryItemComponent extends React.Component<
     },
     {}
 > {
-    element: HTMLDivElement | null;
-
     @action.bound
     onVisibilityChange(isVisible: boolean) {
         if (!this.props.historyItem.isVisible && isVisible) {
@@ -430,10 +463,7 @@ export class FileHistoryItemComponent extends React.Component<
 
         return (
             <VisibilitySensor partialVisibility={true} onChange={this.onVisibilityChange}>
-                <div
-                    ref={ref => (this.element = ref)}
-                    className="EezStudio_HistoryItem EezStudio_HistoryItem_File"
-                >
+                <FileHistoryItemDiv>
                     <Icon
                         className="mr-3"
                         icon={
@@ -447,14 +477,14 @@ export class FileHistoryItemComponent extends React.Component<
                     />
                     <div>
                         <p>
-                            <small className="EezStudio_HistoryItemDate text-muted">
+                            <HistoryItemDate>
                                 {formatDateTimeLong(this.props.historyItem.date)}
-                            </small>
+                            </HistoryItemDate>
                         </p>
                         {this.props.historyItem.sourceDescriptionElement}
                         {body}
                     </div>
-                </div>
+                </FileHistoryItemDiv>
             </VisibilitySensor>
         );
     }
@@ -510,16 +540,7 @@ export class FileHistoryItem extends HistoryItem {
                 Buffer.from(this.data, "binary").toString("base64");
             return <ImagePreview src={imageData} />;
         } else if (this.isPdf) {
-            return (
-                <PdfPreview
-                    data={this.data}
-                    fileName={
-                        (this.fileState.sourceFilePath &&
-                            getFileName(this.fileState.sourceFilePath)) ||
-                        `${this.id}.pdf`
-                    }
-                />
-            );
+            return <PdfPreview historyItem={this} />;
         }
         return null;
     }

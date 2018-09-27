@@ -1,14 +1,50 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { observer } from "mobx-react";
-import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
+import styled from "shared/ui/styled-components";
 import { Toolbar } from "shared/ui/toolbar";
 import { IconAction } from "shared/ui/action";
-import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
+import { VerticalHeaderWithBody, PanelHeader, Body } from "shared/ui/header-with-body";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const ZoomedPreviewBody = styled(VerticalHeaderWithBody)`
+    .EezStudio_Toolbar {
+        margin-top: 0;
+    }
+
+    .EezStudio_Header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    &.EezStudio_ImagePreview {
+        img {
+            object-fit: contain;
+            flex-grow: 1;
+            background-color: black;
+            cursor: zoom-out;
+        }
+    }
+
+    &.EezStudio_PdfPreview {
+        .EezStudio_Body {
+            background-color: #525659;
+            overflow: hidden;
+
+            & > div {
+                flex-grow: 1;
+                display: flex;
+                & > WebView {
+                    flex-grow: 1;
+                }
+            }
+        }
+    }
+`;
 
 @observer
 class ZoomedPreview extends React.Component<{
@@ -41,10 +77,9 @@ class ZoomedPreview extends React.Component<{
     }
 
     render() {
-        let className = classNames("EezStudio_HistoryItem_ZoomedPreview", this.props.className);
         return ReactDOM.createPortal(
-            <VerticalHeaderWithBody className={className} onContextMenu={this.onContextMenu}>
-                <Header>
+            <ZoomedPreviewBody className={this.props.className} onContextMenu={this.onContextMenu}>
+                <PanelHeader>
                     {this.props.toolbar || <Toolbar />}
                     <Toolbar>
                         <IconAction
@@ -54,13 +89,71 @@ class ZoomedPreview extends React.Component<{
                             onClick={this.props.toggleZoom}
                         />
                     </Toolbar>
-                </Header>
+                </PanelHeader>
                 <Body>{this.props.children}</Body>
-            </VerticalHeaderWithBody>,
+            </ZoomedPreviewBody>,
             this.el
         );
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+const UnzoomedPreviewBody = styled.div`
+    cursor: zoom-in;
+
+    &.EezStudio_ImagePreview {
+        img {
+            background-color: black;
+            width: 480px;
+        }
+    }
+
+    &.EezStudio_PdfPreview {
+        & > img {
+            pointer-events: none;
+            width: 240px;
+        }
+        & > div > WebView {
+            pointer-events: none;
+            width: 300px;
+            height: 400px;
+            overflow: hidden;
+        }
+    }
+
+    &.EezStudio_ChartPreview {
+        background-color: white;
+        padding: 8px;
+
+        cursor: zoom-in;
+
+        svg {
+            pointer-events: none;
+        }
+
+        .EezStudio_ChartView {
+            position: static;
+            width: 640px;
+            /*
+            svg {
+                height: 200px;
+            }
+            */
+            svg.EezStudio_Chart_XAxis {
+                height: 24px;
+            }
+        }
+
+        &.EezStudio_ChartPreview_BlackBackground {
+            background-color: black;
+        }
+
+        .EezStudio_ChartView svg {
+            height: 162px;
+        }
+    }
+`;
 
 @observer
 class UnzoomedPreview extends React.Component<{
@@ -68,11 +161,10 @@ class UnzoomedPreview extends React.Component<{
     toggleZoom: (event: React.MouseEvent<HTMLElement>) => void;
 }> {
     render() {
-        let className = classNames("EezStudio_HistoryItem_UnzoomedPreview", this.props.className);
         return (
-            <div className={className} onClick={this.props.toggleZoom}>
+            <UnzoomedPreviewBody className={this.props.className} onClick={this.props.toggleZoom}>
                 {this.props.children}
-            </div>
+            </UnzoomedPreviewBody>
         );
     }
 }

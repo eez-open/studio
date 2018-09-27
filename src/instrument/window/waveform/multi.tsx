@@ -8,6 +8,7 @@ import { objectEqual, objectClone, formatDateTimeLong } from "shared/util";
 import { beginTransaction, commitTransaction } from "shared/store";
 import { logUpdate, IActivityLogEntry } from "shared/activity-log";
 
+import styled from "shared/ui/styled-components";
 import { Dialog, showDialog } from "shared/ui/dialog";
 import {
     TextInputProperty,
@@ -25,7 +26,7 @@ import { MeasurementsModel } from "shared/ui/chart/measurements";
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
-import { HistoryItem } from "instrument/window/history/item";
+import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 
 import {
     Waveform,
@@ -80,6 +81,17 @@ export class MultiWaveformChartsController extends ChartsController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ChartHistoryItemDiv = styled(HistoryItemDiv)`
+    background-color: #f5f5f5;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+
+    .EezStudio_ChartPreview:not(.zoom) .EezStudio_ChartView svg.EezStudio_Chart_XAxis {
+        height: 24px;
+    }
+`;
+
 @observer
 export class ChartHistoryItemComponent extends React.Component<
     {
@@ -95,17 +107,17 @@ export class ChartHistoryItemComponent extends React.Component<
     render() {
         return (
             <VisibilitySensor partialVisibility={true} onChange={this.onVisibilityChange}>
-                <div className="EezStudio_HistoryItem EezStudio_HistoryItem_Chart">
+                <ChartHistoryItemDiv>
                     <Icon className="mr-3" icon={"material:insert_chart"} size={48} />
                     <div>
                         <p>
-                            <small className="EezStudio_HistoryItemDate text-muted">
+                            <HistoryItemDate>
                                 {formatDateTimeLong(this.props.historyItem.date)}
-                            </small>
+                            </HistoryItemDate>
                         </p>
                         <ChartPreview data={this.props.historyItem} />
                     </div>
-                </div>
+                </ChartHistoryItemDiv>
             </VisibilitySensor>
         );
     }
@@ -406,6 +418,19 @@ interface IJoinedWaveformLinkAndDefinitionProperties {
     waveformDefinitionProperties: WaveformDefinitionProperties;
 }
 
+const MultiWaveformConfigurationDialogBody = styled.div`
+    display: flex;
+    position: relative;
+
+    .EezStudio_PropertyList:nth-child(1) {
+        width: 30%;
+    }
+
+    .EezStudio_PropertyList:nth-child(2) {
+        width: 70%;
+    }
+`;
+
 @observer
 class MultiWaveformConfigurationDialog extends React.Component<
     {
@@ -562,7 +587,7 @@ class MultiWaveformConfigurationDialog extends React.Component<
     render() {
         return (
             <Dialog large={false} onOk={this.handleSubmit}>
-                <div className="EezStudio_MultiWaveform_Configuration_Dialog_Body">
+                <MultiWaveformConfigurationDialogBody>
                     <PropertyList>
                         <SelectFromListProperty
                             nodes={this.waveformListNodes}
@@ -575,7 +600,7 @@ class MultiWaveformConfigurationDialog extends React.Component<
                         {this.selectedWaveform.waveformDefinitionProperties &&
                             this.selectedWaveform.waveformDefinitionProperties.render()}
                     </PropertyList>
-                </div>
+                </MultiWaveformConfigurationDialogBody>
             </Dialog>
         );
     }

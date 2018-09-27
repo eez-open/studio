@@ -8,9 +8,7 @@ typings
 src/**/*.js
 src/**/*.js.map
 
-src/home/_stylesheets/main.css
-src/instrument/_stylesheets/instrument.css
-src/instrument/_stylesheets/window.css
+src/shared/_stylesheets/main.css
 src/project-editor/_stylesheets/main.css
 src/test/_stylesheets/main.css
 

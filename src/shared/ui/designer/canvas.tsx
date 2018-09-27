@@ -25,7 +25,7 @@ export class Canvas extends React.Component<
     {
         document: IDocument;
         toolHandler: IToolHandler | undefined;
-        className: string;
+        className?: string;
         style?: React.CSSProperties;
     },
     {}
@@ -35,7 +35,8 @@ export class Canvas extends React.Component<
     intervalTimerIDForClientRectUpdate: any;
     deltaY = 0;
 
-    @observable private mouseHandler: IMouseHandler | undefined;
+    @observable
+    private mouseHandler: IMouseHandler | undefined;
 
     private buttonsAtDown: number;
     private lastMouseUpPosition: Point;

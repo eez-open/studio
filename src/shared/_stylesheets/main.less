@@ -66,15 +66,6 @@ input[type="color"] {
     flex-direction: column;
 }
 
-.EezStudio_Container {
-    position: relative;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
 .EezStudio_Navigation {
     height: 100%;
     margin: 0;
@@ -261,13 +252,6 @@ input[type="color"] {
     }
 }
 
-.EezStudio_NotFoundObject {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background-color: red;
-}
-
 .EezStudio_Panel_Title {
     font-weight: bold;
 }
@@ -436,7 +420,8 @@ input[type="color"] {
 
 .EezStudio_PanelHeader {
     padding: 6px 10px;
-    border-bottom: 1px solid @border-color;
+    border: 0 solid @border-color;
+    border-bottom-width: 1px;
     background-color: @panel-header-color;
 }
 
@@ -903,6 +888,85 @@ DESIGNER
     overflow: hidden;
     padding-top: 12px;
     background-color: white;
+}
+
+.EezStudio_ChartView_BlackBackground {
+    background-color: black;
+}
+
+.EezStudio_ChartContainer {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.EezStudio_Chart {
+    flex-grow: 1;
+    width: 100%;
+    cursor: default;
+}
+
+.EezStudio_Chart_Title {
+    position: absolute;
+    padding: 2px 8px;
+    margin: 8px 8px;
+    border: 1px solid transparent;
+    background-color: rgba(255, 255, 255, 0.8);
+    pointer-events: none;
+}
+
+.EezStudio_ChartView_BlackBackground .EezStudio_Chart_Title {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.EezStudio_Chart_XAxis {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 100%;
+    cursor: default;
+}
+
+.EezStudio_ChartView_Labels text {
+    font-size: 90%;
+    fill: #333;
+}
+
+.EezStudio_ChartView_BlackBackground .EezStudio_ChartView_Labels text {
+    fill: #ddd;
+}
+
+.EezStudio_ChartView_Cursor {
+    pointer-events: none;
+}
+
+.EezStudio_ChartView_Cursor circle {
+    stroke-width: 2;
+    fill-opacity: 0.5;
+}
+
+.EezStudio_ChartView_Cursor.EezStudio_ChartView_Cursor_AddPoint circle {
+    visibility: visible;
+    fill-opacity: 1;
+    fill: white;
+    cursor: copy;
+}
+
+.EezStudio_ChartView_Cursor.error circle {
+    fill: @error;
+    stroke: @error;
+}
+
+.EezStudio_ChartView_BlackBackground
+    .EezStudio_ChartView_Cursor.EezStudio_ChartView_Cursor_AddPoint
+    circle {
+    fill: #333;
+}
+
+.EezStudio_ChartView_Cursor.EezStudio_ChartView_Cursor_AddPoint rect {
+    stroke-opacity: 0;
+    cursor: copy;
 }
 
 .EezStudio_MeasurementChartContainer {
