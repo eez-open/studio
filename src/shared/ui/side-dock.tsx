@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
+import styled from "shared/ui/styled-components";
 import { Splitter } from "shared/ui/splitter";
 import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
 
@@ -223,3 +224,71 @@ export class SideDock extends React.Component<{
         }
     }
 }
+
+export const SideDockViewContainer = styled.div`
+    height: 100%;
+    overflow: auto;
+    padding: 10px;
+
+    .EezStudio_SideDockView_PropertyLabel:not(:last-child) {
+        margin-bottom: 5px;
+    }
+
+    .EezStudio_SideDockView_Property:not(:last-child) {
+        margin-bottom: 5px;
+    }
+
+    .EezStudio_SideDockView_Property {
+        margin-left: 16px;
+    }
+
+    table {
+        margin-left: 16px;
+        font-size: 80%;
+
+        td {
+            text-align: center;
+        }
+
+        td:first-child {
+            max-width: 120px;
+            text-align: left;
+            padding-right: 4px;
+        }
+
+        input {
+            padding: 0;
+            padding-left: 5px;
+        }
+    }
+
+    & > div {
+        padding-bottom: 10px;
+        border-bottom: 1px solid ${props => props.theme.borderColor};
+        margin-bottom: 10px;
+    }
+
+    & > div:last-child {
+        padding-bottom: 0;
+        margin-bottom: 0;
+        border-bottom: none;
+    }
+
+    & > .EezStudio_AxisRulersProperties {
+        border-bottom: 0;
+        margin-bottom: 0;
+
+        .EezStudio_SideDockView_Property {
+            margin-left: 0;
+        }
+
+        td:nth-child(1) {
+            padding-right: 0;
+        }
+
+        td:nth-child(3),
+        td:nth-child(5) {
+            padding-left: 5px;
+        }
+    }
+`;

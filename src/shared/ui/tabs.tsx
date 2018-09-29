@@ -3,6 +3,8 @@ import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
+import styled from "shared/ui/styled-components";
+
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,13 +143,86 @@ class TabView extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const TabsViewContainer = styled.div`
+    flex-grow: 1;
+    display: flex;
+    background-color: ${props => props.theme.panelHeaderColor};
+    height: 45px;
+    border-bottom: 1px solid ${props => props.theme.borderColor};
+    margin: 0;
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    &::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+    }
+
+    &:hover {
+        &::-webkit-scrollbar {
+            height: 2px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: ${props => props.theme.scrollTrackColor};
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: ${props => props.theme.scrollThumbColor};
+        }
+    }
+
+    & > div {
+        height: 45px;
+        border-right: 1px solid @border-color;
+        padding-left: 10px;
+        padding-right: 10px;
+        cursor: pointer;
+        font-style: italic;
+
+        &.permanent {
+            font-style: normal;
+        }
+
+        &.active {
+            background-color: white;
+            font-weight: bold;
+            border-bottom: 3px solid ${props => props.theme.selectionBackgroundColor};
+        }
+
+        & > div {
+            display: flex;
+            align-items: center;
+            height: 38px;
+
+            & > span.title {
+                max-width: 200px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            & > i.close {
+                visibility: hidden;
+                position: relative;
+                font-size: 14px;
+                padding-left: 6px;
+
+                &:hover {
+                    color: red;
+                }
+            }
+        }
+
+        &.active > div > i.close,
+        &:hover > div > i.close {
+            visibility: visible;
+        }
+    }
+`;
+
 @observer
-export class TabsView extends React.Component<
-    {
-        tabs: ITab[];
-    },
-    {}
-> {
+export class TabsView extends React.Component<{ tabs: ITab[] }> {
     div: HTMLElement;
 
     onWheel(e: any) {
@@ -157,17 +232,18 @@ export class TabsView extends React.Component<
         $(this.div)[0].scrollLeft += e.deltaY;
     }
 
+    @bind
+    setRef(x: any) {
+        this.div = x;
+    }
+
     render() {
         let tabs = this.props.tabs.map(tab => <TabView key={tab.id} tab={tab} />);
 
         return (
-            <div
-                ref={ref => (this.div = ref!)}
-                className="EezStudio_TabsView"
-                onWheel={this.onWheel.bind(this)}
-            >
+            <TabsViewContainer innerRef={this.setRef} onWheel={this.onWheel.bind(this)}>
                 {tabs}
-            </div>
+            </TabsViewContainer>
         );
     }
 }

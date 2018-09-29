@@ -20,21 +20,22 @@ const SessionInfoContainer = styled.div`
     background: ${props => props.theme.panelHeaderColor};
 `;
 
+const AppHeader = styled(Header)`
+    display: flex;
+    flex-direction: row;
+`;
+
 @observer
 class AppComponent extends React.Component<{}, {}> {
     render() {
         return (
             <VerticalHeaderWithBody>
-                <Header>
-                    <div style={{ display: "flex", flexDirection: "row" }}>
-                        <div style={{ flexGrow: 1 }}>
-                            <TabsView tabs={tabs.tabs} />
-                        </div>
-                        <SessionInfoContainer>
-                            <SessionInfo appStore={getAppStore()} />
-                        </SessionInfoContainer>
-                    </div>
-                </Header>
+                <AppHeader>
+                    <TabsView tabs={tabs.tabs} />
+                    <SessionInfoContainer>
+                        <SessionInfo appStore={getAppStore()} />
+                    </SessionInfoContainer>
+                </AppHeader>
                 <Body>{tabs.activeTab.render()}</Body>
             </VerticalHeaderWithBody>
         );

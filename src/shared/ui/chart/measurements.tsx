@@ -13,9 +13,11 @@ import { extensions } from "shared/extensions/extensions";
 
 import { theme } from "shared/ui/theme";
 import { ThemeProvider } from "shared/ui/styled-components";
+import styled from "shared/ui/styled-components";
 import { IconAction } from "shared/ui/action";
 import { DockablePanels } from "shared/ui/side-dock";
 import { GenericDialog, IFieldProperties, FieldComponent } from "shared/ui/generic-dialog";
+import { SideDockViewContainer } from "shared/ui/side-dock";
 
 import { ChartsController, ChartController } from "shared/ui/chart/chart";
 import * as GenericChartModule from "shared/ui/chart/generic-chart";
@@ -808,6 +810,72 @@ class MeasurementComponent extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const MeasurementsDockViewContainer = styled(SideDockViewContainer)`
+    table {
+        margin-left: 0;
+    }
+
+    & > div {
+        border: none;
+        padding-bottom: 0;
+        margin-bottom: 5px;
+
+        & > table {
+            width: 100%;
+
+            font-size: 80%;
+
+            border-spacing: 1px 5px;
+            border-collapse: separate;
+
+            & > tbody > tr > td {
+                text-align: center;
+                background-color: #e5e5e5;
+                padding: 5px;
+                vertical-align: top;
+                line-height: 22px;
+            }
+
+            & > tbody > tr > td:first-child {
+                white-space: nowrap;
+                text-align: left;
+                font-weight: bold;
+                min-width: 80px;
+            }
+        }
+    }
+
+    .EezStudio_MeasurementsSideDockView_SelectedChartIndexProperty
+        > .EezStudio_SideDockView_PropertyLabel
+        > span {
+        display: inline-block;
+        margin-right: 10px;
+    }
+
+    .EezStudio_MeasurementsSideDockView_SelectedChartIndexProperty
+        > .EezStudio_SideDockView_PropertyLabel
+        > select {
+        width: auto;
+        display: inline-block;
+    }
+
+    .EezStudio_PropertyList {
+        td {
+            vertical-align: center;
+        }
+
+        td:nth-child(1) {
+            min-width: 50px;
+        }
+
+        tr.EezStudio_MeasurementsSideDockView_MeasurementResult_Enclosure {
+            td:nth-child(1) {
+                font-weight: bold;
+            }
+        }
+    }
+`;
+
 @observer
 export class MeasurementsDockView extends React.Component<{
     measurementsController: MeasurementsController;
@@ -845,7 +913,7 @@ export class MeasurementsDockView extends React.Component<{
 
     render() {
         return (
-            <div className="EezStudio_MeasurementsSideDockView EezStudio_SideDockView">
+            <MeasurementsDockViewContainer>
                 <div>
                     <table>
                         <tbody>
@@ -893,7 +961,7 @@ export class MeasurementsDockView extends React.Component<{
                         </div>
                     </div>
                 )}
-            </div>
+            </MeasurementsDockViewContainer>
         );
     }
 }

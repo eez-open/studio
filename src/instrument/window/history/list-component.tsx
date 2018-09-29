@@ -316,7 +316,7 @@ export class HistoryListComponent extends React.Component<{
     render() {
         return (
             <HistoryListComponentContainer
-                ref={(ref: any) => {
+                innerRef={(ref: any) => {
                     let div = findDOMNode(ref);
                     if (div && div.parentElement) {
                         this.div = div.parentElement;

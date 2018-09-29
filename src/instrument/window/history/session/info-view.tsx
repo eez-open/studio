@@ -2,12 +2,25 @@ import * as React from "react";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
+import styled from "shared/ui/styled-components";
 import { confirm } from "shared/ui/dialog";
 import { ButtonAction, IconAction } from "shared/ui/action";
 
 import { IAppStore } from "instrument/window/history/history";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const SessionInfoContainer = styled.div`
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    span {
+        margin-right: 10px;
+    }
+    span:nth-child(2) {
+        font-weight: 500;
+    }
+`;
 
 @observer
 export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
@@ -57,6 +70,6 @@ export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
             );
         }
 
-        return <div className="EezStudio_SessionInfo">{body}</div>;
+        return <SessionInfoContainer>{body}</SessionInfoContainer>;
     }
 }

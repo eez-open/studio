@@ -3,10 +3,12 @@ import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
 
+import styled from "shared/ui/styled-components";
 import { Checkbox, Radio } from "shared/ui/properties";
 import { CONF_BORDER_COLOR } from "shared/ui/box";
 import { ChartsController, ChartController, globalViewOptions } from "shared/ui/chart/chart";
 import { WaveformRenderAlgorithm } from "shared/ui/chart/render";
+import { SideDockViewContainer } from "shared/ui/side-dock";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -16,11 +18,15 @@ interface DynamicSubdivisionOptionsProps {
 
 @observer
 class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOptionsProps> {
-    @observable xAxisSteps: string;
-    @observable xAxisStepsError: boolean;
+    @observable
+    xAxisSteps: string;
+    @observable
+    xAxisStepsError: boolean;
 
-    @observable yAxisSteps: string[];
-    @observable yAxisStepsError: boolean[];
+    @observable
+    yAxisSteps: string[];
+    @observable
+    yAxisStepsError: boolean[];
 
     constructor(props: DynamicSubdivisionOptionsProps) {
         super(props);
@@ -176,12 +182,17 @@ interface FixedSubdivisionOptionsProps {
 
 @observer
 class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsProps> {
-    @observable majorSubdivisionHorizontal: number;
-    @observable majorSubdivisionVertical: number;
-    @observable minorSubdivisionHorizontal: number;
-    @observable minorSubdivisionVertical: number;
+    @observable
+    majorSubdivisionHorizontal: number;
+    @observable
+    majorSubdivisionVertical: number;
+    @observable
+    minorSubdivisionHorizontal: number;
+    @observable
+    minorSubdivisionVertical: number;
 
-    @observable majorSubdivisionHorizontalError: boolean;
+    @observable
+    majorSubdivisionHorizontalError: boolean;
 
     constructor(props: FixedSubdivisionOptionsProps) {
         super(props);
@@ -317,6 +328,21 @@ class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsPro
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ChartViewOptionsContainer = styled(SideDockViewContainer)`
+    .EezStudio_ChartViewOptions_DynamicAxisLines_Properties {
+        margin-bottom: 10px;
+        input {
+            width: 160px;
+        }
+    }
+
+    .EezStudio_ChartViewOptions_FixedAxisLines_Properties {
+        input {
+            width: 40px;
+        }
+    }
+`;
+
 export interface ChartViewOptionsProps {
     showRenderAlgorithm: boolean;
     showShowSampledDataOption: boolean;
@@ -333,7 +359,7 @@ export class ChartViewOptions extends React.Component<
         const viewOptions = chartsController.viewOptions;
 
         return (
-            <div className="EezStudio_SideDockView EezStudio_ChartViewOptions">
+            <ChartViewOptionsContainer>
                 <div>
                     <div className="EezStudio_SideDockView_PropertyLabel">
                         Axes lines subdivision:
@@ -458,7 +484,7 @@ export class ChartViewOptions extends React.Component<
                         </div>
                     )}
                 </div>
-            </div>
+            </ChartViewOptionsContainer>
         );
     }
 }

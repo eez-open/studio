@@ -5,6 +5,8 @@ import * as classNames from "classnames";
 
 import { capitalize } from "shared/string";
 
+import styled from "shared/ui/styled-components";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IColumn {
@@ -23,6 +25,74 @@ export interface IRow {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const StyledTable = styled.table`
+    cursor: default;
+
+    tbody > tr.selected {
+        background-color: ${props => props.theme.nonFocusedSelectionBackgroundColor};
+        color: ${props => props.theme.nonFocusedSelectionColor};
+    }
+
+    .EezStudio_Toolbar {
+        visibility: hidden;
+    }
+
+    > tbody > tr:hover {
+        .EezStudio_Toolbar {
+            visibility: visible;
+        }
+    }
+
+    > tbody > tr.selected {
+        .EezStudio_Toolbar {
+            visibility: visible;
+        }
+
+        .EezStudio_Action {
+            color: white;
+        }
+
+        .EezStudio_Action:hover {
+            color: #aaa;
+        }
+    }
+
+    &:focus {
+        > tbody > tr:hover {
+            background-color: ${props => props.theme.hoverBackgroundColor};
+            color: ${props => props.theme.hoverColor};
+        }
+
+        > tbody > tr.selected {
+            background-color: ${props => props.theme.selectionBackgroundColor};
+            color: ${props => props.theme.selectionColor};
+        }
+    }
+
+    th,
+    td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    th.sort-enabled {
+        background-repeat: no-repeat;
+        background-position: center left;
+        background-image: url("../shared/_images/col_sort_enabled.png");
+        padding-left: 20px;
+        cursor: pointer;
+    }
+
+    th.sort-asc {
+        background-image: url("../shared/_images/col_sort_asc.png");
+    }
+
+    th.sort-desc {
+        background-image: url("../shared/_images/col_sort_desc.png");
+    }
+`;
 
 interface ITableProps {
     persistId: string;
@@ -160,10 +230,10 @@ export class Table extends React.Component<ITableProps> {
     }
 
     render() {
-        let className = classNames("EezStudio_Table table", this.props.className);
+        let className = classNames("table", this.props.className);
 
         return (
-            <table className={className} tabIndex={-1}>
+            <StyledTable className={className} tabIndex={-1}>
                 <thead>
                     <tr>
                         {this.props.columns.map(column => (
@@ -195,7 +265,7 @@ export class Table extends React.Component<ITableProps> {
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </StyledTable>
         );
     }
 }
