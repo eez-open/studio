@@ -60,7 +60,8 @@ async function getExtraResource() {
         });
 
         if (!foundExtension) {
-            throw `Can't find extension ${instrumentExtensionId}`;
+            console.warn(`Can't find extension ${instrumentExtensionId}`);
+            return;
         }
 
         extensions.push(foundExtension.localPath);
