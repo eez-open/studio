@@ -21,7 +21,8 @@
     "abc": "cd test/abc && tsc && browserify --debug main.js -o bundle.js",
     "update:packages": "node wipe-dependencies.js && rm -rf node_modules && npm update --save-dev && npm update --save",
     "build-catalog": "cd extensions && tsc && node build-catalog.js",
-    "build-installation": "cd installation && tsc && electron extra-resource.js && cd .. && node installation/build-installation.js"
+    "build-installation": "cd installation && tsc && electron extra-resource.js && cd .. && node installation/build-installation.js",
+    "tslint": "tslint --project ./src/tsconfig.json 'src/**/*.{ts,tsx}'"
   },
   "prettier": {
     "printWidth": 100,
@@ -65,6 +66,8 @@
     "npm": "^6.4.1",
     "pump": "^3.0.0",
     "sharp": "^0.20.5",
+    "tslint": "^5.11.0",
+    "tslint-sonarts": "^1.8.0",
     "typescript": "^3.0.3"
   },
   "dependencies": {

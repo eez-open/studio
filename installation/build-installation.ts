@@ -58,15 +58,15 @@ function getIgnore() {
 (async () => {
     try {
         const options = {
-            dir: ".",
-            platform: os.platform(),
             arch: "x64",
             asar: true,
-            prune: true,
-            overwrite: true,
-            icon: "icon.ico",
+            dir: ".",
             extraResource: await getExtraResource(),
-            ignore: getIgnore()
+            icon: "icon.ico",
+            ignore: getIgnore(),
+            overwrite: true,
+            platform: os.platform(),
+            prune: true
         };
 
         const appPaths = await packager(options);

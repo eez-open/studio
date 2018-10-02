@@ -65,7 +65,7 @@ export class HistoryItems extends React.Component<{
                 }
             }
 
-            let className = classNames(`EezStudio_HistoryItem_${historyItem.id}`, {
+            let className = classNames(`EezStudio_HistoryItemEnclosure EezStudio_HistoryItem_${historyItem.id}`, {
                 EezStudio_HistoryItemEnclosure_Session: historyItem.type.startsWith(
                     "activity-log/session"
                 ),

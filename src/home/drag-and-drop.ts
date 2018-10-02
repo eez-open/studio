@@ -21,11 +21,11 @@ export function handleDragAndDrop() {
         $ev.preventDefault();
         const ev = $ev.originalEvent as DragEvent;
 
-        var dt = ev.dataTransfer;
-        var files = dt.files;
+        const dt = ev.dataTransfer;
+        const files = dt.files;
 
-        for (let file of files) {
-            for (let extension of extensions) {
+        for (const file of files) {
+            for (const extension of extensions) {
                 const handleDragAndDropFile = extension[1].handleDragAndDropFile;
                 if (handleDragAndDropFile && (await handleDragAndDropFile(file.path))) {
                     break;
