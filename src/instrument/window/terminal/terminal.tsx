@@ -170,14 +170,16 @@ class Input extends React.Component<
             if (historyItemIndex === undefined) {
                 historyItemIndex = this.commandsHistory.length - 1;
             } else {
-                historyItemIndex--;
-            }
-
-            if (historyItemIndex < 0) {
-                return undefined;
+                if (historyItemIndex >= 0) {
+                    historyItemIndex--;
+                }
             }
 
             this.historyItemIndex = historyItemIndex;
+
+            if (this.historyItemIndex < 0 || this.historyItemIndex >= this.commandsHistory.length) {
+                return undefined;
+            }
 
             return this.commandsHistory[this.historyItemIndex];
         }
@@ -187,16 +189,18 @@ class Input extends React.Component<
         while (true) {
             let historyItemIndex = this.historyItemIndex;
             if (historyItemIndex === undefined) {
-                historyItemIndex = 0;
-            } else {
-                historyItemIndex++;
-            }
-
-            if (historyItemIndex >= this.commandsHistory.length) {
                 return undefined;
+            } else {
+                if (historyItemIndex < this.commandsHistory.length) {
+                    historyItemIndex++;
+                }
             }
 
             this.historyItemIndex = historyItemIndex;
+
+            if (this.historyItemIndex < 0 || this.historyItemIndex >= this.commandsHistory.length) {
+                return undefined;
+            }
 
             return this.commandsHistory[this.historyItemIndex];
         }
