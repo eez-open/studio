@@ -13,7 +13,12 @@
         "radix": false,
         "ordered-imports": false,
         "no-var-requires": false,
-        "member-access": false
+        "member-access": false,
+        "object-literal-sort-keys": false,
+        "max-classes-per-file": false,
+        "no-bitwise": false
     },
-    "extends": ["tslint:recommended", "tslint-sonarts"]
+    "extends": [
+        /*"tslint:recommended", "tslint-sonarts"*/
+    ]
 }

@@ -1,10 +1,11 @@
 import { action, observable } from "mobx";
 import { observer } from "mobx-react";
 import * as React from "react";
+import { bind } from "bind-decorator";
 
 import { IconAction } from "shared/ui/action";
-
-import { FieldComponentProps } from "shared/ui/generic-dialog";
+import { IFieldComponentProps } from "shared/ui/generic-dialog";
+import styled from "shared/ui/styled-components";
 
 import { EditorComponent } from "project-editor/core/metaData";
 import {
@@ -34,7 +35,7 @@ import { loadFontFromFile } from "project-editor/project/features/gui/fontsServi
 
 @observer
 export class GlyphSelectFieldType extends React.Component<
-    FieldComponentProps,
+    IFieldComponentProps,
     {
         isLoading: boolean;
         font?: FontProperties;
@@ -42,6 +43,7 @@ export class GlyphSelectFieldType extends React.Component<
     }
 > {
     fontFilePath: string;
+    fontBpp: number;
     fontSize: number;
     fontThreshold: number;
 
@@ -53,7 +55,7 @@ export class GlyphSelectFieldType extends React.Component<
         glyphsContainer: any;
     };
 
-    constructor(props: FieldComponentProps) {
+    constructor(props: IFieldComponentProps) {
         super(props);
         this.state = {
             isLoading: false,
@@ -78,8 +80,13 @@ export class GlyphSelectFieldType extends React.Component<
             return;
         }
 
+        let fontBpp: number = this.props.values[this.props.fieldProperties.options.fontBppField];
+        if (!fontBpp) {
+            return;
+        }
+
         let fontSize: number;
-        let fontThreshold: number;
+        let fontThreshold: number = 0;
 
         if (!fontFilePath.toLowerCase().endsWith(".bdf")) {
             fontSize = this.props.values[this.props.fieldProperties.options.fontSizeField];
@@ -87,11 +94,13 @@ export class GlyphSelectFieldType extends React.Component<
                 return;
             }
 
-            fontThreshold = this.props.values[
-                this.props.fieldProperties.options.fontThresholdField
-            ];
-            if (!fontThreshold || fontThreshold < 1 || fontThreshold > 255) {
-                return;
+            if (fontBpp !== 8) {
+                fontThreshold = this.props.values[
+                    this.props.fieldProperties.options.fontThresholdField
+                ];
+                if (!fontThreshold || fontThreshold < 1 || fontThreshold > 255) {
+                    return;
+                }
             }
         } else {
             fontSize = this.fontSize;
@@ -100,10 +109,12 @@ export class GlyphSelectFieldType extends React.Component<
 
         if (
             fontFilePath != this.fontFilePath ||
+            fontBpp != this.fontBpp ||
             fontSize != this.fontSize ||
             fontThreshold != this.fontThreshold
         ) {
             this.fontFilePath = fontFilePath;
+            this.fontBpp = fontBpp;
             this.fontSize = fontSize;
             this.fontThreshold = fontThreshold;
 
@@ -111,7 +122,7 @@ export class GlyphSelectFieldType extends React.Component<
                 clearTimeout(this.timeoutId);
             }
             this.timeoutId = setTimeout(() => {
-                loadFontFromFile(undefined, fontFilePath, fontSize, fontThreshold, true)
+                loadFontFromFile(undefined, fontFilePath, fontBpp, fontSize, fontThreshold, true)
                     .then((font: FontProperties) => {
                         font = loadObject(undefined, font, fontMetaData) as FontProperties;
                         this.onChange(
@@ -227,6 +238,16 @@ class Glyph extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const Toolbar = styled.div`
+    flex-wrap: nowrap;
+
+    & > input {
+        width: 200px;
+        margin-left: 4px;
+        margin-top: 3px;
+    }
+`;
+
 @observer
 class Glyphs extends React.Component<
     {
@@ -280,14 +301,14 @@ class Glyphs extends React.Component<
     }
 
     ensureVisible() {
-        let $selectedGlyph = $(this.refs.list).find(".selected");
+        const $selectedGlyph = $(this.refs.list).find(".selected");
         if ($selectedGlyph.length == 1) {
             ($selectedGlyph[0] as any).scrollIntoViewIfNeeded();
         }
     }
 
     render() {
-        let glyphs: JSX.Element[] = this.props.glyphs.map(glyph => (
+        const glyphs: JSX.Element[] = this.props.glyphs.map(glyph => (
             <Glyph
                 key={getId(glyph)}
                 glyph={glyph}
@@ -300,47 +321,42 @@ class Glyphs extends React.Component<
         let addGlyphButton: JSX.Element | undefined;
         if (this.props.onAddGlyph) {
             addGlyphButton = (
-                <div className="btn-group" role="group">
-                    <IconAction
-                        title="Add Glyph"
-                        icon="material:add"
-                        iconSize={16}
-                        onClick={this.props.onAddGlyph.bind(this)}
-                    />
-                </div>
+                <IconAction
+                    title="Add Glyph"
+                    icon="material:add"
+                    iconSize={16}
+                    onClick={this.props.onAddGlyph.bind(this)}
+                />
             );
         }
 
         let deleteGlyphButton: JSX.Element | undefined;
         if (this.props.onDeleteGlyph) {
             deleteGlyphButton = (
-                <div className="btn-group" role="group">
-                    <IconAction
-                        title="Delete Glyph"
-                        icon="material:remove"
-                        iconSize={16}
-                        onClick={this.props.onDeleteGlyph.bind(this)}
-                    />
-                </div>
+                <IconAction
+                    title="Delete Glyph"
+                    icon="material:remove"
+                    iconSize={16}
+                    onClick={this.props.onDeleteGlyph}
+                />
             );
         }
 
         return (
             <div className="EezStudio_ProjectEditor_font-editor-glyphs layoutCenter">
                 <div className="EezStudio_ProjectEditor_font-editor-glyphs-filter layoutTop">
-                    <div className="btn-toolbar" role="toolbar">
-                        <div className="btn-group float-right">
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={this.state.searchValue}
-                                onChange={this.onChange.bind(this)}
-                                placeholder="search"
-                            />
-                        </div>
+                    <Toolbar className="btn-toolbar" role="toolbar">
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={this.state.searchValue}
+                            onChange={this.onChange.bind(this)}
+                            placeholder="search"
+                        />
+                        <div style={{ flexGrow: 1 }} />
                         {addGlyphButton}
                         {deleteGlyphButton}
-                    </div>
+                    </Toolbar>
                 </div>
                 <div className="EezStudio_ProjectEditor_font-editor-glyphs-content layoutCenter">
                     <ul ref="list">{glyphs}</ul>
@@ -364,7 +380,8 @@ class GlyphEditor extends React.Component<
         div: any;
     };
 
-    @observable hitTestResult: EditorImageHitTestResult | undefined = undefined;
+    @observable
+    hitTestResult: EditorImageHitTestResult | undefined = undefined;
     isLeftButtonDown: boolean = false;
     lastToggledPixel:
         | {
@@ -375,15 +392,29 @@ class GlyphEditor extends React.Component<
 
     togglePixel() {
         if (this.props.glyph && this.hitTestResult) {
-            let glyphBitmap = setPixel(
-                this.props.glyph.glyphBitmap,
+            let glyphBitmap = this.props.glyph.glyphBitmap;
+            if (!glyphBitmap) {
+                const width = this.hitTestResult.x + 1;
+                const height = this.hitTestResult.y + 1;
+                glyphBitmap = {
+                    width,
+                    height,
+                    pixelArray: new Array<number>(width * height)
+                };
+            }
+
+            const font = this.props.glyph.getFont();
+
+            const newGlyphBitmap = setPixel(
+                glyphBitmap,
                 this.hitTestResult.x,
                 this.hitTestResult.y,
-                this.props.glyph.getPixel(this.hitTestResult.x, this.hitTestResult.y) ? 0 : 1
+                this.props.glyph.getPixel(this.hitTestResult.x, this.hitTestResult.y) ? 0 : 1,
+                font.bpp
             );
 
             updateObject(this.props.glyph, {
-                glyphBitmap: glyphBitmap
+                glyphBitmap: newGlyphBitmap
             });
 
             this.lastToggledPixel = {
@@ -495,13 +526,15 @@ export class FontEditor extends EditorComponent {
         return font.glyphs;
     }
 
-    @observable selectedGlyph: GlyphProperties | undefined;
+    @observable
+    selectedGlyph: GlyphProperties | undefined;
 
-    @action
+    @action.bound
     onSelectGlyph(glyph: GlyphProperties) {
         this.selectedGlyph = glyph;
     }
 
+    @bind
     onDoubleClickGlyph(glyph: GlyphProperties) {
         selectGlyph(glyph)
             .then(propertyValues => {
@@ -518,7 +551,7 @@ export class FontEditor extends EditorComponent {
         NavigationStore.setSelectedPanel(this);
     }
 
-    @action
+    @action.bound
     onAddGlyph() {
         let font = this.props.editor.object as FontProperties;
         let newGlyph = cloneObject(
@@ -530,6 +563,7 @@ export class FontEditor extends EditorComponent {
         this.selectedGlyph = newGlyph;
     }
 
+    @action.bound
     onDeleteGlyph() {
         let font = this.props.editor.object as FontProperties;
         let selectedGlyph = this.selectedGlyph;
@@ -543,7 +577,7 @@ export class FontEditor extends EditorComponent {
 
         let onDeleteGlyph: (() => void) | undefined;
         if (this.selectedGlyph && font.glyphs[font.glyphs.length - 1] == this.selectedGlyph) {
-            onDeleteGlyph = this.onDeleteGlyph.bind(this);
+            onDeleteGlyph = this.onDeleteGlyph;
         }
 
         return (
@@ -556,9 +590,9 @@ export class FontEditor extends EditorComponent {
                 <Glyphs
                     glyphs={this.glyphs}
                     selectedGlyph={this.selectedGlyph}
-                    onSelectGlyph={this.onSelectGlyph.bind(this)}
-                    onDoubleClickGlyph={this.onDoubleClickGlyph.bind(this)}
-                    onAddGlyph={this.onAddGlyph.bind(this)}
+                    onSelectGlyph={this.onSelectGlyph}
+                    onDoubleClickGlyph={this.onDoubleClickGlyph}
+                    onAddGlyph={this.onAddGlyph}
                     onDeleteGlyph={onDeleteGlyph}
                 />
                 <GlyphEditor glyph={this.selectedGlyph} />

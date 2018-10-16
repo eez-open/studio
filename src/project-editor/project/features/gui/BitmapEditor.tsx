@@ -9,10 +9,11 @@ import { getStyleProperty } from "project-editor/project/features/gui/style";
 @observer
 export class BitmapEditor extends EditorComponent {
     render() {
-        let bitmap = this.props.editor.object as BitmapProperties;
+        const bitmap = this.props.editor.object as BitmapProperties;
 
-        let style = {
-            backgroundColor: getStyleProperty(bitmap.style, "backgroundColor")
+        const style = {
+            backgroundColor: getStyleProperty(bitmap.style, "backgroundColor"),
+            width: "100%"
         };
 
         return (

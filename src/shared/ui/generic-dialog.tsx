@@ -38,7 +38,7 @@ export interface IFieldProperties {
     enclosureClassName?: string;
 }
 
-export interface FieldComponentProps {
+export interface IFieldComponentProps {
     dialogContext: any;
     fieldProperties: IFieldProperties;
     values: any;
@@ -46,7 +46,7 @@ export interface FieldComponentProps {
     onChange: (event: any) => void;
 }
 
-export class FieldComponent extends React.Component<FieldComponentProps, any> {}
+export class FieldComponent extends React.Component<IFieldComponentProps, any> {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -133,6 +133,21 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                 values[fieldProperties.name] = parseInt(this.state.values[fieldProperties.name]);
             } else if (fieldProperties.type === "number") {
                 values[fieldProperties.name] = parseFloat(this.state.values[fieldProperties.name]);
+            } else if (fieldProperties.type === "enum") {
+                const id = this.state.values[fieldProperties.name].toString();
+
+                const enumItem = fieldProperties.enumItems!.find(enumItem => {
+                    const enumItemId =
+                        typeof enumItem === "string" || typeof enumItem === "number"
+                            ? enumItem
+                            : enumItem.id;
+                    return enumItemId.toString() === id;
+                })!;
+
+                values[fieldProperties.name] =
+                    typeof enumItem === "string" || typeof enumItem === "number"
+                        ? enumItem
+                        : enumItem.id;
             } else if (fieldProperties.unit !== undefined) {
                 values[fieldProperties.name] = UNITS[fieldProperties.unit].parseValue(
                     this.state.values[fieldProperties.name]
@@ -256,24 +271,20 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             FieldComponent = TextInputProperty;
                         } else if (fieldProperties.type === "enum") {
                             FieldComponent = SelectProperty;
-                            children = fieldProperties.enumItems!.map(enumItem => (
-                                <option
-                                    key={
-                                        typeof enumItem === "string" || typeof enumItem === "number"
-                                            ? enumItem
-                                            : enumItem.id
-                                    }
-                                    value={
-                                        typeof enumItem === "string" || typeof enumItem === "number"
-                                            ? enumItem
-                                            : enumItem.id
-                                    }
-                                >
-                                    {typeof enumItem === "string" || typeof enumItem === "number"
-                                        ? humanize(enumItem)
-                                        : enumItem.label}
-                                </option>
-                            ));
+                            children = fieldProperties.enumItems!.map(enumItem => {
+                                const id =
+                                    typeof enumItem === "string" || typeof enumItem === "number"
+                                        ? enumItem.toString()
+                                        : enumItem.id;
+                                return (
+                                    <option key={id} value={id}>
+                                        {typeof enumItem === "string" ||
+                                        typeof enumItem === "number"
+                                            ? humanize(enumItem)
+                                            : enumItem.label}
+                                    </option>
+                                );
+                            });
                         } else if (fieldProperties.type === "boolean") {
                             FieldComponent = BooleanProperty;
                         } else {

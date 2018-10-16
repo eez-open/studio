@@ -6,7 +6,7 @@ import { Message } from "project-editor/core/output";
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface EnumItem {
-    id: string;
+    id: string | number;
 }
 
 export type PropertyType =
@@ -38,6 +38,7 @@ export interface PropertyMetaData {
     replaceObjectReference?: (value: string) => string;
     onSelect?: (object: EezObject) => Promise<any>;
     hideInPropertyGrid?: boolean;
+    readOnlyInPropertyGrid?: boolean;
     enumerable?: boolean;
     isOptional?: boolean;
     defaultValue?: any;

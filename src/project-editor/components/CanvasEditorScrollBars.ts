@@ -8,20 +8,15 @@ const SCROLL_BAR_THUMB_BACKGROUND_COLOR = "#C1C1C1";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let SCALES: number[] = [];
+const SCALES: number[] = [];
 
-for (let i = 10; i <= 500; i += 10) {
+for (let i = 10; i <= 1500; i += 10) {
     SCALES.push(i / 100);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface CanvasEditor {
-    getDeviceTranslate(): Point;
-    deviceToDocument(p: Point): Point;
-    mouseToDocument(event: any): Point;
-    documentToDevice(p: Point): Point;
-
+interface ICanvasEditor {
     nonTranslatedDeviceRect: Rect;
     deviceRect: Rect;
     documentRect: Rect;
@@ -29,23 +24,28 @@ interface CanvasEditor {
     deviceTranslate: Point;
     documentTranslate: Point;
 
-    transform(documentTranslate: Point, scale: number): any;
-
     scale: number;
 
     refs: {
         canvas: HTMLCanvasElement;
     };
+
+    getDeviceTranslate(): Point;
+    deviceToDocument(p: Point): Point;
+    mouseToDocument(event: any): Point;
+    documentToDevice(p: Point): Point;
+
+    transform(documentTranslate: Point, scale: number): any;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface ScrollBarState {
+interface IScrollBarState {
     trackRect: Rect;
     thumbRect: Rect;
 }
 
-function drawScrollBar(ctx: CanvasRenderingContext2D, scrollBar: ScrollBarState) {
+function drawScrollBar(ctx: CanvasRenderingContext2D, scrollBar: IScrollBarState) {
     ctx.fillStyle = SCROLL_BAR_TRACK_BACKGROUND_COLOR;
     ctx.fillRect(
         scrollBar.trackRect.x,
@@ -77,26 +77,26 @@ export enum ScrollBarsHitRegion {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class CanvasEditorScrollBars {
-    horizontal?: ScrollBarState;
-    vertical?: ScrollBarState;
+    horizontal?: IScrollBarState;
+    vertical?: IScrollBarState;
     cornerRect?: Rect;
     dragging?: {
         region: ScrollBarsHitRegion;
         offset: Point;
     };
 
-    constructor(private canvasEditor: CanvasEditor) {}
+    constructor(private canvasEditor: ICanvasEditor) {}
 
     update() {
-        let isHorizontalVisible =
+        const isHorizontalVisible =
             Math.floor(this.canvasEditor.documentRect.width) >
             Math.ceil(this.canvasEditor.deviceRect.width);
-        let isVerticalVisible =
+        const isVerticalVisible =
             Math.floor(this.canvasEditor.documentRect.height) >
             Math.ceil(this.canvasEditor.deviceRect.height);
 
-        let x = this.canvasEditor.refs.canvas.width - SCROLL_BAR_SIZE;
-        let y = this.canvasEditor.refs.canvas.height - SCROLL_BAR_SIZE;
+        const x = this.canvasEditor.refs.canvas.width - SCROLL_BAR_SIZE;
+        const y = this.canvasEditor.refs.canvas.height - SCROLL_BAR_SIZE;
         let width = this.canvasEditor.refs.canvas.width;
         let height = this.canvasEditor.refs.canvas.height;
 
@@ -114,22 +114,21 @@ export class CanvasEditorScrollBars {
             this.cornerRect = undefined;
         }
 
-        let scroll = this.documentTranslateToScroll(this.canvasEditor.documentTranslate);
+        const scroll = this.documentTranslateToScroll(this.canvasEditor.documentTranslate);
 
         if (isHorizontalVisible) {
             this.horizontal = {
                 trackRect: {
                     x: 0,
-                    y: y,
-                    width: width,
+                    y,
+                    width,
                     height: SCROLL_BAR_SIZE
                 },
                 thumbRect: {
-                    x: scroll.x * width / this.canvasEditor.documentRect.width,
-                    y: y,
+                    x: (scroll.x * width) / this.canvasEditor.documentRect.width,
+                    y,
                     width:
-                        this.canvasEditor.deviceRect.width *
-                        width /
+                        (this.canvasEditor.deviceRect.width * width) /
                         this.canvasEditor.documentRect.width,
                     height: SCROLL_BAR_SIZE
                 }
@@ -141,18 +140,17 @@ export class CanvasEditorScrollBars {
         if (isVerticalVisible) {
             this.vertical = {
                 trackRect: {
-                    x: x,
+                    x,
                     y: 0,
                     width: SCROLL_BAR_SIZE,
-                    height: height
+                    height
                 },
                 thumbRect: {
-                    x: x,
-                    y: scroll.y * height / this.canvasEditor.documentRect.height,
+                    x,
+                    y: (scroll.y * height) / this.canvasEditor.documentRect.height,
                     width: SCROLL_BAR_SIZE,
                     height:
-                        this.canvasEditor.deviceRect.height *
-                        height /
+                        (this.canvasEditor.deviceRect.height * height) /
                         this.canvasEditor.documentRect.height
                 }
             };
@@ -215,8 +213,8 @@ export class CanvasEditorScrollBars {
         }
 
         return {
-            x: x,
-            y: y
+            x,
+            y
         };
     }
 
@@ -242,9 +240,9 @@ export class CanvasEditorScrollBars {
     }
 
     findNextScale() {
-        for (let i = 0; i < SCALES.length; i++) {
-            if (SCALES[i] > this.canvasEditor.scale) {
-                return SCALES[i];
+        for (const scale of SCALES) {
+            if (scale > this.canvasEditor.scale) {
+                return scale;
             }
         }
         return this.canvasEditor.scale;
@@ -273,30 +271,28 @@ export class CanvasEditorScrollBars {
             }
 
             //
-            let p1 = this.canvasEditor.mouseToDocument(event);
+            const p1 = this.canvasEditor.mouseToDocument(event);
 
             //
-            let documentTranslateSaved = this.canvasEditor.documentTranslate;
-            let scaleSaved = this.canvasEditor.scale;
-            let deviceTranslateSaved = this.canvasEditor.deviceTranslate;
+            const documentTranslateSaved = this.canvasEditor.documentTranslate;
+            const scaleSaved = this.canvasEditor.scale;
+            const deviceTranslateSaved = this.canvasEditor.deviceTranslate;
 
             this.canvasEditor.documentTranslate = { x: 0, y: 0 };
             this.canvasEditor.scale = newScale;
             this.canvasEditor.deviceTranslate = this.canvasEditor.getDeviceTranslate();
 
-            let p2 = this.canvasEditor.mouseToDocument(event);
+            const p2 = this.canvasEditor.mouseToDocument(event);
 
             this.canvasEditor.documentTranslate = documentTranslateSaved;
             this.canvasEditor.scale = scaleSaved;
             this.canvasEditor.deviceTranslate = deviceTranslateSaved;
 
             //
-            let newDocumentTranslate = {
+            newScroll = this.documentTranslateToScroll({
                 x: p1.x - p2.x,
                 y: p1.y - p2.y
-            };
-
-            newScroll = this.documentTranslateToScroll(newDocumentTranslate);
+            });
         } else {
             newScroll = this.documentTranslateToScroll(this.canvasEditor.documentTranslate);
             newScroll = {
@@ -308,9 +304,8 @@ export class CanvasEditorScrollBars {
         }
 
         newScroll = this.scrollClamp(newScroll);
-        let newDocumentTranslate = this.scrollToDocumentTranslate(newScroll);
 
-        this.canvasEditor.transform(newDocumentTranslate, newScale);
+        this.canvasEditor.transform(this.scrollToDocumentTranslate(newScroll), newScale);
     }
 
     isDragging(): boolean {
@@ -318,7 +313,7 @@ export class CanvasEditorScrollBars {
     }
 
     hitTest(event: any): ScrollBarsHitRegion {
-        let mousePoint: Point = {
+        const mousePoint: Point = {
             x: event.offsetX,
             y: event.offsetY
         };
@@ -371,7 +366,7 @@ export class CanvasEditorScrollBars {
             return true;
         }
 
-        let scroll = this.documentTranslateToScroll(this.canvasEditor.documentTranslate);
+        const scroll = this.documentTranslateToScroll(this.canvasEditor.documentTranslate);
 
         let offset: Point;
 
@@ -384,8 +379,7 @@ export class CanvasEditorScrollBars {
             if (this.horizontal && region == ScrollBarsHitRegion.HORIZONTAL_THUMB) {
                 offset = {
                     x:
-                        scroll.x *
-                            this.horizontal.trackRect.width /
+                        (scroll.x * this.horizontal.trackRect.width) /
                             this.canvasEditor.documentRect.width -
                         event.offsetX,
                     y: 0
@@ -394,8 +388,7 @@ export class CanvasEditorScrollBars {
                 offset = {
                     x: 0,
                     y:
-                        scroll.y *
-                            this.vertical.trackRect.height /
+                        (scroll.y * this.vertical.trackRect.height) /
                             this.canvasEditor.documentRect.height -
                         event.offsetY
                 };
@@ -405,8 +398,8 @@ export class CanvasEditorScrollBars {
         }
 
         this.dragging = {
-            region: region,
-            offset: offset
+            region,
+            offset
         };
 
         return true;
@@ -428,16 +421,16 @@ export class CanvasEditorScrollBars {
             newScroll = this.documentTranslateToScroll(this.canvasEditor.documentTranslate);
             if (this.horizontal && this.dragging.region == ScrollBarsHitRegion.HORIZONTAL_THUMB) {
                 newScroll.x =
-                    (event.offsetX + this.dragging.offset.x) *
-                    this.canvasEditor.documentRect.width /
+                    ((event.offsetX + this.dragging.offset.x) *
+                        this.canvasEditor.documentRect.width) /
                     this.horizontal.trackRect.width;
             } else if (
                 this.vertical &&
                 this.dragging.region == ScrollBarsHitRegion.VERTICAL_THUMB
             ) {
                 newScroll.y =
-                    (event.offsetY + this.dragging.offset.y) *
-                    this.canvasEditor.documentRect.height /
+                    ((event.offsetY + this.dragging.offset.y) *
+                        this.canvasEditor.documentRect.height) /
                     this.vertical.trackRect.height;
             } else {
                 return;
@@ -445,8 +438,10 @@ export class CanvasEditorScrollBars {
         }
 
         newScroll = this.scrollClamp(newScroll);
-        let newDocumentTranslate = this.scrollToDocumentTranslate(newScroll);
-        this.canvasEditor.transform(newDocumentTranslate, this.canvasEditor.scale);
+        this.canvasEditor.transform(
+            this.scrollToDocumentTranslate(newScroll),
+            this.canvasEditor.scale
+        );
     }
 
     stopDragging() {

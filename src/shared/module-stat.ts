@@ -1,6 +1,6 @@
 import { _each } from "shared/algorithm";
 import { formatBytes } from "shared/util";
-//import { stringCompare } from "shared/string";
+import { stringCompare } from "shared/string";
 
 const TP_MODULE_PREFIX = "\\node_modules\\";
 const LOCAL_MODULE_PREFIX = "\\src\\";
@@ -37,13 +37,13 @@ function dumpModules(moduleType: string, modulePrefix: string, modules: ModuleIn
     let totalBytes = 0;
 
     modules.sort((a: ModuleInfo, b: ModuleInfo) => {
-        //return stringCompare(n.fileName, b.fileName);
+        return stringCompare(a.fileName, b.fileName);
         return b.bytes - a.bytes;
     });
 
     _each(modules, moduleInfo => {
         totalBytes += moduleInfo.bytes;
-        //console.log(moduleType, formatBytes(moduleInfo.bytes), moduleInfo.relativeName);
+        console.log(moduleType, formatBytes(moduleInfo.bytes), moduleInfo.relativeName);
     });
 
     return totalBytes;

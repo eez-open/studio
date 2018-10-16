@@ -1,16 +1,33 @@
 import { ProjectStore } from "project-editor/core/store";
 
 import { FontProperties } from "project-editor/project/features/gui/fontMetaData";
-import { GlyphProperties } from "project-editor/project/features/gui/glyph";
+import { GlyphProperties, getPixel, GlyphBitmap } from "project-editor/project/features/gui/glyph";
 
 let fs = EEZStudio.electron.remote.require("fs");
 let path = EEZStudio.electron.remote.require("path");
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function from1to8bpp(glyphBitmap: GlyphBitmap) {
+    const newPixelArray = Array<number>(glyphBitmap.width * glyphBitmap.height);
+
+    for (let y = 0; y < glyphBitmap.height; ++y) {
+        for (let x = 0; x < glyphBitmap.width; ++x) {
+            newPixelArray[y * glyphBitmap.width + x] = getPixel(glyphBitmap, x, y, 1);
+        }
+    }
+
+    return {
+        width: glyphBitmap.width,
+        height: glyphBitmap.height,
+        pixelArray: newPixelArray
+    };
+}
+
 function loadBdfFont(
     name: string | undefined,
     filePath: string,
+    bpp: number,
     createGlyphs: boolean,
     fromEncoding: number | undefined,
     toEncoding: number | undefined,
@@ -19,11 +36,12 @@ function loadBdfFont(
     reject: (error: any) => void
 ) {
     let absoluteFilePath = ProjectStore.getAbsoluteFilePath(filePath);
-    let cacheFilePath = absoluteFilePath + ".eez-studio-project-editor-cache";
+    let cacheFilePath = absoluteFilePath + "-" + bpp + ".eez-studio-project-editor-cache";
 
     fs.readFile(cacheFilePath, "utf8", (err: any, data: any) => {
         if (!err) {
             let font = JSON.parse(data);
+            font.name = name;
             resolve(font);
             return;
         }
@@ -38,6 +56,7 @@ function loadBdfFont(
                     source: {
                         filePath: filePath
                     },
+                    bpp,
                     ascent: 0,
                     descent: 0,
                     height: 0,
@@ -84,11 +103,21 @@ function loadBdfFont(
                     } else if (state == "BITMAP") {
                         if (name == "ENDCHAR") {
                             if (!createBlankGlyphs) {
-                                glyph.glyphBitmap = {
+                                let glyphBitmap = {
                                     width: glyph.width,
                                     height: glyph.height,
-                                    pixelArray: pixelArray
+                                    pixelArray
                                 };
+
+                                if (bpp === 8) {
+                                    glyph.glyphBitmap = from1to8bpp({
+                                        width: glyph.width,
+                                        height: glyph.height,
+                                        pixelArray
+                                    });
+                                } else {
+                                    glyph.glyphBitmap = glyphBitmap;
+                                }
                             }
                             glyph.source = <any>{
                                 filePath: filePath,
@@ -153,6 +182,7 @@ function loadBdfFont(
 function loadFontUsingOpentypeJS(
     name: string | undefined,
     filePath: string,
+    bpp: number,
     size: number,
     threshold: number,
     createGlyphs: boolean,
@@ -198,6 +228,7 @@ function loadFontUsingOpentypeJS(
                     size: size,
                     threshold: threshold
                 },
+                bpp,
                 ascent: ascent,
                 descent: descent,
                 height: height,
@@ -229,20 +260,20 @@ function loadFontUsingOpentypeJS(
                         let ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
 
                         let x = 0;
-                        let y = ascent;
+                        let y = openTypeFont.ascender * scale;
 
                         glyph.draw(ctx, x, y, sizePX);
 
-                        if (glyph.xMin != undefined) {
-                            x = Math.round(glyph.xMin * scale) - glyph.xMin * scale;
-                            y = ascent - (Math.round(glyph.yMax * scale) - glyph.yMax * scale);
+                        // if (glyph.xMin != undefined) {
+                        //     x = Math.round(glyph.xMin * scale) - glyph.xMin * scale;
+                        //     y = ascent - (Math.round(glyph.yMax * scale) - glyph.yMax * scale);
 
-                            ctx.clearRect(0, 0, canvas.width, canvas.height);
-                            ctx.save();
-                            ctx.translate(x, y);
-                            glyph.draw(ctx, 0, 0, sizePX);
-                            ctx.restore();
-                        }
+                        //     ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        //     ctx.save();
+                        //     ctx.translate(x, y);
+                        //     glyph.draw(ctx, 0, 0, sizePX);
+                        //     ctx.restore();
+                        // }
 
                         let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                         let pixelMatrix = imageData.data;
@@ -252,19 +283,34 @@ function loadFontUsingOpentypeJS(
                         for (let y = 0; y < canvas.height; y++) {
                             for (let x = 0; x < canvas.width; x++) {
                                 let i = (y * canvas.width + x) * 4 + 3;
-                                if (pixelMatrix[i] >= threshold) {
-                                    hasPixels = true;
-                                    pixelMatrix[i] = 255;
+
+                                let hasPixel: boolean = false;
+
+                                if (bpp === 8) {
+                                    if (pixelMatrix[i]) {
+                                        hasPixel = true;
+                                    }
+                                } else {
+                                    if (pixelMatrix[i] >= threshold) {
+                                        hasPixel = true;
+                                        pixelMatrix[i] = 255;
+                                    }
+                                }
+
+                                if (hasPixel) {
                                     if (x < xMin) {
                                         xMin = x;
                                     } else if (x > xMax) {
                                         xMax = x;
                                     }
+
                                     if (y < yMin) {
                                         yMin = y;
                                     } else if (y > yMax) {
                                         yMax = y;
                                     }
+
+                                    hasPixels = true;
                                 }
                             }
                         }
@@ -275,26 +321,41 @@ function loadFontUsingOpentypeJS(
                             glyphProperties.width = xMax - xMin + 1;
                             glyphProperties.height = yMax - yMin + 1;
 
-                            let widthInBytes = Math.floor((glyphProperties.width + 7) / 8);
+                            let pixelArray: Array<number>;
 
-                            let pixelArray = [];
-
-                            for (let y = yMin; y <= yMax; y++) {
-                                for (
-                                    let x = xMin, iByte = 0;
-                                    iByte < widthInBytes && x <= xMax;
-                                    iByte++
-                                ) {
-                                    let byteData = 0;
-
-                                    for (let iBit = 0; iBit < 8 && x <= xMax; iBit++, x++) {
-                                        let i = (y * canvas.width + x) * 4 + 3;
-                                        if (pixelMatrix[i] == 255) {
-                                            byteData |= 0x80 >> iBit;
-                                        }
+                            if (bpp === 8) {
+                                pixelArray = new Array<number>(
+                                    glyphProperties.width * glyphProperties.height
+                                );
+                                let i = 0;
+                                for (let y = yMin; y <= yMax; y++) {
+                                    for (let x = xMin; x <= xMax; x++) {
+                                        pixelArray[i++] =
+                                            pixelMatrix[(y * canvas.width + x) * 4 + 3];
                                     }
+                                }
+                            } else {
+                                pixelArray = [];
 
-                                    pixelArray.push(byteData);
+                                let widthInBytes = Math.floor((glyphProperties.width + 7) / 8);
+
+                                for (let y = yMin; y <= yMax; y++) {
+                                    for (
+                                        let x = xMin, iByte = 0;
+                                        iByte < widthInBytes && x <= xMax;
+                                        iByte++
+                                    ) {
+                                        let byteData = 0;
+
+                                        for (let iBit = 0; iBit < 8 && x <= xMax; iBit++, x++) {
+                                            let i = (y * canvas.width + x) * 4 + 3;
+                                            if (pixelMatrix[i] == 255) {
+                                                byteData |= 0x80 >> iBit;
+                                            }
+                                        }
+
+                                        pixelArray.push(byteData);
+                                    }
                                 }
                             }
 
@@ -351,6 +412,7 @@ function loadFontUsingOpentypeJS(
 export function loadFontFromFile(
     name: string | undefined,
     filePath: string,
+    bpp: number,
     size: number,
     threshold: number,
     createGlyphs: boolean,
@@ -363,6 +425,7 @@ export function loadFontFromFile(
             return loadBdfFont(
                 name,
                 filePath,
+                bpp,
                 createGlyphs,
                 fromEncoding,
                 toEncoding,
@@ -374,6 +437,7 @@ export function loadFontFromFile(
             return loadFontUsingOpentypeJS(
                 name,
                 filePath,
+                bpp,
                 size,
                 threshold,
                 createGlyphs,

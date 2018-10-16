@@ -1,3 +1,5 @@
+import { blendColor } from "shared/util";
+
 import { FontProperties } from "project-editor/project/features/gui/fontMetaData";
 
 let fgColor: string;
@@ -129,7 +131,11 @@ function drawGlyph(
         setXY(x_glyph, y_glyph, x_glyph + width - 1, y_glyph + height - 1);
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
-                setPixel(ctx, glyph.getPixel(x, y) ? fgColor : bgColor);
+                if (font.bpp === 8) {
+                    setPixel(ctx, blendColor(fgColor, bgColor, glyph.getPixel(x, y) / 255));
+                } else {
+                    setPixel(ctx, glyph.getPixel(x, y) ? fgColor : bgColor);
+                }
             }
         }
     }

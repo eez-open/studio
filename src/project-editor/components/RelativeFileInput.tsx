@@ -34,7 +34,7 @@ export class RelativeFileInput extends FieldComponent {
         if (this.props.values[this.props.fieldProperties.name]) {
             clearButton = (
                 <button className="btn btn-default" type="button" onClick={this.onClear.bind(this)}>
-                    <Icon icon="material:close" />
+                    <Icon icon="material:close" size={17} />
                 </button>
             );
         }

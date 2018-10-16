@@ -51,8 +51,10 @@ interface Panel {
 type NavigationItem = EezObject | TreeObjectAdapter;
 
 class NavigationStoreClass {
-    @observable navigationMap = new Map<string, NavigationItem>();
-    @observable selectedPanel: Panel | undefined;
+    @observable
+    navigationMap = new Map<string, NavigationItem>();
+    @observable
+    selectedPanel: Panel | undefined;
 
     load(map: { [stringPath: string]: string }) {
         let navigationMap = new Map<string, NavigationItem>();
@@ -260,10 +262,14 @@ export interface EditorState {
 }
 
 export class Editor {
-    @observable object: EezObject;
-    @observable active: boolean;
-    @observable permanent: boolean;
-    @observable state: EditorState | undefined;
+    @observable
+    object: EezObject;
+    @observable
+    active: boolean;
+    @observable
+    permanent: boolean;
+    @observable
+    state: EditorState | undefined;
 
     @computed
     get id() {
@@ -295,7 +301,8 @@ export class Editor {
 }
 
 class EditorsStoreClass {
-    @observable editors: Editor[] = [];
+    @observable
+    editors: Editor[] = [];
 
     constructor() {
         // open editor when navigation selection has changed
@@ -491,10 +498,14 @@ class EditorsStoreClass {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ViewOptions {
-    @observable navigationVisible: boolean = true;
-    @observable outputVisible: boolean = true;
-    @observable propertiesVisible: boolean = true;
-    @observable debugVisible: boolean = false;
+    @observable
+    navigationVisible: boolean = true;
+    @observable
+    outputVisible: boolean = true;
+    @observable
+    propertiesVisible: boolean = true;
+    @observable
+    debugVisible: boolean = false;
 
     @action
     load(viewOptions: any) {
@@ -520,13 +531,19 @@ export class ViewOptions {
 ////////////////////////////////////////////////////////////////////////////////
 
 class UIStateStoreClass {
-    @observable viewOptions: ViewOptions = new ViewOptions();
-    @observable selectedBuildConfiguration: string;
-    @observable splitters = new Map<string, number>();
-    @observable features: any;
-    @observable objects = new Map<string, any>();
+    @observable
+    viewOptions: ViewOptions = new ViewOptions();
+    @observable
+    selectedBuildConfiguration: string;
+    @observable
+    splitters = new Map<string, number>();
+    @observable
+    features: any;
+    @observable
+    objects = new Map<string, any>();
 
-    @observable savedState: any;
+    @observable
+    savedState: any;
 
     constructor() {
         autorun(() => {
@@ -676,9 +693,12 @@ interface UndoItem {
 }
 
 export class UndoManagerClass {
-    @observable undoStack: UndoItem[] = [];
-    @observable redoStack: UndoItem[] = [];
-    @observable commands: Command[] = [];
+    @observable
+    undoStack: UndoItem[] = [];
+    @observable
+    redoStack: UndoItem[] = [];
+    @observable
+    commands: Command[] = [];
 
     private selectionBeforeFirstCommand: any;
     public combineCommands: boolean = false;
@@ -806,9 +826,12 @@ function getUIStateFilePath(projectFilePath: string) {
 }
 
 class ProjectStoreClass {
-    @observable properties: ProjectProperties | undefined;
-    @observable filePath: string | undefined;
-    @observable modified: boolean = false;
+    @observable
+    properties: ProjectProperties | undefined;
+    @observable
+    filePath: string | undefined;
+    @observable
+    modified: boolean = false;
 
     constructor() {
         autorun(() => {
@@ -1357,12 +1380,20 @@ export function getChildOfObject(
     let propertyMetaData: PropertyMetaData | undefined;
 
     if (isArray(object)) {
+        let elementIndex: number | undefined = undefined;
+
         if (typeof key == "string") {
-            return (object as any)[parseInt(key)];
+            elementIndex = parseInt(key);
         } else if (typeof key == "number") {
-            return (object as any)[key];
+            elementIndex = key;
+        }
+
+        const array: EezObject[] = object as any;
+
+        if (elementIndex !== undefined && elementIndex >= 0 && elementIndex < array.length) {
+            return array[elementIndex];
         } else {
-            console.error("invalid key type");
+            console.error("invalid array index");
         }
     } else {
         if (typeof key == "string") {

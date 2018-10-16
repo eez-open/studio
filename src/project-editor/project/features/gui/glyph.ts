@@ -34,6 +34,10 @@ export function selectGlyph(glyph: GlyphProperties) {
         return isFont(obj) && path.extname(obj["filePath"]) != ".bdf";
     }
 
+    function isNonBdfFontAnd1BitPerPixel(obj: any) {
+        return isNonBdfFont(obj) && obj["bpp"] === 1;
+    }
+
     return showGenericDialog({
         dialogDefinition: {
             title: "Select Glyph",
@@ -50,6 +54,11 @@ export function selectGlyph(glyph: GlyphProperties) {
                     }
                 },
                 {
+                    name: "bpp",
+                    type: "number",
+                    visible: () => false
+                },
+                {
                     name: "size",
                     type: "number",
                     visible: isNonBdfFont
@@ -57,20 +66,23 @@ export function selectGlyph(glyph: GlyphProperties) {
                 {
                     name: "threshold",
                     type: "number",
-                    visible: isNonBdfFont
+                    visible: isNonBdfFontAnd1BitPerPixel
                 },
                 {
                     name: "encoding",
                     type: GlyphSelectFieldType,
                     options: {
                         fontFilePathField: "filePath",
+                        fontBppField: "bpp",
                         fontSizeField: "size",
                         fontThresholdField: "threshold"
                     }
                 }
             ]
         },
-        values: (glyph.source && objectToJS(glyph.source)) || {}
+        values: Object.assign({}, glyph.source && objectToJS(glyph.source), {
+            bpp: glyph.getFont().bpp
+        })
     }).then(result => {
         return <any>{
             x: result.context.encoding.glyph.x,
@@ -87,9 +99,12 @@ export function selectGlyph(glyph: GlyphProperties) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class GlyphSourceProperties extends EezObject {
-    @observable filePath?: string;
-    @observable size?: number;
-    @observable encoding?: number;
+    @observable
+    filePath?: string;
+    @observable
+    size?: number;
+    @observable
+    encoding?: number;
 
     toString() {
         return getMetaData(this).label(this);
@@ -146,43 +161,64 @@ function getPixelByteIndex(glyphBitmap: GlyphBitmap, x: number, y: number): numb
     return y * Math.floor((glyphBitmap.width + 7) / 8) + Math.floor(x / 8);
 }
 
-export function getPixel(glyphBitmap: GlyphBitmap | undefined, x: number, y: number): number {
+export function getPixel(
+    glyphBitmap: GlyphBitmap | undefined,
+    x: number,
+    y: number,
+    bpp: number
+): number {
     if (glyphBitmap && x < glyphBitmap.width && y < glyphBitmap.height) {
-        return glyphBitmap.pixelArray[getPixelByteIndex(glyphBitmap, x, y)] & (0x80 >> x % 8);
+        if (bpp === 8) {
+            return glyphBitmap.pixelArray[y * glyphBitmap.width + x];
+        } else {
+            return glyphBitmap.pixelArray[getPixelByteIndex(glyphBitmap, x, y)] & (0x80 >> x % 8);
+        }
     } else {
         return 0;
     }
 }
 
-function setPixelInplace(glyphBitmap: GlyphBitmap, x: number, y: number, color: number) {
-    let byteIndex = getPixelByteIndex(glyphBitmap, x, y);
-    if (glyphBitmap.pixelArray[byteIndex] === undefined) {
-        glyphBitmap.pixelArray[byteIndex] = 0;
-    }
-    glyphBitmap.pixelArray[byteIndex] |= 0x80 >> x % 8;
-    if (color) {
-        glyphBitmap.pixelArray[byteIndex] |= 0x80 >> x % 8;
+function setPixelInplace(
+    glyphBitmap: GlyphBitmap,
+    x: number,
+    y: number,
+    color: number,
+    bpp: number
+) {
+    if (bpp === 8) {
+        glyphBitmap.pixelArray[y * glyphBitmap.width + x] = color;
     } else {
-        glyphBitmap.pixelArray[byteIndex] &= ~(0x80 >> x % 8) & 0xff;
+        let byteIndex = getPixelByteIndex(glyphBitmap, x, y);
+        if (glyphBitmap.pixelArray[byteIndex] === undefined) {
+            glyphBitmap.pixelArray[byteIndex] = 0;
+        }
+        glyphBitmap.pixelArray[byteIndex] |= 0x80 >> x % 8;
+        if (color) {
+            glyphBitmap.pixelArray[byteIndex] |= 0x80 >> x % 8;
+        } else {
+            glyphBitmap.pixelArray[byteIndex] &= ~(0x80 >> x % 8) & 0xff;
+        }
     }
 }
 
 export function setPixel(
-    glyphBitmap: GlyphBitmap | undefined,
+    glyphBitmap: GlyphBitmap,
     x: number,
     y: number,
-    color: number
+    color: number,
+    bpp: number
 ) {
     let result = resizeGlyphBitmap(
         glyphBitmap,
         Math.max((glyphBitmap && glyphBitmap.width) || 0, x + 1),
-        Math.max((glyphBitmap && glyphBitmap.height) || 0, y + 1)
+        Math.max((glyphBitmap && glyphBitmap.height) || 0, y + 1),
+        bpp
     );
-    setPixelInplace(result, x, y, color);
+    setPixelInplace(result, x, y, color, bpp);
     return result;
 }
 
-function resizeGlyphBitmap(glyphBitmap: GlyphBitmap | undefined, width: number, height: number) {
+function resizeGlyphBitmap(glyphBitmap: GlyphBitmap, width: number, height: number, bpp: number) {
     let result = {
         width: width,
         height: height,
@@ -191,7 +227,7 @@ function resizeGlyphBitmap(glyphBitmap: GlyphBitmap | undefined, width: number, 
 
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
-            setPixelInplace(result, x, y, getPixel(glyphBitmap, x, y));
+            setPixelInplace(result, x, y, getPixel(glyphBitmap, x, y, bpp), bpp);
         }
     }
 
@@ -202,7 +238,6 @@ const GLYPH_EDITOR_PIXEL_SIZE = 16;
 const GLYPH_EDITOR_GRID_LINE_OUTER_COLOR = "#ddd";
 const GLYPH_EDITOR_GRID_LINE_INNER_COLOR = "#999";
 const GLYPH_EDITOR_BASE_LINE_COLOR = "#00f";
-const GLYPH_EDITOR_PIXEL_COLOR = "#333";
 const GLYPH_EDITOR_PADDING_LEFT = 100;
 const GLYPH_EDITOR_PADDING_TOP = 100;
 const GLYPH_EDITOR_PADDING_RIGHT = 200;
@@ -215,28 +250,39 @@ export interface EditorImageHitTestResult {
 }
 
 export class GlyphProperties extends EezObject {
-    @observable encoding: number;
-    @observable x: number;
-    @observable y: number;
-    @observable width: number;
-    @observable height: number;
-    @observable dx: number;
+    @observable
+    encoding: number;
+    @observable
+    x: number;
+    @observable
+    y: number;
+    @observable
+    width: number;
+    @observable
+    height: number;
+    @observable
+    dx: number;
 
-    @observable glyphBitmap?: GlyphBitmap;
+    @observable
+    glyphBitmap?: GlyphBitmap;
 
     @computed
     get pixelArray(): number[] | undefined {
         if (!this.glyphBitmap) {
             return undefined;
         }
+
         if (this.width == this.glyphBitmap.width && this.height == this.glyphBitmap.height) {
             return this.glyphBitmap.pixelArray;
         }
 
-        return resizeGlyphBitmap(this.glyphBitmap, this.width, this.height).pixelArray;
+        const font = this.getFont();
+
+        return resizeGlyphBitmap(this.glyphBitmap, this.width, this.height, font.bpp).pixelArray;
     }
 
-    @observable source?: GlyphSourceProperties;
+    @observable
+    source?: GlyphSourceProperties;
 
     @computed
     get image(): string {
@@ -261,8 +307,14 @@ export class GlyphProperties extends EezObject {
 
             for (let x = 0; x < this.width; x++) {
                 for (let y = 0; y < this.height; y++) {
-                    if (getPixel(this.glyphBitmap, x, y)) {
+                    const pixelValue = getPixel(this.glyphBitmap, x, y, font.bpp);
+                    if (font.bpp === 8) {
+                        ctx.globalAlpha = pixelValue / 255;
                         ctx.fillRect(x + xOffset, y + yOffset, 1, 1);
+                    } else {
+                        if (pixelValue) {
+                            ctx.fillRect(x + xOffset, y + yOffset, 1, 1);
+                        }
                     }
                 }
             }
@@ -280,7 +332,9 @@ export class GlyphProperties extends EezObject {
             return 0;
         }
 
-        return getPixel(this.glyphBitmap, x, y);
+        let font = this.getFont();
+
+        return getPixel(this.glyphBitmap, x, y, font.bpp);
     }
 
     @computed
@@ -406,10 +460,16 @@ export class GlyphProperties extends EezObject {
 
         // draw pixels
         if (this.glyphBitmap) {
-            ctx.fillStyle = GLYPH_EDITOR_PIXEL_COLOR;
+            ctx.fillStyle = "black";
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
-                    if (this.getPixel(x, y)) {
+                    const pixelValue = getPixel(this.glyphBitmap, x, y, font.bpp);
+
+                    if (font.bpp === 8) {
+                        ctx.globalAlpha = pixelValue / 255;
+                    }
+
+                    if (pixelValue) {
                         ctx.beginPath();
                         ctx.rect(
                             (x + xOffset) * GLYPH_EDITOR_PIXEL_SIZE,

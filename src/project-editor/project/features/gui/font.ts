@@ -31,19 +31,19 @@ export function getData(font: FontProperties) {
     Note: byte 0 == 255 indicates empty glyph
     */
 
-    let min = _minBy(font.glyphs, g => g.encoding);
-    let startEncoding = (min && min.encoding) || 32;
-    let max = _maxBy(font.glyphs, g => g.encoding);
-    let endEncoding = (max && max.encoding) || 127;
+    const min = _minBy(font.glyphs, g => g.encoding);
+    const startEncoding = (min && min.encoding) || 32;
+    const max = _maxBy(font.glyphs, g => g.encoding);
+    const endEncoding = (max && max.encoding) || 127;
 
-    let data: number[] = [];
+    const data: number[] = [];
 
     function add(...values: number[]) {
-        for (let i = 0; i < values.length; i++) {
-            if (values[i] < 0) {
-                data.push(256 + values[i]);
+        for (const value of values) {
+            if (value < 0) {
+                data.push(256 + value);
             } else {
-                data.push(values[i]);
+                data.push(value);
             }
         }
     }
@@ -60,12 +60,12 @@ export function getData(font: FontProperties) {
         }
 
         for (let i = startEncoding; i <= endEncoding; i++) {
-            let offsetIndex = 4 + (i - startEncoding) * 2;
-            let offset = data.length;
+            const offsetIndex = 4 + (i - startEncoding) * 2;
+            const offset = data.length;
             data[offsetIndex] = offset >> 8;
             data[offsetIndex + 1] = offset & 0xff;
 
-            let glyph = font.glyphs[i - 32];
+            const glyph = font.glyphs[i - 32];
 
             if (glyph && glyph.pixelArray) {
                 add(glyph.dx);

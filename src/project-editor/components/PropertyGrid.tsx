@@ -203,7 +203,8 @@ export class ConfigurationReferencesPropertyValue extends React.Component<
 
 @observer
 class CodeEditorProperty extends React.Component<PropertyProps, {}> {
-    @observable value: string = this.getValue();
+    @observable
+    value: string = this.getValue();
     editor: CodeEditor;
 
     getValue(props?: PropertyProps) {
@@ -341,6 +342,10 @@ class Property extends React.Component<PropertyProps, {}> {
     }
 
     changeValue(newValue: any) {
+        if (this.props.propertyMetaData.readOnlyInPropertyGrid) {
+            return;
+        }
+
         this.setState({
             value: newValue != undefined ? newValue : ""
         });
@@ -359,6 +364,12 @@ class Property extends React.Component<PropertyProps, {}> {
             } else {
                 this.changeValue([]);
             }
+        } else if (this.props.propertyMetaData.type === "enum") {
+            const id = target.value.toString();
+            const enumItem = this.props.propertyMetaData.enumItems!.find(
+                enumItem => enumItem.id.toString() === id
+            );
+            this.changeValue(enumItem!.id);
         } else {
             this.changeValue(target.type === "checkbox" ? target.checked : target.value);
         }
@@ -438,6 +449,10 @@ class Property extends React.Component<PropertyProps, {}> {
     }
 
     render() {
+        if (this.props.propertyMetaData.readOnlyInPropertyGrid) {
+            return <input type="text" className="form-control" value={this.value} readOnly />;
+        }
+
         if (this.props.propertyMetaData.type == "string" && this.props.propertyMetaData.unique) {
             return (
                 <div className="input-group">
@@ -502,9 +517,10 @@ class Property extends React.Component<PropertyProps, {}> {
 
             if (this.props.propertyMetaData.enumItems) {
                 options = this.props.propertyMetaData.enumItems.map(enumItem => {
+                    const id = enumItem.id.toString();
                     return (
-                        <option key={enumItem.id} value={enumItem.id}>
-                            {humanize(enumItem.id)}
+                        <option key={id} value={id}>
+                            {humanize(id)}
                         </option>
                     );
                 });
@@ -730,11 +746,13 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
                             />
                         </td>
                         <td>
-                            <PropertyMenu
-                                propertyMetaData={propertyMetaData}
-                                object={object}
-                                updateObject={this.updateObject}
-                            />
+                            {!propertyMetaData.readOnlyInPropertyGrid && (
+                                <PropertyMenu
+                                    propertyMetaData={propertyMetaData}
+                                    object={object}
+                                    updateObject={this.updateObject}
+                                />
+                            )}
                         </td>
                     </tr>
                 );

@@ -226,18 +226,32 @@ LAYOUT
     }
 }
 
-.horizontalSplitter {
-    position: absolute;
-    box-sizing: border-box;
-    width: 4px;
-    cursor: ew-resize;
-}
-
+.horizontalSplitter,
 .verticalSplitter {
     position: absolute;
     box-sizing: border-box;
-    height: 4px;
+    background-color: @splitter-background-color;
+    background-repeat: no-repeat;
+    background-position: center center;
+    &:hover {
+        background-color: @splitter-hover-color;
+    }
+}
+
+.horizontalSplitter {
+    width: 8px;
+    cursor: ew-resize;
+    background-image: url(../../shared/_images/splitter_horizontal_thumb.png);
+    border-left: 1px solid @splitter-border-color;
+    border-right: 1px solid @splitter-border-color;
+}
+
+.verticalSplitter {
+    height: 8px;
     cursor: ns-resize;
+    background-image: url(../../shared/_images/splitter_vertical_thumb.png);
+    border-top: 1px solid @splitter-border-color;
+    border-bottom: 1px solid @splitter-border-color;
 }
 
 .layoutDetached {

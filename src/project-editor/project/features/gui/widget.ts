@@ -78,14 +78,22 @@ export type WidgetParent = PageOrientationProperties | WidgetTypeProperties | Wi
 
 export class WidgetProperties extends EezObject {
     // shared properties
-    @observable type: string;
-    @observable style?: string;
-    @observable data?: string;
-    @observable action?: string;
-    @observable x: number;
-    @observable y: number;
-    @observable width: number;
-    @observable height: number;
+    @observable
+    type: string;
+    @observable
+    style?: string;
+    @observable
+    data?: string;
+    @observable
+    action?: string;
+    @observable
+    x: number;
+    @observable
+    y: number;
+    @observable
+    width: number;
+    @observable
+    height: number;
 
     @computed
     get styleObject() {
@@ -519,7 +527,8 @@ export class WidgetProperties extends EezObject {
 }
 
 export class ContainerWidgetProperties extends WidgetProperties {
-    @observable widgets: WidgetProperties[];
+    @observable
+    widgets: WidgetProperties[];
 
     check() {
         let messages: output.Message[] = [];
@@ -574,8 +583,10 @@ export class ContainerWidgetProperties extends WidgetProperties {
 }
 
 export class ListWidgetProperties extends WidgetProperties {
-    @observable itemWidget?: WidgetProperties;
-    @observable listType?: string;
+    @observable
+    itemWidget?: WidgetProperties;
+    @observable
+    listType?: string;
 
     check() {
         let messages: output.Message[] = [];
@@ -622,8 +633,10 @@ export type Position = "left" | "right" | "top" | "bottom";
 export class SelectWidgetEditorProperties extends EezObject {
     static readonly EDITOR_PADDING = 10;
 
-    @observable x: number;
-    @observable y: number;
+    @observable
+    x: number;
+    @observable
+    y: number;
 
     get parent() {
         return getParent(this) as SelectWidgetProperties;
@@ -828,8 +841,10 @@ export const selectWidgetEditorMetaData = registerMetaData({
 });
 
 export class SelectWidgetProperties extends WidgetProperties {
-    @observable widgets: WidgetProperties[];
-    @observable editor: SelectWidgetEditorProperties;
+    @observable
+    widgets: WidgetProperties[];
+    @observable
+    editor: SelectWidgetEditorProperties;
 
     check() {
         let messages: output.Message[] = [];
@@ -943,7 +958,8 @@ export class SelectWidgetProperties extends WidgetProperties {
 }
 
 export class DisplayDataWidgetProperties extends WidgetProperties {
-    @observable activeStyle?: string;
+    @observable
+    activeStyle?: string;
 
     @computed
     get activeStyleObject() {
@@ -971,8 +987,10 @@ export class DisplayDataWidgetProperties extends WidgetProperties {
 }
 
 export class TextWidgetProperties extends WidgetProperties {
-    @observable text?: string;
-    @observable ignoreLuminocity: boolean;
+    @observable
+    text?: string;
+    @observable
+    ignoreLuminocity: boolean;
 
     check() {
         let messages: output.Message[] = [];
@@ -986,7 +1004,8 @@ export class TextWidgetProperties extends WidgetProperties {
 }
 
 export class MultilineTextWidgetProperties extends WidgetProperties {
-    @observable text?: string;
+    @observable
+    text?: string;
 
     check() {
         let messages: output.Message[] = [];
@@ -1000,8 +1019,10 @@ export class MultilineTextWidgetProperties extends WidgetProperties {
 }
 
 export class RectangleWidgetProperties extends WidgetProperties {
-    @observable ignoreLuminocity: boolean;
-    @observable invertColors: boolean;
+    @observable
+    ignoreLuminocity: boolean;
+    @observable
+    invertColors: boolean;
 
     check() {
         let messages: output.Message[] = [];
@@ -1015,30 +1036,41 @@ export class RectangleWidgetProperties extends WidgetProperties {
 }
 
 export class BitmapWidgetProperties extends WidgetProperties {
-    @observable bitmap?: string;
+    @observable
+    bitmap?: string;
 
     check() {
         let messages: output.Message[] = [];
 
-        if (this.data) {
-            messages.push(output.propertySetButNotUsedMessage(this, "data"));
-        }
-
-        if (this.bitmap) {
-            let bitmapIndex = findBitmapIndex(this.bitmap);
-            if (bitmapIndex == -1) {
-                messages.push(output.propertyNotFoundMessage(this, "bitmap"));
-            } else if (bitmapIndex >= 255) {
+        if (!this.data && !this.bitmap) {
+            messages.push(
+                new output.Message(output.Type.ERROR, "Either bitmap or data must be set", this)
+            );
+        } else {
+            if (this.data && this.bitmap) {
                 messages.push(
                     new output.Message(
                         output.Type.ERROR,
-                        "Bitmap ignored",
-                        getChildOfObject(this, "bitmap")
+                        "Both bitmap and data set, only bitmap is used",
+                        this
                     )
                 );
             }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "bitmap"));
+
+            if (this.bitmap) {
+                let bitmapIndex = findBitmapIndex(this.bitmap);
+                if (bitmapIndex == -1) {
+                    messages.push(output.propertyNotFoundMessage(this, "bitmap"));
+                } else if (bitmapIndex >= 255) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Bitmap ignored",
+                            getChildOfObject(this, "bitmap")
+                        )
+                    );
+                }
+            }
         }
 
         return super.check().concat(messages);
@@ -1046,9 +1078,12 @@ export class BitmapWidgetProperties extends WidgetProperties {
 }
 
 export class ButtonWidgetProperties extends WidgetProperties {
-    @observable text?: string;
-    @observable enabled?: string;
-    @observable disabledStyle?: string;
+    @observable
+    text?: string;
+    @observable
+    enabled?: string;
+    @observable
+    disabledStyle?: string;
 
     @computed
     get disabledStyleObject() {
@@ -1095,8 +1130,10 @@ export class ButtonWidgetProperties extends WidgetProperties {
 }
 
 export class ToggleButtonWidgetProperties extends WidgetProperties {
-    @observable text1?: string;
-    @observable text2?: string;
+    @observable
+    text1?: string;
+    @observable
+    text2?: string;
 
     check() {
         let messages: output.Message[] = [];
@@ -1130,9 +1167,12 @@ export class ButtonGroupWidgetProperties extends WidgetProperties {
 }
 
 export class ScaleWidgetProperties extends WidgetProperties {
-    @observable needlePosition: string;
-    @observable needleWidth: number;
-    @observable needleHeight: number;
+    @observable
+    needlePosition: string;
+    @observable
+    needleWidth: number;
+    @observable
+    needleHeight: number;
 
     check() {
         let messages: output.Message[] = [];
@@ -1146,12 +1186,18 @@ export class ScaleWidgetProperties extends WidgetProperties {
 }
 
 export class BarGraphWidgetProperties extends WidgetProperties {
-    @observable orientation?: string;
-    @observable textStyle?: string;
-    @observable line1Data?: string;
-    @observable line1Style?: string;
-    @observable line2Data?: string;
-    @observable line2Style?: string;
+    @observable
+    orientation?: string;
+    @observable
+    textStyle?: string;
+    @observable
+    line1Data?: string;
+    @observable
+    line1Style?: string;
+    @observable
+    line2Data?: string;
+    @observable
+    line2Style?: string;
 
     @computed
     get textStyleObject() {
@@ -1245,9 +1291,12 @@ export class BarGraphWidgetProperties extends WidgetProperties {
 }
 
 export class YTGraphWidgetProperties extends WidgetProperties {
-    @observable y1Style?: string;
-    @observable y2Data?: string;
-    @observable y2Style?: string;
+    @observable
+    y1Style?: string;
+    @observable
+    y2Data?: string;
+    @observable
+    y2Style?: string;
 
     @computed
     get y1StyleObject() {
@@ -1310,9 +1359,12 @@ export class YTGraphWidgetProperties extends WidgetProperties {
 }
 
 export class UpDownWidgetProperties extends WidgetProperties {
-    @observable buttonsStyle?: string;
-    @observable downButtonText?: string;
-    @observable upButtonText?: string;
+    @observable
+    buttonsStyle?: string;
+    @observable
+    downButtonText?: string;
+    @observable
+    upButtonText?: string;
 
     @computed
     get buttonsStyleObject() {
@@ -1350,13 +1402,20 @@ export class UpDownWidgetProperties extends WidgetProperties {
 }
 
 export class ListGraphWidgetProperties extends WidgetProperties {
-    @observable dwellData?: string;
-    @observable y1Data?: string;
-    @observable y1Style?: string;
-    @observable y2Data?: string;
-    @observable y2Style?: string;
-    @observable cursorData?: string;
-    @observable cursorStyle?: string;
+    @observable
+    dwellData?: string;
+    @observable
+    y1Data?: string;
+    @observable
+    y1Style?: string;
+    @observable
+    y2Data?: string;
+    @observable
+    y2Style?: string;
+    @observable
+    cursorData?: string;
+    @observable
+    cursorStyle?: string;
 
     @computed
     get y1StyleObject() {
@@ -2144,7 +2203,9 @@ let _widgetTypesMap: Map<string, WidgetType> = new Map<string, WidgetType>();
 
 function getWidgetTypesMap() {
     if (!_widgetTypesMap.size) {
-        getWidgetTypes().forEach(widgetType => _widgetTypesMap.set(widgetType.id, widgetType));
+        getWidgetTypes().forEach(widgetType =>
+            _widgetTypesMap.set(widgetType.id.toString(), widgetType)
+        );
 
         (<PropertyMetaData>(
             widgetSharedProperties.find(propertyMetaData => propertyMetaData.name == "type")

@@ -15,17 +15,19 @@ import { GlyphProperties, glyphMetaData } from "project-editor/project/features/
 import { FontEditor } from "project-editor/project/features/gui/FontEditor";
 import { loadFontFromFile } from "project-editor/project/features/gui/fontsService";
 
-let path = EEZStudio.electron.remote.require("path");
+const path = EEZStudio.electron.remote.require("path");
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class FontSourceProperties extends EezObject {
-    @observable filePath: string;
-    @observable size?: number;
+    @observable
+    filePath: string;
+    @observable
+    size?: number;
 }
 
 export const fontSourceMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
+    getClass: (jsObject: any) => {
         return FontSourceProperties;
     },
     className: "FontSource",
@@ -55,18 +57,28 @@ export const fontSourceMetaData = registerMetaData({
 ////////////////////////////////////////////////////////////////////////////////
 
 export class FontProperties extends EezObject {
-    @observable name: string;
-    @observable description?: string;
-    @observable source?: FontSourceProperties;
-    @observable height: number;
-    @observable ascent: number;
-    @observable descent: number;
-    @observable screenOrientation: string;
-    @observable glyphs: GlyphProperties[];
+    @observable
+    name: string;
+    @observable
+    description?: string;
+    @observable
+    source?: FontSourceProperties;
+    @observable
+    bpp: number;
+    @observable
+    height: number;
+    @observable
+    ascent: number;
+    @observable
+    descent: number;
+    @observable
+    screenOrientation: string;
+    @observable
+    glyphs: GlyphProperties[];
 }
 
 export const fontMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
+    getClass: (jsObject: any) => {
         return FontProperties;
     },
     className: "Font",
@@ -87,6 +99,13 @@ export const fontMetaData = registerMetaData({
             name: "source",
             type: "object",
             typeMetaData: fontSourceMetaData
+        },
+        {
+            name: "bpp",
+            type: "enum",
+            enumItems: [{ id: 1 }, { id: 8 }],
+            defaultValue: 1,
+            readOnlyInPropertyGrid: true
         },
         {
             name: "height",
@@ -131,17 +150,13 @@ export const fontMetaData = registerMetaData({
             return isFont(obj) && path.extname(getProperty(obj, "filePath")) != ".bdf";
         }
 
+        function isNonBdfFontAnd1BitPerPixel(obj: EezObject) {
+            return isNonBdfFont(obj) && getProperty(obj, "bpp") === 1;
+        }
+
         function isCreateGlyphs(obj: EezObject) {
             return isFont(obj) && getProperty(obj, "createGlyphs");
         }
-
-        const obj = {
-            size: 14,
-            threshold: 128,
-            fromGlyph: 32,
-            toGlyph: 127,
-            createBlankGlyphs: false
-        };
 
         return showGenericDialog({
             dialogDefinition: {
@@ -150,7 +165,7 @@ export const fontMetaData = registerMetaData({
                     {
                         name: "name",
                         type: "string",
-                        validators: [validators.required, validators.unique(obj, parent)]
+                        validators: [validators.required, validators.unique(undefined, parent)]
                     },
                     {
                         name: "filePath",
@@ -164,6 +179,12 @@ export const fontMetaData = registerMetaData({
                         }
                     },
                     {
+                        name: "bpp",
+                        displayName: "Bits per pixel",
+                        type: "enum",
+                        enumItems: [1, 8]
+                    },
+                    {
                         name: "size",
                         type: "number",
                         visible: isNonBdfFont
@@ -171,7 +192,7 @@ export const fontMetaData = registerMetaData({
                     {
                         name: "threshold",
                         type: "number",
-                        visible: isNonBdfFont
+                        visible: isNonBdfFontAnd1BitPerPixel
                     },
                     {
                         name: "createGlyphs",
@@ -195,12 +216,20 @@ export const fontMetaData = registerMetaData({
                     }
                 ]
             },
-            values: obj
+            values: {
+                size: 14,
+                bpp: 1,
+                threshold: 128,
+                fromGlyph: 32,
+                toGlyph: 127,
+                createBlankGlyphs: false
+            }
         }).then(result => {
             if (result.values.filePath) {
                 return loadFontFromFile(
                     result.values.name,
                     result.values.filePath,
+                    result.values.bpp,
                     result.values.size,
                     result.values.threshold,
                     result.values.createGlyphs,
@@ -209,14 +238,15 @@ export const fontMetaData = registerMetaData({
                     result.values.createBlankGlyphs
                 );
             } else {
-                return <any>{
+                return {
                     name: result.values.name,
+                    bpp: 1,
                     ascent: 0,
                     descent: 0,
                     height: 0,
                     screenOrientation: "all",
                     glyphs: []
-                };
+                } as any;
             }
         });
     },
