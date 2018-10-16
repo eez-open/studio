@@ -135,7 +135,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     communicationInterface: CommunicationInterface | undefined;
     disposer: any;
     notifySource: any;
-    wasConnected = false;
+    private wasConnected = false;
     connectedStartTime: number;
     data: string | undefined;
     idnExpected: boolean;

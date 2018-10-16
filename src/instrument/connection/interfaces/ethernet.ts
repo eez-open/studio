@@ -74,8 +74,8 @@ export class EthernetInterface implements CommunicationInterface {
             this.socket.unref();
             this.socket.removeAllListeners();
             this.socket = undefined;
+            this.host.disconnected();
         }
-        this.host.disconnected();
     }
 
     write(data: string) {
