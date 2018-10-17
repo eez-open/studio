@@ -347,7 +347,7 @@ export function addScript(src: string) {
 }
 
 export function addCssStylesheet(id: string, href: string) {
-    if (!document.getElementById(id)) {
+    if (!document.getElementById(id) && document.head) {
         let link = document.createElement("link");
         link.id = id;
         link.rel = "stylesheet";
