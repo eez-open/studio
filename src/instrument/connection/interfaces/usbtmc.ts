@@ -818,6 +818,8 @@ export class Instrument {
                         data
                     } = this.unpack_dev_dep_resp_header(resp));
 
+                    console.log(msgid, btag, btaginverse);
+
                     if (this.rigol_quirk) {
                         // rigol devices only send the header in the first packet, and they lie about whether the transaction is complete
                         if (read_data.length > 0) {

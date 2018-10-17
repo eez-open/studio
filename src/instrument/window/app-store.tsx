@@ -176,10 +176,12 @@ export class InstrumentAppStore implements IEditor {
 
     @bind
     onDeleteShortcut() {
-        if ($(document.activeElement).hasClass("EezStudio_History_Container")) {
-            this.history.deleteSelectedHistoryItems();
-        } else if ($(document.activeElement).hasClass("EezStudio_DeletedHistory_Container")) {
-            this.deletedItemsHistory.deleteSelectedHistoryItems();
+        if (document.activeElement) {
+            if ($(document.activeElement).hasClass("EezStudio_History_Container")) {
+                this.history.deleteSelectedHistoryItems();
+            } else if ($(document.activeElement).hasClass("EezStudio_DeletedHistory_Container")) {
+                this.deletedItemsHistory.deleteSelectedHistoryItems();
+            }
         }
     }
 

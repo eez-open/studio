@@ -30,7 +30,7 @@ export function drawWithWorker(
 
         const offScreenCanvas = canvas.transferControlToOffscreen();
         worker.postMessage({ canvasId: canvasToWorkerElement.canvasId, canvas: offScreenCanvas }, [
-            offScreenCanvas
+            offScreenCanvas as any
         ]);
     } else {
         worker = workers[canvasToWorkerElement.workerIndex];
