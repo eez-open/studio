@@ -588,11 +588,11 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         this.outsideChangeInXRulersSubscriptionDisposer = autorun(() => {
             const x1 = this.props.chartsController.xAxisController.unit.formatValue(
                 this.rulersModel.x1,
-                4
+                10
             );
             const x2 = this.props.chartsController.xAxisController.unit.formatValue(
                 this.rulersModel.x2,
-                4
+                10
             );
             if (!this.isInsideChange) {
                 runInAction(() => {
@@ -832,7 +832,7 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                                                 className="form-control"
                                                 value={this.props.chartsController.xAxisController.unit.formatValue(
                                                     this.rulersModel.x2 - this.rulersModel.x1,
-                                                    4
+                                                    10
                                                 )}
                                                 readOnly={true}
                                             />
