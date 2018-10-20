@@ -18,7 +18,10 @@ interface ExtensionImplementation {
         metaData: MetaData;
         create: () => any;
         check?: (object: EezObject) => Message[];
-        build?: (project: ProjectProperties) => Promise<BuildResult>;
+        build?: (
+            project: ProjectProperties,
+            sectionNames: string[] | undefined
+        ) => Promise<BuildResult>;
         collectExtensionDefinitions?: (
             project: ProjectProperties,
             extensionDefinition: ExtensionDefinitionProperties,

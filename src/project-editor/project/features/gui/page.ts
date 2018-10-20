@@ -31,12 +31,18 @@ import { PageEditor } from "project-editor/project/features/gui/PageEditor";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class PageOrientationProperties extends EezObject {
-    @observable x: number;
-    @observable y: number;
-    @observable width: number;
-    @observable height: number;
-    @observable style?: string;
-    @observable widgets: WidgetProperties[];
+    @observable
+    x: number;
+    @observable
+    y: number;
+    @observable
+    width: number;
+    @observable
+    height: number;
+    @observable
+    style?: string;
+    @observable
+    widgets: WidgetProperties[];
 
     @computed
     get boundingRect() {
@@ -121,11 +127,18 @@ export const pageOrientationMetaData = registerMetaData({
 ////////////////////////////////////////////////////////////////////////////////
 
 export class PageProperties extends EezObject {
-    @observable name: string;
-    @observable description?: string;
-    @observable portrait: PageOrientationProperties;
-    @observable landscape: PageOrientationProperties;
-    @observable closePageIfTouchedOutside: boolean;
+    @observable
+    name: string;
+    @observable
+    description?: string;
+    @observable
+    portrait: PageOrientationProperties;
+    @observable
+    landscape: PageOrientationProperties;
+    @observable
+    closePageIfTouchedOutside: boolean;
+    @observable
+    usedIn: string[] | undefined;
 }
 
 export interface IWidgetContainerDisplayItem extends DisplayItem {
@@ -259,10 +272,13 @@ export class PageOrientationState {
 export class PageTabState {
     pageProperties: PageProperties;
 
-    @observable selectedScreenOrientation: string;
+    @observable
+    selectedScreenOrientation: string;
 
-    @observable portraitState: PageOrientationState;
-    @observable landscapeState: PageOrientationState;
+    @observable
+    portraitState: PageOrientationState;
+    @observable
+    landscapeState: PageOrientationState;
 
     constructor(object: EezObject) {
         this.pageProperties = object as PageProperties;
@@ -375,6 +391,10 @@ export const pageMetaData = registerMetaData({
         {
             name: "closePageIfTouchedOutside",
             type: "boolean"
+        },
+        {
+            name: "usedIn",
+            type: "configuration-references"
         }
     ],
     newItem: (parent: EezObject) => {

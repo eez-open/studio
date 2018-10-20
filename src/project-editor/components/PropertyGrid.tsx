@@ -449,11 +449,13 @@ class Property extends React.Component<PropertyProps, {}> {
     }
 
     render() {
-        if (this.props.propertyMetaData.readOnlyInPropertyGrid) {
+        const propertyMetaData = this.props.propertyMetaData;
+
+        if (propertyMetaData.readOnlyInPropertyGrid) {
             return <input type="text" className="form-control" value={this.value} readOnly />;
         }
 
-        if (this.props.propertyMetaData.type == "string" && this.props.propertyMetaData.unique) {
+        if (propertyMetaData.type == "string" && propertyMetaData.unique) {
             return (
                 <div className="input-group">
                     <input
@@ -474,7 +476,7 @@ class Property extends React.Component<PropertyProps, {}> {
                     </div>
                 </div>
             );
-        } else if (this.props.propertyMetaData.type == "multiline-text") {
+        } else if (propertyMetaData.type == "multiline-text") {
             return (
                 <textarea
                     ref="textarea"
@@ -484,11 +486,11 @@ class Property extends React.Component<PropertyProps, {}> {
                     style={{ resize: "none" }}
                 />
             );
-        } else if (this.props.propertyMetaData.type == "json") {
+        } else if (propertyMetaData.type == "json") {
             return <CodeEditorProperty {...this.props} />;
-        } else if (this.props.propertyMetaData.type == "object") {
-            let value = getPropertyAsString(this.props.object, this.props.propertyMetaData);
-            if (this.props.propertyMetaData.onSelect) {
+        } else if (propertyMetaData.type == "object") {
+            let value = getPropertyAsString(this.props.object, propertyMetaData);
+            if (propertyMetaData.onSelect) {
                 return (
                     <div className="input-group" title={value}>
                         <input
@@ -512,11 +514,11 @@ class Property extends React.Component<PropertyProps, {}> {
             } else {
                 return <input type="text" className="form-control" value={value} readOnly />;
             }
-        } else if (this.props.propertyMetaData.type == "enum") {
+        } else if (propertyMetaData.type == "enum") {
             let options: JSX.Element[];
 
-            if (this.props.propertyMetaData.enumItems) {
-                options = this.props.propertyMetaData.enumItems.map(enumItem => {
+            if (propertyMetaData.enumItems) {
+                options = propertyMetaData.enumItems.map(enumItem => {
                     const id = enumItem.id.toString();
                     return (
                         <option key={id} value={id}>
@@ -540,7 +542,7 @@ class Property extends React.Component<PropertyProps, {}> {
                     {options}
                 </select>
             );
-        } else if (this.props.propertyMetaData.type == "image") {
+        } else if (propertyMetaData.type == "image") {
             return (
                 <div>
                     <div className="input-group">
@@ -574,7 +576,7 @@ class Property extends React.Component<PropertyProps, {}> {
                     )}
                 </div>
             );
-        } else if (this.props.propertyMetaData.type == "project-relative-folder") {
+        } else if (propertyMetaData.type == "project-relative-folder") {
             let clearButton: JSX.Element | undefined;
 
             if (this.value !== undefined) {
@@ -606,13 +608,11 @@ class Property extends React.Component<PropertyProps, {}> {
                     </div>
                 </div>
             );
-        } else if (this.props.propertyMetaData.type == "object-reference") {
+        } else if (propertyMetaData.type == "object-reference") {
             let objects: EezObject[] = [];
 
-            if (this.props.propertyMetaData.referencedObjectCollectionPath) {
-                objects = getObjectFromPath(
-                    this.props.propertyMetaData.referencedObjectCollectionPath
-                ) as any;
+            if (propertyMetaData.referencedObjectCollectionPath) {
+                objects = getObjectFromPath(propertyMetaData.referencedObjectCollectionPath) as any;
                 if (!objects) {
                     objects = [];
                 }
@@ -646,18 +646,26 @@ class Property extends React.Component<PropertyProps, {}> {
                     {options}
                 </select>
             );
-        } else if (this.props.propertyMetaData.type == "configuration-references") {
+        } else if (propertyMetaData.type == "configuration-references") {
             return (
                 <ConfigurationReferencesPropertyValue
                     value={this.value}
                     onChange={value => this.changeValue(value)}
                 />
             );
-        } else if (this.props.propertyMetaData.type == "boolean") {
+        } else if (propertyMetaData.type == "boolean") {
             return (
-                <input ref="input" type="checkbox" checked={this.value} onChange={this.onChange} />
+                <label>
+                    <input
+                        ref="input"
+                        type="checkbox"
+                        checked={this.value}
+                        onChange={this.onChange}
+                    />
+                    {" " + (propertyMetaData.displayName || humanize(propertyMetaData.name))}
+                </label>
             );
-        } else if (this.props.propertyMetaData.type == "guid") {
+        } else if (propertyMetaData.type == "guid") {
             return (
                 <div className="input-group">
                     <input
@@ -683,7 +691,7 @@ class Property extends React.Component<PropertyProps, {}> {
             return (
                 <input
                     ref="input"
-                    type={this.props.propertyMetaData.type}
+                    type={propertyMetaData.type}
                     className="form-control"
                     value={this.value}
                     onChange={this.onChange}
@@ -732,19 +740,42 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
 
         for (let propertyMetaData of getObjectPropertiesMetaData(object)) {
             if (!isArray(object) && !propertyMetaData.hideInPropertyGrid) {
-                properties.push(
-                    <tr
-                        className={propertyMetaData.name == markedPropertyName ? "marked" : ""}
-                        key={propertyMetaData.name}
-                    >
-                        <td>{propertyMetaData.displayName || humanize(propertyMetaData.name)}</td>
-                        <td>
+                const colSpan = propertyMetaData.type == "boolean";
+
+                let property;
+                if (colSpan) {
+                    property = (
+                        <td colSpan={2}>
                             <Property
                                 propertyMetaData={propertyMetaData}
                                 object={object}
                                 updateObject={this.updateObject}
                             />
                         </td>
+                    );
+                } else {
+                    property = (
+                        <React.Fragment>
+                            <td>
+                                {propertyMetaData.displayName || humanize(propertyMetaData.name)}
+                            </td>
+                            <td>
+                                <Property
+                                    propertyMetaData={propertyMetaData}
+                                    object={object}
+                                    updateObject={this.updateObject}
+                                />
+                            </td>
+                        </React.Fragment>
+                    );
+                }
+
+                properties.push(
+                    <tr
+                        className={propertyMetaData.name == markedPropertyName ? "marked" : ""}
+                        key={propertyMetaData.name}
+                    >
+                        {property}
                         <td>
                             {!propertyMetaData.readOnlyInPropertyGrid && (
                                 <PropertyMenu

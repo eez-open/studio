@@ -17,5 +17,5 @@
     "search.exclude": {},
     "editor.formatOnSave": true,
     "typescript.reportStyleChecksAsWarnings": false,
-    "typescript.autoImportSuggestions.enabled": false
+    "typescript.suggest.autoImports": true
 }

@@ -9,12 +9,12 @@ export function getData(font: FontProperties) {
     Font header:
 
     offset
-    0           ascent              unsigned
-    1           descent             unsigned
-    2           encoding start      unsigned
-    3           encoding end        unsigned
-    4           1st encoding offset unsigned word
-    6           2nd encoding offset unsigned word
+    0           ascent              uint8
+    1           descent             uint8
+    2           encoding start      uint8
+    3           encoding end        uint8
+    4           1st encoding offset uint16 BE (1 bpp) | uint32 LE (8 bpp)
+    6           2nd encoding offset uint16 BE (1 bpp) | uint32 LE (8 bpp)
     ...
     */
 
@@ -22,11 +22,11 @@ export function getData(font: FontProperties) {
     Glyph header:
 
     offset
-    0             DWIDTH                    signed
-    1             BBX width                 unsigned
-    2             BBX height                unsigned
-    3             BBX xoffset               signed
-    4             BBX yoffset               signed
+    0             DWIDTH                    int8
+    1             BBX width                 uint8
+    2             BBX height                uint8
+    3             BBX xoffset               int8
+    4             BBX yoffset               int8
 
     Note: byte 0 == 255 indicates empty glyph
     */
@@ -55,15 +55,31 @@ export function getData(font: FontProperties) {
         add(endEncoding);
 
         for (let i = startEncoding; i <= endEncoding; i++) {
-            add(0);
-            add(0);
+            if (font.bpp === 8) {
+                add(0);
+                add(0);
+                add(0);
+                add(0);
+            } else {
+                add(0);
+                add(0);
+            }
         }
 
         for (let i = startEncoding; i <= endEncoding; i++) {
-            const offsetIndex = 4 + (i - startEncoding) * 2;
+            const offsetIndex = 4 + (i - startEncoding) * (font.bpp === 8 ? 4 : 2);
             const offset = data.length;
-            data[offsetIndex] = offset >> 8;
-            data[offsetIndex + 1] = offset & 0xff;
+            if (font.bpp === 8) {
+                // uint32 LE
+                data[offsetIndex + 0] = offset & 0xff;
+                data[offsetIndex + 1] = (offset >> 8) & 0xff;
+                data[offsetIndex + 2] = (offset >> 16) & 0xff;
+                data[offsetIndex + 3] = offset >> 24;
+            } else {
+                // uint16 BE
+                data[offsetIndex + 0] = offset >> 8;
+                data[offsetIndex + 1] = offset & 0xff;
+            }
 
             const glyph = font.glyphs[i - 32];
 

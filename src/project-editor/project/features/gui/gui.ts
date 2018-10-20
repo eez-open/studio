@@ -28,12 +28,18 @@ import { GuiNavigation } from "project-editor/project/features/gui/GuiNavigation
 ////////////////////////////////////////////////////////////////////////////////
 
 export class GuiProperties extends EezObject {
-    @observable storyboard: StoryboardProperties;
-    @observable pages: PageProperties[];
-    @observable widgets: WidgetTypeProperties[];
-    @observable styles: StyleProperties[];
-    @observable fonts: FontProperties[];
-    @observable bitmaps: BitmapProperties[];
+    @observable
+    storyboard: StoryboardProperties;
+    @observable
+    pages: PageProperties[];
+    @observable
+    widgets: WidgetTypeProperties[];
+    @observable
+    styles: StyleProperties[];
+    @observable
+    fonts: FontProperties[];
+    @observable
+    bitmaps: BitmapProperties[];
 }
 
 export const guiMetaData = registerMetaData({
@@ -75,11 +81,11 @@ export const guiMetaData = registerMetaData({
             check: (object: EezObject) => {
                 let messages: output.Message[] = [];
 
-                if (asArray(object).length > 255) {
+                if (asArray(object).length >= 255) {
                     messages.push(
                         new output.Message(
                             output.Type.ERROR,
-                            "Max. 255 fonts are supported",
+                            "Max. 254 fonts are supported",
                             object
                         )
                     );
@@ -96,11 +102,11 @@ export const guiMetaData = registerMetaData({
             check: (object: EezObject) => {
                 let messages: output.Message[] = [];
 
-                if (asArray(object).length > 255) {
+                if (asArray(object).length >= 255) {
                     messages.push(
                         new output.Message(
                             output.Type.ERROR,
-                            "Max. 255 bitmaps are supported",
+                            "Max. 254 bitmaps are supported",
                             object
                         )
                     );
@@ -180,18 +186,6 @@ export function findLocalWidgetType(widgetTypeName: string) {
     return undefined;
 }
 
-export function findLocalWidgetTypeIndex(widgetTypeName: string) {
-    let gui = getGui();
-    let widgetTypes = (gui && gui.widgets) || [];
-    for (let i = 0; i < widgetTypes.length; i++) {
-        let widgetType = widgetTypes[i];
-        if (widgetType.name == widgetTypeName) {
-            return i;
-        }
-    }
-    return -1;
-}
-
 export function findStyle(styleName: any) {
     let gui = getGui();
     let styles = (gui && gui.styles) || [];
@@ -208,29 +202,6 @@ export function findStyleOrGetDefault(styleName: any) {
     return findStyle(styleName) || getDefaultStyle();
 }
 
-export function findStyleIndex(styleName: any) {
-    let gui = getGui();
-    let styles = (gui && gui.styles) || [];
-    for (let i = 0; i < styles.length; i++) {
-        let style = styles[i];
-        if (style.name == styleName) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-export function findFontIndex(fontName: any) {
-    let gui = getGui();
-    let fonts = (gui && gui.fonts) || [];
-    for (let i = 0; i < fonts.length; i++) {
-        if (fonts[i].name == fontName) {
-            return i;
-        }
-    }
-    return -1;
-}
-
 export function findFont(fontName: any) {
     let gui = getGui();
     let fonts = (gui && gui.fonts) || [];
@@ -241,17 +212,6 @@ export function findFont(fontName: any) {
         }
     }
     return undefined;
-}
-
-export function findBitmapIndex(bitmapName: any) {
-    let gui = getGui();
-    let bitmaps = (gui && gui.bitmaps) || [];
-    for (let i = 0; i < bitmaps.length; i++) {
-        if (bitmaps[i].name == bitmapName) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 export function findBitmap(bitmapName: any) {

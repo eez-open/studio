@@ -17,14 +17,22 @@ import { metrics } from "project-editor/project/features/data/metrics";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DataItemProperties extends EezObject {
-    @observable name: string;
-    @observable description?: string;
-    @observable type: "integer" | "float" | "boolean" | "string" | "enum" | "list";
-    @observable enumItems: string;
-    @observable defaultValue: string;
-    @observable defaultValueList: string;
-    @observable defaultMinValue: number;
-    @observable defaultMaxValue: number;
+    @observable
+    name: string;
+    @observable
+    description?: string;
+    @observable
+    type: "integer" | "float" | "boolean" | "string" | "enum" | "list";
+    @observable
+    enumItems: string;
+    @observable
+    defaultValue: string;
+    @observable
+    defaultValueList: string;
+    @observable
+    defaultMinValue: number;
+    @observable
+    defaultMaxValue: number;
 }
 
 export const dataItemMetaData = registerMetaData({
@@ -128,11 +136,11 @@ registerFeatureImplementation("data", {
         check: (object: EezObject) => {
             let messages: output.Message[] = [];
 
-            if (asArray(object).length > 255) {
+            if (asArray(object).length >= 255) {
                 messages.push(
                     new output.Message(
                         output.Type.ERROR,
-                        "Max. 255 data items are supported",
+                        "Max. 254 data items are supported",
                         object
                     )
                 );

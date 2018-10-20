@@ -33,7 +33,7 @@ import { findActionIndex } from "project-editor/project/features/action/action";
 
 import { GeometryProperties, ObjectGeometryChange } from "project-editor/components/CanvasEditor";
 
-import { findStyle, findBitmapIndex, GuiProperties } from "project-editor/project/features/gui/gui";
+import { findStyle, findBitmap, GuiProperties } from "project-editor/project/features/gui/gui";
 import { PageOrientationProperties } from "project-editor/project/features/gui/page";
 import {
     widgetTypeMetaData,
@@ -1058,17 +1058,9 @@ export class BitmapWidgetProperties extends WidgetProperties {
             }
 
             if (this.bitmap) {
-                let bitmapIndex = findBitmapIndex(this.bitmap);
-                if (bitmapIndex == -1) {
+                let bitmap = findBitmap(this.bitmap);
+                if (!bitmap) {
                     messages.push(output.propertyNotFoundMessage(this, "bitmap"));
-                } else if (bitmapIndex >= 255) {
-                    messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
-                            "Bitmap ignored",
-                            getChildOfObject(this, "bitmap")
-                        )
-                    );
                 }
             }
         }

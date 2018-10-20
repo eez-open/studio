@@ -43,10 +43,17 @@ function buildScpiCommandsDecl(project: ProjectProperties) {
     return `#define SCPI_COMMANDS \\\n${commands.join(" \\\n")}`;
 }
 
-export function build(project: ProjectProperties): Promise<BuildResult> {
+export function build(
+    project: ProjectProperties,
+    sectionNames: string[] | undefined
+): Promise<BuildResult> {
     return new Promise((resolve, reject) => {
-        resolve({
-            SCPI_COMMANDS_DECL: buildScpiCommandsDecl(project)
-        });
+        const result: any = {};
+
+        if (!sectionNames || sectionNames.indexOf("SCPI_COMMANDS_DECL") !== -1) {
+            result.SCPI_COMMANDS_DECL = buildScpiCommandsDecl(project);
+        }
+
+        resolve(result);
     });
 }

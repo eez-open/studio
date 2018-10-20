@@ -1,4 +1,11 @@
-import { OutputSectionsStore, getParent, getProperty } from "project-editor/core/store";
+import { formatBytes } from "shared/util";
+
+import {
+    OutputSectionsStore,
+    getParent,
+    getProperty,
+    ProjectStore
+} from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 import { BuildResult } from "project-editor/core/extensions";
 
@@ -10,12 +17,16 @@ import { findActionIndex } from "project-editor/project/features/action/action";
 
 import {
     GuiProperties,
-    findLocalWidgetTypeIndex,
-    findBitmapIndex,
-    findStyleIndex
+    findLocalWidgetType,
+    findStyle,
+    findFont,
+    findBitmap
 } from "project-editor/project/features/gui/gui";
 import { getData as getFontData } from "project-editor/project/features/gui/font";
-import { getData as getBitmapData, BitmapData } from "project-editor/project/features/gui/bitmap";
+import {
+    getData as getBitmapData,
+    BitmapProperties
+} from "project-editor/project/features/gui/bitmap";
 import { StyleProperties } from "project-editor/project/features/gui/style";
 import * as Widget from "project-editor/project/features/gui/widget";
 import {
@@ -24,6 +35,7 @@ import {
 } from "project-editor/project/features/gui/page";
 import { WidgetTypeProperties } from "project-editor/project/features/gui/widgetType";
 import { findPageTransparentRectanglesInContainer } from "project-editor/project/features/gui/pageTransparentRectangles";
+import { FontProperties } from "./fontMetaData";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -70,6 +82,37 @@ const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function packRegions(regions: number[][]) {
+    let header: number[] = [];
+    let data: number[] = [];
+
+    const headerLength = 4 * regions.length;
+
+    regions.forEach(region => {
+        header = header.concat(packUInt32(headerLength + data.length));
+        data = data.concat(region);
+    });
+
+    return header.concat(data);
+}
+
+function packUInt32(value: number) {
+    return [value & 0xff, (value >> 8) & 0xff, (value >> 16) & 0xff, value >> 24];
+}
+
+function packUInt16(value: number) {
+    return [value & 0xff, value >> 8];
+}
+
+function packInt16(value: number) {
+    if (value < 0) {
+        value = 65535 + value + 1;
+    }
+    return [value & 0xff, value >> 8];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 function buildWidgetText(text: string) {
     try {
         return JSON.parse('"' + text + '"');
@@ -79,10 +122,8 @@ function buildWidgetText(text: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildGuiFontsEnum(project: ProjectProperties) {
-    let gui = getProperty(project, "gui") as GuiProperties;
-
-    let fonts = gui.fonts.map(
+function buildGuiFontsEnum(assets: Assets) {
+    let fonts = assets.fonts.map(
         font =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "FONT_ID_",
@@ -97,24 +138,26 @@ function buildGuiFontsEnum(project: ProjectProperties) {
     return `enum FontsEnum {\n${fonts.join(",\n")}\n};`;
 }
 
-function buildGuiFontsDecl(project: ProjectProperties) {
+function buildGuiFontsDecl() {
     return `extern const uint8_t *fonts[];`;
 }
 
-function buildGuiFontsDef(project: ProjectProperties) {
-    let gui = getProperty(project, "gui") as GuiProperties;
+function buildGuiFontsData(assets: Assets) {
+    return packRegions(assets.fonts.map(font => getFontData(font)));
+}
 
+function buildGuiFontsDef(assets: Assets) {
     let fontItemDataList: string[] = [];
     let fontItemList: string[] = [];
 
-    gui.fonts.forEach(font => {
+    assets.fonts.forEach(font => {
         let fontItemDataName = projectBuild.getName(
             "font_data_",
             font.name,
             projectBuild.NamingConvention.UnderscoreLowerCase
         );
 
-        let data = projectBuild.fixDataForMegaBootloader(getFontData(font), font);
+        let data = getFontData(font);
 
         let fontItemData = `const uint8_t ${fontItemDataName}[${
             data.length
@@ -142,10 +185,8 @@ function buildGuiFontsDef(project: ProjectProperties) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildGuiBitmapsEnum(project: ProjectProperties) {
-    let gui = getProperty(project, "gui") as GuiProperties;
-
-    let bitmaps = gui.bitmaps.map(
+function buildGuiBitmapsEnum(assets: Assets) {
+    let bitmaps = assets.bitmaps.map(
         bitmap =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "BITMAP_ID_",
@@ -159,92 +200,80 @@ function buildGuiBitmapsEnum(project: ProjectProperties) {
     return `enum BitmapsEnum {\n${bitmaps.join(",\n")}\n};`;
 }
 
-function buildGuiBitmapsDecl(project: ProjectProperties) {
-    return `struct Bitmap {
-            uint16_t w;
-            uint16_t h;
-            const uint8_t *pixels;
-        };
-
-        extern Bitmap bitmaps[];`.replace(/\n        /g, "\n");
+function buildGuiBitmapsDecl() {
+    return `extern Bitmap bitmaps[];`.replace(/\n        /g, "\n");
 }
 
-function buildGuiBitmapsDef(project: ProjectProperties) {
-    return new Promise<string>((resolve, reject) => {
-        let gui = getProperty(project, "gui") as GuiProperties;
-
-        if (gui.bitmaps.length === 0) {
-            resolve(`Bitmap bitmaps[] = {
-    { 0, 0, NULL }
-};`);
-            return;
-        }
-
-        let getBitmapDataPromises: Promise<BitmapData>[] = [];
-        for (let i = 0; i < gui.bitmaps.length; i++) {
-            getBitmapDataPromises.push(getBitmapData(gui.bitmaps[i]));
-        }
-
-        Promise.all(getBitmapDataPromises).then(bitmapsData => {
-            let bitmapsPixelData: string[] = [];
-            let bitmapsArray: string[] = [];
-
-            let bitmaps: {
-                name: string;
-                width: number;
-                height: number;
-                pixels: number[];
-            }[] = [];
-            for (let i = 0; i < gui.bitmaps.length; i++) {
-                bitmaps.push({
-                    name: gui.bitmaps[i].name,
-                    width: bitmapsData[i].width,
-                    height: bitmapsData[i].height,
-                    pixels: projectBuild.fixDataForMegaBootloader(
-                        bitmapsData[i].pixels,
-                        gui.bitmaps[i]
-                    )
-                });
-            }
-
-            bitmaps.forEach(bitmap => {
-                let bitmapPixelDataName = projectBuild.getName(
-                    "bitmap_pixel_data_",
-                    bitmap.name,
-                    projectBuild.NamingConvention.UnderscoreLowerCase
-                );
-                bitmapsPixelData.push(
-                    `const uint8_t ${bitmapPixelDataName}[${
-                        bitmap.pixels.length
-                    }] = {${projectBuild.dumpData(bitmap.pixels)}};`
-                );
-                bitmapsArray.push(
-                    `${projectBuild.TAB}{ ${bitmap.width}, ${
-                        bitmap.height
-                    }, ${bitmapPixelDataName} }`
-                );
-            });
-
-            resolve(
-                `// BITMAP DEFINITIONS\n\n${bitmapsPixelData.join(
-                    "\n\n"
-                )}\n\nBitmap bitmaps[] = {\n${bitmapsArray.join(",\n")}\n};`
-            );
-        });
-    });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function packUnsignedShort(value: number) {
-    return [value & 0xff, value >> 8];
-}
-
-function packSignedShort(value: number) {
-    if (value < 0) {
-        value = 65535 + value + 1;
+async function buildGuiBitmaps(assets: Assets) {
+    if (assets.bitmaps.length === 0) {
+        return null;
     }
-    return [value & 0xff, value >> 8];
+
+    let bitmaps: {
+        name: string;
+        width: number;
+        height: number;
+        pixels: number[];
+    }[] = [];
+
+    for (let i = 0; i < assets.bitmaps.length; i++) {
+        const bitmapsData = await getBitmapData(assets.bitmaps[i]);
+
+        bitmaps.push({
+            name: assets.bitmaps[i].name,
+            width: bitmapsData.width,
+            height: bitmapsData.height,
+            pixels: bitmapsData.pixels
+        });
+    }
+
+    return bitmaps;
+}
+
+async function buildGuiBitmapsDef(assets: Assets) {
+    const bitmaps = await buildGuiBitmaps(assets);
+    if (!bitmaps) {
+        return `Bitmap bitmaps[] = {
+    { 0, 0, NULL }
+};`;
+    }
+
+    let bitmapsPixelData: string[] = [];
+    let bitmapsArray: string[] = [];
+
+    bitmaps.forEach(bitmap => {
+        let bitmapPixelDataName = projectBuild.getName(
+            "bitmap_pixel_data_",
+            bitmap.name,
+            projectBuild.NamingConvention.UnderscoreLowerCase
+        );
+        bitmapsPixelData.push(
+            `const uint8_t ${bitmapPixelDataName}[${
+                bitmap.pixels.length
+            }] = {${projectBuild.dumpData(bitmap.pixels)}};`
+        );
+        bitmapsArray.push(
+            `${projectBuild.TAB}{ ${bitmap.width}, ${bitmap.height}, ${bitmapPixelDataName} }`
+        );
+    });
+
+    return `// BITMAP DEFINITIONS\n\n${bitmapsPixelData.join(
+        "\n\n"
+    )}\n\nBitmap bitmaps[] = {\n${bitmapsArray.join(",\n")}\n};`;
+}
+
+async function buildGuiBitmapsData(assets: Assets) {
+    const bitmaps = await buildGuiBitmaps(assets);
+
+    if (!bitmaps) {
+        return [];
+    }
+
+    return packRegions(
+        bitmaps.map(bitmap =>
+            [...packUInt16(bitmap.width), ...packUInt16(bitmap.height)].concat(bitmap.pixels)
+        )
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,7 +313,7 @@ class Struct extends ObjectField {
     }
 
     pack(): number[] {
-        return packUnsignedShort(this.objectOffset);
+        return packUInt16(this.objectOffset);
     }
 
     packObject(): number[] {
@@ -305,7 +334,7 @@ class ObjectPtr extends Field {
     }
 
     pack(): number[] {
-        return packUnsignedShort(this.value ? this.value.objectOffset : 0);
+        return packUInt16(this.value ? this.value.objectOffset : 0);
     }
 }
 
@@ -327,7 +356,7 @@ class ObjectList extends Field {
 
     pack(): number[] {
         return [this.items.length].concat(
-            packUnsignedShort(this.items.length > 0 ? this.items[0].objectOffset : 0)
+            packUInt16(this.items.length > 0 ? this.items[0].objectOffset : 0)
         );
     }
 }
@@ -344,7 +373,7 @@ class String extends ObjectField {
     }
 
     pack(): number[] {
-        return packUnsignedShort(this.objectOffset);
+        return packUInt16(this.objectOffset);
     }
 
     packObject(): number[] {
@@ -375,7 +404,7 @@ class UInt16 extends Field {
     }
 
     pack(): number[] {
-        return packUnsignedShort(this.value);
+        return packUInt16(this.value);
     }
 }
 
@@ -386,16 +415,20 @@ class Int16 extends Field {
     }
 
     pack(): number[] {
-        return packSignedShort(this.value);
+        return packInt16(this.value);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildGuiStylesEnum(project: ProjectProperties) {
-    let gui = getProperty(project, "gui") as GuiProperties;
+function pack(objects: ObjectField[] = []): number[] {
+    return objects.reduce((data: any, object: any) => data.concat(object.packObject()), []);
+}
 
-    let styles = gui.styles.map(
+////////////////////////////////////////////////////////////////////////////////
+
+function buildGuiStylesEnum(assets: Assets) {
+    let styles = assets.styles.map(
         style =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "STYLE_ID_",
@@ -409,16 +442,16 @@ function buildGuiStylesEnum(project: ProjectProperties) {
     return `enum StylesEnum {\n${styles.join(",\n")}\n};`;
 }
 
-function buildGuiStylesDecl(project: ProjectProperties) {
+function buildGuiStylesDecl() {
     return `extern const uint8_t styles[];`;
 }
 
-function buildGuiStylesDef(project: ProjectProperties) {
+function buildGuiStylesData(assets: Assets) {
     function buildStyle(style: StyleProperties) {
         let result = new Struct();
 
         // font
-        let fontIndex = style.fontIndex;
+        let fontIndex = style.font ? assets.getFontIndex(style.font) : -1;
         if (fontIndex == -1) {
             fontIndex = 0;
         }
@@ -486,11 +519,9 @@ function buildGuiStylesDef(project: ProjectProperties) {
     }
 
     function build() {
-        let gui = getProperty(project, "gui") as GuiProperties;
-
         let styles = new ObjectList();
 
-        gui.styles.forEach(style => {
+        assets.styles.forEach(style => {
             styles.addItem(buildStyle(style));
         });
 
@@ -518,26 +549,17 @@ function buildGuiStylesDef(project: ProjectProperties) {
         return objects;
     }
 
-    function pack(objects: ObjectField[] = []): number[] {
-        return objects.reduce((data: any, object: any) => data.concat(object.packObject()), []);
-    }
-
     let colors = new Set<number>();
 
     let document = new Struct();
     build();
     let objects = finish();
     let data = pack(objects);
+    return data;
+}
 
-    let threeExclamationsDetected = false;
-    for (let i = 2; i < data.length; i++) {
-        if (data[i - 2] == 33 && data[i - 1] == 33 && data[i] == 33) {
-            threeExclamationsDetected = true;
-        }
-    }
-    if (threeExclamationsDetected) {
-        // OutputSectionsStore.write(output.Section.OUTPUT, output.Type.ERROR, `"!!!" detected in data, not possible to fix (Arduino Mega bootloader bug).`, project);
-    }
+function buildGuiStylesDef(assets: Assets) {
+    let data = buildGuiStylesData(assets);
 
     return `// STYLES DEFINITION\nconst uint8_t styles[${data.length}] = {${projectBuild.dumpData(
         data
@@ -547,7 +569,8 @@ function buildGuiStylesDef(project: ProjectProperties) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildWidget(
-    object: Widget.WidgetProperties | PageOrientationProperties | WidgetTypeProperties
+    object: Widget.WidgetProperties | PageOrientationProperties | WidgetTypeProperties,
+    assets: Assets
 ) {
     let result = new Struct();
 
@@ -650,9 +673,9 @@ function buildWidget(
     // style
     let style: number;
     if (object.style) {
-        style = findStyleIndex(object.style);
+        style = assets.getStyleIndex(object.style);
     } else {
-        style = findStyleIndex("default");
+        style = assets.getStyleIndex("default");
     }
     style++;
     result.addField(new UInt8(style));
@@ -674,7 +697,7 @@ function buildWidget(
         let childWidgets = new ObjectList();
         if (widgets) {
             widgets.forEach(childWidget => {
-                childWidgets.addItem(buildWidget(childWidget));
+                childWidgets.addItem(buildWidget(childWidget, assets));
             });
         }
 
@@ -712,7 +735,7 @@ function buildWidget(
         let childWidgets = new ObjectList();
         if (widget.widgets) {
             widget.widgets.forEach(childWidget => {
-                childWidgets.addItem(buildWidget(childWidget));
+                childWidgets.addItem(buildWidget(childWidget, assets));
             });
         }
 
@@ -729,7 +752,7 @@ function buildWidget(
         // itemWidget
         let itemWidget: Struct | undefined;
         if (widget.itemWidget) {
-            itemWidget = buildWidget(widget.itemWidget);
+            itemWidget = buildWidget(widget.itemWidget, assets);
         } else {
             OutputSectionsStore.write(
                 output.Section.OUTPUT,
@@ -748,7 +771,7 @@ function buildWidget(
         // activeStyle
         let activeStyle: number;
         if (widget.activeStyle) {
-            activeStyle = findStyleIndex(widget.activeStyle) + 1;
+            activeStyle = assets.getStyleIndex(widget.activeStyle) + 1;
             if (activeStyle == 0) {
                 activeStyle = style;
             }
@@ -860,7 +883,7 @@ function buildWidget(
         // textStyle
         let textStyle: number = 0;
         if (widget.textStyle) {
-            textStyle = findStyleIndex(widget.textStyle) + 1;
+            textStyle = assets.getStyleIndex(widget.textStyle) + 1;
         }
 
         specific.addField(new UInt8(textStyle));
@@ -882,7 +905,7 @@ function buildWidget(
         // line1Style
         let line1Style: number = 0;
         if (widget.line1Style) {
-            line1Style = findStyleIndex(widget.line1Style) + 1;
+            line1Style = assets.getStyleIndex(widget.line1Style) + 1;
         }
 
         specific.addField(new UInt8(line1Style));
@@ -904,7 +927,7 @@ function buildWidget(
         // line2Style
         let line2Style: number = 0;
         if (widget.line2Style) {
-            line2Style = findStyleIndex(widget.line2Style) + 1;
+            line2Style = assets.getStyleIndex(widget.line2Style) + 1;
         }
 
         specific.addField(new UInt8(line2Style));
@@ -915,7 +938,7 @@ function buildWidget(
         // y1Style
         let y1Style: number = 0;
         if (widget.y1Style) {
-            y1Style = findStyleIndex(widget.y1Style) + 1;
+            y1Style = assets.getStyleIndex(widget.y1Style) + 1;
         }
 
         specific.addField(new UInt8(y1Style));
@@ -937,7 +960,7 @@ function buildWidget(
         // y2Style
         let y2Style: number = 0;
         if (widget.y2Style) {
-            y2Style = findStyleIndex(widget.y2Style) + 1;
+            y2Style = assets.getStyleIndex(widget.y2Style) + 1;
         }
 
         specific.addField(new UInt8(y2Style));
@@ -948,7 +971,7 @@ function buildWidget(
         // buttonStyle
         let buttonsStyle: number = 0;
         if (widget.buttonsStyle) {
-            buttonsStyle = findStyleIndex(widget.buttonsStyle) + 1;
+            buttonsStyle = assets.getStyleIndex(widget.buttonsStyle) + 1;
         }
 
         specific.addField(new UInt8(buttonsStyle));
@@ -1006,7 +1029,7 @@ function buildWidget(
         // y1Style
         let y1Style: number = 0;
         if (widget.y1Style) {
-            y1Style = findStyleIndex(widget.y1Style) + 1;
+            y1Style = assets.getStyleIndex(widget.y1Style) + 1;
         }
 
         specific.addField(new UInt8(y1Style));
@@ -1028,7 +1051,7 @@ function buildWidget(
         // y2Style
         let y2Style: number = 0;
         if (widget.y2Style) {
-            y2Style = findStyleIndex(widget.y2Style) + 1;
+            y2Style = assets.getStyleIndex(widget.y2Style) + 1;
         }
 
         specific.addField(new UInt8(y2Style));
@@ -1050,7 +1073,7 @@ function buildWidget(
         // cursorStyle
         let cursorStyle: number = 0;
         if (widget.cursorStyle) {
-            cursorStyle = findStyleIndex(widget.cursorStyle) + 1;
+            cursorStyle = assets.getStyleIndex(widget.cursorStyle) + 1;
         }
 
         specific.addField(new UInt8(cursorStyle));
@@ -1085,7 +1108,7 @@ function buildWidget(
         // disabledStyle
         let disabledStyle: number = 0;
         if (widget.disabledStyle) {
-            disabledStyle = findStyleIndex(widget.disabledStyle) + 1;
+            disabledStyle = assets.getStyleIndex(widget.disabledStyle) + 1;
         }
 
         specific.addField(new UInt8(disabledStyle));
@@ -1119,7 +1142,7 @@ function buildWidget(
         // bitmap
         let bitmap: number = 0;
         if (widget.bitmap) {
-            bitmap = findBitmapIndex(widget.bitmap);
+            bitmap = assets.getBitmapIndex(widget.bitmap);
             if (bitmap != -1) {
                 bitmap++;
                 if (bitmap > 255) {
@@ -1133,7 +1156,7 @@ function buildWidget(
         let widget = object as Widget.WidgetProperties;
         specific = new Struct();
 
-        let customWidget = findLocalWidgetTypeIndex(widget.type.substring("Local.".length)) + 1;
+        let customWidget = assets.getWidgetIndex(widget.type.substring("Local.".length)) + 1;
         specific.addField(new UInt8(customWidget));
     }
 
@@ -1144,10 +1167,8 @@ function buildWidget(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildGuiPagesEnum(project: ProjectProperties) {
-    let gui = getProperty(project, "gui") as GuiProperties;
-
-    let pages = gui.pages
+function buildGuiPagesEnum(assets: Assets) {
+    let pages = assets.pages
         .map(
             widget =>
                 `${projectBuild.TAB}${projectBuild.getName(
@@ -1161,18 +1182,18 @@ function buildGuiPagesEnum(project: ProjectProperties) {
     return `enum PagesEnum {\n${pages}\n};`;
 }
 
-function buildGuiDocumentDecl(project: ProjectProperties) {
+function buildGuiDocumentDecl() {
     return `extern const uint8_t document[];`;
 }
 
-function buildGuiDocumentDef(project: ProjectProperties, screenOrientation: string) {
+function buildGuiDocumentData(assets: Assets, screenOrientation: string) {
     function buildCustomWidget(customWidget: WidgetTypeProperties) {
         var customWidgetStruct = new Struct();
 
         // widgets
         let childWidgets = new ObjectList();
         customWidget.widgets.forEach(childWidget => {
-            childWidgets.addItem(buildWidget(childWidget));
+            childWidgets.addItem(buildWidget(childWidget, assets));
         });
 
         customWidgetStruct.addField(childWidgets);
@@ -1181,22 +1202,21 @@ function buildGuiDocumentDef(project: ProjectProperties, screenOrientation: stri
     }
 
     function buildPage(page: PageOrientationProperties) {
-        return buildWidget(page);
+        return buildWidget(page, assets);
     }
 
     function build() {
-        let gui = getProperty(project, "gui") as GuiProperties;
-
-        let customWidgets = new ObjectList();
-        gui.widgets.forEach(customWidget => {
-            customWidgets.addItem(buildCustomWidget(customWidget));
-        });
-        document.addField(customWidgets);
-
         let pages = new ObjectList();
-        gui.pages.forEach(page => {
+        assets.pages.forEach(page => {
             pages.addItem(buildPage(getProperty(page, screenOrientation)));
         });
+
+        let customWidgets = new ObjectList();
+        assets.widgets.forEach(customWidget => {
+            customWidgets.addItem(buildCustomWidget(customWidget));
+        });
+
+        document.addField(customWidgets);
         document.addField(pages);
     }
 
@@ -1221,50 +1241,322 @@ function buildGuiDocumentDef(project: ProjectProperties, screenOrientation: stri
         return objects;
     }
 
-    function pack(objects: ObjectField[] = []): number[] {
-        return objects.reduce((data: any, object: any) => data.concat(object.packObject()), []);
-    }
-
     let document = new Struct();
     build();
     let objects = finish();
     let data = pack(objects);
 
-    let threeExclamationsDetected = false;
-    for (let i = 2; i < data.length; i++) {
-        if (data[i - 2] == 33 && data[i - 1] == 33 && data[i] == 33) {
-            threeExclamationsDetected = true;
-        }
-    }
-    if (threeExclamationsDetected) {
-        //OutputSectionsStore.write(output.Section.OUTPUT, output.Type.ERROR, `"!!!" detected in data, not possible to fix (Arduino Mega bootloader bug).`, project);
-    }
+    return data;
+}
+
+function buildGuiDocumentDef(assets: Assets, screenOrientation: string) {
+    const data = buildGuiDocumentData(assets, screenOrientation);
 
     return `// DOCUMENT DEFINITION\nconst uint8_t document[${
         data.length
     }] = {${projectBuild.dumpData(data)}};`;
 }
 
+async function buildGuiAssetsData(assets: Assets) {
+    const inputArray = packRegions([
+        buildGuiDocumentData(assets, ProjectStore.selectedScreenOrientation),
+        buildGuiStylesData(assets),
+        buildGuiFontsData(assets),
+        await buildGuiBitmapsData(assets)
+    ]);
+
+    const LZ4 = require("lz4");
+    var inputBuffer = Buffer.alloc(inputArray.length);
+    for (let i = 0; i < inputArray.length; ++i) {
+        inputBuffer[i] = inputArray[i];
+    }
+
+    var outputBuffer = Buffer.alloc(LZ4.encodeBound(inputBuffer.length));
+    var compressedSize = LZ4.encodeBlock(inputBuffer, outputBuffer);
+
+    const data = Buffer.alloc(4 + compressedSize);
+    data.writeUInt32LE(inputBuffer.length, 0); // write uncomprresed size at the beginning
+    outputBuffer.copy(data, 4, 0, compressedSize);
+
+    OutputSectionsStore.write(
+        output.Section.OUTPUT,
+        output.Type.INFO,
+        "Uncompressed size: " + formatBytes(inputBuffer.length)
+    );
+
+    OutputSectionsStore.write(
+        output.Section.OUTPUT,
+        output.Type.INFO,
+        "Compressed size: " + formatBytes(compressedSize)
+    );
+
+    return data;
+}
+
+function buildGuiAssetsDecl(data: Buffer) {
+    return `extern const uint8_t assets[${data.length}];`;
+}
+
+function buildGuiAssetsDef(data: Buffer) {
+    return `// ASSETS DEFINITION\nconst uint8_t assets[${data.length}] = {${projectBuild.dumpData(
+        data
+    )}};`;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
-export function build(project: ProjectProperties): Promise<BuildResult> {
-    return new Promise((resolve, reject) => {
-        buildGuiBitmapsDef(project).then(bitmapsDef => {
-            resolve({
-                GUI_FONTS_ENUM: buildGuiFontsEnum(project),
-                GUI_BITMAPS_ENUM: buildGuiBitmapsEnum(project),
-                GUI_STYLES_ENUM: buildGuiStylesEnum(project),
-                GUI_PAGES_ENUM: buildGuiPagesEnum(project),
-                GUI_FONTS_DECL: buildGuiFontsDecl(project),
-                GUI_FONTS_DEF: buildGuiFontsDef(project),
-                GUI_BITMAPS_DECL: buildGuiBitmapsDecl(project),
-                GUI_BITMAPS_DEF: bitmapsDef,
-                GUI_STYLES_DECL: buildGuiStylesDecl(project),
-                GUI_STYLES_DEF: buildGuiStylesDef(project),
-                GUI_DOCUMENT_DECL: buildGuiDocumentDecl(project),
-                GUI_DOCUMENT_PORTRAIT_DEF: buildGuiDocumentDef(project, "portrait"),
-                GUI_DOCUMENT_LANDSCAPE_DEF: buildGuiDocumentDef(project, "landscape")
-            });
+class Assets {
+    pages: PageProperties[];
+    widgets: WidgetTypeProperties[] = [];
+    styles: StyleProperties[] = [];
+    fonts: FontProperties[] = [];
+    bitmaps: BitmapProperties[] = [];
+
+    constructor(public project: ProjectProperties) {
+        let gui = getProperty(project, "gui") as GuiProperties;
+        this.pages = gui.pages.filter(
+            page =>
+                !ProjectStore.selectedBuildConfiguration ||
+                !page.usedIn ||
+                page.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
+        );
+
+        while (true) {
+            const n = this.totalAssets;
+            buildGuiDocumentData(this, ProjectStore.selectedScreenOrientation);
+            buildGuiStylesData(this);
+            if (n === this.totalAssets) {
+                break;
+            }
+        }
+    }
+
+    get totalAssets() {
+        return (
+            this.pages.length +
+            this.widgets.length +
+            this.styles.length +
+            this.fonts.length +
+            this.bitmaps.length
+        );
+    }
+
+    add(object: WidgetTypeProperties | StyleProperties | FontProperties | BitmapProperties) {
+        if (object instanceof WidgetTypeProperties && this.widgets.indexOf(object) === -1) {
+            this.widgets.push(object);
+        }
+
+        if (object instanceof StyleProperties && this.styles.indexOf(object) === -1) {
+            this.styles.push(object);
+        }
+
+        if (object instanceof FontProperties && this.fonts.indexOf(object) === -1) {
+            this.fonts.push(object);
+        }
+
+        if (object instanceof BitmapProperties && this.bitmaps.indexOf(object) === -1) {
+            this.bitmaps.push(object);
+        }
+    }
+
+    getWidgetIndex(widgetTypeName: string) {
+        for (let i = 0; i < this.widgets.length; i++) {
+            if (this.widgets[i].name == widgetTypeName) {
+                return i;
+            }
+        }
+
+        const widget = findLocalWidgetType(widgetTypeName);
+        if (widget) {
+            this.widgets.push(widget);
+        }
+
+        return -1;
+    }
+
+    getStyleIndex(styleName: string) {
+        for (let i = 0; i < this.styles.length; i++) {
+            if (this.styles[i].name == styleName) {
+                return i;
+            }
+        }
+
+        const style = findStyle(styleName);
+        if (style) {
+            this.styles.push(style);
+        }
+
+        return -1;
+    }
+
+    getFontIndex(fontName: string) {
+        for (let i = 0; i < this.fonts.length; i++) {
+            if (this.fonts[i].name == fontName) {
+                return i;
+            }
+        }
+
+        const font = findFont(fontName);
+        if (font) {
+            this.fonts.push(font);
+        }
+
+        return -1;
+    }
+
+    getBitmapIndex(bitmapName: string) {
+        for (let i = 0; i < this.bitmaps.length; i++) {
+            if (this.bitmaps[i].name == bitmapName) {
+                return i;
+            }
+        }
+
+        const bitmap = findBitmap(bitmapName);
+        if (bitmap) {
+            this.bitmaps.push(bitmap);
+        }
+
+        return -1;
+    }
+
+    reportUnusedAssets() {
+        let gui = getProperty(this.project, "gui") as GuiProperties;
+
+        gui.pages.forEach(page => {
+            if (this.pages.indexOf(page) === -1) {
+                OutputSectionsStore.write(
+                    output.Section.OUTPUT,
+                    output.Type.INFO,
+                    "Unused page: " + page.name,
+                    page
+                );
+            }
         });
-    });
+
+        gui.widgets.forEach(widget => {
+            if (this.widgets.indexOf(widget) === -1) {
+                OutputSectionsStore.write(
+                    output.Section.OUTPUT,
+                    output.Type.INFO,
+                    "Unused widget: " + widget.name,
+                    widget
+                );
+            }
+        });
+
+        gui.styles.forEach(style => {
+            if (this.styles.indexOf(style) === -1) {
+                OutputSectionsStore.write(
+                    output.Section.OUTPUT,
+                    output.Type.INFO,
+                    "Unused style: " + style.name,
+                    style
+                );
+            }
+        });
+
+        gui.fonts.forEach(font => {
+            if (this.fonts.indexOf(font) === -1) {
+                OutputSectionsStore.write(
+                    output.Section.OUTPUT,
+                    output.Type.INFO,
+                    "Unused font: " + font.name,
+                    font
+                );
+            }
+        });
+
+        gui.bitmaps.forEach(bitmap => {
+            if (this.bitmaps.indexOf(bitmap) === -1) {
+                OutputSectionsStore.write(
+                    output.Section.OUTPUT,
+                    output.Type.INFO,
+                    "Unused bitmap: " + bitmap.name,
+                    bitmap
+                );
+            }
+        });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export async function build(
+    project: ProjectProperties,
+    sectionNames: string[] | undefined
+): Promise<BuildResult> {
+    const result: any = {};
+
+    const assets = new Assets(project);
+
+    assets.reportUnusedAssets();
+
+    // build enum's
+    if (!sectionNames || sectionNames.indexOf("GUI_PAGES_ENUM") !== -1) {
+        result.GUI_PAGES_ENUM = buildGuiPagesEnum(assets);
+    }
+    if (!sectionNames || sectionNames.indexOf("GUI_STYLES_ENUM") !== -1) {
+        result.GUI_STYLES_ENUM = buildGuiStylesEnum(assets);
+    }
+    if (!sectionNames || sectionNames.indexOf("GUI_FONTS_ENUM") !== -1) {
+        result.GUI_FONTS_ENUM = buildGuiFontsEnum(assets);
+    }
+    if (!sectionNames || sectionNames.indexOf("GUI_BITMAPS_ENUM") !== -1) {
+        result.GUI_BITMAPS_ENUM = buildGuiBitmapsEnum(assets);
+    }
+
+    const buildAssetsDecl = !sectionNames || sectionNames.indexOf("GUI_ASSETS_DECL") !== -1;
+    const buildAssetsDef = !sectionNames || sectionNames.indexOf("GUI_ASSETS_DEF") !== -1;
+    if (buildAssetsDecl || buildAssetsDef) {
+        // build all assets as single data chunk
+        const assetsData = await buildGuiAssetsData(assets);
+        if (buildAssetsDecl) {
+            result.GUI_ASSETS_DECL = buildGuiAssetsDecl(assetsData);
+        }
+        if (buildAssetsDef) {
+            result.GUI_ASSETS_DEF = await buildGuiAssetsDef(assetsData);
+        }
+    } else {
+        // build document (pages and widgets)
+        if (!sectionNames || sectionNames.indexOf("GUI_DOCUMENT_DECL") !== -1) {
+            result.GUI_DOCUMENT_DECL = buildGuiDocumentDecl();
+        }
+
+        if (!sectionNames || sectionNames.indexOf("GUI_DOCUMENT_PORTRAIT_DEF") !== -1) {
+            result.GUI_DOCUMENT_PORTRAIT_DEF = buildGuiDocumentDef(assets, "portrait");
+        }
+
+        if (!sectionNames || sectionNames.indexOf("GUI_DOCUMENT_LANDSCAPE_DEF") !== -1) {
+            result.GUI_DOCUMENT_LANDSCAPE_DEF = buildGuiDocumentDef(assets, "landscape");
+        }
+
+        // build styles
+        if (!sectionNames || sectionNames.indexOf("GUI_STYLES_DECL") !== -1) {
+            result.GUI_STYLES_DECL = buildGuiStylesDecl();
+        }
+
+        if (!sectionNames || sectionNames.indexOf("GUI_STYLES_DEF") !== -1) {
+            result.GUI_STYLES_DEF = buildGuiStylesDef(assets);
+        }
+
+        // build fonts
+        if (!sectionNames || sectionNames.indexOf("GUI_FONTS_DECL") !== -1) {
+            result.GUI_FONTS_DECL = buildGuiFontsDecl();
+        }
+
+        if (!sectionNames || sectionNames.indexOf("GUI_FONTS_DEF") !== -1) {
+            result.GUI_FONTS_DEF = buildGuiFontsDef(assets);
+        }
+
+        // build bitmaps
+        if (!sectionNames || sectionNames.indexOf("GUI_BITMAPS_DECL") !== -1) {
+            result.GUI_BITMAPS_DECL = buildGuiBitmapsDecl();
+        }
+
+        if (!sectionNames || sectionNames.indexOf("GUI_BITMAPS_DEF") !== -1) {
+            result.GUI_BITMAPS_DEF = await buildGuiBitmapsDef(assets);
+        }
+    }
+
+    return result;
 }

@@ -70,13 +70,29 @@ function buildActionsArrayDef(project: ProjectProperties) {
     )}\n};`;
 }
 
-export function build(project: ProjectProperties): Promise<BuildResult> {
+export function build(
+    project: ProjectProperties,
+    sectionNames: string[] | undefined
+): Promise<BuildResult> {
     return new Promise((resolve, reject) => {
-        resolve({
-            ACTIONS_ENUM: buildActionsEnum(project),
-            ACTIONS_FUNCS_DEF: buildActionsFuncsDef(project),
-            ACTIONS_ARRAY_DECL: buildActionsArrayDecl(project),
-            ACTIONS_ARRAY_DEF: buildActionsArrayDef(project)
-        });
+        const result: any = {};
+
+        if (!sectionNames || sectionNames.indexOf("ACTIONS_ENUM") !== -1) {
+            result.ACTIONS_ENUM = buildActionsEnum(project);
+        }
+
+        if (!sectionNames || sectionNames.indexOf("ACTIONS_FUNCS_DEF") !== -1) {
+            result.ACTIONS_FUNCS_DEF = buildActionsFuncsDef(project);
+        }
+
+        if (!sectionNames || sectionNames.indexOf("ACTIONS_ARRAY_DECL") !== -1) {
+            result.ACTIONS_ARRAY_DECL = buildActionsArrayDecl(project);
+        }
+
+        if (!sectionNames || sectionNames.indexOf("ACTIONS_ARRAY_DEF") !== -1) {
+            result.ACTIONS_ARRAY_DEF = buildActionsArrayDef(project);
+        }
+
+        resolve(result);
     });
 }

@@ -80,12 +80,14 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
                         navigationObject={subsystems}
                         additionalButtons={additionalButtons}
                     />
-                    <ListNavigationWithContent
-                        id="scpi-subsystem-commands"
-                        title="Commands"
-                        navigationObject={(selectedScpiSubsystem.commands as any) as EezObject}
-                        content={content}
-                    />
+                    {
+                        <ListNavigationWithContent
+                            id="scpi-subsystem-commands"
+                            title="Commands"
+                            navigationObject={(selectedScpiSubsystem.commands as any) as EezObject}
+                            content={content}
+                        />
+                    }
                 </Layout.Split>
             );
         } else {

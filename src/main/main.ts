@@ -1,6 +1,6 @@
 require("app-module-path").addPath(__dirname + "/..");
 
-import { app } from "electron";
+import { app, BrowserWindow } from "electron";
 import { configure } from "mobx";
 
 import { setup } from "setup/setup";
@@ -32,6 +32,10 @@ app.on("ready", async function() {
     await setup();
 
     require("shared/service");
+
+    if (process.argv.length > 2 && process.argv[2].startsWith("devToolsExtension=")) {
+        BrowserWindow.addDevToolsExtension(process.argv[2].substr("devToolsExtension=".length));
+    }
 
     const { openHomeWindow } = require("main/home-window") as typeof HomeWindowModule;
     openHomeWindow();

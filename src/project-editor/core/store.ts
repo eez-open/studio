@@ -892,16 +892,17 @@ class ProjectStoreClass {
             this.projectProperties.settings.build.configurations.find(
                 configuration => configuration.name == UIStateStore.selectedBuildConfiguration
             );
+        if (!configuration) {
+            if (this.projectProperties.settings.build.configurations.length > 0) {
+                configuration = this.projectProperties.settings.build.configurations[0];
+            }
+        }
         return configuration;
     }
 
     @computed
     get selectedScreenOrientation() {
-        let configuration =
-            this.projectProperties &&
-            this.projectProperties.settings.build.configurations.find(
-                configuration => configuration.name == UIStateStore.selectedBuildConfiguration
-            );
+        let configuration = this.selectedBuildConfiguration;
         return (configuration && configuration.screenOrientation) || "portrait";
     }
 

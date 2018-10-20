@@ -19,10 +19,14 @@ import { metrics } from "project-editor/project/features/action/metrics";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ActionProperties extends EezObject {
-    @observable name: string;
-    @observable description?: string;
-    @observable implementationType: "graphical" | "native";
-    @observable implementation?: string;
+    @observable
+    name: string;
+    @observable
+    description?: string;
+    @observable
+    implementationType: "graphical" | "native";
+    @observable
+    implementation?: string;
 
     @computed
     get implementationCode() {
@@ -129,8 +133,8 @@ registerFeatureImplementation("action", {
         check: (object: EezObject) => {
             let messages: Message[] = [];
 
-            if (asArray(object).length > 255) {
-                messages.push(new Message(Type.ERROR, "Max. 255 actions are supported", object));
+            if (asArray(object).length >= 255) {
+                messages.push(new Message(Type.ERROR, "Max. 254 actions are supported", object));
             }
 
             return messages;

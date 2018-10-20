@@ -14,12 +14,11 @@ import { strToColor16 } from "project-editor/core/util";
 
 import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
 
-import { findFontIndex } from "project-editor/project/features/gui/gui";
+import { findFont } from "project-editor/project/features/gui/gui";
 
 import { drawText } from "project-editor/project/features/gui/draw";
 import { StyleEditor } from "project-editor/project/features/gui/StyleEditor";
 import { findStyle, findStyleOrGetDefault } from "project-editor/project/features/gui/gui";
-import { FontProperties } from "project-editor/project/features/gui/fontMetaData";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -180,32 +179,45 @@ function getInheritedValue(object: EezObject, propertyName: string): InheritedVa
 ////////////////////////////////////////////////////////////////////////////////
 
 export class StyleProperties extends EezObject {
-    @observable name: string;
-    @observable description?: string;
-    @observable inheritFrom?: string;
-    @observable font?: string;
-    @observable alignHorizontal?: string;
-    @observable alignVertical?: string;
-    @observable color?: string;
-    @observable backgroundColor?: string;
-    @observable borderSize?: number;
-    @observable borderColor?: string;
-    @observable paddingHorizontal?: number;
-    @observable paddingVertical?: number;
-    @observable blink?: boolean;
+    @observable
+    name: string;
+    @observable
+    description?: string;
+    @observable
+    inheritFrom?: string;
+    @observable
+    font?: string;
+    @observable
+    alignHorizontal?: string;
+    @observable
+    alignVertical?: string;
+    @observable
+    color?: string;
+    @observable
+    backgroundColor?: string;
+    @observable
+    borderSize?: number;
+    @observable
+    borderColor?: string;
+    @observable
+    paddingHorizontal?: number;
+    @observable
+    paddingVertical?: number;
+    @observable
+    blink?: boolean;
 
     @computed
-    get fontObject(): FontProperties {
+    get fontName(): string {
         return getStyleProperty(this, "font");
     }
 
     @computed
-    get fontIndex(): number {
-        let font = this.fontObject;
-        if (font) {
-            return findFontIndex(font);
+    get fontObject() {
+        let fontName = this.fontName;
+        if (fontName) {
+            return findFont(fontName);
         }
-        return -1;
+        return null;
     }
 
     @computed
@@ -256,9 +268,9 @@ export class StyleProperties extends EezObject {
     check() {
         let messages: output.Message[] = [];
 
-        if (!this.fontObject) {
+        if (!this.fontName) {
             messages.push(output.propertyNotSetMessage(this, "font"));
-        } else if (this.fontIndex == -1) {
+        } else if (!this.fontObject) {
             messages.push(output.propertyNotFoundMessage(this, "font"));
         }
 

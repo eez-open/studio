@@ -59,13 +59,29 @@ function buildDataArrayDef(project: ProjectProperties) {
     }0,\n${dataItems.join(",\n")}\n};`;
 }
 
-export function build(project: ProjectProperties): Promise<BuildResult> {
+export function build(
+    project: ProjectProperties,
+    sectionNames: string[] | undefined
+): Promise<BuildResult> {
     return new Promise((resolve, reject) => {
-        resolve({
-            DATA_ENUM: buildDataEnum(project),
-            DATA_FUNCS_DECL: buildDataFuncsDecl(project),
-            DATA_ARRAY_DECL: buildDataArrayDecl(project),
-            DATA_ARRAY_DEF: buildDataArrayDef(project)
-        });
+        const result: any = {};
+
+        if (!sectionNames || sectionNames.indexOf("DATA_ENUM") !== -1) {
+            result.DATA_ENUM = buildDataEnum(project);
+        }
+
+        if (!sectionNames || sectionNames.indexOf("DATA_FUNCS_DECL") !== -1) {
+            result.DATA_FUNCS_DECL = buildDataFuncsDecl(project);
+        }
+
+        if (!sectionNames || sectionNames.indexOf("DATA_ARRAY_DECL") !== -1) {
+            result.DATA_ARRAY_DECL = buildDataArrayDecl(project);
+        }
+
+        if (!sectionNames || sectionNames.indexOf("DATA_ARRAY_DEF") !== -1) {
+            result.DATA_ARRAY_DEF = buildDataArrayDef(project);
+        }
+
+        resolve(result);
     });
 }

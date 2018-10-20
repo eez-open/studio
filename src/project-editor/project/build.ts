@@ -1,6 +1,7 @@
 import { createTransformer } from "mobx-utils";
 
 import { writeTextFile } from "shared/util";
+import { _map } from "shared/algorithm";
 import { underscore } from "shared/string";
 
 import { getExtensionsByCategory, BuildResult } from "project-editor/core/extensions";
@@ -50,9 +51,9 @@ export function getName(prefix: string, name: string, namingConvention: NamingCo
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function dumpData(data: number[]) {
+export function dumpData(data: number[] | Buffer) {
     let result = "";
-    data.map(value => "0x" + formatNumber(value, 16, 2)).forEach((value, index) => {
+    _map(data, value => "0x" + formatNumber(value, 16, 2)).forEach((value, index) => {
         if (result.length > 0) {
             result += ",";
         }
@@ -64,35 +65,6 @@ export function dumpData(data: number[]) {
         result += value;
     });
     result += "\n";
-    return result;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Workaround for the "!!!" bug in Arduino Mega bootloader program. Three
-// consecutive "!"" characters causes the bootloader to jump into a 'monitor mode'
-// awaiting user monitor commands (which will never come) thus hanging the up load operation.
-// If hex image contains three consecutive '!' characters (33 is ASCII code)
-// then uploading hex image to the device will fail.
-// Here we replace "!!!"" with "!! ", i.e. [33, 33, 33] with [33, 33, 32].
-export function fixDataForMegaBootloader(data: any, object: EezObject) {
-    let result: number[] = [];
-
-    let threeExclamationsDetected = false;
-
-    for (let i = 0; i < data.length; i++) {
-        if (i >= 2 && data[i - 2] == 33 && data[i - 1] == 33 && data[i] == 33) {
-            threeExclamationsDetected = true;
-            result.push(32);
-        } else {
-            result.push(data[i]);
-        }
-    }
-
-    if (threeExclamationsDetected) {
-        //OutputSectionsStore.write(Section.OUTPUT, Type.WARNING, `"!!!" detected and replaced with "!! " (Arduino Mega bootloader bug)`, object);
-    }
-
     return result;
 }
 
@@ -130,7 +102,7 @@ class BuildException {
     constructor(public message: string, public object?: EezObject | undefined) {}
 }
 
-async function getBuildResults() {
+async function getBuildResults(sectionNames: string[] | undefined) {
     const project = ProjectStore.projectProperties;
 
     let buildResults: BuildResult[] = [];
@@ -145,12 +117,32 @@ async function getBuildResults() {
             )
         ) {
             buildResults.push(
-                await projectFeature.eezStudioExtension.implementation.projectFeature.build(project)
+                await projectFeature.eezStudioExtension.implementation.projectFeature.build(
+                    project,
+                    sectionNames
+                )
             );
         }
     }
 
     return buildResults;
+}
+
+const sectionNamesRegexp = /\/\/\$\{eez-studio (.*)\}/g;
+
+function getSectionNames(): string[] {
+    const project = ProjectStore.projectProperties;
+
+    const sectionNames: string[] = [];
+
+    project.settings.build.files.forEach(buildFile => {
+        let result;
+        while ((result = sectionNamesRegexp.exec(buildFile.template)) !== null) {
+            sectionNames.push(result[1]);
+        }
+    });
+
+    return sectionNames;
 }
 
 async function doBuild(destinationFolderPath: string, buildResults: BuildResult[]) {
@@ -163,12 +155,9 @@ async function doBuild(destinationFolderPath: string, buildResults: BuildResult[
         }
 
         await project.settings.build.files.forEach(async (buildFile: BuildFileProperties) => {
-            let buildFileContent = buildFile.template.replace(
-                /\/\/\$\{eez-studio (.*)\}/g,
-                (_1, part) => {
-                    return parts[part];
-                }
-            );
+            let buildFileContent = buildFile.template.replace(sectionNamesRegexp, (_1, part) => {
+                return parts[part];
+            });
 
             await writeTextFile(destinationFolderPath + "/" + buildFile.fileName, buildFileContent);
         });
@@ -180,29 +169,35 @@ export async function build(onlyCheck: boolean) {
     OutputSectionsStore.clear(Section.OUTPUT);
 
     try {
-        let buildResults = await getBuildResults();
+        let sectionNames: string[] | undefined = undefined;
 
-        if (onlyCheck) {
-            showCheckResult();
-            return;
-        }
-
-        // get and validate destination folder
-        const project = ProjectStore.projectProperties;
-        if (!project.settings.build.destinationFolder) {
-            throw new BuildException(
-                "Destination folder is not specified.",
-                getChildOfObject(project.settings.build, "destinationFolder")
+        let destinationFolderPath;
+        if (!onlyCheck) {
+            // get and validate destination folder
+            const project = ProjectStore.projectProperties;
+            if (!project.settings.build.destinationFolder) {
+                throw new BuildException(
+                    "Destination folder is not specified.",
+                    getChildOfObject(project.settings.build, "destinationFolder")
+                );
+            }
+            destinationFolderPath = ProjectStore.getAbsoluteFilePath(
+                project.settings.build.destinationFolder || "."
             );
+            if (!fs.existsSync(destinationFolderPath)) {
+                throw new BuildException("Cannot find destination folder.");
+            }
+
+            sectionNames = getSectionNames();
         }
-        let destinationFolderPath = ProjectStore.getAbsoluteFilePath(
-            project.settings.build.destinationFolder || "."
-        );
-        if (!fs.existsSync(destinationFolderPath)) {
-            throw new BuildException("Cannot find destination folder.");
-        }
+
+        let buildResults = await getBuildResults(sectionNames);
 
         showCheckResult();
+
+        if (onlyCheck) {
+            return;
+        }
 
         await doBuild(destinationFolderPath, buildResults);
 
