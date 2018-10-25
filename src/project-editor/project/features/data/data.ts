@@ -33,6 +33,8 @@ export class DataItemProperties extends EezObject {
     defaultMinValue: number;
     @observable
     defaultMaxValue: number;
+    @observable
+    usedIn: string[] | undefined;
 }
 
 export const dataItemMetaData = registerMetaData({
@@ -96,6 +98,10 @@ export const dataItemMetaData = registerMetaData({
         {
             name: "defaultMaxValue",
             type: "number"
+        },
+        {
+            name: "usedIn",
+            type: "configuration-references"
         }
     ],
     newItem: (parent: EezObject) => {

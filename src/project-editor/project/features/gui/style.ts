@@ -132,6 +132,13 @@ const blinkProperty: PropertyMetaData = {
     inheritable: true
 };
 
+const alwaysBuildProperty: PropertyMetaData = {
+    name: "alwaysBuild",
+    type: "boolean",
+    defaultValue: false,
+    inheritable: false
+};
+
 const properties = [
     nameProperty,
     descriptionProperty,
@@ -145,7 +152,8 @@ const properties = [
     borderColorProperty,
     paddingHorizontalProperty,
     paddingVerticalProperty,
-    blinkProperty
+    blinkProperty,
+    alwaysBuildProperty
 ];
 
 const propertiesMap: { [propertyName: string]: PropertyMetaData } = _zipObject(
@@ -205,6 +213,8 @@ export class StyleProperties extends EezObject {
     paddingVertical?: number;
     @observable
     blink?: boolean;
+    @observable
+    alwaysBuild: boolean;
 
     @computed
     get fontName(): string {

@@ -3,17 +3,18 @@ import { observable } from "mobx";
 import { validators } from "shared/model/validation";
 
 import { showGenericDialog } from "shared/ui/generic-dialog";
+import * as notification from "shared/ui/notification";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
 import { EezObject, registerMetaData } from "project-editor/core/metaData";
-import { getProperty } from "project-editor/core/store";
+import { getProperty, ProjectStore } from "project-editor/core/store";
 
 import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
 
 import { GlyphProperties, glyphMetaData } from "project-editor/project/features/gui/glyph";
 import { FontEditor } from "project-editor/project/features/gui/FontEditor";
-import { loadFontFromFile } from "project-editor/project/features/gui/fontsService";
+import extractFont from "font-services/font-extract";
 
 const path = EEZStudio.electron.remote.require("path");
 
@@ -75,6 +76,8 @@ export class FontProperties extends EezObject {
     screenOrientation: string;
     @observable
     glyphs: GlyphProperties[];
+    @observable
+    alwaysBuild: boolean;
 }
 
 export const fontMetaData = registerMetaData({
@@ -139,6 +142,10 @@ export const fontMetaData = registerMetaData({
             typeMetaData: glyphMetaData,
             type: "array",
             hideInPropertyGrid: true
+        },
+        {
+            name: "alwaysBuild",
+            type: "boolean"
         }
     ],
     newItem: (parent: EezObject) => {
@@ -171,6 +178,7 @@ export const fontMetaData = registerMetaData({
                         name: "filePath",
                         displayName: "Based on font",
                         type: RelativeFileInput,
+                        validators: [validators.required],
                         options: {
                             filters: [
                                 { name: "Font files", extensions: ["bdf", "ttf", "otf"] },
@@ -218,37 +226,56 @@ export const fontMetaData = registerMetaData({
             },
             values: {
                 size: 14,
-                bpp: 1,
+                bpp: 8,
                 threshold: 128,
                 fromGlyph: 32,
                 toGlyph: 127,
+                createGlyphs: true,
                 createBlankGlyphs: false
             }
-        }).then(result => {
-            if (result.values.filePath) {
-                return loadFontFromFile(
-                    result.values.name,
-                    result.values.filePath,
-                    result.values.bpp,
-                    result.values.size,
-                    result.values.threshold,
-                    result.values.createGlyphs,
-                    result.values.fromGlyph,
-                    result.values.toGlyph,
-                    result.values.createBlankGlyphs
-                );
-            } else {
-                return {
+        })
+            .then(result => {
+                return extractFont({
                     name: result.values.name,
-                    bpp: 1,
-                    ascent: 0,
-                    descent: 0,
-                    height: 0,
-                    screenOrientation: "all",
-                    glyphs: []
-                } as any;
-            }
-        });
+                    absoluteFilePath: ProjectStore.getAbsoluteFilePath(result.values.filePath),
+                    relativeFilePath: result.values.filePath,
+                    bpp: result.values.bpp,
+                    size: result.values.size,
+                    threshold: result.values.threshold,
+                    createGlyphs: result.values.createGlyphs,
+                    fromEncoding: result.values.fromGlyph,
+                    toEncoding: result.values.toGlyph,
+                    createBlankGlyphs: result.values.createBlankGlyphs
+                })
+                    .then(font => {
+                        notification.info(`Added ${result.values.name} font.`);
+                        return font;
+                    })
+                    .catch(err => {
+                        let errorMessage;
+                        if (err) {
+                            if (err.message) {
+                                errorMessage = err.message;
+                            } else {
+                                errorMessage = err.toString();
+                            }
+                        }
+
+                        if (errorMessage) {
+                            notification.error(
+                                `Adding ${fontMetaData.className} failed: ${errorMessage}!`
+                            );
+                        } else {
+                            notification.error(`Adding ${fontMetaData.className} failed!`);
+                        }
+
+                        return false;
+                    });
+            })
+            .catch(() => {
+                // canceled
+                return false;
+            });
     },
     editorComponent: FontEditor,
     navigationComponent: ListNavigationWithContent,

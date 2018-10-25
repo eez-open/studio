@@ -14,6 +14,7 @@ import { humanize } from "shared/string";
 import { _each, _isArray, _map, _uniqWith } from "shared/algorithm";
 
 import { showGenericDialog, TableField } from "shared/ui/generic-dialog";
+import * as notification from "shared/ui/notification";
 
 import {
     EezObject,
@@ -2315,17 +2316,19 @@ export function insertObjectAfter(object: EezObject, objectToInsert: EezObject) 
 
 export function addItem(object: EezObject) {
     const parent = isArray(object) ? object : getParent(object);
-    if (parent && getMetaData(parent).newItem) {
-        const newItem = getMetaData(parent).newItem;
-        if (newItem) {
-            newItem(parent).then(
-                object => {
-                    addObject(parent, object);
-                },
-                () => {
-                    // do nothing on reject
-                }
-            );
+    if (parent) {
+        const metaData = getMetaData(parent);
+        if (metaData.newItem) {
+            metaData
+                .newItem(parent)
+                .then(object => {
+                    if (object) {
+                        addObject(parent, object);
+                    } else {
+                        console.log(`Canceled adding ${metaData.className}`);
+                    }
+                })
+                .catch(err => notification.error(`Adding ${metaData.className} failed: ${err}!`));
         }
     }
 }

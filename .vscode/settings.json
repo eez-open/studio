@@ -14,8 +14,15 @@
         "src/extensions-manager/*.js.map": true,
         "instruments": true
     },
-    "search.exclude": {},
+    "search.exclude": {
+        "tools": true
+    },
     "editor.formatOnSave": true,
     "typescript.reportStyleChecksAsWarnings": false,
-    "typescript.suggest.autoImports": true
+    "typescript.suggest.autoImports": true,
+    "files.associations": {
+        "iosfwd": "cpp",
+        "xiosbase": "cpp",
+        "xlocale": "cpp"
+    }
 }

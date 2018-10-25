@@ -59,6 +59,8 @@ export interface ObjectGeometryChange {
 
 export interface CanvasEditorProps {
     displaySelection: DisplayItemSelection;
+    pageWidth: number;
+    pageHeight: number;
 }
 
 export class CanvasEditorUIState {
@@ -977,8 +979,8 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
         this.tree = this.createTree();
 
         this.centerOffset = {
-            x: -320 / 2,
-            y: -240 / 2
+            x: -this.props.pageWidth / 2,
+            y: -this.props.pageHeight / 2
         };
 
         return (

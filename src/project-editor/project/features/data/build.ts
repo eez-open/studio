@@ -1,5 +1,6 @@
 import { BuildResult } from "project-editor/core/extensions";
 
+import { ProjectStore } from "project-editor/core/store";
 import { ProjectProperties } from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
 
@@ -7,9 +8,7 @@ import { DataItemProperties } from "project-editor/project/features/data/data";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildDataEnum(project: ProjectProperties) {
-    let projectDataItems = project["data"] as DataItemProperties[];
-
+function buildDataEnum(projectDataItems: DataItemProperties[]) {
     let dataItems = projectDataItems.map(
         (dataItem, index) =>
             `${projectBuild.TAB}${projectBuild.getName(
@@ -24,9 +23,7 @@ function buildDataEnum(project: ProjectProperties) {
     return `enum DataEnum {\n${dataItems.join(",\n")}\n};`;
 }
 
-function buildDataFuncsDecl(project: ProjectProperties) {
-    let projectDataItems = project["data"] as DataItemProperties[];
-
+function buildDataFuncsDecl(projectDataItems: DataItemProperties[]) {
     let dataItems = projectDataItems.map(dataItem => {
         return `void ${projectBuild.getName(
             "data_",
@@ -38,13 +35,11 @@ function buildDataFuncsDecl(project: ProjectProperties) {
     return dataItems.join("\n");
 }
 
-function buildDataArrayDecl(project: ProjectProperties) {
+function buildDataArrayDecl() {
     return "typedef void (*DataOperationsFunction)(DataOperationEnum operation, Cursor &cursor, Value &value);\n\nextern DataOperationsFunction g_dataOperationsFunctions[];";
 }
 
-function buildDataArrayDef(project: ProjectProperties) {
-    let projectDataItems = project["data"] as DataItemProperties[];
-
+function buildDataArrayDef(projectDataItems: DataItemProperties[]) {
     let dataItems = projectDataItems.map(
         dataItem =>
             `${projectBuild.TAB}${projectBuild.getName(
@@ -66,20 +61,27 @@ export function build(
     return new Promise((resolve, reject) => {
         const result: any = {};
 
+        const projectDataItems = (project["data"] as DataItemProperties[]).filter(
+            dataItem =>
+                !ProjectStore.selectedBuildConfiguration ||
+                !dataItem.usedIn ||
+                dataItem.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
+        );
+
         if (!sectionNames || sectionNames.indexOf("DATA_ENUM") !== -1) {
-            result.DATA_ENUM = buildDataEnum(project);
+            result.DATA_ENUM = buildDataEnum(projectDataItems);
         }
 
         if (!sectionNames || sectionNames.indexOf("DATA_FUNCS_DECL") !== -1) {
-            result.DATA_FUNCS_DECL = buildDataFuncsDecl(project);
+            result.DATA_FUNCS_DECL = buildDataFuncsDecl(projectDataItems);
         }
 
         if (!sectionNames || sectionNames.indexOf("DATA_ARRAY_DECL") !== -1) {
-            result.DATA_ARRAY_DECL = buildDataArrayDecl(project);
+            result.DATA_ARRAY_DECL = buildDataArrayDecl();
         }
 
         if (!sectionNames || sectionNames.indexOf("DATA_ARRAY_DEF") !== -1) {
-            result.DATA_ARRAY_DEF = buildDataArrayDef(project);
+            result.DATA_ARRAY_DEF = buildDataArrayDef(projectDataItems);
         }
 
         resolve(result);

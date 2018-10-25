@@ -49,7 +49,9 @@ function getIgnore() {
         "^/node_modules/better-sqlite3/build/Release/obj.*",
         "^/node_modules/lzz-gyp/lzz-compiled/linux",
         "^/node_modules/lzz-gyp/lzz-compiled/osx",
-        "^/node_modules/lzz-gyp/lzz-compiled/bsd"
+        "^/node_modules/lzz-gyp/lzz-compiled/bsd",
+
+        "^/tools"
     ];
 
     return ignore;

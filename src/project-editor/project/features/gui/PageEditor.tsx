@@ -74,6 +74,8 @@ export class PageEditor extends EditorComponent {
                     displaySelection={
                         pageTabState.selectedPageOrientationState.widgetContainerDisplayItem
                     }
+                    pageWidth={pageTabState.selectedPageOrientation.width}
+                    pageHeight={pageTabState.selectedPageOrientation.height}
                 />
             );
         }

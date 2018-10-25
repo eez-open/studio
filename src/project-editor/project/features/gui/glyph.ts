@@ -41,6 +41,7 @@ export function selectGlyph(glyph: GlyphProperties) {
     return showGenericDialog({
         dialogDefinition: {
             title: "Select Glyph",
+            large: true,
             fields: [
                 {
                     name: "filePath",
@@ -290,6 +291,9 @@ export class GlyphProperties extends EezObject {
 
         let canvasWidth = this.glyphBitmap ? this.dx : 1;
         let canvasHeight = font.height;
+
+        canvasWidth = canvasWidth || 1;
+        canvasHeight = canvasHeight || 1;
 
         let canvas = document.createElement("canvas");
         canvas.setAttribute("width", canvasWidth.toString());

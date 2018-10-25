@@ -758,6 +758,8 @@ export class StoryboardEditor extends EditorComponent {
                     body={
                         <StoryboardCanvasEditor
                             displaySelection={storyboardTabState.storyboardAdapter}
+                            pageWidth={0}
+                            pageHeight={0}
                         />
                     }
                 />

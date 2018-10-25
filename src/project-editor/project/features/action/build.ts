@@ -1,5 +1,6 @@
 import { BuildResult } from "project-editor/core/extensions";
 
+import { ProjectStore } from "project-editor/core/store";
 import { ProjectProperties } from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
 
@@ -7,9 +8,7 @@ import { ActionProperties } from "project-editor/project/features/action/action"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildActionsEnum(project: ProjectProperties) {
-    let projectActions = project["actions"] as ActionProperties[];
-
+function buildActionsEnum(projectActions: ActionProperties[]) {
     let actions = projectActions.map(
         action =>
             `${projectBuild.TAB}${projectBuild.getName(
@@ -24,9 +23,7 @@ function buildActionsEnum(project: ProjectProperties) {
     return `enum ActionsEnum {\n${actions.join(",\n")}\n};`;
 }
 
-function buildActionsFuncsDef(project: ProjectProperties) {
-    let projectActions = project["actions"] as ActionProperties[];
-
+function buildActionsFuncsDef(projectActions: ActionProperties[]) {
     let actions = projectActions.map(action => {
         let implementationCode = action.implementationCode;
 
@@ -49,13 +46,11 @@ function buildActionsFuncsDef(project: ProjectProperties) {
     return actions.join("\n");
 }
 
-function buildActionsArrayDecl(project: ProjectProperties) {
+function buildActionsArrayDecl() {
     return "extern ActionExecFunc g_actionExecFunctions[];";
 }
 
-function buildActionsArrayDef(project: ProjectProperties) {
-    let projectActions = project["actions"] as ActionProperties[];
-
+function buildActionsArrayDef(projectActions: ActionProperties[]) {
     let actions = projectActions.map(
         action =>
             `${projectBuild.TAB}${projectBuild.getName(
@@ -77,20 +72,27 @@ export function build(
     return new Promise((resolve, reject) => {
         const result: any = {};
 
+        const projectActions = (project["actions"] as ActionProperties[]).filter(
+            action =>
+                !ProjectStore.selectedBuildConfiguration ||
+                !action.usedIn ||
+                action.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
+        );
+
         if (!sectionNames || sectionNames.indexOf("ACTIONS_ENUM") !== -1) {
-            result.ACTIONS_ENUM = buildActionsEnum(project);
+            result.ACTIONS_ENUM = buildActionsEnum(projectActions);
         }
 
         if (!sectionNames || sectionNames.indexOf("ACTIONS_FUNCS_DEF") !== -1) {
-            result.ACTIONS_FUNCS_DEF = buildActionsFuncsDef(project);
+            result.ACTIONS_FUNCS_DEF = buildActionsFuncsDef(projectActions);
         }
 
         if (!sectionNames || sectionNames.indexOf("ACTIONS_ARRAY_DECL") !== -1) {
-            result.ACTIONS_ARRAY_DECL = buildActionsArrayDecl(project);
+            result.ACTIONS_ARRAY_DECL = buildActionsArrayDecl();
         }
 
         if (!sectionNames || sectionNames.indexOf("ACTIONS_ARRAY_DEF") !== -1) {
-            result.ACTIONS_ARRAY_DEF = buildActionsArrayDef(project);
+            result.ACTIONS_ARRAY_DEF = buildActionsArrayDef(projectActions);
         }
 
         resolve(result);

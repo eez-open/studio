@@ -25,6 +25,10 @@ export class WidgetTypeEditor extends EditorComponent {
         super(props);
     }
 
+    get widgetType() {
+        return this.props.editor.object as WidgetTypeProperties;
+    }
+
     @observable
     isExperimentalEditor: boolean =
         window.localStorage.getItem("isExperimentalEditor") === "1" ? true : false;
@@ -55,6 +59,8 @@ export class WidgetTypeEditor extends EditorComponent {
             editor = (
                 <WidgetContainerEditor
                     displaySelection={widgetTypeTabState.widgetContainerDisplayItem}
+                    pageWidth={this.widgetType.width}
+                    pageHeight={this.widgetType.height}
                 />
             );
         }

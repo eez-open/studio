@@ -22,8 +22,14 @@ interface ITaskResult {
 
 export let service: <I, O>(
     serviceName: string,
-    serviceImplementation: (inputParams: I) => Promise<O> // given function
-) => (inputParams: I) => Promise<O>;
+    serviceImplementation: (inputParams: I) => Promise<O>, // given function
+    executeInsideMainProcess?: boolean
+) => (inputParams: I) => Promise<O> = <I, O>(
+    serviceName: string,
+    serviceImplementation: (inputParams: I) => Promise<O>
+) => {
+    return serviceImplementation;
+};
 
 if (isRenderer()) {
     if (EEZStudio.windowType === "shared/service") {
@@ -63,25 +69,23 @@ if (isRenderer()) {
                 }
             }
         );
-
-        service = <I, O>(
-            serviceName: string,
-            serviceImplementation: (inputParams: I) => Promise<O>
-        ) => {
-            return serviceImplementation;
-        };
     } else {
         // this is calling process (renderer)
 
         service = <I, O>(
             serviceName: string,
-            serviceImplementation: (inputParams: I) => Promise<O>
+            serviceImplementation: (inputParams: I) => Promise<O>,
+            executeInsideMainProcess?: boolean
         ) => {
-            const serviceWindow = EEZStudio.electron.remote.BrowserWindow.getAllWindows().find(
-                window => window.webContents.getURL().endsWith("shared/service.html")
-            );
+            let serviceWindow: Electron.BrowserWindow | undefined;
 
-            if (serviceWindow) {
+            if (!executeInsideMainProcess) {
+                serviceWindow = EEZStudio.electron.remote.BrowserWindow.getAllWindows().find(
+                    window => window.webContents.getURL().endsWith("shared/service.html")
+                );
+            }
+
+            if (executeInsideMainProcess || serviceWindow) {
                 return (inputParams: I) => {
                     return new Promise<O>((resolve, reject) => {
                         const taskId = guid();
@@ -105,8 +109,13 @@ if (isRenderer()) {
                             inputParams
                         };
 
-                        // send task to service process
-                        serviceWindow.webContents.send(NEW_TASK_CHANNEL, task);
+                        if (executeInsideMainProcess) {
+                            // send task to main process
+                            EEZStudio.electron.ipcRenderer.send(NEW_TASK_CHANNEL, task);
+                        } else {
+                            // send task to service process
+                            serviceWindow!.webContents.send(NEW_TASK_CHANNEL, task);
+                        }
                     });
                 };
             } else {
@@ -118,12 +127,40 @@ if (isRenderer()) {
     }
 } else {
     // this is main proccess
+    const { BrowserWindow, ipcMain } = require("electron");
 
     // create service process
-    const { BrowserWindow } = require("electron");
     var windowContructorParams: Electron.BrowserWindowConstructorOptions = {
         show: false
     };
     let browserWindow = new BrowserWindow(windowContructorParams);
     browserWindow.loadURL(`file://${__dirname}/../shared/service.html`);
+
+    // waiting for the new task
+    ipcMain.on(NEW_TASK_CHANNEL, (event: Electron.Event, task: ITask) => {
+        function send(taskResult: ITaskResult) {
+            // send result back to calling process
+            event.sender.send(TASK_DONE_CHANNEL + task.taskId, taskResult);
+        }
+
+        function sendResult(result: any) {
+            send({ result });
+        }
+
+        function sendError(error: any) {
+            send({ error });
+        }
+
+        try {
+            const serviceImplementation: (
+                inputParams: any
+            ) => Promise<any> = require(task.serviceName).default;
+
+            serviceImplementation(task.inputParams)
+                .then(sendResult)
+                .catch(sendError);
+        } catch (error) {
+            sendError(error);
+        }
+    });
 }

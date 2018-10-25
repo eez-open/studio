@@ -17,13 +17,20 @@ import { getStyleProperty } from "project-editor/project/features/gui/style";
 let fs = EEZStudio.electron.remote.require("fs");
 
 export class BitmapProperties extends EezObject {
-    @observable name: string;
-    @observable description?: string;
-    @observable image: string;
-    @observable style?: string;
+    @observable
+    name: string;
+    @observable
+    description?: string;
+    @observable
+    image: string;
+    @observable
+    style?: string;
+    @observable
+    alwaysBuild: boolean;
 
     private imageElementLoading: boolean = false;
-    @observable private _imageElement: HTMLImageElement | null = null;
+    @observable
+    private _imageElement: HTMLImageElement | null = null;
 
     get imageElement() {
         if (!this._imageElement && !this.imageElementLoading) {
@@ -66,6 +73,10 @@ export const bitmapMetaData = registerMetaData({
             name: "style",
             type: "object-reference",
             referencedObjectCollectionPath: ["gui", "styles"]
+        },
+        {
+            name: "alwaysBuild",
+            type: "boolean"
         }
     ],
     newItem: (parent: EezObject) => {

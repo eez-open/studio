@@ -6,6 +6,7 @@ import { observer } from "mobx-react";
 //import { isDev } from 'shared/util';
 
 import { TabsView } from "shared/ui/tabs";
+import * as notification from "shared/ui/notification";
 
 import {
     UndoManager,
@@ -344,6 +345,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
                     </Layout.SplitPanel>
                     <Layout.SplitPanel>{debugPanel}</Layout.SplitPanel>
                 </Layout.Split>
+                {notification.container.get()}
                 {devTools}
                 <Notification />
             </div>

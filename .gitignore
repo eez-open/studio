@@ -28,6 +28,9 @@ installation/extra-resource.js
 installation/extra-resource.js.map
 installation/extra-resource.json
 
+tools/freetype-tools/agg-2.5
+tools/freetype-tools/FreeType-Emscripten
+
 TODO.txt
 
 .cache-require-paths.json

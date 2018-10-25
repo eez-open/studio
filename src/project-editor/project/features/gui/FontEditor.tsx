@@ -3,9 +3,10 @@ import { observer } from "mobx-react";
 import * as React from "react";
 import { bind } from "bind-decorator";
 
-import { IconAction } from "shared/ui/action";
+import { IconAction, TextAction } from "shared/ui/action";
 import { IFieldComponentProps } from "shared/ui/generic-dialog";
 import styled from "shared/ui/styled-components";
+import * as notification from "shared/ui/notification";
 
 import { EditorComponent } from "project-editor/core/metaData";
 import {
@@ -15,7 +16,10 @@ import {
     deleteObject,
     cloneObject,
     updateObject,
-    getId
+    replaceObject,
+    getId,
+    ProjectStore,
+    objectToJS
 } from "project-editor/core/store";
 import { doLayout } from "project-editor/core/layout";
 
@@ -29,7 +33,8 @@ import {
     EditorImageHitTestResult
 } from "project-editor/project/features/gui/glyph";
 import { glyphMetaData, setPixel } from "project-editor/project/features/gui/glyph";
-import { loadFontFromFile } from "project-editor/project/features/gui/fontsService";
+import extractFont from "font-services/font-extract";
+import rebuildFont from "font-services/font-rebuild";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -122,7 +127,14 @@ export class GlyphSelectFieldType extends React.Component<
                 clearTimeout(this.timeoutId);
             }
             this.timeoutId = setTimeout(() => {
-                loadFontFromFile(undefined, fontFilePath, fontBpp, fontSize, fontThreshold, true)
+                extractFont({
+                    absoluteFilePath: ProjectStore.getAbsoluteFilePath(fontFilePath),
+                    relativeFilePath: fontFilePath,
+                    bpp: fontBpp,
+                    size: fontSize,
+                    threshold: fontThreshold,
+                    createGlyphs: true
+                })
                     .then((font: FontProperties) => {
                         font = loadObject(undefined, font, fontMetaData) as FontProperties;
                         this.onChange(
@@ -255,6 +267,7 @@ class Glyphs extends React.Component<
         selectedGlyph: GlyphProperties | undefined;
         onSelectGlyph: (glyph: GlyphProperties) => void;
         onDoubleClickGlyph: (glyph: GlyphProperties) => void;
+        onRebuildGlyphs?: () => void;
         onAddGlyph?: () => void;
         onDeleteGlyph?: () => void;
     },
@@ -318,6 +331,17 @@ class Glyphs extends React.Component<
             />
         ));
 
+        let rebuildGlyphsButton: JSX.Element | undefined;
+        if (this.props.onRebuildGlyphs) {
+            rebuildGlyphsButton = (
+                <TextAction
+                    text="Rebuild"
+                    title="Rebuild Glyphs"
+                    onClick={this.props.onRebuildGlyphs.bind(this)}
+                />
+            );
+        }
+
         let addGlyphButton: JSX.Element | undefined;
         if (this.props.onAddGlyph) {
             addGlyphButton = (
@@ -354,6 +378,7 @@ class Glyphs extends React.Component<
                             placeholder="search"
                         />
                         <div style={{ flexGrow: 1 }} />
+                        {rebuildGlyphsButton}
                         {addGlyphButton}
                         {deleteGlyphButton}
                     </Toolbar>
@@ -409,7 +434,7 @@ class GlyphEditor extends React.Component<
                 glyphBitmap,
                 this.hitTestResult.x,
                 this.hitTestResult.y,
-                this.props.glyph.getPixel(this.hitTestResult.x, this.hitTestResult.y) ? 0 : 1,
+                this.props.glyph.getPixel(this.hitTestResult.x, this.hitTestResult.y) ? 0 : 255,
                 font.bpp
             );
 
@@ -552,6 +577,24 @@ export class FontEditor extends EditorComponent {
     }
 
     @action.bound
+    async onRebuildGlyphs() {
+        try {
+            const font = this.props.editor.object as FontProperties;
+
+            const newFont = await rebuildFont({
+                font: objectToJS(font),
+                projectFilePath: ProjectStore.filePath!
+            });
+
+            replaceObject(font, loadObject(undefined, newFont, fontMetaData));
+
+            notification.info(`Font rebuilded.`);
+        } catch (err) {
+            notification.error(`Rebuild failed (${err})!`);
+        }
+    }
+
+    @action.bound
     onAddGlyph() {
         let font = this.props.editor.object as FontProperties;
         let newGlyph = cloneObject(
@@ -592,6 +635,7 @@ export class FontEditor extends EditorComponent {
                     selectedGlyph={this.selectedGlyph}
                     onSelectGlyph={this.onSelectGlyph}
                     onDoubleClickGlyph={this.onDoubleClickGlyph}
+                    onRebuildGlyphs={this.onRebuildGlyphs}
                     onAddGlyph={this.onAddGlyph}
                     onDeleteGlyph={onDeleteGlyph}
                 />

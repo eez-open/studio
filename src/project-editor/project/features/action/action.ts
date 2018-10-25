@@ -27,6 +27,8 @@ export class ActionProperties extends EezObject {
     implementationType: "graphical" | "native";
     @observable
     implementation?: string;
+    @observable
+    usedIn: string[] | undefined;
 
     @computed
     get implementationCode() {
@@ -93,6 +95,10 @@ export const actionMetaData = registerMetaData({
             name: "implementation",
             type: "string",
             hideInPropertyGrid: true
+        },
+        {
+            name: "usedIn",
+            type: "configuration-references"
         }
     ],
     newItem: (parent: EezObject) => {
