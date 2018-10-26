@@ -34,7 +34,7 @@ import { findActionIndex } from "project-editor/project/features/action/action";
 import { GeometryProperties, ObjectGeometryChange } from "project-editor/components/CanvasEditor";
 
 import { findStyle, findBitmap, GuiProperties } from "project-editor/project/features/gui/gui";
-import { PageOrientationProperties } from "project-editor/project/features/gui/page";
+import { PageResolutionProperties } from "project-editor/project/features/gui/page";
 import {
     widgetTypeMetaData,
     WidgetTypeProperties
@@ -74,7 +74,7 @@ function getWidgetTypeClass() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type WidgetParent = PageOrientationProperties | WidgetTypeProperties | WidgetProperties;
+export type WidgetParent = PageResolutionProperties | WidgetTypeProperties | WidgetProperties;
 
 export class WidgetProperties extends EezObject {
     // shared properties
@@ -103,7 +103,7 @@ export class WidgetProperties extends EezObject {
         return undefined;
     }
 
-    // Return immediate parent, which can be of type PageOrientationProperties, WidgetTyperProperties
+    // Return immediate parent, which can be of type PageResolutionProperties, WidgetTyperProperties
     // or WidgetProperties (i.e. ContainerWidgetProperties, ListWidgetProperties, SelectWidgetPropertis)
     get parent(): WidgetParent {
         let parent = getParent(this)!;
@@ -114,7 +114,7 @@ export class WidgetProperties extends EezObject {
     }
 
     // Return first ancestor of type:
-    //   - PageOrientationProperties or
+    //   - PageResolutionProperties or
     //   - WidgetTyperProperties or
     //   - WidgetProperties, if that ancestor parent is SelectWidgetProperties
     get anchorParent() {
@@ -124,7 +124,7 @@ export class WidgetProperties extends EezObject {
             let parent = widget.parent;
 
             if (
-                parent instanceof PageOrientationProperties ||
+                parent instanceof PageResolutionProperties ||
                 parent instanceof WidgetTypeProperties
             ) {
                 return parent;
@@ -180,7 +180,7 @@ export class WidgetProperties extends EezObject {
             rect.left += parent.x;
             rect.top += parent.y;
 
-            if (parent instanceof PageOrientationProperties) {
+            if (parent instanceof PageResolutionProperties) {
                 break;
             }
 

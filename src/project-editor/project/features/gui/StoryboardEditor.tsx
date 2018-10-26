@@ -5,7 +5,6 @@ import * as React from "react";
 import { _each } from "shared/algorithm";
 
 import {
-    ProjectStore,
     UIStateStore,
     EditorsStore,
     addObject,
@@ -13,7 +12,6 @@ import {
     isObjectInstanceOf,
     loadObject,
     getEezStudioDataFromDragEvent,
-    getProperty,
     getId,
     getModificationTime
 } from "project-editor/core/store";
@@ -51,7 +49,7 @@ import {
     StoryboardTabState
 } from "project-editor/project/features/gui/storyboard";
 import { getPages, findPage } from "project-editor/project/features/gui/gui";
-import { PageOrientationProperties } from "project-editor/project/features/gui/page";
+import { PageResolutionProperties } from "project-editor/project/features/gui/page";
 import {
     drawPageFrame,
     drawNotFoundPageFrame,
@@ -82,7 +80,7 @@ function getCacheId(object: EezObject) {
 class RenderTask {
     callbacks: (() => void)[] = [];
 
-    constructor(public id: string, public pageOrientation: PageOrientationProperties) {}
+    constructor(public id: string, public pageResolution: PageResolutionProperties) {}
 
     addCallback(callback: () => void) {
         for (var i = 0; i < this.callbacks.length; i++) {
@@ -94,7 +92,7 @@ class RenderTask {
     }
 
     render() {
-        return drawPage(this.pageOrientation);
+        return drawPage(this.pageResolution);
     }
 
     callCallbacks() {
@@ -139,13 +137,13 @@ function renderLoop() {
 
 function createRenderTask(
     id: string,
-    pageOrientation: PageOrientationProperties,
+    pageResolution: PageResolutionProperties,
     callback: () => void
 ) {
     let renderTask = renderQueue.find(renderTask => renderTask.id == id);
 
     if (!renderTask) {
-        renderTask = new RenderTask(id, pageOrientation);
+        renderTask = new RenderTask(id, pageResolution);
         renderQueue.push(renderTask);
     }
 
@@ -158,15 +156,15 @@ renderLoop();
 
 function drawPageFromCache(
     ctx: CanvasRenderingContext2D,
-    pageOrientation: PageOrientationProperties,
+    pageResolution: PageResolutionProperties,
     callback: () => void
 ) {
-    let id = getCacheId(pageOrientation);
+    let id = getCacheId(pageResolution);
     let canvas = cacheMap.get(id);
     if (canvas) {
         ctx.drawImage(canvas, 0, 0);
     } else {
-        createRenderTask(id, pageOrientation, callback);
+        createRenderTask(id, pageResolution, callback);
     }
 }
 
@@ -177,7 +175,7 @@ function drawPageNode(
     callback: () => void
 ) {
     let storyboardPage = node.item.object as StoryboardPageProperties;
-    let pageOrientation = node.custom.pageOrientation;
+    let pageResolution = node.custom.pageResolution;
 
     ctx.save();
 
@@ -188,7 +186,7 @@ function drawPageNode(
     ctx.font = TITLE_FONT;
     let tm = ctx.measureText(storyboardPage.page);
 
-    if (pageOrientation) {
+    if (pageResolution) {
         ctx.fillStyle = "black";
     } else {
         ctx.fillStyle = "red";
@@ -198,9 +196,9 @@ function drawPageNode(
 
     ctx.translate(0, DISTANCE_BETWEEN_TITLE_AND_PAGE);
 
-    if (pageOrientation) {
-        drawPageFrame(ctx, pageOrientation, scale, pageOrientation.style);
-        drawPageFromCache(ctx, node.custom.pageOrientation, callback);
+    if (pageResolution) {
+        drawPageFrame(ctx, pageResolution, scale, pageResolution.style);
+        drawPageFromCache(ctx, node.custom.pageResolution, callback);
     } else {
         drawNotFoundPageFrame(
             ctx,
@@ -466,8 +464,6 @@ class StoryboardCanvasEditor extends CanvasEditor {
     }
 
     createTree(): TreeNode {
-        let screenOrientation = ProjectStore.selectedScreenOrientation;
-
         let tree: TreeNode = {
             parent: null,
             children: null,
@@ -479,9 +475,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
             selectable: false,
 
             item: this.props.displaySelection,
-            custom: {
-                screenOrientation: screenOrientation
-            },
+            custom: {},
 
             draw: () => {}
         } as any;
@@ -494,8 +488,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
             (storyboardPageItem: any) => {
                 let storyboardPage = storyboardPageItem.object as StoryboardPageProperties;
                 let page = findPage(storyboardPage.page);
-                let pageOrientation =
-                    page && (getProperty(page, screenOrientation) as PageOrientationProperties);
+                let pageResolution = page && (page.resolutions[0] as PageResolutionProperties);
 
                 pageNodes.push({
                     parent: tree,
@@ -504,16 +497,8 @@ class StoryboardCanvasEditor extends CanvasEditor {
                     rect: {
                         x: storyboardPage.x,
                         y: storyboardPage.y,
-                        width: pageOrientation
-                            ? pageOrientation.width
-                            : screenOrientation == "portrait"
-                                ? 240
-                                : 320,
-                        height: pageOrientation
-                            ? pageOrientation.height
-                            : screenOrientation == "portrait"
-                                ? 320
-                                : 240
+                        width: pageResolution ? pageResolution.width : 480,
+                        height: pageResolution ? pageResolution.height : 272
                     },
                     selected: storyboardPageItem.selected,
                     resizable: false,
@@ -523,8 +508,8 @@ class StoryboardCanvasEditor extends CanvasEditor {
                     item: storyboardPageItem,
 
                     custom: {
-                        page: page,
-                        pageOrientation: pageOrientation
+                        page,
+                        pageResolution
                     },
 
                     draw: drawPageNode,
@@ -629,14 +614,13 @@ class StoryboardCanvasEditor extends CanvasEditor {
                 let storyboardPage = object as StoryboardPageProperties;
 
                 let page = findPage(storyboardPage.page);
-                let screenOrientation = ProjectStore.selectedScreenOrientation;
-                let pageOrientation = page && getProperty(page, screenOrientation);
+                let pageResolution = page && page.resolutions[0];
 
                 let rect = {
                     x: Math.round(p.x),
                     y: Math.round(p.y),
-                    width: pageOrientation.width,
-                    height: pageOrientation.height
+                    width: pageResolution ? pageResolution.width : 480,
+                    height: pageResolution ? pageResolution.height : 272
                 };
 
                 setTimeout(() => {
@@ -657,8 +641,8 @@ class StoryboardCanvasEditor extends CanvasEditor {
                         },
 
                         custom: {
-                            page: page,
-                            pageOrientation: pageOrientation
+                            page,
+                            pageResolution
                         },
 
                         draw: drawPageNode,

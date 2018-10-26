@@ -36,18 +36,6 @@ export class PageEditor extends EditorComponent {
     }
 
     @bind
-    onPortrait() {
-        let pageTabState = this.props.editor.state as PageTabState;
-        pageTabState.selectPortrait();
-    }
-
-    @bind
-    onLandscape() {
-        let pageTabState = this.props.editor.state as PageTabState;
-        pageTabState.selectLandscape();
-    }
-
-    @bind
     focusHandler() {
         NavigationStore.setSelectedPanel(this);
     }
@@ -65,17 +53,17 @@ export class PageEditor extends EditorComponent {
         if (this.isExperimentalEditor) {
             editor = (
                 <ExperimentalWidgetContainerEditor
-                    container={pageTabState.selectedPageOrientation}
+                    container={pageTabState.selectedPageResolution}
                 />
             );
         } else {
             editor = (
                 <WidgetContainerEditor
                     displaySelection={
-                        pageTabState.selectedPageOrientationState.widgetContainerDisplayItem
+                        pageTabState.selectedPageResolutionState.widgetContainerDisplayItem
                     }
-                    pageWidth={pageTabState.selectedPageOrientation.width}
-                    pageHeight={pageTabState.selectedPageOrientation.height}
+                    pageWidth={pageTabState.selectedPageResolution.width}
+                    pageHeight={pageTabState.selectedPageResolution.height}
                 />
             );
         }
@@ -92,22 +80,6 @@ export class PageEditor extends EditorComponent {
                         iconSize={16}
                         onClick={this.toggleExperimentalEditor}
                         selected={this.isExperimentalEditor}
-                    />,
-                    <IconAction
-                        key="portrait"
-                        title="Portrait"
-                        icon="material:crop_portrait"
-                        iconSize={16}
-                        onClick={this.onPortrait}
-                        selected={pageTabState.selectedScreenOrientation == "portrait"}
-                    />,
-                    <IconAction
-                        key="landscape"
-                        title="Landscape"
-                        icon="material:crop_landscape"
-                        iconSize={16}
-                        onClick={this.onLandscape}
-                        selected={pageTabState.selectedScreenOrientation == "landscape"}
                     />
                 ]}
                 body={editor}
@@ -119,7 +91,7 @@ export class PageEditor extends EditorComponent {
         } else {
             let pageStructure = (
                 <Tree
-                    rootItem={pageTabState.selectedPageOrientationState.widgetContainerDisplayItem}
+                    rootItem={pageTabState.selectedPageResolutionState.widgetContainerDisplayItem}
                     tabIndex={0}
                     collapsable={true}
                 />

@@ -139,7 +139,6 @@ class FreeTypeFile {
             height,
             ascent,
             descent,
-            screenOrientation: "all",
             glyphs: []
         };
 

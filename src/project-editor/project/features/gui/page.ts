@@ -2,7 +2,7 @@ import { observable, computed, action, autorun } from "mobx";
 
 import { _find } from "shared/algorithm";
 
-import { ProjectStore, hasAncestor, getParent, getId } from "project-editor/core/store";
+import { getParent, getId } from "project-editor/core/store";
 import {
     EezObject,
     MetaData,
@@ -30,7 +30,7 @@ import { PageEditor } from "project-editor/project/features/gui/PageEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class PageOrientationProperties extends EezObject {
+export class PageResolutionProperties extends EezObject {
     @observable
     x: number;
     @observable
@@ -55,21 +55,13 @@ export class PageOrientationProperties extends EezObject {
     }
 }
 
-export const pageOrientationMetaData = registerMetaData({
+export const pageResolutionMetaData = registerMetaData({
     getClass: function(jsObject: any) {
-        return PageOrientationProperties;
+        return PageResolutionProperties;
     },
-    className: "PageOrientation",
+    className: "PageResolution",
     label: (object: EezObject) => {
-        let parent = getParent(object);
-        if (parent instanceof PageProperties) {
-            if (parent.portrait == object) {
-                return "portrait";
-            } else {
-                return "landscape";
-            }
-        }
-        return "PageOrientation";
+        return "PageResolution";
     },
     properties: () => [
         {
@@ -115,9 +107,9 @@ export const pageOrientationMetaData = registerMetaData({
         isSingleObject: boolean
     ): EezObject | PropertyMetaData | undefined => {
         if (metaData == widgetMetaData) {
-            let pageOrientation = object as PageOrientationProperties;
-            if (pageOrientation) {
-                return pageOrientation.widgets as any;
+            let pageResolution = object as PageResolutionProperties;
+            if (pageResolution) {
+                return pageResolution.widgets as any;
             }
         }
         return undefined;
@@ -132,9 +124,7 @@ export class PageProperties extends EezObject {
     @observable
     description?: string;
     @observable
-    portrait: PageOrientationProperties;
-    @observable
-    landscape: PageOrientationProperties;
+    resolutions: PageResolutionProperties[];
     @observable
     closePageIfTouchedOutside: boolean;
     @observable
@@ -253,11 +243,11 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
     }
 }
 
-export class PageOrientationState {
+export class PageResolutionState {
     widgetContainerDisplayItem: WidgetContainerDisplayItem;
 
-    constructor(pageOrientation: PageOrientationProperties) {
-        this.widgetContainerDisplayItem = new WidgetContainerDisplayItem(pageOrientation);
+    constructor(pageResolution: PageResolutionProperties) {
+        this.widgetContainerDisplayItem = new WidgetContainerDisplayItem(pageResolution);
     }
 
     saveState() {
@@ -273,87 +263,53 @@ export class PageTabState {
     pageProperties: PageProperties;
 
     @observable
-    selectedScreenOrientation: string;
-
-    @observable
-    portraitState: PageOrientationState;
-    @observable
-    landscapeState: PageOrientationState;
+    pageResolutionState: PageResolutionState;
 
     constructor(object: EezObject) {
         this.pageProperties = object as PageProperties;
 
-        this.selectedScreenOrientation = ProjectStore.selectedScreenOrientation;
-
-        this.portraitState = new PageOrientationState(this.pageProperties.portrait);
-        this.landscapeState = new PageOrientationState(this.pageProperties.landscape);
+        this.pageResolutionState = new PageResolutionState(this.pageProperties.resolutions[0]);
     }
 
     @computed
-    get selectedPageOrientation() {
-        return this.selectedScreenOrientation == "portrait"
-            ? this.pageProperties.portrait
-            : this.pageProperties.landscape;
+    get selectedPageResolution() {
+        return this.pageProperties.resolutions[0];
     }
 
     @computed
-    get selectedPageOrientationState() {
-        return this.selectedScreenOrientation == "portrait"
-            ? this.portraitState
-            : this.landscapeState;
-    }
-
-    @action
-    selectPortrait() {
-        this.selectedScreenOrientation = "portrait";
-    }
-
-    @action
-    selectLandscape() {
-        this.selectedScreenOrientation = "landscape";
+    get selectedPageResolutionState() {
+        return this.pageResolutionState;
     }
 
     @computed
     get selectedObject(): EezObject | undefined {
-        let object = this.selectedPageOrientationState.widgetContainerDisplayItem.selectedObject;
+        let object = this.selectedPageResolutionState.widgetContainerDisplayItem.selectedObject;
         if (object) {
             return object;
         }
-        if (
-            this.selectedPageOrientationState.widgetContainerDisplayItem.selectedItems.length == 0
-        ) {
-            return this.selectedPageOrientation;
+        if (this.selectedPageResolutionState.widgetContainerDisplayItem.selectedItems.length == 0) {
+            return this.selectedPageResolution;
         }
         return undefined;
     }
 
     loadState(state: any) {
-        this.selectedScreenOrientation = state.selectedScreenOrientation;
-        this.portraitState.loadState(state.portraitState);
-        this.landscapeState.loadState(state.landscapeState);
+        this.pageResolutionState.loadState(state.pageResolutionState);
     }
 
     saveState() {
         return {
-            selectedScreenOrientation: this.selectedScreenOrientation,
-            portraitState: this.portraitState.saveState(),
-            landscapeState: this.landscapeState.saveState()
+            pageResolutionState: this.pageResolutionState.saveState()
         };
     }
 
     @action
     selectObject(object: EezObject) {
-        if (hasAncestor(object, this.pageProperties.portrait)) {
-            this.selectedScreenOrientation = "portrait";
-        } else {
-            this.selectedScreenOrientation = "landscape";
-        }
-
-        let item = this.selectedPageOrientationState.widgetContainerDisplayItem.getObjectAdapter(
+        let item = this.selectedPageResolutionState.widgetContainerDisplayItem.getObjectAdapter(
             object
         );
         if (item) {
-            this.selectedPageOrientationState.widgetContainerDisplayItem.selectItems([item]);
+            this.selectedPageResolutionState.widgetContainerDisplayItem.selectItems([item]);
         }
     }
 }
@@ -377,15 +333,9 @@ export const pageMetaData = registerMetaData({
             type: "multiline-text"
         },
         {
-            name: "portrait",
-            type: "object",
-            typeMetaData: pageOrientationMetaData,
-            hideInPropertyGrid: true
-        },
-        {
-            name: "landscape",
-            type: "object",
-            typeMetaData: pageOrientationMetaData,
+            name: "resolutions",
+            type: "array",
+            typeMetaData: pageResolutionMetaData,
             hideInPropertyGrid: true
         },
         {
@@ -400,20 +350,15 @@ export const pageMetaData = registerMetaData({
     newItem: (parent: EezObject) => {
         return Promise.resolve({
             name: "Page",
-            portrait: {
-                x: 0,
-                y: 0,
-                width: 240,
-                height: 320,
-                widgets: []
-            },
-            landscape: {
-                x: 0,
-                y: 0,
-                width: 320,
-                height: 240,
-                widgets: []
-            },
+            resolutions: [
+                {
+                    x: 0,
+                    y: 0,
+                    width: 480,
+                    height: 272,
+                    widgets: []
+                }
+            ],
             closePageIfTouchedOutside: false
         });
     },

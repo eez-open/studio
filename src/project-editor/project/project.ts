@@ -26,10 +26,12 @@ let fs = EEZStudio.electron.remote.require("fs");
 ////////////////////////////////////////////////////////////////////////////////
 
 export class BuildConfigurationProperties extends EezObject {
-    @observable name: string;
-    @observable description: string;
-    @observable screenOrientation: string;
-    @observable properties: string;
+    @observable
+    name: string;
+    @observable
+    description: string;
+    @observable
+    properties: string;
 
     check() {
         let messages: output.Message[] = [];
@@ -65,26 +67,13 @@ export const buildConfigurationMetaData = registerMetaData({
             type: "multiline-text"
         },
         {
-            name: "screenOrientation",
-            type: "enum",
-            enumItems: [
-                {
-                    id: "portrait"
-                },
-                {
-                    id: "landscape"
-                }
-            ]
-        },
-        {
             name: "properties",
             type: "json"
         }
     ],
     newItem: (parent: EezObject) => {
         return Promise.resolve({
-            name: "Configuration",
-            screenOrientation: "portrait"
+            name: "Configuration"
         });
     },
     showInNavigation: true
@@ -93,9 +82,12 @@ export const buildConfigurationMetaData = registerMetaData({
 ////////////////////////////////////////////////////////////////////////////////
 
 export class BuildFileProperties extends EezObject {
-    @observable fileName: string;
-    @observable description?: string;
-    @observable template: string;
+    @observable
+    fileName: string;
+    @observable
+    description?: string;
+    @observable
+    template: string;
 }
 
 export const buildFileMetaData = registerMetaData({
@@ -134,9 +126,12 @@ export const buildFileMetaData = registerMetaData({
 ////////////////////////////////////////////////////////////////////////////////
 
 export class BuildProperties extends EezObject {
-    @observable configurations: BuildConfigurationProperties[];
-    @observable files: BuildFileProperties[];
-    @observable destinationFolder?: string;
+    @observable
+    configurations: BuildConfigurationProperties[];
+    @observable
+    files: BuildFileProperties[];
+    @observable
+    destinationFolder?: string;
 }
 
 export const buildMetaData = registerMetaData({
@@ -169,7 +164,8 @@ export const buildMetaData = registerMetaData({
 ////////////////////////////////////////////////////////////////////////////////
 
 export class GeneralProperties extends EezObject {
-    @observable scpiDocFolder?: string;
+    @observable
+    scpiDocFolder?: string;
 }
 
 export const generalMetaData = registerMetaData({
@@ -191,9 +187,12 @@ export const generalMetaData = registerMetaData({
 ////////////////////////////////////////////////////////////////////////////////
 
 export class SettingsProperties extends EezObject {
-    @observable general: GeneralProperties;
-    @observable build: BuildProperties;
-    @observable scpiHelpFolder?: string;
+    @observable
+    general: GeneralProperties;
+    @observable
+    build: BuildProperties;
+    @observable
+    scpiHelpFolder?: string;
 }
 
 export const settingsMetaData = registerMetaData({
@@ -228,9 +227,12 @@ let numProjectFeatures = 0;
 let projectProperties: PropertyMetaData[];
 
 export class ProjectProperties extends EezObject {
-    @observable settings: SettingsProperties;
-    @observable data: DataItemProperties[];
-    @observable actions: ActionProperties[];
+    @observable
+    settings: SettingsProperties;
+    @observable
+    data: DataItemProperties[];
+    @observable
+    actions: ActionProperties[];
 
     callExtendObservableForAllOptionalProjectFeatures() {
         let optionalFeatures: any = {};
@@ -308,8 +310,7 @@ export function getNewProject(): ProjectProperties {
             build: {
                 configurations: [
                     {
-                        name: "Default",
-                        screenOrientation: "portrait"
+                        name: "Default"
                     }
                 ],
                 files: []

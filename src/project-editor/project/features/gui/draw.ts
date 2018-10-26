@@ -1217,7 +1217,7 @@ export function drawNotFoundPageFrame(ctx: CanvasRenderingContext2D, rect: Rect,
 }
 
 export function drawPage(
-    pageOrientation: {
+    pageResolution: {
         width: number;
         height: number;
         widgets: Widget.WidgetProperties[];
@@ -1225,12 +1225,12 @@ export function drawPage(
 ) {
     let canvas = document.createElement("canvas");
 
-    canvas.width = pageOrientation.width;
-    canvas.height = pageOrientation.height;
+    canvas.width = pageResolution.width;
+    canvas.height = pageResolution.height;
 
     let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-    let tree = createWidgetTree(pageOrientation, true);
+    let tree = createWidgetTree(pageResolution, true);
     drawTree(ctx, tree, 1, () => {});
 
     return canvas;

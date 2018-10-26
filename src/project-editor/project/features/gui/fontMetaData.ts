@@ -73,8 +73,6 @@ export class FontProperties extends EezObject {
     @observable
     descent: number;
     @observable
-    screenOrientation: string;
-    @observable
     glyphs: GlyphProperties[];
     @observable
     alwaysBuild: boolean;
@@ -121,21 +119,6 @@ export const fontMetaData = registerMetaData({
         {
             name: "descent",
             type: "number"
-        },
-        {
-            name: "screenOrientation",
-            type: "enum",
-            enumItems: [
-                {
-                    id: "all"
-                },
-                {
-                    id: "portrait"
-                },
-                {
-                    id: "landscape"
-                }
-            ]
         },
         {
             name: "glyphs",

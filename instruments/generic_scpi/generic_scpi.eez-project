@@ -8,7 +8,6 @@
         {
           "name": "Generic SCPI instrument",
           "description": "An example instrument with serial and Ethernet connection",
-          "screenOrientation": "landscape",
           "properties": "{\n  \"connection\": {\n    \"ethernet\": {\n      \"port\": 5025\n    },\n    \"serial\": {\n      \"baudRates\": [9600, 19200, 38400, 57600, 74880, 115200, 230400, 250000],\n      \"defaultBaudRate\": 9600\n    }\n  }\n}"
         }
       ],

@@ -8,7 +8,6 @@
         {
           "name": "DS1000E, DS1000D",
           "description": "The Rigol DS1000 (DS1000E, DS1000D) oscilloscopes are entry level-devices at affordable pricing without compromising on quality. The low pricing level results from the large amount of units sold, huge reductions in the margins of manufacturer and distributors, as well as substantial economies.\nAll models of the DS1000 series are equipped with 2 channels, a sample rate of 1 GSa/s, 1 Mpts memory, a 5.7” (14.4 cm) TFT color display, as well as intuitive measurement and mathematical functions.\nDespite of two different bandwidth-ranges (50 and 100 MHz), the DS1000D series models are equipped with a built-in 16 channel logic analyzer.",
-          "screenOrientation": "landscape",
           "properties": "{\n  \"connection\": {\n    \"serial\": {\n      \"baudRates\": [9600, 19200, 38400, 57600]\n    }\n  },\n  \"channels\": [\n    { \"color\": \"#FBFB00\", \"colorInverse\": \"#AEAE00\" },\n    { \"color\": \"#03FFFF\", \"colorInverse\": \"#00B5B5\" }\n  ]\n}"
         }
       ],

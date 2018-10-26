@@ -8,7 +8,6 @@
         {
           "name": "DS1000B",
           "description": "The Rigol DS1000B Oscilloscopes provide 4 channels with a medium-range bandwidth and sample rate. If 4 channels are required, this series is a suitable alternative to the (lower priced) DS1000Z and the higher priced DS4000 series.\nAll models are equipped with 4 channels, a sample rate of 2 GSa/s, a storage of 15 kpts and a 5,7” (14,4 cm) TFT color display, as well as basic measurement and mathematical functions.\nYou can choose between 3 ranges of bandwidth: 70, 100 and 200 MHz.",
-          "screenOrientation": "landscape",
           "properties": "{\n  \"connection\": {\n    \"serial\": {\n      \"baudRates\": [9600, 19200, 38400, 57600]\n    },\n    \"ethernet\": {\n      \"port\": 5555\n    }\n  },\n  \"channels\": [\n    { \"color\": \"#FBFB00\", \"colorInverse\": \"#AEAE00\" },\n    { \"color\": \"#03FFFF\", \"colorInverse\": \"#00B5B5\" },\n    { \"color\": \"#F000F0\", \"colorInverse\": \"#A300A3\" },\n    { \"color\": \"#007FFF\", \"colorInverse\": \"#0059B3\" }\n  ]\n}"
         }
       ],

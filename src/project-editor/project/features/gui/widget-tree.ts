@@ -18,8 +18,8 @@ import { TreeNode } from "project-editor/components/CanvasEditorTreeNode";
 import * as data from "project-editor/project/features/data/data";
 
 import {
-    PageOrientationProperties,
-    pageOrientationMetaData,
+    PageResolutionProperties,
+    pageResolutionMetaData,
     isWidgetOpaque,
     IWidgetContainerDisplayItem
 } from "project-editor/project/features/gui/page";
@@ -97,9 +97,9 @@ function drawPageFrameForTreeNode(
     scale: number,
     callback: () => void
 ) {
-    if (isObjectInstanceOf(node.item.object, pageOrientationMetaData)) {
-        let pageOrientation = node.item.object as PageOrientationProperties;
-        drawPageFrame(ctx, pageOrientation, scale, pageOrientation.style || "default");
+    if (isObjectInstanceOf(node.item.object, pageResolutionMetaData)) {
+        let pageResolution = node.item.object as PageResolutionProperties;
+        drawPageFrame(ctx, pageResolution, scale, pageResolution.style || "default");
     } else if (isObjectInstanceOf(node.item.object, widgetTypeMetaData)) {
         let widgetType = node.item.object as WidgetTypeProperties;
         drawPageFrame(
@@ -129,10 +129,10 @@ export function createWidgetTree(
         ) {
             let object = item.object as
                 | WidgetProperties
-                | PageOrientationProperties
+                | PageResolutionProperties
                 | WidgetTypeProperties;
 
-            if (object instanceof WidgetProperties || object instanceof PageOrientationProperties) {
+            if (object instanceof WidgetProperties || object instanceof PageResolutionProperties) {
                 x += object.x || 0;
                 y += object.y || 0;
             }
@@ -166,7 +166,7 @@ export function createWidgetTree(
             }
 
             if (
-                object instanceof PageOrientationProperties ||
+                object instanceof PageResolutionProperties ||
                 object instanceof WidgetTypeProperties
             ) {
                 let widgetsItemChildren = item.children as DisplayItemChildrenArray;

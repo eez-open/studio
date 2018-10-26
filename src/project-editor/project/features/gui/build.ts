@@ -29,10 +29,7 @@ import {
 } from "project-editor/project/features/gui/bitmap";
 import { StyleProperties } from "project-editor/project/features/gui/style";
 import * as Widget from "project-editor/project/features/gui/widget";
-import {
-    PageProperties,
-    PageOrientationProperties
-} from "project-editor/project/features/gui/page";
+import { PageProperties, PageResolutionProperties } from "project-editor/project/features/gui/page";
 import { WidgetTypeProperties } from "project-editor/project/features/gui/widgetType";
 import { findPageTransparentRectanglesInContainer } from "project-editor/project/features/gui/pageTransparentRectangles";
 import { FontProperties } from "./fontMetaData";
@@ -445,7 +442,7 @@ function buildGuiStylesData(assets: Assets) {
         let result = new Struct();
 
         // font
-        let fontIndex = style.font ? assets.getFontIndex(style.font) : 0;
+        let fontIndex = style.fontName ? assets.getFontIndex(style.fontName) : 0;
         result.addField(new UInt8(fontIndex));
 
         // flags
@@ -552,14 +549,14 @@ function buildGuiStylesData(assets: Assets) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildWidget(
-    object: Widget.WidgetProperties | PageOrientationProperties | WidgetTypeProperties,
+    object: Widget.WidgetProperties | PageResolutionProperties | WidgetTypeProperties,
     assets: Assets
 ) {
     let result = new Struct();
 
     // type
     let type: number;
-    if (object instanceof PageOrientationProperties || object instanceof WidgetTypeProperties) {
+    if (object instanceof PageResolutionProperties || object instanceof WidgetTypeProperties) {
         type = WIDGET_TYPE_CONTAINER;
     } else {
         let widget = object;
@@ -621,14 +618,14 @@ function buildWidget(
 
     // x
     let x: number = 0;
-    if (object instanceof Widget.WidgetProperties || object instanceof PageOrientationProperties) {
+    if (object instanceof Widget.WidgetProperties || object instanceof PageResolutionProperties) {
         x = object.x || 0;
     }
     result.addField(new Int16(x));
 
     // y
     let y: number = 0;
-    if (object instanceof Widget.WidgetProperties || object instanceof PageOrientationProperties) {
+    if (object instanceof Widget.WidgetProperties || object instanceof PageResolutionProperties) {
         y = object.y || 0;
     }
     result.addField(new Int16(y));
@@ -655,7 +652,7 @@ function buildWidget(
         specific = new Struct();
 
         let widgets: Widget.WidgetProperties[] | undefined;
-        if (object instanceof PageOrientationProperties || object instanceof WidgetTypeProperties) {
+        if (object instanceof PageResolutionProperties || object instanceof WidgetTypeProperties) {
             widgets = object.widgets;
         } else {
             widgets = (object as Widget.ContainerWidgetProperties).widgets;
@@ -671,7 +668,7 @@ function buildWidget(
 
         specific.addField(childWidgets);
 
-        if (object instanceof PageOrientationProperties) {
+        if (object instanceof PageResolutionProperties) {
             let rects = findPageTransparentRectanglesInContainer(object);
 
             let rectObjectList = new ObjectList();
@@ -1096,7 +1093,7 @@ function buildGuiPagesEnum(assets: Assets) {
     return `enum PagesEnum {\n${pages}\n};`;
 }
 
-function buildGuiDocumentData(assets: Assets, screenOrientation: string) {
+function buildGuiDocumentData(assets: Assets) {
     function buildCustomWidget(customWidget: WidgetTypeProperties) {
         var customWidgetStruct = new Struct();
 
@@ -1111,14 +1108,14 @@ function buildGuiDocumentData(assets: Assets, screenOrientation: string) {
         return customWidgetStruct;
     }
 
-    function buildPage(page: PageOrientationProperties) {
+    function buildPage(page: PageResolutionProperties) {
         return buildWidget(page, assets);
     }
 
     function build() {
         let pages = new ObjectList();
         assets.pages.forEach(page => {
-            pages.addItem(buildPage(getProperty(page, screenOrientation)));
+            pages.addItem(buildPage(page.resolutions[0]));
         });
 
         let customWidgets = new ObjectList();
@@ -1161,7 +1158,7 @@ function buildGuiDocumentData(assets: Assets, screenOrientation: string) {
 
 async function buildGuiAssetsData(assets: Assets) {
     const inputArray = packRegions([
-        buildGuiDocumentData(assets, ProjectStore.selectedScreenOrientation),
+        buildGuiDocumentData(assets),
         buildGuiStylesData(assets),
         buildGuiFontsData(assets),
         await buildGuiBitmapsData(assets)
@@ -1253,7 +1250,7 @@ class Assets {
 
         while (true) {
             const n = this.totalGuiAssets;
-            buildGuiDocumentData(this, ProjectStore.selectedScreenOrientation);
+            buildGuiDocumentData(this);
             buildGuiStylesData(this);
             if (n === this.totalGuiAssets) {
                 break;

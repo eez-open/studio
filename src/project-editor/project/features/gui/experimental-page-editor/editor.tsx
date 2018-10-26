@@ -33,7 +33,7 @@ import { EezObject } from "project-editor/core/metaData";
 import * as data from "project-editor/project/features/data/data";
 
 import { findStyleOrGetDefault } from "project-editor/project/features/gui/gui";
-import { PageOrientationProperties } from "project-editor/project/features/gui/page";
+import { PageResolutionProperties } from "project-editor/project/features/gui/page";
 import { WidgetTypeProperties } from "project-editor/project/features/gui/widgetType";
 import {
     WidgetProperties,
@@ -70,7 +70,8 @@ abstract class BaseObjectComponent extends React.Component<{ object: EezObject }
     implements IBaseObject {
     children: BaseObjectComponent[] = [];
 
-    @observable selected: boolean;
+    @observable
+    selected: boolean;
 
     abstract get rect(): Rect;
     abstract get boundingRect(): Rect;
@@ -570,13 +571,13 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
 ////////////////////////////////////////////////////////////////////////////////
 
 function findSelectWidgetEditors(
-    rootObject: WidgetProperties | PageOrientationProperties | WidgetTypeProperties
+    rootObject: WidgetProperties | PageResolutionProperties | WidgetTypeProperties
 ) {
     const result: SelectWidgetEditorProperties[] = [];
 
-    function doFind(object: WidgetProperties | PageOrientationProperties | WidgetTypeProperties) {
+    function doFind(object: WidgetProperties | PageResolutionProperties | WidgetTypeProperties) {
         if (
-            object instanceof PageOrientationProperties ||
+            object instanceof PageResolutionProperties ||
             object instanceof WidgetTypeProperties ||
             object instanceof ContainerWidgetProperties
         ) {
@@ -601,7 +602,7 @@ function findSelectWidgetEditors(
 @observer
 class RootObjectComponent extends BaseObjectComponent {
     get rootObject() {
-        return this.props.object as PageOrientationProperties | WidgetTypeProperties;
+        return this.props.object as PageResolutionProperties | WidgetTypeProperties;
     }
 
     get childrenObjects() {
@@ -612,8 +613,8 @@ class RootObjectComponent extends BaseObjectComponent {
     @computed
     get rect() {
         return {
-            left: this.rootObject instanceof PageOrientationProperties ? this.rootObject.x : 0,
-            top: this.rootObject instanceof PageOrientationProperties ? this.rootObject.y : 0,
+            left: this.rootObject instanceof PageResolutionProperties ? this.rootObject.x : 0,
+            top: this.rootObject instanceof PageResolutionProperties ? this.rootObject.y : 0,
             width: this.rootObject.width,
             height: this.rootObject.height
         };
@@ -649,19 +650,22 @@ class RootObjectComponent extends BaseObjectComponent {
 ////////////////////////////////////////////////////////////////////////////////
 
 interface ExperimentalWidgetContainerEditorProps {
-    container: PageOrientationProperties | WidgetTypeProperties;
+    container: PageResolutionProperties | WidgetTypeProperties;
 }
 
 @observer
 export class ExperimentalWidgetContainerEditor
     extends React.Component<ExperimentalWidgetContainerEditorProps>
     implements IDocument {
-    container: PageOrientationProperties | WidgetTypeProperties;
+    container: PageResolutionProperties | WidgetTypeProperties;
     transform: Transform;
     saveTransformDisposer: any;
-    @observable _selectionVisible: boolean;
-    @observable _rubberBendRect: Rect | undefined;
-    @observable _selectedObjects: BaseObjectComponent[] = [];
+    @observable
+    _selectionVisible: boolean;
+    @observable
+    _rubberBendRect: Rect | undefined;
+    @observable
+    _selectedObjects: BaseObjectComponent[] = [];
     selectionResizable: boolean = true;
     rootObjectComponent: RootObjectComponent;
 
@@ -696,17 +700,17 @@ export class ExperimentalWidgetContainerEditor
     }
 
     @action
-    loadContainer(container: PageOrientationProperties | WidgetTypeProperties) {
+    loadContainer(container: PageResolutionProperties | WidgetTypeProperties) {
         if (this.container) {
             this.unloadContainer();
         }
 
         this.container = container;
 
-        const pageOrientationUIState = UIStateStore.getObjectUIState(container);
+        const pageResolutionUIState = UIStateStore.getObjectUIState(container);
 
-        if (pageOrientationUIState) {
-            this.transform = new Transform(pageOrientationUIState.transform);
+        if (pageResolutionUIState) {
+            this.transform = new Transform(pageResolutionUIState.transform);
         } else {
             this.transform = new Transform({
                 translate: {

@@ -38,7 +38,6 @@ export function extractBdfFont(
                         ascent: 0,
                         descent: 0,
                         height: 0,
-                        screenOrientation: "all",
                         glyphs: []
                     };
 

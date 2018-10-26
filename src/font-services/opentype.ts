@@ -47,7 +47,6 @@ export function loadFontUsingOpentypeJS(
                 ascent: ascent,
                 descent: descent,
                 height: height,
-                screenOrientation: "all",
                 glyphs: []
             };
 

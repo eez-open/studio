@@ -5,7 +5,6 @@ export interface FontProperties {
     height: number;
     ascent: number;
     descent: number;
-    screenOrientation?: string;
     glyphs: GlyphProperties[];
 }
 
