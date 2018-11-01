@@ -10,7 +10,7 @@ const GAMMA = 1.0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const wasmModule = require("font-services/freetype-tools-wasm/freetype-tools");
+const wasmModule = require("../../libs/freetype-tools-wasm/freetype-tools");
 
 let wasmModuleReady = false;
 wasmModule["onRuntimeInitialized"] = () => {

@@ -1200,15 +1200,6 @@ export function loadObject(
     let object = new (metaData.getClass(jsObject))();
     object.$eez = createEezObjectState(parent as EezObject, metaData);
 
-    // migration of Page object, landscape -> resolutions = [landscape]
-    if (metaData.className == "Page") {
-        if (jsObject.landscape) {
-            jsObject.resolutions = [jsObject.landscape];
-            delete jsObject.landscape;
-            delete jsObject.portrait;
-        }
-    }
-
     let properties = metaData.properties(jsObject);
     for (let i = 0; i < properties.length; i++) {
         let propertyMetaData = properties[i];

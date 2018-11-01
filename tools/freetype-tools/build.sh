@@ -13,4 +13,4 @@ emcc \
     \
     -s EXPORTED_FUNCTIONS='["_create_font_extract_state", "_extract_glyph", "_free_font_extract_state"]'\
     -s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]'\
-    -o ../../src/font-services/freetype-tools-wasm/freetype-tools.js
+    -o ../../libs/freetype-tools-wasm/freetype-tools.js

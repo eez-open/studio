@@ -20,18 +20,14 @@ import * as data from "project-editor/project/features/data/data";
 import {
     PageResolutionProperties,
     pageResolutionMetaData,
-    isWidgetOpaque,
     IWidgetContainerDisplayItem
 } from "project-editor/project/features/gui/page";
 import {
     WidgetProperties,
     ListWidgetProperties,
+    GridWidgetProperties,
     SelectWidgetProperties
 } from "project-editor/project/features/gui/widget";
-import {
-    widgetTypeMetaData,
-    WidgetTypeProperties
-} from "project-editor/project/features/gui/widgetType";
 import { drawWidget, drawPageFrame } from "project-editor/project/features/gui/draw";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,19 +96,6 @@ function drawPageFrameForTreeNode(
     if (isObjectInstanceOf(node.item.object, pageResolutionMetaData)) {
         let pageResolution = node.item.object as PageResolutionProperties;
         drawPageFrame(ctx, pageResolution, scale, pageResolution.style || "default");
-    } else if (isObjectInstanceOf(node.item.object, widgetTypeMetaData)) {
-        let widgetType = node.item.object as WidgetTypeProperties;
-        drawPageFrame(
-            ctx,
-            {
-                x: 0,
-                y: 0,
-                width: widgetType.width,
-                height: widgetType.height
-            },
-            scale,
-            widgetType.style
-        );
     }
 }
 
@@ -127,10 +110,7 @@ export function createWidgetTree(
             x: number,
             y: number
         ) {
-            let object = item.object as
-                | WidgetProperties
-                | PageResolutionProperties
-                | WidgetTypeProperties;
+            let object = item.object as WidgetProperties | PageResolutionProperties;
 
             if (object instanceof WidgetProperties || object instanceof PageResolutionProperties) {
                 x += object.x || 0;
@@ -157,18 +137,14 @@ export function createWidgetTree(
                 image:
                     draw && object instanceof WidgetProperties
                         ? drawWidget(object, rect)
-                        : undefined,
-                isOpaque: object instanceof WidgetProperties && isWidgetOpaque(object)
+                        : undefined
             };
 
             if (parentNode) {
                 parentNode.children.push(treeNode);
             }
 
-            if (
-                object instanceof PageResolutionProperties ||
-                object instanceof WidgetTypeProperties
-            ) {
+            if (object instanceof PageResolutionProperties) {
                 let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
                 widgetsItemChildren.forEach(child => {
@@ -196,6 +172,29 @@ export function createWidgetTree(
                                 y += itemWidget.height;
                             } else {
                                 x += itemWidget.width;
+                            }
+                        }
+                    }
+                } else if (object.type == "Grid") {
+                    let widget = object as GridWidgetProperties;
+                    let itemWidget = widget.itemWidget;
+                    if (itemWidget) {
+                        let itemWidgetItem = (item.children as DisplayItemChildrenObject)[
+                            "itemWidget"
+                        ];
+
+                        for (let i = 0; i < data.count(<string>widget.data); i++) {
+                            enumWidget(treeNode, itemWidgetItem, x, y);
+
+                            if (x + itemWidget.width < widget.width) {
+                                x += itemWidget.width;
+                            } else {
+                                if (y + itemWidget.height < widget.height) {
+                                    y += itemWidget.height;
+                                    x = rect.x;
+                                } else {
+                                    break;
+                                }
                             }
                         }
                     }

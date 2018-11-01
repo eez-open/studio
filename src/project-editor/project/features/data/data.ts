@@ -142,7 +142,7 @@ registerFeatureImplementation("data", {
         check: (object: EezObject) => {
             let messages: output.Message[] = [];
 
-            if (asArray(object).length >= 255) {
+            if (asArray(object).length >= 65534) {
                 messages.push(
                     new output.Message(
                         output.Type.ERROR,

@@ -34,7 +34,6 @@ export interface TreeNode {
         scale: number
     ) => void;
     startLineConnecting?: (treeNode: TreeNode, p: Point) => LineConnecting;
-    isOpaque?: boolean;
 }
 
 export enum TraverseTreeContinuation {

@@ -139,8 +139,8 @@ registerFeatureImplementation("action", {
         check: (object: EezObject) => {
             let messages: Message[] = [];
 
-            if (asArray(object).length >= 255) {
-                messages.push(new Message(Type.ERROR, "Max. 254 actions are supported", object));
+            if (asArray(object).length >= 65535) {
+                messages.push(new Message(Type.ERROR, "Max. 65534 actions are supported", object));
             }
 
             return messages;

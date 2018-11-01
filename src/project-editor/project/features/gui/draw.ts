@@ -19,7 +19,7 @@ import {
 } from "project-editor/project/features/gui/style";
 import { BitmapProperties } from "project-editor/project/features/gui/bitmap";
 import {
-    findLocalWidgetType,
+    findPage,
     findStyle,
     findStyleOrGetDefault,
     findFont,
@@ -196,7 +196,7 @@ export function drawText(
             } else if (styleIsHorzAlignRight(style)) {
                 x_offset = x2 - getStyleProperty(style, "paddingHorizontal") - width;
             } else {
-                x_offset = Math.floor(x1 + (x2 - x1 - width) / 2);
+                x_offset = Math.floor(x1 + (x2 - x1 + 1 - width) / 2);
             }
 
             let y_offset: number;
@@ -205,7 +205,7 @@ export function drawText(
             } else if (styleIsVertAlignBottom(style)) {
                 y_offset = y2 - getStyleProperty(style, "paddingVertical") - height;
             } else {
-                y_offset = Math.floor(y1 + (y2 - y1 - height) / 2);
+                y_offset = Math.floor(y1 + (y2 - y1 + 1 - height) / 2);
             }
 
             let backgroundColor = inverse
@@ -466,6 +466,10 @@ export function drawRectangle(w: number, h: number, style: StyleProperties, inve
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export function drawDefaultWidget(widget: Widget.WidgetProperties, rect: Rect) {
+    return drawRectangle(rect.width, rect.height, findStyleOrGetDefault(widget.style), true);
+}
+
 export function drawDisplayDataWidget(widget: Widget.WidgetProperties, rect: Rect) {
     let text = (widget.data && ((<string>data.get(widget.data)) as string)) || "";
     return drawText(text, rect.width, rect.height, findStyleOrGetDefault(widget.style), false);
@@ -504,18 +508,25 @@ export function drawRectangleWidget(widget: Widget.WidgetProperties, rect: Rect)
 
 export function drawBitmapWidget(widget: Widget.WidgetProperties, rect: Rect) {
     let bitmapWidget = widget as Widget.BitmapWidgetProperties;
+
+    let bitmap;
+
     if (bitmapWidget.bitmap) {
-        let bitmap = findBitmap(bitmapWidget.bitmap);
-        if (bitmap) {
-            return drawBitmap(
-                bitmap,
-                rect.width,
-                rect.height,
-                findStyleOrGetDefault(bitmapWidget.style),
-                false
-            );
-        }
+        bitmap = findBitmap(bitmapWidget.bitmap);
+    } else if (bitmapWidget.data) {
+        bitmap = findBitmap(data.get(bitmapWidget.data) as string);
     }
+
+    if (bitmap) {
+        return drawBitmap(
+            bitmap,
+            rect.width,
+            rect.height,
+            findStyleOrGetDefault(bitmapWidget.style),
+            false
+        );
+    }
+
     return undefined;
 }
 
@@ -1150,30 +1161,69 @@ export function drawListGraphWidget(widget: Widget.WidgetProperties, rect: Rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function drawLocalWidget(widget: Widget.WidgetProperties, rect: Rect) {
-    const widgetType = findLocalWidgetType(widget.type.substring("Local.".length));
-    if (widgetType) {
-        return drawFromCache(
-            "drawLocalWidget",
-            getCacheId(widgetType) + "." + rect.width + "." + rect.height,
-            rect.width,
-            rect.height,
-            (ctx: CanvasRenderingContext2D) => {
-                let tree = createWidgetTree(widgetType, true);
-                drawTree(ctx, tree, 1, () => {});
-            }
-        );
+export function drawLayoutViewWidget(widget: Widget.WidgetProperties, rect: Rect) {
+    let pageViewWidget = widget as Widget.LayoutViewWidgetProperties;
+
+    let layoutName;
+    if (pageViewWidget.layout) {
+        layoutName = pageViewWidget.layout;
+    } else if (pageViewWidget.data) {
+        layoutName = data.get(pageViewWidget.data) as string;
     }
+
+    if (layoutName) {
+        const layout = findPage(layoutName);
+        if (layout) {
+            return drawFromCache(
+                "drawLayoutViewWidget",
+                getCacheId(layout) + "." + rect.width + "." + rect.height,
+                rect.width,
+                rect.height,
+                (ctx: CanvasRenderingContext2D) => {
+                    let tree = createWidgetTree(layout.resolutions[0], true);
+                    drawTree(ctx, tree, 1, () => {});
+                }
+            );
+        }
+    }
+
+    return undefined;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function drawAppViewWidget(widget: Widget.WidgetProperties, rect: Rect) {
+    let pageViewWidget = widget as Widget.AppViewWidgetProperties;
+
+    if (pageViewWidget.data) {
+        const pageName = data.get(pageViewWidget.data) as string;
+        if (pageName) {
+            const page = findPage(pageName);
+            let x;
+            if (page) {
+                x = drawFromCache(
+                    "drawAppViewWidget",
+                    getCacheId(page) + "." + rect.width + "." + rect.height,
+                    rect.width,
+                    rect.height,
+                    (ctx: CanvasRenderingContext2D) => {
+                        let tree = createWidgetTree(page.resolutions[0], true);
+                        drawTree(ctx, tree, 1, () => {});
+                    }
+                );
+            }
+            if (x) {
+                return x;
+            }
+        }
+    }
+
     return undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function drawWidget(widget: Widget.WidgetProperties, rect: Rect) {
-    if (widget.type && widget.type.startsWith("Local.")) {
-        return drawLocalWidget(widget, rect);
-    }
-
     let widgetType = Widget.getWidgetType(widget);
     if (widgetType) {
         let draw = widgetType.draw;
@@ -1181,7 +1231,6 @@ export function drawWidget(widget: Widget.WidgetProperties, rect: Rect) {
             return draw(widget, rect);
         }
     }
-
     return undefined;
 }
 

@@ -11,10 +11,6 @@ import {
 } from "project-editor/project/features/gui/storyboard";
 import { pageMetaData, PageProperties } from "project-editor/project/features/gui/page";
 import {
-    widgetTypeMetaData,
-    WidgetTypeProperties
-} from "project-editor/project/features/gui/widgetType";
-import {
     styleMetaData,
     StyleProperties,
     getDefaultStyle
@@ -32,8 +28,6 @@ export class GuiProperties extends EezObject {
     storyboard: StoryboardProperties;
     @observable
     pages: PageProperties[];
-    @observable
-    widgets: WidgetTypeProperties[];
     @observable
     styles: StyleProperties[];
     @observable
@@ -57,14 +51,9 @@ export const guiMetaData = registerMetaData({
         },
         {
             name: "pages",
+            displayName: "Pages (Layouts)",
             type: "array",
             typeMetaData: pageMetaData,
-            hideInPropertyGrid: true
-        },
-        {
-            name: "widgets",
-            type: "array",
-            typeMetaData: widgetTypeMetaData,
             hideInPropertyGrid: true
         },
         {
@@ -169,18 +158,6 @@ export function findPage(pageName: string) {
         let page = pages[i];
         if (page.name == pageName) {
             return page;
-        }
-    }
-    return undefined;
-}
-
-export function findLocalWidgetType(widgetTypeName: string) {
-    let gui = getGui();
-    let widgetTypes = (gui && gui.widgets) || [];
-    for (let i = 0; i < widgetTypes.length; i++) {
-        let widgetType = widgetTypes[i];
-        if (widgetType.name == widgetTypeName) {
-            return widgetType;
         }
     }
     return undefined;

@@ -1,25 +1,17 @@
 import * as React from "react";
 
-import {
-    ProjectStore,
-    objectToClipboardData,
-    setClipboardData,
-    setEez
-} from "project-editor/core/store";
-import { EezObject } from "project-editor/core/metaData";
+import { objectToClipboardData, setClipboardData, setEez } from "project-editor/core/store";
 import { DragAndDropManager } from "project-editor/core/dd";
 
-import { GuiProperties } from "project-editor/project/features/gui/gui";
 import { widgetMetaData, WidgetType } from "project-editor/project/features/gui/widget";
 import { getWidgetTypes } from "project-editor/project/features/gui/widget";
-import { WidgetTypeProperties } from "project-editor/project/features/gui/widgetType";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 interface WidgetProps {
-    widget: WidgetType | WidgetTypeProperties;
+    widget: WidgetType;
     selected: boolean;
-    onSelect: (widget: WidgetType | WidgetTypeProperties | undefined) => void;
+    onSelect: (widget: WidgetType | undefined) => void;
 }
 
 interface WidgetState {
@@ -41,22 +33,12 @@ class Widget extends React.Component<WidgetProps, WidgetState> {
             dragging: true
         });
 
-        let object: EezObject;
-        if ((this.props.widget as WidgetType)["create"]) {
-            object = (this.props.widget as WidgetType)["create"]();
-        } else {
-            let widgetTypeProperties = this.props.widget as WidgetTypeProperties;
-            object = {
-                type: "Local." + widgetTypeProperties.name,
-                x: 0,
-                y: 0,
-                width: widgetTypeProperties.width,
-                height: widgetTypeProperties.height
-            } as any;
-        }
+        let object = (this.props.widget as WidgetType)["create"]();
+
         if (!(object as any).style) {
             (object as any).style = "default";
         }
+
         setEez(object, {
             id: "undefined",
             metaData: widgetMetaData
@@ -109,7 +91,7 @@ class Widget extends React.Component<WidgetProps, WidgetState> {
 export class WidgetPalette extends React.Component<
     {},
     {
-        selectedWidget: WidgetType | WidgetTypeProperties | undefined;
+        selectedWidget: WidgetType | undefined;
     }
 > {
     constructor(props: {}) {
@@ -119,14 +101,14 @@ export class WidgetPalette extends React.Component<
         };
     }
 
-    onSelect(widget: WidgetType | WidgetTypeProperties | undefined) {
+    onSelect(widget: WidgetType | undefined) {
         this.setState({
             selectedWidget: widget
         });
     }
 
     render() {
-        let generalWidgets = getWidgetTypes().map(widget => {
+        let widgets = getWidgetTypes().map(widget => {
             return (
                 <Widget
                     key={widget.id}
@@ -137,24 +119,9 @@ export class WidgetPalette extends React.Component<
             );
         });
 
-        let localWidgets = ((ProjectStore.projectProperties as any)
-            .gui as GuiProperties).widgets.map(widgetType => {
-            return (
-                <Widget
-                    key={"Local." + widgetType.name}
-                    widget={widgetType}
-                    onSelect={this.onSelect.bind(this, widgetType)}
-                    selected={widgetType == this.state.selectedWidget}
-                />
-            );
-        });
-
         return (
             <div tabIndex={0} className="EezStudio_ProjectEditor_widget-palette layoutCenter">
-                <h4>General</h4>
-                <div>{generalWidgets}</div>
-                <h4>Local</h4>
-                <div>{localWidgets}</div>
+                <div>{widgets}</div>
             </div>
         );
     }

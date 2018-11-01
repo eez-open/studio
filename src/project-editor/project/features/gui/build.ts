@@ -17,7 +17,6 @@ import { ActionProperties } from "project-editor/project/features/action/action"
 
 import {
     GuiProperties,
-    findLocalWidgetType,
     findStyle,
     findFont,
     findBitmap
@@ -30,8 +29,6 @@ import {
 import { StyleProperties } from "project-editor/project/features/gui/style";
 import * as Widget from "project-editor/project/features/gui/widget";
 import { PageProperties, PageResolutionProperties } from "project-editor/project/features/gui/page";
-import { WidgetTypeProperties } from "project-editor/project/features/gui/widgetType";
-import { findPageTransparentRectanglesInContainer } from "project-editor/project/features/gui/pageTransparentRectangles";
 import { FontProperties } from "./fontMetaData";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -48,21 +45,23 @@ const STYLE_FLAGS_BLINK = 1 << 5;
 const WIDGET_TYPE_NONE = 0;
 const WIDGET_TYPE_CONTAINER = 1;
 const WIDGET_TYPE_LIST = 2;
-const WIDGET_TYPE_SELECT = 3;
-const WIDGET_TYPE_DISPLAY_DATA = 4;
-const WIDGET_TYPE_TEXT = 5;
-const WIDGET_TYPE_MULTILINE_TEXT = 6;
-const WIDGET_TYPE_RECTANGLE = 7;
-const WIDGET_TYPE_BITMAP = 8;
-const WIDGET_TYPE_BUTTON = 9;
-const WIDGET_TYPE_TOGGLE_BUTTON = 10;
-const WIDGET_TYPE_BUTTON_GROUP = 11;
-const WIDGET_TYPE_SCALE = 12;
-const WIDGET_TYPE_BAR_GRAPH = 13;
-const WIDGET_TYPE_CUSTOM = 14;
-const WIDGET_TYPE_YT_GRAPH = 15;
-const WIDGET_TYPE_UP_DOWN = 16;
-const WIDGET_TYPE_LIST_GRAPH = 17;
+const WIDGET_TYPE_GRID = 3;
+const WIDGET_TYPE_SELECT = 4;
+const WIDGET_TYPE_DISPLAY_DATA = 5;
+const WIDGET_TYPE_TEXT = 6;
+const WIDGET_TYPE_MULTILINE_TEXT = 7;
+const WIDGET_TYPE_RECTANGLE = 8;
+const WIDGET_TYPE_BITMAP = 9;
+const WIDGET_TYPE_BUTTON = 10;
+const WIDGET_TYPE_TOGGLE_BUTTON = 11;
+const WIDGET_TYPE_BUTTON_GROUP = 12;
+const WIDGET_TYPE_SCALE = 13;
+const WIDGET_TYPE_BAR_GRAPH = 14;
+const WIDGET_TYPE_LAYOUT_VIEW = 15;
+const WIDGET_TYPE_YT_GRAPH = 16;
+const WIDGET_TYPE_UP_DOWN = 17;
+const WIDGET_TYPE_LIST_GRAPH = 18;
+const WIDGET_TYPE_APP_VIEW = 19;
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -548,15 +547,12 @@ function buildGuiStylesData(assets: Assets) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildWidget(
-    object: Widget.WidgetProperties | PageResolutionProperties | WidgetTypeProperties,
-    assets: Assets
-) {
+function buildWidget(object: Widget.WidgetProperties | PageResolutionProperties, assets: Assets) {
     let result = new Struct();
 
     // type
     let type: number;
-    if (object instanceof PageResolutionProperties || object instanceof WidgetTypeProperties) {
+    if (object instanceof PageResolutionProperties) {
         type = WIDGET_TYPE_CONTAINER;
     } else {
         let widget = object;
@@ -592,8 +588,12 @@ function buildWidget(
             type = WIDGET_TYPE_UP_DOWN;
         } else if (widget.type == "ListGraph") {
             type = WIDGET_TYPE_LIST_GRAPH;
-        } else if (widget.type && widget.type.startsWith("Local.")) {
-            type = WIDGET_TYPE_CUSTOM;
+        } else if (widget.type == "LayoutView") {
+            type = WIDGET_TYPE_LAYOUT_VIEW;
+        } else if (widget.type == "AppView") {
+            type = WIDGET_TYPE_APP_VIEW;
+        } else if (widget.type == "Grid") {
+            type = WIDGET_TYPE_GRID;
         } else {
             type = WIDGET_TYPE_NONE;
         }
@@ -605,7 +605,7 @@ function buildWidget(
     if (object instanceof Widget.WidgetProperties && object.data) {
         data = assets.getDataItemIndex(object, "data");
     }
-    result.addField(new UInt8(data));
+    result.addField(new UInt16(data));
 
     // action
     let action: number = 0;
@@ -614,7 +614,7 @@ function buildWidget(
             action = assets.getActionIndex(object, "action");
         }
     }
-    result.addField(new UInt8(action));
+    result.addField(new UInt16(action));
 
     // x
     let x: number = 0;
@@ -643,7 +643,16 @@ function buildWidget(
     } else {
         style = assets.getStyleIndex("default");
     }
-    result.addField(new UInt8(style));
+    result.addField(new UInt16(style));
+
+    // style
+    let activeStyle: number;
+    if (object instanceof Widget.WidgetProperties && object.activeStyle) {
+        activeStyle = assets.getStyleIndex(object.activeStyle);
+    } else {
+        activeStyle = 0;
+    }
+    result.addField(new UInt16(activeStyle));
 
     // specific
     let specific: Struct | undefined;
@@ -652,7 +661,7 @@ function buildWidget(
         specific = new Struct();
 
         let widgets: Widget.WidgetProperties[] | undefined;
-        if (object instanceof PageResolutionProperties || object instanceof WidgetTypeProperties) {
+        if (object instanceof PageResolutionProperties) {
             widgets = object.widgets;
         } else {
             widgets = (object as Widget.ContainerWidgetProperties).widgets;
@@ -669,25 +678,6 @@ function buildWidget(
         specific.addField(childWidgets);
 
         if (object instanceof PageResolutionProperties) {
-            let rects = findPageTransparentRectanglesInContainer(object);
-
-            let rectObjectList = new ObjectList();
-
-            for (let i = 0; i < rects.length; i++) {
-                var rect = rects[i];
-
-                let rectStruct = new Struct();
-
-                rectStruct.addField(new Int16(rect.x));
-                rectStruct.addField(new Int16(rect.y));
-                rectStruct.addField(new UInt16(rect.width));
-                rectStruct.addField(new UInt16(rect.height));
-
-                rectObjectList.addItem(rectStruct);
-            }
-
-            specific.addField(rectObjectList);
-
             specific.addField(
                 new UInt8((getParent(object) as PageProperties).closePageIfTouchedOutside ? 1 : 0)
             );
@@ -719,12 +709,19 @@ function buildWidget(
         if (widget.itemWidget) {
             itemWidget = buildWidget(widget.itemWidget, assets);
         } else {
-            OutputSectionsStore.write(
-                output.Section.OUTPUT,
-                output.Type.ERROR,
-                "List item widget is missing",
-                widget
-            );
+            itemWidget = undefined;
+        }
+
+        specific.addField(new ObjectPtr(itemWidget));
+    } else if (type == WIDGET_TYPE_GRID) {
+        let widget = object as Widget.GridWidgetProperties;
+        specific = new Struct();
+
+        // itemWidget
+        let itemWidget: Struct | undefined;
+        if (widget.itemWidget) {
+            itemWidget = buildWidget(widget.itemWidget, assets);
+        } else {
             itemWidget = undefined;
         }
 
@@ -733,18 +730,18 @@ function buildWidget(
         let widget = object as Widget.DisplayDataWidgetProperties;
         specific = new Struct();
 
-        // activeStyle
-        let activeStyle: number;
-        if (widget.activeStyle) {
-            activeStyle = assets.getStyleIndex(widget.activeStyle);
-            if (activeStyle == 0) {
-                activeStyle = style;
+        // focusStyle
+        let focusStyle: number;
+        if (widget.focusStyle) {
+            focusStyle = assets.getStyleIndex(widget.focusStyle);
+            if (focusStyle == 0) {
+                focusStyle = style;
             }
         } else {
-            activeStyle = style;
+            focusStyle = style;
         }
 
-        specific.addField(new UInt8(activeStyle));
+        specific.addField(new UInt16(focusStyle));
     } else if (type == WIDGET_TYPE_TEXT) {
         let widget = object as Widget.TextWidgetProperties;
         specific = new Struct();
@@ -851,7 +848,7 @@ function buildWidget(
             textStyle = assets.getStyleIndex(widget.textStyle);
         }
 
-        specific.addField(new UInt8(textStyle));
+        specific.addField(new UInt16(textStyle));
 
         // line1Data
         let line1Data = 0;
@@ -859,7 +856,7 @@ function buildWidget(
             line1Data = assets.getDataItemIndex(widget, "line1Data");
         }
 
-        specific.addField(new UInt8(line1Data));
+        specific.addField(new UInt16(line1Data));
 
         // line1Style
         let line1Style: number = 0;
@@ -867,7 +864,7 @@ function buildWidget(
             line1Style = assets.getStyleIndex(widget.line1Style);
         }
 
-        specific.addField(new UInt8(line1Style));
+        specific.addField(new UInt16(line1Style));
 
         // line2Data
         let line2Data = 0;
@@ -875,7 +872,7 @@ function buildWidget(
             line2Data = assets.getDataItemIndex(widget, "line2Data");
         }
 
-        specific.addField(new UInt8(line2Data));
+        specific.addField(new UInt16(line2Data));
 
         // line2Style
         let line2Style: number = 0;
@@ -883,7 +880,7 @@ function buildWidget(
             line2Style = assets.getStyleIndex(widget.line2Style);
         }
 
-        specific.addField(new UInt8(line2Style));
+        specific.addField(new UInt16(line2Style));
     } else if (type == WIDGET_TYPE_YT_GRAPH) {
         let widget = object as Widget.YTGraphWidgetProperties;
         specific = new Struct();
@@ -894,7 +891,7 @@ function buildWidget(
             y1Style = assets.getStyleIndex(widget.y1Style);
         }
 
-        specific.addField(new UInt8(y1Style));
+        specific.addField(new UInt16(y1Style));
 
         // data2
         let y2Data = 0;
@@ -902,7 +899,7 @@ function buildWidget(
             y2Data = assets.getDataItemIndex(widget, "y2Data");
         }
 
-        specific.addField(new UInt8(y2Data));
+        specific.addField(new UInt16(y2Data));
 
         // y2Style
         let y2Style: number = 0;
@@ -910,7 +907,7 @@ function buildWidget(
             y2Style = assets.getStyleIndex(widget.y2Style);
         }
 
-        specific.addField(new UInt8(y2Style));
+        specific.addField(new UInt16(y2Style));
     } else if (type == WIDGET_TYPE_UP_DOWN) {
         let widget = object as Widget.UpDownWidgetProperties;
         specific = new Struct();
@@ -921,7 +918,7 @@ function buildWidget(
             buttonsStyle = assets.getStyleIndex(widget.buttonsStyle);
         }
 
-        specific.addField(new UInt8(buttonsStyle));
+        specific.addField(new UInt16(buttonsStyle));
 
         // down button text
         let downButtonText: string;
@@ -951,7 +948,7 @@ function buildWidget(
             dwellData = assets.getDataItemIndex(widget, "dwellData");
         }
 
-        specific.addField(new UInt8(dwellData));
+        specific.addField(new UInt16(dwellData));
 
         // y1Data
         let y1Data = 0;
@@ -959,7 +956,7 @@ function buildWidget(
             y1Data = assets.getDataItemIndex(widget, "y1Data");
         }
 
-        specific.addField(new UInt8(y1Data));
+        specific.addField(new UInt16(y1Data));
 
         // y1Style
         let y1Style: number = 0;
@@ -967,7 +964,7 @@ function buildWidget(
             y1Style = assets.getStyleIndex(widget.y1Style);
         }
 
-        specific.addField(new UInt8(y1Style));
+        specific.addField(new UInt16(y1Style));
 
         // y2Data
         let y2Data = 0;
@@ -975,7 +972,7 @@ function buildWidget(
             y2Data = assets.getDataItemIndex(widget, "y2Data");
         }
 
-        specific.addField(new UInt8(y2Data));
+        specific.addField(new UInt16(y2Data));
 
         // y2Style
         let y2Style: number = 0;
@@ -983,7 +980,7 @@ function buildWidget(
             y2Style = assets.getStyleIndex(widget.y2Style);
         }
 
-        specific.addField(new UInt8(y2Style));
+        specific.addField(new UInt16(y2Style));
 
         // cursorData
         let cursorData = 0;
@@ -991,7 +988,7 @@ function buildWidget(
             cursorData = assets.getDataItemIndex(widget, "cursorData");
         }
 
-        specific.addField(new UInt8(cursorData));
+        specific.addField(new UInt16(cursorData));
 
         // cursorStyle
         let cursorStyle: number = 0;
@@ -999,7 +996,7 @@ function buildWidget(
             cursorStyle = assets.getStyleIndex(widget.cursorStyle);
         }
 
-        specific.addField(new UInt8(cursorStyle));
+        specific.addField(new UInt16(cursorStyle));
     } else if (type == WIDGET_TYPE_BUTTON) {
         let widget = object as Widget.ButtonWidgetProperties;
         specific = new Struct();
@@ -1020,7 +1017,7 @@ function buildWidget(
             enabledData = assets.getDataItemIndex(widget, "enabled");
         }
 
-        specific.addField(new UInt8(enabledData));
+        specific.addField(new UInt16(enabledData));
 
         // disabledStyle
         let disabledStyle: number = 0;
@@ -1028,7 +1025,7 @@ function buildWidget(
             disabledStyle = assets.getStyleIndex(widget.disabledStyle);
         }
 
-        specific.addField(new UInt8(disabledStyle));
+        specific.addField(new UInt16(disabledStyle));
     } else if (type == WIDGET_TYPE_TOGGLE_BUTTON) {
         let widget = object as Widget.ToggleButtonWidgetProperties;
         specific = new Struct();
@@ -1063,12 +1060,19 @@ function buildWidget(
         }
 
         specific.addField(new UInt8(bitmap));
-    } else if (type == WIDGET_TYPE_CUSTOM) {
-        let widget = object as Widget.WidgetProperties;
+    } else if (type == WIDGET_TYPE_LAYOUT_VIEW) {
+        let widget = object as Widget.LayoutViewWidgetProperties;
         specific = new Struct();
 
-        let customWidget = assets.getWidgetIndex(widget.type.substring("Local.".length));
-        specific.addField(new UInt8(customWidget));
+        // bitmap
+        let layout: number = -1;
+        if (widget.layout) {
+            layout = assets.getPageIndex(widget.layout);
+        }
+
+        specific.addField(new Int16(layout));
+    } else if (type == WIDGET_TYPE_APP_VIEW) {
+        // no specific fields
     }
 
     result.addField(new ObjectPtr(specific));
@@ -1094,36 +1098,17 @@ function buildGuiPagesEnum(assets: Assets) {
 }
 
 function buildGuiDocumentData(assets: Assets) {
-    function buildCustomWidget(customWidget: WidgetTypeProperties) {
-        var customWidgetStruct = new Struct();
-
-        // widgets
-        let childWidgets = new ObjectList();
-        customWidget.widgets.forEach(childWidget => {
-            childWidgets.addItem(buildWidget(childWidget, assets));
-        });
-
-        customWidgetStruct.addField(childWidgets);
-
-        return customWidgetStruct;
-    }
-
     function buildPage(page: PageResolutionProperties) {
         return buildWidget(page, assets);
     }
 
     function build() {
         let pages = new ObjectList();
+
         assets.pages.forEach(page => {
             pages.addItem(buildPage(page.resolutions[0]));
         });
 
-        let customWidgets = new ObjectList();
-        assets.widgets.forEach(customWidget => {
-            customWidgets.addItem(buildCustomWidget(customWidget));
-        });
-
-        document.addField(customWidgets);
         document.addField(pages);
     }
 
@@ -1209,7 +1194,6 @@ class Assets {
     actions: ActionProperties[];
 
     pages: PageProperties[];
-    widgets: WidgetTypeProperties[] = [];
     styles: StyleProperties[] = [];
     fonts: FontProperties[] = [];
     bitmaps: BitmapProperties[] = [];
@@ -1263,7 +1247,7 @@ class Assets {
 
         for (let i = 0; i < this.dataItems.length; i++) {
             if (this.dataItems[i].name === dataItemName) {
-                return Math.min(i + 1, 255);
+                return Math.min(i + 1, 65535);
             }
         }
 
@@ -1282,7 +1266,7 @@ class Assets {
         const actionName = object[propertyName];
         for (let i = 0; i < this.actions.length; i++) {
             if (this.actions[i].name === actionName) {
-                return Math.min(i + 1, 255);
+                return Math.min(i + 1, 65535);
             }
         }
 
@@ -1292,20 +1276,10 @@ class Assets {
     }
 
     get totalGuiAssets() {
-        return (
-            this.pages.length +
-            this.widgets.length +
-            this.styles.length +
-            this.fonts.length +
-            this.bitmaps.length
-        );
+        return this.pages.length + this.styles.length + this.fonts.length + this.bitmaps.length;
     }
 
-    add(object: WidgetTypeProperties | StyleProperties | FontProperties | BitmapProperties) {
-        if (object instanceof WidgetTypeProperties && this.widgets.indexOf(object) === -1) {
-            this.widgets.push(object);
-        }
-
+    add(object: StyleProperties | FontProperties | BitmapProperties) {
         if (object instanceof StyleProperties && this.styles.indexOf(object) === -1) {
             this.styles.push(object);
         }
@@ -1319,19 +1293,14 @@ class Assets {
         }
     }
 
-    getWidgetIndex(widgetTypeName: string) {
-        for (let i = 0; i < this.widgets.length; i++) {
-            if (this.widgets[i].name == widgetTypeName) {
-                return i + 1;
+    getPageIndex(pageName: string) {
+        for (let i = 0; i < this.pages.length; i++) {
+            if (this.pages[i].name == pageName) {
+                return i;
             }
         }
 
-        const widget = findLocalWidgetType(widgetTypeName);
-        if (widget) {
-            this.widgets.push(widget);
-        }
-
-        return 0;
+        return -1;
     }
 
     getStyleIndex(styleName: string) {
@@ -1389,17 +1358,6 @@ class Assets {
                     output.Type.INFO,
                     "Unused page: " + page.name,
                     page
-                );
-            }
-        });
-
-        gui.widgets.forEach(widget => {
-            if (this.widgets.indexOf(widget) === -1) {
-                OutputSectionsStore.write(
-                    output.Section.OUTPUT,
-                    output.Type.INFO,
-                    "Unused widget: " + widget.name,
-                    widget
                 );
             }
         });

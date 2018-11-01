@@ -1,7 +1,6 @@
 import * as React from "react";
 import { action } from "mobx";
 
-import { getDebugOptions } from "project-editor/core/debug";
 import { Point, Rect, boundingRect } from "project-editor/core/util";
 import { updateObject, UndoManager, objectToString } from "project-editor/core/store";
 import { EezObject } from "project-editor/core/metaData";
@@ -29,8 +28,6 @@ import {
     drawSelection,
     nodesFromPoint
 } from "project-editor/components/CanvasEditorUtil";
-
-import * as PageTransparentRectanglesModule from "project-editor/project/features/gui/pageTransparentRectangles";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -105,8 +102,6 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
     rubberBandSelection?: RubberBandSelection;
 
     lineConnecting?: LineConnecting;
-
-    showPageTransparentRectangles: boolean;
 
     drawCallback = this.draw.bind(this);
 
@@ -404,13 +399,6 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
         //
         if (this.lineConnecting) {
             this.lineConnecting.draw(ctx, this.scale);
-        }
-
-        if (this.showPageTransparentRectangles) {
-            const {
-                debugDrawPageTransparentRectangles
-            } = require("project-editor/project/features/gui/pageTransparentRectangles") as typeof PageTransparentRectanglesModule;
-            debugDrawPageTransparentRectangles(ctx, this.tree);
         }
 
         ctx.restore();
@@ -974,8 +962,6 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
     }
 
     render() {
-        this.showPageTransparentRectangles = getDebugOptions().showPageTransparentRectangles;
-
         this.tree = this.createTree();
 
         this.centerOffset = {

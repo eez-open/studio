@@ -34,11 +34,11 @@ import * as data from "project-editor/project/features/data/data";
 
 import { findStyleOrGetDefault } from "project-editor/project/features/gui/gui";
 import { PageResolutionProperties } from "project-editor/project/features/gui/page";
-import { WidgetTypeProperties } from "project-editor/project/features/gui/widgetType";
 import {
     WidgetProperties,
     ContainerWidgetProperties,
     ListWidgetProperties,
+    GridWidgetProperties,
     SelectWidgetProperties,
     SelectWidgetEditorProperties,
     getWidgetType
@@ -57,6 +57,8 @@ function getObjectComponentClass(object: EezObject): typeof BaseObjectComponent 
         return ContainerWidgetObjectComponent;
     } else if (object instanceof ListWidgetProperties) {
         return ListWidgetObjectComponent;
+    } else if (object instanceof GridWidgetProperties) {
+        return GridWidgetObjectComponent;
     } else if (object instanceof SelectWidgetProperties) {
         return SelectWidgetObjectComponent;
     } else {
@@ -174,33 +176,64 @@ class WidgetObjectComponent extends BaseObjectComponent {
 
         let listWidget = getParent(this.widgetProperties);
         while (
-            !(listWidget instanceof ListWidgetProperties) &&
+            !(
+                listWidget instanceof ListWidgetProperties ||
+                listWidget instanceof GridWidgetProperties
+            ) &&
             listWidget instanceof WidgetProperties
         ) {
             listWidget = getParent(listWidget);
         }
 
-        if (!(listWidget instanceof ListWidgetProperties)) {
+        if (
+            !(
+                listWidget instanceof ListWidgetProperties ||
+                listWidget instanceof GridWidgetProperties
+            )
+        ) {
             return rects;
         }
 
-        let count = listWidget.data ? data.count(listWidget.data) : 0;
+        const itemWidget = listWidget.itemWidget;
+        if (itemWidget) {
+            let count = listWidget.data ? data.count(listWidget.data) : 0;
 
-        for (let i = 1; i < count; i++) {
-            if (listWidget.listType === "horizontal") {
-                rects.push({
-                    left: this.boundingRect.left + i * listWidget.itemWidget!.width,
-                    top: this.boundingRect.top,
-                    width: this.boundingRect.width,
-                    height: this.boundingRect.height
-                });
+            if (listWidget instanceof ListWidgetProperties) {
+                for (let i = 1; i < count; i++) {
+                    if (listWidget.listType === "horizontal") {
+                        rects.push({
+                            left: this.boundingRect.left + i * itemWidget.width,
+                            top: this.boundingRect.top,
+                            width: this.boundingRect.width,
+                            height: this.boundingRect.height
+                        });
+                    } else {
+                        rects.push({
+                            left: this.boundingRect.left,
+                            top: this.boundingRect.top + i * itemWidget.height,
+                            width: this.boundingRect.width,
+                            height: this.boundingRect.height
+                        });
+                    }
+                }
             } else {
-                rects.push({
-                    left: this.boundingRect.left,
-                    top: this.boundingRect.top + i * listWidget.itemWidget!.height,
-                    width: this.boundingRect.width,
-                    height: this.boundingRect.height
-                });
+                const rows = Math.floor(listWidget.width / itemWidget.width);
+                const cols = Math.floor(listWidget.height / itemWidget.height);
+                for (let i = 1; i < count; i++) {
+                    const row = i % rows;
+                    const col = Math.floor(i / rows);
+
+                    if (col >= cols) {
+                        break;
+                    }
+
+                    rects.push({
+                        left: this.boundingRect.left + row * itemWidget.width,
+                        top: this.boundingRect.top + col * itemWidget.height,
+                        width: this.boundingRect.width,
+                        height: this.boundingRect.height
+                    });
+                }
             }
         }
 
@@ -317,6 +350,79 @@ class ListWidgetObjectComponent extends WidgetObjectComponent {
                 </g>
             );
         });
+    }
+
+    render() {
+        return (
+            <React.Fragment>
+                {this.renderBackgroundRect()}
+                {this.renderItems()}
+            </React.Fragment>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+class GridWidgetObjectComponent extends WidgetObjectComponent {
+    get gridWidgetProperties() {
+        return this.widgetProperties as GridWidgetProperties;
+    }
+
+    get itemWidget() {
+        return this.gridWidgetProperties.itemWidget;
+    }
+
+    get count() {
+        if (this.itemWidget && this.gridWidgetProperties.data) {
+            return data.count(this.gridWidgetProperties.data);
+        } else {
+            return 0;
+        }
+    }
+
+    renderItems() {
+        this.children = [];
+
+        if (!this.itemWidget) {
+            return null;
+        }
+
+        const itemWidget = this.itemWidget;
+        const ItemWidgetComponent = getObjectComponentClass(this.itemWidget);
+
+        return _range(this.count)
+            .map(i => {
+                const rows = Math.floor(this.rect.width / itemWidget.width);
+                const cols = Math.floor(this.rect.height / itemWidget.height);
+
+                const row = i % rows;
+                const col = Math.floor(i / rows);
+
+                if (col >= cols) {
+                    return undefined;
+                }
+
+                let xListItem = this.rect.left + row * itemWidget.width;
+                let yListItem = this.rect.top + col * itemWidget.height;
+
+                return (
+                    <g key={i} transform={`translate(${xListItem} ${yListItem})`}>
+                        {
+                            <ItemWidgetComponent
+                                ref={ref => {
+                                    if (i === 0 && ref) {
+                                        this.children.push(ref);
+                                    }
+                                }}
+                                object={itemWidget}
+                            />
+                        }
+                    </g>
+                );
+            })
+            .filter(item => !!item);
     }
 
     render() {
@@ -570,19 +676,19 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function findSelectWidgetEditors(
-    rootObject: WidgetProperties | PageResolutionProperties | WidgetTypeProperties
-) {
+function findSelectWidgetEditors(rootObject: WidgetProperties | PageResolutionProperties) {
     const result: SelectWidgetEditorProperties[] = [];
 
-    function doFind(object: WidgetProperties | PageResolutionProperties | WidgetTypeProperties) {
+    function doFind(object: WidgetProperties | PageResolutionProperties) {
         if (
             object instanceof PageResolutionProperties ||
-            object instanceof WidgetTypeProperties ||
             object instanceof ContainerWidgetProperties
         ) {
             object.widgets.forEach(doFind);
-        } else if (object instanceof ListWidgetProperties) {
+        } else if (
+            object instanceof ListWidgetProperties ||
+            object instanceof GridWidgetProperties
+        ) {
             if (object.itemWidget) {
                 doFind(object.itemWidget);
             }
@@ -602,7 +708,7 @@ function findSelectWidgetEditors(
 @observer
 class RootObjectComponent extends BaseObjectComponent {
     get rootObject() {
-        return this.props.object as PageResolutionProperties | WidgetTypeProperties;
+        return this.props.object as PageResolutionProperties;
     }
 
     get childrenObjects() {
@@ -650,14 +756,14 @@ class RootObjectComponent extends BaseObjectComponent {
 ////////////////////////////////////////////////////////////////////////////////
 
 interface ExperimentalWidgetContainerEditorProps {
-    container: PageResolutionProperties | WidgetTypeProperties;
+    container: PageResolutionProperties;
 }
 
 @observer
 export class ExperimentalWidgetContainerEditor
     extends React.Component<ExperimentalWidgetContainerEditorProps>
     implements IDocument {
-    container: PageResolutionProperties | WidgetTypeProperties;
+    container: PageResolutionProperties;
     transform: Transform;
     saveTransformDisposer: any;
     @observable
@@ -700,7 +806,7 @@ export class ExperimentalWidgetContainerEditor
     }
 
     @action
-    loadContainer(container: PageResolutionProperties | WidgetTypeProperties) {
+    loadContainer(container: PageResolutionProperties) {
         if (this.container) {
             this.unloadContainer();
         }

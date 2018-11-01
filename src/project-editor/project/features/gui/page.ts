@@ -23,7 +23,6 @@ import * as data from "project-editor/project/features/data/data";
 import {
     WidgetProperties,
     widgetMetaData,
-    getWidgetType,
     SelectWidgetProperties
 } from "project-editor/project/features/gui/widget";
 import { PageEditor } from "project-editor/project/features/gui/PageEditor";
@@ -368,14 +367,3 @@ export const pageMetaData = registerMetaData({
     navigationComponentId: "pages",
     icon: "filter_none"
 });
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function isWidgetOpaque(widgetObj: WidgetProperties) {
-    if (widgetObj.type && widgetObj.type.startsWith("Local.")) {
-        return true;
-    }
-
-    let widgetType = getWidgetType(widgetObj);
-    return widgetType && widgetType.isOpaque;
-}

@@ -11,7 +11,6 @@ export function metrics(project: ProjectProperties): { [key: string]: string | n
     return {
         GUI: "",
         "<span class='td-indent'>Pages</span>": gui.pages.length,
-        "<span class='td-indent'>Widgets</span>": gui.widgets.length,
         "<span class='td-indent'>Styles</span>": gui.styles.length,
         "<span class='td-indent'>Fonts</span>": gui.fonts.length,
         "<span class='td-indent'>Bitmaps</span>": gui.bitmaps.length
