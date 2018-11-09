@@ -125,6 +125,24 @@ const paddingVerticalProperty: PropertyMetaData = {
     inheritable: true
 };
 
+const brightnessProperty: PropertyMetaData = {
+    name: "brightness",
+    type: "enum",
+    enumItems: [
+        {
+            id: "normal"
+        },
+        {
+            id: "bright"
+        },
+        {
+            id: "dim"
+        }
+    ],
+    defaultValue: "normal",
+    inheritable: true
+};
+
 const blinkProperty: PropertyMetaData = {
     name: "blink",
     type: "boolean",
@@ -152,6 +170,7 @@ const properties = [
     borderColorProperty,
     paddingHorizontalProperty,
     paddingVerticalProperty,
+    brightnessProperty,
     blinkProperty,
     alwaysBuildProperty
 ];
@@ -212,6 +231,8 @@ export class StyleProperties extends EezObject {
     @observable
     paddingVertical?: number;
     @observable
+    brightness: string;
+    @observable
     blink?: boolean;
     @observable
     alwaysBuild: boolean;
@@ -268,6 +289,11 @@ export class StyleProperties extends EezObject {
     @computed
     get paddingVerticalProperty(): number {
         return getStyleProperty(this, "paddingVertical");
+    }
+
+    @computed
+    get brightnessProperty(): string {
+        return getStyleProperty(this, "brightness");
     }
 
     @computed
@@ -387,6 +413,7 @@ export function getDefaultStyle(): StyleProperties {
                 borderColor: borderColorProperty.defaultValue,
                 paddingHorizontal: paddingHorizontalProperty.defaultValue,
                 paddingVertical: paddingVerticalProperty.defaultValue,
+                brightness: brightnessProperty.defaultValue,
                 blink: blinkProperty.defaultValue
             },
             styleMetaData

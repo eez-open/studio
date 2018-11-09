@@ -24,6 +24,8 @@ export class BitmapProperties extends EezObject {
     @observable
     image: string;
     @observable
+    bpp: number;
+    @observable
     style?: string;
     @observable
     alwaysBuild: boolean;
@@ -68,6 +70,12 @@ export const bitmapMetaData = registerMetaData({
             type: "image",
             hideInPropertyGrid: true,
             skipSearch: true
+        },
+        {
+            name: "bpp",
+            type: "enum",
+            enumItems: [{ id: 16 }, { id: 32 }],
+            defaultValue: 16
         },
         {
             name: "style",
@@ -134,6 +142,7 @@ export const bitmapMetaData = registerMetaData({
 export interface BitmapData {
     width: number;
     height: number;
+    bpp: number;
     pixels: number[];
 }
 
@@ -163,14 +172,23 @@ export function getData(bitmap: BitmapProperties): Promise<BitmapData> {
                 let g = imageData[i + 1];
                 let b = imageData[i + 2];
 
-                // rrrrrggggggbbbbb
-                pixels.push(((g & 28) << 3) | (b >> 3));
-                pixels.push((r & 248) | (g >> 5));
+                if (bitmap.bpp === 32) {
+                    let a = imageData[i + 3];
+                    pixels.push(b);
+                    pixels.push(g);
+                    pixels.push(r);
+                    pixels.push(a);
+                } else {
+                    // rrrrrggggggbbbbb
+                    pixels.push(((g & 28) << 3) | (b >> 3));
+                    pixels.push((r & 248) | (g >> 5));
+                }
             }
 
             resolve({
                 width: image.width,
                 height: image.height,
+                bpp: bitmap.bpp,
                 pixels: pixels
             });
         };

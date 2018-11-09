@@ -1,5 +1,3 @@
-import { formatBytes } from "shared/util";
-
 import {
     OutputSectionsStore,
     getParent,
@@ -40,7 +38,9 @@ const STYLE_FLAGS_HORZ_ALIGN_CENTER = 2 << 1;
 const STYLE_FLAGS_VERT_ALIGN_TOP = 0 << 3;
 const STYLE_FLAGS_VERT_ALIGN_BOTTOM = 1 << 3;
 const STYLE_FLAGS_VERT_ALIGN_CENTER = 2 << 3;
-const STYLE_FLAGS_BLINK = 1 << 5;
+const STYLE_FLAGS_BRIGHT = 1 << 5;
+const STYLE_FLAGS_DIM = 2 << 5;
+const STYLE_FLAGS_BLINK = 1 << 7;
 
 const WIDGET_TYPE_NONE = 0;
 const WIDGET_TYPE_CONTAINER = 1;
@@ -338,16 +338,16 @@ function buildWidgetText(text: string) {
 
 function buildGuiFontsEnum(assets: Assets) {
     let fonts = assets.fonts.map(
-        font =>
+        (font, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "FONT_ID_",
                 font.name,
                 projectBuild.NamingConvention.UnderscoreUpperCase
-            )}`
+            )} = ${i + 1}`
     );
 
     // TODO what if font name is none!?
-    fonts.unshift(`${projectBuild.TAB}FONT_ID_NONE`);
+    fonts.unshift(`${projectBuild.TAB}FONT_ID_NONE = 0`);
 
     return `enum FontsEnum {\n${fonts.join(",\n")}\n};`;
 }
@@ -360,15 +360,15 @@ function buildGuiFontsData(assets: Assets) {
 
 function buildGuiBitmapsEnum(assets: Assets) {
     let bitmaps = assets.bitmaps.map(
-        bitmap =>
+        (bitmap, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "BITMAP_ID_",
                 bitmap.name,
                 projectBuild.NamingConvention.UnderscoreUpperCase
-            )}`
+            )} = ${i + 1}`
     );
 
-    bitmaps.unshift(`${projectBuild.TAB}BITMAP_ID_NONE`);
+    bitmaps.unshift(`${projectBuild.TAB}BITMAP_ID_NONE = 0`);
 
     return `enum BitmapsEnum {\n${bitmaps.join(",\n")}\n};`;
 }
@@ -382,6 +382,7 @@ async function buildGuiBitmaps(assets: Assets) {
         name: string;
         width: number;
         height: number;
+        bpp: number;
         pixels: number[];
     }[] = [];
 
@@ -392,6 +393,7 @@ async function buildGuiBitmaps(assets: Assets) {
             name: assets.bitmaps[i].name,
             width: bitmapsData.width,
             height: bitmapsData.height,
+            bpp: bitmapsData.bpp,
             pixels: bitmapsData.pixels
         });
     }
@@ -410,8 +412,10 @@ async function buildGuiBitmapsData(assets: Assets) {
         bitmaps.map(bitmap => {
             const struct = new Struct();
 
-            struct.addField(new UInt16(bitmap.width));
-            struct.addField(new UInt16(bitmap.height));
+            struct.addField(new Int16(bitmap.width));
+            struct.addField(new Int16(bitmap.height));
+            struct.addField(new Int16(bitmap.bpp === 32 ? 32 : 16));
+            struct.addField(new Int16(0));
             struct.addField(new UInt8Array(bitmap.pixels));
 
             return struct.packObject();
@@ -423,15 +427,15 @@ async function buildGuiBitmapsData(assets: Assets) {
 
 function buildGuiStylesEnum(assets: Assets) {
     let styles = assets.styles.map(
-        style =>
+        (style, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "STYLE_ID_",
                 style.name,
                 projectBuild.NamingConvention.UnderscoreUpperCase
-            )}`
+            )} = ${i + 1}`
     );
 
-    styles.unshift(`${projectBuild.TAB}STYLE_ID_NONE`);
+    styles.unshift(`${projectBuild.TAB}STYLE_ID_NONE = 0`);
 
     return `enum StylesEnum {\n${styles.join(",\n")}\n};`;
 }
@@ -467,6 +471,13 @@ function buildGuiStylesData(assets: Assets) {
             flags |= STYLE_FLAGS_VERT_ALIGN_BOTTOM;
         } else {
             flags |= STYLE_FLAGS_VERT_ALIGN_CENTER;
+        }
+
+        let styleBrightness = style.brightnessProperty;
+        if (styleBrightness === "bright") {
+            flags |= STYLE_FLAGS_BRIGHT;
+        } else if (styleBrightness === "dim") {
+            flags |= STYLE_FLAGS_DIM;
         }
 
         let styleBlink = style.blinkProperty;
@@ -631,10 +642,10 @@ function buildWidget(object: Widget.WidgetProperties | PageResolutionProperties,
     result.addField(new Int16(y));
 
     // width
-    result.addField(new UInt16(object.width || 0));
+    result.addField(new Int16(object.width || 0));
 
     // height
-    result.addField(new UInt16(object.height || 0));
+    result.addField(new Int16(object.height || 0));
 
     // style
     let style: number;
@@ -1085,12 +1096,12 @@ function buildWidget(object: Widget.WidgetProperties | PageResolutionProperties,
 function buildGuiPagesEnum(assets: Assets) {
     let pages = assets.pages
         .map(
-            widget =>
+            (widget, i) =>
                 `${projectBuild.TAB}${projectBuild.getName(
                     "PAGE_ID_",
                     widget.name,
                     projectBuild.NamingConvention.UnderscoreUpperCase
-                )}`
+                )} = ${i}`
         )
         .join(",\n");
 
@@ -1165,13 +1176,13 @@ async function buildGuiAssetsData(assets: Assets) {
     OutputSectionsStore.write(
         output.Section.OUTPUT,
         output.Type.INFO,
-        "Uncompressed size: " + formatBytes(inputBuffer.length)
+        "Uncompressed size: " + inputBuffer.length
     );
 
     OutputSectionsStore.write(
         output.Section.OUTPUT,
         output.Type.INFO,
-        "Compressed size: " + formatBytes(compressedSize)
+        "Compressed size: " + compressedSize
     );
 
     return data;

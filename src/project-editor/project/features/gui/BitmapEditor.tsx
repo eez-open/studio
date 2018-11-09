@@ -12,7 +12,10 @@ export class BitmapEditor extends EditorComponent {
         const bitmap = this.props.editor.object as BitmapProperties;
 
         const style = {
-            backgroundColor: getStyleProperty(bitmap.style, "backgroundColor"),
+            backgroundColor:
+                bitmap.bpp === 32
+                    ? "transparent"
+                    : getStyleProperty(bitmap.style, "backgroundColor"),
             width: "100%"
         };
 

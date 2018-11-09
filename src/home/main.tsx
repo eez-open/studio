@@ -8,7 +8,7 @@ import { ThemeProvider } from "shared/ui/styled-components";
 
 import { handleDragAndDrop } from "home/drag-and-drop";
 
-configure({ enforceActions: true });
+configure({ enforceActions: "observed" });
 
 EEZStudio.electron.ipcRenderer.on("beforeClose", () => {
     const { destroyExtensions } = require("shared/extensions/extensions");

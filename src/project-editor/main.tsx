@@ -12,7 +12,7 @@ import { init as storeInit } from "project-editor/core/store";
 import * as layout from "project-editor/core/layout";
 import { ProjectEditor } from "project-editor/project/ProjectEditor";
 
-configure({ enforceActions: true });
+configure({ enforceActions: "observed" });
 
 window.requestAnimationFrame(async () => {
     try {

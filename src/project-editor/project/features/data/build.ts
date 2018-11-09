@@ -10,15 +10,15 @@ import { DataItemProperties } from "project-editor/project/features/data/data";
 
 function buildDataEnum(projectDataItems: DataItemProperties[]) {
     let dataItems = projectDataItems.map(
-        (dataItem, index) =>
+        (dataItem, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "DATA_ID_",
                 dataItem.name,
                 projectBuild.NamingConvention.UnderscoreUpperCase
-            )}`
+            )} = ${i + 1}`
     );
 
-    dataItems.unshift(`${projectBuild.TAB}DATA_ID_NONE`);
+    dataItems.unshift(`${projectBuild.TAB}DATA_ID_NONE = 0`);
 
     return `enum DataEnum {\n${dataItems.join(",\n")}\n};`;
 }

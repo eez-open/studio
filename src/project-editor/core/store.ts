@@ -1452,17 +1452,17 @@ export function getObjectFromObjectId(objectID: string): EezObject | undefined {
             }
         }
 
-        console.log("ups!!!");
-
         return undefined;
     }
 
     return getDescendantObjectFromId(ProjectStore.projectProperties, objectID as string);
 }
 
+const eezArrayObjectStateMap = new Map<EezObject, EezObjectState>();
+
 export function getEez(object: EezObject) {
     if (isArray(object)) {
-        return (object as any)[-1] as EezObjectState;
+        return eezArrayObjectStateMap.get(object) as EezObjectState;
     } else {
         return (object as any).$eez as EezObjectState;
     }
@@ -1470,7 +1470,7 @@ export function getEez(object: EezObject) {
 
 export function setEez(object: EezObject, eez: EezObjectState) {
     if (isArray(object)) {
-        (object as any)[-1] = eez;
+        eezArrayObjectStateMap.set(object, eez);
     } else {
         (object as any).$eez = eez;
     }

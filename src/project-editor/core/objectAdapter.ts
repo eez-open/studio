@@ -361,7 +361,6 @@ export class TreeObjectAdapter {
                 });
 
                 if (!result) {
-                    console.log("UPS!!!");
                     break;
                 }
 

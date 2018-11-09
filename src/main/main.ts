@@ -8,7 +8,7 @@ import { setup } from "setup/setup";
 import * as HomeWindowModule from "main/home-window";
 import * as SettingsModule from "main/settings";
 
-configure({ enforceActions: true });
+configure({ enforceActions: "observed" });
 
 ////////////////////////////////////////////////////////////////////////////////
 

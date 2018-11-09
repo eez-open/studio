@@ -6,7 +6,7 @@ import { configure } from "mobx";
 import { theme } from "shared/ui/theme";
 import { ThemeProvider } from "shared/ui/styled-components";
 
-configure({ enforceActions: true });
+configure({ enforceActions: "observed" });
 
 EEZStudio.electron.ipcRenderer.on("beforeClose", () => {});
 

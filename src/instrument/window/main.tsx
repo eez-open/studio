@@ -10,7 +10,7 @@ import { instruments } from "instrument/instrument-object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-configure({ enforceActions: true });
+configure({ enforceActions: "observed" });
 
 import { loadExtensions } from "shared/extensions/extensions";
 

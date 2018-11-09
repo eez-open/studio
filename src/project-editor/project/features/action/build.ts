@@ -10,15 +10,15 @@ import { ActionProperties } from "project-editor/project/features/action/action"
 
 function buildActionsEnum(projectActions: ActionProperties[]) {
     let actions = projectActions.map(
-        action =>
+        (action, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "ACTION_ID_",
                 action.name,
                 projectBuild.NamingConvention.UnderscoreUpperCase
-            )}`
+            )} = ${i + 1}`
     );
 
-    actions.unshift(`${projectBuild.TAB}ACTION_ID_NONE`);
+    actions.unshift(`${projectBuild.TAB}ACTION_ID_NONE = 0`);
 
     return `enum ActionsEnum {\n${actions.join(",\n")}\n};`;
 }
