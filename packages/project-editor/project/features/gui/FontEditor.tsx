@@ -38,10 +38,8 @@ import rebuildFont from "font-services/font-rebuild";
 ////////////////////////////////////////////////////////////////////////////////
 
 const GlyphSelectFieldContainerDiv = styled.div`
-    position: relative;
     height: 600px;
     border: 1px solid ${props => props.theme.borderColor};
-    box-sizing: content-box;
     display: flex;
 `;
 
