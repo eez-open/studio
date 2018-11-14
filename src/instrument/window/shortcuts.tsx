@@ -1,7 +1,7 @@
 import * as React from "react";
 import { observable, computed, values } from "mobx";
 
-import { beginTransaction, commitTransaction } from "shared/store";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 
 import { IShortcut, IGroup } from "shortcuts/interfaces";
 import { Shortcuts, ShortcutsToolbarButtons } from "shortcuts/shortcuts";

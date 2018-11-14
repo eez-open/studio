@@ -3,8 +3,8 @@ import { configure } from "mobx";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { theme } from "shared/ui/theme";
-import { ThemeProvider } from "shared/ui/styled-components";
+import { theme } from "eez-studio-shared/ui/theme";
+import { ThemeProvider } from "eez-studio-shared/ui/styled-components";
 
 import { ProjectStore } from "project-editor/core/store";
 import { loadExtensions } from "project-editor/core/extensions";
@@ -39,4 +39,4 @@ EEZStudio.electron.ipcRenderer.on("reload", () => {
     window.location.reload();
 });
 
-//require("shared/module-stat");
+//require("eez-studio-shared/module-stat");

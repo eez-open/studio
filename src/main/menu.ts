@@ -16,7 +16,7 @@ import {
 import { settings } from "main/settings";
 import { APP_NAME } from "main/util";
 import showAboutBox from "main/about-box";
-import { undoManager } from "shared/store";
+import { undoManager } from "eez-studio-shared/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -3,7 +3,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { bind } from "bind-decorator";
 
-import { CodeEditor } from "shared/ui/code-editor";
+import { CodeEditor } from "eez-studio-shared/ui/code-editor";
 
 import { EditorComponent } from "project-editor/core/metaData";
 import { UndoManager, updateObject } from "project-editor/core/store";

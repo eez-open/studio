@@ -1,17 +1,17 @@
 import { observable, action, runInAction, autorun } from "mobx";
 import { bind } from "bind-decorator";
 
-import { db } from "shared/db";
-import { beginTransaction, commitTransaction } from "shared/store";
+import { db } from "eez-studio-shared/db";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import {
     IActivityLogEntry,
     activityLogStore,
     log,
     logUpdate,
     activeSession
-} from "shared/activity-log";
+} from "eez-studio-shared/activity-log";
 
-import { error } from "shared/ui/notification";
+import { error } from "eez-studio-shared/ui/notification";
 
 import { History, CONF_BLOCK_SIZE } from "instrument/window/history/history";
 import { createHistoryItem } from "instrument/window/history/item-factory";

@@ -1,7 +1,7 @@
-import { IExtension } from "shared/extensions/extension";
-import { installExtension } from "shared/extensions/extensions";
-import { confirmWithButtons, info } from "shared/ui/dialog";
-import * as notification from "shared/ui/notification";
+import { IExtension } from "eez-studio-shared/extensions/extension";
+import { installExtension } from "eez-studio-shared/extensions/extensions";
+import { confirmWithButtons, info } from "eez-studio-shared/ui/dialog";
+import * as notification from "eez-studio-shared/ui/notification";
 
 function confirmMessage(extension: IExtension) {
     return `You are about to install version ${extension.version} of the '${extension.displayName ||

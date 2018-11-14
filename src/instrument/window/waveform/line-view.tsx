@@ -3,14 +3,14 @@ import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { ILineController, globalViewOptions } from "shared/ui/chart/chart";
+import { ILineController, globalViewOptions } from "eez-studio-shared/ui/chart/chart";
 
 import {
     IWaveform,
     IWaveformRenderJobSpecification,
     renderWaveformPath
-} from "shared/ui/chart/render";
-import { drawWithWorker, releaseCanvas } from "shared/ui/chart/worker-manager";
+} from "eez-studio-shared/ui/chart/render";
+import { drawWithWorker, releaseCanvas } from "eez-studio-shared/ui/chart/worker-manager";
 
 ////////////////////////////////////////////////////////////////////////////////
 

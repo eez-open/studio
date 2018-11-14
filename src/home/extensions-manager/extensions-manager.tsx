@@ -4,34 +4,34 @@ import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
-import { compareVersions, studioVersion } from "shared/util";
-import { humanize } from "shared/string";
+import { compareVersions, studioVersion } from "eez-studio-shared/util";
+import { humanize } from "eez-studio-shared/string";
 
-import { IExtension } from "shared/extensions/extension";
+import { IExtension } from "eez-studio-shared/extensions/extension";
 import {
     installedExtensions,
     installExtension,
     uninstallExtension,
     changeExtensionImage,
     exportExtension
-} from "shared/extensions/extensions";
+} from "eez-studio-shared/extensions/extensions";
 
 import {
     copyFile,
     getTempFilePath,
     getValidFileNameFromFileName,
     writeBinaryData
-} from "shared/util";
-import { stringCompare } from "shared/string";
+} from "eez-studio-shared/util";
+import { stringCompare } from "eez-studio-shared/string";
 
-import styled from "shared/ui/styled-components";
-import { Splitter } from "shared/ui/splitter";
-import { VerticalHeaderWithBody, Header, ToolbarHeader, Body } from "shared/ui/header-with-body";
-import { Toolbar } from "shared/ui/toolbar";
-import { ButtonAction, DropdownIconAction, DropdownItem } from "shared/ui/action";
-import { List, ListItem, IListNode } from "shared/ui/list";
-import { confirm, confirmWithButtons, info } from "shared/ui/dialog";
-import * as notification from "shared/ui/notification";
+import styled from "eez-studio-shared/ui/styled-components";
+import { Splitter } from "eez-studio-shared/ui/splitter";
+import { VerticalHeaderWithBody, Header, ToolbarHeader, Body } from "eez-studio-shared/ui/header-with-body";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { ButtonAction, DropdownIconAction, DropdownItem } from "eez-studio-shared/ui/action";
+import { List, ListItem, IListNode } from "eez-studio-shared/ui/list";
+import { confirm, confirmWithButtons, info } from "eez-studio-shared/ui/dialog";
+import * as notification from "eez-studio-shared/ui/notification";
 
 import { ExtensionShortcuts } from "home/extensions-manager/extension-shortcuts";
 import { extensionsCatalog } from "home/extensions-manager/catalog";

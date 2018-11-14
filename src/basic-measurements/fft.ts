@@ -3,7 +3,7 @@ const fftAsm = require("fourier-transform/asm");
 const decibels = require("decibels");
 const windowing = require("fft-windowing");
 
-import { IMeasureTask } from "shared/extensions/extension";
+import { IMeasureTask } from "eez-studio-shared/extensions/extension";
 
 export default function(task: IMeasureTask) {
     let windowSize = (task.parameters && task.parameters.windowSize) || 1024;

@@ -1,6 +1,6 @@
 import { toJS } from "mobx";
 
-import { makeFolder } from "shared/util";
+import { makeFolder } from "eez-studio-shared/util";
 
 import {
     buildInstrumentExtension,

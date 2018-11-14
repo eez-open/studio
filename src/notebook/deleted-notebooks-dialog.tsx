@@ -3,9 +3,9 @@ import { findDOMNode } from "react-dom";
 import { computed, values } from "mobx";
 import { observer } from "mobx-react";
 
-import { Dialog, showDialog, confirm } from "shared/ui/dialog";
-import { ListContainer, List, IListNode, ListItem } from "shared/ui/list";
-import { ButtonAction } from "shared/ui/action";
+import { Dialog, showDialog, confirm } from "eez-studio-shared/ui/dialog";
+import { ListContainer, List, IListNode, ListItem } from "eez-studio-shared/ui/list";
+import { ButtonAction } from "eez-studio-shared/ui/action";
 
 import { INotebook, notebooksStore, deletedNotebooks, itemsStore } from "notebook/store";
 

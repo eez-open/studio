@@ -3,13 +3,13 @@ import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { humanize } from "shared/string";
-import { Icon } from "shared/ui/icon";
+import { humanize } from "eez-studio-shared/string";
+import { Icon } from "eez-studio-shared/ui/icon";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
-import { showGenericDialog } from "shared/ui/generic-dialog";
-import { CodeEditor } from "shared/ui/code-editor";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
+import { CodeEditor } from "eez-studio-shared/ui/code-editor";
 
 import {
     UndoManager,

@@ -1,7 +1,7 @@
 import { observable, action, runInAction } from "mobx";
 
-import { capitalize } from "shared/string";
-import { IUnit, VOLTAGE_UNIT, CURRENT_UNIT, POWER_UNIT } from "shared/units";
+import { capitalize } from "eez-studio-shared/string";
+import { IUnit, VOLTAGE_UNIT, CURRENT_UNIT, POWER_UNIT } from "eez-studio-shared/units";
 
 import {
     ChartsController,
@@ -11,7 +11,7 @@ import {
     IViewOptionsAxesLines,
     IViewOptionsAxesLinesType,
     ChartMode
-} from "shared/ui/chart/chart";
+} from "eez-studio-shared/ui/chart/chart";
 
 import { InstrumentObject } from "instrument/instrument-object";
 

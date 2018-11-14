@@ -9,9 +9,9 @@ import {
     getFirstDayOfWeek,
     getDayOfWeekName,
     getWeekNumber
-} from "shared/util";
+} from "eez-studio-shared/util";
 
-import styled from "shared/ui/styled-components";
+import styled from "eez-studio-shared/ui/styled-components";
 
 import { History } from "instrument/window/history/history";
 

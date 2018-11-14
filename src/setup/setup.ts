@@ -2,11 +2,11 @@ import * as fs from "fs";
 import * as path from "path";
 import { BrowserWindow, ipcMain, Event, WebContents } from "electron";
 
-import * as ExtensionsModule from "shared/extensions/extensions";
-import { IExtension } from "shared/extensions/extension";
+import * as ExtensionsModule from "eez-studio-shared/extensions/extensions";
+import { IExtension } from "eez-studio-shared/extensions/extension";
 
-import { isDev, getUserDataPath, makeFolder, copyFile, delay } from "shared/util";
-import { DEFAULT_DB_NAME, EXTENSIONS_FOLDER_NAME } from "shared/conf";
+import { isDev, getUserDataPath, makeFolder, copyFile, delay } from "eez-studio-shared/util";
+import { DEFAULT_DB_NAME, EXTENSIONS_FOLDER_NAME } from "eez-studio-shared/conf";
 
 async function setupExtensions(
     webContents: WebContents,
@@ -28,7 +28,9 @@ async function setupExtensions(
 
     webContents.send("setupMessage", `Installing ${fileList.length} extensions`);
 
-    const { installExtension } = require("shared/extensions/extensions") as typeof ExtensionsModule;
+    const {
+        installExtension
+    } = require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
 
     for (let i = 0; i < fileList.length; i++) {
         const filePath = fileList[i];
@@ -103,7 +105,9 @@ async function doSetup(webContents: WebContents) {
     }
 
     // database is ready, we can now load extensions
-    const { loadExtensions } = require("shared/extensions/extensions") as typeof ExtensionsModule;
+    const {
+        loadExtensions
+    } = require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
     loadExtensions();
 
     const extensionsFolderPath = getUserDataPath(EXTENSIONS_FOLDER_NAME);
@@ -117,7 +121,7 @@ export async function setup() {
         if (isDev || !isAnySetupRequired()) {
             const {
                 loadExtensions
-            } = require("shared/extensions/extensions") as typeof ExtensionsModule;
+            } = require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
             loadExtensions();
 
             resolve();

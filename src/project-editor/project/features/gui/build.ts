@@ -38,9 +38,7 @@ const STYLE_FLAGS_HORZ_ALIGN_CENTER = 2 << 1;
 const STYLE_FLAGS_VERT_ALIGN_TOP = 0 << 3;
 const STYLE_FLAGS_VERT_ALIGN_BOTTOM = 1 << 3;
 const STYLE_FLAGS_VERT_ALIGN_CENTER = 2 << 3;
-const STYLE_FLAGS_BRIGHT = 1 << 5;
-const STYLE_FLAGS_DIM = 2 << 5;
-const STYLE_FLAGS_BLINK = 1 << 7;
+const STYLE_FLAGS_BLINK = 1 << 5;
 
 const WIDGET_TYPE_NONE = 0;
 const WIDGET_TYPE_CONTAINER = 1;
@@ -444,10 +442,6 @@ function buildGuiStylesData(assets: Assets) {
     function buildStyle(style: StyleProperties) {
         let result = new Struct();
 
-        // font
-        let fontIndex = style.fontName ? assets.getFontIndex(style.fontName) : 0;
-        result.addField(new UInt8(fontIndex));
-
         // flags
         let flags = 0;
         let styleBorderSize = style.borderSizeProperty;
@@ -471,13 +465,6 @@ function buildGuiStylesData(assets: Assets) {
             flags |= STYLE_FLAGS_VERT_ALIGN_BOTTOM;
         } else {
             flags |= STYLE_FLAGS_VERT_ALIGN_CENTER;
-        }
-
-        let styleBrightness = style.brightnessProperty;
-        if (styleBrightness === "bright") {
-            flags |= STYLE_FLAGS_BRIGHT;
-        } else if (styleBrightness === "dim") {
-            flags |= STYLE_FLAGS_DIM;
         }
 
         let styleBlink = style.blinkProperty;
@@ -508,6 +495,13 @@ function buildGuiStylesData(assets: Assets) {
         }
         result.addField(new UInt16(borderColor16));
         colors.add(borderColor16);
+
+        // font
+        let fontIndex = style.fontName ? assets.getFontIndex(style.fontName) : 0;
+        result.addField(new UInt8(fontIndex));
+
+        // opacity
+        result.addField(new UInt8(style.opacityProperty));
 
         // padding
         result.addField(new UInt8(style.paddingHorizontalProperty || 0));

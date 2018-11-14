@@ -1,4 +1,4 @@
-import { service } from "shared/service";
+import { service } from "eez-studio-shared/service";
 
 import { FontProperties } from "font-services/interfaces";
 

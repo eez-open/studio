@@ -1,8 +1,8 @@
 import { observable, computed, action } from "mobx";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
-import { showGenericDialog } from "shared/ui/generic-dialog";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
 
 import {
     getChildOfObject,

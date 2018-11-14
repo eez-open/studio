@@ -1,6 +1,6 @@
 import { values } from "mobx";
 
-import { isRenderer } from "shared/util";
+import { isRenderer } from "eez-studio-shared/util";
 
 import {
     createStore,
@@ -8,7 +8,7 @@ import {
     createStoreObjectsCollection,
     beginTransaction,
     commitTransaction
-} from "shared/store";
+} from "eez-studio-shared/store";
 
 import { IGroup } from "shortcuts/interfaces";
 import { store as shortcutsStore, shortcuts } from "shortcuts/shortcuts-store";

@@ -7,16 +7,16 @@ import {
     createStoreObjectsCollection,
     beginTransaction,
     commitTransaction
-} from "shared/store";
-import { IExtension } from "shared/extensions/extension";
-import { loadExtensionById } from "shared/extensions/extensions";
-import { activityLogStore, log, IActivityLogEntry } from "shared/activity-log";
-import { objectEqual, isRenderer } from "shared/util";
-import { IUnit } from "shared/units";
-import { db } from "shared/db";
-import { _defer } from "shared/algorithm";
+} from "eez-studio-shared/store";
+import { IExtension } from "eez-studio-shared/extensions/extension";
+import { loadExtensionById } from "eez-studio-shared/extensions/extensions";
+import { activityLogStore, log, IActivityLogEntry } from "eez-studio-shared/activity-log";
+import { objectEqual, isRenderer } from "eez-studio-shared/util";
+import { IUnit } from "eez-studio-shared/units";
+import { db } from "eez-studio-shared/db";
+import { _defer } from "eez-studio-shared/algorithm";
 
-import styled from "shared/ui/styled-components";
+import styled from "eez-studio-shared/ui/styled-components";
 
 import * as MainWindowModule from "main/window";
 
@@ -32,7 +32,7 @@ import { createConnection } from "instrument/connection/connection";
 import { ConnectionErrorCode, ConnectionParameters } from "instrument/connection/interface";
 import { IFileUploadInstructions } from "instrument/connection/file-upload";
 
-import * as UiPropertiesModule from "shared/ui/properties";
+import * as UiPropertiesModule from "eez-studio-shared/ui/properties";
 
 import * as AppStoreModule from "instrument/window/app-store";
 
@@ -61,7 +61,7 @@ const UNKNOWN_INSTRUMENT_EXTENSION: IExtension = {
     name: "Unknown instrument",
     version: "no version",
     author: "no author",
-    image: "../shared/_images/object-implementation-not-found.svg",
+    image: "../eez-studio-shared/_images/object-implementation-not-found.svg",
     properties: {}
 };
 
@@ -492,7 +492,7 @@ export class InstrumentObject {
         const {
             PropertyList,
             StaticProperty
-        } = require("shared/ui/properties") as typeof UiPropertiesModule;
+        } = require("eez-studio-shared/ui/properties") as typeof UiPropertiesModule;
 
         if (this.lastConnection) {
             if (this.lastConnection.type === "ethernet") {
@@ -562,7 +562,7 @@ export class InstrumentObject {
 
     @computed
     get content() {
-        const { Icon } = require("shared/ui/icon");
+        const { Icon } = require("eez-studio-shared/ui/icon");
 
         if (this.extension) {
             return (

@@ -1,4 +1,4 @@
-import { IActivityLogEntry } from "shared/activity-log";
+import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import { Connection } from "instrument/connection/connection";
 import { FileState, FileStateState } from "instrument/connection/file-state";

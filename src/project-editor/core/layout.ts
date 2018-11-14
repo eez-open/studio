@@ -1,6 +1,6 @@
 import { action } from "mobx";
 
-import { capitalize } from "shared/string";
+import { capitalize } from "eez-studio-shared/string";
 import { UIStateStore } from "project-editor/core/store";
 
 const LAYOUT_TIMEOUT = 100;

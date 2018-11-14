@@ -1,177 +1,10 @@
-@import "../../shared/_stylesheets/main.less";
-
-body {
-    font-family: "Segoe UI", sans-serif;
-    margin: 0;
-    overflow: hidden;
-}
-
-a {
-    cursor: pointer;
-}
-
-#content {
-    border: 1px solid @border-color;
-}
-
-.error {
-    color: red;
-}
-
-.warning {
-    color: orange;
-}
-
-.btn:active {
-    box-shadow: none;
-    -webkit-box-shadow: none;
-}
-
-.EezStudio_ProjectEditor_center-content {
-    display: flex;
-    justify-content: center; /* align horizontal */
-    align-items: center; /* align vertical */
-}
-
-input[type="color"] {
-    height: 38px;
-}
-
-.btn-toolbar > button,
-.btn-toolbar > .btn-group {
-    margin-right: 5px;
-}
-
-.btn-group > button {
-    margin-right: 2px !important;
-}
-
-/*------------------------------------------------------------------------------
-
-MISC
-
-*/
-
-.EezStudio_ProjectEditor_center-block {
-    display: block;
-    margin: auto;
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-}
-
-/*------------------------------------------------------------------------------
-
-TOOLBAR
-
-*/
-
-.EezStudio_ProjectEditor_toolbar {
-    padding: 5px;
-    background-color: @panel-header-color;
-
-    .btn-group:not(:last-child) {
-        margin-right: 5px;
-    }
-}
-
-.EezStudio_ProjectEditor_btn {
-    font-size: 0;
-    padding: 6px;
-}
-
-.EezStudio_ProjectEditor_toolbar select {
-    height: 36px;
-}
+@import "../../eez-studio-shared/_stylesheets/main.less";
 
 /*------------------------------------------------------------------------------
 
 STATUSBAR
 
 */
-
-.EezStudio_ProjectEditor_status-bar {
-    background-color: @panel-header-color;
-}
-
-.EezStudio_ProjectEditor_status-bar__item {
-    display: inline-block;
-    padding: 4px 8px;
-    cursor: pointer;
-}
-
-/*------------------------------------------------------------------------------
-
-LOADER
-
-*/
-
-.loader-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.loader,
-.loader:before,
-.loader:after {
-    background: #454545;
-    -webkit-animation: load1 1s infinite ease-in-out;
-    animation: load1 1s infinite ease-in-out;
-    width: 1em;
-    height: 4em;
-}
-.loader:before,
-.loader:after {
-    position: absolute;
-    top: 0;
-    content: "";
-}
-.loader:before {
-    left: -1.5em;
-    -webkit-animation-delay: -0.32s;
-    animation-delay: -0.32s;
-}
-.loader {
-    color: #454545;
-    text-indent: -9999em;
-    position: relative;
-    font-size: 11px;
-    -webkit-transform: translateZ(0);
-    -ms-transform: translateZ(0);
-    transform: translateZ(0);
-    -webkit-animation-delay: -0.16s;
-    animation-delay: -0.16s;
-}
-.loader:after {
-    left: 1.5em;
-}
-@-webkit-keyframes load1 {
-    0%,
-    80%,
-    100% {
-        box-shadow: 0 0;
-        height: 4em;
-    }
-    40% {
-        box-shadow: 0 -2em;
-        height: 5em;
-    }
-}
-@keyframes load1 {
-    0%,
-    80%,
-    100% {
-        box-shadow: 0 0;
-        height: 4em;
-    }
-    40% {
-        box-shadow: 0 -2em;
-        height: 5em;
-    }
-}
 
 /*------------------------------------------------------------------------------
 
@@ -241,7 +74,7 @@ LAYOUT
 .horizontalSplitter {
     width: 8px;
     cursor: ew-resize;
-    background-image: url(../../shared/_images/splitter_horizontal_thumb.png);
+    background-image: url(../../eez-studio-shared/_images/splitter_horizontal_thumb.png);
     border-left: 1px solid @splitter-border-color;
     border-right: 1px solid @splitter-border-color;
 }
@@ -249,7 +82,7 @@ LAYOUT
 .verticalSplitter {
     height: 8px;
     cursor: ns-resize;
-    background-image: url(../../shared/_images/splitter_vertical_thumb.png);
+    background-image: url(../../eez-studio-shared/_images/splitter_vertical_thumb.png);
     border-top: 1px solid @splitter-border-color;
     border-bottom: 1px solid @splitter-border-color;
 }

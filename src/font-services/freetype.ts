@@ -1,6 +1,6 @@
 import { FontProperties, GlyphProperties } from "font-services/interfaces";
 import { getAllGlyphEncodings } from "font-services/opentype";
-import { _range } from "shared/algorithm";
+import { _range } from "eez-studio-shared/algorithm";
 
 const path = require("path");
 

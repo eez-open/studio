@@ -1,4 +1,4 @@
-import { _map, _zipObject } from "shared/algorithm";
+import { _map, _zipObject } from "eez-studio-shared/algorithm";
 
 import { observable, computed } from "mobx";
 
@@ -125,21 +125,10 @@ const paddingVerticalProperty: PropertyMetaData = {
     inheritable: true
 };
 
-const brightnessProperty: PropertyMetaData = {
-    name: "brightness",
-    type: "enum",
-    enumItems: [
-        {
-            id: "normal"
-        },
-        {
-            id: "bright"
-        },
-        {
-            id: "dim"
-        }
-    ],
-    defaultValue: "normal",
+const opacityProperty: PropertyMetaData = {
+    name: "opacity",
+    type: "number",
+    defaultValue: 255,
     inheritable: true
 };
 
@@ -170,7 +159,7 @@ const properties = [
     borderColorProperty,
     paddingHorizontalProperty,
     paddingVerticalProperty,
-    brightnessProperty,
+    opacityProperty,
     blinkProperty,
     alwaysBuildProperty
 ];
@@ -231,7 +220,7 @@ export class StyleProperties extends EezObject {
     @observable
     paddingVertical?: number;
     @observable
-    brightness: string;
+    opacity: number;
     @observable
     blink?: boolean;
     @observable
@@ -292,8 +281,12 @@ export class StyleProperties extends EezObject {
     }
 
     @computed
-    get brightnessProperty(): string {
-        return getStyleProperty(this, "brightness");
+    get opacityProperty(): number {
+        const opacity = getStyleProperty(this, "opacity");
+        if (isNaN(opacity)) {
+            return 255;
+        }
+        return opacity;
     }
 
     @computed
@@ -413,7 +406,7 @@ export function getDefaultStyle(): StyleProperties {
                 borderColor: borderColorProperty.defaultValue,
                 paddingHorizontal: paddingHorizontalProperty.defaultValue,
                 paddingVertical: paddingVerticalProperty.defaultValue,
-                brightness: brightnessProperty.defaultValue,
+                opacity: opacityProperty.defaultValue,
                 blink: blinkProperty.defaultValue
             },
             styleMetaData

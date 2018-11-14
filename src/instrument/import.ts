@@ -10,9 +10,9 @@ import {
     isRenderer,
     writeBinaryData,
     writeJsObjectToFile
-} from "shared/util";
-import { getExtensionFolderPath } from "shared/extensions/extension-folder";
-import { IExtension } from "shared/extensions/extension";
+} from "eez-studio-shared/util";
+import { getExtensionFolderPath } from "eez-studio-shared/extensions/extension-folder";
+import { IExtension } from "eez-studio-shared/extensions/extension";
 
 import { IInstrumentExtensionProperties } from "instrument/instrument-extension";
 import * as PropertiesComponentModule from "instrument/properties-component";
@@ -223,7 +223,7 @@ export function getNotFoundInstrumentExtension(instrumentExtensionId: string) {
         name: "no name",
         version: "no version",
         author: "no author",
-        image: `${__dirname}/../shared/_images/object-implementation-not-found.svg`
+        image: `${__dirname}/../eez-studio-shared/_images/object-implementation-not-found.svg`
     };
 }
 

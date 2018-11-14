@@ -4,22 +4,22 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import * as classNames from "classnames";
 
-import { objectClone, addAlphaToColor } from "shared/util";
-import { _range } from "shared/algorithm";
+import { objectClone, addAlphaToColor } from "eez-studio-shared/util";
+import { _range } from "eez-studio-shared/algorithm";
 import {
     IUnit,
     TIME_UNIT,
     TIME_UNIT_NO_CUSTOM_FORMAT,
     VOLTAGE_UNIT,
     CURRENT_UNIT
-} from "shared/units";
+} from "eez-studio-shared/units";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
-import { theme } from "shared/ui/theme";
-import styled from "shared/ui/styled-components";
-import { VerticalHeaderWithBody, Body, ToolbarHeader } from "shared/ui/header-with-body";
-import { Splitter } from "shared/ui/splitter";
+import { theme } from "eez-studio-shared/ui/theme";
+import styled from "eez-studio-shared/ui/styled-components";
+import { VerticalHeaderWithBody, Body, ToolbarHeader } from "eez-studio-shared/ui/header-with-body";
+import { Splitter } from "eez-studio-shared/ui/splitter";
 import {
     AxisController,
     ChartController,
@@ -31,10 +31,10 @@ import {
     ChartView,
     MouseHandler,
     globalViewOptions
-} from "shared/ui/chart/chart";
-import { Toolbar } from "shared/ui/toolbar";
-import { ButtonAction, DropdownButtonAction, DropdownItem } from "shared/ui/action";
-import { showGenericDialog } from "shared/ui/generic-dialog";
+} from "eez-studio-shared/ui/chart/chart";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { ButtonAction, DropdownButtonAction, DropdownItem } from "eez-studio-shared/ui/action";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
 
 import { InstrumentObject } from "instrument/instrument-object";
 

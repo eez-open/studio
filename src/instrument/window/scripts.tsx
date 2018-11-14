@@ -2,14 +2,14 @@ import * as React from "react";
 import { observable, computed, values, action, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react";
 
-import { stringCompare } from "shared/string";
+import { stringCompare } from "eez-studio-shared/string";
 
-import styled from "shared/ui/styled-components";
-import { AlertDanger } from "shared/ui/alert";
-import { Splitter } from "shared/ui/splitter";
-import { List } from "shared/ui/list";
-import { ButtonAction } from "shared/ui/action";
-import { CodeEditor } from "shared/ui/code-editor";
+import styled from "eez-studio-shared/ui/styled-components";
+import { AlertDanger } from "eez-studio-shared/ui/alert";
+import { Splitter } from "eez-studio-shared/ui/splitter";
+import { List } from "eez-studio-shared/ui/list";
+import { ButtonAction } from "eez-studio-shared/ui/action";
+import { CodeEditor } from "eez-studio-shared/ui/code-editor";
 
 import { IShortcut } from "shortcuts/interfaces";
 

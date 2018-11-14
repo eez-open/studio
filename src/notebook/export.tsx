@@ -4,19 +4,19 @@ import * as archiverModule from "archiver";
 import * as React from "react";
 import { values } from "mobx";
 
-import { stringCompare } from "shared/string";
-import { _flatten } from "shared/algorithm";
-import { db } from "shared/db";
-import { IStore } from "shared/store";
-import { IActivityLogEntry, activityLogStore, logGet, loadData } from "shared/activity-log";
+import { stringCompare } from "eez-studio-shared/string";
+import { _flatten } from "eez-studio-shared/algorithm";
+import { db } from "eez-studio-shared/db";
+import { IStore } from "eez-studio-shared/store";
+import { IActivityLogEntry, activityLogStore, logGet, loadData } from "eez-studio-shared/activity-log";
 
-import { DropdownIconAction, DropdownItem } from "shared/ui/action";
-import * as notification from "shared/ui/notification";
-import { showGenericDialog } from "shared/ui/generic-dialog";
+import { DropdownIconAction, DropdownItem } from "eez-studio-shared/ui/action";
+import * as notification from "eez-studio-shared/ui/notification";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
-import { IActivityLogController } from "shared/extensions/extension";
+import { IActivityLogController } from "eez-studio-shared/extensions/extension";
 
 import { store as instrumentsStore } from "instrument/instrument-object";
 import {

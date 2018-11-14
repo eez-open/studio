@@ -1,4 +1,4 @@
-import { IMeasureTask } from "shared/extensions/extension";
+import { IMeasureTask } from "eez-studio-shared/extensions/extension";
 
 export default function(task: IMeasureTask) {
     let result = Number.MAX_VALUE;

@@ -1,9 +1,9 @@
 import { values } from "mobx";
 
-import { isRenderer } from "shared/util";
-import { db } from "shared/db";
-import { sendMessage } from "shared/notify";
-import { createStore, types, createStoreObjectsCollection } from "shared/store";
+import { isRenderer } from "eez-studio-shared/util";
+import { db } from "eez-studio-shared/db";
+import { sendMessage } from "eez-studio-shared/notify";
+import { createStore, types, createStoreObjectsCollection } from "eez-studio-shared/store";
 
 import { IShortcut } from "shortcuts/interfaces";
 import { DEFAULT_TOOLBAR_BUTTON_COLOR } from "shortcuts/toolbar-button-colors";

@@ -2,9 +2,9 @@ import * as React from "react";
 import { observable, computed, action, values } from "mobx";
 import { observer } from "mobx-react";
 
-import { objectClone, isReserverdKeybinding } from "shared/util";
-import { makeValidator, validators, VALIDATION_MESSAGE_REQUIRED } from "shared/model/validation";
-import { Dialog, showDialog } from "shared/ui/dialog";
+import { objectClone, isReserverdKeybinding } from "eez-studio-shared/util";
+import { makeValidator, validators, VALIDATION_MESSAGE_REQUIRED } from "eez-studio-shared/model/validation";
+import { Dialog, showDialog } from "eez-studio-shared/ui/dialog";
 import {
     PropertyList,
     TextInputProperty,
@@ -13,11 +13,11 @@ import {
     NumberInputProperty,
     SelectProperty,
     StaticProperty
-} from "shared/ui/properties";
+} from "eez-studio-shared/ui/properties";
 
-import { CodeEditorProperty } from "shared/ui/code-editor";
+import { CodeEditorProperty } from "eez-studio-shared/ui/code-editor";
 
-import { extensions } from "shared/extensions/extensions";
+import { extensions } from "eez-studio-shared/extensions/extensions";
 
 import { IActionType, IShortcut, IShortcutsStore, IGroupsStore } from "shortcuts/interfaces";
 import { TOOLBAR_BUTTON_COLORS } from "shortcuts/toolbar-button-colors";
@@ -430,7 +430,7 @@ export function showShortcutDialog(
     //     maximizable: false
     // });
 
-    // win.loadURL(`file://${__dirname}/../../../../shared/download.html`);
+    // win.loadURL(`file://${__dirname}/../../../../eez-studio-shared/download.html`);
 
     // win.setMenu(null);
 }

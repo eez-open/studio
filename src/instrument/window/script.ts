@@ -1,20 +1,20 @@
-import { format } from "shared/units";
+import { format } from "eez-studio-shared/units";
 import {
     IActivityLogEntry,
     activityLogStore,
     log,
     logUpdate,
     logDelete
-} from "shared/activity-log";
+} from "eez-studio-shared/activity-log";
 
-import * as NotificationModule from "shared/ui/notification";
-import { confirm, info } from "shared/ui/dialog";
-import { showGenericDialog } from "shared/ui/generic-dialog";
+import * as NotificationModule from "eez-studio-shared/ui/notification";
+import { confirm, info } from "eez-studio-shared/ui/dialog";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
-import { run as runScpi } from "shared/script-engines/scpi";
-import { run as runJavaScript } from "shared/script-engines/javascript";
+import { run as runScpi } from "eez-studio-shared/script-engines/scpi";
+import { run as runJavaScript } from "eez-studio-shared/script-engines/javascript";
 
 import { IShortcut } from "shortcuts/interfaces";
 

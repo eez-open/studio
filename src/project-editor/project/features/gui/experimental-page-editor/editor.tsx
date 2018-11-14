@@ -3,7 +3,9 @@ import { observable, computed, action, runInAction, reaction, autorun } from "mo
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { _range } from "shared/algorithm";
+const { Menu, MenuItem } = EEZStudio.electron.remote;
+
+import { _range } from "eez-studio-shared/algorithm";
 import {
     Point,
     Rect,
@@ -11,12 +13,18 @@ import {
     pointInRect,
     BoundingRectBuilder,
     isRectInsideRect
-} from "shared/geometry";
+} from "eez-studio-shared/geometry";
 
-import { SvgLabel } from "shared/ui/svg-label";
-import { IBaseObject, IDocument } from "shared/ui/designer/designer-interfaces";
-import { Canvas } from "shared/ui/designer/canvas";
-import { selectToolHandler } from "shared/ui/designer/select-tool";
+import { SvgLabel } from "eez-studio-shared/ui/svg-label";
+import {
+    IBaseObject,
+    IDocument,
+    IContextMenu,
+    IContextMenuItem,
+    IContextMenuPopupOptions
+} from "eez-studio-designer/designer-interfaces";
+import { Canvas } from "eez-studio-designer/canvas";
+import { selectToolHandler } from "eez-studio-designer/select-tool";
 
 import {
     NavigationStore,
@@ -921,7 +929,17 @@ export class ExperimentalWidgetContainerEditor
         UndoManager.setCombineCommands(false);
     }
 
-    initContextMenu(menu: Electron.Menu) {}
+    createContextMenu(): IContextMenu {
+        const menu = new Menu();
+        return {
+            appendMenuItem: (menuItem: IContextMenuItem) => {
+                menu.append(new MenuItem(menuItem));
+            },
+            popup: (options: IContextMenuPopupOptions) => {
+                menu.popup(options);
+            }
+        };
+    }
 
     objectFromPoint(point: Point) {
         return this.rootObjectComponent.objectFromPoint(point);

@@ -8,9 +8,8 @@ typings
 src/**/*.js
 src/**/*.js.map
 
-src/shared/_stylesheets/main.css
+src/eez-studio-shared/_stylesheets/main.css
 src/project-editor/_stylesheets/main.css
-src/test/_stylesheets/main.css
 
 extensions/advanced-measurements/**/*.js
 extensions/advanced-measurements/**/*.js.map

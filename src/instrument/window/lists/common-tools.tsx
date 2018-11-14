@@ -2,7 +2,7 @@ import * as React from "react";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 
-import { ChartsController } from "shared/ui/chart/chart";
+import { ChartsController } from "eez-studio-shared/ui/chart/chart";
 
 ////////////////////////////////////////////////////////////////////////////////
 

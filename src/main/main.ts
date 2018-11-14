@@ -31,7 +31,7 @@ app.on("ready", async function() {
 
     await setup();
 
-    require("shared/service");
+    require("eez-studio-shared/service");
 
     if (process.argv.length > 2 && process.argv[2].startsWith("devToolsExtension=")) {
         BrowserWindow.addDevToolsExtension(process.argv[2].substr("devToolsExtension=".length));

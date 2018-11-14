@@ -14,8 +14,8 @@ import {
 
 import { groups, addGroup, updateGroup, deleteGroup } from "shortcuts/groups-store";
 
-import { beginTransaction, commitTransaction } from "shared/store";
-import { VerticalHeaderWithBody, ToolbarHeader, Body } from "shared/ui/header-with-body";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-shared/ui/header-with-body";
 
 import * as InstrumentObjectModule from "instrument/instrument-object";
 

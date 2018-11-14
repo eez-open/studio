@@ -9,12 +9,12 @@ import {
     autorun
 } from "mobx";
 
-import { confirmSave } from "shared/util";
-import { humanize } from "shared/string";
-import { _each, _isArray, _map, _uniqWith } from "shared/algorithm";
+import { confirmSave } from "eez-studio-shared/util";
+import { humanize } from "eez-studio-shared/string";
+import { _each, _isArray, _map, _uniqWith } from "eez-studio-shared/algorithm";
 
-import { showGenericDialog, TableField } from "shared/ui/generic-dialog";
-import * as notification from "shared/ui/notification";
+import { showGenericDialog, TableField } from "eez-studio-shared/ui/generic-dialog";
+import * as notification from "eez-studio-shared/ui/notification";
 
 import {
     EezObject,

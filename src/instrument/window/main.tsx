@@ -3,8 +3,8 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { configure } from "mobx";
 
-import { theme } from "shared/ui/theme";
-import { ThemeProvider } from "shared/ui/styled-components";
+import { theme } from "eez-studio-shared/ui/theme";
+import { ThemeProvider } from "eez-studio-shared/ui/styled-components";
 
 import { instruments } from "instrument/instrument-object";
 
@@ -12,7 +12,7 @@ import { instruments } from "instrument/instrument-object";
 
 configure({ enforceActions: "observed" });
 
-import { loadExtensions } from "shared/extensions/extensions";
+import { loadExtensions } from "eez-studio-shared/extensions/extensions";
 
 loadExtensions().then(() => {
     const instrumentId = EEZStudio.electron.ipcRenderer.sendSync("getWindowArgs");
@@ -37,4 +37,4 @@ EEZStudio.electron.ipcRenderer.on("reload", () => {
     window.location.reload();
 });
 
-//require("shared/module-stat");
+//require("eez-studio-shared/module-stat");

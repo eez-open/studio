@@ -1,4 +1,4 @@
-import { service } from "shared/service";
+import { service } from "eez-studio-shared/service";
 
 export default service("pdf-services/pdf-to-png", async (data: string) => {
     const pdfjsLib = require("../../libs/pdfjs/build/pdf.js");

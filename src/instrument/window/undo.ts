@@ -1,7 +1,7 @@
 import { observable, action, runInAction, autorun } from "mobx";
 
-import { confirmSave, objectClone } from "shared/util";
-import { IStore, beginTransaction, commitTransaction } from "shared/store";
+import { confirmSave, objectClone } from "eez-studio-shared/util";
+import { IStore, beginTransaction, commitTransaction } from "eez-studio-shared/store";
 
 interface ICommand {
     execute: () => void;

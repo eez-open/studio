@@ -1,10 +1,10 @@
 import * as React from "react";
 import { observable } from "mobx";
 
-import { formatDuration } from "shared/util";
-import { IActivityLogEntry, loadData, logDelete } from "shared/activity-log";
+import { formatDuration } from "eez-studio-shared/util";
+import { IActivityLogEntry, loadData, logDelete } from "eez-studio-shared/activity-log";
 
-import styled from "shared/ui/styled-components";
+import styled from "eez-studio-shared/ui/styled-components";
 
 import { IAppStore } from "instrument/window/history/history";
 

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { observer } from "mobx-react";
 
-import { IconAction } from "shared/ui/action";
+import { IconAction } from "eez-studio-shared/ui/action";
 
 import {
     EditorsStore,

@@ -2,8 +2,8 @@ import { action } from "mobx";
 import { observer } from "mobx-react";
 import * as React from "react";
 
-import { Icon } from "shared/ui/icon";
-import { TabsView } from "shared/ui/tabs";
+import { Icon } from "eez-studio-shared/ui/icon";
+import { TabsView } from "eez-studio-shared/ui/tabs";
 
 import { UIStateStore, OutputSectionsStore, NavigationStore } from "project-editor/core/store";
 import { Message as OutputMessage, Type as MessageType } from "project-editor/core/output";

@@ -3,7 +3,7 @@ import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { IconAction } from "shared/ui/action";
+import { IconAction } from "eez-studio-shared/ui/action";
 
 import { NavigationStore } from "project-editor/core/store";
 import { EditorComponent } from "project-editor/core/metaData";

@@ -4,15 +4,15 @@ import { observable, action, runInAction, reaction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { objectClone } from "shared/util";
+import { objectClone } from "eez-studio-shared/util";
 
 import {
     PropertyList,
     TextInputProperty,
     NumberInputProperty,
     SelectProperty
-} from "shared/ui/properties";
-import { Dialog, showDialog } from "shared/ui/dialog";
+} from "eez-studio-shared/ui/properties";
+import { Dialog, showDialog } from "eez-studio-shared/ui/dialog";
 
 import { ConnectionParameters } from "instrument/connection/interface";
 

@@ -3,16 +3,16 @@ import { observable, computed, action, runInAction, values } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { clamp, objectClone } from "shared/util";
-import { _max, _range } from "shared/algorithm";
-import { Point, pointDistance, closestPointOnSegment } from "shared/geometry";
-import { capitalize } from "shared/string";
-import { IUnit, TIME_UNIT } from "shared/units";
+import { clamp, objectClone } from "eez-studio-shared/util";
+import { _max, _range } from "eez-studio-shared/algorithm";
+import { Point, pointDistance, closestPointOnSegment } from "eez-studio-shared/geometry";
+import { capitalize } from "eez-studio-shared/string";
+import { IUnit, TIME_UNIT } from "eez-studio-shared/units";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
-import styled from "shared/ui/styled-components";
-import { VerticalHeaderWithBody, Body } from "shared/ui/header-with-body";
+import styled from "eez-studio-shared/ui/styled-components";
+import { VerticalHeaderWithBody, Body } from "eez-studio-shared/ui/header-with-body";
 import {
     AxisController,
     ChartMode,
@@ -28,11 +28,11 @@ import {
     ILineController,
     MouseHandler,
     CONF_CURSOR_RADIUS
-} from "shared/ui/chart/chart";
-import { showPopup } from "shared/ui/popup";
-import { Toolbar } from "shared/ui/toolbar";
-import { ButtonAction, DropdownButtonAction, DropdownItem } from "shared/ui/action";
-import { showGenericDialog } from "shared/ui/generic-dialog";
+} from "eez-studio-shared/ui/chart/chart";
+import { showPopup } from "eez-studio-shared/ui/popup";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { ButtonAction, DropdownButtonAction, DropdownItem } from "eez-studio-shared/ui/action";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
 
 import { InstrumentObject } from "instrument/instrument-object";
 

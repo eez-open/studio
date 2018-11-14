@@ -9,18 +9,18 @@ import {
     fileExists,
     isValidFileName,
     isValidPath
-} from "shared/util";
+} from "eez-studio-shared/util";
 
-import { makeValidator, validators } from "shared/model/validation";
+import { makeValidator, validators } from "eez-studio-shared/model/validation";
 
-import { Dialog, showDialog } from "shared/ui/dialog";
+import { Dialog, showDialog } from "eez-studio-shared/ui/dialog";
 import {
     PropertyList,
     TextInputProperty,
     NumberInputProperty,
     BooleanProperty,
     FileInputProperty
-} from "shared/ui/properties";
+} from "eez-studio-shared/ui/properties";
 
 import { IFileUploadInstructions } from "instrument/connection/file-upload";
 

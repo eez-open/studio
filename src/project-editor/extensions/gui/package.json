@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "description": "This feature adds GUI support for your project",
     "author": "EEZ",
-    "authorLogo": "../shared/_images/eez_logo.png",
+    "authorLogo": "../eez-studio-shared/_images/eez_logo.png",
     "eezStudioExtension": {
         "displayName": "GUI",
         "category": "project-feature",

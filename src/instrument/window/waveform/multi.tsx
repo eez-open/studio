@@ -4,24 +4,24 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import * as VisibilitySensor from "react-visibility-sensor";
 
-import { objectEqual, objectClone, formatDateTimeLong } from "shared/util";
-import { beginTransaction, commitTransaction } from "shared/store";
-import { logUpdate, IActivityLogEntry } from "shared/activity-log";
+import { objectEqual, objectClone, formatDateTimeLong } from "eez-studio-shared/util";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
 
-import styled from "shared/ui/styled-components";
-import { Dialog, showDialog } from "shared/ui/dialog";
+import styled from "eez-studio-shared/ui/styled-components";
+import { Dialog, showDialog } from "eez-studio-shared/ui/dialog";
 import {
     TextInputProperty,
     ColorInputProperty,
     PropertyList,
     SelectFromListProperty
-} from "shared/ui/properties";
-import { IListNode, ListItem } from "shared/ui/list";
-import { ChartMode, ChartsController, IAxisModel } from "shared/ui/chart/chart";
-import { Icon } from "shared/ui/icon";
+} from "eez-studio-shared/ui/properties";
+import { IListNode, ListItem } from "eez-studio-shared/ui/list";
+import { ChartMode, ChartsController, IAxisModel } from "eez-studio-shared/ui/chart/chart";
+import { Icon } from "eez-studio-shared/ui/icon";
 
-import { RulersModel } from "shared/ui/chart/rulers";
-import { MeasurementsModel } from "shared/ui/chart/measurements";
+import { RulersModel } from "eez-studio-shared/ui/chart/rulers";
+import { MeasurementsModel } from "eez-studio-shared/ui/chart/measurements";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";

@@ -4,11 +4,11 @@ import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { theme } from "shared/ui/theme";
-import { ThemeProvider } from "shared/ui/styled-components";
-import { IconAction, ButtonAction } from "shared/ui/action";
-import { SideDock, DockablePanels } from "shared/ui/side-dock";
-import { SearchInput } from "shared/ui/search-input";
+import { theme } from "eez-studio-shared/ui/theme";
+import { ThemeProvider } from "eez-studio-shared/ui/styled-components";
+import { IconAction, ButtonAction } from "eez-studio-shared/ui/action";
+import { SideDock, DockablePanels } from "eez-studio-shared/ui/side-dock";
+import { SearchInput } from "eez-studio-shared/ui/search-input";
 
 import { IAppStore } from "instrument/window/history/history";
 import { HistoryListComponent } from "instrument/window/history/list-component";

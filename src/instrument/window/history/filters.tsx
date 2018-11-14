@@ -2,12 +2,12 @@ import * as React from "react";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 
-import { IActivityLogEntry } from "shared/activity-log";
-import { db } from "shared/db";
-import { scheduleTask, Priority } from "shared/scheduler";
+import { IActivityLogEntry } from "eez-studio-shared/activity-log";
+import { db } from "eez-studio-shared/db";
+import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 
-import styled from "shared/ui/styled-components";
-import { PropertyList, BooleanProperty } from "shared/ui/properties";
+import styled from "eez-studio-shared/ui/styled-components";
+import { PropertyList, BooleanProperty } from "eez-studio-shared/ui/properties";
 
 import { IAppStore, History } from "instrument/window/history/history";
 import { IHistoryItem } from "instrument/window/history/item";

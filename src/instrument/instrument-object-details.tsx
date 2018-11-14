@@ -2,17 +2,17 @@ import * as React from "react";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { Panels, Panel } from "shared/ui/panel";
-import { Loader } from "shared/ui/loader";
+import { Panels, Panel } from "eez-studio-shared/ui/panel";
+import { Loader } from "eez-studio-shared/ui/loader";
 import {
     PropertyList,
     StaticProperty,
     TextInputProperty,
     BooleanProperty
-} from "shared/ui/properties";
-import { AlertDanger } from "shared/ui/alert";
-import { Toolbar } from "shared/ui/toolbar";
-import { ButtonAction } from "shared/ui/action";
+} from "eez-studio-shared/ui/properties";
+import { AlertDanger } from "eez-studio-shared/ui/alert";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { ButtonAction } from "eez-studio-shared/ui/action";
 
 import { ConnectionProperties } from "instrument/window/connection-dialog";
 import { InstrumentObject } from "instrument/instrument-object";

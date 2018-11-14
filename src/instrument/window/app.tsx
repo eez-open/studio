@@ -3,12 +3,12 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import styled from "shared/ui/styled-components";
-import { AppRootComponent } from "shared/ui/app";
-import { AlertDanger } from "shared/ui/alert";
-import { Loader } from "shared/ui/loader";
-import { Toolbar } from "shared/ui/toolbar";
-import { PanelHeader } from "shared/ui/header-with-body";
+import styled from "eez-studio-shared/ui/styled-components";
+import { AppRootComponent } from "eez-studio-shared/ui/app";
+import { AlertDanger } from "eez-studio-shared/ui/alert";
+import { Loader } from "eez-studio-shared/ui/loader";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { PanelHeader } from "eez-studio-shared/ui/header-with-body";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { getConnection } from "instrument/window/connection";

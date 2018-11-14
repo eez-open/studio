@@ -5,8 +5,10 @@ import { observer } from "mobx-react";
 //import DevTools from 'mobx-react-devtools';
 //import { isDev } from 'shared/util';
 
-import { TabsView } from "shared/ui/tabs";
-import * as notification from "shared/ui/notification";
+import styled from "eez-studio-shared/ui/styled-components";
+
+import { TabsView } from "eez-studio-shared/ui/tabs";
+import * as notification from "eez-studio-shared/ui/notification";
 
 import {
     UndoManager,
@@ -25,7 +27,7 @@ import { startSearch } from "project-editor/core/search";
 import { Debug } from "project-editor/core/debug";
 import { Section } from "project-editor/core/output";
 
-import { IconAction } from "shared/ui/action";
+import { IconAction } from "eez-studio-shared/ui/action";
 import { Panel } from "project-editor/components/Panel";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Output } from "project-editor/components/Output";
@@ -36,6 +38,19 @@ import { BuildConfigurationProperties } from "project-editor/project/project";
 import { Notification } from "project-editor/project/Notification";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const ToolbarNav = styled.nav`
+    padding: 5px;
+    background-color: ${props => props.theme.panelHeaderColor};
+
+    .btn-group:not(:last-child) {
+        margin-right: 5px;
+    }
+
+    select {
+        height: 36px;
+    }
+`;
 
 @observer
 class Toolbar extends React.Component<
@@ -75,7 +90,7 @@ class Toolbar extends React.Component<
         );
 
         return (
-            <nav className="navbar justify-content-between layoutTop EezStudio_ProjectEditor_toolbar">
+            <ToolbarNav className="navbar justify-content-between layoutTop">
                 <div>
                     <div className="btn-group" role="group">
                         <IconAction
@@ -142,7 +157,7 @@ class Toolbar extends React.Component<
                         />
                     </div>
                 </div>
-            </nav>
+            </ToolbarNav>
         );
     }
 }
@@ -255,6 +270,12 @@ class Content extends React.Component<{}, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const StatusBarItemSpan = styled.span`
+    display: inline-block;
+    padding: 4px 8px;
+    cursor: pointer;
+`;
+
 @observer
 class StatusBarItem extends React.Component<
     {
@@ -265,14 +286,16 @@ class StatusBarItem extends React.Component<
 > {
     render() {
         return (
-            <span className="EezStudio_ProjectEditor_status-bar__item" onClick={this.props.onClick}>
-                {this.props.body}
-            </span>
+            <StatusBarItemSpan onClick={this.props.onClick}>{this.props.body}</StatusBarItemSpan>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const StatusBarDiv = styled.div`
+    background-color: ${props => props.theme.panelHeaderColor};
+`;
 
 @observer
 class StatusBar extends React.Component<{}, {}> {
@@ -284,18 +307,40 @@ class StatusBar extends React.Component<{}, {}> {
 
     render() {
         return (
-            <div className="EezStudio_ProjectEditor_status-bar">
+            <StatusBarDiv>
                 <StatusBarItem
                     key="checks"
                     body={OutputSectionsStore.getSection(Section.CHECKS).title}
                     onClick={this.onChecksClicked}
                 />
-            </div>
+            </StatusBarDiv>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const ProjectEditorContainer = styled.div`
+    overflow: hidden;
+    border-top: 1px solid ${props => props.theme.borderColor};
+
+    .error {
+        color: red;
+    }
+
+    .warning {
+        color: orange;
+    }
+
+    .btn-toolbar > button,
+    .btn-toolbar > .btn-group {
+        margin-right: 5px;
+    }
+
+    .btn-group > button {
+        margin-right: 2px !important;
+    }
+`;
 
 @observer
 export class ProjectEditor extends React.Component<{}, {}> {
@@ -329,7 +374,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
         // }
 
         return (
-            <div className="layoutCenter">
+            <ProjectEditorContainer className="layoutCenter">
                 <Layout.Split orientation="horizontal" splitId="project-debug" splitPosition="0.8">
                     <Layout.SplitPanel>
                         <Toolbar />
@@ -348,7 +393,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
                 {notification.container.get()}
                 {devTools}
                 <Notification />
-            </div>
+            </ProjectEditorContainer>
         );
     }
 }

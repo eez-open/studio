@@ -1,18 +1,18 @@
 import { observable, computed, action, runInAction } from "mobx";
 
-import { isRenderer } from "shared/util";
+import { isRenderer } from "eez-studio-shared/util";
 import {
     createStore,
     types,
     createStoreObjectsCollection,
     beginTransaction,
     commitTransaction
-} from "shared/store";
-import { Rect } from "shared/geometry";
-import { IActivityLogEntry } from "shared/activity-log";
+} from "eez-studio-shared/store";
+import { Rect } from "eez-studio-shared/geometry";
+import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
-import { getObject } from "shared/extensions/extensions";
-import { IActivityLogEntryInfo } from "shared/extensions/extension";
+import { getObject } from "eez-studio-shared/extensions/extensions";
+import { IActivityLogEntryInfo } from "eez-studio-shared/extensions/extension";
 
 import { tabs } from "home/tabs-store";
 

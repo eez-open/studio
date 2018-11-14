@@ -1,4 +1,4 @@
-import { IActivityLogEntry } from "shared/activity-log";
+import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import * as GenericWaveformModule from "instrument/window/waveform/generic";
 import * as MultiWaveformModule from "instrument/window/waveform/multi";

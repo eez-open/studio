@@ -6,8 +6,8 @@ import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
-import styled from "shared/ui/styled-components";
-import { Icon } from "shared/ui/icon";
+import styled from "eez-studio-shared/ui/styled-components";
+import { Icon } from "eez-studio-shared/ui/icon";
 
 import { Waveform } from "instrument/window/waveform/generic";
 

@@ -1,4 +1,4 @@
-import { service } from "shared/service";
+import { service } from "eez-studio-shared/service";
 
 import * as BdfModule from "font-services/bdf";
 import * as FreeTypeModule from "font-services/freetype";

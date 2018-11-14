@@ -3,12 +3,12 @@ import { observable, action, computed } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import styled from "shared/ui/styled-components";
-import { IListNode, List } from "shared/ui/list";
-import { ITreeNode, Tree } from "shared/ui/tree";
-import { Splitter } from "shared/ui/splitter";
-import { VerticalHeaderWithBody, Header, PanelHeader, Body } from "shared/ui/header-with-body";
-import { SearchInput } from "shared/ui/search-input";
+import styled from "eez-studio-shared/ui/styled-components";
+import { IListNode, List } from "eez-studio-shared/ui/list";
+import { ITreeNode, Tree } from "eez-studio-shared/ui/tree";
+import { Splitter } from "eez-studio-shared/ui/splitter";
+import { VerticalHeaderWithBody, Header, PanelHeader, Body } from "eez-studio-shared/ui/header-with-body";
+import { SearchInput } from "eez-studio-shared/ui/search-input";
 
 import { ICommandSyntax, makeItShort, matchCommand } from "instrument/commands-tree";
 

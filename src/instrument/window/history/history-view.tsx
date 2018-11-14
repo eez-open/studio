@@ -4,19 +4,19 @@ import { observable, computed, action, keys } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { readBinaryFile } from "shared/util";
-import { beginTransaction, commitTransaction } from "shared/store";
-import { log } from "shared/activity-log";
+import { readBinaryFile } from "eez-studio-shared/util";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import { log } from "eez-studio-shared/activity-log";
 
-import styled from "shared/ui/styled-components";
-import { theme } from "shared/ui/theme";
-import { ThemeProvider } from "shared/ui/styled-components";
-import { IconAction, ButtonAction } from "shared/ui/action";
-import { Toolbar } from "shared/ui/toolbar";
-import { SideDock, DockablePanels } from "shared/ui/side-dock";
-import { SearchInput } from "shared/ui/search-input";
+import styled from "eez-studio-shared/ui/styled-components";
+import { theme } from "eez-studio-shared/ui/theme";
+import { ThemeProvider } from "eez-studio-shared/ui/styled-components";
+import { IconAction, ButtonAction } from "eez-studio-shared/ui/action";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { SideDock, DockablePanels } from "eez-studio-shared/ui/side-dock";
+import { SearchInput } from "eez-studio-shared/ui/search-input";
 
-import { extensions } from "shared/extensions/extensions";
+import { extensions } from "eez-studio-shared/extensions/extensions";
 
 import { IAppStore, INavigationStore } from "instrument/window/history/history";
 import { HistoryListComponent } from "instrument/window/history/list-component";

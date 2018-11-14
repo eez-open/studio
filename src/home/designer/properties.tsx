@@ -1,9 +1,9 @@
 import * as React from "react";
 import { observer } from "mobx-react";
 
-import { Box } from "shared/ui/box";
-import { PanelTitle } from "shared/ui/panel";
-import { Splitter } from "shared/ui/splitter";
+import { Box } from "eez-studio-shared/ui/box";
+import { PanelTitle } from "eez-studio-shared/ui/panel";
+import { Splitter } from "eez-studio-shared/ui/splitter";
 
 import { IWorkbenchObject } from "home/designer/designer-store";
 import { HistorySection } from "home/history";

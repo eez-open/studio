@@ -2,9 +2,9 @@ import * as React from "react";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import styled from "shared/ui/styled-components";
-import { confirm } from "shared/ui/dialog";
-import { ButtonAction, IconAction } from "shared/ui/action";
+import styled from "eez-studio-shared/ui/styled-components";
+import { confirm } from "eez-studio-shared/ui/dialog";
+import { ButtonAction, IconAction } from "eez-studio-shared/ui/action";
 
 import { IAppStore } from "instrument/window/history/history";
 

@@ -2,10 +2,10 @@ import * as React from "react";
 import { observable, action, reaction, ObservableMap, autorun, values } from "mobx";
 import { bind } from "bind-decorator";
 
-import { scheduleTask, Priority } from "shared/scheduler";
-import { IStore } from "shared/store";
+import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
+import { IStore } from "eez-studio-shared/store";
 
-import { IEditor } from "shared/extensions/extension";
+import { IEditor } from "eez-studio-shared/extensions/extension";
 
 import { IShortcut } from "shortcuts/interfaces";
 import { bindShortcuts } from "shortcuts/mousetrap";

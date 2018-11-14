@@ -1,8 +1,8 @@
 import { observable } from "mobx";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
-import { showGenericDialog } from "shared/ui/generic-dialog";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
 
 import { ProjectStore, getProperty } from "project-editor/core/store";
 import { registerMetaData, EezObject } from "project-editor/core/metaData";

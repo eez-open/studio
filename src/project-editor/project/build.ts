@@ -1,8 +1,8 @@
 import { createTransformer } from "mobx-utils";
 
-import { writeTextFile } from "shared/util";
-import { _map } from "shared/algorithm";
-import { underscore } from "shared/string";
+import { writeTextFile } from "eez-studio-shared/util";
+import { _map } from "eez-studio-shared/algorithm";
+import { underscore } from "eez-studio-shared/string";
 
 import { getExtensionsByCategory, BuildResult } from "project-editor/core/extensions";
 import { formatNumber } from "project-editor/core/util";

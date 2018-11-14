@@ -1,4 +1,4 @@
-import { IExtensionDefinition, IActivityLogController } from "shared/extensions/extension";
+import { IExtensionDefinition, IActivityLogController } from "eez-studio-shared/extensions/extension";
 
 // late binding
 import * as SectionModule from "notebook/section";

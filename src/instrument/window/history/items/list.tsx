@@ -3,13 +3,13 @@ import { computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { formatDateTimeLong } from "shared/util";
-import { IActivityLogEntry, activityLogStore } from "shared/activity-log";
+import { formatDateTimeLong } from "eez-studio-shared/util";
+import { IActivityLogEntry, activityLogStore } from "eez-studio-shared/activity-log";
 
-import styled from "shared/ui/styled-components";
-import { Toolbar } from "shared/ui/toolbar";
-import { IconAction } from "shared/ui/action";
-import { Icon } from "shared/ui/icon";
+import styled from "eez-studio-shared/ui/styled-components";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { IconAction } from "eez-studio-shared/ui/action";
+import { Icon } from "eez-studio-shared/ui/icon";
 
 import { getSource } from "notebook/store";
 

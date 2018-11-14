@@ -1,4 +1,4 @@
-import { IMeasureTask } from "shared/extensions/extension";
+import { IMeasureTask } from "eez-studio-shared/extensions/extension";
 
 export default function(task: IMeasureTask) {
     if (task.inputs[0].samplingRate !== task.inputs[1].samplingRate) {

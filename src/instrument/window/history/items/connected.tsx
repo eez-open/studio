@@ -2,10 +2,10 @@ import * as React from "react";
 import { computed } from "mobx";
 import { observer } from "mobx-react";
 
-import { formatDateTimeLong } from "shared/util";
-import { IActivityLogEntry } from "shared/activity-log";
+import { formatDateTimeLong } from "eez-studio-shared/util";
+import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
-import styled from "shared/ui/styled-components";
+import styled from "eez-studio-shared/ui/styled-components";
 
 import { getConnectionParametersInfo } from "instrument/window/connection";
 

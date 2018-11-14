@@ -1,4 +1,4 @@
-import { activityLogStore, log, logUpdate, IActivityLogEntry } from "shared/activity-log";
+import { activityLogStore, log, logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import { FileState } from "instrument/connection/file-state";
 import { FileTransfer } from "instrument/connection/file-transfer";

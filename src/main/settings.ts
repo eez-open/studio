@@ -2,9 +2,9 @@ import * as fs from "fs";
 import { app, screen, ipcMain } from "electron";
 import { observable, action } from "mobx";
 
-import { getUserDataPath } from "shared/util";
-import { SETTINGS_FILE_NAME, DEFAULT_DB_NAME } from "shared/conf";
-import { DATE_FORMATS, TIME_FORMATS } from "shared/i10n";
+import { getUserDataPath } from "eez-studio-shared/util";
+import { SETTINGS_FILE_NAME, DEFAULT_DB_NAME } from "eez-studio-shared/conf";
+import { DATE_FORMATS, TIME_FORMATS } from "eez-studio-shared/i10n";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,1 +1,1 @@
-/// <reference path="../src/shared/globals.d.ts"/>
+/// <reference path="../src/eez-studio-shared/globals.d.ts"/>

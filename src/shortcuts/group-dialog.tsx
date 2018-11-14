@@ -2,9 +2,9 @@ import * as React from "react";
 import { observable, action, values } from "mobx";
 import { observer } from "mobx-react";
 
-import { makeValidator, validators } from "shared/model/validation";
-import { PropertyList, TextInputProperty } from "shared/ui/properties";
-import { Dialog } from "shared/ui/dialog";
+import { makeValidator, validators } from "eez-studio-shared/model/validation";
+import { PropertyList, TextInputProperty } from "eez-studio-shared/ui/properties";
+import { Dialog } from "eez-studio-shared/ui/dialog";
 
 import { IGroup, IGroupsStore } from "shortcuts/interfaces";
 

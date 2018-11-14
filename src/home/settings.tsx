@@ -5,9 +5,9 @@ import { bind } from "bind-decorator";
 import * as moment from "moment";
 
 const shell = require("electron").shell;
-import { app, createEmptyFile } from "shared/util";
-import { stringCompare } from "shared/string";
-import { getDbPath, setDbPath } from "shared/db";
+import { app, createEmptyFile } from "eez-studio-shared/util";
+import { stringCompare } from "eez-studio-shared/string";
+import { getDbPath, setDbPath } from "eez-studio-shared/db";
 import {
     LOCALES,
     getLocale,
@@ -18,12 +18,12 @@ import {
     TIME_FORMATS,
     getTimeFormat,
     setTimeFormat
-} from "shared/i10n";
+} from "eez-studio-shared/i10n";
 
-import styled from "shared/ui/styled-components";
-import { PropertyList, FileInputProperty, SelectProperty } from "shared/ui/properties";
-import * as notification from "shared/ui/notification";
-import { PanelHeader } from "shared/ui/header-with-body";
+import styled from "eez-studio-shared/ui/styled-components";
+import { PropertyList, FileInputProperty, SelectProperty } from "eez-studio-shared/ui/properties";
+import * as notification from "eez-studio-shared/ui/notification";
+import { PanelHeader } from "eez-studio-shared/ui/header-with-body";
 
 ////////////////////////////////////////////////////////////////////////////////
 

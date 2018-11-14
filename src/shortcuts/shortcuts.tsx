@@ -4,14 +4,14 @@ import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
-import styled from "shared/ui/styled-components";
-import { Toolbar } from "shared/ui/toolbar";
-import { IconAction, ButtonAction } from "shared/ui/action";
-import { confirm } from "shared/ui/dialog";
-import { Icon } from "shared/ui/icon";
-import { Table, IColumn, IRow } from "shared/ui/table";
+import styled from "eez-studio-shared/ui/styled-components";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { IconAction, ButtonAction } from "eez-studio-shared/ui/action";
+import { confirm } from "eez-studio-shared/ui/dialog";
+import { Icon } from "eez-studio-shared/ui/icon";
+import { Table, IColumn, IRow } from "eez-studio-shared/ui/table";
 
-import { extensions } from "shared/extensions/extensions";
+import { extensions } from "eez-studio-shared/extensions/extensions";
 
 import { IShortcut, IShortcutsStore, IGroupsStore } from "shortcuts/interfaces";
 import { DEFAULT_TOOLBAR_BUTTON_COLOR } from "shortcuts/toolbar-button-colors";

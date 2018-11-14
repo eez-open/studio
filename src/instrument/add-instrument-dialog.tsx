@@ -3,10 +3,10 @@ import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { IExtension } from "shared/extensions/extension";
-import { Dialog, showDialog, info } from "shared/ui/dialog";
-import { PropertyList, SelectFromListProperty } from "shared/ui/properties";
-import { IListNode, ListItem } from "shared/ui/list";
+import { IExtension } from "eez-studio-shared/extensions/extension";
+import { Dialog, showDialog, info } from "eez-studio-shared/ui/dialog";
+import { PropertyList, SelectFromListProperty } from "eez-studio-shared/ui/properties";
+import { IListNode, ListItem } from "eez-studio-shared/ui/list";
 
 import { instrumentExtensions } from "instrument/instrument-extension";
 

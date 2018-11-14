@@ -3,10 +3,10 @@ import { observer } from "mobx-react";
 import * as React from "react";
 import { bind } from "bind-decorator";
 
-import { IconAction, TextAction } from "shared/ui/action";
-import { IFieldComponentProps } from "shared/ui/generic-dialog";
-import styled from "shared/ui/styled-components";
-import * as notification from "shared/ui/notification";
+import { IconAction, TextAction } from "eez-studio-shared/ui/action";
+import { IFieldComponentProps } from "eez-studio-shared/ui/generic-dialog";
+import styled from "eez-studio-shared/ui/styled-components";
+import * as notification from "eez-studio-shared/ui/notification";
 
 import { EditorComponent } from "project-editor/core/metaData";
 import {

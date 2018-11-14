@@ -1,4 +1,4 @@
-import { IExtensionDefinition } from "shared/extensions/extension";
+import { IExtensionDefinition } from "eez-studio-shared/extensions/extension";
 
 import "home/store";
 

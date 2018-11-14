@@ -1,7 +1,7 @@
 import { observable, action, computed, isObservableArray } from "mobx";
 import { createTransformer } from "mobx-utils";
 
-import { _each, _find, _pickBy } from "shared/algorithm";
+import { _each, _find, _pickBy } from "eez-studio-shared/algorithm";
 
 import {
     isArray,

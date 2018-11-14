@@ -7,11 +7,11 @@ import {
     fileExists,
     readJsObjectFromFile,
     writeJsObjectToFile
-} from "shared/util";
+} from "eez-studio-shared/util";
 
-import * as notification from "shared/ui/notification";
+import * as notification from "eez-studio-shared/ui/notification";
 
-import { IExtension } from "shared/extensions/extension";
+import { IExtension } from "eez-studio-shared/extensions/extension";
 
 const DEFAULT_EXTENSIONS_CATALOG_VERSION_DOWNLOAD_URL =
     "https://github.com/eez-open/studio/raw/master/extensions/catalog-version.json";

@@ -3,9 +3,9 @@ import { observer } from "mobx-react";
 //import { DragSource, DragSourceConnector, DragSourceMonitor } from "react-dnd";
 import * as classNames from "classnames";
 
-import { Icon } from "shared/ui/icon";
-import { IToolboxGroup, ITool } from "shared/ui/designer/designer-interfaces";
-import styled from "shared/ui/styled-components";
+import { Icon } from "eez-studio-shared/ui/icon";
+import { IToolboxGroup, ITool } from "eez-studio-designer/designer-interfaces";
+import styled from "eez-studio-shared/ui/styled-components";
 
 @observer
 export class DndTool extends React.Component<

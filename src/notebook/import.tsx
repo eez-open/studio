@@ -7,14 +7,14 @@ import {
     readJsObjectFromFile,
     readBinaryFile,
     fileExists
-} from "shared/util";
-import { db } from "shared/db";
+} from "eez-studio-shared/util";
+import { db } from "eez-studio-shared/db";
 
-import { showGenericDialog } from "shared/ui/generic-dialog";
-import { confirm } from "shared/ui/dialog";
-import * as notification from "shared/ui/notification";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
+import { confirm } from "eez-studio-shared/ui/dialog";
+import * as notification from "eez-studio-shared/ui/notification";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
 import { remapReferencedItemIds } from "instrument/window/history/item-factory";
 

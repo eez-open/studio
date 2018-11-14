@@ -3,18 +3,18 @@ import { observable, computed, action, runInAction, values, toJS, autorun } from
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { stringCompare } from "shared/string";
-import { beginTransaction, commitTransaction } from "shared/store";
-import { sendSimpleMessage } from "shared/util";
+import { stringCompare } from "eez-studio-shared/string";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import { sendSimpleMessage } from "eez-studio-shared/util";
 
-import { Splitter } from "shared/ui/splitter";
-import { VerticalHeaderWithBody, ToolbarHeader, Body } from "shared/ui/header-with-body";
-import { IconAction, DropdownIconAction, DropdownItem } from "shared/ui/action";
-import { List as ListComponent } from "shared/ui/list";
-import { confirm } from "shared/ui/dialog";
-import { showGenericDialog } from "shared/ui/generic-dialog";
+import { Splitter } from "eez-studio-shared/ui/splitter";
+import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-shared/ui/header-with-body";
+import { IconAction, DropdownIconAction, DropdownItem } from "eez-studio-shared/ui/action";
+import { List as ListComponent } from "eez-studio-shared/ui/list";
+import { confirm } from "eez-studio-shared/ui/dialog";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
 import {
     IAppStore,

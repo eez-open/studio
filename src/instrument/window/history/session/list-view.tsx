@@ -4,17 +4,17 @@ import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
-import { formatDateTimeLong } from "shared/util";
-import { beginTransaction, commitTransaction } from "shared/store";
-import { log, logUpdate, logDelete } from "shared/activity-log";
+import { formatDateTimeLong } from "eez-studio-shared/util";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import { log, logUpdate, logDelete } from "eez-studio-shared/activity-log";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
-import styled from "shared/ui/styled-components";
-import { IconAction } from "shared/ui/action";
-import { showGenericDialog } from "shared/ui/generic-dialog";
-import { Body } from "shared/ui/header-with-body";
-import { confirm } from "shared/ui/dialog";
+import styled from "eez-studio-shared/ui/styled-components";
+import { IconAction } from "eez-studio-shared/ui/action";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
+import { Body } from "eez-studio-shared/ui/header-with-body";
+import { confirm } from "eez-studio-shared/ui/dialog";
 
 import { IAppStore, History } from "instrument/window/history/history";
 import { ISession } from "instrument/window/history/session/store";

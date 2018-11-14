@@ -1,9 +1,9 @@
 import { observable, computed, action, autorun, toJS } from "mobx";
 import { bind } from "bind-decorator";
 
-import { IActivityLogEntry, activityLogStore, log } from "shared/activity-log";
-import { registerSource, unregisterSource, sendMessage, watch } from "shared/notify";
-import { isRenderer } from "shared/util";
+import { IActivityLogEntry, activityLogStore, log } from "eez-studio-shared/activity-log";
+import { registerSource, unregisterSource, sendMessage, watch } from "eez-studio-shared/notify";
+import { isRenderer } from "eez-studio-shared/util";
 
 import { InstrumentObject } from "instrument/instrument-object";
 import { EthernetInterface } from "instrument/connection/interfaces/ethernet";

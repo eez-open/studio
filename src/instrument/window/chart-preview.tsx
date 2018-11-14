@@ -3,7 +3,7 @@ import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
 
-import { ChartsView, globalViewOptions, ChartsController, ChartMode } from "shared/ui/chart/chart";
+import { ChartsView, globalViewOptions, ChartsController, ChartMode } from "eez-studio-shared/ui/chart/chart";
 
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 

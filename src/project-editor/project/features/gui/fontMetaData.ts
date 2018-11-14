@@ -1,9 +1,9 @@
 import { observable } from "mobx";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
-import { showGenericDialog } from "shared/ui/generic-dialog";
-import * as notification from "shared/ui/notification";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
+import * as notification from "eez-studio-shared/ui/notification";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 

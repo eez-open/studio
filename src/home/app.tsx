@@ -3,9 +3,9 @@ import { observer } from "mobx-react";
 //import { DragDropContext } from "react-dnd";
 //import HTML5Backend from "react-dnd-html5-backend";
 
-import styled from "shared/ui/styled-components";
-import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
-import { TabsView } from "shared/ui/tabs";
+import styled from "eez-studio-shared/ui/styled-components";
+import { VerticalHeaderWithBody, Header, Body } from "eez-studio-shared/ui/header-with-body";
+import { TabsView } from "eez-studio-shared/ui/tabs";
 import { SessionInfo } from "instrument/window/history/session/info-view";
 
 import { tabs } from "home/tabs-store";

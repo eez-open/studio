@@ -1,10 +1,10 @@
 import * as React from "react";
 import { observable, computed, reaction, toJS } from "mobx";
 
-import { objectEqual, formatDateTimeLong } from "shared/util";
-import { capitalize } from "shared/string";
-import { logUpdate, IActivityLogEntry } from "shared/activity-log";
-import { IUnit, TIME_UNIT, VOLTAGE_UNIT, CURRENT_UNIT, POWER_UNIT } from "shared/units";
+import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
+import { capitalize } from "eez-studio-shared/string";
+import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
+import { IUnit, TIME_UNIT, VOLTAGE_UNIT, CURRENT_UNIT, POWER_UNIT } from "eez-studio-shared/units";
 
 import {
     AxisController,
@@ -14,11 +14,11 @@ import {
     IAxisModel,
     ZoomMode,
     LineController
-} from "shared/ui/chart/chart";
-import { RulersModel } from "shared/ui/chart/rulers";
-import { MeasurementsModel } from "shared/ui/chart/measurements";
-import { IWaveform } from "shared/ui/chart/render";
-import { WaveformFormat, initValuesAccesor } from "shared/ui/chart/buffer";
+} from "eez-studio-shared/ui/chart/chart";
+import { RulersModel } from "eez-studio-shared/ui/chart/rulers";
+import { MeasurementsModel } from "eez-studio-shared/ui/chart/measurements";
+import { IWaveform } from "eez-studio-shared/ui/chart/render";
+import { WaveformFormat, initValuesAccesor } from "eez-studio-shared/ui/chart/buffer";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";

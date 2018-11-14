@@ -1,7 +1,7 @@
 import * as React from "react";
 
-import { Dialog, showDialog } from "shared/ui/dialog";
-import { PropertyList, RichTextProperty } from "shared/ui/properties";
+import { Dialog, showDialog } from "eez-studio-shared/ui/dialog";
+import { PropertyList, RichTextProperty } from "eez-studio-shared/ui/properties";
 
 class NoteDialog extends React.Component<
     {

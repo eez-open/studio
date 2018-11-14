@@ -1,10 +1,10 @@
-/// <reference path="../shared/globals.d.ts"/>
+/// <reference path="../eez-studio-shared/globals.d.ts"/>
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { configure } from "mobx";
 
-import { theme } from "shared/ui/theme";
-import { ThemeProvider } from "shared/ui/styled-components";
+import { theme } from "eez-studio-shared/ui/theme";
+import { ThemeProvider } from "eez-studio-shared/ui/styled-components";
 
 configure({ enforceActions: "observed" });
 
@@ -26,4 +26,4 @@ async function main() {
 
 main();
 
-//require("shared/module-stat");
+//require("eez-studio-shared/module-stat");

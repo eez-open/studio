@@ -1,13 +1,13 @@
 import * as React from "react";
 import { observable, action, runInAction, reaction } from "mobx";
 
-import { isRenderer } from "shared/util";
+import { isRenderer } from "eez-studio-shared/util";
 
-import { loadPreinstalledExtension } from "shared/extensions/extensions";
-import { IEditor } from "shared/extensions/extension";
+import { loadPreinstalledExtension } from "eez-studio-shared/extensions/extensions";
+import { IEditor } from "eez-studio-shared/extensions/extension";
 
-import { Icon } from "shared/ui/icon";
-import { ITab } from "shared/ui/tabs";
+import { Icon } from "eez-studio-shared/ui/icon";
+import { ITab } from "eez-studio-shared/ui/tabs";
 
 import { WorkbenchObject, workbenchObjects } from "home/store";
 import * as HomeComponentModule from "home/home-component";

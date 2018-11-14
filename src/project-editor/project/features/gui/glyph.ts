@@ -1,6 +1,6 @@
 import { observable, computed } from "mobx";
 
-import { showGenericDialog } from "shared/ui/generic-dialog";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 

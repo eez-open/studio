@@ -1,4 +1,4 @@
-import { _isEqual } from "shared/algorithm";
+import { _isEqual } from "eez-studio-shared/algorithm";
 
 ////////////////////////////////////////////////////////////////////////////////
 

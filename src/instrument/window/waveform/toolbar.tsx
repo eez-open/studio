@@ -2,9 +2,9 @@ import * as React from "react";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { Toolbar } from "shared/ui/toolbar";
-import { ButtonAction } from "shared/ui/action";
-import { ChartsController } from "shared/ui/chart/chart";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { ButtonAction } from "eez-studio-shared/ui/action";
+import { ChartsController } from "eez-studio-shared/ui/chart/chart";
 
 import { Waveform } from "instrument/window/waveform/generic";
 import { MultiWaveform } from "instrument/window/waveform/multi";

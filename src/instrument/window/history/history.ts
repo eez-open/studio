@@ -1,26 +1,26 @@
 import { observable, computed, runInAction, action, reaction } from "mobx";
 import { bind } from "bind-decorator";
 
-import { formatDate } from "shared/util";
-import { db } from "shared/db";
+import { formatDate } from "eez-studio-shared/util";
+import { db } from "eez-studio-shared/db";
 import {
     IActivityLogEntry,
     activityLogStore,
     IActivityLogFilterSpecification,
     logDelete,
     logUndelete
-} from "shared/activity-log";
+} from "eez-studio-shared/activity-log";
 import {
     IStore,
     StoreOperation,
     IStoreOperationOptions,
     beginTransaction,
     commitTransaction
-} from "shared/store";
-import { scheduleTask, Priority } from "shared/scheduler";
+} from "eez-studio-shared/store";
+import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 
-import { confirm } from "shared/ui/dialog";
-import * as notification from "shared/ui/notification";
+import { confirm } from "eez-studio-shared/ui/dialog";
+import * as notification from "eez-studio-shared/ui/notification";
 
 import { Filters, FilterStats } from "instrument/window/history/filters";
 

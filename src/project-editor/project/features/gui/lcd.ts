@@ -1,4 +1,4 @@
-import { blendColor } from "shared/util";
+import { blendColor } from "eez-studio-shared/util";
 
 import { FontProperties } from "project-editor/project/features/gui/fontMetaData";
 

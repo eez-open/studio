@@ -1,7 +1,7 @@
 import * as React from "react";
 
-import { Icon } from "shared/ui/icon";
-import { FieldComponent } from "shared/ui/generic-dialog";
+import { Icon } from "eez-studio-shared/ui/icon";
+import { FieldComponent } from "eez-studio-shared/ui/generic-dialog";
 
 import { ProjectStore } from "project-editor/core/store";
 

@@ -2,15 +2,15 @@ import * as React from "react";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { formatDateTimeLong } from "shared/util";
-import { beginTransaction, commitTransaction } from "shared/store";
-import { IActivityLogEntry, logUpdate } from "shared/activity-log";
+import { formatDateTimeLong } from "eez-studio-shared/util";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import { IActivityLogEntry, logUpdate } from "eez-studio-shared/activity-log";
 
-import styled from "shared/ui/styled-components";
-import { Balloon } from "shared/ui/balloon";
-import { PropertyList, StaticRichTextProperty } from "shared/ui/properties";
-import { Toolbar } from "shared/ui/toolbar";
-import { IconAction } from "shared/ui/action";
+import styled from "eez-studio-shared/ui/styled-components";
+import { Balloon } from "eez-studio-shared/ui/balloon";
+import { PropertyList, StaticRichTextProperty } from "eez-studio-shared/ui/properties";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { IconAction } from "eez-studio-shared/ui/action";
 
 import { showEditNoteDialog } from "instrument/window/note-dialog";
 

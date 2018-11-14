@@ -2,7 +2,7 @@ import * as React from "react";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 
-import { VerticalHeaderWithBody, ToolbarHeader, Body } from "shared/ui/header-with-body";
+import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-shared/ui/header-with-body";
 
 import {
     IAppStore,

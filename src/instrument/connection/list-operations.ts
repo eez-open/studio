@@ -1,7 +1,7 @@
 import { autorun } from "mobx";
 
-import { isRenderer, roundNumber } from "shared/util";
-import { activityLogStore, IActivityLogEntry, log } from "shared/activity-log";
+import { isRenderer, roundNumber } from "eez-studio-shared/util";
+import { activityLogStore, IActivityLogEntry, log } from "eez-studio-shared/activity-log";
 
 import { Connection, connections } from "instrument/connection/connection";
 

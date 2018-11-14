@@ -2,7 +2,7 @@ import * as React from "react";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 
-import { AppRootComponent } from "shared/ui/app";
+import { AppRootComponent } from "eez-studio-shared/ui/app";
 
 import { Test1 } from "test/test1";
 

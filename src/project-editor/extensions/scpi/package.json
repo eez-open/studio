@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "description": "This feature adds SCPI support for your project",
     "author": "EEZ",
-    "authorLogo": "../shared/_images/eez_logo.png",
+    "authorLogo": "../eez-studio-shared/_images/eez_logo.png",
     "eezStudioExtension": {
         "displayName": "SCPI",
         "category": "project-feature",

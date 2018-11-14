@@ -1,4 +1,4 @@
-import { extensions } from "shared/extensions/extensions";
+import { extensions } from "eez-studio-shared/extensions/extensions";
 
 export function handleDragAndDrop() {
     function removeDragData(ev: DragEvent) {

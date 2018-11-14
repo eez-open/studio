@@ -1,4 +1,4 @@
-import { _minBy, _maxBy } from "shared/algorithm";
+import { _minBy, _maxBy } from "eez-studio-shared/algorithm";
 
 import { FontProperties } from "project-editor/project/features/gui/fontMetaData";
 

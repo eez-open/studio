@@ -1,4 +1,4 @@
-import { createStore, types } from "shared/store";
+import { createStore, types } from "eez-studio-shared/store";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 

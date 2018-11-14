@@ -2,7 +2,7 @@ import { BrowserWindow, ipcMain } from "electron";
 
 const fileType = require("file-type");
 
-import { getFileNameExtension } from "shared/util";
+import { getFileNameExtension } from "eez-studio-shared/util";
 import { FileState } from "instrument/connection/file-state";
 
 export const SAMPLE_LENGTH = 4096;

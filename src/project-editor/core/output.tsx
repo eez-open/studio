@@ -1,7 +1,7 @@
 import * as React from "react";
 import { observable, action, computed } from "mobx";
 
-import { Icon } from "shared/ui/icon";
+import { Icon } from "eez-studio-shared/ui/icon";
 
 import {
     OutputSectionsStore,

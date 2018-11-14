@@ -1,9 +1,9 @@
 import * as React from "react";
 import { observer } from "mobx-react";
 
-import { IDocument, IToolbarButton } from "shared/ui/designer/designer-interfaces";
-import { Toolbar } from "shared/ui/toolbar";
-import { ButtonAction } from "shared/ui/action";
+import { IDocument, IToolbarButton } from "eez-studio-designer/designer-interfaces";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { ButtonAction } from "eez-studio-shared/ui/action";
 
 @observer
 export class DesignerToolbar extends React.Component<

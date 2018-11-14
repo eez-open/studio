@@ -2,7 +2,7 @@ import * as React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 
-import { VerticalHeaderWithBody, ToolbarHeader, Body } from "shared/ui/header-with-body";
+import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-shared/ui/header-with-body";
 
 import { IShortcut } from "shortcuts/interfaces";
 import { Shortcuts, ShortcutsToolbarButtons } from "shortcuts/shortcuts";

@@ -1,7 +1,7 @@
 import { observable, computed, action, runInAction, values, reaction } from "mobx";
 import { bind } from "bind-decorator";
 
-const { MenuItem } = EEZStudio.electron.remote;
+const { Menu, MenuItem } = EEZStudio.electron.remote;
 
 import {
     Rect,
@@ -10,22 +10,28 @@ import {
     pointInRect,
     isRectInsideRect,
     Transform
-} from "shared/geometry";
-import { beginTransaction, commitTransaction } from "shared/store";
-import { humanize } from "shared/string";
+} from "eez-studio-shared/geometry";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import { humanize } from "eez-studio-shared/string";
 
-import { extensionsToolboxGroups, extensionsToolbarButtons } from "shared/extensions/extensions";
+import {
+    extensionsToolboxGroups,
+    extensionsToolbarButtons
+} from "eez-studio-shared/extensions/extensions";
 
-import { BOUNCE_ENTRANCE_TRANSITION_DURATION } from "shared/ui/transitions";
+import { BOUNCE_ENTRANCE_TRANSITION_DURATION } from "eez-studio-shared/ui/transitions";
 
 import {
     IBaseObject,
     IDocument,
     ITool,
     IToolboxGroup,
-    IToolbarButton
-} from "shared/ui/designer/designer-interfaces";
-import { selectToolHandler } from "shared/ui/designer/select-tool";
+    IToolbarButton,
+    IContextMenu,
+    IContextMenuItem,
+    IContextMenuPopupOptions
+} from "eez-studio-designer/designer-interfaces";
+import { selectToolHandler } from "eez-studio-designer/select-tool";
 
 import {
     store,
@@ -280,7 +286,9 @@ class WorkbenchDocument implements IWorkbenchDocument {
         }
     }
 
-    initContextMenu(menu: Electron.Menu): void {
+    createContextMenu(): IContextMenu {
+        const menu = new Menu();
+
         if (this.selectedObjects.length === 1) {
             const object = this.selectedObjects[0] as IWorkbenchObject;
 
@@ -310,6 +318,15 @@ class WorkbenchDocument implements IWorkbenchDocument {
                 );
             }
         }
+
+        return {
+            appendMenuItem: (menuItem: IContextMenuItem) => {
+                menu.append(new MenuItem(menuItem));
+            },
+            popup: (options: IContextMenuPopupOptions) => {
+                menu.popup(options);
+            }
+        };
     }
 }
 

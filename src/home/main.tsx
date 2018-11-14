@@ -3,21 +3,21 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { configure } from "mobx";
 
-import { theme } from "shared/ui/theme";
-import { ThemeProvider } from "shared/ui/styled-components";
+import { theme } from "eez-studio-shared/ui/theme";
+import { ThemeProvider } from "eez-studio-shared/ui/styled-components";
 
 import { handleDragAndDrop } from "home/drag-and-drop";
 
 configure({ enforceActions: "observed" });
 
 EEZStudio.electron.ipcRenderer.on("beforeClose", () => {
-    const { destroyExtensions } = require("shared/extensions/extensions");
+    const { destroyExtensions } = require("eez-studio-shared/extensions/extensions");
     destroyExtensions();
     EEZStudio.electron.ipcRenderer.send("readyToClose");
 });
 
 EEZStudio.electron.ipcRenderer.on("reload", () => {
-    const { destroyExtensions } = require("shared/extensions/extensions");
+    const { destroyExtensions } = require("eez-studio-shared/extensions/extensions");
     destroyExtensions();
     window.location.reload();
 });
@@ -39,7 +39,7 @@ async function main() {
         document.getElementById("EezStudio_Content")
     );
 
-    const { loadExtensions } = await import("shared/extensions/extensions");
+    const { loadExtensions } = await import("eez-studio-shared/extensions/extensions");
     loadExtensions();
 
     handleDragAndDrop();
@@ -47,4 +47,4 @@ async function main() {
 
 main();
 
-//require("shared/module-stat");
+//require("eez-studio-shared/module-stat");

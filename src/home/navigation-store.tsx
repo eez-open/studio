@@ -1,11 +1,11 @@
 import * as React from "react";
 import { observable, computed, action, runInAction, autorun } from "mobx";
 
-import { onSimpleMessage } from "shared/util";
+import { onSimpleMessage } from "eez-studio-shared/util";
 
-import { extensions } from "shared/extensions/extensions";
+import { extensions } from "eez-studio-shared/extensions/extensions";
 
-import { IRootNavigationItem } from "shared/ui/app";
+import { IRootNavigationItem } from "eez-studio-shared/ui/app";
 
 import { HistoryView, showSessionsList } from "instrument/window/history/history-view";
 

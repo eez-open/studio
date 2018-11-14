@@ -1,8 +1,8 @@
 import * as React from "react";
 import { observer } from "mobx-react";
 
-import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
-import { Splitter } from "shared/ui/splitter";
+import { VerticalHeaderWithBody, Header, Body } from "eez-studio-shared/ui/header-with-body";
+import { Splitter } from "eez-studio-shared/ui/splitter";
 
 import { workbenchDocument } from "home/designer/designer-store";
 import { WorkbenchDocument } from "home/designer/canvas";

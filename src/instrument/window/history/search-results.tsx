@@ -2,12 +2,12 @@ import * as React from "react";
 import { observer } from "mobx-react";
 import * as classNames from "classnames";
 
-import { formatDateTimeLong } from "shared/util";
-import { VerticalHeaderWithBody, Header, Body } from "shared/ui/header-with-body";
-import { Loader } from "shared/ui/loader";
-import { ButtonAction } from "shared/ui/action";
+import { formatDateTimeLong } from "eez-studio-shared/util";
+import { VerticalHeaderWithBody, Header, Body } from "eez-studio-shared/ui/header-with-body";
+import { Loader } from "eez-studio-shared/ui/loader";
+import { ButtonAction } from "eez-studio-shared/ui/action";
 
-import { findObjectByActivityLogEntry } from "shared/extensions/extensions";
+import { findObjectByActivityLogEntry } from "eez-studio-shared/extensions/extensions";
 
 import { History, SearchResult } from "instrument/window/history/history";
 

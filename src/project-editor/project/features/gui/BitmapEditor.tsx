@@ -1,10 +1,18 @@
 import * as React from "react";
 import { observer } from "mobx-react";
 
+import styled from "eez-studio-shared/ui/styled-components";
+
 import { EditorComponent } from "project-editor/core/metaData";
 
 import { BitmapProperties } from "project-editor/project/features/gui/bitmap";
 import { getStyleProperty } from "project-editor/project/features/gui/style";
+
+const BitmapEditorContainer = styled.div`
+    display: flex;
+    justify-content: center; /* align horizontal */
+    align-items: center; /* align vertical */
+`;
 
 @observer
 export class BitmapEditor extends EditorComponent {
@@ -20,7 +28,7 @@ export class BitmapEditor extends EditorComponent {
         };
 
         return (
-            <div className="layoutCenter EezStudio_ProjectEditor_center-content">
+            <BitmapEditorContainer className="layoutCenter">
                 <div>
                     <div>
                         <img src={bitmap.image} style={style} />
@@ -31,7 +39,7 @@ export class BitmapEditor extends EditorComponent {
                         </h4>
                     )}
                 </div>
-            </div>
+            </BitmapEditorContainer>
         );
     }
 }

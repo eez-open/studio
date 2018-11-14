@@ -1,13 +1,13 @@
 import { observable, computed } from "mobx";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
 import { registerMetaData, EezObject } from "project-editor/core/metaData";
 import { ProjectStore, asArray } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import { Message, Type } from "project-editor/core/output";
 
-import { showGenericDialog } from "shared/ui/generic-dialog";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
 
 import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
 

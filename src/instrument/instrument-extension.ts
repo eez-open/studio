@@ -4,13 +4,13 @@ import {
     IExtensionDefinition,
     IExtension,
     IExtensionProperties
-} from "shared/extensions/extension";
-import { extensions } from "shared/extensions/extensions";
-import { isRenderer } from "shared/util";
-import { stringCompare } from "shared/string";
-import { beginTransaction, commitTransaction } from "shared/store";
-import { IDocument } from "shared/ui/designer/designer-interfaces";
-import { createCreateObjectToolHandler } from "shared/ui/designer/tool-handler";
+} from "eez-studio-shared/extensions/extension";
+import { extensions } from "eez-studio-shared/extensions/extensions";
+import { isRenderer } from "eez-studio-shared/util";
+import { stringCompare } from "eez-studio-shared/string";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import { IDocument } from "eez-studio-designer/designer-interfaces";
+import { createCreateObjectToolHandler } from "eez-studio-designer/tool-handler";
 
 import { loadInstrumentExtension } from "instrument/import";
 import { instrumentStore, instruments } from "instrument/instrument-object";

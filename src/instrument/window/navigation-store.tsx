@@ -1,7 +1,7 @@
 import * as React from "react";
 import { observable, computed, action, autorun } from "mobx";
 
-import { IRootNavigationItem } from "shared/ui/app";
+import { IRootNavigationItem } from "eez-studio-shared/ui/app";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import * as ScriptsModule from "instrument/window/scripts";

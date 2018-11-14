@@ -15,22 +15,22 @@ import {
     formatDateTimeLong,
     getTempDirPath,
     fileExists
-} from "shared/util";
+} from "eez-studio-shared/util";
 
-import * as notification from "shared/ui/notification";
+import * as notification from "eez-studio-shared/ui/notification";
 
-import { beginTransaction, commitTransaction } from "shared/store";
-import { SAMPLING_RATE_UNIT } from "shared/units";
-import { IActivityLogEntry, logUpdate } from "shared/activity-log";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import { SAMPLING_RATE_UNIT } from "eez-studio-shared/units";
+import { IActivityLogEntry, logUpdate } from "eez-studio-shared/activity-log";
 
-import styled from "shared/ui/styled-components";
-import * as UiPropertiesModule from "shared/ui/properties";
-import { Balloon } from "shared/ui/balloon";
-import { PropertyList, StaticRichTextProperty } from "shared/ui/properties";
-import { Toolbar } from "shared/ui/toolbar";
-import { IconAction, TextAction } from "shared/ui/action";
-import { Icon } from "shared/ui/icon";
-import * as UiBalloonModule from "shared/ui/balloon";
+import styled from "eez-studio-shared/ui/styled-components";
+import * as UiPropertiesModule from "eez-studio-shared/ui/properties";
+import { Balloon } from "eez-studio-shared/ui/balloon";
+import { PropertyList, StaticRichTextProperty } from "eez-studio-shared/ui/properties";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { IconAction, TextAction } from "eez-studio-shared/ui/action";
+import { Icon } from "eez-studio-shared/ui/icon";
+import * as UiBalloonModule from "eez-studio-shared/ui/balloon";
 
 import pdfToPng from "pdf-services/pdf-to-png";
 
@@ -470,8 +470,8 @@ export class FileHistoryItemComponent extends React.Component<
                             this.props.historyItem.direction === "upload"
                                 ? "material:file_upload"
                                 : this.props.historyItem.direction === "download"
-                                    ? "material:file_download"
-                                    : "material:attach_file"
+                                ? "material:file_download"
+                                : "material:attach_file"
                         }
                         size={48}
                     />
@@ -501,9 +501,9 @@ export class FileHistoryItem extends HistoryItem {
             const {
                 PropertyList,
                 StaticRichTextProperty
-            } = require("shared/ui/properties") as typeof UiPropertiesModule;
+            } = require("eez-studio-shared/ui/properties") as typeof UiPropertiesModule;
 
-            const { Balloon } = require("shared/ui/balloon") as typeof UiBalloonModule;
+            const { Balloon } = require("eez-studio-shared/ui/balloon") as typeof UiBalloonModule;
 
             note = (
                 <Balloon>

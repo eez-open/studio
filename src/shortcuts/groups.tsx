@@ -4,13 +4,13 @@ import { observer } from "mobx-react";
 import * as classNames from "classnames";
 import { bind } from "bind-decorator";
 
-import { _countBy } from "shared/algorithm";
+import { _countBy } from "eez-studio-shared/algorithm";
 
-import styled from "shared/ui/styled-components";
-import { Toolbar } from "shared/ui/toolbar";
-import { IconAction, ButtonAction } from "shared/ui/action";
-import { showDialog, confirm } from "shared/ui/dialog";
-import { Table, IColumn, IRow } from "shared/ui/table";
+import styled from "eez-studio-shared/ui/styled-components";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { IconAction, ButtonAction } from "eez-studio-shared/ui/action";
+import { showDialog, confirm } from "eez-studio-shared/ui/dialog";
+import { Table, IColumn, IRow } from "eez-studio-shared/ui/table";
 
 import { IGroup, IGroupsStore, IShortcutsStore } from "shortcuts/interfaces";
 import { GroupDialog } from "shortcuts/group-dialog";

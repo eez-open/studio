@@ -1,8 +1,8 @@
 import { observable, action } from "mobx";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
-import { showGenericDialog } from "shared/ui/generic-dialog";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
 
 import { ProjectStore } from "project-editor/core/store";
 import { EezObject, registerMetaData } from "project-editor/core/metaData";
@@ -159,8 +159,12 @@ export function getData(bitmap: BitmapProperties): Promise<BitmapData> {
 
             let ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
 
-            ctx.fillStyle = getStyleProperty(bitmap.style, "backgroundColor");
-            ctx.fillRect(0, 0, image.width, image.height);
+            if (bitmap.bpp === 32) {
+                ctx.clearRect(0, 0, image.width, image.height);
+            } else {
+                ctx.fillStyle = getStyleProperty(bitmap.style, "backgroundColor");
+                ctx.fillRect(0, 0, image.width, image.height);
+            }
 
             ctx.drawImage(image, 0, 0);
 

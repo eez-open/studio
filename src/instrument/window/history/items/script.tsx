@@ -2,11 +2,11 @@ import * as React from "react";
 import { computed } from "mobx";
 import { observer } from "mobx-react";
 
-import { formatDateTimeLong } from "shared/util";
-import { IActivityLogEntry } from "shared/activity-log";
+import { formatDateTimeLong } from "eez-studio-shared/util";
+import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
-import styled from "shared/ui/styled-components";
-import { Icon } from "shared/ui/icon";
+import styled from "eez-studio-shared/ui/styled-components";
+import { Icon } from "eez-studio-shared/ui/icon";
 
 import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";

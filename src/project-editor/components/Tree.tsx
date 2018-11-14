@@ -2,9 +2,9 @@ import * as React from "react";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { _filter, _map } from "shared/algorithm";
+import { _filter, _map } from "eez-studio-shared/algorithm";
 
-import { Icon } from "shared/ui/icon";
+import { Icon } from "eez-studio-shared/ui/icon";
 
 import { EezObject, PropertyMetaData } from "project-editor/core/metaData";
 

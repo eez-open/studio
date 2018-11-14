@@ -5,7 +5,7 @@ import { observer } from "mobx-react";
 import { IShortcut } from "shortcuts/interfaces";
 import { Shortcuts } from "shortcuts/shortcuts";
 
-import { IExtension } from "shared/extensions/extension";
+import { IExtension } from "eez-studio-shared/extensions/extension";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { observer } from "mobx-react";
 
-import { AppRootComponent } from "shared/ui/app";
+import { AppRootComponent } from "eez-studio-shared/ui/app";
 
 import { navigationStore } from "home/navigation-store";
 

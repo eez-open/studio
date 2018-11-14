@@ -1,13 +1,13 @@
-import { isRenderer } from "shared/util";
-import { db } from "shared/db";
+import { isRenderer } from "eez-studio-shared/util";
+import { db } from "eez-studio-shared/db";
 import {
     createStore,
     types,
     createStoreObjectsCollection,
     IFilterSpecification
-} from "shared/store";
+} from "eez-studio-shared/store";
 
-import { extensions } from "shared/extensions/extensions";
+import { extensions } from "eez-studio-shared/extensions/extensions";
 
 import { store as instrumentsStore } from "instrument/instrument-object";
 

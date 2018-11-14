@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "description": "This feature adds support for ESW extension definitions into your project",
     "author": "EEZ",
-    "authorLogo": "../shared/_images/eez_logo.png",
+    "authorLogo": "../eez-studio-shared/_images/eez_logo.png",
     "eezStudioExtension": {
         "displayName": "ESW extension definitions",
         "category": "project-feature",

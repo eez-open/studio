@@ -2,19 +2,19 @@ import * as React from "react";
 import { observer } from "mobx-react";
 //import { DropTarget, DropTargetConnector, DropTargetMonitor } from "react-dnd";
 
-import { getBoundingClientRectOfChildNodes } from "shared/util";
-import { rectScale, Transform } from "shared/geometry";
+import { getBoundingClientRectOfChildNodes } from "eez-studio-shared/util";
+import { rectScale, Transform } from "eez-studio-shared/geometry";
 
-import styled from "shared/ui/styled-components";
-import { ITool } from "shared/ui/designer/designer-interfaces";
+import styled from "eez-studio-shared/ui/styled-components";
+import { ITool } from "eez-studio-designer/designer-interfaces";
 
 import {
     TransitionGroup,
     BounceEntranceTransition,
     BOUNCE_ENTRANCE_TRANSITION_DURATION
-} from "shared/ui/transitions";
+} from "eez-studio-shared/ui/transitions";
 
-import { Canvas } from "shared/ui/designer/canvas";
+import { Canvas } from "eez-studio-designer/canvas";
 
 import { IWorkbenchObject, IWorkbenchDocument } from "home/designer/designer-store";
 

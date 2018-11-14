@@ -3,8 +3,8 @@ import * as ReactDOM from "react-dom";
 import { observable, computed, action, autorun, Lambda, toJS } from "mobx";
 import { observer } from "mobx-react";
 
-import { theme } from "shared/ui/theme";
-import { ThemeProvider } from "shared/ui/styled-components";
+import { theme } from "eez-studio-shared/ui/theme";
+import { ThemeProvider } from "eez-studio-shared/ui/styled-components";
 
 import { ProjectStore, UndoManager } from "project-editor/core/store";
 import { loadObject, addObject, deleteObject, getProperty } from "project-editor/core/store";

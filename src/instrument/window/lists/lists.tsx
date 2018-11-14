@@ -3,30 +3,30 @@ import { observable, computed, action, runInAction, toJS, values } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { logGet, logUpdate } from "shared/activity-log";
-import { readCsvFile, writeCsvFile, getValidFileNameFromFileName } from "shared/util";
-import { stringCompare } from "shared/string";
-import { beginTransaction, commitTransaction } from "shared/store";
-import { _range } from "shared/algorithm";
+import { logGet, logUpdate } from "eez-studio-shared/activity-log";
+import { readCsvFile, writeCsvFile, getValidFileNameFromFileName } from "eez-studio-shared/util";
+import { stringCompare } from "eez-studio-shared/string";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import { _range } from "eez-studio-shared/algorithm";
 
-import { validators } from "shared/model/validation";
+import { validators } from "eez-studio-shared/model/validation";
 
-import styled from "shared/ui/styled-components";
-import { Icon } from "shared/ui/icon";
-import { Splitter } from "shared/ui/splitter";
+import styled from "eez-studio-shared/ui/styled-components";
+import { Icon } from "eez-studio-shared/ui/icon";
+import { Splitter } from "eez-studio-shared/ui/splitter";
 import {
     VerticalHeaderWithBody,
     ToolbarHeader,
     PanelHeader,
     Body
-} from "shared/ui/header-with-body";
-import { IconAction, ButtonAction } from "shared/ui/action";
-import { List as ListComponent } from "shared/ui/list";
-import { Dialog, showDialog, error, confirm } from "shared/ui/dialog";
-import { showGenericDialog } from "shared/ui/generic-dialog";
-import * as notification from "shared/ui/notification";
-import { PropertyList, SelectProperty } from "shared/ui/properties";
-import { Header } from "shared/ui/header-with-body";
+} from "eez-studio-shared/ui/header-with-body";
+import { IconAction, ButtonAction } from "eez-studio-shared/ui/action";
+import { List as ListComponent } from "eez-studio-shared/ui/list";
+import { Dialog, showDialog, error, confirm } from "eez-studio-shared/ui/dialog";
+import { showGenericDialog } from "eez-studio-shared/ui/generic-dialog";
+import * as notification from "eez-studio-shared/ui/notification";
+import { PropertyList, SelectProperty } from "eez-studio-shared/ui/properties";
+import { Header } from "eez-studio-shared/ui/header-with-body";
 
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/import";
 import { InstrumentObject } from "instrument/instrument-object";

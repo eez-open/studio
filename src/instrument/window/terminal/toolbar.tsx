@@ -2,11 +2,11 @@ import * as React from "react";
 import { computed } from "mobx";
 import { observer } from "mobx-react";
 
-import { capitalize } from "shared/string";
+import { capitalize } from "eez-studio-shared/string";
 
-import styled from "shared/ui/styled-components";
-import { Toolbar } from "shared/ui/toolbar";
-import { ButtonAction } from "shared/ui/action";
+import styled from "eez-studio-shared/ui/styled-components";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { ButtonAction } from "eez-studio-shared/ui/action";
 
 import { IShortcut } from "shortcuts/interfaces";
 

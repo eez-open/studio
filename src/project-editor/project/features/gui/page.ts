@@ -1,6 +1,6 @@
 import { observable, computed, action, autorun } from "mobx";
 
-import { _find } from "shared/algorithm";
+import { _find } from "eez-studio-shared/algorithm";
 
 import { getParent, getId } from "project-editor/core/store";
 import {

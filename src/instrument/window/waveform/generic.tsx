@@ -4,17 +4,17 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import * as tinycolor from "tinycolor2";
 
-import { objectEqual, objectClone } from "shared/util";
-import { capitalize } from "shared/string";
-import { beginTransaction, commitTransaction } from "shared/store";
-import { logUpdate, IActivityLogEntry } from "shared/activity-log";
-import { IUnit, SAMPLING_RATE_UNIT, UNITS } from "shared/units";
-import { scheduleTask, Priority } from "shared/scheduler";
+import { objectEqual, objectClone } from "eez-studio-shared/util";
+import { capitalize } from "eez-studio-shared/string";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
+import { IUnit, SAMPLING_RATE_UNIT, UNITS } from "eez-studio-shared/units";
+import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 
-import { makeValidator, validators } from "shared/model/validation";
+import { makeValidator, validators } from "eez-studio-shared/model/validation";
 
-import { Dialog, showDialog } from "shared/ui/dialog";
-import { PropertyList, TextInputProperty, SelectProperty } from "shared/ui/properties";
+import { Dialog, showDialog } from "eez-studio-shared/ui/dialog";
+import { PropertyList, TextInputProperty, SelectProperty } from "eez-studio-shared/ui/properties";
 import {
     AxisController,
     ChartController,
@@ -26,10 +26,10 @@ import {
     IViewOptions,
     IViewOptionsAxesLines,
     IViewOptionsAxesLinesType
-} from "shared/ui/chart/chart";
-import { RulersModel } from "shared/ui/chart/rulers";
-import { MeasurementsModel } from "shared/ui/chart/measurements";
-import { initValuesAccesor, WaveformFormat } from "shared/ui/chart/buffer";
+} from "eez-studio-shared/ui/chart/chart";
+import { RulersModel } from "eez-studio-shared/ui/chart/rulers";
+import { MeasurementsModel } from "eez-studio-shared/ui/chart/measurements";
+import { initValuesAccesor, WaveformFormat } from "eez-studio-shared/ui/chart/buffer";
 
 import { checkMime } from "instrument/connection/file-type";
 

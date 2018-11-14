@@ -1,7 +1,7 @@
 import * as React from "react";
 import { observer } from "mobx-react";
 
-import { _range } from "shared/algorithm";
+import { _range } from "eez-studio-shared/algorithm";
 
 @observer
 export class ChildElement extends React.Component<{ num: number }> {

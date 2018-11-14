@@ -3,10 +3,10 @@ import * as ReactDOM from "react-dom";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import styled from "shared/ui/styled-components";
-import { Toolbar } from "shared/ui/toolbar";
-import { IconAction } from "shared/ui/action";
-import { VerticalHeaderWithBody, PanelHeader, Body } from "shared/ui/header-with-body";
+import styled from "eez-studio-shared/ui/styled-components";
+import { Toolbar } from "eez-studio-shared/ui/toolbar";
+import { IconAction } from "eez-studio-shared/ui/action";
+import { VerticalHeaderWithBody, PanelHeader, Body } from "eez-studio-shared/ui/header-with-body";
 
 ////////////////////////////////////////////////////////////////////////////////
 

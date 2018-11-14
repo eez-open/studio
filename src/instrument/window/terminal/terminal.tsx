@@ -3,9 +3,9 @@ import { observable, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import styled from "shared/ui/styled-components";
-import { Splitter } from "shared/ui/splitter";
-import { IconAction } from "shared/ui/action";
+import styled from "eez-studio-shared/ui/styled-components";
+import { Splitter } from "eez-studio-shared/ui/splitter";
+import { IconAction } from "eez-studio-shared/ui/action";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { executeShortcut } from "instrument/window/script";

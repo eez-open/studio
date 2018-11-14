@@ -1,4 +1,4 @@
-/// <reference path="../shared/globals.d.ts"/>
+/// <reference path="../eez-studio-shared/globals.d.ts"/>
 
 declare const opentype: {
     parse(arg: any): any;
