@@ -446,7 +446,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const TreeContainer = styled.div`
+const TreeOuterDiv = styled.div`
     flex-grow: 1;
     overflow: auto;
     padding: 5px;
@@ -483,6 +483,10 @@ const TreeContainer = styled.div`
             }
         }
     }
+`;
+
+const TreeInnerDiv = styled.div`
+    position: relative;
 `;
 
 interface TreeProps {
@@ -686,14 +690,14 @@ export class Tree extends React.Component<TreeProps, {}> {
         });
 
         return (
-            <TreeContainer
+            <TreeOuterDiv
                 innerRef={ref => (this.tree = ref)}
                 className={className}
                 tabIndex={this.props.tabIndex}
                 onKeyDown={this.onKeyDown}
                 onFocus={() => this.props.onFocus && this.props.onFocus()}
             >
-                <div onDrop={this.onDrop}>
+                <TreeInnerDiv onDrop={this.onDrop}>
                     <TreeRow
                         showOnlyChildren={true}
                         collapsable={this.props.collapsable || false}
@@ -704,8 +708,8 @@ export class Tree extends React.Component<TreeProps, {}> {
                         filter={this.props.filter}
                         draggable={false}
                     />
-                </div>
-            </TreeContainer>
+                </TreeInnerDiv>
+            </TreeOuterDiv>
         );
     }
 }

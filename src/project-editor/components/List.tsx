@@ -332,7 +332,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ListDiv = styled.div`
+const ListOuterDiv = styled.div`
     flex-grow: 1;
     overflow: auto;
     padding: 5px;
@@ -365,6 +365,10 @@ const ListDiv = styled.div`
             }
         }
     }
+`;
+
+const ListInnerDiv = styled.div`
+    position: relative;
 `;
 
 interface ListProps {
@@ -596,15 +600,15 @@ export class List extends React.Component<ListProps, {}> {
         }
 
         return (
-            <ListDiv
+            <ListOuterDiv
                 innerRef={ref => (this.list = ref)}
                 className={className}
                 tabIndex={this.props.tabIndex}
                 onKeyDown={this.onKeyDown.bind(this)}
                 onFocus={() => this.props.onFocus && this.props.onFocus()}
             >
-                <div onDrop={this.onDrop.bind(this)}>{childrenElements}</div>
-            </ListDiv>
+                <ListInnerDiv onDrop={this.onDrop.bind(this)}>{childrenElements}</ListInnerDiv>
+            </ListOuterDiv>
         );
     }
 }

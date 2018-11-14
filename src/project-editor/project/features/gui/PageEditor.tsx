@@ -107,7 +107,12 @@ export class PageEditor extends EditorComponent {
                     childrenOverflow="hidden"
                 >
                     {panel}
-                    <Splitter type="vertical" persistId="page-editor/vertical" sizes={`100%|240px`}>
+                    <Splitter
+                        type="vertical"
+                        persistId="page-editor/vertical"
+                        sizes={`100%|240px`}
+                        childrenOverflow="hidden"
+                    >
                         <Panel id="page-structure" title="Page Structure" body={pageStructure} />
                         <Panel id="widgets" title="Widget Palette" body={<WidgetPalette />} />
                     </Splitter>

@@ -2,8 +2,8 @@ import * as React from "react";
 import { computed, action } from "mobx";
 import { observer } from "mobx-react";
 
-//import DevTools from 'mobx-react-devtools';
-//import { isDev } from 'shared/util';
+// import DevTools from "mobx-react-devtools";
+// import { isDev } from "eez-studio-shared/util";
 
 import styled from "eez-studio-shared/ui/styled-components";
 import { TabsView } from "eez-studio-shared/ui/tabs";
