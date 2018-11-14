@@ -1,5 +1,8 @@
 import { observer } from "mobx-react";
 import * as React from "react";
+import * as classNames from "classnames";
+
+import styled from "eez-studio-shared/ui/styled-components";
 
 import { objectToClipboardData, loadObject, setClipboardData } from "project-editor/core/store";
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -13,6 +16,26 @@ import {
 } from "project-editor/project/features/gui/storyboard";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const PageDiv = styled.div`
+    cursor: -webkit-grab;
+    border: 2px solid transparent;
+
+    &:hover {
+        background-color: ${props => props.theme.hoverBackgroundColor};
+        color: ${props => props.theme.hoverColor};
+    }
+
+    &.selected {
+        background-color: ${props => props.theme.selectionBackgroundColor};
+        color: ${props => props.theme.selectionColor};
+    }
+
+    &.dragging {
+        background-color: ${props => props.theme.dragSourceBackgroundColor};
+        color: ${props => props.theme.dragSourceColor};
+    }
+`;
 
 class PageProps {
     page: PageProperties;
@@ -64,16 +87,13 @@ class Page extends React.Component<PageProps, PageState> {
     }
 
     render() {
-        let className = "EezStudio_ProjectEditor_page-palette-page";
-        if (this.props.selected) {
-            className += " selected";
-        }
-        if (this.state.dragging) {
-            className += " dragging";
-        }
+        let className = classNames({
+            selected: this.props.selected,
+            dragging: this.state.dragging
+        });
 
         return (
-            <div
+            <PageDiv
                 className={className}
                 onClick={this.props.onSelect}
                 draggable={true}
@@ -81,12 +101,16 @@ class Page extends React.Component<PageProps, PageState> {
                 onDragEnd={this.onDragEnd.bind(this)}
             >
                 {this.props.page.name}
-            </div>
+            </PageDiv>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const PagesPaletteDiv = styled.div`
+    overflow: auto;
+`;
 
 interface PagesPaletteProps {
     storyboard: StoryboardProperties;
@@ -131,10 +155,6 @@ export class PagesPalette extends React.Component<PagesPaletteProps, PagesPalett
             );
         });
 
-        return (
-            <div tabIndex={0} className="EezStudio_ProjectEditor_page-palette layoutCenter">
-                {pages}
-            </div>
-        );
+        return <PagesPaletteDiv tabIndex={0}>{pages}</PagesPaletteDiv>;
     }
 }

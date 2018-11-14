@@ -2,6 +2,8 @@ import { observable, action, keys } from "mobx";
 import { observer } from "mobx-react";
 import * as React from "react";
 
+import styled from "eez-studio-shared/ui/styled-components";
+
 import { UIStateStore } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +73,7 @@ class Vars extends React.Component<{}, {}> {
         ));
 
         return (
-            <table className="EezStudio_ProjectEditor_debug__vars">
+            <table>
                 <thead>
                     <tr>
                         <td>Name</td>
@@ -86,36 +88,59 @@ class Vars extends React.Component<{}, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const DebugDiv = styled.div`
+    flex-grow: 1
+
+    background-color: #333;
+    border-color: 1px solid #999;
+    color: white;
+
+    #EezStudio_ProjectEditor_Debug_Vars {
+        width: 100%;
+    }
+
+    .EezStudio_ProjectEditor_debug__vars td:nth-child(2) {
+        padding-left: 10px;
+        text-align: right;
+    }
+`;
+
+const DebugVardDiv = styled.div`
+    width: 100%;
+
+    td:nth-child(2) {
+        padding-left: 10px;
+        text-align: right;
+    }
+`;
+
 @observer
 export class Debug extends React.Component<{}, {}> {
     render() {
         return (
-            <div className="EezStudio_ProjectEditor_debug layoutCenter">
-                <ul className="nav nav-pills layoutTop">
+            <DebugDiv>
+                <ul className="nav nav-pills">
                     <li className="active">
-                        <a href="#EezStudio_ProjectEditor_debug__options" data-toggle="tab">
+                        <a href="#EezStudio_ProjectEditor_Debug_Options" data-toggle="tab">
                             Options
                         </a>
                     </li>
                     <li>
-                        <a href="#EezStudio_ProjectEditor_debug__vars" data-toggle="tab">
+                        <a href="#EezStudio_ProjectEditor_Debug_Vars" data-toggle="tab">
                             Vars
                         </a>
                     </li>
                 </ul>
 
-                <div className="tab-content clearfix layoutCenter">
-                    <div
-                        className="tab-pane layoutCenter active"
-                        id="EezStudio_ProjectEditor_debug__options"
-                    >
+                <div className="tab-content clearfix">
+                    <div className="tab-pane active" id="EezStudio_ProjectEditor_Debug_Options">
                         <Options />
                     </div>
-                    <div className="tab-pane layoutCenter" id="EezStudio_ProjectEditor_debug__vars">
+                    <DebugVardDiv className="tab-pane" id="EezStudio_ProjectEditor_Debug_Vars">
                         <Vars />
-                    </div>
+                    </DebugVardDiv>
                 </div>
-            </div>
+            </DebugDiv>
         );
     }
 }

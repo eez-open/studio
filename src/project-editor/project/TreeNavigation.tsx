@@ -2,6 +2,7 @@ import * as React from "react";
 import { observer } from "mobx-react";
 
 import { IconAction } from "eez-studio-shared/ui/action";
+import { Splitter } from "eez-studio-shared/ui/splitter";
 
 import {
     EditorsStore,
@@ -15,7 +16,6 @@ import {
 import { EezObject, NavigationComponent } from "project-editor/core/metaData";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
-import * as Layout from "project-editor/components/Layout";
 import { Panel } from "project-editor/components/Panel";
 import { Tree } from "project-editor/components/Tree";
 
@@ -157,14 +157,15 @@ export class TreeNavigation extends NavigationComponent {
     render() {
         if (UIStateStore.viewOptions.navigationVisible) {
             return (
-                <Layout.Split
-                    orientation="horizontal"
-                    splitId={`navigation-${this.props.id}`}
-                    splitPosition="0.25"
+                <Splitter
+                    type="horizontal"
+                    persistId={`project-editor/navigation-${this.props.id}`}
+                    sizes={`240px|100%`}
+                    childrenOverflow="hidden"
                 >
                     <TreeNavigationPanel navigationObject={this.props.navigationObject} />
                     {this.props.content}
-                </Layout.Split>
+                </Splitter>
             );
         } else {
             return this.props.content;

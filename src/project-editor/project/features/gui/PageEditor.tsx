@@ -4,11 +4,11 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-shared/ui/action";
+import { Splitter } from "eez-studio-shared/ui/splitter";
 
 import { NavigationStore } from "project-editor/core/store";
 import { EditorComponent } from "project-editor/core/metaData";
 
-import * as Layout from "project-editor/components/Layout";
 import { Panel } from "project-editor/components/Panel";
 import { Tree } from "project-editor/components/Tree";
 
@@ -98,24 +98,20 @@ export class PageEditor extends EditorComponent {
             );
 
             return (
-                <Layout.Split
-                    orientation="horizontal"
-                    splitId="page-editor-horizontal"
-                    splitPosition="0.7"
-                    className="EezStudio_ProjectEditor_page-editor"
+                <Splitter
+                    type="horizontal"
+                    persistId="page-editor/horizontal"
+                    sizes={`100%|240px`}
                     tabIndex={0}
                     onFocus={this.focusHandler}
+                    childrenOverflow="hidden"
                 >
                     {panel}
-                    <Layout.Split
-                        orientation="vertical"
-                        splitId="page-editor-vertical"
-                        splitPosition="0.7"
-                    >
+                    <Splitter type="vertical" persistId="page-editor/vertical" sizes={`100%|240px`}>
                         <Panel id="page-structure" title="Page Structure" body={pageStructure} />
                         <Panel id="widgets" title="Widget Palette" body={<WidgetPalette />} />
-                    </Layout.Split>
-                </Layout.Split>
+                    </Splitter>
+                </Splitter>
             );
         }
     }

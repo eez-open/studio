@@ -25,6 +25,7 @@ import {
 } from "eez-studio-designer/designer-interfaces";
 import { Canvas } from "eez-studio-designer/canvas";
 import { selectToolHandler } from "eez-studio-designer/select-tool";
+import styled from "eez-studio-shared/ui/styled-components";
 
 import {
     NavigationStore,
@@ -763,6 +764,38 @@ class RootObjectComponent extends BaseObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ExperimentalCanvasContainer = styled.div`
+    flex-grow: 1;
+    overflow: hidden;
+    display: flex;
+
+    .EezStudio_DesignerSelection_SelectedObject {
+        border: 1px solid #333;
+    }
+
+    .EezStudio_DesignerSelection_BoundingRect {
+        border: 2px solid black;
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .EezStudio_DesignerSelection_Handle.Side {
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .EezStudio_DesignerSelection_Handle.Corner {
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    svg {
+        image-rendering: pixelated;
+    }
+`;
+
+const ExperimentalCanvas = styled(Canvas)`
+    flex-grow: 1;
+    position: relative;
+`;
+
 interface ExperimentalWidgetContainerEditorProps {
     container: PageResolutionProperties;
 }
@@ -960,12 +993,8 @@ export class ExperimentalWidgetContainerEditor
 
     render() {
         return (
-            <div
-                className="layoutCenter EezStudio_ExperimentalPageEditor"
-                tabIndex={0}
-                onFocus={this.focusHander}
-            >
-                <Canvas className="layoutCenter" document={this} toolHandler={selectToolHandler}>
+            <ExperimentalCanvasContainer tabIndex={0} onFocus={this.focusHander}>
+                <ExperimentalCanvas document={this} toolHandler={selectToolHandler}>
                     <RootObjectComponent
                         ref={ref => {
                             if (ref) {
@@ -974,8 +1003,8 @@ export class ExperimentalWidgetContainerEditor
                         }}
                         object={this.props.container}
                     />
-                </Canvas>
-            </div>
+                </ExperimentalCanvas>
+            </ExperimentalCanvasContainer>
         );
     }
 }

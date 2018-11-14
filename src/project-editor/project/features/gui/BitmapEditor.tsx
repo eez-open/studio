@@ -9,6 +9,7 @@ import { BitmapProperties } from "project-editor/project/features/gui/bitmap";
 import { getStyleProperty } from "project-editor/project/features/gui/style";
 
 const BitmapEditorContainer = styled.div`
+    flex-grow: 1;
     display: flex;
     justify-content: center; /* align horizontal */
     align-items: center; /* align vertical */
@@ -28,7 +29,7 @@ export class BitmapEditor extends EditorComponent {
         };
 
         return (
-            <BitmapEditorContainer className="layoutCenter">
+            <BitmapEditorContainer>
                 <div>
                     <div>
                         <img src={bitmap.image} style={style} />

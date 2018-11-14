@@ -10,6 +10,12 @@ export interface ThemeInterface {
     hoverColor: string;
     scrollTrackColor: string;
     scrollThumbColor: string;
+    darkTextColor: string;
+    focusBackgroundColor: string;
+    focusColor: string;
+    dragSourceBackgroundColor: string;
+    dragSourceColor: string;
+    dropPlaceColor: string;
 }
 
 export const theme: ThemeInterface = {
@@ -23,5 +29,11 @@ export const theme: ThemeInterface = {
     hoverBackgroundColor: "#c5c5c5",
     hoverColor: "black",
     scrollTrackColor: "#f1f1f1",
-    scrollThumbColor: "#c1c1c1"
+    scrollThumbColor: "#c1c1c1",
+    darkTextColor: "#555",
+    focusBackgroundColor: "#4e94d1",
+    focusColor: "#444",
+    dragSourceBackgroundColor: "#e040fb",
+    dragSourceColor: "#ffffff",
+    dropPlaceColor: "#7c4dff"
 };

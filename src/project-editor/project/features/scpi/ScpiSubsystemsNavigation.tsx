@@ -3,14 +3,12 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 
 import { IconAction } from "eez-studio-shared/ui/action";
+import { Splitter } from "eez-studio-shared/ui/splitter";
 
 import { EezObject, NavigationComponent } from "project-editor/core/metaData";
 import { ProjectStore, NavigationStore, getProperty } from "project-editor/core/store";
-import { doLayout } from "project-editor/core/layout";
 
 import { ListNavigation, ListNavigationWithContent } from "project-editor/project/ListNavigation";
-
-import * as Layout from "project-editor/components/Layout";
 
 import { showImportScpiDocDialog } from "project-editor/project/features/scpi/importScpiDoc";
 import {
@@ -32,14 +30,6 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
             return NavigationStore.selectedPanel.selectedObject;
         }
         return NavigationStore.selectedObject;
-    }
-
-    componentDidMount() {
-        doLayout();
-    }
-
-    componentDidUpdate() {
-        doLayout();
     }
 
     render() {
@@ -71,24 +61,23 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
 
         if (selectedScpiSubsystem) {
             return (
-                <Layout.Split
-                    orientation="horizontal"
-                    splitId={`navigation-${this.props.id}`}
-                    splitPosition="0.25"
+                <Splitter
+                    type="horizontal"
+                    persistId={`project-editor/navigation-${this.props.id}`}
+                    sizes={`240px|100%`}
+                    childrenOverflow="hidden"
                 >
                     <ListNavigation
                         navigationObject={subsystems}
                         additionalButtons={additionalButtons}
                     />
-                    {
-                        <ListNavigationWithContent
-                            id="scpi-subsystem-commands"
-                            title="Commands"
-                            navigationObject={(selectedScpiSubsystem.commands as any) as EezObject}
-                            content={content}
-                        />
-                    }
-                </Layout.Split>
+                    <ListNavigationWithContent
+                        id="scpi-subsystem-commands"
+                        title="Commands"
+                        navigationObject={(selectedScpiSubsystem.commands as any) as EezObject}
+                        content={content}
+                    />
+                </Splitter>
             );
         } else {
             return (

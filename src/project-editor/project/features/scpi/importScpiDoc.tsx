@@ -4,7 +4,7 @@ import { observable, computed, action, autorun, Lambda, toJS } from "mobx";
 import { observer } from "mobx-react";
 
 import { theme } from "eez-studio-shared/ui/theme";
-import { ThemeProvider } from "eez-studio-shared/ui/styled-components";
+import { styled, ThemeProvider } from "eez-studio-shared/ui/styled-components";
 
 import { ProjectStore, UndoManager } from "project-editor/core/store";
 import { loadObject, addObject, deleteObject, getProperty } from "project-editor/core/store";
@@ -367,6 +367,70 @@ function getChanges() {
     });
 }
 
+const ImportScpiDocDialogDiv = styled.div`
+    * {
+        user-select: auto;
+    }
+
+    table {
+        margin-bottom: 0;
+        width: 100%;
+        border: 1px solid #ddd;
+    }
+
+    thead {
+        display: block;
+        width: 100%;
+    }
+
+    th {
+        background-color: #eee;
+        height: 32px;
+        padding-top: 4px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    thead,
+    tbody,
+    tr,
+    td,
+    th {
+        display: block;
+    }
+
+    tbody {
+        display: block;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    tr {
+        clear: both;
+    }
+
+    tbody {
+        td {
+            float: left;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
+    thead {
+        th {
+            float: left;
+        }
+    }
+`;
+
+const TablesDiv = styled.div`
+    padding-top: 15px;
+`;
+
 type Section = "added" | "deleted" | "moved";
 
 const SECTIONS: Section[] = ["added", "deleted", "moved"];
@@ -382,13 +446,10 @@ export class ImportScpiDocDialog extends React.Component<
         super(props);
     }
 
-    refs: {
-        [key: string]: Element;
-        dialog: HTMLDivElement;
-        addedSelectAllCheckbox: HTMLInputElement;
-        deletedSelectAllCheckbox: HTMLInputElement;
-        movedSelectAllCheckbox: HTMLInputElement;
-    };
+    dialog: HTMLDivElement;
+    addedSelectAllCheckbox: HTMLInputElement;
+    deletedSelectAllCheckbox: HTMLInputElement;
+    movedSelectAllCheckbox: HTMLInputElement;
 
     @observable
     changes: Changes;
@@ -428,17 +489,17 @@ export class ImportScpiDocDialog extends React.Component<
     }
 
     componentDidMount() {
-        $(this.refs.dialog).on("shown.bs.modal", () => {
-            $(this.refs.dialog)
+        $(this.dialog).on("shown.bs.modal", () => {
+            $(this.dialog)
                 .find("input")
                 .select();
         });
 
-        $(this.refs.dialog).on("hidden.bs.modal", () => {
+        $(this.dialog).on("hidden.bs.modal", () => {
             this.props.onHidden();
         });
 
-        $(this.refs.dialog).modal({
+        $(this.dialog).modal({
             backdrop: "static"
         });
 
@@ -480,7 +541,7 @@ export class ImportScpiDocDialog extends React.Component<
 
     onOk(event: any) {
         event.preventDefault();
-        $(this.refs.dialog).modal("hide");
+        $(this.dialog).modal("hide");
 
         UndoManager.setCombineCommands(true);
 
@@ -562,7 +623,7 @@ export class ImportScpiDocDialog extends React.Component<
     }
 
     onCancel() {
-        $(this.refs.dialog).modal("hide");
+        $(this.dialog).modal("hide");
     }
 
     @action
@@ -580,11 +641,11 @@ export class ImportScpiDocDialog extends React.Component<
             let checkbox: HTMLInputElement;
 
             if (section === "added") {
-                checkbox = this.refs.addedSelectAllCheckbox;
+                checkbox = this.addedSelectAllCheckbox;
             } else if (section === "deleted") {
-                checkbox = this.refs.deletedSelectAllCheckbox;
+                checkbox = this.deletedSelectAllCheckbox;
             } else {
-                checkbox = this.refs.movedSelectAllCheckbox;
+                checkbox = this.movedSelectAllCheckbox;
             }
 
             if (!checkbox) {
@@ -689,7 +750,11 @@ export class ImportScpiDocDialog extends React.Component<
                         thead = (
                             <tr>
                                 <th className="col-8">
-                                    <input ref="addedSelectAllCheckbox" type="checkbox" /> Command
+                                    <input
+                                        ref={ref => (this.addedSelectAllCheckbox = ref!)}
+                                        type="checkbox"
+                                    />{" "}
+                                    Command
                                 </th>
                                 <th className="col-4">To</th>
                             </tr>
@@ -698,7 +763,11 @@ export class ImportScpiDocDialog extends React.Component<
                         thead = (
                             <tr>
                                 <th className="col-8">
-                                    <input ref="deletedSelectAllCheckbox" type="checkbox" /> Command
+                                    <input
+                                        ref={ref => (this.deletedSelectAllCheckbox = ref!)}
+                                        type="checkbox"
+                                    />{" "}
+                                    Command
                                 </th>
                                 <th className="col-4">From</th>
                             </tr>
@@ -707,7 +776,11 @@ export class ImportScpiDocDialog extends React.Component<
                         thead = (
                             <tr>
                                 <th className="col-6">
-                                    <input ref="movedSelectAllCheckbox" type="checkbox" /> Command
+                                    <input
+                                        ref={ref => (this.movedSelectAllCheckbox = ref!)}
+                                        type="checkbox"
+                                    />{" "}
+                                    Command
                                 </th>
                                 <th className="col-3">From</th>
                                 <th className="col-3">To</th>
@@ -775,9 +848,7 @@ export class ImportScpiDocDialog extends React.Component<
                 content = (
                     <form className="form-horizontal" onSubmit={this.onOk.bind(this)}>
                         <ul className="nav nav-pills">{tabs}</ul>
-                        <div className="EezStudio_ProjectEditor_ImportScpiDoc_TablesDiv">
-                            {tables}
-                        </div>
+                        <TablesDiv>{tables}</TablesDiv>
                     </form>
                 );
 
@@ -824,9 +895,9 @@ export class ImportScpiDocDialog extends React.Component<
         }
 
         return (
-            <div
-                ref="dialog"
-                className={"modal fade EezStudio_ProjectEditor_ImportScpiDoc"}
+            <ImportScpiDocDialogDiv
+                innerRef={ref => (this.dialog = ref!)}
+                className={"modal fade"}
                 tabIndex={-1}
                 role="dialog"
             >
@@ -849,7 +920,7 @@ export class ImportScpiDocDialog extends React.Component<
                         {footer}
                     </div>
                 </div>
-            </div>
+            </ImportScpiDocDialogDiv>
         );
     }
 }

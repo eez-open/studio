@@ -27,10 +27,6 @@ export class StyleEditor extends EditorComponent {
         canvas.height = 320;
         drawStylePreview(canvas, this.props.editor.object as StyleProperties);
 
-        return (
-            <div className="layoutCenter">
-                <Image src={canvas.toDataURL()} />
-            </div>
-        );
+        return <Image src={canvas.toDataURL()} />;
     }
 }

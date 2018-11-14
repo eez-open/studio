@@ -3,6 +3,7 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 
 import { IconAction } from "eez-studio-shared/ui/action";
+import { Splitter } from "eez-studio-shared/ui/splitter";
 
 import {
     NavigationStore,
@@ -16,7 +17,6 @@ import {
 } from "project-editor/core/store";
 import { EezObject, NavigationComponentProps } from "project-editor/core/metaData";
 
-import * as Layout from "project-editor/components/Layout";
 import { Panel } from "project-editor/components/Panel";
 import { List } from "project-editor/components/List";
 
@@ -149,10 +149,11 @@ export class ListNavigationWithContent extends React.Component<ListNavigationWit
     render() {
         if (UIStateStore.viewOptions.navigationVisible) {
             return (
-                <Layout.Split
-                    orientation="horizontal"
-                    splitId={`navigation-${this.props.id}`}
-                    splitPosition="0.25"
+                <Splitter
+                    type="horizontal"
+                    persistId={`project-editor/navigation-${this.props.id}`}
+                    sizes={`240px|100%`}
+                    childrenOverflow="hidden"
                 >
                     <ListNavigation
                         title={this.props.title}
@@ -161,7 +162,7 @@ export class ListNavigationWithContent extends React.Component<ListNavigationWit
                         additionalButtons={this.props.additionalButtons}
                     />
                     {this.props.content}
-                </Layout.Split>
+                </Splitter>
             );
         } else {
             return this.props.content;

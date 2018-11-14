@@ -33,6 +33,8 @@ app.on("ready", async function() {
 
     require("eez-studio-shared/service");
 
+    // start with:
+    // npm start devToolsExtension="C:\Users\mvladic\AppData\Local\Google\Chrome\User Data\Default\Extensions\fmkadmapgofadopljbjfkapdkoienihi\3.4.2_0"
     if (process.argv.length > 2 && process.argv[2].startsWith("devToolsExtension=")) {
         BrowserWindow.addDevToolsExtension(process.argv[2].substr("devToolsExtension=".length));
     }

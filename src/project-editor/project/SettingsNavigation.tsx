@@ -2,6 +2,9 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 import * as React from "react";
 
+import { Splitter } from "eez-studio-shared/ui/splitter";
+import styled from "eez-studio-shared/ui/styled-components";
+
 import { NavigationComponent, EezObject } from "project-editor/core/metaData";
 import {
     ProjectStore,
@@ -15,9 +18,24 @@ import {
 import { confirm } from "project-editor/core/util";
 import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
 
-import * as Layout from "project-editor/components/Layout";
 import { TreeNavigationPanel } from "project-editor/project/TreeNavigation";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const ProjectFeatureDiv = styled.div`
+    padding: 10px;
+    margin-bottom: 20px;
+    h4 {
+        margin: 0;
+        border-bottom: 1px solid ${props => props.theme.borderColor};
+    }
+`;
+
+const ExtensionCardAuthor = styled.div`
+    margin-top: 5px;
+    font-size: 120%;
+`;
 
 @observer
 class ProjectFeature extends React.Component<
@@ -95,7 +113,7 @@ class ProjectFeature extends React.Component<
         }
 
         return (
-            <div className="EezStudio_ProjectEditor_settings-editor-project-feature">
+            <ProjectFeatureDiv>
                 <div className="float-right" title="Feature version">
                     v{this.props.extension.version}
                 </div>
@@ -106,15 +124,28 @@ class ProjectFeature extends React.Component<
                 <div className="extension-card-description" title="Feature description">
                     {this.props.extension.description}
                 </div>
-                <div className="extension-card-author" title="Feature author">
+                <ExtensionCardAuthor title="Feature author">
                     {button}
                     <img src={this.props.extension.authorLogo} width="32" height="32" />{" "}
                     {this.props.extension.author}
-                </div>
-            </div>
+                </ExtensionCardAuthor>
+            </ProjectFeatureDiv>
         );
     }
 }
+
+const SettingsEditorDiv = styled.div`
+    padding: 10px;
+    overflow: auto;
+
+    .EezStudio_ProjectEditor_PropertyGrid {
+        position: static;
+    }
+
+    .EezStudio_ProjectEditor_PropertyGrid {
+        overflow: visible;
+    }
+`;
 
 @observer
 export class SettingsEditor extends React.Component<{ object: EezObject | undefined }, {}> {
@@ -128,16 +159,14 @@ export class SettingsEditor extends React.Component<{ object: EezObject | undefi
             ));
 
             return (
-                <div className="EezStudio_ProjectEditor_settings-editor layoutCenter">
-                    <div className="EezStudio_ProjectEditor_settings-editor-inner">
-                        {this.props.object && <PropertyGrid object={this.props.object} />}
-                        <h3>Project features</h3>
-                        {projectFeatures}
-                    </div>
-                </div>
+                <SettingsEditorDiv>
+                    {this.props.object && <PropertyGrid object={this.props.object} />}
+                    <h3>Project features</h3>
+                    {projectFeatures}
+                </SettingsEditorDiv>
             );
         } else {
-            return <PropertyGrid object={this.props.object} className="layoutCenter" />;
+            return <PropertyGrid object={this.props.object} />;
         }
     }
 }
@@ -162,14 +191,15 @@ export class SettingsNavigation extends NavigationComponent {
 
         if (UIStateStore.viewOptions.navigationVisible) {
             return (
-                <Layout.Split
-                    orientation="horizontal"
-                    splitId={`navigation-${this.props.id}`}
-                    splitPosition="0.25"
+                <Splitter
+                    type="horizontal"
+                    persistId={`project-editor/navigation-${this.props.id}`}
+                    sizes={`240px|100%`}
+                    childrenOverflow="hidden"
                 >
                     <TreeNavigationPanel navigationObject={this.props.navigationObject} />
                     {content}
-                </Layout.Split>
+                </Splitter>
             );
         } else {
             return content;

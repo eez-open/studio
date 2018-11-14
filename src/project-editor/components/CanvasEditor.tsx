@@ -1,5 +1,8 @@
 import * as React from "react";
 import { action } from "mobx";
+import { bind } from "bind-decorator";
+
+import styled from "eez-studio-shared/ui/styled-components";
 
 import { Point, Rect, boundingRect } from "project-editor/core/util";
 import { updateObject, UndoManager, objectToString } from "project-editor/core/store";
@@ -54,6 +57,12 @@ export interface ObjectGeometryChange {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const CanvasContainerDiv = styled.div`
+    flex-grow: 1;
+    display: flex;
+    overflow: hidden;
+`;
+
 export interface CanvasEditorProps {
     displaySelection: DisplayItemSelection;
     pageWidth: number;
@@ -74,10 +83,7 @@ export class CanvasEditorUIState {
 }
 
 export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}> {
-    refs: {
-        [key: string]: Element;
-        canvas: HTMLCanvasElement;
-    };
+    canvas: HTMLCanvasElement;
 
     contentTree: TreeNode;
     tree: TreeNode;
@@ -122,7 +128,7 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
 
     translateOffsetFromEventTargetToCanvas(event: any) {
         let targetRect = event.target.getBoundingClientRect();
-        let canvasRect = this.refs.canvas.getBoundingClientRect();
+        let canvasRect = this.canvas.getBoundingClientRect();
         return {
             offsetX: event.offsetX + targetRect.left - canvasRect.left,
             offsetY: event.offsetY + targetRect.top - canvasRect.top,
@@ -137,7 +143,7 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
         document.addEventListener(
             "mousemove",
             event => {
-                if (this.isDragging() && event.target != this.refs.canvas) {
+                if (this.isDragging() && event.target != this.canvas) {
                     this.onMouseMove(this.translateOffsetFromEventTargetToCanvas(event));
                     event.preventDefault();
                     event.stopPropagation();
@@ -149,7 +155,7 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
         document.addEventListener(
             "mouseup",
             event => {
-                if (this.isDragging() && event.target != this.refs.canvas) {
+                if (this.isDragging() && event.target != this.canvas) {
                     this.onMouseUp(this.translateOffsetFromEventTargetToCanvas(event));
                     event.preventDefault();
                     event.stopPropagation();
@@ -158,19 +164,13 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
             true
         );
 
-        $(this.refs.canvas)
-            .parent()
-            .on("autoLayout:resize", () => {
-                this.redraw();
-            });
-
-        $(this.refs.canvas).on("contextmenu", event => {
+        $(this.canvas).on("contextmenu", event => {
             this.scrollBars.stopDragging();
             this.props.displaySelection.showSelectionContextMenu();
             event.preventDefault();
         });
 
-        this.redraw();
+        this.resize();
     }
 
     componentDidUpdate() {
@@ -178,23 +178,24 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
     }
 
     componentWillUnmount() {
-        $(this.refs.canvas)
-            .parent()
-            .off("autoLayout:resize");
+        if (this.resizeAnimationFrameId) {
+            window.cancelAnimationFrame(this.resizeAnimationFrameId);
+            this.resizeAnimationFrameId = false;
+        }
     }
 
     getDeviceTranslate() {
         return {
-            x: this.refs.canvas.width / 2 + this.centerOffset.x * this.scale,
-            y: this.refs.canvas.height / 2 + this.centerOffset.y * this.scale
+            x: this.canvas.width / 2 + this.centerOffset.x * this.scale,
+            y: this.canvas.height / 2 + this.centerOffset.y * this.scale
         };
     }
 
     getDeviceRect() {
         let topLeft = this.deviceToDocument({ x: 0, y: 0 });
         let bottomRight = this.deviceToDocument({
-            x: this.refs.canvas.width,
-            y: this.refs.canvas.height
+            x: this.canvas.width,
+            y: this.canvas.height
         });
         return {
             x: topLeft.x,
@@ -277,49 +278,56 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
         };
     }
 
-    redrawAnimationFrameId: any;
+    resizeAnimationFrameId: any;
 
-    redraw() {
-        if (!this.redrawAnimationFrameId) {
-            this.redrawAnimationFrameId = window.requestAnimationFrame(() => {
-                this.redrawAnimationFrameId = undefined;
+    @bind
+    resize() {
+        if (this.canvas) {
+            const canvasWidth = $(this.canvas)
+                .parent()
+                .width()!;
+            const canvasHeight = $(this.canvas)
+                .parent()
+                .height()!;
 
-                if (!this.refs.canvas) {
-                    return;
-                }
-
-                this.refs.canvas.width = $(this.refs.canvas)
-                    .parent()
-                    .width()!;
-                this.refs.canvas.height = $(this.refs.canvas)
-                    .parent()
-                    .height()!;
-
-                this.deviceTranslate = this.getDeviceTranslate();
-                this.nonTranslatedDeviceRect = this.getNonTranslatedDeviceRect();
-                this.deviceRect = this.getDeviceRect();
-                this.documentRect = this.getDocumentRect();
-
-                this.calculateSelectionRect();
-
-                this.scrollBars.update();
-
-                this.draw();
-            });
+            if (this.canvas.width !== canvasWidth || this.canvas.height !== canvasHeight) {
+                this.canvas.width = canvasWidth;
+                this.canvas.height = canvasHeight;
+                this.redraw();
+            }
         }
+
+        this.resizeAnimationFrameId = window.requestAnimationFrame(this.resize);
     }
 
-    draw() {
-        if (!this.refs.canvas) {
+    redraw() {
+        if (!this.canvas || !this.canvas.width || !this.canvas.height) {
             return;
         }
 
-        const ctx = this.refs.canvas.getContext("2d");
+        this.deviceTranslate = this.getDeviceTranslate();
+        this.nonTranslatedDeviceRect = this.getNonTranslatedDeviceRect();
+        this.deviceRect = this.getDeviceRect();
+        this.documentRect = this.getDocumentRect();
+
+        this.calculateSelectionRect();
+
+        this.scrollBars.update();
+
+        this.draw();
+    }
+
+    draw() {
+        if (!this.canvas) {
+            return;
+        }
+
+        const ctx = this.canvas.getContext("2d");
         if (ctx == null) {
             return;
         }
 
-        ctx.clearRect(0, 0, this.refs.canvas.width, this.refs.canvas.height);
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         ctx.save();
 
@@ -409,28 +417,28 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
     changeCursor(hitRegion?: HitRegion) {
         if (hitRegion) {
             if (hitRegion == HitRegion.NW) {
-                $(this.refs.canvas).css("cursor", "nw-resize");
+                $(this.canvas).css("cursor", "nw-resize");
             } else if (hitRegion == HitRegion.N) {
-                $(this.refs.canvas).css("cursor", "n-resize");
+                $(this.canvas).css("cursor", "n-resize");
             } else if (hitRegion == HitRegion.NE) {
-                $(this.refs.canvas).css("cursor", "ne-resize");
+                $(this.canvas).css("cursor", "ne-resize");
             } else if (hitRegion == HitRegion.W) {
-                $(this.refs.canvas).css("cursor", "w-resize");
+                $(this.canvas).css("cursor", "w-resize");
             } else if (hitRegion == HitRegion.E) {
-                $(this.refs.canvas).css("cursor", "e-resize");
+                $(this.canvas).css("cursor", "e-resize");
             } else if (hitRegion == HitRegion.SW) {
-                $(this.refs.canvas).css("cursor", "sw-resize");
+                $(this.canvas).css("cursor", "sw-resize");
             } else if (hitRegion == HitRegion.S) {
-                $(this.refs.canvas).css("cursor", "s-resize");
+                $(this.canvas).css("cursor", "s-resize");
             } else if (hitRegion == HitRegion.SE) {
-                $(this.refs.canvas).css("cursor", "se-resize");
+                $(this.canvas).css("cursor", "se-resize");
             } else if (hitRegion == HitRegion.INSIDE) {
-                $(this.refs.canvas).css("cursor", "move");
+                $(this.canvas).css("cursor", "move");
             } else {
-                $(this.refs.canvas).css("cursor", "default");
+                $(this.canvas).css("cursor", "default");
             }
         } else {
-            $(this.refs.canvas).css("cursor", "default");
+            $(this.canvas).css("cursor", "default");
         }
     }
 
@@ -970,21 +978,22 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
         };
 
         return (
-            <canvas
-                tabIndex={0}
-                ref="canvas"
-                onMouseDown={this.onMouseDown.bind(this)}
-                onMouseMove={this.onMouseMove.bind(this)}
-                onMouseUp={this.onMouseUp.bind(this)}
-                onWheel={this.onMouseWheel.bind(this)}
-                onDoubleClick={this.onDoubleClick.bind(this)}
-                onDragEnter={this.onDragEnter.bind(this)}
-                onDragOver={this.onDragOver.bind(this)}
-                onDrop={this.onDrop.bind(this)}
-                onDragLeave={this.onDragLeave.bind(this)}
-                onKeyDown={this.onKeyDown.bind(this)}
-                onKeyUp={this.onKeyUp.bind(this)}
-            />
+            <CanvasContainerDiv tabIndex={0}>
+                <canvas
+                    ref={ref => (this.canvas = ref!)}
+                    onMouseDown={this.onMouseDown.bind(this)}
+                    onMouseMove={this.onMouseMove.bind(this)}
+                    onMouseUp={this.onMouseUp.bind(this)}
+                    onWheel={this.onMouseWheel.bind(this)}
+                    onDoubleClick={this.onDoubleClick.bind(this)}
+                    onDragEnter={this.onDragEnter.bind(this)}
+                    onDragOver={this.onDragOver.bind(this)}
+                    onDrop={this.onDrop.bind(this)}
+                    onDragLeave={this.onDragLeave.bind(this)}
+                    onKeyDown={this.onKeyDown.bind(this)}
+                    onKeyUp={this.onKeyUp.bind(this)}
+                />
+            </CanvasContainerDiv>
         );
     }
 

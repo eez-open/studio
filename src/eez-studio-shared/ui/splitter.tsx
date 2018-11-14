@@ -20,6 +20,9 @@ interface SplitterProps {
 
     overflow?: string;
     childrenOverflow?: string;
+
+    tabIndex?: number;
+    onFocus?: () => void;
 }
 
 interface IDraggableParams {
@@ -299,6 +302,8 @@ export class Splitter extends React.Component<SplitterProps, {}> {
                 className={this.props.className}
                 ref={element => (this.element = element)}
                 style={style}
+                tabIndex={this.props.tabIndex}
+                onFocus={this.props.onFocus}
             >
                 {children.map((child, i) => (
                     <div key={"child" + i} style={childStyles[i]}>

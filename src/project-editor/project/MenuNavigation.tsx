@@ -1,5 +1,8 @@
 import * as React from "react";
 import { observer } from "mobx-react";
+import * as classNames from "classnames";
+
+import styled from "eez-studio-shared/ui/styled-components";
 
 import { EezObject } from "project-editor/core/metaData";
 import {
@@ -11,6 +14,23 @@ import {
 } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const NavigationMenuItemContainer = styled.div`
+    display: block;
+    cursor: pointer;
+    padding: 4px;
+    background-color: @panel-header-color;
+    color: #999;
+    border: 0;
+
+    &:hover:not(.selected) {
+        color: #333;
+    }
+
+    &.selected {
+        color: ${props => props.theme.selectionBackgroundColor};
+    }
+`;
 
 interface NavigationMenuItemProps {
     navigationObject: EezObject;
@@ -30,30 +50,32 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
     }
 
     render() {
-        let classes = ["EezStudio_ProjectEditor_navigation-menu__item"];
-
-        if (
-            NavigationStore.getNavigationSelectedItem(this.props.navigationObject) ===
-            this.props.item
-        ) {
-            classes.push("EezStudio_ProjectEditor_navigation-menu__item--selected");
-        }
+        let className = classNames({
+            selected:
+                NavigationStore.getNavigationSelectedItem(this.props.navigationObject) ===
+                this.props.item
+        });
 
         let icon = getMetaData(this.props.item).icon || "extension";
 
         return (
-            <div
-                className={classes.join(" ")}
+            <NavigationMenuItemContainer
+                className={className}
                 title={objectToString(this.props.item)}
                 onClick={this.onClick}
             >
                 <i className="material-icons md-24">{icon}</i>
-            </div>
+            </NavigationMenuItemContainer>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const MenuContainer = styled.div`
+    background-color: ${props => props.theme.panelHeaderColor};
+    border-right: 1px solid ${props => props.theme.borderColor};
+`;
 
 @observer
 class Menu extends React.Component<
@@ -75,18 +97,20 @@ class Menu extends React.Component<
             />
         ));
         return (
-            <div
-                className="EezStudio_ProjectEditor_navigation-menu"
-                tabIndex={0}
-                onFocus={this.onFocus.bind(this)}
-            >
+            <MenuContainer tabIndex={0} onFocus={this.onFocus.bind(this)}>
                 {items}
-            </div>
+            </MenuContainer>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const MenuNavigationContainer = styled.div`
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+`;
 
 @observer
 export class MenuNavigation extends React.Component<
@@ -116,12 +140,10 @@ export class MenuNavigation extends React.Component<
         }
 
         return (
-            <div className="layoutCenter">
-                <div className="layoutLeft">
-                    <Menu navigationObject={this.props.navigationObject} />
-                </div>
-                <div className="layoutCenter">{subNavigation || this.props.content}</div>
-            </div>
+            <MenuNavigationContainer>
+                <Menu navigationObject={this.props.navigationObject} />
+                {subNavigation || this.props.content}
+            </MenuNavigationContainer>
         );
     }
 }

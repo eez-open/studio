@@ -7,6 +7,7 @@ import { IconAction, TextAction } from "eez-studio-shared/ui/action";
 import { IFieldComponentProps } from "eez-studio-shared/ui/generic-dialog";
 import styled from "eez-studio-shared/ui/styled-components";
 import * as notification from "eez-studio-shared/ui/notification";
+import { Splitter } from "eez-studio-shared/ui/splitter";
 
 import { EditorComponent } from "project-editor/core/metaData";
 import {
@@ -21,9 +22,7 @@ import {
     ProjectStore,
     objectToJS
 } from "project-editor/core/store";
-import { doLayout } from "project-editor/core/layout";
 
-import * as Layout from "project-editor/components/Layout";
 import { Loading } from "project-editor/components/Loading";
 
 import { FontProperties, fontMetaData } from "project-editor/project/features/gui/fontMetaData";
@@ -37,6 +36,13 @@ import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const GlyphSelectFieldContainerDiv = styled.div`
+    position: relative;
+    height: 600px;
+    border: 1px solid ${props => props.theme.borderColor};
+    box-sizing: content-box;
+`;
 
 @observer
 export class GlyphSelectFieldType extends React.Component<
@@ -54,11 +60,8 @@ export class GlyphSelectFieldType extends React.Component<
 
     timeoutId: any;
 
-    refs: {
-        [key: string]: Element;
-        glyphs: any;
-        glyphsContainer: any;
-    };
+    glyphs: any;
+    glyphsContainer: any;
 
     constructor(props: IFieldComponentProps) {
         super(props);
@@ -158,9 +161,8 @@ export class GlyphSelectFieldType extends React.Component<
                 selectedGlyph: undefined
             });
         } else {
-            if (this.refs.glyphs) {
-                doLayout(this.refs.glyphsContainer);
-                this.refs.glyphs.ensureVisible();
+            if (this.glyphs) {
+                this.glyphs.ensureVisible();
             }
         }
     }
@@ -189,18 +191,15 @@ export class GlyphSelectFieldType extends React.Component<
     render() {
         if (this.state.font) {
             return (
-                <div
-                    className="EezStudio_ProjectEditor_glyph-select-field-glyphs-container"
-                    ref="glyphsContainer"
-                >
+                <GlyphSelectFieldContainerDiv innerRef={ref => (this.glyphsContainer = ref)}>
                     <Glyphs
-                        ref="glyphs"
+                        ref={ref => (this.glyphs = ref!)}
                         glyphs={this.state.font.glyphs}
                         selectedGlyph={this.state.selectedGlyph}
                         onSelectGlyph={this.onSelectGlyph.bind(this)}
                         onDoubleClickGlyph={this.onDoubleClickGlyph.bind(this)}
                     />
-                </div>
+                </GlyphSelectFieldContainerDiv>
             );
         } else if (this.state.isLoading) {
             return (
@@ -260,6 +259,65 @@ const Toolbar = styled.div`
     }
 `;
 
+const GlyphsDiv = styled.div`
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    ul {
+        padding: 5px;
+    }
+
+    li {
+        display: inline-block;
+        margin: 5px;
+        border: 2px solid #eee;
+        padding: 5px;
+        background-color: white;
+        cursor: pointer;
+    }
+
+    li.selected {
+        border: 2px solid ${props => props.theme.selectionBackgroundColor};
+    }
+
+    li > div {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    li > div > img {
+        flex: 1;
+    }
+
+    li > div > div {
+        font-size: 80%;
+        font-family: monospace;
+    }
+`;
+
+const GlyphsFilterDiv = styled.div`
+    flex-grow: 0;
+    flex-shrink: 0;
+    padding: 5px;
+    background-color: ${props => props.theme.panelHeaderColor};
+    border-bottom: 1px solid ${props => props.theme.borderColor};
+    input {
+        height: 28px;
+    }
+
+    input {
+        width: 100%;
+    }
+`;
+
+const GlyphsContentDiv = styled.div`
+    flex-grow: 1;
+    display: flex;
+    overflow: auto;
+`;
+
 @observer
 class Glyphs extends React.Component<
     {
@@ -279,10 +337,7 @@ class Glyphs extends React.Component<
         searchValue: ""
     };
 
-    refs: {
-        [key: string]: Element;
-        list: HTMLUListElement;
-    };
+    list: HTMLUListElement;
 
     onChange(event: any) {
         let searchValue: string = event.target.value;
@@ -314,7 +369,7 @@ class Glyphs extends React.Component<
     }
 
     ensureVisible() {
-        const $selectedGlyph = $(this.refs.list).find(".selected");
+        const $selectedGlyph = $(this.list).find(".selected");
         if ($selectedGlyph.length == 1) {
             ($selectedGlyph[0] as any).scrollIntoViewIfNeeded();
         }
@@ -367,8 +422,8 @@ class Glyphs extends React.Component<
         }
 
         return (
-            <div className="EezStudio_ProjectEditor_font-editor-glyphs layoutCenter">
-                <div className="EezStudio_ProjectEditor_font-editor-glyphs-filter layoutTop">
+            <GlyphsDiv>
+                <GlyphsFilterDiv>
                     <Toolbar className="btn-toolbar" role="toolbar">
                         <input
                             type="text"
@@ -382,11 +437,11 @@ class Glyphs extends React.Component<
                         {addGlyphButton}
                         {deleteGlyphButton}
                     </Toolbar>
-                </div>
-                <div className="EezStudio_ProjectEditor_font-editor-glyphs-content layoutCenter">
-                    <ul ref="list">{glyphs}</ul>
-                </div>
-            </div>
+                </GlyphsFilterDiv>
+                <GlyphsContentDiv>
+                    <ul ref={ref => (this.list = ref!)}>{glyphs}</ul>
+                </GlyphsContentDiv>
+            </GlyphsDiv>
         );
     }
 }
@@ -400,10 +455,7 @@ class GlyphEditor extends React.Component<
     },
     {}
 > {
-    refs: {
-        [key: string]: Element;
-        div: any;
-    };
+    div: HTMLDivElement;
 
     @observable
     hitTestResult: EditorImageHitTestResult | undefined = undefined;
@@ -453,8 +505,8 @@ class GlyphEditor extends React.Component<
     selectPixel(event: any) {
         if (this.props.glyph) {
             this.hitTestResult = this.props.glyph.editorImageHitTest(
-                event.nativeEvent.offsetX + $(this.refs.div).scrollLeft(),
-                event.nativeEvent.offsetY + $(this.refs.div).scrollTop()
+                event.nativeEvent.offsetX + $(this.div).scrollLeft(),
+                event.nativeEvent.offsetY + $(this.div).scrollTop()
             );
         } else {
             this.hitTestResult = undefined;
@@ -529,8 +581,7 @@ class GlyphEditor extends React.Component<
 
         return (
             <div
-                ref="div"
-                className="EezStudio_ProjectEditor_font-editor-glyph layoutCenter"
+                ref={ref => (this.div = ref!)}
                 onMouseDown={this.onMouseDown.bind(this)}
                 onMouseMove={this.onMouseMove.bind(this)}
                 onMouseUp={this.onMouseUp.bind(this)}
@@ -624,9 +675,10 @@ export class FontEditor extends EditorComponent {
         }
 
         return (
-            <Layout.Split
-                orientation="vertical"
-                splitId="font-editor"
+            <Splitter
+                type="vertical"
+                persistId="project-editor/font-editor"
+                sizes={`50%|50%`}
                 tabIndex={0}
                 onFocus={this.focusHander.bind(this)}
             >
@@ -640,7 +692,7 @@ export class FontEditor extends EditorComponent {
                     onDeleteGlyph={onDeleteGlyph}
                 />
                 <GlyphEditor glyph={this.selectedGlyph} />
-            </Layout.Split>
+            </Splitter>
         );
     }
 }

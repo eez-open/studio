@@ -5,7 +5,8 @@ import * as React from "react";
 import { NavigationStore, UIStateStore } from "project-editor/core/store";
 import { NavigationComponent } from "project-editor/core/metaData";
 
-import * as Layout from "project-editor/components/Layout";
+import { Splitter } from "eez-studio-shared/ui/splitter";
+
 import { ListNavigation } from "project-editor/project/ListNavigation";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 
@@ -22,19 +23,20 @@ export class ExtensionDefinitionsNavigation extends NavigationComponent {
     render() {
         let content;
         if (this.object) {
-            content = <PropertyGrid object={this.object} className="layoutCenter" />;
+            content = <PropertyGrid object={this.object} />;
         }
 
         if (UIStateStore.viewOptions.navigationVisible) {
             return (
-                <Layout.Split
-                    orientation="horizontal"
-                    splitId={`navigation-${this.props.id}`}
-                    splitPosition="0.25"
+                <Splitter
+                    type="horizontal"
+                    persistId={`project-editor/navigation-${this.props.id}`}
+                    sizes={`240px|100%`}
+                    childrenOverflow="hidden"
                 >
                     <ListNavigation navigationObject={this.props.navigationObject} />
                     {content}
-                </Layout.Split>
+                </Splitter>
             );
         } else {
             return content;

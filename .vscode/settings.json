@@ -9,7 +9,6 @@
         "src/**/*.js": true,
         "src/**/*.js.map": true,
         "src/eez-studio-shared/_stylesheets/main.css": true,
-        "src/project-editor/_stylesheets/main.css": true,
         "src/extensions-manager/*.js": true,
         "src/extensions-manager/*.js.map": true,
         "instruments": true

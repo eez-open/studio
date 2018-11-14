@@ -1,6 +1,9 @@
 import * as React from "react";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
+import * as classNames from "classnames";
+
+import styled from "eez-studio-shared/ui/styled-components";
 
 import { EezObject, PropertyMetaData } from "project-editor/core/metaData";
 
@@ -37,18 +40,40 @@ import { DragAndDropManager, DropPosition } from "project-editor/core/dd";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const DropMarkDiv = styled.div`
+    position: absolute;
+    font-size: 18px;
+    margin-top: -11px;
+    margin-left: -13px;
+    color: ${props => props.theme.dropPlaceColor};
+    -webkit-filter: drop-shadow(0px 0px 1px ${props => props.theme.dropPlaceColor});
+    filter: drop-shadow(0px 0px 1px ${props => props.theme.dropPlaceColor});
+    pointer-events: none;
+    text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+`;
+
 @observer
 export class DropMark extends React.Component<{}, {}> {
     render() {
         return (
-            <div className="EezStudio_ProjectEditor_drop-mark">
+            <DropMarkDiv>
                 <i className="material-icons">chevron_right</i>
-            </div>
+            </DropMarkDiv>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const DropPlaceholderDiv = styled.div`
+    margin: 1px;
+    border: 1px dotted ${props => props.theme.dropPlaceColor};
+    height: 10px;
+
+    &.drop-target {
+        background-color: ${props => props.theme.dropPlaceColor};
+    }
+`;
 
 interface DropPlaceholderProps {
     object: EezObject;
@@ -76,17 +101,14 @@ export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
     }
 
     render() {
-        let className = "EezStudio_ProjectEditor_drop-placeholder";
-
-        if (
-            this.props.object == DragAndDropManager.dropObject &&
-            DragAndDropManager.dropPosition == DropPosition.DROP_INSIDE
-        ) {
-            className += " drop-target";
-        }
+        let className = classNames({
+            "drop-target":
+                this.props.object == DragAndDropManager.dropObject &&
+                DragAndDropManager.dropPosition == DropPosition.DROP_INSIDE
+        });
 
         return (
-            <div
+            <DropPlaceholderDiv
                 className={className}
                 onDragOver={this.onDragOver}
                 onDragLeave={this.onDragLeave}
@@ -97,6 +119,22 @@ export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ListItemDiv = styled.div`
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &.drag-source {
+        background-color: ${props => props.theme.dragSourceBackgroundColor};
+        color: ${props => props.theme.dragSourceColor};
+    }
+
+    &.drop-target {
+        background-color: ${props => props.theme.dropPlaceColor};
+    }
+`;
+
 interface ListItemProps {
     navigationObject: EezObject;
     item: EezObject;
@@ -106,17 +144,14 @@ interface ListItemProps {
 
 @observer
 export class ListItem extends React.Component<ListItemProps, {}> {
-    refs: {
-        [key: string]: Element;
-        item: HTMLDivElement;
-    };
+    item: HTMLDivElement;
     index: number;
 
     ensureVisible() {
         setTimeout(() => {
             if (!DragAndDropManager.dragObject) {
-                if ($(this.refs.item).hasClass("selected")) {
-                    ($(this.refs.item)[0] as any).scrollIntoViewIfNeeded();
+                if ($(this.item).hasClass("selected")) {
+                    (this.item as any).scrollIntoViewIfNeeded();
                 }
             }
         }, 0);
@@ -260,30 +295,21 @@ export class ListItem extends React.Component<ListItemProps, {}> {
     }
 
     render() {
-        let className = "EezStudio_ProjectEditor_list-item";
-
         let selectedItem = NavigationStore.getNavigationSelectedItem(this.props.navigationObject);
 
-        if (this.props.item == selectedItem) {
-            className += " selected";
-        }
-
-        if (DragAndDropManager.dragObject == this.props.item) {
-            className += " drag-source";
-        }
-
-        if (
-            this.props.item == DragAndDropManager.dropObject &&
-            DragAndDropManager.dropPosition == DropPosition.DROP_INSIDE
-        ) {
-            className += " drop-target";
-        }
+        let className = classNames("list-item", {
+            selected: this.props.item == selectedItem,
+            "drag-source": DragAndDropManager.dragObject == this.props.item,
+            "drop-target":
+                this.props.item == DragAndDropManager.dropObject &&
+                DragAndDropManager.dropPosition == DropPosition.DROP_INSIDE
+        });
 
         const itemMetaData = getMetaData(this.props.item);
 
         return (
-            <div
-                ref="item"
+            <ListItemDiv
+                innerRef={ref => (this.item = ref)}
                 data-object-id={getId(this.props.item)}
                 className={className}
                 onMouseUp={this.onMouseUp}
@@ -299,12 +325,47 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                 {itemMetaData.listLabel
                     ? itemMetaData.listLabel(this.props.item)
                     : objectToString(this.props.item)}
-            </div>
+            </ListItemDiv>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const ListDiv = styled.div`
+    flex-grow: 1;
+    overflow: auto;
+    padding: 5px;
+    border: 2px dashed transparent;
+
+    &:not(.drag-source) {
+        .list-item:not(.drag-source) {
+            &.selected {
+                background-color: ${props => props.theme.nonFocusedSelectionBackgroundColor};
+                color: ${props => props.theme.nonFocusedSelectionColor};
+            }
+        }
+
+        &:focus {
+            .list-item:not(.drag-source) {
+                &:hover {
+                    background-color: ${props => props.theme.hoverBackgroundColor};
+                    color: ${props => props.theme.hoverColor};
+                }
+
+                &.focused {
+                    background-color: ${props => props.theme.focusBackgroundColor};
+                    color: ${props => props.theme.focusColor};
+                }
+
+                &.selected {
+                    background-color: ${props => props.theme.selectionBackgroundColor};
+                    color: ${props => props.theme.selectionColor};
+                }
+            }
+        }
+    }
+`;
 
 interface ListProps {
     navigationObject: EezObject;
@@ -319,10 +380,7 @@ export class List extends React.Component<ListProps, {}> {
         tabIndex: -1
     };
 
-    refs: {
-        [key: string]: Element;
-        list: HTMLDivElement;
-    };
+    list: HTMLDivElement;
 
     dragAndDropUpdateTimeoutId: any;
 
@@ -354,8 +412,8 @@ export class List extends React.Component<ListProps, {}> {
     }
 
     onKeyDown(event: any) {
-        let focusedItemId = $(this.refs.list)
-            .find(".EezStudio_ProjectEditor_list-item.selected")
+        let focusedItemId = $(this.list)
+            .find(".list-item.selected")
             .attr("data-object-id");
 
         if (!focusedItemId) {
@@ -364,9 +422,7 @@ export class List extends React.Component<ListProps, {}> {
 
         let focusedItem = getObjectFromObjectId(focusedItemId);
 
-        let $focusedItem = $(this.refs.list).find(
-            `.EezStudio_ProjectEditor_list-item[data-object-id="${focusedItemId}"]`
-        );
+        let $focusedItem = $(this.list).find(`.list-item[data-object-id="${focusedItemId}"]`);
 
         if (event.altKey) {
         } else if (event.shiftKey) {
@@ -398,10 +454,10 @@ export class List extends React.Component<ListProps, {}> {
                 event.keyCode == 36 ||
                 event.keyCode == 35
             ) {
-                let $rows = $(this.refs.list).find(".EezStudio_ProjectEditor_list-item");
+                let $rows = $(this.list).find(".list-item");
                 let index = $rows.index($focusedItem);
 
-                let pageSize = Math.floor($(this.refs.list).height()! / $rows.height()!);
+                let pageSize = Math.floor($(this.list).height()! / $rows.height()!);
 
                 if (event.keyCode == 38) {
                     // up
@@ -483,11 +539,9 @@ export class List extends React.Component<ListProps, {}> {
     }
 
     render() {
-        let className = "EezStudio_ProjectEditor_list layoutCenter";
-
-        if (DragAndDropManager.dragObject) {
-            className += " drag-source";
-        }
+        let className = classNames({
+            "drag-source": DragAndDropManager.dragObject
+        });
 
         let children = getChildren(this.props.navigationObject);
 
@@ -542,15 +596,15 @@ export class List extends React.Component<ListProps, {}> {
         }
 
         return (
-            <div
-                ref="list"
+            <ListDiv
+                innerRef={ref => (this.list = ref)}
                 className={className}
                 tabIndex={this.props.tabIndex}
                 onKeyDown={this.onKeyDown.bind(this)}
                 onFocus={() => this.props.onFocus && this.props.onFocus()}
             >
                 <div onDrop={this.onDrop.bind(this)}>{childrenElements}</div>
-            </div>
+            </ListDiv>
         );
     }
 }

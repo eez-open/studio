@@ -1,4 +1,7 @@
 import * as React from "react";
+import * as classNames from "classnames";
+
+import styled from "eez-studio-shared/ui/styled-components";
 
 import { objectToClipboardData, setClipboardData, setEez } from "project-editor/core/store";
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -7,6 +10,26 @@ import { widgetMetaData, WidgetType } from "project-editor/project/features/gui/
 import { getWidgetTypes } from "project-editor/project/features/gui/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const WidgetDiv = styled.div`
+    cursor: -webkit-grab;
+    border: 2px solid transparent;
+
+    &:hover {
+        background-color: ${props => props.theme.hoverBackgroundColor};
+        color: ${props => props.theme.hoverColor};
+    }
+
+    &.selected {
+        background-color: ${props => props.theme.selectionBackgroundColor};
+        color: ${props => props.theme.selectionColor};
+    }
+
+    &.dragging {
+        background-color: ${props => props.theme.dragSourceBackgroundColor};
+        color: ${props => props.theme.dragSourceColor};
+    }
+`;
 
 interface WidgetProps {
     widget: WidgetType;
@@ -62,18 +85,15 @@ class Widget extends React.Component<WidgetProps, WidgetState> {
     }
 
     render() {
-        let className = "EezStudio_ProjectEditor_widget-palette-widget";
-        if (this.props.selected) {
-            className += " selected";
-        }
-        if (this.state.dragging) {
-            className += " dragging";
-        }
+        let className = classNames({
+            selected: this.props.selected,
+            dragging: this.state.dragging
+        });
 
         let label = (this.props.widget as any)["id"] || (this.props.widget as any)["name"];
 
         return (
-            <div
+            <WidgetDiv
                 className={className}
                 onClick={this.onSelect.bind(this)}
                 draggable={true}
@@ -81,12 +101,17 @@ class Widget extends React.Component<WidgetProps, WidgetState> {
                 onDragEnd={this.onDragEnd.bind(this)}
             >
                 {label}
-            </div>
+            </WidgetDiv>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const WidgetPaletteDiv = styled.div`
+    overflow: auto;
+    padding: 10px;
+`;
 
 export class WidgetPalette extends React.Component<
     {},
@@ -120,9 +145,9 @@ export class WidgetPalette extends React.Component<
         });
 
         return (
-            <div tabIndex={0} className="EezStudio_ProjectEditor_widget-palette layoutCenter">
+            <WidgetPaletteDiv tabIndex={0}>
                 <div>{widgets}</div>
-            </div>
+            </WidgetPaletteDiv>
         );
     }
 }

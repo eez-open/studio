@@ -2,6 +2,8 @@ import * as React from "react";
 import { bind } from "bind-decorator";
 
 import { guid } from "eez-studio-shared/util";
+
+import styled from "eez-studio-shared/ui/styled-components";
 import { PropertyEnclosure } from "eez-studio-shared/ui/properties";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,6 +104,10 @@ function destroyEditor(editor: any) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const CodeEditorDiv = styled.div`
+    flex-grow: 1;
+`;
 
 type CodeEditorMode = "c_cpp" | "javascript" | "json" | "scpi";
 
@@ -212,8 +218,8 @@ export class CodeEditor extends React.Component<CodeEditorProps, {}> {
 
     render() {
         return (
-            <div
-                ref={ref => (this.element = ref!)}
+            <CodeEditorDiv
+                innerRef={ref => (this.element = ref!)}
                 className={this.props.className}
                 style={this.props.style}
                 tabIndex={this.props.tabIndex}

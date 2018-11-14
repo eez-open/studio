@@ -1,9 +1,19 @@
 import * as React from "react";
 
+import styled from "eez-studio-shared/ui/styled-components";
+
 import { objectToString, getAncestors } from "project-editor/core/store";
 import { EezObject } from "project-editor/core/metaData";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const ObjectPathSpan = styled.span`
+    span:not(:first-child) {
+        &::before {
+            content: " / ";
+        }
+    }
+`;
 
 export class ObjectPath extends React.Component<
     {
@@ -19,6 +29,6 @@ export class ObjectPath extends React.Component<
             pathComponents.push(<span key={i}>{objectToString(ancestors[i])}</span>);
         }
 
-        return <span className="EezStudio_ProjectEditor_item-path">{pathComponents}</span>;
+        return <ObjectPathSpan>{pathComponents}</ObjectPathSpan>;
     }
 }

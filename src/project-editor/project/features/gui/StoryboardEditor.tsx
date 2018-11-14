@@ -4,6 +4,8 @@ import * as React from "react";
 
 import { _each } from "eez-studio-shared/algorithm";
 
+import { Splitter } from "eez-studio-shared/ui/splitter";
+
 import {
     UIStateStore,
     EditorsStore,
@@ -30,7 +32,6 @@ import {
     pointSegmentDistance
 } from "project-editor/core/util";
 
-import * as Layout from "project-editor/components/Layout";
 import { Panel } from "project-editor/components/Panel";
 import { TreeNode, LineConnecting } from "project-editor/components/CanvasEditorTreeNode";
 import {
@@ -730,10 +731,10 @@ export class StoryboardEditor extends EditorComponent {
         let storyboardTabState = this.props.editor.state as StoryboardTabState;
 
         return (
-            <Layout.Split
-                orientation="horizontal"
-                splitId="storyboard"
-                splitPosition="0.7"
+            <Splitter
+                type="horizontal"
+                persistId="project-editor/storyboard"
+                sizes={`100%|240px`}
                 className="EezStudio_ProjectEditor_storyboard-editor"
             >
                 <Panel
@@ -752,7 +753,7 @@ export class StoryboardEditor extends EditorComponent {
                     title="Pages Palette"
                     body={<PagesPalette storyboard={this.storyboard} />}
                 />
-            </Layout.Split>
+            </Splitter>
         );
     }
 }

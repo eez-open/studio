@@ -1,6 +1,5 @@
 import { observer } from "mobx-react";
 import * as React from "react";
-import * as ReactDOM from "react-dom";
 import { bind } from "bind-decorator";
 
 import { CodeEditor } from "eez-studio-shared/ui/code-editor";
@@ -49,13 +48,11 @@ export class NativeImplementationEditor extends React.Component<
     }
 
     componentDidMount() {
-        $(ReactDOM.findDOMNode(this.codeEditor) as Element).on("autoLayout:resize", () => {
-            this.codeEditor.resize();
-        });
+        this.codeEditor.resize();
     }
 
-    componentWillUnmount() {
-        $(ReactDOM.findDOMNode(this.codeEditor) as Element).off("autoLayout:resize");
+    componentDidUpdate() {
+        this.codeEditor.resize();
     }
 
     render() {
@@ -67,7 +64,6 @@ export class NativeImplementationEditor extends React.Component<
                 onChange={this.onChange}
                 onFocus={this.onFocus}
                 onBlur={this.onBlur}
-                className="layoutCenter"
             />
         );
     }

@@ -5,6 +5,7 @@ import { bind } from "bind-decorator";
 
 import { humanize } from "eez-studio-shared/string";
 import { Icon } from "eez-studio-shared/ui/icon";
+import styled from "eez-studio-shared/ui/styled-components";
 
 import { validators } from "eez-studio-shared/model/validation";
 
@@ -43,6 +44,34 @@ interface PropertyProps {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const PropertyMenuDiv = styled.div`
+    padding: 6px;
+    width: 20px;
+    height: 20px;
+
+    &:hover {
+        background-color: #eee;
+    }
+
+    & > div {
+        width: 8px;
+        height: 8px;
+        border: 1px solid #666;
+    }
+
+    &.default > div {
+        background-color: #fff;
+    }
+
+    &.modified > div {
+        background-color: #666;
+    }
+
+    &.inherited > div {
+        background-color: #00d;
+    }
+`;
 
 interface PropertyValueSourceInfo {
     source: "default" | "modified" | "inherited";
@@ -107,22 +136,34 @@ class PropertyMenu extends React.Component<PropertyProps, {}> {
     }
 
     render() {
-        let className = `EezStudio_ProjectEditor_property-menu ${this.sourceInfo.source}`;
-
         let title = humanize(this.sourceInfo.source);
         if (this.sourceInfo.inheritedFrom) {
             title += " from " + this.sourceInfo.inheritedFrom;
         }
 
         return (
-            <div className={className} title={title} onClick={this.onClicked}>
+            <PropertyMenuDiv
+                className={this.sourceInfo.source}
+                title={title}
+                onClick={this.onClicked}
+            >
                 <div />
-            </div>
+            </PropertyMenuDiv>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const ConfigurationReferencesPropertyValueDiv = styled.div`
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.375rem 0.75rem;
+`;
+
+const ConfigurationReferencesPropertyValueConfigurationsDiv = styled.div`
+    padding-left: 1.25rem;
+`;
 
 export class ConfigurationReferencesPropertyValue extends React.Component<
     {
@@ -133,7 +174,7 @@ export class ConfigurationReferencesPropertyValue extends React.Component<
 > {
     render() {
         return (
-            <div className="EezStudio_ProjectEditor_PropertyGrid_ConfigurationReferencesPropertyValue">
+            <ConfigurationReferencesPropertyValueDiv className="EezStudio_ProjectEditor_PropertyGrid">
                 <div className="form-check">
                     <label>
                         <input
@@ -159,7 +200,7 @@ export class ConfigurationReferencesPropertyValue extends React.Component<
                     </label>
                 </div>
                 {this.props.value && (
-                    <div className="EezStudio_ProjectEditor_PropertyGrid_ConfigurationReferencesPropertyValue_Configurations">
+                    <ConfigurationReferencesPropertyValueConfigurationsDiv>
                         {ProjectStore.projectProperties.settings.build.configurations.map(
                             configuration => {
                                 return (
@@ -192,9 +233,9 @@ export class ConfigurationReferencesPropertyValue extends React.Component<
                                 );
                             }
                         )}
-                    </div>
+                    </ConfigurationReferencesPropertyValueConfigurationsDiv>
                 )}
-            </div>
+            </ConfigurationReferencesPropertyValueDiv>
         );
     }
 }
@@ -703,6 +744,41 @@ class Property extends React.Component<PropertyProps, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const PropertyGridDiv = styled.div`
+    padding: 5px;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    & > table {
+        width: 100%;
+
+        tr.marked {
+            background-color: #ffccd4;
+        }
+
+        td {
+            padding: 5px;
+            vertical-align: middle;
+        }
+
+        td:first-child {
+            width: 25%;
+            max-width: 150px;
+            vertical-align: baseline;
+            transform: translateY(8px);
+        }
+
+        td:nth-child(2) {
+            width: 75%;
+        }
+
+        td > input[type="checkbox"] {
+            height: 20px;
+            margin-top: 7px;
+        }
+    }
+`;
+
 interface PropertyGridProps {
     object: EezObject;
     className?: string;
@@ -790,13 +866,8 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
             }
         }
 
-        let className = "EezStudio_ProjectEditor_PropertyGrid";
-        if (this.props.className) {
-            className += " " + this.props.className;
-        }
-
         return (
-            <div className={className}>
+            <PropertyGridDiv className={this.props.className}>
                 <table>
                     <tbody>
                         <tr>
@@ -805,7 +876,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
                         {properties}
                     </tbody>
                 </table>
-            </div>
+            </PropertyGridDiv>
         );
     }
 }

@@ -26,9 +26,7 @@ interface ICanvasEditor {
 
     scale: number;
 
-    refs: {
-        canvas: HTMLCanvasElement;
-    };
+    canvas: HTMLCanvasElement;
 
     getDeviceTranslate(): Point;
     deviceToDocument(p: Point): Point;
@@ -95,10 +93,10 @@ export class CanvasEditorScrollBars {
             Math.floor(this.canvasEditor.documentRect.height) >
             Math.ceil(this.canvasEditor.deviceRect.height);
 
-        const x = this.canvasEditor.refs.canvas.width - SCROLL_BAR_SIZE;
-        const y = this.canvasEditor.refs.canvas.height - SCROLL_BAR_SIZE;
-        let width = this.canvasEditor.refs.canvas.width;
-        let height = this.canvasEditor.refs.canvas.height;
+        const x = this.canvasEditor.canvas.width - SCROLL_BAR_SIZE;
+        const y = this.canvasEditor.canvas.height - SCROLL_BAR_SIZE;
+        let width = this.canvasEditor.canvas.width;
+        let height = this.canvasEditor.canvas.height;
 
         if (isHorizontalVisible && isVerticalVisible) {
             // make space for the corner

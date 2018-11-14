@@ -1,7 +1,7 @@
 import { observer } from "mobx-react";
 import * as React from "react";
 
-import * as Layout from "project-editor/components/Layout";
+import { Splitter } from "eez-studio-shared/ui/splitter";
 
 import { ProjectStore } from "project-editor/core/store";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
@@ -26,10 +26,10 @@ export class ScpiSubsystemOrCommandEditor extends React.Component<
             );
 
             return (
-                <Layout.Split
-                    orientation="vertical"
-                    splitId="ScpiSubsystemOrCommandEditor"
-                    splitPosition="0.3"
+                <Splitter
+                    type="vertical"
+                    persistId="project-editor/ScpiSubsystemOrCommandEditor"
+                    sizes={`240px|100%`}
                 >
                     <PropertyGrid object={this.props.object} />
                     <iframe
@@ -41,7 +41,7 @@ export class ScpiSubsystemOrCommandEditor extends React.Component<
                             border: "none"
                         }}
                     />
-                </Layout.Split>
+                </Splitter>
             );
         } else {
             return <PropertyGrid object={this.props.object} />;

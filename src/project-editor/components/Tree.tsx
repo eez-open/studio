@@ -1,10 +1,12 @@
 import * as React from "react";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
+import * as classNames from "classnames";
 
 import { _filter, _map } from "eez-studio-shared/algorithm";
 
 import { Icon } from "eez-studio-shared/ui/icon";
+import styled from "eez-studio-shared/ui/styled-components";
 
 import { EezObject, PropertyMetaData } from "project-editor/core/metaData";
 
@@ -32,6 +34,18 @@ import { TreeObjectAdapter, TreeObjectAdapterChildren } from "project-editor/cor
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const DropMarkDiv = styled.div`
+    position: absolute;
+    font-size: 18px;
+    margin-top: -11px;
+    margin-left: -13px;
+    color: ${props => props.theme.dropPlaceColor};
+    -webkit-filter: drop-shadow(0px 0px 1px ${props => props.theme.dropPlaceColor});
+    filter: drop-shadow(0px 0px 1px ${props => props.theme.dropPlaceColor});
+    pointer-events: none;
+    text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+`;
+
 interface DropMarkProps {
     level: number;
 }
@@ -40,17 +54,24 @@ interface DropMarkProps {
 export class DropMark extends React.Component<DropMarkProps, {}> {
     render() {
         return (
-            <div
-                className="EezStudio_ProjectEditor_drop-mark"
-                style={{ paddingLeft: this.props.level * 20 }}
-            >
+            <DropMarkDiv style={{ paddingLeft: this.props.level * 20 }}>
                 <i className="material-icons">chevron_right</i>
-            </div>
+            </DropMarkDiv>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const DropPlaceholderDiv = styled.div`
+    margin: 1px;
+    border: 1px dotted ${props => props.theme.dropPlaceColor};
+    height: 10px;
+
+    &.drop-target {
+        background-color: ${props => props.theme.dropPlaceColor};
+    }
+`;
 
 interface DropPlaceholderProps {
     level: number;
@@ -79,17 +100,14 @@ export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
     }
 
     render() {
-        let className = "EezStudio_ProjectEditor_drop-placeholder";
-
-        if (
-            this.props.item == DragAndDropManager.dropObject &&
-            DragAndDropManager.dropPosition == DropPosition.DROP_INSIDE
-        ) {
-            className += " drop-target";
-        }
+        let className = classNames({
+            "drop-target":
+                this.props.item == DragAndDropManager.dropObject &&
+                DragAndDropManager.dropPosition == DropPosition.DROP_INSIDE
+        });
 
         return (
-            <div
+            <DropPlaceholderDiv
                 className={className}
                 style={{ marginLeft: this.props.level * 20 + 13 }}
                 onDragOver={this.onDragOver}
@@ -100,6 +118,33 @@ export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const TreeRowEnclosureDiv = styled.div`
+    &.drag-source {
+        background-color: ${props => props.theme.dragSourceBackgroundColor};
+        color: ${props => props.theme.dragSourceColor};
+    }
+`;
+
+const TreeRowDiv = styled.div`
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    .tree-row-label {
+        display: inline-block;
+        margin-left: 13px;
+    }
+
+    .tree-row-triangle {
+        color: #333;
+    }
+
+    .tree-row-triangle:hover {
+        color: #666;
+    }
+`;
 
 interface TreeRowProps {
     showOnlyChildren: boolean;
@@ -114,17 +159,14 @@ interface TreeRowProps {
 
 @observer
 export class TreeRow extends React.Component<TreeRowProps, {}> {
-    refs: {
-        [key: string]: Element;
-        row: HTMLDivElement;
-    };
+    row: HTMLDivElement;
     index: number;
 
     ensureVisible() {
         setTimeout(() => {
             if (!DragAndDropManager.dragObject) {
-                if ($(this.refs.row).hasClass("selected")) {
-                    ($(this.refs.row)[0] as any).scrollIntoViewIfNeeded();
+                if ($(this.row).hasClass("selected")) {
+                    ($(this.row)[0] as any).scrollIntoViewIfNeeded();
                 }
             }
         }, 0);
@@ -329,20 +371,18 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
             }
         }
 
-        let rowEnclosureClassName = "EezStudio_ProjectEditor_tree-row-enclosure";
+        let rowEnclosureClassName = classNames("tree-row-enclosure", {
+            "drag-source":
+                !this.props.showOnlyChildren &&
+                DragAndDropManager.dragObject == this.props.item.object
+        });
 
         let row: JSX.Element | undefined;
 
         if (!this.props.showOnlyChildren) {
-            if (DragAndDropManager.dragObject == this.props.item.object) {
-                rowEnclosureClassName += " drag-source";
-            }
-
-            let className = "EezStudio_ProjectEditor_tree-row";
-
-            if (this.props.item.selected) {
-                className += " selected";
-            }
+            let className = classNames("tree-row", {
+                selected: this.props.item.selected
+            });
 
             let labelText = objectToString(this.props.item.object);
 
@@ -354,10 +394,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
                     (!this.props.filter && canContainChildren(this.props.item.object))
                 ) {
                     triangle = (
-                        <small
-                            className="EezStudio_ProjectEditor_tree-row-triangle"
-                            onClick={this.onTriangleClick}
-                        >
+                        <small className="tree-row-triangle" onClick={this.onTriangleClick}>
                             <Icon
                                 icon={
                                     this.props.item.expanded
@@ -370,17 +407,15 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
                     );
                     label = <span>{labelText}</span>;
                 } else {
-                    label = (
-                        <span className="EezStudio_ProjectEditor_tree-row-label">{labelText}</span>
-                    );
+                    label = <span className="tree-row-label">{labelText}</span>;
                 }
             } else {
                 label = <span>{labelText}</span>;
             }
 
             row = (
-                <div
-                    ref="row"
+                <TreeRowDiv
+                    innerRef={ref => (this.row = ref)}
                     data-object-id={getId(this.props.item.object)}
                     className={className}
                     style={{ paddingLeft: this.props.level * 20 }}
@@ -396,20 +431,59 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
                 >
                     {triangle}
                     {label}
-                </div>
+                </TreeRowDiv>
             );
         }
 
         return (
-            <div className={rowEnclosureClassName}>
+            <TreeRowEnclosureDiv className={rowEnclosureClassName}>
                 {row}
                 {childrenRows}
-            </div>
+            </TreeRowEnclosureDiv>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const TreeContainer = styled.div`
+    flex-grow: 1;
+    overflow: auto;
+    padding: 5px;
+    border: 2px dashed transparent;
+
+    &:not(.drag-source) {
+        .tree-row-enclosure:not(.drag-source) {
+            .tree-row {
+                &.selected {
+                    background-color: ${props => props.theme.nonFocusedSelectionBackgroundColor};
+                    color: ${props => props.theme.nonFocusedSelectionColor};
+                }
+            }
+        }
+
+        &:focus {
+            .tree-row-enclosure:not(.drag-source) {
+                .tree-row {
+                    &:hover {
+                        background-color: ${props => props.theme.hoverBackgroundColor};
+                        color: ${props => props.theme.hoverColor};
+                    }
+
+                    &.focused {
+                        background-color: ${props => props.theme.focusBackgroundColor};
+                        color: ${props => props.theme.focusColor};
+                    }
+
+                    &.selected {
+                        background-color: ${props => props.theme.selectionBackgroundColor};
+                        color: ${props => props.theme.selectionColor};
+                    }
+                }
+            }
+        }
+    }
+`;
 
 interface TreeProps {
     rootItem: TreeObjectAdapter;
@@ -429,10 +503,7 @@ export class Tree extends React.Component<TreeProps, {}> {
         collapsable: false
     };
 
-    refs: {
-        [key: string]: Element;
-        tree: HTMLDivElement;
-    };
+    tree: HTMLDivElement;
 
     dragAndDropUpdateTimeoutId: any;
 
@@ -466,17 +537,15 @@ export class Tree extends React.Component<TreeProps, {}> {
 
     @bind
     onKeyDown(event: any) {
-        let focusedItemId = $(this.refs.tree)
-            .find(".EezStudio_ProjectEditor_tree-row.selected")
+        let focusedItemId = $(this.tree)
+            .find(".tree-row.selected")
             .attr("data-object-id");
 
         if (!focusedItemId) {
             return;
         }
 
-        let $focusedItem = $(this.refs.tree).find(
-            `.EezStudio_ProjectEditor_tree-row[data-object-id="${focusedItemId}"]`
-        );
+        let $focusedItem = $(this.tree).find(`.tree-row[data-object-id="${focusedItemId}"]`);
 
         if (event.altKey) {
         } else if (event.shiftKey) {
@@ -500,10 +569,10 @@ export class Tree extends React.Component<TreeProps, {}> {
                 event.keyCode == 36 ||
                 event.keyCode == 35
             ) {
-                let $rows = $(this.refs.tree).find(".EezStudio_ProjectEditor_tree-row");
+                let $rows = $(this.tree).find(".tree-row");
                 let index = $rows.index($focusedItem);
 
-                let pageSize = Math.floor($(this.refs.tree).height()! / $rows.height()!);
+                let pageSize = Math.floor($(this.tree).height()! / $rows.height()!);
 
                 if (event.keyCode == 38) {
                     // up
@@ -539,27 +608,25 @@ export class Tree extends React.Component<TreeProps, {}> {
                 event.preventDefault();
             } else if (event.keyCode == 37) {
                 // left
-                let $rows = $focusedItem.parent().find(".EezStudio_ProjectEditor_tree-row");
+                let $rows = $focusedItem.parent().find(".tree-row");
                 if ($rows.length == 1) {
                     let $row = $($rows[0]);
                     $rows = $row
                         .parent()
                         .parent()
-                        .find(".EezStudio_ProjectEditor_tree-row");
+                        .find(".tree-row");
                     let newFocusedItemId = $($rows[0]).attr("data-object-id");
                     if (newFocusedItemId) {
                         this.onSelect(newFocusedItemId);
                     }
                 } else {
-                    $focusedItem
-                        .find(".EezStudio_ProjectEditor_tree-row-triangle")
-                        .trigger("click");
+                    $focusedItem.find(".tree-row-triangle").trigger("click");
                 }
 
                 event.preventDefault();
             } else if (event.keyCode == 39) {
                 // right
-                let $rows = $focusedItem.parent().find(".EezStudio_ProjectEditor_tree-row");
+                let $rows = $focusedItem.parent().find(".tree-row");
                 let index = $rows.index($focusedItem);
 
                 if (index == 0) {
@@ -569,9 +636,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                             this.onSelect(newFocusedItemId);
                         }
                     } else {
-                        $focusedItem
-                            .find(".EezStudio_ProjectEditor_tree-row-triangle")
-                            .trigger("click");
+                        $focusedItem.find(".tree-row-triangle").trigger("click");
                     }
                 }
 
@@ -615,21 +680,15 @@ export class Tree extends React.Component<TreeProps, {}> {
     }
 
     render() {
-        let className = "EezStudio_ProjectEditor_tree layoutCenter";
-
-        if (this.props.collapsable) {
-            className += " EezStudio_ProjectEditor_tree-collapsable";
-        }
-
-        if (DragAndDropManager.dragObject) {
-            className += " drag-source";
-        }
+        const className = classNames({
+            collapsable: this.props.collapsable,
+            "drag-source": DragAndDropManager.dragObject
+        });
 
         return (
-            <div
-                ref="tree"
+            <TreeContainer
+                innerRef={ref => (this.tree = ref)}
                 className={className}
-                style={{ overflow: "auto" }}
                 tabIndex={this.props.tabIndex}
                 onKeyDown={this.onKeyDown}
                 onFocus={() => this.props.onFocus && this.props.onFocus()}
@@ -646,7 +705,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                         draggable={false}
                     />
                 </div>
-            </div>
+            </TreeContainer>
         );
     }
 }

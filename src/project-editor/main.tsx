@@ -9,7 +9,6 @@ import { ThemeProvider } from "eez-studio-shared/ui/styled-components";
 import { ProjectStore } from "project-editor/core/store";
 import { loadExtensions } from "project-editor/core/extensions";
 import { init as storeInit } from "project-editor/core/store";
-import * as layout from "project-editor/core/layout";
 import { ProjectEditor } from "project-editor/project/ProjectEditor";
 
 configure({ enforceActions: "observed" });
@@ -24,7 +23,6 @@ window.requestAnimationFrame(async () => {
             </ThemeProvider>,
             document.getElementById("content")
         );
-        layout.enable();
     } catch (err) {
         console.error(err);
     }

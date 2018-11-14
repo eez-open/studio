@@ -6,9 +6,9 @@ import { observer } from "mobx-react";
 //import { isDev } from 'shared/util';
 
 import styled from "eez-studio-shared/ui/styled-components";
-
 import { TabsView } from "eez-studio-shared/ui/tabs";
 import * as notification from "eez-studio-shared/ui/notification";
+import { Splitter } from "eez-studio-shared/ui/splitter";
 
 import {
     UndoManager,
@@ -31,17 +31,16 @@ import { IconAction } from "eez-studio-shared/ui/action";
 import { Panel } from "project-editor/components/Panel";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Output } from "project-editor/components/Output";
-import * as Layout from "project-editor/components/Layout";
 
 import { MenuNavigation } from "project-editor/project/MenuNavigation";
 import { BuildConfigurationProperties } from "project-editor/project/project";
-import { Notification } from "project-editor/project/Notification";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const ToolbarNav = styled.nav`
     padding: 5px;
     background-color: ${props => props.theme.panelHeaderColor};
+    border-bottom: 1px solid ${props => props.theme.borderColor};
 
     .btn-group:not(:last-child) {
         margin-right: 5px;
@@ -90,7 +89,7 @@ class Toolbar extends React.Component<
         );
 
         return (
-            <ToolbarNav className="navbar justify-content-between layoutTop">
+            <ToolbarNav className="navbar justify-content-between">
                 <div>
                     <div className="btn-group" role="group">
                         <IconAction
@@ -183,18 +182,22 @@ class Editor extends React.Component<{}, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const EditorsDiv = styled.div`
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+`;
+
 @observer
 class Editors extends React.Component<{}, {}> {
     render() {
         return (
-            <div id="EezStudio_ProjectEditor_editors" className="layoutCenter">
-                <div className="layoutTop EezStudio_ProjectEditor_BorderRight">
+            <EditorsDiv>
+                <div>
                     <TabsView tabs={EditorsStore.editors} />
                 </div>
-                <div className="layoutCenter">
-                    <Editor />
-                </div>
-            </div>
+                <Editor />
+            </EditorsDiv>
         );
     }
 }
@@ -208,7 +211,7 @@ class Properties extends React.Component<{ object: EezObject | undefined }, {}> 
 
         let object = this.props.object;
         if (object) {
-            propertyGrid = <PropertyGrid object={object} className="layoutCenter" />;
+            propertyGrid = <PropertyGrid object={object} />;
         }
 
         return <Panel id="properties" title="Properties" body={propertyGrid} />;
@@ -248,10 +251,15 @@ class Content extends React.Component<{}, {}> {
         }
 
         let content = (
-            <Layout.Split orientation="horizontal" splitId="project-content" splitPosition="0.75">
+            <Splitter
+                type="horizontal"
+                persistId="project-editor/content"
+                sizes={`100%|400px`}
+                childrenOverflow="hidden"
+            >
                 <Editors />
-                <Layout.SplitPanel>{properties}</Layout.SplitPanel>
-            </Layout.Split>
+                {properties}
+            </Splitter>
         );
 
         if (UIStateStore.viewOptions.navigationVisible) {
@@ -274,6 +282,7 @@ const StatusBarItemSpan = styled.span`
     display: inline-block;
     padding: 4px 8px;
     cursor: pointer;
+    border-top: 1px solid ${props => props.theme.borderColor};
 `;
 
 @observer
@@ -321,8 +330,12 @@ class StatusBar extends React.Component<{}, {}> {
 ////////////////////////////////////////////////////////////////////////////////
 
 const ProjectEditorContainer = styled.div`
+    position: absolute;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
     border-top: 1px solid ${props => props.theme.borderColor};
+    display: flex;
 
     .error {
         color: red;
@@ -342,6 +355,12 @@ const ProjectEditorContainer = styled.div`
     }
 `;
 
+const MainContent = styled.div`
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+`;
+
 @observer
 export class ProjectEditor extends React.Component<{}, {}> {
     render() {
@@ -349,23 +368,46 @@ export class ProjectEditor extends React.Component<{}, {}> {
             return null;
         }
 
-        let debugPanel: JSX.Element | undefined;
-        if (UIStateStore.viewOptions.debugVisible) {
-            debugPanel = <Debug key="debugPanel" />;
-        }
-
         let statusBar: JSX.Element | undefined;
         if (!UIStateStore.viewOptions.outputVisible) {
-            statusBar = (
-                <div className="layoutBottom">
-                    <StatusBar />
-                </div>
-            );
+            statusBar = <StatusBar />;
         }
 
         let outputPanel: JSX.Element | undefined;
         if (UIStateStore.viewOptions.outputVisible) {
             outputPanel = <Output />;
+        }
+
+        let mainContent = (
+            <MainContent>
+                <Toolbar />
+                <Splitter
+                    type="vertical"
+                    persistId={
+                        outputPanel ? "project-editor/with-output" : "project-editor/without-output"
+                    }
+                    sizes={outputPanel ? "100%|240px" : "100%"}
+                    childrenOverflow="hidden"
+                >
+                    <Content />
+                    {outputPanel}
+                </Splitter>
+                {statusBar}
+            </MainContent>
+        );
+
+        if (UIStateStore.viewOptions.debugVisible) {
+            mainContent = (
+                <Splitter
+                    type="horizontal"
+                    persistId="project-editor/debug"
+                    sizes={`100%|240px`}
+                    childrenOverflow="hidden"
+                >
+                    {mainContent}
+                    <Debug key="debugPanel" />
+                </Splitter>
+            );
         }
 
         let devTools: JSX.Element | undefined;
@@ -374,25 +416,10 @@ export class ProjectEditor extends React.Component<{}, {}> {
         // }
 
         return (
-            <ProjectEditorContainer className="layoutCenter">
-                <Layout.Split orientation="horizontal" splitId="project-debug" splitPosition="0.8">
-                    <Layout.SplitPanel>
-                        <Toolbar />
-                        <Layout.Split
-                            orientation="vertical"
-                            splitId="project-output"
-                            splitPosition="0.75"
-                        >
-                            <Content />
-                            <Layout.SplitPanel>{outputPanel}</Layout.SplitPanel>
-                        </Layout.Split>
-                        {statusBar}
-                    </Layout.SplitPanel>
-                    <Layout.SplitPanel>{debugPanel}</Layout.SplitPanel>
-                </Layout.Split>
+            <ProjectEditorContainer>
+                {mainContent}
                 {notification.container.get()}
                 {devTools}
-                <Notification />
             </ProjectEditorContainer>
         );
     }
