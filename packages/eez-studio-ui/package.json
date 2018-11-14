@@ -1,0 +1,12 @@
+{
+  "name": "eez-studio-ui",
+  "description": "Reusable UI components",
+  "version": "1.0.0",
+  "keywords": [],
+  "author": "Envox",
+  "license": "GPLv3",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/eez-open/studio.git"
+  }
+}

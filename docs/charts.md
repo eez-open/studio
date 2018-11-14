@@ -1,17 +1,17 @@
-Shared component: [chart.tsx](../src/shared/ui/chart.tsx)
+Shared component: [chart.tsx](../packages/shared/ui/chart.tsx)
 
 Used in:
 
 -   Waveform
 
-    -   [Generic](../src/instrument/window/waveform/generic.tsx)
-    -   [DLog](../src/instrument/window/waveform/generic.tsx)
-    -   [Multi](../src/instrument/window/waveform/generic.tsx)
+    -   [Generic](../packages/instrument/window/waveform/generic.tsx)
+    -   [DLog](../packages/instrument/window/waveform/generic.tsx)
+    -   [Multi](../packages/instrument/window/waveform/generic.tsx)
 
 -   Lists
 
-    -   [Envelope](../src/instrument/window/lists/envelope.tsx)
-    -   [Table](../src/instrument/window/lists/table.tsx)
+    -   [Envelope](../packages/instrument/window/lists/envelope.tsx)
+    -   [Table](../packages/instrument/window/lists/table.tsx)
 
 ```mermaid
 graph TD;

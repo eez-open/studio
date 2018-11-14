@@ -39,12 +39,12 @@ function getIgnore() {
         "^/help",
         "^/test",
 
-        "^/src/tsconfig\\.dev\\.json",
-        "^/src/tsconfig\\.json",
-        "^/src/.*\\.ts",
-        "^/src/.*\\.tsx",
-        "^/src/.*\\.js\\.map",
-        "^/src/.*\\.less",
+        "^/packages/tsconfig\\.dev\\.json",
+        "^/packages/tsconfig\\.json",
+        "^/packages/.*\\.ts",
+        "^/packages/.*\\.tsx",
+        "^/packages/.*\\.js\\.map",
+        "^/packages/.*\\.less",
 
         "^/node_modules/better-sqlite3/build/Release/obj.*",
         "^/node_modules/lzz-gyp/lzz-compiled/linux",

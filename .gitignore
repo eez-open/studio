@@ -5,10 +5,10 @@ node_modules
 npm-debug.log
 typings
 
-src/**/*.js
-src/**/*.js.map
+packages/**/*.js
+packages/**/*.js.map
 
-src/eez-studio-shared/_stylesheets/main.css
+packages/eez-studio-ui/_stylesheets/main.css
 
 extensions/advanced-measurements/**/*.js
 extensions/advanced-measurements/**/*.js.map

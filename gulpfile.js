@@ -7,7 +7,7 @@ function minify(folder, cb) {
 }
 
 gulp.task("minify", function(cb) {
-    minify("src", cb);
+    minify("packages", cb);
 });
 
 gulp.task("default", gulp.series("minify"));
