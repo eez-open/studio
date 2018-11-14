@@ -4,7 +4,8 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import * as classNames from "classnames";
 
-import { objectClone, addAlphaToColor } from "eez-studio-shared/util";
+import { objectClone } from "eez-studio-shared/util";
+import { addAlphaToColor } from "eez-studio-shared/color";
 import { _range } from "eez-studio-shared/algorithm";
 import {
     IUnit,

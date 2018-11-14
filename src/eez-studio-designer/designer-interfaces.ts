@@ -33,7 +33,7 @@ export interface IDocument {
 
     // selection
     selectedObjects: IBaseObject[];
-    selectionVisible: boolean;
+    readonly selectionVisible: boolean;
     selectionResizable: boolean;
     rubberBendRect: Rect | undefined;
     selectedObjectsBoundingRect: Rect | undefined;

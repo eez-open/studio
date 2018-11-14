@@ -1,7 +1,10 @@
 import * as React from "react";
 import { observer } from "mobx-react";
 
+import { addAlphaToColor } from "eez-studio-shared/color";
 import { Rect, Transform } from "eez-studio-shared/geometry";
+
+import styled from "eez-studio-shared/ui/styled-components";
 
 import { IBaseObject, IDocument } from "eez-studio-designer/designer-interfaces";
 
@@ -34,6 +37,72 @@ class SelectedObject extends React.Component<
         );
     }
 }
+
+const SelectionDiv = styled.div`
+    position: absolute;
+    left: 0;
+    top: 0;
+    cursor: move;
+
+    .EezStudio_DesignerSelection_SelectedObject {
+        pointer-events: none;
+        border: 2px solid ${props => props.theme.selectionBackgroundColor};
+    }
+
+    .EezStudio_DesignerSelection_BoundingRect {
+        border: 2px solid ${props => props.theme.selectionBackgroundColor};
+    }
+
+    .EezStudio_DesignerSelection_RubberBend {
+        position: absolute;
+        background-color: ${props => addAlphaToColor(props.theme.selectionBackgroundColor, 0.5)};
+        border: 1px solid ${props => props.theme.selectionBackgroundColor};
+    }
+
+    .EezStudio_DesignerSelection_Handle {
+        position: absolute;
+    }
+
+    .EezStudio_DesignerSelection_Handle.Side {
+        background-color: rgba(0, 0, 255, 0.5);
+    }
+
+    .EezStudio_DesignerSelection_Handle.Corner {
+        background-color: rgba(0, 0, 255, 0.8);
+    }
+
+    .EezStudio_DesignerSelection_Handle.TopLeft {
+        cursor: nw-resize;
+    }
+
+    .EezStudio_DesignerSelection_Handle.Top {
+        cursor: n-resize;
+    }
+
+    .EezStudio_DesignerSelection_Handle.TopRight {
+        cursor: ne-resize;
+    }
+
+    .EezStudio_DesignerSelection_Handle.Left {
+        cursor: w-resize;
+    }
+
+    .EezStudio_DesignerSelection_Handle.Right {
+        cursor: e-resize;
+    }
+
+    .EezStudio_DesignerSelection_Handle.BottomLeft {
+        cursor: sw-resize;
+    }
+
+    .EezStudio_DesignerSelection_Handle.Bottom {
+        cursor: s-resize;
+    }
+
+    .EezStudio_DesignerSelection_Handle.BottomRight {
+        cursor: se-resize;
+    }
+`;
 
 @observer
 export class Selection extends React.Component<
@@ -230,7 +299,7 @@ export class Selection extends React.Component<
         }
 
         return (
-            <div
+            <SelectionDiv
                 className="EezStudio_DesignerSelection"
                 style={{
                     left: 0,
@@ -241,7 +310,7 @@ export class Selection extends React.Component<
                 {selectedObjectsBoundingRect}
                 {resizeHandlers}
                 {rubberBendRect}
-            </div>
+            </SelectionDiv>
         );
     }
 }

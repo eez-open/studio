@@ -1,8 +1,12 @@
 {
   "name": "eez-studio-shared",
+  "description": "Shared libraries used by EEZ studio packages",
   "version": "1.0.0",
-  "description": "",
   "keywords": [],
   "author": "Envox",
-  "license": "GPL"
+  "license": "GPLv3",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/eez-open/studio.git"
+  }
 }
