@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { bind } from "bind-decorator";
 
 import { guid } from "eez-studio-shared/util";

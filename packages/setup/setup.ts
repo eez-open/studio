@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 import { BrowserWindow, ipcMain, Event, WebContents } from "electron";
 
 import * as ExtensionsModule from "eez-studio-shared/extensions/extensions";

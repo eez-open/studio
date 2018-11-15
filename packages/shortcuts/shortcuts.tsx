@@ -1,7 +1,7 @@
-import * as React from "react";
+import React from "react";
 import { observable, computed, action, IObservableValue, toJS } from "mobx";
 import { observer } from "mobx-react";
-import * as classNames from "classnames";
+import classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import styled from "eez-studio-ui/styled-components";

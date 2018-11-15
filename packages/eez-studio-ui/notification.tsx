@@ -1,7 +1,7 @@
-import * as React from "react";
+import React from "react";
 import { observable, runInAction } from "mobx";
 
-import * as ToastModule from "react-toastify";
+import ToastModule from "react-toastify";
 
 // lazy notifications, i.e. do not load react-toastify module until needed
 

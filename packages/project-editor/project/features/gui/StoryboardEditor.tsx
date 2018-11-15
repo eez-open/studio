@@ -1,6 +1,6 @@
 import { action } from "mobx";
 import { observer } from "mobx-react";
-import * as React from "react";
+import React from "react";
 
 import { _each } from "eez-studio-shared/algorithm";
 

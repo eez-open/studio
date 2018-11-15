@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { PropertyList, RichTextProperty } from "eez-studio-ui/properties";

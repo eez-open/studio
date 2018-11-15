@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 
 import { Editor, EditorState, getId, setEez } from "project-editor/core/store";
 import { Message } from "project-editor/core/output";

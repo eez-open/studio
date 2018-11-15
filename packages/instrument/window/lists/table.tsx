@@ -1,8 +1,8 @@
-import * as React from "react";
+import React from "react";
 import { observable, computed, values, runInAction, action, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
-import * as classNames from "classnames";
+import classNames from "classnames";
 
 import { objectClone } from "eez-studio-shared/util";
 import { addAlphaToColor } from "eez-studio-shared/color";

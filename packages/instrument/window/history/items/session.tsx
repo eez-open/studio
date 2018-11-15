@@ -1,7 +1,7 @@
-import * as React from "react";
+import React from "react";
 import { computed } from "mobx";
 import { observer } from "mobx-react";
-import * as classNames from "classnames";
+import classNames from "classnames";
 
 import { formatDuration, formatDateTimeLong } from "eez-studio-shared/util";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log";

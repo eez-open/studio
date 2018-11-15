@@ -1,7 +1,7 @@
-import * as React from "react";
+import React from "react";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
-import * as classNames from "classnames";
+import classNames from "classnames";
 
 import { _filter, _map } from "eez-studio-shared/algorithm";
 

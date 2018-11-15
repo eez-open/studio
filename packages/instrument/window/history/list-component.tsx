@@ -1,9 +1,9 @@
-import * as React from "react";
-import * as ReactDOM from "react-dom";
+import React from "react";
+import ReactDOM from "react-dom";
 import { findDOMNode } from "react-dom";
 import { action } from "mobx";
 import { observer } from "mobx-react";
-import * as classNames from "classnames";
+import classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import styled from "eez-studio-ui/styled-components";

@@ -1,8 +1,8 @@
-import * as React from "react";
+import React from "react";
 import { observable, computed, action, runInAction, reaction, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
-import * as VisibilitySensor from "react-visibility-sensor";
+import VisibilitySensor from "react-visibility-sensor";
 
 import { objectEqual, objectClone, formatDateTimeLong } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";

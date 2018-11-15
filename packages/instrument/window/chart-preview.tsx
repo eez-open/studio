@@ -1,7 +1,7 @@
-import * as React from "react";
+import React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
-import * as classNames from "classnames";
+import classNames from "classnames";
 
 import { ChartsView, globalViewOptions, ChartsController, ChartMode } from "eez-studio-ui/chart/chart";
 

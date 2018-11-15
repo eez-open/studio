@@ -1,5 +1,5 @@
 import { observable, runInAction } from "mobx";
-import * as path from "path";
+import path from "path";
 
 import {
     isDev,

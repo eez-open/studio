@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { observable, computed, action, autorun } from "mobx";
 
 import { IRootNavigationItem } from "eez-studio-ui/app";

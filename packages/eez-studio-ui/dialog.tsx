@@ -1,7 +1,7 @@
-import * as React from "react";
-import * as ReactDOM from "react-dom";
+import React from "react";
+import ReactDOM from "react-dom";
 import { observable, action } from "mobx";
-import * as classNames from "classnames";
+import classNames from "classnames";
 import { observer } from "mobx-react";
 import bind from "bind-decorator";
 

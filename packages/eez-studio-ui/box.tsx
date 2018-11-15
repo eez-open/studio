@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 
 export const CONF_BORDER_COLOR = "#d5d5d5";
 const CONF_PANEL_BORDER_COLOR = "#e7eaec";

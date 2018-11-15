@@ -1,5 +1,5 @@
-import * as SerialPortModule from "serialport";
-import * as React from "react";
+import SerialPortModule from "serialport";
+import React from "react";
 import { observable, action, runInAction, reaction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";

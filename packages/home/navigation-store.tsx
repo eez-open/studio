@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { observable, computed, action, runInAction, autorun } from "mobx";
 
 import { onSimpleMessage } from "eez-studio-shared/util";

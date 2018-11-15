@@ -1,6 +1,6 @@
-import * as os from "os";
+import os from "os";
 
-import * as path from "path";
+import path from "path";
 
 export function getIcon() {
     if (os.platform() == "win32") {

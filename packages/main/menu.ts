@@ -1,4 +1,4 @@
-import * as os from "os";
+import os from "os";
 import { app, dialog, Menu, ipcMain } from "electron";
 import { autorun } from "mobx";
 

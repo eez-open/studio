@@ -1,7 +1,7 @@
-import * as React from "react";
+import React from "react";
 import { observable, computed, action, runInAction, autorun } from "mobx";
 import { observer } from "mobx-react";
-import * as classNames from "classnames";
+import classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import { compareVersions, studioVersion } from "eez-studio-shared/util";
@@ -26,7 +26,12 @@ import { stringCompare } from "eez-studio-shared/string";
 
 import styled from "eez-studio-ui/styled-components";
 import { Splitter } from "eez-studio-ui/splitter";
-import { VerticalHeaderWithBody, Header, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    Header,
+    ToolbarHeader,
+    Body
+} from "eez-studio-ui/header-with-body";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction, DropdownIconAction, DropdownItem } from "eez-studio-ui/action";
 import { List, ListItem, IListNode } from "eez-studio-ui/list";
@@ -990,15 +995,14 @@ export class DetailsView extends React.Component {
                                     onClick={this.handleUninstall}
                                 />
                             )}
-                            {extension.isEditable &&
-                                extension.isDirty && (
-                                    <ButtonAction
-                                        text="Export"
-                                        title="Export extension"
-                                        className="btn-secondary"
-                                        onClick={this.handleExport}
-                                    />
-                                )}
+                            {extension.isEditable && extension.isDirty && (
+                                <ButtonAction
+                                    text="Export"
+                                    title="Export extension"
+                                    className="btn-secondary"
+                                    onClick={this.handleExport}
+                                />
+                            )}
                         </Toolbar>
                     </ExtensionDetailsHeaderProperties>
                 </ExtensionDetailsHeader>

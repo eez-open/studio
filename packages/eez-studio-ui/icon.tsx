@@ -1,6 +1,6 @@
-import * as React from "react";
+import React from "react";
 import { observer } from "mobx-react";
-import * as classnames from "classnames";
+import classnames from "classnames";
 
 const MATERIAL_PREFIX = "material:";
 

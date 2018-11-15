@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { observable, action, runInAction, reaction } from "mobx";
 
 import { isRenderer } from "eez-studio-shared/util";

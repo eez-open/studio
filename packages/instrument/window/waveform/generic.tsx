@@ -1,8 +1,8 @@
-import * as React from "react";
+import React from "react";
 import { observable, computed, runInAction, action, toJS, when, reaction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
-import * as tinycolor from "tinycolor2";
+import tinycolor from "tinycolor2";
 
 import { objectEqual, objectClone } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";

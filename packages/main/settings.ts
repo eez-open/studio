@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import fs from "fs";
 import { app, screen, ipcMain } from "electron";
 import { observable, action } from "mobx";
 

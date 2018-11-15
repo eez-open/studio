@@ -1,6 +1,6 @@
 import { computed } from "mobx";
 import { observer } from "mobx-react";
-import * as React from "react";
+import React from "react";
 
 import { NavigationStore, UIStateStore } from "project-editor/core/store";
 import { NavigationComponent } from "project-editor/core/metaData";

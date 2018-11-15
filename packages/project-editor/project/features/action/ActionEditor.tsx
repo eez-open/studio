@@ -1,5 +1,5 @@
 import { observer } from "mobx-react";
-import * as React from "react";
+import React from "react";
 import { bind } from "bind-decorator";
 
 import { CodeEditor } from "eez-studio-ui/code-editor";

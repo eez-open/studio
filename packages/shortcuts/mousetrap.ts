@@ -1,5 +1,5 @@
 import { ObservableMap, IComputedValue, autorun, values } from "mobx";
-import * as Mousetrap from "mousetrap";
+import Mousetrap from "mousetrap";
 
 import { IShortcut } from "shortcuts/interfaces";
 

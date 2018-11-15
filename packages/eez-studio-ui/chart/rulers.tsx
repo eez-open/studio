@@ -1,7 +1,7 @@
-import * as React from "react";
+import React from "react";
 import { observable, computed, action, runInAction, autorun } from "mobx";
 import { observer } from "mobx-react";
-import * as classNames from "classnames";
+import classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import { _range } from "eez-studio-shared/algorithm";

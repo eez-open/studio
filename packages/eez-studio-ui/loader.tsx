@@ -1,5 +1,5 @@
-import * as React from "react";
-import * as classnames from "classnames";
+import React from "react";
+import classnames from "classnames";
 
 export class Loader extends React.Component<{ className?: string; size?: number }, {}> {
     render() {

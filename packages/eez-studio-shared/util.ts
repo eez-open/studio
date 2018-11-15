@@ -1,7 +1,7 @@
-import * as fs from "fs";
-import * as path from "path";
-import * as MobXModule from "mobx";
-import * as MomentModule from "moment";
+import fs from "fs";
+import path from "path";
+import MobXModule from "mobx";
+import MomentModule from "moment";
 import * as GeometryModule from "eez-studio-shared/geometry";
 
 import * as I10nModule from "eez-studio-shared/i10n";

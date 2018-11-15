@@ -1,8 +1,8 @@
-import * as React from "react";
+import React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
-import * as moment from "moment";
+import moment from "moment";
 
 const shell = require("electron").shell;
 import { app, createEmptyFile } from "eez-studio-shared/util";

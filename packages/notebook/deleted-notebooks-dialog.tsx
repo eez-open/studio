@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { findDOMNode } from "react-dom";
 import { computed, values } from "mobx";
 import { observer } from "mobx-react";

@@ -1,4 +1,4 @@
-import * as tinycolor from "tinycolor2";
+import tinycolor from "tinycolor2";
 
 export function addAlphaToColor(color: string, alpha: number) {
     return tinycolor(color)

@@ -1,4 +1,4 @@
-import * as Database from "better-sqlite3";
+import Database from "better-sqlite3";
 import { isRenderer } from "eez-studio-shared/util";
 
 import * as MainSettingsModule from "main/settings";

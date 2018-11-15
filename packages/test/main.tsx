@@ -1,6 +1,6 @@
 /// <reference path="../eez-studio-shared/globals.d.ts"/>
-import * as React from "react";
-import * as ReactDOM from "react-dom";
+import React from "react";
+import ReactDOM from "react-dom";
 import { configure } from "mobx";
 
 import { theme } from "eez-studio-ui/theme";

@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 
 import { Icon } from "eez-studio-ui/icon";
 import { FieldComponent } from "eez-studio-ui/generic-dialog";

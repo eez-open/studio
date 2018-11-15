@@ -1,7 +1,7 @@
-import * as fsModule from "fs";
-import * as pathModule from "path";
-import * as archiverModule from "archiver";
-import * as React from "react";
+import fsModule from "fs";
+import pathModule from "path";
+import archiverModule from "archiver";
+import React from "react";
 import { values } from "mobx";
 
 import { stringCompare } from "eez-studio-shared/string";

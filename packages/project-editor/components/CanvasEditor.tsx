@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { action } from "mobx";
 import { bind } from "bind-decorator";
 

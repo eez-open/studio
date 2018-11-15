@@ -1,8 +1,8 @@
-import * as React from "react";
+import React from "react";
 import { observable, computed, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { clipboard, nativeImage, SaveDialogOptions } from "electron";
-import * as VisibilitySensor from "react-visibility-sensor";
+import VisibilitySensor from "react-visibility-sensor";
 import { bind } from "bind-decorator";
 
 const WebView = require("react-electron-web-view");

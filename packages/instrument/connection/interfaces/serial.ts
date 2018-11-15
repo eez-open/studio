@@ -1,4 +1,4 @@
-import * as SerialPortModule from "serialport";
+import SerialPortModule from "serialport";
 
 import {
     CommunicationInterface,

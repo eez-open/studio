@@ -1,7 +1,7 @@
-import * as React from "react";
+import React from "react";
 import { action } from "mobx";
 import { observer } from "mobx-react";
-import * as classNames from "classnames";
+import classNames from "classnames";
 
 import { Icon } from "eez-studio-ui/icon";
 

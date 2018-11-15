@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { observable } from "mobx";
 
 import { formatDuration } from "eez-studio-shared/util";

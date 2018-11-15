@@ -23,11 +23,7 @@ import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 import * as notification from "eez-studio-ui/notification";
 import { IToolboxGroup, IToolbarButton } from "eez-studio-designer/designer-interfaces";
 
-import {
-    IExtension,
-    IObject,
-    IExtensionProperties
-} from "eez-studio-shared/extensions/extension";
+import { IExtension, IObject, IExtensionProperties } from "eez-studio-shared/extensions/extension";
 
 import {
     preInstalledExtensionsFolderPath,
