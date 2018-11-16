@@ -1198,7 +1198,7 @@ export function loadObject(
     }
 
     let object = new (metaData.getClass(jsObject))();
-    object.$eez = createEezObjectState(parent as EezObject, metaData);
+    setEez(object, createEezObjectState(parent as EezObject, metaData));
 
     let properties = metaData.properties(jsObject);
     for (let i = 0; i < properties.length; i++) {
@@ -1239,11 +1239,7 @@ export function loadObject(
 }
 
 export function objectToJson(object: EezObject, space?: number) {
-    return JSON.stringify(
-        toJS(object),
-        (key: string | number, value: any) => (key !== "$eez" && key !== -1 ? value : undefined),
-        space
-    );
+    return JSON.stringify(toJS(object), undefined, space);
 }
 
 export function objectToJS(object: EezObject): any {
@@ -1458,22 +1454,14 @@ export function getObjectFromObjectId(objectID: string): EezObject | undefined {
     return getDescendantObjectFromId(ProjectStore.projectProperties, objectID as string);
 }
 
-const eezArrayObjectStateMap = new Map<EezObject, EezObjectState>();
+const eezObjectToEezObjectState = new WeakMap<EezObject, EezObjectState>();
 
 export function getEez(object: EezObject) {
-    if (isArray(object)) {
-        return eezArrayObjectStateMap.get(object) as EezObjectState;
-    } else {
-        return (object as any).$eez as EezObjectState;
-    }
+    return eezObjectToEezObjectState.get(object) as EezObjectState;
 }
 
 export function setEez(object: EezObject, eez: EezObjectState) {
-    if (isArray(object)) {
-        eezArrayObjectStateMap.set(object, eez);
-    } else {
-        (object as any).$eez = eez;
-    }
+    eezObjectToEezObjectState.set(object, eez);
 }
 
 export function getParent(object: EezObject) {
@@ -2097,7 +2085,7 @@ class UpdateCommand implements Command {
         for (let propertyName in src) {
             dest[propertyName] = src[propertyName];
             if (isArray(dest[propertyName])) {
-                setEez(dest[propertyName], src[propertyName].$eez);
+                setEez(dest[propertyName], getEez(src[propertyName]));
             }
         }
     }

@@ -119,9 +119,7 @@ export class EezObjectState {
     propertyMetaData?: PropertyMetaData;
 }
 
-export class EezObject {
-    $eez: EezObjectState;
-}
+export class EezObject {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
