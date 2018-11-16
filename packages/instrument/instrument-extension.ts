@@ -9,7 +9,8 @@ import { extensions } from "eez-studio-shared/extensions/extensions";
 import { isRenderer } from "eez-studio-shared/util";
 import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
-import { IDocument } from "eez-studio-designer/designer-interfaces";
+
+import { IDesignerContext } from "eez-studio-designer/designer-interfaces";
 
 import { loadInstrumentExtension } from "instrument/import";
 import { instrumentStore, instruments } from "instrument/instrument-object";
@@ -75,7 +76,7 @@ const instrumentExtension: IExtensionDefinition = {
                 label: "Add Instrument",
                 title: "Add instrument",
                 className: "btn-success",
-                onClick: (document: IDocument) => {
+                onClick: (context: IDesignerContext) => {
                     const {
                         showAddInstrumentDialog
                     } = require("instrument/add-instrument-dialog") as typeof AddInstrumentDialogModule;
@@ -83,7 +84,7 @@ const instrumentExtension: IExtensionDefinition = {
                     showAddInstrumentDialog(extension => {
                         beginTransaction("Add instrument");
                         let params = createInstrument(extension);
-                        document.createObject(params);
+                        context.document.createObject(params);
                         commitTransaction();
                     });
                 }
@@ -101,7 +102,7 @@ const instrumentExtension: IExtensionDefinition = {
                 label: "Deleted Instruments",
                 title: "Show deleted instruments",
                 className: "btn-default",
-                onClick: (document: IDocument) => {
+                onClick: (context: IDesignerContext) => {
                     showDeletedInstrumentsDialog();
                 }
             });

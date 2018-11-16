@@ -4,8 +4,14 @@ import { observable, runInAction } from "mobx";
 import { closestByClass } from "eez-studio-shared/dom";
 import { Point, Rect, pointInRect, rectEqual } from "eez-studio-shared/geometry";
 
-import { IDocument, IToolHandler, IContextMenu } from "eez-studio-designer/designer-interfaces";
+import {
+    IDesignerContext,
+    IToolHandler,
+    IContextMenu,
+    IMouseHandler
+} from "eez-studio-designer/designer-interfaces";
 import { MouseHandler } from "eez-studio-designer/mouse-handler";
+import { Selection } from "eez-studio-designer/selection";
 
 // - select object with click
 // - selection context menu
@@ -14,35 +20,39 @@ import { MouseHandler } from "eez-studio-designer/mouse-handler";
 // - resize selection
 
 export const selectToolHandler: IToolHandler = {
-    onClick(document: IDocument, point: Point) {},
+    render(context: IDesignerContext, mouseHandler: IMouseHandler | undefined) {
+        return <Selection context={context} mouseHandler={mouseHandler} />;
+    },
+
+    onClick(context: IDesignerContext, point: Point) {},
 
     onContextMenu(
-        document: IDocument,
+        context: IDesignerContext,
         point: Point,
         showContextMenu: (menu: IContextMenu) => void
     ) {
         if (
-            document.selectedObjects.length === 0 ||
-            !pointInRect(point, document.selectedObjectsBoundingRect as Rect)
+            context.document.selectedObjects.length === 0 ||
+            !pointInRect(point, context.document.selectedObjectsBoundingRect as Rect)
         ) {
-            document.deselectAllObjects();
+            context.document.deselectAllObjects();
 
-            let object = document.objectFromPoint(point);
+            let object = context.document.objectFromPoint(point);
             if (!object) {
                 return;
             }
 
-            document.selectObject(object);
+            context.document.selectObject(object);
         }
 
         setTimeout(() => {
-            if (document.selectedObjects.length > 0) {
-                const menu = document.createContextMenu();
+            if (context.document.selectedObjects.length > 0) {
+                const menu = context.document.createContextMenu();
 
                 menu.appendMenuItem({
                     label: "Delete",
                     click: () => {
-                        document.deleteSelectedObjects();
+                        context.document.deleteSelectedObjects();
                     }
                 });
 
@@ -56,7 +66,7 @@ export const selectToolHandler: IToolHandler = {
     canDrag: false,
     drop() {},
 
-    createMouseHandler(document: IDocument, event: MouseEvent) {
+    createMouseHandler(context: IDesignerContext, event: MouseEvent) {
         if (closestByClass(event.target, "EezStudio_DesignerSelection_Handle")) {
             return new ResizeMouseHandler();
         }
@@ -65,14 +75,14 @@ export const selectToolHandler: IToolHandler = {
             return new DragMouseHandler();
         }
 
-        let point = document.transform.mouseEventToModelPoint(event);
-        let object = document.objectFromPoint(point);
+        let point = context.viewState.transform.mouseEventToModelPoint(event);
+        let object = context.document.objectFromPoint(point);
         if (object) {
             if (!object.selected) {
                 if (!event.ctrlKey && !event.shiftKey) {
-                    document.deselectAllObjects();
+                    context.document.deselectAllObjects();
                 }
-                document.selectObject(object);
+                context.document.selectObject(object);
             }
             return new DragMouseHandler();
         }
@@ -85,13 +95,13 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
     @observable
     rubberBendRect: Rect | undefined;
 
-    down(document: IDocument, event: MouseEvent) {
-        super.down(document, event);
-        document.deselectAllObjects();
+    down(context: IDesignerContext, event: MouseEvent) {
+        super.down(context, event);
+        context.document.deselectAllObjects();
     }
 
-    move(document: IDocument, event: MouseEvent) {
-        super.move(document, event);
+    move(context: IDesignerContext, event: MouseEvent) {
+        super.move(context, event);
 
         let left;
         let top;
@@ -125,11 +135,13 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
             this.rubberBendRect = rubberBendRect;
         });
 
-        document.selectObjectsInsideRect(document.transform.offsetToModelRect(rubberBendRect));
+        context.document.selectObjectsInsideRect(
+            context.viewState.transform.offsetToModelRect(rubberBendRect)
+        );
     }
 
-    up(document: IDocument, event?: MouseEvent) {
-        super.up(document, event);
+    up(context: IDesignerContext, event?: MouseEvent) {
+        super.up(context, event);
 
         runInAction(() => {
             this.rubberBendRect = undefined;
@@ -156,21 +168,21 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
 class DragMouseHandler extends MouseHandler {
     changed: boolean;
 
-    down(document: IDocument, event: MouseEvent) {
-        super.down(document, event);
-        document.onDragStart("move");
+    down(context: IDesignerContext, event: MouseEvent) {
+        super.down(context, event);
+        context.document.onDragStart("move");
     }
 
-    move(document: IDocument, event: MouseEvent) {
-        super.move(document, event);
+    move(context: IDesignerContext, event: MouseEvent) {
+        super.move(context, event);
 
-        let objects = document.selectedObjects;
+        let objects = context.document.selectedObjects;
         for (let i = 0; i < objects.length; i++) {
             let object = objects[i];
 
             let rect = {
-                left: object.rect.left + this.movement.x / document.transform.scale,
-                top: object.rect.top + this.movement.y / document.transform.scale,
+                left: object.rect.left + this.movement.x / context.viewState.transform.scale,
+                top: object.rect.top + this.movement.y / context.viewState.transform.scale,
                 width: object.rect.width,
                 height: object.rect.height
             };
@@ -182,9 +194,9 @@ class DragMouseHandler extends MouseHandler {
         }
     }
 
-    up(document: IDocument, event?: MouseEvent) {
-        super.up(document, event);
-        document.onDragEnd("move", this.changed);
+    up(context: IDesignerContext, event?: MouseEvent) {
+        super.up(context, event);
+        context.document.onDragEnd("move", this.changed);
     }
 }
 
@@ -210,10 +222,10 @@ class ResizeMouseHandler extends MouseHandler {
 
     changed: boolean;
 
-    down(document: IDocument, event: MouseEvent) {
-        super.down(document, event);
+    down(context: IDesignerContext, event: MouseEvent) {
+        super.down(context, event);
 
-        document.onDragStart("resize");
+        context.document.onDragStart("resize");
 
         let className = (event.target as HTMLElement).className;
         if (className.indexOf("Corner") !== -1) {
@@ -238,7 +250,7 @@ class ResizeMouseHandler extends MouseHandler {
             }
         }
 
-        this.savedBoundingRect = document.selectedObjectsBoundingRect!;
+        this.savedBoundingRect = context.document.selectedObjectsBoundingRect!;
         this.boundingRect = {
             left: this.savedBoundingRect.left,
             top: this.savedBoundingRect.top,
@@ -248,7 +260,7 @@ class ResizeMouseHandler extends MouseHandler {
 
         this.savedRects = [];
         this.rects = [];
-        let objects = document.selectedObjects;
+        let objects = context.document.selectedObjects;
         for (let i = 0; i < objects.length; i++) {
             let rect = objects[i].rect;
 
@@ -268,36 +280,40 @@ class ResizeMouseHandler extends MouseHandler {
         }
     }
 
-    moveTop(document: IDocument, savedRect: Rect, rect: Rect) {
+    moveTop(context: IDesignerContext, savedRect: Rect, rect: Rect) {
         let bottom = rect.top + rect.height;
-        rect.top = savedRect.top + this.offsetDistance.y / document.transform.scale;
+        rect.top = savedRect.top + this.offsetDistance.y / context.viewState.transform.scale;
         if (rect.top >= bottom) {
             rect.top = bottom - 1;
         }
         rect.height = bottom - rect.top;
     }
 
-    moveLeft(document: IDocument, savedRect: Rect, rect: Rect) {
+    moveLeft(context: IDesignerContext, savedRect: Rect, rect: Rect) {
         let right = rect.left + rect.width;
-        rect.left = savedRect.left + this.offsetDistance.x / document.transform.scale;
+        rect.left = savedRect.left + this.offsetDistance.x / context.viewState.transform.scale;
         if (rect.left >= right) {
             rect.left = right - 1;
         }
         rect.width = right - rect.left;
     }
 
-    moveBottom(document: IDocument, savedRect: Rect, rect: Rect) {
+    moveBottom(context: IDesignerContext, savedRect: Rect, rect: Rect) {
         let bottom =
-            savedRect.top + savedRect.height + this.offsetDistance.y / document.transform.scale;
+            savedRect.top +
+            savedRect.height +
+            this.offsetDistance.y / context.viewState.transform.scale;
         if (bottom <= rect.top) {
             bottom = rect.top + 1;
         }
         rect.height = bottom - rect.top;
     }
 
-    moveRight(document: IDocument, savedRect: Rect, rect: Rect) {
+    moveRight(context: IDesignerContext, savedRect: Rect, rect: Rect) {
         let right =
-            savedRect.left + savedRect.width + this.offsetDistance.x / document.transform.scale;
+            savedRect.left +
+            savedRect.width +
+            this.offsetDistance.x / context.viewState.transform.scale;
         if (right <= rect.left) {
             right = rect.left + 1;
         }
@@ -330,43 +346,43 @@ class ResizeMouseHandler extends MouseHandler {
         rect.height = height;
     }
 
-    resizeRect(document: IDocument, savedRect: Rect, rect: Rect) {
+    resizeRect(context: IDesignerContext, savedRect: Rect, rect: Rect) {
         if (this.handleType === HandleType.TopLeft) {
-            this.moveTop(document, savedRect, rect);
-            this.moveLeft(document, savedRect, rect);
+            this.moveTop(context, savedRect, rect);
+            this.moveLeft(context, savedRect, rect);
             //this.maintainSameAspectRatio(savedRect, rect, true, true);
         } else if (this.handleType === HandleType.Top) {
-            this.moveTop(document, savedRect, rect);
+            this.moveTop(context, savedRect, rect);
         } else if (this.handleType === HandleType.TopRight) {
-            this.moveTop(document, savedRect, rect);
-            this.moveRight(document, savedRect, rect);
+            this.moveTop(context, savedRect, rect);
+            this.moveRight(context, savedRect, rect);
             //this.maintainSameAspectRatio(savedRect, rect, true, false);
         } else if (this.handleType === HandleType.Left) {
-            this.moveLeft(document, savedRect, rect);
+            this.moveLeft(context, savedRect, rect);
         } else if (this.handleType === HandleType.Right) {
-            this.moveRight(document, savedRect, rect);
+            this.moveRight(context, savedRect, rect);
         } else if (this.handleType === HandleType.BottomLeft) {
-            this.moveBottom(document, savedRect, rect);
-            this.moveLeft(document, savedRect, rect);
+            this.moveBottom(context, savedRect, rect);
+            this.moveLeft(context, savedRect, rect);
             //this.maintainSameAspectRatio(savedRect, rect, false, true);
         } else if (this.handleType === HandleType.Bottom) {
-            this.moveBottom(document, savedRect, rect);
+            this.moveBottom(context, savedRect, rect);
         } else {
-            this.moveBottom(document, savedRect, rect);
-            this.moveRight(document, savedRect, rect);
+            this.moveBottom(context, savedRect, rect);
+            this.moveRight(context, savedRect, rect);
             //this.maintainSameAspectRatio(savedRect, rect, false, false);
         }
     }
 
-    move(document: IDocument, event: MouseEvent) {
-        super.move(document, event);
+    move(context: IDesignerContext, event: MouseEvent) {
+        super.move(context, event);
 
-        this.resizeRect(document, this.savedBoundingRect, this.boundingRect);
+        this.resizeRect(context, this.savedBoundingRect, this.boundingRect);
 
         let scaleWidth = this.boundingRect.width / this.savedBoundingRect.width;
         let scaleHeight = this.boundingRect.height / this.savedBoundingRect.height;
 
-        let objects = document.selectedObjects;
+        let objects = context.document.selectedObjects;
 
         for (let i = 0; i < this.rects.length; i++) {
             let savedRect = this.savedRects[i];
@@ -387,9 +403,9 @@ class ResizeMouseHandler extends MouseHandler {
         }
     }
 
-    up(document: IDocument, event?: MouseEvent) {
-        super.up(document, event);
+    up(context: IDesignerContext, event?: MouseEvent) {
+        super.up(context, event);
 
-        document.onDragEnd("resize", this.changed);
+        context.document.onDragEnd("resize", this.changed);
     }
 }

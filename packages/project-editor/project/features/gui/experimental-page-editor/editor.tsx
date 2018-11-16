@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, runInAction, reaction, autorun } from "mobx";
+import { observable, computed, action, runInAction, autorun } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -9,7 +9,6 @@ import { _range } from "eez-studio-shared/algorithm";
 import {
     Point,
     Rect,
-    Transform,
     pointInRect,
     BoundingRectBuilder,
     isRectInsideRect
@@ -23,6 +22,7 @@ import {
     IContextMenuItem,
     IContextMenuPopupOptions
 } from "eez-studio-designer/designer-interfaces";
+import { DesignerContext } from "eez-studio-designer/context";
 import { Canvas } from "eez-studio-designer/canvas";
 import { selectToolHandler } from "eez-studio-designer/select-tool";
 import styled from "eez-studio-ui/styled-components";
@@ -805,10 +805,6 @@ export class ExperimentalWidgetContainerEditor
     extends React.Component<ExperimentalWidgetContainerEditorProps>
     implements IDocument {
     container: PageResolutionProperties;
-    transform: Transform;
-    saveTransformDisposer: any;
-    @observable
-    _selectionVisible: boolean;
     @observable
     _selectedObjects: BaseObjectComponent[] = [];
     selectionResizable: boolean = true;
@@ -836,61 +832,15 @@ export class ExperimentalWidgetContainerEditor
         this.loadContainer(props.container);
     }
 
-    componentWillUnmount() {
-        this.unloadContainer();
-    }
-
-    unloadContainer() {
-        this.saveTransformDisposer();
-    }
-
     @action
     loadContainer(container: PageResolutionProperties) {
-        if (this.container) {
-            this.unloadContainer();
-        }
-
         this.container = container;
-
-        const pageResolutionUIState = UIStateStore.getObjectUIState(container);
-
-        if (pageResolutionUIState) {
-            this.transform = new Transform(pageResolutionUIState.transform);
-        } else {
-            this.transform = new Transform({
-                translate: {
-                    x: -160,
-                    y: -120
-                },
-                scale: 1
-            });
-        }
-
-        this.saveTransformDisposer = reaction(
-            () => ({
-                translate: this.transform.translate,
-                scale: this.transform.scale
-            }),
-            transform => UIStateStore.updateObjectUIState(container, { transform })
-        );
-
-        this._selectionVisible = true;
         this._selectedObjects = [];
         this.selectionResizable = true;
     }
 
-    @action
-    resetTransform() {
-        this.transform.scale = 1;
-        this.transform.translate = {
-            x: -160,
-            y: -120
-        };
-    }
-
     createObject(params: any): void {}
 
-    @computed
     get selectedObjects() {
         return this._selectedObjects;
     }
@@ -921,14 +871,6 @@ export class ExperimentalWidgetContainerEditor
 
     deleteSelectedObjects(): void {
         deleteItems(this.selectedObjects.map(objectComponent => objectComponent.props.object));
-    }
-
-    get selectionVisible() {
-        return this._selectionVisible;
-    }
-
-    set selectionVisible(value: boolean) {
-        runInAction(() => (this._selectionVisible = value));
     }
 
     get selectedObjectsBoundingRect() {
@@ -976,20 +918,54 @@ export class ExperimentalWidgetContainerEditor
         NavigationStore.setSelectedPanel(this);
     }
 
+    @bind
+    loadViewState() {
+        const uiState = UIStateStore.getObjectUIState(this.container);
+
+        if (uiState && uiState.experimentalCanvasViewState) {
+            return uiState.experimentalCanvasViewState;
+        }
+
+        return {
+            transform: {
+                translate: {
+                    x: -160,
+                    y: -120
+                },
+                scale: 1
+            }
+        };
+    }
+
+    @bind
+    saveViewState(viewState: any) {
+        UIStateStore.updateObjectUIState(this.container, {
+            experimentalCanvasViewState: viewState
+        });
+    }
+
     render() {
         return (
-            <ExperimentalCanvasContainer tabIndex={0} onFocus={this.focusHander}>
-                <ExperimentalCanvas document={this} toolHandler={selectToolHandler}>
-                    <RootObjectComponent
-                        ref={ref => {
-                            if (ref) {
-                                this.rootObjectComponent = ref;
-                            }
-                        }}
-                        object={this.props.container}
-                    />
-                </ExperimentalCanvas>
-            </ExperimentalCanvasContainer>
+            <DesignerContext
+                document={this}
+                viewStatePersistanceHandler={{
+                    load: this.loadViewState,
+                    save: this.saveViewState
+                }}
+            >
+                <ExperimentalCanvasContainer tabIndex={0} onFocus={this.focusHander}>
+                    <ExperimentalCanvas toolHandler={selectToolHandler}>
+                        <RootObjectComponent
+                            ref={ref => {
+                                if (ref) {
+                                    this.rootObjectComponent = ref;
+                                }
+                            }}
+                            object={this.props.container}
+                        />
+                    </ExperimentalCanvas>
+                </ExperimentalCanvasContainer>
+            </DesignerContext>
         );
     }
 }

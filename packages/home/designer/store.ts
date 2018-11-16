@@ -1,4 +1,4 @@
-import { observable, computed, action, runInAction, values, reaction } from "mobx";
+import { computed, runInAction, values } from "mobx";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -7,8 +7,7 @@ import {
     Point,
     BoundingRectBuilder,
     pointInRect,
-    isRectInsideRect,
-    Transform
+    isRectInsideRect
 } from "eez-studio-shared/geometry";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { humanize } from "eez-studio-shared/string";
@@ -20,7 +19,6 @@ import { BOUNCE_ENTRANCE_TRANSITION_DURATION } from "eez-studio-ui/transitions";
 import {
     IBaseObject,
     IDocument,
-    IToolbarButton,
     IContextMenu,
     IContextMenuItem,
     IContextMenuPopupOptions
@@ -52,62 +50,7 @@ export interface IWorkbenchObject extends IBaseObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IWorkbenchDocument extends IDocument {
-    objects: IWorkbenchObject[];
-    selectedObjects: IWorkbenchObject[];
-
-    toolbarButtons: IToolbarButton[];
-    selectionVisible: boolean;
-    boundingRect: Rect | undefined;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-class WorkbenchDocument implements IWorkbenchDocument {
-    @observable _selectionVisible: boolean = true;
-    transform: Transform;
-
-    constructor() {
-        let translate: Point | undefined;
-        let scale: number | undefined;
-
-        let transformJson = window.localStorage.getItem("home/designer/transform");
-        if (transformJson) {
-            try {
-                let transformJs = JSON.parse(transformJson);
-                translate = transformJs.translate;
-                scale = transformJs.scale;
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        if (translate === undefined || !scale) {
-            translate = { x: 0, y: 0 };
-            scale = 1;
-        }
-
-        this.transform = new Transform({ translate, scale });
-
-        reaction(
-            () =>
-                JSON.stringify({
-                    translate: this.transform.translate,
-                    scale: this.transform.scale
-                }),
-            transformJson => window.localStorage.setItem("home/designer/transform", transformJson)
-        );
-    }
-
-    @action
-    resetTransform() {
-        this.transform.scale = 1;
-        this.transform.translate = {
-            x: 0,
-            y: 0
-        };
-    }
-
+class WorkbenchDocument implements IDocument {
     @computed
     get objects() {
         return Array.from(workbenchObjects.values());
@@ -167,14 +110,6 @@ class WorkbenchDocument implements IWorkbenchDocument {
         }, BOUNCE_ENTRANCE_TRANSITION_DURATION);
     }
 
-    get selectionVisible() {
-        return this._selectionVisible;
-    }
-
-    set selectionVisible(value: boolean) {
-        runInAction(() => (this._selectionVisible = value));
-    }
-
     objectFromPoint(point: Point) {
         let objects = this.objects;
         for (let i = objects.length - 1; i >= 0; i--) {
@@ -212,13 +147,9 @@ class WorkbenchDocument implements IWorkbenchDocument {
         });
     }
 
-    onDragStart(op: "move" | "resize"): void {
-        this.selectionVisible = false;
-    }
+    onDragStart(op: "move" | "resize"): void {}
 
     onDragEnd(op: "move" | "resize", changed: boolean): void {
-        this.selectionVisible = true;
-
         if (changed) {
             let objects = this.selectedObjects;
 

@@ -1,5 +1,5 @@
 import { Point } from "eez-studio-shared/geometry";
-import { IDocument, IMouseHandler } from "eez-studio-designer/designer-interfaces";
+import { IDesignerContext, IMouseHandler } from "eez-studio-designer/designer-interfaces";
 
 export class MouseHandler implements IMouseHandler {
     constructor() {}
@@ -14,22 +14,22 @@ export class MouseHandler implements IMouseHandler {
 
     cursor: string = "default";
 
-    down(document: IDocument, event: MouseEvent) {
+    down(context: IDesignerContext, event: MouseEvent) {
         event.preventDefault();
 
-        this.lastOffsetPoint = this.offsetPointAtDown = document.transform.mouseEventToOffsetPoint(
+        this.lastOffsetPoint = this.offsetPointAtDown = context.viewState.transform.mouseEventToOffsetPoint(
             event
         );
         this.offsetDistance = { x: 0, y: 0 };
         this.movement = { x: 0, y: 0 };
 
-        this.modelPointAtDown = document.transform.mouseEventToModelPoint(event);
+        this.modelPointAtDown = context.viewState.transform.mouseEventToModelPoint(event);
     }
 
-    move(document: IDocument, event: MouseEvent) {
+    move(context: IDesignerContext, event: MouseEvent) {
         event.preventDefault();
 
-        let offsetPoint = document.transform.mouseEventToOffsetPoint(event);
+        let offsetPoint = context.viewState.transform.mouseEventToOffsetPoint(event);
 
         this.offsetDistance = {
             x: offsetPoint.x - this.offsetPointAtDown.x,
@@ -43,12 +43,12 @@ export class MouseHandler implements IMouseHandler {
 
         this.lastOffsetPoint = offsetPoint;
 
-        this.lastModelPoint = document.transform.mouseEventToModelPoint(event);
+        this.lastModelPoint = context.viewState.transform.mouseEventToModelPoint(event);
     }
 
-    up(document: IDocument, event?: MouseEvent) {
+    up(context: IDesignerContext, event?: MouseEvent) {
         if (event) {
-            this.move(document, event);
+            this.move(context, event);
         }
     }
 }

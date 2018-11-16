@@ -1,7 +1,5 @@
 import { Point, Rect, Transform } from "eez-studio-shared/geometry";
 
-////////////////////////////////////////////////////////////////////////////////
-
 export interface IContextMenuItem {
     label: string;
     click: () => void;
@@ -23,14 +21,10 @@ export interface IBaseObject {
 }
 
 export interface IDocument {
-    transform: Transform;
-    resetTransform(): void;
-
     createObject(params: any): void;
 
     // selection
     selectedObjects: IBaseObject[];
-    readonly selectionVisible: boolean;
     selectionResizable: boolean;
     selectedObjectsBoundingRect: Rect | undefined;
 
@@ -40,13 +34,33 @@ export interface IDocument {
 
     deleteSelectedObjects(): void;
 
+    // events
     onDragStart(op: "move" | "resize"): void;
     onDragEnd(op: "move" | "resize", changed: boolean): void;
 
-    createContextMenu(): IContextMenu;
-
     // view
     objectFromPoint(point: Point): IBaseObject | undefined;
+
+    // misc.
+    createContextMenu(): IContextMenu;
+}
+
+export interface IViewState {
+    transform: Transform;
+    resetTransform(): void;
+
+    // true if there is no active user interaction (like mouse) with the designer.
+    isIdle: boolean;
+}
+
+export interface IDesignerContext {
+    document: IDocument;
+    viewState: IViewState;
+}
+
+export interface IViewStatePersistanceHandler {
+    load(): any;
+    save(viewState: any): void;
 }
 
 export interface IToolbarButton {
@@ -54,21 +68,24 @@ export interface IToolbarButton {
     label: string;
     title: string;
     className?: string;
-    onClick: (document: IDocument) => void;
+    onClick: (context: IDesignerContext) => void;
 }
 
 export interface IMouseHandler {
     cursor: string;
-    down(document: IDocument, event: MouseEvent): void;
-    move(document: IDocument, event: MouseEvent): void;
-    up(document: IDocument, event?: MouseEvent): void;
+    down(context: IDesignerContext, event: MouseEvent): void;
+    move(context: IDesignerContext, event: MouseEvent): void;
+    up(context: IDesignerContext, event?: MouseEvent): void;
     renderInSelectionLayer?(): React.ReactNode;
 }
 
 export interface IToolHandler {
-    onClick(document: IDocument, point: Point): void;
+    render(context: IDesignerContext, mouseHandler: IMouseHandler | undefined): React.ReactNode;
+
+    onClick(context: IDesignerContext, point: Point): void;
+
     onContextMenu(
-        document: IDocument,
+        context: IDesignerContext,
         point: Point,
         showContextMenu: (menu: IContextMenu) => void
     ): void;
@@ -76,7 +93,7 @@ export interface IToolHandler {
     cursor: string;
 
     canDrag: boolean;
-    drop(document: IDocument, point: Point): void;
+    drop(context: IDesignerContext, point: Point): void;
 
-    createMouseHandler(document: IDocument, event: MouseEvent): IMouseHandler | undefined;
+    createMouseHandler(context: IDesignerContext, event: MouseEvent): IMouseHandler | undefined;
 }

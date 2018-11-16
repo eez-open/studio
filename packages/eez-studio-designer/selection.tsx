@@ -6,7 +6,11 @@ import { Rect, Transform } from "eez-studio-shared/geometry";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { IBaseObject, IDocument, IMouseHandler } from "eez-studio-designer/designer-interfaces";
+import {
+    IBaseObject,
+    IDesignerContext,
+    IMouseHandler
+} from "eez-studio-designer/designer-interfaces";
 import { RubberBandSelectionMouseHandler } from "eez-studio-designer/select-tool";
 
 @observer
@@ -108,8 +112,7 @@ const SelectionDiv = styled.div`
 @observer
 export class Selection extends React.Component<
     {
-        document: IDocument;
-        transform: Transform;
+        context: IDesignerContext;
         mouseHandler?: IMouseHandler;
     },
     {}
@@ -122,27 +125,27 @@ export class Selection extends React.Component<
         let selectedObjectRects;
         let selectedObjectsBoundingRect;
         let resizeHandlers;
-        if (this.props.document.selectedObjects.length > 0) {
+        if (this.props.context.document.selectedObjects.length > 0) {
             const selectedObjectClassName =
-                this.props.document.selectedObjects.length > 1
+                this.props.context.document.selectedObjects.length > 1
                     ? "EezStudio_DesignerSelection_SelectedObject"
                     : "EezStudio_DesignerSelection_BoundingRect";
 
             //
-            selectedObjectRects = this.props.document.selectedObjects.map(object => (
+            selectedObjectRects = this.props.context.document.selectedObjects.map(object => (
                 <SelectedObject
                     className={selectedObjectClassName}
                     key={object.id}
                     object={object}
-                    transform={this.props.transform}
+                    transform={this.props.context.viewState.transform}
                 />
             ));
 
             //
-            let boundingRect = this.props.transform.modelToOffsetRect(this.props.document
-                .selectedObjectsBoundingRect as Rect);
+            let boundingRect = this.props.context.viewState.transform.modelToOffsetRect(this.props
+                .context.document.selectedObjectsBoundingRect as Rect);
 
-            if (this.props.document.selectedObjects.length > 1) {
+            if (this.props.context.document.selectedObjects.length > 1) {
                 let style: React.CSSProperties = {
                     position: "absolute",
                     left: boundingRect.left + "px",
@@ -162,7 +165,7 @@ export class Selection extends React.Component<
                 this.props.mouseHandler instanceof RubberBandSelectionMouseHandler &&
                 this.props.mouseHandler.rubberBendRect;
 
-            if (!isActiveRubberBendSelection! && this.props.document.selectionResizable) {
+            if (!isActiveRubberBendSelection! && this.props.context.document.selectionResizable) {
                 let left = boundingRect.left;
                 let width = boundingRect.width;
                 let top = boundingRect.top;

@@ -1,6 +1,6 @@
 import React from "react";
 import { observable, action, runInAction } from "mobx";
-import { observer } from "mobx-react";
+import { observer, inject } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { Point, pointDistance } from "eez-studio-shared/geometry";
@@ -8,14 +8,12 @@ import { Point, pointDistance } from "eez-studio-shared/geometry";
 import { Draggable } from "eez-studio-ui/draggable";
 
 import {
-    IDocument,
     IToolHandler,
     IMouseHandler,
-    IContextMenu
+    IContextMenu,
+    IDesignerContext
 } from "eez-studio-designer/designer-interfaces";
 import { PanMouseHandler } from "eez-studio-designer/mouse-handlers/pan";
-import { selectToolHandler } from "eez-studio-designer/select-tool";
-import { Selection } from "eez-studio-designer/selection";
 import { ScrollDiv } from "eez-studio-designer/scroll-div";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,11 +23,12 @@ const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@inject("designerContext")
 @observer
 export class Canvas extends React.Component<
     {
-        document: IDocument;
-        toolHandler: IToolHandler | undefined;
+        designerContext?: IDesignerContext;
+        toolHandler: IToolHandler;
         className?: string;
         style?: React.CSSProperties;
     },
@@ -40,8 +39,21 @@ export class Canvas extends React.Component<
     intervalTimerIDForClientRectUpdate: any;
     deltaY = 0;
 
+    get designerContext() {
+        return this.props.designerContext!;
+    }
+
     @observable
-    private mouseHandler: IMouseHandler | undefined;
+    private _mouseHandler: IMouseHandler | undefined;
+    get mouseHandler() {
+        return this._mouseHandler;
+    }
+    set mouseHandler(value: IMouseHandler | undefined) {
+        runInAction(() => {
+            this._mouseHandler = value;
+            this.designerContext.viewState.isIdle = !this._mouseHandler;
+        });
+    }
 
     private buttonsAtDown: number;
     private lastMouseUpPosition: Point;
@@ -55,7 +67,7 @@ export class Canvas extends React.Component<
         this.draggable.attach(this.div);
 
         this.intervalTimerIDForClientRectUpdate = setInterval(() => {
-            const transform = this.props.document.transform;
+            const transform = this.designerContext.viewState.transform;
 
             let clientRect = this.div.getBoundingClientRect();
             if (
@@ -91,7 +103,7 @@ export class Canvas extends React.Component<
             return;
         }
 
-        const transform = this.props.document.transform;
+        const transform = this.designerContext.viewState.transform;
 
         if (event.ctrlKey) {
             this.deltaY += event.deltaY;
@@ -141,7 +153,7 @@ export class Canvas extends React.Component<
         this.buttonsAtDown = event.buttons;
 
         if (this.mouseHandler) {
-            this.mouseHandler.up(this.props.document, event);
+            this.mouseHandler.up(this.designerContext, event);
             this.mouseHandler = undefined;
         }
 
@@ -150,21 +162,21 @@ export class Canvas extends React.Component<
         } else {
             if (this.props.toolHandler) {
                 this.mouseHandler = this.props.toolHandler.createMouseHandler(
-                    this.props.document,
+                    this.designerContext,
                     event
                 );
             }
         }
 
         if (this.mouseHandler) {
-            this.mouseHandler.down(this.props.document, event);
+            this.mouseHandler.down(this.designerContext, event);
         }
     }
 
     @bind
     onDragMove(event: PointerEvent) {
         if (this.mouseHandler) {
-            this.mouseHandler.move(this.props.document, event);
+            this.mouseHandler.move(this.designerContext, event);
         }
     }
 
@@ -173,7 +185,7 @@ export class Canvas extends React.Component<
         let preventContextMenu = false;
 
         if (this.mouseHandler) {
-            this.mouseHandler.up(this.props.document, event);
+            this.mouseHandler.up(this.designerContext, event);
 
             if (this.mouseHandler instanceof PanMouseHandler) {
                 if (pointDistance(this.mouseHandler.totalMovement) > 10) {
@@ -186,7 +198,7 @@ export class Canvas extends React.Component<
 
         let time = new Date().getTime();
 
-        const transform = this.props.document.transform;
+        const transform = this.designerContext.viewState.transform;
 
         if (this.buttonsAtDown === 1) {
             let distance = pointDistance(
@@ -206,11 +218,11 @@ export class Canvas extends React.Component<
                         distance <= CONF_DOUBLE_CLICK_DISTANCE
                     ) {
                         // double click
-                        if (this.props.document.selectedObjects.length === 1) {
-                            const object = this.props.document.selectedObjects[0];
+                        if (this.designerContext.document.selectedObjects.length === 1) {
+                            const object = this.designerContext.document.selectedObjects[0];
                             object.open();
-                        } else if (this.props.document.selectedObjects.length === 0) {
-                            this.props.document.resetTransform();
+                        } else if (this.designerContext.document.selectedObjects.length === 0) {
+                            this.designerContext.viewState.resetTransform();
                         }
                     }
                 }
@@ -228,11 +240,11 @@ export class Canvas extends React.Component<
 
             if (!preventContextMenu && this.props.toolHandler && this.buttonsAtDown === 2) {
                 this.props.toolHandler.onContextMenu(
-                    this.props.document,
+                    this.designerContext,
                     transform.mouseEventToModelPoint(event),
                     (menu: IContextMenu) => {
                         if (this.mouseHandler) {
-                            this.mouseHandler.up(this.props.document);
+                            this.mouseHandler.up(this.designerContext);
                             this.mouseHandler = undefined;
                         }
 
@@ -250,8 +262,8 @@ export class Canvas extends React.Component<
             event.stopPropagation();
 
             this.props.toolHandler.onClick(
-                this.props.document,
-                this.props.document.transform.mouseEventToModelPoint(event.nativeEvent)
+                this.designerContext,
+                this.designerContext.viewState.transform.mouseEventToModelPoint(event.nativeEvent)
             );
         }
     }
@@ -275,7 +287,7 @@ export class Canvas extends React.Component<
 
         this.draggable.cursor = style.cursor;
 
-        const transform = this.props.document.transform;
+        const transform = this.designerContext.viewState.transform;
 
         let xt = transform.clientRect.width / 2 + transform.translate.x + transform.scrollOffset.x;
         let yt = transform.clientRect.height / 2 + transform.translate.y + transform.scrollOffset.y;
@@ -290,7 +302,7 @@ export class Canvas extends React.Component<
             >
                 <ScrollDiv
                     ref={ref => (this.scrollDiv = ref!)}
-                    transform={this.props.document.transform}
+                    transform={this.designerContext.viewState.transform}
                 >
                     <svg
                         ref={ref => (this.svg = ref!)}
@@ -307,14 +319,7 @@ export class Canvas extends React.Component<
                         </g>
                     </svg>
 
-                    {this.props.document.selectionVisible &&
-                        this.props.toolHandler === selectToolHandler && (
-                            <Selection
-                                document={this.props.document}
-                                transform={this.props.document.transform}
-                                mouseHandler={this.mouseHandler}
-                            />
-                        )}
+                    {this.props.toolHandler.render(this.designerContext, this.mouseHandler)}
                 </ScrollDiv>
             </div>
         );

@@ -1,4 +1,4 @@
-import { IDocument } from "eez-studio-designer/designer-interfaces";
+import { IDesignerContext } from "eez-studio-designer/designer-interfaces";
 import { MouseHandler } from "eez-studio-designer/mouse-handler";
 
 export class PanMouseHandler extends MouseHandler {
@@ -9,13 +9,13 @@ export class PanMouseHandler extends MouseHandler {
 
     cursor = "default";
 
-    down(document: IDocument, event: MouseEvent) {
-        super.down(document, event);
+    down(context: IDesignerContext, event: MouseEvent) {
+        super.down(context, event);
     }
 
-    move(document: IDocument, event: MouseEvent) {
-        super.move(document, event);
-        document.transform.translateBy(this.movement);
+    move(context: IDesignerContext, event: MouseEvent) {
+        super.move(context, event);
+        context.viewState.transform.translateBy(this.movement);
         this.totalMovement.x += this.movement.x;
         this.totalMovement.y += this.movement.y;
     }
