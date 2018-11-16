@@ -65,7 +65,6 @@ export interface IWorkbenchDocument extends IDocument {
 
     toolbarButtons: IToolbarButton[];
     toolboxGroups: IToolboxGroup[];
-    rubberBendRect: Rect | undefined;
     selectionVisible: boolean;
     boundingRect: Rect | undefined;
 }
@@ -74,7 +73,6 @@ export interface IWorkbenchDocument extends IDocument {
 
 class WorkbenchDocument implements IWorkbenchDocument {
     @observable selectedTool: ITool | undefined;
-    @observable _rubberBendRect: Rect | undefined;
     @observable _selectionVisible: boolean = true;
     transform: Transform;
 
@@ -207,14 +205,6 @@ class WorkbenchDocument implements IWorkbenchDocument {
             }
         }, BOUNCE_ENTRANCE_TRANSITION_DURATION);
         this.selectDefaultTool();
-    }
-
-    get rubberBendRect() {
-        return this._rubberBendRect;
-    }
-
-    set rubberBendRect(value: Rect | undefined) {
-        runInAction(() => (this._rubberBendRect = value));
     }
 
     get selectionVisible() {

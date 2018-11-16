@@ -35,7 +35,6 @@ export interface IDocument {
     selectedObjects: IBaseObject[];
     readonly selectionVisible: boolean;
     selectionResizable: boolean;
-    rubberBendRect: Rect | undefined;
     selectedObjectsBoundingRect: Rect | undefined;
 
     selectObject(object: IBaseObject): void;
@@ -76,6 +75,7 @@ export interface IMouseHandler {
     down(document: IDocument, event: MouseEvent): void;
     move(document: IDocument, event: MouseEvent): void;
     up(document: IDocument, event?: MouseEvent): void;
+    renderInSelectionLayer?(): React.ReactNode;
 }
 
 export interface IToolHandler {

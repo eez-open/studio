@@ -1,3 +1,6 @@
+import React from "react";
+import { observable, runInAction } from "mobx";
+
 import { closestByClass } from "eez-studio-shared/dom";
 import { Point, Rect, pointInRect, rectEqual } from "eez-studio-shared/geometry";
 
@@ -78,7 +81,10 @@ export const selectToolHandler: IToolHandler = {
     }
 };
 
-class RubberBandSelectionMouseHandler extends MouseHandler {
+export class RubberBandSelectionMouseHandler extends MouseHandler {
+    @observable
+    rubberBendRect: Rect | undefined;
+
     down(document: IDocument, event: MouseEvent) {
         super.down(document, event);
         document.deselectAllObjects();
@@ -108,14 +114,16 @@ class RubberBandSelectionMouseHandler extends MouseHandler {
             height = this.offsetPointAtDown.y - this.lastOffsetPoint.y;
         }
 
-        let rubberBendRect = {
-            left: left,
-            top: top,
-            width: width,
-            height: height
+        const rubberBendRect = {
+            left,
+            top,
+            width,
+            height
         };
 
-        document.rubberBendRect = rubberBendRect;
+        runInAction(() => {
+            this.rubberBendRect = rubberBendRect;
+        });
 
         document.selectObjectsInsideRect(document.transform.offsetToModelRect(rubberBendRect));
     }
@@ -123,7 +131,25 @@ class RubberBandSelectionMouseHandler extends MouseHandler {
     up(document: IDocument, event?: MouseEvent) {
         super.up(document, event);
 
-        document.rubberBendRect = undefined;
+        runInAction(() => {
+            this.rubberBendRect = undefined;
+        });
+    }
+
+    renderInSelectionLayer() {
+        return (
+            this.rubberBendRect && (
+                <div
+                    className="EezStudio_DesignerSelection_RubberBend"
+                    style={{
+                        left: this.rubberBendRect.left,
+                        top: this.rubberBendRect.top,
+                        width: this.rubberBendRect.width,
+                        height: this.rubberBendRect.height
+                    }}
+                />
+            )
+        );
     }
 }
 

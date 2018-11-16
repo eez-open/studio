@@ -312,7 +312,7 @@ export class Canvas extends React.Component<
                             <Selection
                                 document={this.props.document}
                                 transform={this.props.document.transform}
-                                rubberBendRect={this.props.document.rubberBendRect}
+                                mouseHandler={this.mouseHandler}
                             />
                         )}
                 </ScrollDiv>

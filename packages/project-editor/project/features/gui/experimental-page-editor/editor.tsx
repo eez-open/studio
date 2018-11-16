@@ -810,8 +810,6 @@ export class ExperimentalWidgetContainerEditor
     @observable
     _selectionVisible: boolean;
     @observable
-    _rubberBendRect: Rect | undefined;
-    @observable
     _selectedObjects: BaseObjectComponent[] = [];
     selectionResizable: boolean = true;
     rootObjectComponent: RootObjectComponent;
@@ -877,7 +875,6 @@ export class ExperimentalWidgetContainerEditor
         );
 
         this._selectionVisible = true;
-        this._rubberBendRect = undefined;
         this._selectedObjects = [];
         this.selectionResizable = true;
     }
@@ -928,14 +925,6 @@ export class ExperimentalWidgetContainerEditor
 
     deleteSelectedObjects(): void {
         deleteItems(this.selectedObjects.map(objectComponent => objectComponent.props.object));
-    }
-
-    get rubberBendRect() {
-        return this._rubberBendRect;
-    }
-
-    set rubberBendRect(value: Rect | undefined) {
-        runInAction(() => (this._rubberBendRect = value));
     }
 
     get selectionVisible() {

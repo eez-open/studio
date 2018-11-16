@@ -6,7 +6,8 @@ import { Rect, Transform } from "eez-studio-shared/geometry";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { IBaseObject, IDocument } from "eez-studio-designer/designer-interfaces";
+import { IBaseObject, IDocument, IMouseHandler } from "eez-studio-designer/designer-interfaces";
+import { RubberBandSelectionMouseHandler } from "eez-studio-designer/select-tool";
 
 @observer
 class SelectedObject extends React.Component<
@@ -109,7 +110,7 @@ export class Selection extends React.Component<
     {
         document: IDocument;
         transform: Transform;
-        rubberBendRect: Rect | undefined;
+        mouseHandler?: IMouseHandler;
     },
     {}
 > {
@@ -156,7 +157,12 @@ export class Selection extends React.Component<
             }
 
             //
-            if (!this.props.rubberBendRect && this.props.document.selectionResizable) {
+            const isActiveRubberBendSelection =
+                this.props.mouseHandler &&
+                this.props.mouseHandler instanceof RubberBandSelectionMouseHandler &&
+                this.props.mouseHandler.rubberBendRect;
+
+            if (!isActiveRubberBendSelection! && this.props.document.selectionResizable) {
                 let left = boundingRect.left;
                 let width = boundingRect.width;
                 let top = boundingRect.top;
@@ -282,22 +288,6 @@ export class Selection extends React.Component<
             }
         }
 
-        //
-        let rubberBendRect;
-        if (this.props.rubberBendRect) {
-            rubberBendRect = (
-                <div
-                    className="EezStudio_DesignerSelection_RubberBend"
-                    style={{
-                        left: this.props.rubberBendRect.left,
-                        top: this.props.rubberBendRect.top,
-                        width: this.props.rubberBendRect.width,
-                        height: this.props.rubberBendRect.height
-                    }}
-                />
-            );
-        }
-
         return (
             <SelectionDiv
                 className="EezStudio_DesignerSelection"
@@ -309,7 +299,9 @@ export class Selection extends React.Component<
                 {selectedObjectRects}
                 {selectedObjectsBoundingRect}
                 {resizeHandlers}
-                {rubberBendRect}
+                {this.props.mouseHandler &&
+                    this.props.mouseHandler.renderInSelectionLayer &&
+                    this.props.mouseHandler.renderInSelectionLayer()}
             </SelectionDiv>
         );
     }
