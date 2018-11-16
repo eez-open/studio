@@ -1,7 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-//import { DragDropContext } from "react-dnd";
-//import HTML5Backend from "react-dnd-html5-backend";
 
 import styled from "eez-studio-ui/styled-components";
 import { VerticalHeaderWithBody, Header, Body } from "eez-studio-ui/header-with-body";

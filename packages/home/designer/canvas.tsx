@@ -1,6 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-//import { DropTarget, DropTargetConnector, DropTargetMonitor } from "react-dnd";
 
 import { getBoundingClientRectOfChildNodes } from "eez-studio-shared/util";
 import { rectScale, Transform } from "eez-studio-shared/geometry";
@@ -80,12 +79,10 @@ class ObjectComponent extends React.Component<
     }
 }
 
-interface DndWorkbenchDocumentProps {
+interface WorkbenchDocumentProps {
     document: IWorkbenchDocument;
     tool: ITool | undefined;
     selectDefaultTool: () => void;
-    //connectDropTarget: any;
-    //isOver: boolean;
 }
 
 const WorkbenchCanvas = styled(Canvas)`
@@ -98,7 +95,7 @@ const WorkbenchCanvas = styled(Canvas)`
 `;
 
 @observer
-class DndWorkbenchDocument extends React.Component<DndWorkbenchDocumentProps, {}> {
+export class WorkbenchDocument extends React.Component<WorkbenchDocumentProps, {}> {
     render() {
         const transform = this.props.document.transform;
         const toolHandler = this.props.tool && this.props.tool.toolHandler;
@@ -121,28 +118,3 @@ class DndWorkbenchDocument extends React.Component<DndWorkbenchDocumentProps, {}
         );
     }
 }
-
-// export const WorkbenchDocument = DropTarget(
-//     "ToolFromToolbox",
-//     {
-//         drop(props: any, monitor: DropTargetMonitor, documentComponent: DndWorkbenchDocument) {
-//             let tool: ITool = props.tool;
-//             return tool.toolHandler.drop(
-//                 documentComponent.props.document,
-//                 documentComponent.transform.clientToModelPoint(monitor.getClientOffset())
-//             );
-//         },
-
-//         canDrop() {
-//             return true;
-//         }
-//     },
-//     (connect: DropTargetConnector, monitor: DropTargetMonitor) => {
-//         return {
-//             connectDropTarget: connect.dropTarget(),
-//             isOver: monitor.isOver(),
-//             canDrop: monitor.canDrop()
-//         };
-//     }
-// )(DndWorkbenchDocument);
-export const WorkbenchDocument = DndWorkbenchDocument;
