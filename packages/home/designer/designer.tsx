@@ -4,20 +4,15 @@ import { observer } from "mobx-react";
 import { VerticalHeaderWithBody, Header, Body } from "eez-studio-ui/header-with-body";
 import { Splitter } from "eez-studio-ui/splitter";
 
+import { selectToolHandler } from "eez-studio-designer/select-tool";
+
 import { workbenchDocument } from "home/designer/designer-store";
 import { WorkbenchDocument } from "home/designer/canvas";
 import { DesignerToolbar } from "home/designer/toolbar";
-//import { Toolbox } from "home/designer/toolbox";
 import { Properties } from "home/designer/properties";
 
 @observer
 export class Designer extends React.Component<{}, {}> {
-    constructor(props: any) {
-        super(props);
-
-        workbenchDocument.selectDefaultTool();
-    }
-
     render() {
         return (
             <VerticalHeaderWithBody>
@@ -33,15 +28,9 @@ export class Designer extends React.Component<{}, {}> {
                         sizes={/*"240px|100%|240px"*/ "100%|240px"}
                         persistId="home/designer/splitter"
                     >
-                        {/*<Toolbox
-                            toolboxGroups={workbenchDocument.toolboxGroups}
-                            selectTool={tool => workbenchDocument.selectTool(tool)}
-                        />*/}
-
                         <WorkbenchDocument
                             document={workbenchDocument}
-                            tool={workbenchDocument.selectedTool}
-                            selectDefaultTool={workbenchDocument.selectDefaultTool}
+                            toolHandler={selectToolHandler}
                         />
 
                         <Properties selectedObjects={workbenchDocument.selectedObjects} />

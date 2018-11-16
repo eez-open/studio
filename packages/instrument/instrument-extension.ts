@@ -1,4 +1,4 @@
-import { observable, computed, values } from "mobx";
+import { computed, values } from "mobx";
 
 import {
     IExtensionDefinition,
@@ -10,7 +10,6 @@ import { isRenderer } from "eez-studio-shared/util";
 import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { IDocument } from "eez-studio-designer/designer-interfaces";
-import { createCreateObjectToolHandler } from "eez-studio-designer/tool-handler";
 
 import { loadInstrumentExtension } from "instrument/import";
 import { instrumentStore, instruments } from "instrument/instrument-object";
@@ -51,28 +50,6 @@ function createInstrument(extension: IExtension) {
         }
     };
 }
-
-const instrumentToolboxGroup = computed(() => ({
-    id: "instruments",
-    label: "Instruments",
-    title: "Instruments",
-    tools: instrumentExtensions.get().map((extension: IExtension) =>
-        observable({
-            id: extension.id,
-            icon: extension.image || "",
-            iconSize: 48,
-            label: extension.displayName || extension.name,
-            title: extension.displayName || extension.name,
-            selected: false,
-            toolHandler: createCreateObjectToolHandler(() => {
-                beginTransaction("Add instrument");
-                const instrument = createInstrument(extension);
-                commitTransaction();
-                return instrument;
-            })
-        })
-    )
-}));
 
 const instrumentExtension: IExtensionDefinition = {
     preInstalled: true,
@@ -131,10 +108,6 @@ const instrumentExtension: IExtensionDefinition = {
         }
 
         return buttons;
-    },
-
-    get toolboxGroups() {
-        return [instrumentToolboxGroup.get()];
     },
 
     objectTypes: {

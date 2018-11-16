@@ -1,5 +1,4 @@
 import { observable, computed, action, runInAction, values, reaction } from "mobx";
-import { bind } from "bind-decorator";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -14,24 +13,18 @@ import {
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { humanize } from "eez-studio-shared/string";
 
-import {
-    extensionsToolboxGroups,
-    extensionsToolbarButtons
-} from "eez-studio-shared/extensions/extensions";
+import { extensionsToolbarButtons } from "eez-studio-shared/extensions/extensions";
 
 import { BOUNCE_ENTRANCE_TRANSITION_DURATION } from "eez-studio-ui/transitions";
 
 import {
     IBaseObject,
     IDocument,
-    ITool,
-    IToolboxGroup,
     IToolbarButton,
     IContextMenu,
     IContextMenuItem,
     IContextMenuPopupOptions
 } from "eez-studio-designer/designer-interfaces";
-import { selectToolHandler } from "eez-studio-designer/select-tool";
 
 import {
     store,
@@ -64,7 +57,6 @@ export interface IWorkbenchDocument extends IDocument {
     selectedObjects: IWorkbenchObject[];
 
     toolbarButtons: IToolbarButton[];
-    toolboxGroups: IToolboxGroup[];
     selectionVisible: boolean;
     boundingRect: Rect | undefined;
 }
@@ -72,7 +64,6 @@ export interface IWorkbenchDocument extends IDocument {
 ////////////////////////////////////////////////////////////////////////////////
 
 class WorkbenchDocument implements IWorkbenchDocument {
-    @observable selectedTool: ITool | undefined;
     @observable _selectionVisible: boolean = true;
     transform: Transform;
 
@@ -162,38 +153,8 @@ class WorkbenchDocument implements IWorkbenchDocument {
     }
 
     @computed
-    get toolboxGroups() {
-        return toolboxGroups.get();
-    }
-
-    @computed
     get toolbarButtons() {
         return extensionsToolbarButtons.get();
-    }
-
-    @computed
-    get defaultTool() {
-        return this.toolboxGroups[0].tools[0];
-    }
-
-    @action
-    selectTool(tool: ITool | undefined) {
-        if (tool !== this.selectedTool) {
-            if (this.selectedTool) {
-                this.selectedTool.selected = false;
-            }
-
-            this.selectedTool = tool || this.defaultTool;
-
-            if (this.selectedTool) {
-                this.selectedTool.selected = true;
-            }
-        }
-    }
-
-    @bind
-    selectDefaultTool() {
-        this.selectTool(this.defaultTool);
     }
 
     createObject(params: any) {
@@ -204,7 +165,6 @@ class WorkbenchDocument implements IWorkbenchDocument {
                 this.selectObject(object);
             }
         }, BOUNCE_ENTRANCE_TRANSITION_DURATION);
-        this.selectDefaultTool();
     }
 
     get selectionVisible() {
@@ -321,33 +281,5 @@ class WorkbenchDocument implements IWorkbenchDocument {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const standardToolboxGroup = {
-    id: "standard",
-    label: undefined,
-    title: "Standard",
-    tools: [
-        observable(
-            {
-                id: "select",
-                icon: "_images/select.svg",
-                iconSize: 24,
-                label: undefined,
-                title: "Select",
-                selected: false,
-                toolHandler: selectToolHandler
-            },
-            {
-                toolHandler: observable.ref
-            }
-        )
-    ]
-};
-
-const toolboxGroups = computed(() => {
-    return observable([standardToolboxGroup as IToolboxGroup]).concat(
-        extensionsToolboxGroups.get() as IToolboxGroup[]
-    );
-});
 
 export const workbenchDocument = new WorkbenchDocument();

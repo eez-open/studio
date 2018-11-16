@@ -890,10 +890,6 @@ export class ExperimentalWidgetContainerEditor
 
     createObject(params: any): void {}
 
-    selectDefaultTool(): void {
-        console.log("selectDefaultTool");
-    }
-
     @computed
     get selectedObjects() {
         return this._selectedObjects;

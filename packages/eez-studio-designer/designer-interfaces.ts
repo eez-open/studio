@@ -28,9 +28,6 @@ export interface IDocument {
 
     createObject(params: any): void;
 
-    // toolbox
-    selectDefaultTool(): void;
-
     // selection
     selectedObjects: IBaseObject[];
     readonly selectionVisible: boolean;
@@ -60,16 +57,6 @@ export interface IToolbarButton {
     onClick: (document: IDocument) => void;
 }
 
-export interface ITool {
-    id: string;
-    icon: string;
-    iconSize: number;
-    label: string | undefined;
-    title: string;
-    selected: boolean;
-    toolHandler: IToolHandler;
-}
-
 export interface IMouseHandler {
     cursor: string;
     down(document: IDocument, event: MouseEvent): void;
@@ -92,11 +79,4 @@ export interface IToolHandler {
     drop(document: IDocument, point: Point): void;
 
     createMouseHandler(document: IDocument, event: MouseEvent): IMouseHandler | undefined;
-}
-
-export interface IToolboxGroup {
-    id: string;
-    label: string | undefined;
-    title: string;
-    tools: ITool[];
 }

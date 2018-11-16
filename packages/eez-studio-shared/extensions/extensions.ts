@@ -21,7 +21,7 @@ import { registerSource, sendMessage, watch } from "eez-studio-shared/notify";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import * as notification from "eez-studio-ui/notification";
-import { IToolboxGroup, IToolbarButton } from "eez-studio-designer/designer-interfaces";
+import { IToolbarButton } from "eez-studio-designer/designer-interfaces";
 
 import { IExtension, IObject, IExtensionProperties } from "eez-studio-shared/extensions/extension";
 
@@ -578,16 +578,4 @@ export const extensionsToolbarButtons = computed(() => {
     });
 
     return buttons;
-});
-
-export const extensionsToolboxGroups = computed(() => {
-    let groups: IToolboxGroup[] = [];
-
-    values(extensions).forEach(extension => {
-        if (extension.toolboxGroups) {
-            groups.push(...extension.toolboxGroups);
-        }
-    });
-
-    return groups;
 });

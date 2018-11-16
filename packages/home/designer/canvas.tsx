@@ -5,7 +5,7 @@ import { getBoundingClientRectOfChildNodes } from "eez-studio-shared/util";
 import { rectScale, Transform } from "eez-studio-shared/geometry";
 
 import styled from "eez-studio-ui/styled-components";
-import { ITool } from "eez-studio-designer/designer-interfaces";
+import { IToolHandler } from "eez-studio-designer/designer-interfaces";
 
 import {
     TransitionGroup,
@@ -81,8 +81,7 @@ class ObjectComponent extends React.Component<
 
 interface WorkbenchDocumentProps {
     document: IWorkbenchDocument;
-    tool: ITool | undefined;
-    selectDefaultTool: () => void;
+    toolHandler: IToolHandler;
 }
 
 const WorkbenchCanvas = styled(Canvas)`
@@ -98,11 +97,10 @@ const WorkbenchCanvas = styled(Canvas)`
 export class WorkbenchDocument extends React.Component<WorkbenchDocumentProps, {}> {
     render() {
         const transform = this.props.document.transform;
-        const toolHandler = this.props.tool && this.props.tool.toolHandler;
 
         return (
             /*this.props.connectDropTarget*/
-            <WorkbenchCanvas document={this.props.document} toolHandler={toolHandler}>
+            <WorkbenchCanvas document={this.props.document} toolHandler={this.props.toolHandler}>
                 <TransitionGroup
                     component="g"
                     className="EezStudio_Layer"
