@@ -403,7 +403,6 @@ export function getObject(type: string, oid: string): IObject {
                 return null;
             },
             details: null,
-            isResizable: false,
             isEditable: false
         };
     }

@@ -39,7 +39,6 @@ export class WorkbenchObject {
     type: string;
     oid: string;
     @observable private _rect: Rect;
-    @observable selected: boolean;
 
     @observable _boundingRect: Rect | undefined;
 
@@ -85,10 +84,6 @@ export class WorkbenchObject {
 
     get details(): JSX.Element | null {
         return this.implementation.details;
-    }
-
-    get isResizable() {
-        return this.implementation.isResizable;
     }
 
     open() {

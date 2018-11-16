@@ -155,8 +155,6 @@ export class InstrumentObject {
 
     connection: IConnection;
 
-    isResizable: false;
-
     _creationDate: Date | null | undefined;
 
     // This complication with extension loading

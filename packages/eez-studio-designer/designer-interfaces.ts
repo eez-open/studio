@@ -15,34 +15,29 @@ export interface IContextMenu {
 export interface IBaseObject {
     id: string;
     rect: Rect;
+    boundingRect: Rect;
     selectionRects: Rect[];
-    selected: boolean;
+    isResizable?: boolean;
     open(): void;
 }
 
 export interface IDocument {
+    findObjectById(id: string): IBaseObject | undefined;
+
+    // modify
     createObject(params: any): void;
-
-    // selection
-    selectedObjects: IBaseObject[];
-    selectionResizable: boolean;
-    selectedObjectsBoundingRect: Rect | undefined;
-
-    selectObject(object: IBaseObject): void;
-    selectObjectsInsideRect(rect: Rect): void;
-    deselectAllObjects(): void;
-
-    deleteSelectedObjects(): void;
-
-    // events
-    onDragStart(op: "move" | "resize"): void;
-    onDragEnd(op: "move" | "resize", changed: boolean): void;
+    deleteObjects(objects: IBaseObject[]): void;
 
     // view
     objectFromPoint(point: Point): IBaseObject | undefined;
+    getObjectsInsideRect(rect: Rect): IBaseObject[];
 
     // misc.
-    createContextMenu(): IContextMenu;
+    createContextMenu(objects: IBaseObject[]): IContextMenu;
+
+    // events
+    onDragStart(op: "move" | "resize"): void;
+    onDragEnd(op: "move" | "resize", changed: boolean, objects: IBaseObject[]): void;
 }
 
 export interface IViewState {
@@ -51,6 +46,17 @@ export interface IViewState {
 
     // true if there is no active user interaction (like mouse) with the designer.
     isIdle: boolean;
+
+    // selection
+    selectedObjects: IBaseObject[];
+    isSelectionResizable: boolean;
+    selectedObjectsBoundingRect: Rect | undefined;
+
+    isObjectSelected(object: IBaseObject): boolean;
+
+    selectObject(object: IBaseObject): void;
+    selectObjects(objects: IBaseObject[]): void;
+    deselectAllObjects(): void;
 }
 
 export interface IDesignerContext {

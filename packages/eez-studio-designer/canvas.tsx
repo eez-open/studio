@@ -218,10 +218,10 @@ export class Canvas extends React.Component<
                         distance <= CONF_DOUBLE_CLICK_DISTANCE
                     ) {
                         // double click
-                        if (this.designerContext.document.selectedObjects.length === 1) {
-                            const object = this.designerContext.document.selectedObjects[0];
+                        if (this.designerContext.viewState.selectedObjects.length === 1) {
+                            const object = this.designerContext.viewState.selectedObjects[0];
                             object.open();
-                        } else if (this.designerContext.document.selectedObjects.length === 0) {
+                        } else if (this.designerContext.viewState.selectedObjects.length === 0) {
                             this.designerContext.viewState.resetTransform();
                         }
                     }

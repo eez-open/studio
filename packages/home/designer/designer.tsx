@@ -19,7 +19,11 @@ import { PanelTitle } from "eez-studio-ui/panel";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
 
-import { IToolbarButton, IDesignerContext } from "eez-studio-designer/designer-interfaces";
+import {
+    IBaseObject,
+    IToolbarButton,
+    IDesignerContext
+} from "eez-studio-designer/designer-interfaces";
 import { DesignerContext } from "eez-studio-designer/context";
 import { Canvas } from "eez-studio-designer/canvas";
 import { selectToolHandler } from "eez-studio-designer/select-tool";
@@ -64,25 +68,30 @@ const CONF_SHOW_HISTORY_DELAY = 500;
 @observer
 export class Properties extends React.Component<{
     designerContext?: IDesignerContext;
-    selectedObjects: IWorkbenchObject[];
     className?: string;
 }> {
+    get viewStateSelectedObject() {
+        return this.props.designerContext!.viewState.selectedObjects;
+    }
+
     ///////////////////////////////////////////////////////////////////
     // Show history if selectedObjects doesn't change after some period
     // of time (CONF_SHOW_HISTORY_DELAY).
     // TODO let's hope that React hooks will make this much simpler.
     @observable.shallow
-    selectedObjects: IWorkbenchObject[];
+    selectedObjects: IBaseObject[];
 
     @computed
     get showHistory() {
-        return JSON.stringify(this.selectedObjects) === JSON.stringify(this.props.selectedObjects);
+        return (
+            JSON.stringify(this.selectedObjects) === JSON.stringify(this.viewStateSelectedObject)
+        );
     }
 
     showHistoryAfterDelay() {
         setTimeout(
             action(() => {
-                this.selectedObjects = this.props.selectedObjects;
+                this.selectedObjects = this.viewStateSelectedObject;
             }),
             CONF_SHOW_HISTORY_DELAY
         );
@@ -100,7 +109,7 @@ export class Properties extends React.Component<{
     render() {
         let className = this.props.className;
 
-        if (this.props.selectedObjects.length === 0) {
+        if (this.viewStateSelectedObject.length === 0) {
             return <div className={className} />;
         }
 
@@ -111,8 +120,8 @@ export class Properties extends React.Component<{
                     {this.props.designerContext!.viewState.isIdle && this.showHistory && (
                         <div>
                             <HistorySection
-                                oids={this.props.selectedObjects.map(
-                                    selectedObject => selectedObject.oid
+                                oids={this.viewStateSelectedObject.map(
+                                    selectedObject => (selectedObject as IWorkbenchObject).oid
                                 )}
                                 simple={true}
                             />
@@ -122,7 +131,7 @@ export class Properties extends React.Component<{
             </Box>
         );
 
-        if (this.props.selectedObjects.length === 1) {
+        if (this.viewStateSelectedObject.length === 1) {
             return (
                 <Splitter
                     type="vertical"
@@ -130,7 +139,7 @@ export class Properties extends React.Component<{
                     className={className}
                     persistId="home/designer/properties/splitter"
                 >
-                    {this.props.selectedObjects[0].details}
+                    {(this.viewStateSelectedObject[0] as IWorkbenchObject).details}
                     {history}
                 </Splitter>
             );
@@ -300,7 +309,7 @@ export class Designer extends React.Component<{}, {}> {
                         >
                             <WorkbenchDocument />
 
-                            <Properties selectedObjects={workbenchDocument.selectedObjects} />
+                            <Properties />
                         </Splitter>
                     </Body>
                 </VerticalHeaderWithBody>

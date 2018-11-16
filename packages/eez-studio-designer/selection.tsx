@@ -125,14 +125,14 @@ export class Selection extends React.Component<
         let selectedObjectRects;
         let selectedObjectsBoundingRect;
         let resizeHandlers;
-        if (this.props.context.document.selectedObjects.length > 0) {
+        if (this.props.context.viewState.selectedObjects.length > 0) {
             const selectedObjectClassName =
-                this.props.context.document.selectedObjects.length > 1
+                this.props.context.viewState.selectedObjects.length > 1
                     ? "EezStudio_DesignerSelection_SelectedObject"
                     : "EezStudio_DesignerSelection_BoundingRect";
 
             //
-            selectedObjectRects = this.props.context.document.selectedObjects.map(object => (
+            selectedObjectRects = this.props.context.viewState.selectedObjects.map(object => (
                 <SelectedObject
                     className={selectedObjectClassName}
                     key={object.id}
@@ -143,9 +143,9 @@ export class Selection extends React.Component<
 
             //
             let boundingRect = this.props.context.viewState.transform.modelToOffsetRect(this.props
-                .context.document.selectedObjectsBoundingRect as Rect);
+                .context.viewState.selectedObjectsBoundingRect as Rect);
 
-            if (this.props.context.document.selectedObjects.length > 1) {
+            if (this.props.context.viewState.selectedObjects.length > 1) {
                 let style: React.CSSProperties = {
                     position: "absolute",
                     left: boundingRect.left + "px",
@@ -165,7 +165,10 @@ export class Selection extends React.Component<
                 this.props.mouseHandler instanceof RubberBandSelectionMouseHandler &&
                 this.props.mouseHandler.rubberBendRect;
 
-            if (!isActiveRubberBendSelection! && this.props.context.document.selectionResizable) {
+            if (
+                !isActiveRubberBendSelection! &&
+                this.props.context.viewState.isSelectionResizable
+            ) {
                 let left = boundingRect.left;
                 let width = boundingRect.width;
                 let top = boundingRect.top;

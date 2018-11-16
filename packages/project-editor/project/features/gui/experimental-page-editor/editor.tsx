@@ -6,13 +6,7 @@ import { bind } from "bind-decorator";
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
 import { _range } from "eez-studio-shared/algorithm";
-import {
-    Point,
-    Rect,
-    pointInRect,
-    BoundingRectBuilder,
-    isRectInsideRect
-} from "eez-studio-shared/geometry";
+import { Point, Rect, pointInRect, isRectInsideRect } from "eez-studio-shared/geometry";
 
 import { SvgLabel } from "eez-studio-ui/svg-label";
 import {
@@ -81,22 +75,38 @@ abstract class BaseObjectComponent extends React.Component<{ object: EezObject }
     implements IBaseObject {
     children: BaseObjectComponent[] = [];
 
-    @observable
-    selected: boolean;
-
     abstract get rect(): Rect;
     abstract get boundingRect(): Rect;
     abstract get selectionRects(): Rect[];
+
+    get isResizable() {
+        return true;
+    }
 
     get id() {
         return getId(this.props.object);
     }
 
+    findObjectById(id: string): IBaseObject | undefined {
+        if (this.id === id) {
+            return this;
+        }
+
+        for (const child of this.children) {
+            const object = child.findObjectById(id);
+            if (object) {
+                return object;
+            }
+        }
+
+        return undefined;
+    }
+
     objectFromPoint(point: Point): BaseObjectComponent | undefined {
         let foundObject: BaseObjectComponent | undefined = undefined;
 
-        for (let i = 0; i < this.children.length; i++) {
-            let result = this.children[i].objectFromPoint(point);
+        for (const child of this.children) {
+            let result = child.objectFromPoint(point);
             if (result) {
                 foundObject = result;
             }
@@ -807,7 +817,6 @@ export class ExperimentalWidgetContainerEditor
     container: PageResolutionProperties;
     @observable
     _selectedObjects: BaseObjectComponent[] = [];
-    selectionResizable: boolean = true;
     rootObjectComponent: RootObjectComponent;
 
     constructor(props: ExperimentalWidgetContainerEditorProps) {
@@ -836,60 +845,41 @@ export class ExperimentalWidgetContainerEditor
     loadContainer(container: PageResolutionProperties) {
         this.container = container;
         this._selectedObjects = [];
-        this.selectionResizable = true;
     }
 
-    createObject(params: any): void {}
+    findObjectById(id: string) {
+        return this.rootObjectComponent.findObjectById(id);
+    }
+
+    createObject(params: any) {
+        // TODO ???
+    }
 
     get selectedObjects() {
         return this._selectedObjects;
     }
 
-    selectObject(object: IBaseObject): void {
-        runInAction(() => {
-            object.selected = true;
-            this._selectedObjects.push(object as BaseObjectComponent);
-        });
+    getObjectsInsideRect(rect: Rect) {
+        return this.rootObjectComponent.children.filter(object =>
+            isRectInsideRect(object.boundingRect, rect)
+        );
     }
 
-    selectObjectsInsideRect(rect: Rect): void {
-        this.deselectAllObjects();
-
-        this.rootObjectComponent.children.forEach(child => {
-            if (isRectInsideRect(child.boundingRect, rect)) {
-                this.selectObject(child);
-            }
-        });
-    }
-
-    deselectAllObjects() {
-        runInAction(() => {
-            this.selectedObjects.forEach(object => (object.selected = false));
-            this._selectedObjects = [];
-        });
-    }
-
-    deleteSelectedObjects(): void {
-        deleteItems(this.selectedObjects.map(objectComponent => objectComponent.props.object));
-    }
-
-    get selectedObjectsBoundingRect() {
-        let boundingRectBuilder = new BoundingRectBuilder();
-        for (let i = 0; i < this.selectedObjects.length; i++) {
-            boundingRectBuilder.addRect(this.selectedObjects[i].boundingRect);
-        }
-        return boundingRectBuilder.getRect();
+    deleteObjects(objects: BaseObjectComponent[]) {
+        deleteItems(
+            objects.map(objectComponent => (objectComponent as BaseObjectComponent).props.object)
+        );
     }
 
     onDragStart(op: "move" | "resize"): void {
         UndoManager.setCombineCommands(true);
     }
 
-    onDragEnd(op: "move" | "resize", changed: boolean): void {
+    onDragEnd(op: "move" | "resize", changed: boolean, objects: IBaseObject[]): void {
         UndoManager.setCombineCommands(false);
     }
 
-    createContextMenu(): IContextMenu {
+    createContextMenu(objects: IBaseObject[]): IContextMenu {
         const menu = new Menu();
         return {
             appendMenuItem: (menuItem: IContextMenuItem) => {

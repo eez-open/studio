@@ -29,7 +29,6 @@ export interface IObject {
     content: JSX.Element | null;
     activityLogEntryInfo(logEntry: IActivityLogEntry): IActivityLogEntryInfo | null;
     details: JSX.Element | null;
-    isResizable: boolean;
     isEditable: boolean;
     getEditor?(): IEditor;
     getEditorWindowArgs?(): {

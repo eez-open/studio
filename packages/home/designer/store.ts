@@ -1,4 +1,4 @@
-import { computed, runInAction, values } from "mobx";
+import { computed } from "mobx";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -14,8 +14,6 @@ import { humanize } from "eez-studio-shared/string";
 
 import { extensionsToolbarButtons } from "eez-studio-shared/extensions/extensions";
 
-import { BOUNCE_ENTRANCE_TRANSITION_DURATION } from "eez-studio-ui/transitions";
-
 import {
     IBaseObject,
     IDocument,
@@ -24,13 +22,7 @@ import {
     IContextMenuPopupOptions
 } from "eez-studio-designer/designer-interfaces";
 
-import {
-    store,
-    workbenchObjects,
-    findWorkbenchObjectById,
-    deleteWorkbenchObject,
-    WorkbenchObject
-} from "home/store";
+import { store, workbenchObjects, deleteWorkbenchObject, WorkbenchObject } from "home/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,9 +48,8 @@ class WorkbenchDocument implements IDocument {
         return Array.from(workbenchObjects.values());
     }
 
-    @computed
-    get selectedObjects() {
-        return values(workbenchObjects).filter(object => object.selected);
+    findObjectById(id: string): IBaseObject | undefined {
+        return this.objects.find(object => object.id === id);
     }
 
     @computed
@@ -72,25 +63,18 @@ class WorkbenchDocument implements IDocument {
         return boundingRectBuilder.getRect();
     }
 
-    selectObject(object: IWorkbenchObject) {
-        runInAction(() => (object.selected = true));
+    getObjectsInsideRect(rect: Rect) {
+        return this.objects.filter(object => isRectInsideRect(object.boundingRect, rect));
     }
 
-    selectObjectsInsideRect(rect: Rect) {
-        for (let i = 0; i < this.objects.length; i++) {
-            let object = this.objects[i];
-            runInAction(() => (object.selected = isRectInsideRect(object.rect, rect)));
-        }
-    }
-
-    deleteSelectedObjects() {
-        if (this.selectedObjects.length > 0) {
+    deleteObjects(objects: IBaseObject[]) {
+        if (objects.length > 0) {
             beginTransaction("Delete workbench items");
         } else {
             beginTransaction("Delete workbench item");
         }
 
-        this.selectedObjects.forEach(object => deleteWorkbenchObject(object as WorkbenchObject));
+        objects.forEach(object => deleteWorkbenchObject(object as WorkbenchObject));
 
         commitTransaction();
     }
@@ -101,13 +85,7 @@ class WorkbenchDocument implements IDocument {
     }
 
     createObject(params: any) {
-        let objectId = store.createObject(params);
-        setTimeout(() => {
-            let object = findWorkbenchObjectById(objectId);
-            if (object) {
-                this.selectObject(object);
-            }
-        }, BOUNCE_ENTRANCE_TRANSITION_DURATION);
+        store.createObject(params);
     }
 
     objectFromPoint(point: Point) {
@@ -122,37 +100,10 @@ class WorkbenchDocument implements IDocument {
         return undefined;
     }
 
-    get selectedObjectsBoundingRect() {
-        let boundingRectBuilder = new BoundingRectBuilder();
-
-        for (let i = 0; i < this.selectedObjects.length; i++) {
-            boundingRectBuilder.addRect(this.selectedObjects[i].boundingRect);
-        }
-
-        return boundingRectBuilder.getRect();
-    }
-
-    get selectionResizable() {
-        for (let i = 0; i < this.selectedObjects.length; i++) {
-            if (!this.selectedObjects[i].isResizable) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    deselectAllObjects() {
-        runInAction(() => {
-            this.selectedObjects.forEach(object => (object.selected = false));
-        });
-    }
-
     onDragStart(op: "move" | "resize"): void {}
 
-    onDragEnd(op: "move" | "resize", changed: boolean): void {
+    onDragEnd(op: "move" | "resize", changed: boolean, objects: IWorkbenchObject[]): void {
         if (changed) {
-            let objects = this.selectedObjects;
-
             if (objects.length > 0) {
                 beginTransaction(`${humanize(op)} workbench items`);
             } else {
@@ -167,11 +118,11 @@ class WorkbenchDocument implements IDocument {
         }
     }
 
-    createContextMenu(): IContextMenu {
+    createContextMenu(objects: IWorkbenchObject[]): IContextMenu {
         const menu = new Menu();
 
-        if (this.selectedObjects.length === 1) {
-            const object = this.selectedObjects[0] as IWorkbenchObject;
+        if (objects.length === 1) {
+            const object = objects[0];
 
             if (object.isEditable) {
                 menu.append(

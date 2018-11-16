@@ -32,27 +32,27 @@ export const selectToolHandler: IToolHandler = {
         showContextMenu: (menu: IContextMenu) => void
     ) {
         if (
-            context.document.selectedObjects.length === 0 ||
-            !pointInRect(point, context.document.selectedObjectsBoundingRect as Rect)
+            context.viewState.selectedObjects.length === 0 ||
+            !pointInRect(point, context.viewState.selectedObjectsBoundingRect as Rect)
         ) {
-            context.document.deselectAllObjects();
+            context.viewState.deselectAllObjects();
 
             let object = context.document.objectFromPoint(point);
             if (!object) {
                 return;
             }
 
-            context.document.selectObject(object);
+            context.viewState.selectObject(object);
         }
 
         setTimeout(() => {
-            if (context.document.selectedObjects.length > 0) {
-                const menu = context.document.createContextMenu();
+            if (context.viewState.selectedObjects.length > 0) {
+                const menu = context.document.createContextMenu(context.viewState.selectedObjects);
 
                 menu.appendMenuItem({
                     label: "Delete",
                     click: () => {
-                        context.document.deleteSelectedObjects();
+                        context.document.deleteObjects(context.viewState.selectedObjects);
                     }
                 });
 
@@ -78,11 +78,11 @@ export const selectToolHandler: IToolHandler = {
         let point = context.viewState.transform.mouseEventToModelPoint(event);
         let object = context.document.objectFromPoint(point);
         if (object) {
-            if (!object.selected) {
+            if (!context.viewState.isObjectSelected(object)) {
                 if (!event.ctrlKey && !event.shiftKey) {
-                    context.document.deselectAllObjects();
+                    context.viewState.deselectAllObjects();
                 }
-                context.document.selectObject(object);
+                context.viewState.selectObject(object);
             }
             return new DragMouseHandler();
         }
@@ -97,7 +97,7 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
 
     down(context: IDesignerContext, event: MouseEvent) {
         super.down(context, event);
-        context.document.deselectAllObjects();
+        context.viewState.deselectAllObjects();
     }
 
     move(context: IDesignerContext, event: MouseEvent) {
@@ -135,8 +135,10 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
             this.rubberBendRect = rubberBendRect;
         });
 
-        context.document.selectObjectsInsideRect(
-            context.viewState.transform.offsetToModelRect(rubberBendRect)
+        context.viewState.selectObjects(
+            context.document.getObjectsInsideRect(
+                context.viewState.transform.offsetToModelRect(rubberBendRect)
+            )
         );
     }
 
@@ -176,10 +178,7 @@ class DragMouseHandler extends MouseHandler {
     move(context: IDesignerContext, event: MouseEvent) {
         super.move(context, event);
 
-        let objects = context.document.selectedObjects;
-        for (let i = 0; i < objects.length; i++) {
-            let object = objects[i];
-
+        for (const object of context.viewState.selectedObjects) {
             let rect = {
                 left: object.rect.left + this.movement.x / context.viewState.transform.scale,
                 top: object.rect.top + this.movement.y / context.viewState.transform.scale,
@@ -196,7 +195,7 @@ class DragMouseHandler extends MouseHandler {
 
     up(context: IDesignerContext, event?: MouseEvent) {
         super.up(context, event);
-        context.document.onDragEnd("move", this.changed);
+        context.document.onDragEnd("move", this.changed, context.viewState.selectedObjects);
     }
 }
 
@@ -250,7 +249,7 @@ class ResizeMouseHandler extends MouseHandler {
             }
         }
 
-        this.savedBoundingRect = context.document.selectedObjectsBoundingRect!;
+        this.savedBoundingRect = context.viewState.selectedObjectsBoundingRect!;
         this.boundingRect = {
             left: this.savedBoundingRect.left,
             top: this.savedBoundingRect.top,
@@ -260,9 +259,8 @@ class ResizeMouseHandler extends MouseHandler {
 
         this.savedRects = [];
         this.rects = [];
-        let objects = context.document.selectedObjects;
-        for (let i = 0; i < objects.length; i++) {
-            let rect = objects[i].rect;
+        for (const object of context.viewState.selectedObjects) {
+            let rect = object.rect;
 
             this.savedRects.push({
                 left: rect.left,
@@ -382,7 +380,7 @@ class ResizeMouseHandler extends MouseHandler {
         let scaleWidth = this.boundingRect.width / this.savedBoundingRect.width;
         let scaleHeight = this.boundingRect.height / this.savedBoundingRect.height;
 
-        let objects = context.document.selectedObjects;
+        let objects = context.viewState.selectedObjects;
 
         for (let i = 0; i < this.rects.length; i++) {
             let savedRect = this.savedRects[i];
@@ -406,6 +404,6 @@ class ResizeMouseHandler extends MouseHandler {
     up(context: IDesignerContext, event?: MouseEvent) {
         super.up(context, event);
 
-        context.document.onDragEnd("resize", this.changed);
+        context.document.onDragEnd("resize", this.changed, context.viewState.selectedObjects);
     }
 }
