@@ -25,8 +25,7 @@ import {
     isArray,
     asArray,
     isValue,
-    updateObject,
-    getId
+    updateObject
 } from "project-editor/core/store";
 
 import { EezObject, PropertyMetaData } from "project-editor/core/metaData";
@@ -663,7 +662,7 @@ class Property extends React.Component<PropertyProps, {}> {
 
             let options = objects.map(object => {
                 return (
-                    <option key={getId(object)} value={getProperty(object, "name")}>
+                    <option key={object._id} value={getProperty(object, "name")}>
                         {objectToString(object)}
                     </option>
                 );

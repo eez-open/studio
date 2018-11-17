@@ -5,7 +5,7 @@ import classNames from "classnames";
 import styled from "eez-studio-ui/styled-components";
 
 import { EezObject } from "project-editor/core/metaData";
-import { NavigationStore, getChildren, objectToString, getId } from "project-editor/core/store";
+import { NavigationStore, getChildren, objectToString } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,7 +85,7 @@ class Menu extends React.Component<
     render() {
         let items = getChildren(this.props.navigationObject).map(item => (
             <NavigationMenuItem
-                key={getId(item)}
+                key={item._id}
                 navigationObject={this.props.navigationObject}
                 item={item}
             />

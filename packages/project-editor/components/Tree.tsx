@@ -23,8 +23,7 @@ import {
     isArrayElement,
     isSameInstanceTypeAs,
     objectToString,
-    setClipboardData,
-    getId
+    setClipboardData
 } from "project-editor/core/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -322,7 +321,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
 
                 childrenRows.push(
                     <TreeRow
-                        key={getId(child.item.object)}
+                        key={child.item.object._id}
                         showOnlyChildren={children.length == 1 && isArray(child.item.object)}
                         rootItem={this.props.rootItem}
                         item={child.item}
@@ -415,7 +414,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
             row = (
                 <TreeRowDiv
                     innerRef={ref => (this.row = ref)}
-                    data-object-id={getId(this.props.item.object)}
+                    data-object-id={this.props.item.object._id}
                     className={className}
                     style={{ paddingLeft: this.props.level * 20 }}
                     onMouseUp={this.onMouseUp}

@@ -50,7 +50,7 @@
 import React from "react";
 import { observable } from "mobx";
 
-import { Editor, EditorState, getId } from "project-editor/core/store";
+import { Editor, EditorState } from "project-editor/core/store";
 import { Message } from "project-editor/core/output";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +190,7 @@ export class EezValueObject extends EezObject {
     constructor(object: EezObject, public propertyMetaData: PropertyMetaData, public value: any) {
         super();
 
-        this._id = getId(object) + "." + propertyMetaData.name;
+        this._id = object._id + "." + propertyMetaData.name;
         this._key = propertyMetaData.name;
         this._parent = object;
         this._metaData = valueObjectMetaData;

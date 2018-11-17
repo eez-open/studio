@@ -12,7 +12,6 @@ import {
     canDelete,
     hasAncestor,
     extendContextMenu,
-    getId,
     isSameInstanceTypeAs
 } from "project-editor/core/store";
 import { reduceUntilCommonParent as reduceObjectsUntilCommonParent } from "project-editor/core/store";
@@ -63,13 +62,13 @@ export interface DisplayItemSelection extends DisplayItem {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getDisplayItemFromObjectId(item: DisplayItem, id: string): DisplayItem | undefined {
-    if (getId(item.object) == id) {
+    if (item.object._id == id) {
         return item;
     }
 
     let result = _find(item.children, (displayItemChild: any) => {
         let child: DisplayItem = displayItemChild;
-        return id === getId(child.object) || id.startsWith(getId(child.object) + ".");
+        return id === child.object._id || id.startsWith(child.object._id + ".");
     });
 
     if (result) {
@@ -84,7 +83,7 @@ export function reduceUntilCommonParent(
     items: DisplayItem[]
 ): DisplayItem[] {
     let objects = reduceObjectsUntilCommonParent(items.map(item => item.object));
-    let parentItems = objects.map(object => getDisplayItemFromObjectId(rootItem, getId(object)));
+    let parentItems = objects.map(object => getDisplayItemFromObjectId(rootItem, object._id));
     return parentItems.filter(item => item !== undefined) as DisplayItem[];
 }
 
@@ -280,13 +279,13 @@ export class TreeObjectAdapter {
             objectAdapter: TreeObjectAdapter,
             id: string
         ): TreeObjectAdapter | undefined {
-            if (getId(objectAdapter.object) == id) {
+            if (objectAdapter.object._id == id) {
                 return objectAdapter;
             }
 
             let result = _find(objectAdapter.children, (displayItemChild: any) => {
                 let child: DisplayItem = displayItemChild;
-                return id == getId(child.object) || id.startsWith(getId(child.object) + ".");
+                return id == child.object._id || id.startsWith(child.object._id + ".");
             });
             if (result) {
                 return getObjectAdapterFromObjectId(result as any, id);
@@ -300,14 +299,11 @@ export class TreeObjectAdapter {
         }
 
         if (objectAdapterOrObjectOrObjectId instanceof EezArrayObject) {
-            return getObjectAdapterFromObjectId(
-                this,
-                getId(objectAdapterOrObjectOrObjectId as any)
-            );
+            return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId._id);
         }
 
         if (objectAdapterOrObjectOrObjectId instanceof EezObject) {
-            return getObjectAdapterFromObjectId(this, getId(objectAdapterOrObjectOrObjectId));
+            return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId._id);
         }
 
         return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId);
@@ -357,7 +353,7 @@ export class TreeObjectAdapter {
                         return true;
                     }
 
-                    if (getId(item.object).startsWith(getId(child.object) + ".")) {
+                    if (item.object._id.startsWith(child.object._id + ".")) {
                         return true;
                     }
 

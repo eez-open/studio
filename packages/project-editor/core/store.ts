@@ -70,7 +70,7 @@ class NavigationStoreClass {
                 }
 
                 if (navigationItem) {
-                    navigationMap.set(getId(navigationObject), navigationItem);
+                    navigationMap.set(navigationObject._id, navigationItem);
                 }
             }
         }
@@ -178,11 +178,11 @@ class NavigationStoreClass {
     }
 
     getNavigationSelectedItem(navigationObject: EezObject): NavigationItem | undefined {
-        let item = this.navigationMap.get(getId(navigationObject));
+        let item = this.navigationMap.get(navigationObject._id);
 
         if (item && !(item instanceof TreeObjectAdapter)) {
             // is this maybe deleted object?
-            item = getObjectFromObjectId(getId(item));
+            item = getObjectFromObjectId(item._id);
         }
 
         if (!item) {
@@ -216,7 +216,7 @@ class NavigationStoreClass {
 
     @action
     setNavigationSelectedItem(navigationObject: EezObject, navigationItem: NavigationItem) {
-        this.navigationMap.set(getId(navigationObject), navigationItem);
+        this.navigationMap.set(navigationObject._id, navigationItem);
         let parent = navigationObject._parent;
         if (parent) {
             if (!this.getNavigationSelectedItem(parent)) {
@@ -265,7 +265,7 @@ export class Editor {
 
     @computed
     get id() {
-        return getId(this.object);
+        return this.object._id;
     }
 
     @computed
@@ -1407,16 +1407,16 @@ export function getObjectPropertyAsObject(object: EezObject, propertyMetaData: P
 
 export function getObjectFromObjectId(objectID: string): EezObject | undefined {
     function getDescendantObjectFromId(object: EezObject, id: string): EezObject | undefined {
-        if (getId(object) == id) {
+        if (object._id == id) {
             return object;
         }
 
         if (isArray(object)) {
             let childObject = asArray(object).find(
-                child => id == getId(child) || id.startsWith(getId(child) + ".")
+                child => id == child._id || id.startsWith(child._id + ".")
             );
             if (childObject) {
-                if (getId(childObject) == id) {
+                if (childObject._id == id) {
                     return childObject;
                 }
                 return getDescendantObjectFromId(childObject, id);
@@ -1429,10 +1429,10 @@ export function getObjectFromObjectId(objectID: string): EezObject | undefined {
                 if (propertyMetaData.type === "object" || propertyMetaData.type === "array") {
                     let childObject = getChildOfObject(object, propertyMetaData);
                     if (childObject) {
-                        if (getId(childObject) == id) {
+                        if (childObject._id == id) {
                             return childObject;
                         }
-                        if (id.startsWith(getId(childObject) + ".")) {
+                        if (id.startsWith(childObject._id + ".")) {
                             return getDescendantObjectFromId(childObject, id);
                         }
                     }
@@ -1448,10 +1448,6 @@ export function getObjectFromObjectId(objectID: string): EezObject | undefined {
 
 export function getKey(object: EezObject) {
     return object._key;
-}
-
-export function getId(object: EezObject) {
-    return object._id;
 }
 
 export function getModificationTime(object: EezObject) {
@@ -1569,7 +1565,7 @@ export function objectToString(object: EezObject) {
                 label = humanize(name);
             }
 
-            label = getId(object);
+            label = object._id;
         }
     }
 
@@ -1652,7 +1648,7 @@ export function getAncestors(
         let possibleAncestor = asArray(ancestor).find(
             possibleAncestor =>
                 object == possibleAncestor ||
-                getId(object).startsWith(getId(possibleAncestor) + ".")
+                object._id.startsWith(possibleAncestor._id + ".")
         );
         if (possibleAncestor) {
             if (possibleAncestor == object) {
@@ -1692,7 +1688,7 @@ export function getAncestors(
 
                     if (
                         possibleAncestor &&
-                        getId(object).startsWith(getId(possibleAncestor) + ".")
+                        object._id.startsWith(possibleAncestor._id + ".")
                     ) {
                         return [ancestor].concat(
                             getAncestors(object, possibleAncestor, numObjectOrArrayProperties > 1)

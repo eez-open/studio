@@ -26,7 +26,6 @@ import {
     updateObject,
     deleteItems,
     UndoManager,
-    getId,
     UIStateStore,
     isObjectExists
 } from "project-editor/core/store";
@@ -83,7 +82,7 @@ abstract class BaseObjectComponent extends React.Component<{ object: EezObject }
     }
 
     get id() {
-        return getId(this.props.object);
+        return this.props.object._id;
     }
 
     findObjectById(id: string): IBaseObject | undefined {
@@ -139,7 +138,7 @@ abstract class BaseObjectComponent extends React.Component<{ object: EezObject }
                                     this.children[i] = ref;
                                 }
                             }}
-                            key={getId(child)}
+                            key={child._id}
                             object={child}
                         />
                     );
@@ -564,7 +563,7 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
             const ChildObjectComponent = getObjectComponentClass(child);
 
             return (
-                <React.Fragment key={getId(child)}>
+                <React.Fragment key={child._id}>
                     <text x={xLabel} y={yLabel} textAnchor={textAnchor} alignmentBaseline="middle">
                         {label}
                     </text>

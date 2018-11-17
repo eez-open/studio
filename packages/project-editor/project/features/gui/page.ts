@@ -2,7 +2,6 @@ import { observable, computed, action, autorun } from "mobx";
 
 import { _find } from "eez-studio-shared/algorithm";
 
-import { getId } from "project-editor/core/store";
 import {
     EezObject,
     MetaData,
@@ -157,7 +156,7 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
 
                 // remove all what we remembered below selected object
                 Object.keys(this.selectWidgetToSelectedWidget).forEach(key => {
-                    if (key.startsWith(getId(selectedObject))) {
+                    if (key.startsWith(selectedObject._id)) {
                         delete this.selectWidgetToSelectedWidget[key];
                     }
                 });
@@ -165,9 +164,8 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
                 // remember from selectedObject up to the root
                 while (selectedObject._parent && selectedObject._parent!._parent) {
                     if (selectedObject._parent!._parent instanceof SelectWidgetProperties) {
-                        this.selectWidgetToSelectedWidget[
-                            getId(selectedObject._parent!._parent!)
-                        ] = getId(selectedObject);
+                        this.selectWidgetToSelectedWidget[selectedObject._parent!._parent!._id] =
+                            selectedObject._id;
                     }
                     selectedObject = selectedObject._parent!;
                 }
@@ -223,7 +221,7 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
         );
 
         // second, use selectWidgetToSelectedWidget to find selected widget
-        let selectedWidgetId = this.selectWidgetToSelectedWidget[getId(widget)];
+        let selectedWidgetId = this.selectWidgetToSelectedWidget[widget._id];
         if (selectedWidgetId) {
             selectedWidgetItem = getDisplayItemFromObjectId(this, selectedWidgetId);
         }

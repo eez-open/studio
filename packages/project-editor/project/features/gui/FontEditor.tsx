@@ -18,7 +18,6 @@ import {
     cloneObject,
     updateObject,
     replaceObject,
-    getId,
     ProjectStore,
     objectToJS
 } from "project-editor/core/store";
@@ -382,7 +381,7 @@ class Glyphs extends React.Component<
     render() {
         const glyphs: JSX.Element[] = this.props.glyphs.map(glyph => (
             <Glyph
-                key={getId(glyph)}
+                key={glyph._id}
                 glyph={glyph}
                 isSelected={glyph == this.props.selectedGlyph}
                 onSelect={this.props.onSelectGlyph.bind(null, glyph)}

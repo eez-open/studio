@@ -31,8 +31,7 @@ import {
     canPaste,
     pasteItem,
     canDelete,
-    deleteItem,
-    getId
+    deleteItem
 } from "project-editor/core/store";
 
 import { DragAndDropManager, DropPosition } from "project-editor/core/dd";
@@ -309,7 +308,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
         return (
             <ListItemDiv
                 innerRef={ref => (this.item = ref)}
-                data-object-id={getId(this.props.item)}
+                data-object-id={this.props.item._id}
                 className={className}
                 onMouseUp={this.onMouseUp}
                 onClick={this.onClick}
@@ -561,7 +560,7 @@ export class List extends React.Component<ListProps, {}> {
             childrenElements.push(
                 <ListItem
                     navigationObject={this.props.navigationObject}
-                    key={getId(child)}
+                    key={child._id}
                     item={child}
                     onDoubleClick={this.props.onDoubleClick}
                 />

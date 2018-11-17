@@ -14,7 +14,6 @@ import {
     isObjectInstanceOf,
     loadObject,
     getEezStudioDataFromDragEvent,
-    getId,
     getModificationTime
 } from "project-editor/core/store";
 import { EezObject, EditorComponent } from "project-editor/core/metaData";
@@ -70,9 +69,9 @@ let cacheMap: Map<string, HTMLCanvasElement> = new Map<string, HTMLCanvasElement
 function getCacheId(object: EezObject) {
     let modificationTime = getModificationTime(object);
     if (modificationTime != undefined) {
-        return getId(object) + "-" + modificationTime;
+        return object._id + "-" + modificationTime;
     } else {
-        return getId(object);
+        return object._id;
     }
 }
 
