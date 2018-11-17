@@ -11,8 +11,8 @@ export function metrics(project: ProjectProperties): { [key: string]: string | n
 
     return {
         SCPI: "",
-        "<span class='td-indent'>Commands</span>": scpi.subsystems.reduce(
-            (c, s) => c + s.commands.reduce(c => c + 1, 0),
+        "<span class='td-indent'>Commands</span>": scpi.subsystems._array.reduce(
+            (c, s) => c + s.commands._array.reduce(c => c + 1, 0),
             0
         )
     };

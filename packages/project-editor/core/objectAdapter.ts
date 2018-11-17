@@ -1,4 +1,4 @@
-import { observable, action, computed, isObservableArray } from "mobx";
+import { observable, action, computed } from "mobx";
 import { createTransformer } from "mobx-utils";
 
 import { _each, _find, _pickBy } from "eez-studio-shared/algorithm";
@@ -14,12 +14,11 @@ import {
     hasAncestor,
     extendContextMenu,
     getId,
-    getMetaData,
     isSameInstanceTypeAs
 } from "project-editor/core/store";
 import { reduceUntilCommonParent as reduceObjectsUntilCommonParent } from "project-editor/core/store";
 
-import { EezObject } from "project-editor/core/metaData";
+import { EezObject, EezArrayObject } from "project-editor/core/metaData";
 import { objectsToClipboardData } from "project-editor/core/store";
 import {
     cutItem,
@@ -120,16 +119,16 @@ export class TreeObjectAdapter {
             return asArray(this.object).map(child => this.transformer(child));
         }
 
-        let properties = getMetaData(this.object)
+        let properties = this.object._metaData
             .properties(this.object)
             .filter(
                 propertyMetaData =>
-                    (propertyMetaData.type == "object" || propertyMetaData.type == "array") &&
+                    (propertyMetaData.type === "object" || propertyMetaData.type === "array") &&
                     !(propertyMetaData.enumerable !== undefined && !propertyMetaData.enumerable) &&
                     getProperty(this.object, propertyMetaData.name)
             );
 
-        if (properties.length == 1 && properties[0].type == "array") {
+        if (properties.length == 1 && properties[0].type === "array") {
             return asArray(getProperty(this.object, properties[0].name)).map(child =>
                 this.transformer(child)
             );
@@ -271,7 +270,13 @@ export class TreeObjectAdapter {
         return state;
     }
 
-    getObjectAdapter(objectAdapterOrObjectOrObjectId: TreeObjectAdapter | EezObject | string) {
+    getObjectAdapter(
+        objectAdapterOrObjectOrObjectId:
+            | TreeObjectAdapter
+            | EezObject
+            | EezArrayObject<EezObject>
+            | string
+    ) {
         function getObjectAdapterFromObjectId(
             objectAdapter: TreeObjectAdapter,
             id: string
@@ -295,15 +300,15 @@ export class TreeObjectAdapter {
             return objectAdapterOrObjectOrObjectId;
         }
 
-        if (objectAdapterOrObjectOrObjectId instanceof EezObject) {
-            return getObjectAdapterFromObjectId(this, getId(objectAdapterOrObjectOrObjectId));
-        }
-
-        if (isObservableArray(objectAdapterOrObjectOrObjectId)) {
+        if (objectAdapterOrObjectOrObjectId instanceof EezArrayObject) {
             return getObjectAdapterFromObjectId(
                 this,
                 getId(objectAdapterOrObjectOrObjectId as any)
             );
+        }
+
+        if (objectAdapterOrObjectOrObjectId instanceof EezObject) {
+            return getObjectAdapterFromObjectId(this, getId(objectAdapterOrObjectOrObjectId));
         }
 
         return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId);

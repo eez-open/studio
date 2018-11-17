@@ -1,6 +1,56 @@
-import React from "react";
+// ProjectProperties => actions, data, extensionDefinitions
+// BuildProperties => configurations, files
+// GuiProperties => pages, styles, fonts, bitmaps
+// StoryboardProperties => pages, lines
+// PageProperties => resolutions
+// PageResolutionProperties => widgets
+// SelectWidgetProperties => widgets
+// ContainerWidgetProperties => widgets
+// FontProperties => glyphs
+// ScpiProperties => subsystems
+// ScpiSubsystemProperties => commands
+// ShortcutsProperties => shortcuts
 
-import { Editor, EditorState, getId, setEez } from "project-editor/core/store";
+// SettingsProperties =>
+// GeneralProperties =>
+// BuildConfigurationProperties =>
+// BuildFileProperties =>
+// ActionProperties =>
+// DataItemProperties =>
+// ExtensionDefinitionProperties =>
+// StoryboardPageProperties =>
+// StoryboardLineTargetProperties =>
+// StoryboardLineSourceProperties =>
+// TextWidgetProperties =>
+// BitmapWidgetProperties =>
+// DisplayDataWidgetProperties =>
+// MultilineTextWidgetProperties =>
+// SelectWidgetEditorProperties =>
+// RectangleWidgetProperties =>
+// AppViewWidgetProperties =>
+// GridWidgetProperties =>
+// ListWidgetProperties =>
+// LayoutViewWidgetProperties =>
+// ButtonWidgetProperties =>
+// BarGraphWidgetProperties =>
+// YTGraphWidgetProperties =>
+// ToggleButtonWidgetProperties =>
+// ButtonGroupWidgetProperties =>
+// ListGraphWidgetProperties =>
+// UpDownWidgetProperties =>
+// StyleProperties =>
+// FontSourceProperties =>
+// GlyphProperties =>
+// GlyphSourceProperties =>
+// BitmapProperties =>
+// ScpiCommandProperties =>
+// ShortcutProperties =>
+// ShortcutActionProperties =>
+
+import React from "react";
+import { observable } from "mobx";
+
+import { Editor, EditorState, getId } from "project-editor/core/store";
 import { Message } from "project-editor/core/output";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,17 +159,19 @@ export function findMetaData(className: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class EezObjectState {
-    id: string;
-    key?: string;
-    parent?: EezObject;
-    lastChildId?: number;
-    metaData: MetaData;
-    modificationTime?: number;
-    propertyMetaData?: PropertyMetaData;
+export class EezObject {
+    _id: string;
+    _key?: string;
+    _parent?: EezObject;
+    _lastChildId?: number;
+    _metaData: MetaData;
+    _modificationTime?: number;
+    _propertyMetaData?: PropertyMetaData;
 }
 
-export class EezObject {}
+export class EezArrayObject<T> extends EezObject {
+    @observable _array: T[] = [];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -138,11 +190,9 @@ export class EezValueObject extends EezObject {
     constructor(object: EezObject, public propertyMetaData: PropertyMetaData, public value: any) {
         super();
 
-        setEez(this, {
-            id: getId(object) + "." + propertyMetaData.name,
-            key: propertyMetaData.name,
-            parent: object,
-            metaData: valueObjectMetaData
-        });
+        this._id = getId(object) + "." + propertyMetaData.name;
+        this._key = propertyMetaData.name;
+        this._parent = object;
+        this._metaData = valueObjectMetaData;
     }
 }

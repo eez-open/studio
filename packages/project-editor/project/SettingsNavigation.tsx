@@ -12,8 +12,7 @@ import {
     loadObject,
     NavigationStore,
     UIStateStore,
-    getProperty,
-    getMetaData
+    getProperty
 } from "project-editor/core/store";
 import { confirm } from "project-editor/core/util";
 import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
@@ -183,7 +182,7 @@ export class SettingsNavigation extends NavigationComponent {
 
     render() {
         let content = this.props.content;
-        if (this.object && getMetaData(this.object).editorComponent) {
+        if (this.object && this.object._metaData.editorComponent) {
             content = this.props.content;
         } else {
             content = <SettingsEditor object={this.object} />;

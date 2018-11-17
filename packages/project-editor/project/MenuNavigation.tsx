@@ -5,13 +5,7 @@ import classNames from "classnames";
 import styled from "eez-studio-ui/styled-components";
 
 import { EezObject } from "project-editor/core/metaData";
-import {
-    NavigationStore,
-    getChildren,
-    objectToString,
-    getMetaData,
-    getId
-} from "project-editor/core/store";
+import { NavigationStore, getChildren, objectToString, getId } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,7 +50,7 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
                 this.props.item
         });
 
-        let icon = getMetaData(this.props.item).icon || "extension";
+        let icon = this.props.item._metaData.icon || "extension";
 
         return (
             <NavigationMenuItemContainer
@@ -127,11 +121,11 @@ export class MenuNavigation extends React.Component<
             this.props.navigationObject
         );
         if (selectedItem) {
-            let NavigationComponent = getMetaData(selectedItem).navigationComponent;
+            let NavigationComponent = selectedItem._metaData.navigationComponent;
             if (NavigationComponent) {
                 subNavigation = (
                     <NavigationComponent
-                        id={getMetaData(selectedItem).navigationComponentId || this.props.id}
+                        id={selectedItem._metaData.navigationComponentId || this.props.id}
                         navigationObject={selectedItem}
                         content={this.props.content}
                     />

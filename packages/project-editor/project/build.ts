@@ -13,8 +13,7 @@ import {
     isArray,
     asArray,
     getProperty,
-    check,
-    getMetaData
+    check
 } from "project-editor/core/store";
 import { EezObject, PropertyMetaData } from "project-editor/core/metaData";
 import { Message, Section, Type } from "project-editor/core/output";
@@ -135,7 +134,7 @@ function getSectionNames(): string[] {
 
     const sectionNames: string[] = [];
 
-    project.settings.build.files.forEach(buildFile => {
+    project.settings.build.files._array.forEach(buildFile => {
         let result;
         while ((result = sectionNamesRegexp.exec(buildFile.template)) !== null) {
             sectionNames.push(result[1]);
@@ -148,19 +147,27 @@ function getSectionNames(): string[] {
 async function doBuild(destinationFolderPath: string, buildResults: BuildResult[]) {
     const project = ProjectStore.projectProperties;
 
-    if (project.settings.build.files.length > 0) {
+    if (project.settings.build.files._array.length > 0) {
         let parts: any = {};
         for (let i = 0; i < buildResults.length; i++) {
             parts = Object.assign(parts, buildResults[i]);
         }
 
-        await project.settings.build.files.forEach(async (buildFile: BuildFileProperties) => {
-            let buildFileContent = buildFile.template.replace(sectionNamesRegexp, (_1, part) => {
-                return parts[part];
-            });
+        await project.settings.build.files._array.forEach(
+            async (buildFile: BuildFileProperties) => {
+                let buildFileContent = buildFile.template.replace(
+                    sectionNamesRegexp,
+                    (_1, part) => {
+                        return parts[part];
+                    }
+                );
 
-            await writeTextFile(destinationFolderPath + "/" + buildFile.fileName, buildFileContent);
-        });
+                await writeTextFile(
+                    destinationFolderPath + "/" + buildFile.fileName,
+                    buildFileContent
+                );
+            }
+        );
     }
 }
 
@@ -219,7 +226,7 @@ export async function build(onlyCheck: boolean) {
 
 var checkTransformer: (object: EezObject) => Message[] = createTransformer(
     (object: EezObject): Message[] => {
-        const children = getMetaData(object)
+        const children = object._metaData
             .properties(object)
             .filter(
                 propertyMetaData =>

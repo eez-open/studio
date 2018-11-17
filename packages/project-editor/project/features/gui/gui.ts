@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import { registerMetaData, EezObject } from "project-editor/core/metaData";
+import { registerMetaData, EezObject, EezArrayObject } from "project-editor/core/metaData";
 import { ProjectStore, asArray, getProperty } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import * as output from "project-editor/core/output";
@@ -26,14 +26,18 @@ import { GuiNavigation } from "project-editor/project/features/gui/GuiNavigation
 export class GuiProperties extends EezObject {
     @observable
     storyboard: StoryboardProperties;
+
     @observable
-    pages: PageProperties[];
+    pages: EezArrayObject<PageProperties>;
+
     @observable
-    styles: StyleProperties[];
+    styles: EezArrayObject<StyleProperties>;
+
     @observable
-    fonts: FontProperties[];
+    fonts: EezArrayObject<FontProperties>;
+
     @observable
-    bitmaps: BitmapProperties[];
+    bitmaps: EezArrayObject<BitmapProperties>;
 }
 
 export const guiMetaData = registerMetaData({
@@ -154,8 +158,7 @@ export function getPages() {
 
 export function findPage(pageName: string) {
     let pages = getPages();
-    for (let i = 0; i < pages.length; i++) {
-        let page = pages[i];
+    for (const page of pages._array) {
         if (page.name == pageName) {
             return page;
         }
@@ -165,9 +168,8 @@ export function findPage(pageName: string) {
 
 export function findStyle(styleName: any) {
     let gui = getGui();
-    let styles = (gui && gui.styles) || [];
-    for (let i = 0; i < styles.length; i++) {
-        let style = styles[i];
+    let styles = (gui && gui.styles._array) || [];
+    for (const style of styles) {
         if (style.name == styleName) {
             return style;
         }
@@ -182,8 +184,7 @@ export function findStyleOrGetDefault(styleName: any) {
 export function findFont(fontName: any) {
     let gui = getGui();
     let fonts = (gui && gui.fonts) || [];
-    for (let i = 0; i < fonts.length; i++) {
-        let font = fonts[i];
+    for (const font of fonts._array) {
         if (font.name == fontName) {
             return font;
         }
@@ -194,8 +195,7 @@ export function findFont(fontName: any) {
 export function findBitmap(bitmapName: any) {
     let gui = getGui();
     let bitmaps = (gui && gui.bitmaps) || [];
-    for (let i = 0; i < bitmaps.length; i++) {
-        let bitmap = bitmaps[i];
+    for (const bitmap of bitmaps._array) {
         if (bitmap.name == bitmapName) {
             return bitmap;
         }

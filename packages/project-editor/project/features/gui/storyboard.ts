@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import { registerMetaData, EezObject } from "project-editor/core/metaData";
+import { registerMetaData, EezObject, EezArrayObject } from "project-editor/core/metaData";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import { StoryboardEditor } from "project-editor/project/features/gui/StoryboardEditor";
@@ -111,8 +111,8 @@ export const storyboardLineMetaData = registerMetaData({
 ////////////////////////////////////////////////////////////////////////////////
 
 export class StoryboardProperties extends EezObject {
-    @observable pages: StoryboardPageProperties[];
-    @observable lines: StoryboardLineProperties[];
+    @observable pages: EezArrayObject<StoryboardPageProperties>;
+    @observable lines: EezArrayObject<StoryboardLineProperties>;
 }
 
 export class StoryboardTabState {

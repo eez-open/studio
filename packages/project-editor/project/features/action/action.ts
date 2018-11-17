@@ -152,22 +152,17 @@ registerFeatureImplementation("action", {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getActions() {
-    return (ProjectStore.projectProperties as any).actions;
-}
-
 export function findAction(actionName: string) {
-    let actions = getActions();
-    for (let i = 0; i < actions.length; i++) {
-        let action = actions[i];
+    for (const action of ProjectStore.projectProperties.actions._array) {
         if (action.name == actionName) {
             return action;
         }
     }
+    return undefined;
 }
 
 export function findActionIndex(actionName: string) {
-    let actions = getActions();
+    let actions = ProjectStore.projectProperties.actions._array;
     for (let i = 0; i < actions.length; i++) {
         if (actions[i].name == actionName) {
             return i;

@@ -10,8 +10,7 @@ import {
     UIStateStore,
     objectToString,
     addItem,
-    canAdd,
-    getMetaData
+    canAdd
 } from "project-editor/core/store";
 import { EezObject, NavigationComponent } from "project-editor/core/metaData";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
@@ -85,7 +84,7 @@ interface TreeNavigationPanelProps {
 @observer
 export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProps, {}> {
     static navigationTreeFilter(object: EezObject) {
-        const metaData = getMetaData(object);
+        const metaData = object._metaData;
         return (
             metaData.showInNavigation ||
             !!metaData.navigationComponent ||

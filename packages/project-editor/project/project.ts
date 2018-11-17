@@ -1,14 +1,13 @@
 import { observable, extendObservable } from "mobx";
 
 import { getExtensionsByCategory } from "project-editor/core/extensions";
+import { loadObject, objectToJson, ProjectStore, getProperty } from "project-editor/core/store";
 import {
-    loadObject,
-    objectToJson,
-    ProjectStore,
-    getProperty,
-    getMetaData
-} from "project-editor/core/store";
-import { PropertyMetaData, registerMetaData, EezObject } from "project-editor/core/metaData";
+    PropertyMetaData,
+    registerMetaData,
+    EezObject,
+    EezArrayObject
+} from "project-editor/core/metaData";
 import * as output from "project-editor/core/output";
 
 import { BuildFileEditor } from "project-editor/project/BuildFileEditor";
@@ -127,9 +126,11 @@ export const buildFileMetaData = registerMetaData({
 
 export class BuildProperties extends EezObject {
     @observable
-    configurations: BuildConfigurationProperties[];
+    configurations: EezArrayObject<BuildConfigurationProperties>;
+
     @observable
-    files: BuildFileProperties[];
+    files: EezArrayObject<BuildFileProperties>;
+
     @observable
     destinationFolder?: string;
 }
@@ -229,24 +230,21 @@ let projectProperties: PropertyMetaData[];
 export class ProjectProperties extends EezObject {
     @observable
     settings: SettingsProperties;
+
     @observable
-    data: DataItemProperties[];
+    data: EezArrayObject<DataItemProperties>;
+
     @observable
-    actions: ActionProperties[];
+    actions: EezArrayObject<ActionProperties>;
 
     callExtendObservableForAllOptionalProjectFeatures() {
         let optionalFeatures: any = {};
 
-        getMetaData(this)
-            .properties(this)
-            .forEach(propertyMetaData => {
-                if (propertyMetaData.isOptional && !(propertyMetaData.name in this)) {
-                    optionalFeatures[propertyMetaData.name] = getProperty(
-                        this,
-                        propertyMetaData.name
-                    );
-                }
-            });
+        this._metaData.properties(this).forEach(propertyMetaData => {
+            if (propertyMetaData.isOptional && !(propertyMetaData.name in this)) {
+                optionalFeatures[propertyMetaData.name] = getProperty(this, propertyMetaData.name);
+            }
+        });
 
         extendObservable(this, optionalFeatures);
     }

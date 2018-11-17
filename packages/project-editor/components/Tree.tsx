@@ -24,8 +24,7 @@ import {
     isSameInstanceTypeAs,
     objectToString,
     setClipboardData,
-    getId,
-    getMetaData
+    getId
 } from "project-editor/core/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -351,7 +350,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
                 } else {
                     let place = findPastePlaceInside(
                         this.props.item.object,
-                        getMetaData(DragAndDropManager.dragObject),
+                        DragAndDropManager.dragObject._metaData,
                         true
                     );
                     if (place) {
@@ -664,7 +663,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                 } else if (dropPosition == DropPosition.DROP_INSIDE) {
                     let dropPlace = findPastePlaceInside(
                         DragAndDropManager.dropObject.object,
-                        getMetaData(object),
+                        object._metaData,
                         true
                     );
                     if (dropPlace) {

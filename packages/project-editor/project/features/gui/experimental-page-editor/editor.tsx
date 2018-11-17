@@ -308,7 +308,7 @@ class ContainerWidgetObjectComponent extends WidgetObjectComponent {
     render() {
         return (
             <React.Fragment>
-                {this.renderChildren(this.containerWidgetProperties.widgets)}
+                {this.renderChildren(this.containerWidgetProperties.widgets._array)}
             </React.Fragment>
         );
     }
@@ -463,7 +463,7 @@ class SelectWidgetObjectComponent extends WidgetObjectComponent {
     }
 
     get count() {
-        return this.selectWidgetProperties.widgets.length;
+        return this.selectWidgetProperties.widgets._array.length;
     }
 
     get index() {
@@ -489,7 +489,7 @@ class SelectWidgetObjectComponent extends WidgetObjectComponent {
 
         let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-        let tree = createWidgetTree(this.selectWidgetProperties.widgets[index], true);
+        let tree = createWidgetTree(this.selectWidgetProperties.widgets._array[index], true);
         drawTree(ctx, tree, 1, () => {});
 
         return (
@@ -542,9 +542,9 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
     }
 
     renderSelectChildren() {
-        this.children = new Array(this.selectWidget.widgets.length);
+        this.children = new Array(this.selectWidget.widgets._array.length);
 
-        return this.selectWidget.widgets.map((child, i) => {
+        return this.selectWidget.widgets._array.map((child, i) => {
             let x = this.rect.left + SelectWidgetEditorProperties.EDITOR_PADDING;
             let y =
                 this.rect.top +
@@ -703,7 +703,7 @@ function findSelectWidgetEditors(rootObject: WidgetProperties | PageResolutionPr
             object instanceof PageResolutionProperties ||
             object instanceof ContainerWidgetProperties
         ) {
-            object.widgets.forEach(doFind);
+            object.widgets._array.forEach(doFind);
         } else if (
             object instanceof ListWidgetProperties ||
             object instanceof GridWidgetProperties
@@ -713,7 +713,7 @@ function findSelectWidgetEditors(rootObject: WidgetProperties | PageResolutionPr
             }
         } else if (object instanceof SelectWidgetProperties) {
             result.push(object.editor);
-            object.widgets.forEach(doFind);
+            object.widgets._array.forEach(doFind);
         }
     }
 
@@ -731,7 +731,7 @@ class RootObjectComponent extends BaseObjectComponent {
     }
 
     get childrenObjects() {
-        const childrenObjects = this.rootObject.widgets as EezObject[];
+        const childrenObjects = this.rootObject.widgets._array as EezObject[];
         return childrenObjects.concat(findSelectWidgetEditors(this.rootObject));
     }
 

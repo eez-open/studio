@@ -7,7 +7,7 @@ import * as notification from "eez-studio-ui/notification";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
-import { EezObject, registerMetaData } from "project-editor/core/metaData";
+import { EezObject, registerMetaData, EezArrayObject } from "project-editor/core/metaData";
 import { getProperty, ProjectStore } from "project-editor/core/store";
 
 import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
@@ -72,8 +72,10 @@ export class FontProperties extends EezObject {
     ascent: number;
     @observable
     descent: number;
+
     @observable
-    glyphs: GlyphProperties[];
+    glyphs: EezArrayObject<GlyphProperties>;
+
     @observable
     alwaysBuild: boolean;
 }

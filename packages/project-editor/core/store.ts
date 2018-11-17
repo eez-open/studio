@@ -1,13 +1,4 @@
-import {
-    observable,
-    extendObservable,
-    computed,
-    action,
-    isObservableArray,
-    toJS,
-    reaction,
-    autorun
-} from "mobx";
+import { observable, extendObservable, computed, action, toJS, reaction, autorun } from "mobx";
 
 import { confirmSave } from "eez-studio-shared/util";
 import { humanize } from "eez-studio-shared/string";
@@ -22,7 +13,7 @@ import {
     PropertyMetaData,
     findMetaData,
     EezValueObject,
-    EezObjectState
+    EezArrayObject
 } from "project-editor/core/metaData";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { findAllReferences, isReferenced } from "project-editor/core/search";
@@ -144,7 +135,7 @@ class NavigationStoreClass {
         let iterObject = object;
         let parent = getParent(iterObject);
         while (iterObject && parent) {
-            if (getMetaData(parent).navigationComponent) {
+            if (parent._metaData.navigationComponent) {
                 let grandparent = getParent(parent);
                 if (!isArray(grandparent)) {
                     let navigationItem = this.getNavigationSelectedItem(parent);
@@ -164,7 +155,7 @@ class NavigationStoreClass {
         let iterObject = object;
         let parent = getParent(iterObject);
         while (iterObject && parent) {
-            if (getMetaData(parent).navigationComponent) {
+            if (parent._metaData.navigationComponent) {
                 let grandparent = getParent(parent);
                 if (!isArray(grandparent)) {
                     let navigationItem = this.getNavigationSelectedItem(parent);
@@ -195,7 +186,7 @@ class NavigationStoreClass {
         }
 
         if (!item) {
-            let defaultNavigationKey = getMetaData(navigationObject).defaultNavigationKey;
+            let defaultNavigationKey = navigationObject._metaData.defaultNavigationKey;
             if (defaultNavigationKey) {
                 item = getProperty(navigationObject, defaultNavigationKey);
             }
@@ -237,7 +228,7 @@ class NavigationStoreClass {
     showObject(objectToShow: EezObject) {
         this.setSelection([objectToShow]);
         for (let object: EezObject | undefined = objectToShow; object; object = getParent(object)) {
-            if (getMetaData(object).editorComponent) {
+            if (object._metaData.editorComponent) {
                 const editor = EditorsStore.openEditor(object);
                 setTimeout(() => {
                     if (editor && editor.state) {
@@ -280,7 +271,7 @@ export class Editor {
     @computed
     get title() {
         if (isArrayElement(this.object)) {
-            return `${getMetaData(this.object).className}: ${objectToString(this.object)}`;
+            return `${this.object._metaData.className}: ${objectToString(this.object)}`;
         } else {
             return objectToString(this.object);
         }
@@ -314,17 +305,14 @@ class EditorsStoreClass {
                 while (navigationItem) {
                     if (navigationItem instanceof TreeObjectAdapter) {
                         let object = navigationItem.selectedObject;
-                        if (object && !isArray(object) && getMetaData(object).editorComponent) {
+                        if (object && !isArray(object) && object._metaData.editorComponent) {
                             this.openEditor(object);
-                        } else if (getMetaData(navigationItem.object).editorComponent) {
+                        } else if (navigationItem.object._metaData.editorComponent) {
                             this.openEditor(navigationItem.object);
                         }
                         return;
                     } else {
-                        if (
-                            !isArray(navigationItem) &&
-                            getMetaData(navigationItem).editorComponent
-                        ) {
+                        if (!isArray(navigationItem) && navigationItem._metaData.editorComponent) {
                             this.openEditor(navigationItem);
                         }
                         navigationItem = NavigationStore.getNavigationSelectedItem(navigationItem);
@@ -372,7 +360,7 @@ class EditorsStoreClass {
                         newEditor.object = object;
                         newEditor.active = editor.active;
                         newEditor.permanent = editor.permanent;
-                        const createEditorState = getMetaData(object).createEditorState;
+                        const createEditorState = object._metaData.createEditorState;
                         if (createEditorState) {
                             newEditor.state = createEditorState(object);
                             if (editor.state) {
@@ -455,7 +443,7 @@ class EditorsStoreClass {
         nonPermanentEditor.permanent = openAsPermanentEditor;
         nonPermanentEditor.object = object;
         nonPermanentEditor.active = true;
-        const createEditorState = getMetaData(object).createEditorState;
+        const createEditorState = object._metaData.createEditorState;
         if (createEditorState) {
             nonPermanentEditor.state = createEditorState(object);
         } else {
@@ -890,12 +878,12 @@ class ProjectStoreClass {
     get selectedBuildConfiguration() {
         let configuration =
             this.projectProperties &&
-            this.projectProperties.settings.build.configurations.find(
+            this.projectProperties.settings.build.configurations._array.find(
                 configuration => configuration.name == UIStateStore.selectedBuildConfiguration
             );
         if (!configuration) {
-            if (this.projectProperties.settings.build.configurations.length > 0) {
-                configuration = this.projectProperties.settings.build.configurations[0];
+            if (this.projectProperties.settings.build.configurations._array.length > 0) {
+                configuration = this.projectProperties.settings.build.configurations._array[0];
             }
         }
         return configuration;
@@ -1138,45 +1126,37 @@ class ProjectStoreClass {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function createEezObjectState(parent: EezObject | undefined, metaData: MetaData): EezObjectState {
+function getChildId(parent: EezObject | undefined) {
     let id;
     if (parent) {
-        const parentEezObjectState = getEez(parent);
-
-        if (parentEezObjectState.lastChildId === undefined) {
-            parentEezObjectState.lastChildId = 1;
+        if (parent._lastChildId === undefined) {
+            parent._lastChildId = 1;
         } else {
-            parentEezObjectState.lastChildId++;
+            parent._lastChildId++;
         }
 
-        id = parentEezObjectState.id + "." + parentEezObjectState.lastChildId;
+        id = parent._id + "." + parent._lastChildId;
     } else {
         id = "1";
     }
 
-    return {
-        metaData,
-        parent,
-        id
-    };
+    return id;
 }
 
 function loadArrayObject(arrayObject: any, parent: any, propertyMetaData: PropertyMetaData) {
-    const arrayEezObjectState = createEezObjectState(
-        parent,
-        propertyMetaData.typeMetaData as MetaData
-    );
-    arrayEezObjectState.key = propertyMetaData.name;
-    arrayEezObjectState.propertyMetaData = propertyMetaData;
-    setEez(arrayObject, arrayEezObjectState);
+    const eezArray = new EezArrayObject<any>();
 
-    for (let j = 0; j < arrayObject.length; j++) {
-        arrayObject[j] = loadObject(
-            arrayObject,
-            arrayObject[j],
-            propertyMetaData.typeMetaData as MetaData
-        );
-    }
+    eezArray._id = getChildId(parent);
+    eezArray._metaData = propertyMetaData.typeMetaData as MetaData;
+    eezArray._parent = parent;
+    eezArray._key = propertyMetaData.name;
+    eezArray._propertyMetaData = propertyMetaData;
+
+    eezArray._array = arrayObject.map((object: any) =>
+        loadObject(eezArray, object, propertyMetaData.typeMetaData as MetaData)
+    );
+
+    return eezArray;
 }
 
 export function loadObject(
@@ -1189,16 +1169,18 @@ export function loadObject(
         typeof jsObjectOrString == "string" ? JSON.parse(jsObjectOrString) : jsObjectOrString;
 
     if (Array.isArray(jsObject)) {
-        loadArrayObject(jsObject, parent, {
+        return loadArrayObject(jsObject, parent, {
             type: "array",
             name: key!,
             typeMetaData: metaData
         });
-        return jsObject as any;
     }
 
     let object = new (metaData.getClass(jsObject))();
-    setEez(object, createEezObjectState(parent as EezObject, metaData));
+
+    object._id = getChildId(parent as EezObject);
+    object._metaData = metaData;
+    object._parent = parent as EezObject;
 
     let properties = metaData.properties(jsObject);
     for (let i = 0; i < properties.length; i++) {
@@ -1217,18 +1199,16 @@ export function loadObject(
             }
 
             if (childObject) {
-                getEez(childObject).key = propertyMetaData.name;
+                childObject._key = propertyMetaData.name;
                 object[propertyMetaData.name] = childObject;
             }
-        } else if (propertyMetaData.type == "array") {
+        } else if (propertyMetaData.type === "array") {
             if (!value && !propertyMetaData.isOptional) {
                 value = [];
             }
 
             if (value) {
-                object[propertyMetaData.name] = observable(value);
-                let arrayObject = object[propertyMetaData.name];
-                loadArrayObject(arrayObject, object, propertyMetaData);
+                object[propertyMetaData.name] = loadArrayObject(value, object, propertyMetaData);
             }
         } else {
             object[propertyMetaData.name] = value;
@@ -1238,16 +1218,28 @@ export function loadObject(
     return object;
 }
 
-export function objectToJson(object: EezObject, space?: number) {
-    return JSON.stringify(toJS(object), undefined, space);
+export function objectToJson(object: EezObject | EezObject[], space?: number) {
+    return JSON.stringify(
+        toJS(object),
+        (key: string | number, value: any) => {
+            if (value && typeof value === "object" && "_array" in value) {
+                return value.array;
+            }
+            if (typeof key === "string" && key[0] === "_") {
+                return undefined;
+            }
+            return value;
+        },
+        space
+    );
 }
 
-export function objectToJS(object: EezObject): any {
+export function objectToJS(object: EezObject | EezObject[]): any {
     return JSON.parse(objectToJson(object));
 }
 
 export function cloneObject(parent: EezObject | undefined, obj: EezObject) {
-    return loadObject(parent, objectToJson(obj), getMetaData(obj));
+    return loadObject(parent, objectToJson(obj), obj._metaData);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1263,14 +1255,14 @@ export interface SerializedData {
 
 export function objectToClipboardData(object: EezObject): string {
     return JSON.stringify({
-        className: getMetaData(object).className,
+        className: object._metaData.className,
         object: objectToJson(object)
     });
 }
 
 export function objectsToClipboardData(objects: EezObject[]): string {
     return JSON.stringify({
-        className: getMetaData(objects[0]).className,
+        className: objects[0]._metaData.className,
         objects: objects.map(object => objectToJson(object))
     });
 }
@@ -1337,27 +1329,27 @@ export function isObject(object: EezObject | undefined) {
 }
 
 export function isArray(object: EezObject | undefined) {
-    return !!object && !isValue(object) && isObservableArray(object);
+    return !!object && !isValue(object) && object instanceof EezArrayObject;
 }
 
-export function asArray(object: EezObject): EezObject[] {
-    return (object as any) as EezObject[];
+export function asArray(object: EezObject) {
+    return (object as EezArrayObject<EezObject>)._array;
 }
 
 export function getChildren(parent: EezObject): EezObject[] {
     if (isArray(parent)) {
         return asArray(parent);
     } else {
-        let properties = getMetaData(parent)
+        let properties = parent._metaData
             .properties(parent)
             .filter(
                 propertyMetaData =>
-                    (propertyMetaData.type == "object" || propertyMetaData.type == "array") &&
+                    (propertyMetaData.type === "object" || propertyMetaData.type === "array") &&
                     !(propertyMetaData.enumerable !== undefined && !propertyMetaData.enumerable) &&
                     getProperty(parent, propertyMetaData.name)
             );
 
-        if (properties.length == 1 && properties[0].type == "array") {
+        if (properties.length == 1 && properties[0].type === "array") {
             return asArray(getProperty(parent, properties[0].name));
         }
 
@@ -1380,7 +1372,7 @@ export function getChildOfObject(
             elementIndex = key;
         }
 
-        const array: EezObject[] = object as any;
+        const array = asArray(object);
 
         if (elementIndex !== undefined && elementIndex >= 0 && elementIndex < array.length) {
             return array[elementIndex];
@@ -1430,11 +1422,11 @@ export function getObjectFromObjectId(objectID: string): EezObject | undefined {
                 return getDescendantObjectFromId(childObject, id);
             }
         } else {
-            let properties = getMetaData(object).properties(object);
+            let properties = object._metaData.properties(object);
 
             for (let i = 0; i < properties.length; i++) {
                 let propertyMetaData = properties[i];
-                if (propertyMetaData.type == "object" || propertyMetaData.type == "array") {
+                if (propertyMetaData.type === "object" || propertyMetaData.type === "array") {
                     let childObject = getChildOfObject(object, propertyMetaData);
                     if (childObject) {
                         if (getId(childObject) == id) {
@@ -1454,34 +1446,20 @@ export function getObjectFromObjectId(objectID: string): EezObject | undefined {
     return getDescendantObjectFromId(ProjectStore.projectProperties, objectID as string);
 }
 
-const eezObjectToEezObjectState = new WeakMap<EezObject, EezObjectState>();
-
-export function getEez(object: EezObject) {
-    return eezObjectToEezObjectState.get(object) as EezObjectState;
-}
-
-export function setEez(object: EezObject, eez: EezObjectState) {
-    eezObjectToEezObjectState.set(object, eez);
-}
-
 export function getParent(object: EezObject) {
-    return getEez(object).parent;
+    return object._parent;
 }
 
 export function getKey(object: EezObject) {
-    return getEez(object).key;
+    return object._key;
 }
 
 export function getId(object: EezObject) {
-    return getEez(object).id;
-}
-
-export function getMetaData(object: EezObject) {
-    return getEez(object).metaData;
+    return object._id;
 }
 
 export function getModificationTime(object: EezObject) {
-    return getEez(object).modificationTime;
+    return object._modificationTime;
 }
 
 export function getProperty(object: EezObject, name: string) {
@@ -1490,7 +1468,7 @@ export function getProperty(object: EezObject, name: string) {
 
 export function check(object: EezObject) {
     if (isArray(object)) {
-        const check = getEez(object).propertyMetaData!.check;
+        const check = object._propertyMetaData!.check;
         if (check) {
             return check(object);
         }
@@ -1564,7 +1542,7 @@ export function reduceUntilCommonParent(objects: EezObject[]): EezObject[] {
 }
 
 export function isArrayElement(object: EezObject) {
-    return isObservableArray(getParent(object));
+    return getParent(object) instanceof EezArrayObject;
 }
 
 export function isSameInstanceTypeAs(object1: EezObject, object2: EezObject) {
@@ -1572,7 +1550,7 @@ export function isSameInstanceTypeAs(object1: EezObject, object2: EezObject) {
         return false;
     }
 
-    return getMetaData(object1) == getMetaData(object2);
+    return object1._metaData == object2._metaData;
 }
 
 export function objectToString(object: EezObject) {
@@ -1586,7 +1564,7 @@ export function objectToString(object: EezObject) {
     } else {
         object = object;
 
-        const objectLabel = getMetaData(object).label;
+        const objectLabel = object._metaData.label;
         if (objectLabel) {
             label = objectLabel(object);
         } else {
@@ -1620,7 +1598,7 @@ export function objectToString(object: EezObject) {
 
 export function getAncestorOfType(object: EezObject, metaData: MetaData): EezObject | undefined {
     if (object) {
-        if (getMetaData(object) == metaData) {
+        if (object._metaData == metaData) {
             return object;
         }
         return getParent(object) && getAncestorOfType(getParent(object)!, metaData);
@@ -1675,7 +1653,7 @@ export function getAncestors(
     }
 
     if (isArray(ancestor)) {
-        let possibleAncestor = ((ancestor as any) as EezObject[]).find(
+        let possibleAncestor = asArray(ancestor).find(
             possibleAncestor =>
                 object == possibleAncestor ||
                 getId(object).startsWith(getId(possibleAncestor) + ".")
@@ -1696,12 +1674,12 @@ export function getAncestors(
             }
         }
     } else {
-        let properties = getMetaData(ancestor).properties(ancestor);
+        let properties = ancestor._metaData.properties(ancestor);
 
         let numObjectOrArrayProperties = 0;
         for (let i = 0; i < properties.length; i++) {
             let propertyMetaData = properties[i];
-            if (propertyMetaData.type == "object" || propertyMetaData.type == "array") {
+            if (propertyMetaData.type === "object" || propertyMetaData.type === "array") {
                 numObjectOrArrayProperties++;
             }
         }
@@ -1709,11 +1687,13 @@ export function getAncestors(
         if (numObjectOrArrayProperties > 0) {
             for (let i = 0; i < properties.length; i++) {
                 let propertyMetaData = properties[i];
-                if (propertyMetaData.type == "object" || propertyMetaData.type == "array") {
+                if (propertyMetaData.type === "object" || propertyMetaData.type === "array") {
                     let possibleAncestor: EezObject = (ancestor as any)[propertyMetaData.name];
-                    if (possibleAncestor == object) {
+
+                    if (possibleAncestor === object) {
                         return [];
                     }
+
                     if (
                         possibleAncestor &&
                         getId(object).startsWith(getId(possibleAncestor) + ".")
@@ -1738,15 +1718,15 @@ export function getHumanReadableObjectPath(object: EezObject) {
 }
 
 export function getObjectPropertiesMetaData(object: EezObject) {
-    return getMetaData(object).properties(object);
+    return object._metaData.properties(object);
 }
 
 export function isObjectInstanceOf(object: EezObject, eezMetaData: MetaData) {
-    return getMetaData(object) == eezMetaData;
+    return object._metaData == eezMetaData;
 }
 
 export function getInheritedValue(object: EezObject, propertyName: string) {
-    const getInheritedValue = getMetaData(object).getInheritedValue;
+    const getInheritedValue = object._metaData.getInheritedValue;
     if (getInheritedValue) {
         return getInheritedValue(object, propertyName);
     }
@@ -1781,7 +1761,7 @@ export function isObjectExists(object: EezObject) {
 }
 
 export function canAdd(object: EezObject) {
-    return (isArrayElement(object) || isArray(object)) && getMetaData(object).newItem != undefined;
+    return (isArrayElement(object) || isArray(object)) && object._metaData.newItem != undefined;
 }
 
 export function canDuplicate(object: EezObject) {
@@ -1789,7 +1769,7 @@ export function canDuplicate(object: EezObject) {
 }
 
 export function getProperties(object: EezObject) {
-    return getMetaData(object).properties(object);
+    return object._metaData.properties(object);
 }
 
 export function findPropertyByName(object: EezObject, propertyName: string) {
@@ -1838,7 +1818,7 @@ export function canContainChildren(object: EezObject) {
 
     for (let i = 0; i < properties.length; i++) {
         let propertyMetaData = properties[i];
-        if (propertyMetaData.type == "array" || propertyMetaData.type == "object") {
+        if (propertyMetaData.type === "array" || propertyMetaData.type === "object") {
             return true;
         }
     }
@@ -1851,12 +1831,12 @@ export function findPastePlaceInside(
     metaData: MetaData,
     isSingleObject: boolean
 ) {
-    if (isArray(object) && getMetaData(object) == metaData) {
+    if (isArray(object) && object._metaData == metaData) {
         return object;
     }
 
     if (isObject(object)) {
-        const findPastePlaceInside = getMetaData(object).findPastePlaceInside;
+        const findPastePlaceInside = object._metaData.findPastePlaceInside;
         if (findPastePlaceInside) {
             return findPastePlaceInside(object, metaData, isSingleObject);
         }
@@ -1867,7 +1847,7 @@ export function findPastePlaceInside(
     // first, find among array properties
     for (let i = 0; i < properties.length; i++) {
         let propertyMetaData = properties[i];
-        if (propertyMetaData.type == "array" && propertyMetaData.typeMetaData == metaData) {
+        if (propertyMetaData.type === "array" && propertyMetaData.typeMetaData === metaData) {
             let collectionObject = getChildOfObject(object, propertyMetaData);
             if (collectionObject) {
                 return collectionObject;
@@ -1951,9 +1931,9 @@ function getUniquePropertyValue(existingObjects: EezObject[], key: string, value
 
 // ensure that unique properties are unique inside parent
 function ensureUniqueProperties(parentObject: EezObject, objects: EezObject[]) {
-    let existingObjects: EezObject[] = (parentObject as any).map((object: EezObject) => object);
+    let existingObjects = asArray(parentObject).map((object: EezObject) => object);
     objects.forEach(object => {
-        for (let propertyMetaData of getMetaData(object).properties(object)) {
+        for (let propertyMetaData of object._metaData.properties(object)) {
             if (propertyMetaData.unique) {
                 (object as any)[propertyMetaData.name] = getUniquePropertyValue(
                     existingObjects,
@@ -1969,27 +1949,26 @@ function ensureUniqueProperties(parentObject: EezObject, objects: EezObject[]) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function onObjectModified(object: EezObject) {
-    const eez = getEez(object);
-    eez.modificationTime = new Date().getTime();
-    if (eez.parent) {
-        onObjectModified(eez.parent);
+    object._modificationTime = new Date().getTime();
+    if (object._parent) {
+        onObjectModified(object._parent);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export let addObject = action((parentObject: any, object: EezObject) => {
-    object = loadObject(parentObject, object, getMetaData(parentObject));
+    object = loadObject(parentObject, object, parentObject._metaData);
     ensureUniqueProperties(parentObject, [object]);
 
     UndoManager.executeCommand({
         execute: action(() => {
-            (parentObject as any).push(object);
+            asArray(parentObject).push(object);
             onObjectModified(parentObject);
         }),
 
         undo: action(() => {
-            (parentObject as any).pop();
+            asArray(parentObject).pop();
         }),
 
         get description() {
@@ -2003,18 +1982,18 @@ export let addObject = action((parentObject: any, object: EezObject) => {
 });
 
 export let addObjects = action((parentObject: EezObject, objects: EezObject[]) => {
-    objects = objects.map(object => loadObject(parentObject, object, getMetaData(parentObject)));
+    objects = objects.map(object => loadObject(parentObject, object, parentObject._metaData));
     ensureUniqueProperties(parentObject, objects);
 
     UndoManager.executeCommand({
         execute: action(() => {
-            (parentObject as any).push.apply(parentObject, objects);
+            asArray(parentObject).push.apply(parentObject, objects);
             onObjectModified(parentObject);
         }),
 
         undo: action(() => {
             for (let i = 0; i < objects.length; i++) {
-                (parentObject as any).pop();
+                asArray(parentObject).pop();
             }
             onObjectModified(parentObject);
         }),
@@ -2028,17 +2007,17 @@ export let addObjects = action((parentObject: EezObject, objects: EezObject[]) =
 });
 
 export let insertObject = action((parentObject: EezObject, index: number, object: EezObject) => {
-    object = loadObject(parentObject, object, getMetaData(parentObject));
+    object = loadObject(parentObject, object, parentObject._metaData);
     ensureUniqueProperties(parentObject, [object]);
 
     UndoManager.executeCommand({
         execute: action(() => {
-            (parentObject as any).splice(index, 0, object);
+            asArray(parentObject).splice(index, 0, object);
             onObjectModified(parentObject);
         }),
 
         undo: action(() => {
-            (parentObject as any).splice(index, 1);
+            asArray(parentObject).splice(index, 1);
             onObjectModified(parentObject);
         }),
 
@@ -2084,9 +2063,6 @@ class UpdateCommand implements Command {
     static assignValues(dest: any, src: any) {
         for (let propertyName in src) {
             dest[propertyName] = src[propertyName];
-            if (isArray(dest[propertyName])) {
-                setEez(dest[propertyName], getEez(src[propertyName]));
-            }
         }
     }
 
@@ -2128,17 +2104,18 @@ export let updateObject = action((object: EezObject, values: any) => {
 
 export let deleteObject = action((object: any) => {
     if (isArrayElement(object)) {
-        let parent = getParent(object) as any;
-        let index = parent.indexOf(object);
+        const parent = getParent(object)!;
+        const array = asArray(parent);
+        const index = array.indexOf(object);
 
         UndoManager.executeCommand({
             execute: action(() => {
-                parent.splice(index, 1);
+                array.splice(index, 1);
                 onObjectModified(parent);
             }),
 
             undo: action(() => {
-                parent.splice(index, 0, object);
+                array.splice(index, 0, object);
                 onObjectModified(parent);
             }),
 
@@ -2147,11 +2124,11 @@ export let deleteObject = action((object: any) => {
             }
         });
 
-        if (parent.length > 0) {
-            if (index == parent.length) {
-                NavigationStore.setSelection([parent[index - 1]]);
+        if (array.length > 0) {
+            if (index == array.length) {
+                NavigationStore.setSelection([array[index - 1]]);
             } else {
-                NavigationStore.setSelection([parent[index]]);
+                NavigationStore.setSelection([array[index]]);
             }
         } else {
             NavigationStore.setSelection([parent]);
@@ -2171,15 +2148,18 @@ export let deleteObjects = action((objects: EezObject[]) => {
             undoIndexes = [];
             for (let i = 0; i < objects.length; i++) {
                 let object = objects[i];
-                let parent = getParent(object) as any;
+                let parent = getParent(object)!;
+
                 if (isArrayElement(object)) {
-                    let index = parent.indexOf(object);
+                    const array = asArray(parent!);
+                    let index = array.indexOf(object);
                     undoIndexes.push(index);
-                    parent.splice(index, 1);
+                    array.splice(index, 1);
                 } else {
                     undoIndexes.push(-1);
-                    parent[getKey(object) as string] = undefined;
+                    (parent as any)[getKey(object) as string] = undefined;
                 }
+
                 onObjectModified(parent);
             }
         }),
@@ -2187,12 +2167,13 @@ export let deleteObjects = action((objects: EezObject[]) => {
         undo: action(() => {
             for (let i = objects.length - 1; i >= 0; i--) {
                 let object = objects[i];
-                let parent = getParent(object) as any;
+                let parent = getParent(object)!;
                 if (isArrayElement(object)) {
+                    const array = asArray(parent);
                     let index = undoIndexes[i];
-                    parent.splice(index, 0, object);
+                    array.splice(index, 0, object);
                 } else {
-                    parent[getKey(object) as string] = object;
+                    (parent as any)[getKey(object) as string] = object;
                 }
                 onObjectModified(parent);
             }
@@ -2207,21 +2188,23 @@ export let deleteObjects = action((objects: EezObject[]) => {
 });
 
 export let replaceObject = action((object: EezObject, replaceWithObject: EezObject) => {
-    getEez(replaceWithObject).id = getEez(object).id;
-    getEez(replaceWithObject).key = getEez(object).key;
-    getEez(replaceWithObject).parent = getEez(object).parent;
+    replaceWithObject._id = object._id;
+    replaceWithObject._key = object._key;
+    replaceWithObject._parent = object._parent;
 
-    let parent = getEez(object).parent as any;
+    let parent = object._parent!;
     if (isArrayElement(object)) {
-        let index = parent.indexOf(object);
+        const array = asArray(parent);
+
+        let index = array.indexOf(object);
 
         UndoManager.executeCommand({
             execute: action(() => {
-                parent[index] = replaceWithObject;
+                array[index] = replaceWithObject;
             }),
 
             undo: action(() => {
-                parent[index] = object;
+                array[index] = object;
             }),
 
             get description() {
@@ -2232,31 +2215,32 @@ export let replaceObject = action((object: EezObject, replaceWithObject: EezObje
         NavigationStore.setSelection([replaceWithObject]);
     } else {
         updateObject(parent as any, {
-            [getEez(object).key as string]: replaceWithObject
+            [object._key!]: replaceWithObject
         });
     }
 });
 
 export let replaceObjects = action((objects: EezObject[], replaceWithObject: EezObject) => {
-    let parent = getParent(objects[0]) as any;
-    let index = parent.indexOf(objects[0]);
+    const parent = getParent(objects[0]);
+    const array = asArray(parent!);
+    const index = array.indexOf(objects[0]);
 
-    getEez(replaceWithObject).id = getEez(objects[0]).id;
-    getEez(replaceWithObject).key = getEez(objects[0]).key;
-    getEez(replaceWithObject).parent = parent;
+    replaceWithObject._id = objects[0]._id;
+    replaceWithObject._key = objects[0]._key;
+    replaceWithObject._parent = parent;
 
     let undoIndexes: number[];
 
     UndoManager.executeCommand({
         execute: action(() => {
-            parent[index] = replaceWithObject;
+            array[index] = replaceWithObject;
 
             undoIndexes = [];
             for (let i = 1; i < objects.length; i++) {
                 let object = objects[i];
-                let index = parent.indexOf(object);
+                let index = array.indexOf(object);
                 undoIndexes.push(index);
-                parent.splice(index, 1);
+                array.splice(index, 1);
             }
         }),
 
@@ -2264,10 +2248,10 @@ export let replaceObjects = action((objects: EezObject[], replaceWithObject: Eez
             for (let i = objects.length - 1; i >= 1; i--) {
                 let object = objects[i];
                 let index = undoIndexes[i - 1];
-                parent.splice(index, 0, object);
+                array.splice(index, 0, object);
             }
 
-            parent[index] = objects[0];
+            array[index] = objects[0];
         }),
 
         get description() {
@@ -2283,14 +2267,16 @@ export let replaceObjects = action((objects: EezObject[], replaceWithObject: Eez
 ////////////////////////////////////////////////////////////////////////////////
 
 export function insertObjectBefore(object: EezObject, objectToInsert: EezObject) {
-    let parent = getParent(object) as any;
-    let index = parent.indexOf(object);
+    const parent = getParent(object)!;
+    const array = asArray(parent);
+    const index = array.indexOf(object);
     insertObject(parent, index, objectToInsert);
 }
 
 export function insertObjectAfter(object: EezObject, objectToInsert: EezObject) {
-    let parent = getParent(object) as any;
-    let index = parent.indexOf(object);
+    const parent = getParent(object)!;
+    const array = asArray(parent);
+    const index = array.indexOf(object);
     insertObject(parent, index + 1, objectToInsert);
 }
 
@@ -2299,7 +2285,7 @@ export function insertObjectAfter(object: EezObject, objectToInsert: EezObject) 
 export function addItem(object: EezObject) {
     const parent = isArray(object) ? object : getParent(object);
     if (parent) {
-        const metaData = getMetaData(parent);
+        const metaData = parent._metaData;
         if (metaData.newItem) {
             metaData
                 .newItem(parent)

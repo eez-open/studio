@@ -342,17 +342,17 @@ class StoryboardLineConnecting implements LineConnecting {
             ) as StoryboardProperties;
             let storyboardLines = storyboard.lines;
 
-            let line: StoryboardLineProperties = {
+            let line = {
                 source: {
                     page: (this.source.item.object as StoryboardPageProperties).page
                 },
                 target: {
                     page: (this.target.item.object as StoryboardPageProperties).page
                 }
-            } as any;
+            };
             let lineObject = loadObject(storyboardLines, line, storyboardLineMetaData);
 
-            addObject(storyboardLines as any, lineObject);
+            addObject(storyboardLines, lineObject);
         }
     }
 }
@@ -489,7 +489,8 @@ class StoryboardCanvasEditor extends CanvasEditor {
             (storyboardPageItem: any) => {
                 let storyboardPage = storyboardPageItem.object as StoryboardPageProperties;
                 let page = findPage(storyboardPage.page);
-                let pageResolution = page && (page.resolutions[0] as PageResolutionProperties);
+                let pageResolution =
+                    page && (page.resolutions._array[0] as PageResolutionProperties);
 
                 pageNodes.push({
                     parent: tree,
@@ -615,7 +616,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
                 let storyboardPage = object as StoryboardPageProperties;
 
                 let page = findPage(storyboardPage.page);
-                let pageResolution = page && page.resolutions[0];
+                let pageResolution = page && page.resolutions._array[0];
 
                 let rect = {
                     x: Math.round(p.x),
@@ -683,7 +684,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
             dropItemObj.y = this.dropItem.rect.y;
 
             addObject(
-                (this.props.displaySelection.object as StoryboardProperties).pages as any,
+                (this.props.displaySelection.object as StoryboardProperties).pages,
                 dropItemObj
             );
         }
@@ -715,10 +716,10 @@ export class StoryboardEditor extends EditorComponent {
     }
 
     getMissingPages() {
-        return getPages().filter(page => {
+        return getPages()._array.filter(page => {
             let storyboardPages = this.storyboardPages;
             if (storyboardPages) {
-                return !storyboardPages.find(storyboardPage => {
+                return !storyboardPages._array.find(storyboardPage => {
                     return (storyboardPage as StoryboardPageProperties).page == page.name;
                 });
             } else {

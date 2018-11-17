@@ -32,7 +32,6 @@ import {
     pasteItem,
     canDelete,
     deleteItem,
-    getMetaData,
     getId
 } from "project-editor/core/store";
 
@@ -223,7 +222,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                     if (
                         findPastePlaceInside(
                             this.props.item,
-                            getMetaData(DragAndDropManager.dragObject),
+                            DragAndDropManager.dragObject._metaData,
                             true
                         )
                     ) {
@@ -305,7 +304,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                 DragAndDropManager.dropPosition == DropPosition.DROP_INSIDE
         });
 
-        const itemMetaData = getMetaData(this.props.item);
+        const itemMetaData = this.props.item._metaData;
 
         return (
             <ListItemDiv
@@ -523,7 +522,7 @@ export class List extends React.Component<ListProps, {}> {
                 } else if (dropPosition == DropPosition.DROP_INSIDE) {
                     let dropPlace = findPastePlaceInside(
                         DragAndDropManager.dropObject,
-                        getMetaData(object),
+                        object._metaData,
                         true
                     );
                     if (dropPlace) {
@@ -584,7 +583,7 @@ export class List extends React.Component<ListProps, {}> {
             } else {
                 let place = findPastePlaceInside(
                     this.props.navigationObject,
-                    getMetaData(DragAndDropManager.dragObject),
+                    DragAndDropManager.dragObject._metaData,
                     true
                 );
                 if (place) {

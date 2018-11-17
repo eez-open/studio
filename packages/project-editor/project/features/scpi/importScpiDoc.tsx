@@ -6,8 +6,15 @@ import { observer } from "mobx-react";
 import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 
-import { ProjectStore, UndoManager } from "project-editor/core/store";
-import { loadObject, addObject, deleteObject, getProperty } from "project-editor/core/store";
+import { EezArrayObject } from "project-editor/core/metaData";
+import {
+    ProjectStore,
+    UndoManager,
+    loadObject,
+    addObject,
+    deleteObject,
+    getProperty
+} from "project-editor/core/store";
 
 import { Loading } from "project-editor/components/Loading";
 
@@ -27,7 +34,7 @@ interface Command {
 
 interface Subsystem {
     name: string;
-    commands: Command[];
+    commands: EezArrayObject<Command>;
     helpLink?: string;
 }
 
@@ -102,7 +109,7 @@ function getSubsystemFromScpiFileVersion1Doc(file: string, aElements: NodeListOf
         if (topic) {
             let subsystem: Subsystem = {
                 name: topic,
-                commands: [],
+                commands: new EezArrayObject<Command>(),
                 helpLink: file
             };
 
@@ -159,7 +166,7 @@ function getSubsystemFromScpiFileVersion1Doc(file: string, aElements: NodeListOf
             }
 
             commands.forEach((bookmark, command) => {
-                subsystem.commands.push({
+                subsystem.commands._array.push({
                     name: command,
                     helpLink: file + "#" + bookmark
                 });
@@ -188,12 +195,12 @@ function getSubsystemFromScpiFileVersion2Doc(file: string, aElements: NodeListOf
                     if (bookmark.startsWith("_scpi_subsys_")) {
                         subsystem = {
                             name: text,
-                            commands: [],
+                            commands: new EezArrayObject<Command>(),
                             helpLink: file
                         };
                         subsystems.push(subsystem);
                     } else if (subsystem && bookmark.startsWith("_scpi_")) {
-                        subsystem.commands.push({
+                        subsystem.commands._array.push({
                             name: getCommandFromSyntax(text),
                             helpLink: file + "#" + (commandBookmark || bookmark)
                         });
@@ -291,10 +298,8 @@ function compareCommandDefinitions(a: CommandDefinition, b: CommandDefinition) {
 }
 
 function findCommandInSubsystems(subsystems: Subsystem[], commandName: string) {
-    for (let i = 0; i < subsystems.length; i++) {
-        let subsystem = subsystems[i];
-        for (let j = 0; j < subsystem.commands.length; j++) {
-            let command = subsystem.commands[j];
+    for (const subsystem of subsystems) {
+        for (const command of subsystem.commands._array) {
             if (command.name === commandName) {
                 return {
                     subsystem: subsystem,
@@ -310,7 +315,7 @@ function findMissingCommands(subsystems1: Subsystem[], subsystems2: Subsystem[])
     let missingCommands: CommandDefinition[] = [];
 
     subsystems1.forEach(subsystem => {
-        subsystem.commands.forEach(command => {
+        subsystem.commands._array.forEach(command => {
             if (!findCommandInSubsystems(subsystems2, command.name)) {
                 missingCommands.push({
                     command: command,
@@ -335,16 +340,19 @@ function getChanges() {
                 ) as ScpiProperties).subsystems;
 
                 // added
-                let added = findMissingCommands(subsystems, existingSubsystems);
+                let added = findMissingCommands(subsystems, existingSubsystems._array);
 
                 // deleted
-                let deleted = findMissingCommands(existingSubsystems, subsystems);
+                let deleted = findMissingCommands(existingSubsystems._array, subsystems);
 
                 // moved
                 let moved: MovedCommandDefinition[] = [];
                 subsystems.forEach(subsystem => {
-                    subsystem.commands.forEach(command => {
-                        let result = findCommandInSubsystems(existingSubsystems, command.name);
+                    subsystem.commands._array.forEach(command => {
+                        let result = findCommandInSubsystems(
+                            existingSubsystems._array,
+                            command.name
+                        );
                         if (result && result.subsystem.name !== subsystem.name) {
                             moved.push({
                                 command: command,
@@ -551,7 +559,7 @@ export class ImportScpiDocDialog extends React.Component<
         ) as ScpiProperties).subsystems;
 
         let getOrAddSubsystem = (subsystem: Subsystem) => {
-            let existingSubsystem = existingSubsystems.find(
+            let existingSubsystem = existingSubsystems._array.find(
                 existingSubsystem => existingSubsystem.name === subsystem.name
             );
             if (existingSubsystem) {
@@ -592,7 +600,7 @@ export class ImportScpiDocDialog extends React.Component<
 
         this.selectedChanges.deleted.forEach(commandDefinition => {
             let result = findCommandInSubsystems(
-                existingSubsystems,
+                existingSubsystems._array,
                 commandDefinition.command.name
             );
             if (result) {
@@ -602,7 +610,7 @@ export class ImportScpiDocDialog extends React.Component<
 
         this.selectedChanges.moved.forEach(commandDefinition => {
             let result = findCommandInSubsystems(
-                existingSubsystems,
+                existingSubsystems._array,
                 commandDefinition.command.name
             );
             if (result) {

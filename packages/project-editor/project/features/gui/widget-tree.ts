@@ -1,10 +1,4 @@
-import {
-    isObjectInstanceOf,
-    isArray,
-    asArray,
-    getProperty,
-    getMetaData
-} from "project-editor/core/store";
+import { isObjectInstanceOf, isArray, asArray, getProperty } from "project-editor/core/store";
 import { EezObject } from "project-editor/core/metaData";
 import {
     DisplayItem,
@@ -41,11 +35,11 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
         if (isArray(this.object)) {
             return asArray(this.object).map(child => new DummyWidgetContainerDisplayItem(child));
         } else {
-            let properties = getMetaData(this.object)
+            let properties = this.object._metaData
                 .properties(this.object)
                 .filter(
                     propertyMetaData =>
-                        (propertyMetaData.type == "object" || propertyMetaData.type == "array") &&
+                        (propertyMetaData.type === "object" || propertyMetaData.type === "array") &&
                         !(
                             propertyMetaData.enumerable !== undefined &&
                             !propertyMetaData.enumerable
@@ -53,7 +47,7 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
                         getProperty(this.object, propertyMetaData.name)
                 );
 
-            if (properties.length == 1 && properties[0].type == "array") {
+            if (properties.length == 1 && properties[0].type === "array") {
                 return asArray(getProperty(this.object, properties[0].name)).map(
                     child => new DummyWidgetContainerDisplayItem(child)
                 );
@@ -75,7 +69,7 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
         let widget = item.object as SelectWidgetProperties;
         if (widget.data && widget.widgets) {
             let index: number = data.getEnumValue(widget.data);
-            if (index >= 0 && index < widget.widgets.length) {
+            if (index >= 0 && index < widget.widgets._array.length) {
                 let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
                 return widgetsItemChildren[index];

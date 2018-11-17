@@ -44,7 +44,7 @@ export class ShortcutsNavigation extends NavigationComponent {
         ) as ShortcutsProperties).shortcuts;
 
         let shortcutsMap = new Map<string, ShortcutProperties>();
-        shortcuts.forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
+        shortcuts._array.forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
 
         return {
             shortcuts: observable.map(shortcutsMap),

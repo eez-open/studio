@@ -61,7 +61,7 @@ export function build(
     return new Promise((resolve, reject) => {
         const result: any = {};
 
-        const projectDataItems = (project["data"] as DataItemProperties[]).filter(
+        const projectDataItems = project.data._array.filter(
             dataItem =>
                 !ProjectStore.selectedBuildConfiguration ||
                 !dataItem.usedIn ||

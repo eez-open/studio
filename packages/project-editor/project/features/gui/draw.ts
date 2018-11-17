@@ -2,11 +2,10 @@ import { Rect } from "project-editor/core/util";
 import {
     isObjectInstanceOf,
     objectToJS,
-    getEez,
     getModificationTime,
     getId
 } from "project-editor/core/store";
-import { EezObject } from "project-editor/core/metaData";
+import { EezObject, EezArrayObject } from "project-editor/core/metaData";
 
 import * as data from "project-editor/project/features/data/data";
 
@@ -116,30 +115,28 @@ function drawFromCache(
 function getCacheId(obj: EezObject) {
     let id: string = "";
 
-    if (obj && getEez(obj)) {
-        let modificationTime = getModificationTime(obj);
-        if (modificationTime != undefined) {
-            id = getId(obj) + "-" + modificationTime;
-        } else {
-            id = getId(obj);
+    let modificationTime = getModificationTime(obj);
+    if (modificationTime != undefined) {
+        id = getId(obj) + "-" + modificationTime;
+    } else {
+        id = getId(obj);
+    }
+
+    if (isObjectInstanceOf(obj, styleMetaData)) {
+        let style = obj as StyleProperties;
+
+        const font = styleGetFont(style);
+        if (font) {
+            id += getCacheId(font);
         }
 
-        if (isObjectInstanceOf(obj, styleMetaData)) {
-            let style = obj as StyleProperties;
-
-            const font = styleGetFont(style);
-            if (font) {
-                id += getCacheId(font);
-            }
-
-            let inheritFromStyle = style.inheritFrom && findStyle(style.inheritFrom);
-            if (inheritFromStyle) {
-                id += "," + getCacheId(inheritFromStyle);
-            } else {
-                let defaultStyle = getDefaultStyle();
-                if (style != defaultStyle) {
-                    id += "," + getCacheId(defaultStyle);
-                }
+        let inheritFromStyle = style.inheritFrom && findStyle(style.inheritFrom);
+        if (inheritFromStyle) {
+            id += "," + getCacheId(inheritFromStyle);
+        } else {
+            let defaultStyle = getDefaultStyle();
+            if (style != defaultStyle) {
+                id += "," + getCacheId(defaultStyle);
             }
         }
     }
@@ -277,7 +274,7 @@ export function drawMultilineText(
             y1 += getStyleProperty(style, "paddingVertical");
             y2 -= getStyleProperty(style, "paddingVertical");
 
-            const spaceGlyph = font.glyphs.find(glyph => glyph.encoding == 32);
+            const spaceGlyph = font.glyphs._array.find(glyph => glyph.encoding == 32);
             const spaceWidth = (spaceGlyph && spaceGlyph.dx) || 0;
 
             let x = x1;
@@ -1180,7 +1177,7 @@ export function drawLayoutViewWidget(widget: Widget.WidgetProperties, rect: Rect
                 rect.width,
                 rect.height,
                 (ctx: CanvasRenderingContext2D) => {
-                    let tree = createWidgetTree(layout.resolutions[0], true);
+                    let tree = createWidgetTree(layout.resolutions._array[0], true);
                     drawTree(ctx, tree, 1, () => {});
                 }
             );
@@ -1207,7 +1204,7 @@ export function drawAppViewWidget(widget: Widget.WidgetProperties, rect: Rect) {
                     rect.width,
                     rect.height,
                     (ctx: CanvasRenderingContext2D) => {
-                        let tree = createWidgetTree(page.resolutions[0], true);
+                        let tree = createWidgetTree(page.resolutions._array[0], true);
                         drawTree(ctx, tree, 1, () => {});
                     }
                 );
@@ -1269,7 +1266,7 @@ export function drawPage(
     pageResolution: {
         width: number;
         height: number;
-        widgets: Widget.WidgetProperties[];
+        widgets: EezArrayObject<Widget.WidgetProperties>;
     } & EezObject
 ) {
     let canvas = document.createElement("canvas");

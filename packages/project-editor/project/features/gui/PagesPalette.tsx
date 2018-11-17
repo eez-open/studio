@@ -130,8 +130,8 @@ export class PagesPalette extends React.Component<PagesPaletteProps, PagesPalett
     }
 
     getMissingPages() {
-        return getPages().filter(page => {
-            return !this.props.storyboard.pages.find(storyboardPage => {
+        return getPages()._array.filter(page => {
+            return !this.props.storyboard.pages._array.find(storyboardPage => {
                 return (storyboardPage as StoryboardPageProperties).page == page.name;
             });
         });

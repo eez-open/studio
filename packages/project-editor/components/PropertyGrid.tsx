@@ -24,6 +24,7 @@ import {
     getInheritedValue,
     getPropertyAsString,
     isArray,
+    asArray,
     isValue,
     updateObject,
     getId
@@ -201,7 +202,7 @@ export class ConfigurationReferencesPropertyValue extends React.Component<
                 </div>
                 {this.props.value && (
                     <ConfigurationReferencesPropertyValueConfigurationsDiv>
-                        {ProjectStore.projectProperties.settings.build.configurations.map(
+                        {ProjectStore.projectProperties.settings.build.configurations._array.map(
                             configuration => {
                                 return (
                                     <div key={configuration.name} className="checkbox">
@@ -653,7 +654,9 @@ class Property extends React.Component<PropertyProps, {}> {
             let objects: EezObject[] = [];
 
             if (propertyMetaData.referencedObjectCollectionPath) {
-                objects = getObjectFromPath(propertyMetaData.referencedObjectCollectionPath) as any;
+                objects = asArray(
+                    getObjectFromPath(propertyMetaData.referencedObjectCollectionPath)
+                );
                 if (!objects) {
                     objects = [];
                 }

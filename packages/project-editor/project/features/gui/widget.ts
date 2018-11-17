@@ -14,7 +14,6 @@ import {
     updateObject,
     cloneObject,
     getParent,
-    getMetaData,
     getProperty,
     ProjectStore,
     isArray
@@ -23,7 +22,8 @@ import {
     EnumItem,
     EezObject,
     PropertyMetaData,
-    registerMetaData
+    registerMetaData,
+    EezArrayObject
 } from "project-editor/core/metaData";
 import { Rect, htmlEncode } from "project-editor/core/util";
 import * as output from "project-editor/core/output";
@@ -173,7 +173,7 @@ export class WidgetProperties extends EezObject {
             let parent = object.parent;
 
             if (parent instanceof SelectWidgetProperties) {
-                let i = parent.widgets.indexOf(object);
+                let i = parent.widgets._array.indexOf(object);
 
                 rect.left += parent.editor.rect.left + SelectWidgetEditorProperties.EDITOR_PADDING;
                 rect.top +=
@@ -359,7 +359,7 @@ export class WidgetProperties extends EezObject {
         thisWidgetJsObject.x = 0;
         thisWidgetJsObject.y = 0;
 
-        selectWidgetJsObject.widgets = [thisWidgetJsObject];
+        selectWidgetJsObject.widgets._array = [thisWidgetJsObject];
 
         replaceObject(this, loadObject(undefined, selectWidgetJsObject, widgetMetaData));
     }
@@ -393,7 +393,7 @@ export class WidgetProperties extends EezObject {
             widgetJsObject.x -= x1;
             widgetJsObject.y -= y1;
 
-            containerWidgetJsObject.widgets.push(widgetJsObject);
+            containerWidgetJsObject.widgets._array = [widgetJsObject];
         }
 
         replaceObjects(widgets, loadObject(undefined, containerWidgetJsObject, widgetMetaData));
@@ -479,7 +479,7 @@ export class WidgetProperties extends EezObject {
                         {
                             name: "name",
                             type: "enum",
-                            enumItems: layouts.map(layout => layout.name)
+                            enumItems: layouts._array.map(layout => layout.name)
                         }
                     ]
                 },
@@ -547,7 +547,7 @@ export class WidgetProperties extends EezObject {
 
 export class ContainerWidgetProperties extends WidgetProperties {
     @observable
-    widgets: WidgetProperties[];
+    widgets: EezArrayObject<WidgetProperties>;
 
     check() {
         let messages: output.Message[] = [];
@@ -569,8 +569,7 @@ export class ContainerWidgetProperties extends WidgetProperties {
 
         updateObject(this, changedProperties);
 
-        for (let j = 0; j < this.widgets.length; j++) {
-            let childWidget = this.widgets[j];
+        for (const childWidget of this.widgets._array) {
             if (!geometryChanges.find(geometryChange => geometryChange.object == childWidget)) {
                 var childChangedProperties: GeometryProperties = {};
                 var changed = false;
@@ -833,7 +832,7 @@ export class SelectWidgetEditorProperties extends EezObject {
         let width;
         let height;
 
-        const count = this.parent.widgets.length;
+        const count = this.parent.widgets._array.length;
 
         if (this.editorOrientation === "vertical") {
             width = this.parent.width + 2 * SelectWidgetEditorProperties.EDITOR_PADDING;
@@ -866,7 +865,7 @@ export const selectWidgetEditorMetaData = registerMetaData({
 
     label: (selectWidgetEditor: SelectWidgetEditorProperties) => {
         const parent = getParent(selectWidgetEditor)!;
-        return getMetaData(parent).label(parent) + " Editor";
+        return parent._metaData.label(parent) + " Editor";
     },
 
     properties: () => [
@@ -888,7 +887,8 @@ export const selectWidgetEditorMetaData = registerMetaData({
 
 export class SelectWidgetProperties extends WidgetProperties {
     @observable
-    widgets: WidgetProperties[];
+    widgets: EezArrayObject<WidgetProperties>;
+
     @observable
     editor: SelectWidgetEditorProperties;
 
@@ -912,7 +912,7 @@ export class SelectWidgetProperties extends WidgetProperties {
                     enumItems = ["0", "1"];
                 }
 
-                if (enumItems.length > this.widgets.length) {
+                if (enumItems.length > this.widgets._array.length) {
                     messages.push(
                         new output.Message(
                             output.Type.ERROR,
@@ -920,7 +920,7 @@ export class SelectWidgetProperties extends WidgetProperties {
                             this
                         )
                     );
-                } else if (enumItems.length < this.widgets.length) {
+                } else if (enumItems.length < this.widgets._array.length) {
                     messages.push(
                         new output.Message(
                             output.Type.ERROR,
@@ -942,8 +942,7 @@ export class SelectWidgetProperties extends WidgetProperties {
     ) {
         updateObject(this, changedProperties);
 
-        for (let j = 0; j < this.widgets.length; j++) {
-            let childWidget = this.widgets[j];
+        for (const childWidget of this.widgets._array) {
             if (!geometryChanges.find(geometryChange => geometryChange.object == childWidget)) {
                 var childChangedProperties: GeometryProperties = {};
                 var changed = false;
@@ -969,7 +968,7 @@ export class SelectWidgetProperties extends WidgetProperties {
 
     getChildLabel(childObject: WidgetProperties) {
         if (this.widgets) {
-            let index = this.widgets.indexOf(childObject);
+            let index = this.widgets._array.indexOf(childObject);
             if (index != -1) {
                 if (this.data) {
                     let dataItem = data.findDataItem(this.data);

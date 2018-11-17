@@ -4,7 +4,7 @@ import { validators } from "eez-studio-shared/model/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { registerMetaData, EezObject } from "project-editor/core/metaData";
+import { registerMetaData, EezObject, EezArrayObject } from "project-editor/core/metaData";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { ScpiSubsystemsNavigation } from "project-editor/project/features/scpi/ScpiSubsystemsNavigation";
@@ -84,7 +84,7 @@ export class ScpiSubsystemProperties extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable helpLink?: string;
-    @observable commands: ScpiCommandProperties[];
+    @observable commands: EezArrayObject<ScpiCommandProperties>;
 }
 
 export const scpiSubsystemMetaData = registerMetaData({
@@ -142,7 +142,7 @@ export const scpiSubsystemMetaData = registerMetaData({
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScpiProperties extends EezObject {
-    @observable subsystems: ScpiSubsystemProperties[];
+    @observable subsystems: EezArrayObject<ScpiSubsystemProperties>;
 }
 
 export const scpiMetaData = registerMetaData({

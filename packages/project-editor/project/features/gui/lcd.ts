@@ -82,7 +82,7 @@ function setXY(x1_: number, y1_: number, x2_: number, y2_: number) {
 }
 
 function getGlyph(font: FontProperties, encoding: number) {
-    return font && font.glyphs.find(glyph => glyph.encoding == encoding);
+    return font && font.glyphs._array.find(glyph => glyph.encoding == encoding);
 }
 
 function measureGlyph(encoding: number, font: FontProperties): number {

@@ -6,6 +6,7 @@ import {
     buildInstrumentExtension,
     IdfProperties as InstrumentIdfProperties
 } from "instrument/export";
+import { EezArrayObject } from "project-editor/core/metaData";
 import { ProjectStore, OutputSectionsStore, getProperty } from "project-editor/core/store";
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 import { Section, Type } from "project-editor/core/output";
@@ -44,11 +45,11 @@ export async function extensionDefinitionBuild() {
     let extensionDefinitions = getProperty(
         ProjectStore.projectProperties,
         "extensionDefinitions"
-    ) as ExtensionDefinitionProperties[];
+    ) as EezArrayObject<ExtensionDefinitionProperties>;
 
     if (extensionDefinitions) {
         await Promise.all(
-            extensionDefinitions
+            extensionDefinitions._array
                 .filter(extensionDefinition => !extensionDefinition.doNotBuild)
                 .map(async extensionDefinition => {
                     const idfFromProject = toJS(extensionDefinition);
@@ -59,7 +60,7 @@ export async function extensionDefinitionBuild() {
                     let properties = {};
 
                     // from configuration
-                    const configuration = ProjectStore.projectProperties.settings.build.configurations.find(
+                    const configuration = ProjectStore.projectProperties.settings.build.configurations._array.find(
                         configuration =>
                             configuration.name == extensionDefinition.buildConfiguration
                     );
@@ -102,11 +103,17 @@ export async function extensionDefinitionBuild() {
                             idfFilePath = ProjectStore.getAbsoluteFilePath(idfFileName);
                         }
 
+                        const subsystems = (getProperty(
+                            ProjectStore.projectProperties,
+                            "scpi"
+                        ) as ScpiProperties).subsystems._array.map(subsystem => ({
+                            commands: subsystem.commands._array
+                        }));
+
                         await buildInstrumentExtension(
                             instrumentIdf,
 
-                            (getProperty(ProjectStore.projectProperties, "scpi") as ScpiProperties)
-                                .subsystems,
+                            subsystems,
 
                             idfFilePath,
 

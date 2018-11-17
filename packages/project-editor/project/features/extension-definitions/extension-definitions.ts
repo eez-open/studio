@@ -5,7 +5,7 @@ import { validators } from "eez-studio-shared/model/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { ProjectStore, getProperty } from "project-editor/core/store";
-import { registerMetaData, EezObject } from "project-editor/core/metaData";
+import { registerMetaData, EezObject, EezArrayObject } from "project-editor/core/metaData";
 import * as output from "project-editor/core/output";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
@@ -56,9 +56,9 @@ export class ExtensionDefinitionProperties extends EezObject {
         let extensionDefinitions = getProperty(
             ProjectStore.projectProperties,
             "extensionDefinitions"
-        ) as ExtensionDefinitionProperties[];
+        ) as EezArrayObject<ExtensionDefinitionProperties>;
         if (
-            extensionDefinitions.find(
+            extensionDefinitions._array.find(
                 extensionDefinition =>
                     extensionDefinition !== this && extensionDefinition.idfGuid === this.idfGuid
             )
@@ -82,9 +82,8 @@ export function findExtensionDefinition(name: string) {
     let extensionDefinitions = getProperty(
         ProjectStore.projectProperties,
         "extensionDefinitions"
-    ) as ExtensionDefinitionProperties[];
-    for (let i = 0; i < extensionDefinitions.length; i++) {
-        let extensionDefinition = extensionDefinitions[i];
+    ) as EezArrayObject<ExtensionDefinitionProperties>;
+    for (const extensionDefinition of extensionDefinitions._array) {
         if (extensionDefinition.name == name) {
             return extensionDefinition;
         }

@@ -9,8 +9,7 @@ import {
     objectToString,
     getObjectPropertyAsObject,
     isArray,
-    asArray,
-    getMetaData
+    asArray
 } from "project-editor/core/store";
 import { EezObject, EezValueObject } from "project-editor/core/metaData";
 
@@ -29,13 +28,13 @@ function* visitWithPause(parentObject: EezObject): IterableIterator<VisitResult>
             yield* visitWithPause(arrayOfObjects[i]);
         }
     } else {
-        let properties = getMetaData(parentObject).properties(parentObject);
+        let properties = parentObject._metaData.properties(parentObject);
         for (let i = 0; i < properties.length; i++) {
             let propertyMetaData = properties[i];
             if (!propertyMetaData.skipSearch) {
                 let value = getProperty(parentObject, propertyMetaData.name);
                 if (value) {
-                    if (propertyMetaData.type == "object" || propertyMetaData.type == "array") {
+                    if (propertyMetaData.type === "object" || propertyMetaData.type === "array") {
                         yield* visitWithPause(value);
                     } else {
                         yield getObjectPropertyAsObject(parentObject, propertyMetaData);
@@ -56,13 +55,13 @@ function* visitWithoutPause(parentObject: EezObject): IterableIterator<VisitResu
             yield* visitWithoutPause(arrayOfObjects[i]);
         }
     } else {
-        let properties = getMetaData(parentObject).properties(parentObject);
+        let properties = parentObject._metaData.properties(parentObject);
         for (let i = 0; i < properties.length; i++) {
             let propertyMetaData = properties[i];
             if (!propertyMetaData.skipSearch) {
                 let value = getProperty(parentObject, propertyMetaData.name);
                 if (value) {
-                    if (propertyMetaData.type == "object" || propertyMetaData.type == "array") {
+                    if (propertyMetaData.type === "object" || propertyMetaData.type === "array") {
                         yield* visitWithoutPause(value);
                     } else {
                         yield getObjectPropertyAsObject(parentObject, propertyMetaData);

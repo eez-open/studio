@@ -30,13 +30,13 @@ export class BitmapProperties extends EezObject {
     @observable
     alwaysBuild: boolean;
 
-    private imageElementLoading: boolean = false;
+    private _imageElementLoading: boolean = false;
     @observable
     private _imageElement: HTMLImageElement | null = null;
 
     get imageElement() {
-        if (!this._imageElement && !this.imageElementLoading) {
-            this.imageElementLoading = true;
+        if (!this._imageElement && !this._imageElementLoading) {
+            this._imageElementLoading = true;
             let imageElement = new Image();
             imageElement.src = this.image;
             imageElement.onload = action(() => {

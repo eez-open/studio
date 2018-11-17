@@ -667,9 +667,9 @@ function buildWidget(object: Widget.WidgetProperties | PageResolutionProperties,
 
         let widgets: Widget.WidgetProperties[] | undefined;
         if (object instanceof PageResolutionProperties) {
-            widgets = object.widgets;
+            widgets = object.widgets._array;
         } else {
-            widgets = (object as Widget.ContainerWidgetProperties).widgets;
+            widgets = (object as Widget.ContainerWidgetProperties).widgets._array;
         }
 
         // widgets
@@ -694,7 +694,7 @@ function buildWidget(object: Widget.WidgetProperties | PageResolutionProperties,
         // widgets
         let childWidgets = new ObjectList();
         if (widget.widgets) {
-            widget.widgets.forEach(childWidget => {
+            widget.widgets._array.forEach(childWidget => {
                 childWidgets.addItem(buildWidget(childWidget, assets));
             });
         }
@@ -1111,7 +1111,7 @@ function buildGuiDocumentData(assets: Assets) {
         let pages = new ObjectList();
 
         assets.pages.forEach(page => {
-            pages.addItem(buildPage(page.resolutions[0]));
+            pages.addItem(buildPage(page.resolutions._array[0]));
         });
 
         document.addField(pages);
@@ -1204,36 +1204,36 @@ class Assets {
     bitmaps: BitmapProperties[] = [];
 
     constructor(public project: ProjectProperties) {
-        this.dataItems = (project["data"] as DataItemProperties[]).filter(
+        this.dataItems = (project.data._array as DataItemProperties[]).filter(
             dataItem =>
                 !ProjectStore.selectedBuildConfiguration ||
                 !dataItem.usedIn ||
                 dataItem.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
         );
 
-        this.actions = (project["actions"] as ActionProperties[]).filter(
+        this.actions = (project.actions._array as ActionProperties[]).filter(
             action =>
                 !ProjectStore.selectedBuildConfiguration ||
                 !action.usedIn ||
                 action.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
         );
 
-        this.pages = (getProperty(project, "gui") as GuiProperties).pages.filter(
+        this.pages = (getProperty(project, "gui") as GuiProperties).pages._array.filter(
             page =>
                 !ProjectStore.selectedBuildConfiguration ||
                 !page.usedIn ||
                 page.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
         );
 
-        this.styles = (getProperty(project, "gui") as GuiProperties).styles.filter(
+        this.styles = (getProperty(project, "gui") as GuiProperties).styles._array.filter(
             style => style.alwaysBuild
         );
 
-        this.fonts = (getProperty(project, "gui") as GuiProperties).fonts.filter(
+        this.fonts = (getProperty(project, "gui") as GuiProperties).fonts._array.filter(
             bitmap => bitmap.alwaysBuild
         );
 
-        this.bitmaps = (getProperty(project, "gui") as GuiProperties).bitmaps.filter(
+        this.bitmaps = (getProperty(project, "gui") as GuiProperties).bitmaps._array.filter(
             font => font.alwaysBuild
         );
 
@@ -1356,7 +1356,7 @@ class Assets {
     reportUnusedAssets() {
         let gui = getProperty(this.project, "gui") as GuiProperties;
 
-        gui.pages.forEach(page => {
+        gui.pages._array.forEach(page => {
             if (this.pages.indexOf(page) === -1) {
                 OutputSectionsStore.write(
                     output.Section.OUTPUT,
@@ -1367,7 +1367,7 @@ class Assets {
             }
         });
 
-        gui.styles.forEach(style => {
+        gui.styles._array.forEach(style => {
             if (this.styles.indexOf(style) === -1) {
                 OutputSectionsStore.write(
                     output.Section.OUTPUT,
@@ -1378,7 +1378,7 @@ class Assets {
             }
         });
 
-        gui.fonts.forEach(font => {
+        gui.fonts._array.forEach(font => {
             if (this.fonts.indexOf(font) === -1) {
                 OutputSectionsStore.write(
                     output.Section.OUTPUT,
@@ -1389,7 +1389,7 @@ class Assets {
             }
         });
 
-        gui.bitmaps.forEach(bitmap => {
+        gui.bitmaps._array.forEach(bitmap => {
             if (this.bitmaps.indexOf(bitmap) === -1) {
                 OutputSectionsStore.write(
                     output.Section.OUTPUT,

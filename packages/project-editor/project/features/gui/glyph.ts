@@ -4,7 +4,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
-import { loadObject, objectToJS, getParent, getMetaData } from "project-editor/core/store";
+import { loadObject, objectToJS, getParent } from "project-editor/core/store";
 import { EezObject, registerMetaData } from "project-editor/core/metaData";
 import * as util from "project-editor/core/util";
 
@@ -108,7 +108,7 @@ export class GlyphSourceProperties extends EezObject {
     encoding?: number;
 
     toString() {
-        return getMetaData(this).label(this);
+        return this._metaData.label(this);
     }
 }
 

@@ -3,7 +3,7 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { objectToClipboardData, setClipboardData, setEez } from "project-editor/core/store";
+import { objectToClipboardData, setClipboardData } from "project-editor/core/store";
 import { DragAndDropManager } from "project-editor/core/dd";
 
 import { widgetMetaData, WidgetType } from "project-editor/project/features/gui/widget";
@@ -62,10 +62,8 @@ class Widget extends React.Component<WidgetProps, WidgetState> {
             (object as any).style = "default";
         }
 
-        setEez(object, {
-            id: "undefined",
-            metaData: widgetMetaData
-        });
+        object._id = "undefined";
+        object._metaData = widgetMetaData;
 
         setClipboardData(event, objectToClipboardData(object));
 

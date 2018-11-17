@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import { registerMetaData, EezObject } from "project-editor/core/metaData";
+import { registerMetaData, EezObject, EezArrayObject } from "project-editor/core/metaData";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import { objectToJS, getProperty } from "project-editor/core/store";
 
@@ -107,7 +107,7 @@ export const shortcutMetaData = registerMetaData({
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ShortcutsProperties extends EezObject {
-    @observable shortcuts: ShortcutProperties[];
+    @observable shortcuts: EezArrayObject<ShortcutProperties>;
 }
 
 export const shortcutsMetaData = registerMetaData({
@@ -150,11 +150,13 @@ registerFeatureImplementation("shortcuts", {
             properties
         ) => {
             let shortcuts = getProperty(project, "shortcuts") as ShortcutsProperties;
-            properties.shortcuts = objectToJS(shortcuts.shortcuts.filter(
-                shortcut =>
-                    !shortcut.usedIn ||
-                    shortcut.usedIn.indexOf(extensionDefinition.buildConfiguration) != -1
-            ) as any).map((shortcut: any) =>
+            properties.shortcuts = objectToJS(
+                shortcuts.shortcuts._array.filter(
+                    shortcut =>
+                        !shortcut.usedIn ||
+                        shortcut.usedIn.indexOf(extensionDefinition.buildConfiguration) != -1
+                )
+            ).map((shortcut: any) =>
                 Object.assign(shortcut, {
                     selected: undefined
                 })

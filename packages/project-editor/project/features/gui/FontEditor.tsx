@@ -34,6 +34,7 @@ import {
 import { glyphMetaData, setPixel } from "project-editor/project/features/gui/glyph";
 import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";
+import { FontProperties as FontValue } from "font-services/interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -137,11 +138,15 @@ export class GlyphSelectFieldType extends React.Component<
                     threshold: fontThreshold,
                     createGlyphs: true
                 })
-                    .then((font: FontProperties) => {
-                        font = loadObject(undefined, font, fontMetaData) as FontProperties;
+                    .then((fontValue: FontValue) => {
+                        const font: FontProperties = loadObject(
+                            undefined,
+                            fontValue,
+                            fontMetaData
+                        ) as FontProperties;
                         this.onChange(
                             font,
-                            font.glyphs.find(
+                            font.glyphs._array.find(
                                 glyph =>
                                     glyph.encoding ==
                                     this.props.values[this.props.fieldProperties.name]
@@ -193,7 +198,7 @@ export class GlyphSelectFieldType extends React.Component<
                 <GlyphSelectFieldContainerDiv innerRef={ref => (this.glyphsContainer = ref)}>
                     <Glyphs
                         ref={ref => (this.glyphs = ref!)}
-                        glyphs={this.state.font.glyphs}
+                        glyphs={this.state.font.glyphs._array}
                         selectedGlyph={this.state.selectedGlyph}
                         onSelectGlyph={this.onSelectGlyph.bind(this)}
                         onDoubleClickGlyph={this.onDoubleClickGlyph.bind(this)}
@@ -649,10 +654,10 @@ export class FontEditor extends EditorComponent {
         let font = this.props.editor.object as FontProperties;
         let newGlyph = cloneObject(
             undefined,
-            font.glyphs[font.glyphs.length - 1]
+            font.glyphs._array[font.glyphs._array.length - 1]
         ) as GlyphProperties;
         newGlyph.encoding = newGlyph.encoding + 1;
-        newGlyph = addObject(font.glyphs as any, newGlyph) as GlyphProperties;
+        newGlyph = addObject(font.glyphs, newGlyph) as GlyphProperties;
         this.selectedGlyph = newGlyph;
     }
 
@@ -660,7 +665,7 @@ export class FontEditor extends EditorComponent {
     onDeleteGlyph() {
         let font = this.props.editor.object as FontProperties;
         let selectedGlyph = this.selectedGlyph;
-        if (selectedGlyph && font.glyphs[font.glyphs.length - 1] == selectedGlyph) {
+        if (selectedGlyph && font.glyphs._array[font.glyphs._array.length - 1] == selectedGlyph) {
             deleteObject(selectedGlyph);
         }
     }
@@ -669,7 +674,10 @@ export class FontEditor extends EditorComponent {
         let font = this.props.editor.object as FontProperties;
 
         let onDeleteGlyph: (() => void) | undefined;
-        if (this.selectedGlyph && font.glyphs[font.glyphs.length - 1] == this.selectedGlyph) {
+        if (
+            this.selectedGlyph &&
+            font.glyphs._array[font.glyphs._array.length - 1] == this.selectedGlyph
+        ) {
             onDeleteGlyph = this.onDeleteGlyph;
         }
 
@@ -682,7 +690,7 @@ export class FontEditor extends EditorComponent {
                 onFocus={this.focusHander.bind(this)}
             >
                 <Glyphs
-                    glyphs={this.glyphs}
+                    glyphs={this.glyphs._array}
                     selectedGlyph={this.selectedGlyph}
                     onSelectGlyph={this.onSelectGlyph}
                     onDoubleClickGlyph={this.onDoubleClickGlyph}

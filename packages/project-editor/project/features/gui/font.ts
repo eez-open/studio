@@ -31,9 +31,9 @@ export function getData(font: FontProperties) {
     Note: byte 0 == 255 indicates empty glyph
     */
 
-    const min = _minBy(font.glyphs, g => g.encoding);
+    const min = _minBy(font.glyphs._array, g => g.encoding);
     const startEncoding = (min && min.encoding) || 32;
-    const max = _maxBy(font.glyphs, g => g.encoding);
+    const max = _maxBy(font.glyphs._array, g => g.encoding);
     const endEncoding = (max && max.encoding) || 127;
 
     const data: number[] = [];
@@ -81,7 +81,7 @@ export function getData(font: FontProperties) {
                 data[offsetIndex + 1] = offset & 0xff;
             }
 
-            const glyph = font.glyphs[i - 32];
+            const glyph = font.glyphs._array[i - 32];
 
             if (glyph && glyph.pixelArray) {
                 add(glyph.dx);

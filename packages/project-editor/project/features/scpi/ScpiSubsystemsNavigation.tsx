@@ -5,7 +5,7 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { EezObject, NavigationComponent } from "project-editor/core/metaData";
+import { NavigationComponent } from "project-editor/core/metaData";
 import { ProjectStore, NavigationStore, getProperty } from "project-editor/core/store";
 
 import { ListNavigation, ListNavigationWithContent } from "project-editor/project/ListNavigation";
@@ -33,8 +33,8 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
     }
 
     render() {
-        let subsystems = ((getProperty(ProjectStore.projectProperties, "scpi") as ScpiProperties)
-            .subsystems as any) as EezObject;
+        let subsystems = (getProperty(ProjectStore.projectProperties, "scpi") as ScpiProperties)
+            .subsystems;
 
         let selectedScpiSubsystem = NavigationStore.getNavigationSelectedItem(
             subsystems
@@ -74,7 +74,7 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
                     <ListNavigationWithContent
                         id="scpi-subsystem-commands"
                         title="Commands"
-                        navigationObject={(selectedScpiSubsystem.commands as any) as EezObject}
+                        navigationObject={selectedScpiSubsystem.commands}
                         content={content}
                     />
                 </Splitter>

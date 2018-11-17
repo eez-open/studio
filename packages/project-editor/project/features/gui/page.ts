@@ -7,7 +7,8 @@ import {
     EezObject,
     MetaData,
     PropertyMetaData,
-    registerMetaData
+    registerMetaData,
+    EezArrayObject
 } from "project-editor/core/metaData";
 import {
     TreeObjectAdapter,
@@ -38,10 +39,12 @@ export class PageResolutionProperties extends EezObject {
     width: number;
     @observable
     height: number;
+
     @observable
     style?: string;
+
     @observable
-    widgets: WidgetProperties[];
+    widgets: EezArrayObject<WidgetProperties>;
 
     @computed
     get boundingRect() {
@@ -108,7 +111,7 @@ export const pageResolutionMetaData = registerMetaData({
         if (metaData == widgetMetaData) {
             let pageResolution = object as PageResolutionProperties;
             if (pageResolution) {
-                return pageResolution.widgets as any;
+                return pageResolution.widgets;
             }
         }
         return undefined;
@@ -120,12 +123,16 @@ export const pageResolutionMetaData = registerMetaData({
 export class PageProperties extends EezObject {
     @observable
     name: string;
+
     @observable
     description?: string;
+
     @observable
-    resolutions: PageResolutionProperties[];
+    resolutions: EezArrayObject<PageResolutionProperties>;
+
     @observable
     closePageIfTouchedOutside: boolean;
+
     @observable
     usedIn: string[] | undefined;
 }
@@ -225,7 +232,7 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
             // if not found then select default for enum data
             if (widget.data && widget.widgets) {
                 let index: number = data.getEnumValue(widget.data);
-                if (index >= 0 && index < widget.widgets.length) {
+                if (index >= 0 && index < widget.widgets._array.length) {
                     selectedWidgetItem = widgetsItemChildren[index];
                 }
             }
@@ -267,12 +274,14 @@ export class PageTabState {
     constructor(object: EezObject) {
         this.pageProperties = object as PageProperties;
 
-        this.pageResolutionState = new PageResolutionState(this.pageProperties.resolutions[0]);
+        this.pageResolutionState = new PageResolutionState(
+            this.pageProperties.resolutions._array[0]
+        );
     }
 
     @computed
     get selectedPageResolution() {
-        return this.pageProperties.resolutions[0];
+        return this.pageProperties.resolutions._array[0];
     }
 
     @computed
