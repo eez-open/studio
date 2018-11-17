@@ -2,7 +2,6 @@ import {
     ProjectStore,
     OutputSectionsStore,
     updateObject,
-    getKey,
     getProperty,
     getObjectPath,
     objectToString,
@@ -297,7 +296,7 @@ export function replaceObjectReference(object: EezObject, newValue: string) {
 
             let parent = searchValue._parent;
             if (parent) {
-                let key = getKey(searchValue);
+                let key = searchValue._key;
                 if (parent && key && typeof key == "string") {
                     updateObject(parent, {
                         [key]: value

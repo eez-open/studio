@@ -17,7 +17,6 @@ import {
     ProjectStore,
     getObjectFromPath,
     objectToString,
-    getKey,
     getProperty,
     getObjectPropertiesMetaData,
     getInheritedValue,
@@ -807,7 +806,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
 
         let object;
         if (isValue(this.props.object)) {
-            markedPropertyName = getKey(this.props.object);
+            markedPropertyName = this.props.object._key;
             object = this.props.object._parent as EezObject;
         } else {
             object = this.props.object;

@@ -1311,7 +1311,7 @@ export function isEqual(object1: EezObject, object2: EezObject) {
         if (!isValue(object1)) {
             return false;
         }
-        return object1._parent == object2._parent && getKey(object1) == getKey(object2);
+        return object1._parent == object2._parent && object1._key == object2._key;
     } else {
         if (isValue(object1)) {
             return false;
@@ -1446,14 +1446,6 @@ export function getObjectFromObjectId(objectID: string): EezObject | undefined {
     return getDescendantObjectFromId(ProjectStore.projectProperties, objectID as string);
 }
 
-export function getKey(object: EezObject) {
-    return object._key;
-}
-
-export function getModificationTime(object: EezObject) {
-    return object._modificationTime;
-}
-
 export function getProperty(object: EezObject, name: string) {
     return (object as any)[name];
 }
@@ -1549,10 +1541,10 @@ export function objectToString(object: EezObject) {
     let label: string;
 
     if (isValue(object)) {
-        label = getProperty(object._parent!, getKey(object)!);
+        label = getProperty(object._parent!, object._key!);
     } else if (isArray(object)) {
-        let propertyMetaData = findPropertyByName(object._parent!, getKey(object)!);
-        label = (propertyMetaData && propertyMetaData.displayName) || humanize(getKey(object));
+        let propertyMetaData = findPropertyByName(object._parent!, object._key!);
+        label = (propertyMetaData && propertyMetaData.displayName) || humanize(object._key);
     } else {
         object = object;
 
@@ -1574,12 +1566,9 @@ export function objectToString(object: EezObject) {
         object._parent &&
         object._parent instanceof EezArrayObject &&
         object._parent!._parent &&
-        getKey(object._parent!)
+        object._parent!._key
     ) {
-        let propertyMetaData = findPropertyByName(
-            object._parent!._parent!,
-            getKey(object._parent!)!
-        );
+        let propertyMetaData = findPropertyByName(object._parent!._parent!, object._parent!._key!);
         if (propertyMetaData && propertyMetaData.childLabel) {
             label = propertyMetaData.childLabel(object, label);
         }
@@ -1604,7 +1593,7 @@ export function getObjectPath(object: EezObject): (string | number)[] {
         if (isArrayElement(object)) {
             return getObjectPath(parent).concat(asArray(parent).indexOf(object as EezObject));
         } else {
-            return getObjectPath(parent).concat(getKey(object) as string);
+            return getObjectPath(parent).concat(object._key as string);
         }
     }
     return [];
@@ -1647,8 +1636,7 @@ export function getAncestors(
     if (isArray(ancestor)) {
         let possibleAncestor = asArray(ancestor).find(
             possibleAncestor =>
-                object == possibleAncestor ||
-                object._id.startsWith(possibleAncestor._id + ".")
+                object == possibleAncestor || object._id.startsWith(possibleAncestor._id + ".")
         );
         if (possibleAncestor) {
             if (possibleAncestor == object) {
@@ -1686,10 +1674,7 @@ export function getAncestors(
                         return [];
                     }
 
-                    if (
-                        possibleAncestor &&
-                        object._id.startsWith(possibleAncestor._id + ".")
-                    ) {
+                    if (possibleAncestor && object._id.startsWith(possibleAncestor._id + ".")) {
                         return [ancestor].concat(
                             getAncestors(object, possibleAncestor, numObjectOrArrayProperties > 1)
                         );
@@ -1743,7 +1728,7 @@ export function isObjectExists(object: EezObject) {
                 return false;
             }
         } else {
-            const key = getKey(object);
+            const key = object._key;
             if (key && (parent as any)[key] !== object) {
                 return false;
             }
@@ -1782,9 +1767,7 @@ function isOptional(object: EezObject) {
         return false;
     }
 
-    let property: PropertyMetaData | undefined = findPropertyByName(parent, getKey(
-        object
-    ) as string);
+    let property: PropertyMetaData | undefined = findPropertyByName(parent, object._key!);
 
     if (property == undefined) {
         return false;
@@ -2127,7 +2110,7 @@ export let deleteObject = action((object: any) => {
         }
     } else {
         updateObject(object, {
-            [getKey(object) as string]: undefined
+            [object._key as string]: undefined
         });
     }
 });
@@ -2149,7 +2132,7 @@ export let deleteObjects = action((objects: EezObject[]) => {
                     array.splice(index, 1);
                 } else {
                     undoIndexes.push(-1);
-                    (parent as any)[getKey(object) as string] = undefined;
+                    (parent as any)[object._key as string] = undefined;
                 }
 
                 onObjectModified(parent);
@@ -2165,7 +2148,7 @@ export let deleteObjects = action((objects: EezObject[]) => {
                     let index = undoIndexes[i];
                     array.splice(index, 0, object);
                 } else {
-                    (parent as any)[getKey(object) as string] = object;
+                    (parent as any)[object._key as string] = object;
                 }
                 onObjectModified(parent);
             }
