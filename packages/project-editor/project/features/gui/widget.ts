@@ -13,7 +13,6 @@ import {
     replaceObjects,
     updateObject,
     cloneObject,
-    getParent,
     getProperty,
     ProjectStore,
     isArray
@@ -120,9 +119,9 @@ export class WidgetProperties extends EezObject {
     // Return immediate parent, which can be of type PageResolutionProperties, WidgetTyperProperties
     // or WidgetProperties (i.e. ContainerWidgetProperties, ListWidgetProperties, GridWidgetProperties, SelectWidgetPropertis)
     get parent(): WidgetParent {
-        let parent = getParent(this)!;
+        let parent = this._parent!;
         if (isArray(parent)) {
-            parent = getParent(parent)!;
+            parent = parent._parent!;
         }
         return parent as WidgetParent;
     }
@@ -295,7 +294,7 @@ export class WidgetProperties extends EezObject {
 
         let i: number;
         for (i = 1; i < objects.length; i++) {
-            if (getParent(objects[i]) !== getParent(objects[0])) {
+            if (objects[i]._parent !== objects[0]._parent) {
                 break;
             }
         }
@@ -323,8 +322,8 @@ export class WidgetProperties extends EezObject {
                 })
             );
 
-            let parent = getParent(objects[0]);
-            if (parent && getParent(parent) instanceof SelectWidgetProperties) {
+            let parent = objects[0]._parent;
+            if (parent && parent._parent instanceof SelectWidgetProperties) {
                 additionalMenuItems.push(
                     new MenuItem({
                         label: "Replace Parent",
@@ -512,9 +511,9 @@ export class WidgetProperties extends EezObject {
     }
 
     replaceParent() {
-        let parent = getParent(this);
+        let parent = this._parent;
         if (parent) {
-            let selectWidget = getParent(parent);
+            let selectWidget = parent._parent;
             if (selectWidget instanceof SelectWidgetProperties) {
                 replaceObject(selectWidget, cloneObject(undefined, this));
             }
@@ -684,7 +683,7 @@ export class SelectWidgetEditorProperties extends EezObject {
     y: number;
 
     get parent() {
-        return getParent(this) as SelectWidgetProperties;
+        return this._parent as SelectWidgetProperties;
     }
 
     // Returns array of edges (as Position[]) that Select Widget touches.
@@ -864,7 +863,7 @@ export const selectWidgetEditorMetaData = registerMetaData({
     className: "SelectWidgetEditor",
 
     label: (selectWidgetEditor: SelectWidgetEditorProperties) => {
-        const parent = getParent(selectWidgetEditor)!;
+        const parent = selectWidgetEditor._parent!;
         return parent._metaData.label(parent) + " Editor";
     },
 
@@ -1859,10 +1858,9 @@ export function getWidgetTypes() {
                         childLabel: (childObject: EezObject, childLabel: string) => {
                             let label;
 
-                            if (getParent(childObject)) {
-                                let selectWidgetProperties = getParent(
-                                    getParent(childObject)!
-                                )! as SelectWidgetProperties;
+                            if (childObject._parent) {
+                                let selectWidgetProperties = childObject._parent!
+                                    ._parent as SelectWidgetProperties;
 
                                 label = selectWidgetProperties.getChildLabel(
                                     childObject as WidgetProperties

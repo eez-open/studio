@@ -6,7 +6,6 @@ import { _each, _find, _pickBy } from "eez-studio-shared/algorithm";
 import {
     isArray,
     asArray,
-    getParent,
     getProperty,
     canCut,
     canPaste,
@@ -333,7 +332,7 @@ export class TreeObjectAdapter {
     }
 
     getParent(item: TreeObjectAdapter) {
-        for (let parent = getParent(item.object); parent; parent = getParent(parent)) {
+        for (let parent = item.object._parent; parent; parent = parent._parent) {
             let parentObjectAdapter = this.getObjectAdapter(parent);
             if (parentObjectAdapter) {
                 return parentObjectAdapter;

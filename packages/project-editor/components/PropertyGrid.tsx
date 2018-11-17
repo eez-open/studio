@@ -17,7 +17,6 @@ import {
     ProjectStore,
     getObjectFromPath,
     objectToString,
-    getParent,
     getKey,
     getProperty,
     getObjectPropertiesMetaData,
@@ -465,7 +464,7 @@ class Property extends React.Component<PropertyProps, {}> {
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique(this.props.object, getParent(this.props.object))
+                            validators.unique(this.props.object, this.props.object._parent)
                         ]
                     }
                 ]
@@ -794,7 +793,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
         let object = this.props.object;
         if (object) {
             if (isValue(object)) {
-                object = getParent(object) as EezObject;
+                object = object._parent as EezObject;
             }
             updateObject(object, propertyValues);
         }
@@ -810,7 +809,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
         let object;
         if (isValue(this.props.object)) {
             markedPropertyName = getKey(this.props.object);
-            object = getParent(this.props.object) as EezObject;
+            object = this.props.object._parent as EezObject;
         } else {
             object = this.props.object;
         }

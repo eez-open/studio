@@ -2,7 +2,7 @@ import { observable, computed, action, autorun } from "mobx";
 
 import { _find } from "eez-studio-shared/algorithm";
 
-import { getParent, getId } from "project-editor/core/store";
+import { getId } from "project-editor/core/store";
 import {
     EezObject,
     MetaData,
@@ -163,13 +163,13 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
                 });
 
                 // remember from selectedObject up to the root
-                while (getParent(selectedObject) && getParent(getParent(selectedObject)!)) {
-                    if (getParent(getParent(selectedObject)!) instanceof SelectWidgetProperties) {
+                while (selectedObject._parent && selectedObject._parent!._parent) {
+                    if (selectedObject._parent!._parent instanceof SelectWidgetProperties) {
                         this.selectWidgetToSelectedWidget[
-                            getId(getParent(getParent(selectedObject)!)!)
+                            getId(selectedObject._parent!._parent!)
                         ] = getId(selectedObject);
                     }
-                    selectedObject = getParent(selectedObject)!;
+                    selectedObject = selectedObject._parent!;
                 }
             }
 

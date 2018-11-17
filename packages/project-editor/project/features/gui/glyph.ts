@@ -4,7 +4,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
-import { loadObject, objectToJS, getParent } from "project-editor/core/store";
+import { loadObject, objectToJS } from "project-editor/core/store";
 import { EezObject, registerMetaData } from "project-editor/core/metaData";
 import * as util from "project-editor/core/util";
 
@@ -328,7 +328,7 @@ export class GlyphProperties extends EezObject {
     }
 
     getFont() {
-        return getParent(getParent(this)!) as FontProperties;
+        return this._parent!._parent as FontProperties;
     }
 
     getPixel(x: number, y: number): number {

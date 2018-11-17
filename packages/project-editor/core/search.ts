@@ -2,7 +2,6 @@ import {
     ProjectStore,
     OutputSectionsStore,
     updateObject,
-    getParent,
     getKey,
     getProperty,
     getObjectPath,
@@ -116,7 +115,7 @@ function* searchForReference(
 ): IterableIterator<SearchResult> {
     let v = withPause ? visitWithPause(root) : visitWithoutPause(root);
 
-    let objectParent = getParent(object);
+    let objectParent = object._parent;
     if (!objectParent) {
         return;
     }
@@ -296,7 +295,7 @@ export function replaceObjectReference(object: EezObject, newValue: string) {
                 }
             }
 
-            let parent = getParent(searchValue);
+            let parent = searchValue._parent;
             if (parent) {
                 let key = getKey(searchValue);
                 if (parent && key && typeof key == "string") {

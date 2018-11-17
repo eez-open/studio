@@ -27,7 +27,6 @@ import {
     deleteItems,
     UndoManager,
     getId,
-    getParent,
     UIStateStore,
     isObjectExists
 } from "project-editor/core/store";
@@ -193,7 +192,7 @@ class WidgetObjectComponent extends BaseObjectComponent {
     get selectionRects() {
         let rects = [this.boundingRect];
 
-        let listWidget = getParent(this.widgetProperties);
+        let listWidget = this.widgetProperties._parent;
         while (
             !(
                 listWidget instanceof ListWidgetProperties ||
@@ -201,7 +200,7 @@ class WidgetObjectComponent extends BaseObjectComponent {
             ) &&
             listWidget instanceof WidgetProperties
         ) {
-            listWidget = getParent(listWidget);
+            listWidget = listWidget._parent;
         }
 
         if (
@@ -513,7 +512,7 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
     }
 
     get selectWidget() {
-        return getParent(this.props.object)! as SelectWidgetProperties;
+        return this.props.object._parent! as SelectWidgetProperties;
     }
 
     get rect() {

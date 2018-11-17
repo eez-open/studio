@@ -133,10 +133,10 @@ class NavigationStoreClass {
         let object = selection[0];
 
         let iterObject = object;
-        let parent = getParent(iterObject);
+        let parent = iterObject._parent;
         while (iterObject && parent) {
             if (parent._metaData.navigationComponent) {
-                let grandparent = getParent(parent);
+                let grandparent = parent._parent;
                 if (!isArray(grandparent)) {
                     let navigationItem = this.getNavigationSelectedItem(parent);
                     if (navigationItem && navigationItem instanceof TreeObjectAdapter) {
@@ -147,16 +147,16 @@ class NavigationStoreClass {
                 }
             }
             iterObject = parent;
-            parent = getParent(iterObject);
+            parent = iterObject._parent;
         }
     }
 
     isSelected(object: EezObject) {
         let iterObject = object;
-        let parent = getParent(iterObject);
+        let parent = iterObject._parent;
         while (iterObject && parent) {
             if (parent._metaData.navigationComponent) {
-                let grandparent = getParent(parent);
+                let grandparent = parent._parent;
                 if (!isArray(grandparent)) {
                     let navigationItem = this.getNavigationSelectedItem(parent);
                     if (navigationItem && navigationItem instanceof TreeObjectAdapter) {
@@ -171,7 +171,7 @@ class NavigationStoreClass {
                 }
             }
             iterObject = parent;
-            parent = getParent(iterObject);
+            parent = iterObject._parent;
         }
 
         return true;
@@ -217,7 +217,7 @@ class NavigationStoreClass {
     @action
     setNavigationSelectedItem(navigationObject: EezObject, navigationItem: NavigationItem) {
         this.navigationMap.set(getId(navigationObject), navigationItem);
-        let parent = getParent(navigationObject);
+        let parent = navigationObject._parent;
         if (parent) {
             if (!this.getNavigationSelectedItem(parent)) {
                 this.setNavigationSelectedItem(parent, navigationObject);
@@ -227,14 +227,14 @@ class NavigationStoreClass {
 
     showObject(objectToShow: EezObject) {
         this.setSelection([objectToShow]);
-        for (let object: EezObject | undefined = objectToShow; object; object = getParent(object)) {
+        for (let object: EezObject | undefined = objectToShow; object; object = object._parent) {
             if (object._metaData.editorComponent) {
                 const editor = EditorsStore.openEditor(object);
                 setTimeout(() => {
                     if (editor && editor.state) {
                         editor.state.selectObject(
                             isValue(objectToShow)
-                                ? (getParent(objectToShow) as EezObject)
+                                ? (objectToShow._parent as EezObject)
                                 : objectToShow
                         );
                     }
@@ -319,7 +319,7 @@ class EditorsStoreClass {
                     }
                 }
 
-                object = getParent(object);
+                object = object._parent;
             }
         });
 
@@ -1311,7 +1311,7 @@ export function isEqual(object1: EezObject, object2: EezObject) {
         if (!isValue(object1)) {
             return false;
         }
-        return getParent(object1) == getParent(object2) && getKey(object1) == getKey(object2);
+        return object1._parent == object2._parent && getKey(object1) == getKey(object2);
     } else {
         if (isValue(object1)) {
             return false;
@@ -1446,10 +1446,6 @@ export function getObjectFromObjectId(objectID: string): EezObject | undefined {
     return getDescendantObjectFromId(ProjectStore.projectProperties, objectID as string);
 }
 
-export function getParent(object: EezObject) {
-    return object._parent;
-}
-
 export function getKey(object: EezObject) {
     return object._key;
 }
@@ -1499,7 +1495,7 @@ export function hasAncestor(object: EezObject, ancestor: EezObject): boolean {
         return true;
     }
 
-    let parent = getParent(object);
+    let parent = object._parent;
     return !!parent && hasAncestor(parent, ancestor);
 }
 
@@ -1508,7 +1504,7 @@ export function hasProperAncestor(object: EezObject, ancestor: EezObject) {
         return false;
     }
 
-    let parent = getParent(object);
+    let parent = object._parent;
     return !!parent && hasAncestor(parent, ancestor);
 }
 
@@ -1521,7 +1517,7 @@ function uniqueTop(objects: EezObject[]): EezObject[] {
 
 function getParents(objects: EezObject[]): EezObject[] {
     return uniqueTop(objects
-        .map(object => getParent(object))
+        .map(object => object._parent)
         .filter(object => !!object) as EezObject[]);
 }
 
@@ -1542,7 +1538,7 @@ export function reduceUntilCommonParent(objects: EezObject[]): EezObject[] {
 }
 
 export function isArrayElement(object: EezObject) {
-    return getParent(object) instanceof EezArrayObject;
+    return object._parent instanceof EezArrayObject;
 }
 
 export function isSameInstanceTypeAs(object1: EezObject, object2: EezObject) {
@@ -1557,9 +1553,9 @@ export function objectToString(object: EezObject) {
     let label: string;
 
     if (isValue(object)) {
-        label = getProperty(getParent(object)!, getKey(object)!);
+        label = getProperty(object._parent!, getKey(object)!);
     } else if (isArray(object)) {
-        let propertyMetaData = findPropertyByName(getParent(object)!, getKey(object)!);
+        let propertyMetaData = findPropertyByName(object._parent!, getKey(object)!);
         label = (propertyMetaData && propertyMetaData.displayName) || humanize(getKey(object));
     } else {
         object = object;
@@ -1579,14 +1575,14 @@ export function objectToString(object: EezObject) {
 
     if (
         object &&
-        getParent(object) &&
-        isArray(getParent(object)) &&
-        getParent(getParent(object)!) &&
-        getKey(getParent(object)!)
+        object._parent &&
+        object._parent instanceof EezArrayObject &&
+        object._parent!._parent &&
+        getKey(object._parent!)
     ) {
         let propertyMetaData = findPropertyByName(
-            getParent(getParent(object)!)!,
-            getKey(getParent(object)!)!
+            object._parent!._parent!,
+            getKey(object._parent!)!
         );
         if (propertyMetaData && propertyMetaData.childLabel) {
             label = propertyMetaData.childLabel(object, label);
@@ -1601,13 +1597,13 @@ export function getAncestorOfType(object: EezObject, metaData: MetaData): EezObj
         if (object._metaData == metaData) {
             return object;
         }
-        return getParent(object) && getAncestorOfType(getParent(object)!, metaData);
+        return object._parent && getAncestorOfType(object._parent!, metaData);
     }
     return undefined;
 }
 
 export function getObjectPath(object: EezObject): (string | number)[] {
-    let parent = getParent(object);
+    let parent = object._parent;
     if (parent) {
         if (isArrayElement(object)) {
             return getObjectPath(parent).concat(asArray(parent).indexOf(object as EezObject));
@@ -1649,7 +1645,7 @@ export function getAncestors(
     }
 
     if (isValue(object)) {
-        object = getParent(object) as EezObject;
+        object = object._parent as EezObject;
     }
 
     if (isArray(ancestor)) {
@@ -1744,7 +1740,7 @@ export function getPropertyAsString(object: EezObject, propertyMetaData: Propert
 }
 
 export function isObjectExists(object: EezObject) {
-    let parent = getParent(object);
+    let parent = object._parent;
     if (parent) {
         if (isArray(parent)) {
             if (asArray(parent).indexOf(object) === -1) {
@@ -1785,7 +1781,7 @@ export function humanizePropertyName(object: EezObject, propertyName: string) {
 }
 
 function isOptional(object: EezObject) {
-    let parent = getParent(object);
+    let parent = object._parent;
     if (!parent) {
         return false;
     }
@@ -1883,7 +1879,7 @@ function findPastePlaceInsideAndOutside(object: EezObject, serializedData: Seria
         return place;
     }
 
-    let parent = getParent(object);
+    let parent = object._parent;
     return parent && findPastePlaceInside(parent, serializedData.metaData, !!serializedData.object);
 }
 
@@ -2104,7 +2100,7 @@ export let updateObject = action((object: EezObject, values: any) => {
 
 export let deleteObject = action((object: any) => {
     if (isArrayElement(object)) {
-        const parent = getParent(object)!;
+        const parent = object._parent!;
         const array = asArray(parent);
         const index = array.indexOf(object);
 
@@ -2148,7 +2144,7 @@ export let deleteObjects = action((objects: EezObject[]) => {
             undoIndexes = [];
             for (let i = 0; i < objects.length; i++) {
                 let object = objects[i];
-                let parent = getParent(object)!;
+                let parent = object._parent!;
 
                 if (isArrayElement(object)) {
                     const array = asArray(parent!);
@@ -2167,7 +2163,7 @@ export let deleteObjects = action((objects: EezObject[]) => {
         undo: action(() => {
             for (let i = objects.length - 1; i >= 0; i--) {
                 let object = objects[i];
-                let parent = getParent(object)!;
+                let parent = object._parent!;
                 if (isArrayElement(object)) {
                     const array = asArray(parent);
                     let index = undoIndexes[i];
@@ -2221,7 +2217,7 @@ export let replaceObject = action((object: EezObject, replaceWithObject: EezObje
 });
 
 export let replaceObjects = action((objects: EezObject[], replaceWithObject: EezObject) => {
-    const parent = getParent(objects[0]);
+    const parent = objects[0]._parent;
     const array = asArray(parent!);
     const index = array.indexOf(objects[0]);
 
@@ -2267,14 +2263,14 @@ export let replaceObjects = action((objects: EezObject[], replaceWithObject: Eez
 ////////////////////////////////////////////////////////////////////////////////
 
 export function insertObjectBefore(object: EezObject, objectToInsert: EezObject) {
-    const parent = getParent(object)!;
+    const parent = object._parent!;
     const array = asArray(parent);
     const index = array.indexOf(object);
     insertObject(parent, index, objectToInsert);
 }
 
 export function insertObjectAfter(object: EezObject, objectToInsert: EezObject) {
-    const parent = getParent(object)!;
+    const parent = object._parent!;
     const array = asArray(parent);
     const index = array.indexOf(object);
     insertObject(parent, index + 1, objectToInsert);
@@ -2283,7 +2279,7 @@ export function insertObjectAfter(object: EezObject, objectToInsert: EezObject) 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function addItem(object: EezObject) {
-    const parent = isArray(object) ? object : getParent(object);
+    const parent = isArray(object) ? object : object._parent;
     if (parent) {
         const metaData = parent._metaData;
         if (metaData.newItem) {
@@ -2343,7 +2339,7 @@ export function copyItem(object: EezObject) {
 }
 
 function duplicateItem(object: EezObject) {
-    let parent = getParent(object) as EezObject;
+    let parent = object._parent as EezObject;
     let duplicate = cloneObject(parent, object);
     addObject(parent, duplicate);
 }

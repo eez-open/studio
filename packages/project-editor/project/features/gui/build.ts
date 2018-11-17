@@ -1,6 +1,5 @@
 import {
     OutputSectionsStore,
-    getParent,
     getProperty,
     ProjectStore
 } from "project-editor/core/store";
@@ -684,7 +683,7 @@ function buildWidget(object: Widget.WidgetProperties | PageResolutionProperties,
 
         if (object instanceof PageResolutionProperties) {
             specific.addField(
-                new UInt8((getParent(object) as PageProperties).closePageIfTouchedOutside ? 1 : 0)
+                new UInt8((object._parent as PageProperties).closePageIfTouchedOutside ? 1 : 0)
             );
         }
     } else if (type == WIDGET_TYPE_SELECT) {
