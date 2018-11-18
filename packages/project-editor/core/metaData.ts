@@ -31,8 +31,10 @@ export enum PropertyType {
 
 export interface PropertyInfo {
     name: string;
-    displayName?: string;
     type: PropertyType;
+
+    // optional properties
+    displayName?: string;
     enumItems?: EnumItem[];
     typeClass?: EezClass;
     referencedObjectCollectionPath?: string[];
@@ -73,9 +75,15 @@ export type InheritedValue =
     | undefined;
 
 export interface ClassInfo {
-    getClass?: (jsObject: any) => any;
+    properties: (object: EezObject) => PropertyInfo[];
+
+    // TODO this should be optional
+    // default implementation should return (object.name || object.constructor.name)
     label: (object: EezObject) => string;
+
+    // optional properties
     listLabel?: (object: EezObject) => JSX.Element | string;
+    getClass?: (jsObject: any) => any;
 
     parentClassInfo?: ClassInfo;
 
@@ -87,7 +95,6 @@ export interface ClassInfo {
 
     editorComponent?: typeof EditorComponent;
     createEditorState?: (object: EezObject) => EditorState;
-    properties: (object: EezObject) => PropertyInfo[];
     newItem?: (object: EezObject) => Promise<any>;
     getInheritedValue?: (object: EezObject, propertyName: string) => InheritedValue;
     defaultValue?: any;

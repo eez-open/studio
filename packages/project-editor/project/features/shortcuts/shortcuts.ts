@@ -111,9 +111,6 @@ export class Shortcuts extends EezObject {
     @observable shortcuts: EezArrayObject<Shortcut>;
 
     static classInfo: ClassInfo = {
-        getClass: function(jsObject: any) {
-            return Shortcuts;
-        },
         label: () => "Shortcuts",
         properties: () => [
             {
