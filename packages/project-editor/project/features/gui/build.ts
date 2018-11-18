@@ -14,7 +14,7 @@ import { getData as getBitmapData, Bitmap } from "project-editor/project/feature
 import { Style } from "project-editor/project/features/gui/style";
 import * as Widget from "project-editor/project/features/gui/widget";
 import { Page, PageResolution } from "project-editor/project/features/gui/page";
-import { Font } from "./fontMetaData";
+import { Font } from "project-editor/project/features/gui/font";
 
 ////////////////////////////////////////////////////////////////////////////////
 

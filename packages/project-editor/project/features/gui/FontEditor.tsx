@@ -24,7 +24,7 @@ import {
 
 import { Loading } from "project-editor/components/Loading";
 
-import { Font } from "project-editor/project/features/gui/fontMetaData";
+import { Font } from "project-editor/project/features/gui/font";
 import {
     Glyph,
     selectGlyph,

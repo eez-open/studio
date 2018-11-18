@@ -14,7 +14,7 @@ import * as output from "project-editor/core/output";
 import { Storyboard } from "project-editor/project/features/gui/storyboard";
 import { Page } from "project-editor/project/features/gui/page";
 import { Style, getDefaultStyle } from "project-editor/project/features/gui/style";
-import { Font } from "project-editor/project/features/gui/fontMetaData";
+import { Font } from "project-editor/project/features/gui/font";
 import { Bitmap } from "project-editor/project/features/gui/bitmap";
 import { build } from "project-editor/project/features/gui/build";
 import { metrics } from "project-editor/project/features/gui/metrics";

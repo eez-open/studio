@@ -9,7 +9,7 @@ import { ClassInfo, EezObject, registerClass, PropertyType } from "project-edito
 import * as util from "project-editor/core/util";
 
 import { GlyphSelectFieldType } from "project-editor/project/features/gui/FontEditor";
-import { Font } from "project-editor/project/features/gui/fontMetaData";
+import { Font } from "project-editor/project/features/gui/font";
 
 let path = EEZStudio.electron.remote.require("path");
 

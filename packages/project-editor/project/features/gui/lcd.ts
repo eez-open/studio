@@ -1,6 +1,6 @@
 import { blendColor } from "eez-studio-shared/color";
 
-import { Font } from "project-editor/project/features/gui/fontMetaData";
+import { Font } from "project-editor/project/features/gui/font";
 
 let fgColor: string;
 let bgColor: string;
