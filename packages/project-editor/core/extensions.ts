@@ -1,4 +1,4 @@
-import { EezObject, ClassInfo, PropertyType } from "project-editor/core/metaData";
+import { EezObject, EezClass, PropertyType } from "project-editor/core/metaData";
 import { Message } from "project-editor/core/output";
 import { Project } from "project-editor/project/project";
 
@@ -15,7 +15,7 @@ interface ExtensionImplementation {
         key: string;
         displayName?: string;
         type: PropertyType;
-        classInfo: ClassInfo;
+        typeClass: EezClass;
         create: () => any;
         check?: (object: EezObject) => Message[];
         build?: (project: Project, sectionNames: string[] | undefined) => Promise<BuildResult>;

@@ -340,7 +340,7 @@ class StoryboardLineConnecting implements LineConnecting {
                     page: (this.target.item.object as StoryboardPage).page
                 }
             };
-            let lineObject = loadObject(storyboardLines, line, StoryboardLine.classInfo);
+            let lineObject = loadObject(storyboardLines, line, StoryboardLine);
 
             addObject(storyboardLines, lineObject);
         }

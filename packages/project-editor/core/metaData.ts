@@ -34,7 +34,7 @@ export interface PropertyInfo {
     displayName?: string;
     type: PropertyType;
     enumItems?: EnumItem[];
-    typeClassInfo?: ClassInfo;
+    typeClass?: EezClass;
     referencedObjectCollectionPath?: string[];
     matchObjectReference?: (object: EezObject, path: (string | number)[], value: string) => boolean;
     replaceObjectReference?: (value: string) => string;
@@ -73,7 +73,7 @@ export type InheritedValue =
     | undefined;
 
 export interface ClassInfo {
-    getClass: (jsObject: any) => any;
+    getClass?: (jsObject: any) => any;
     label: (object: EezObject) => string;
     listLabel?: (object: EezObject) => JSX.Element | string;
 
@@ -129,7 +129,7 @@ export class EezArrayObject<T> extends EezObject {
     @observable _array: T[] = [];
 
     get _classInfo(): ClassInfo {
-        return this._propertyInfo!.typeClassInfo!;
+        return this._propertyInfo!.typeClass!.classInfo;
     }
 }
 
@@ -162,10 +162,7 @@ export class EezValueObject extends EezObject {
         return valueObject;
     }
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return undefined;
-        },
+    static classInfo: ClassInfo = {
         label: (object: EezValueObject) => {
             return object.value && object.value.toString();
         },

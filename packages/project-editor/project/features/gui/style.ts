@@ -4,6 +4,7 @@ import { observable, computed } from "mobx";
 
 import { loadObject, getProperty } from "project-editor/core/store";
 import {
+    ClassInfo,
     PropertyInfo,
     registerClass,
     EezObject,
@@ -227,10 +228,7 @@ export class Style extends EezObject {
     @observable
     alwaysBuild: boolean;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return Style;
-        },
+    static classInfo: ClassInfo = {
         label: (style: Style) => {
             return style.name;
         },
@@ -411,7 +409,7 @@ export function getDefaultStyle(): Style {
                 opacity: opacityProperty.defaultValue,
                 blink: blinkProperty.defaultValue
             },
-            Style.classInfo
+            Style
         ) as Style;
     }
 

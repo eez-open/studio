@@ -1,6 +1,7 @@
 import { observable } from "mobx";
 
 import {
+    ClassInfo,
     registerClass,
     EezObject,
     EezArrayObject,
@@ -21,11 +22,7 @@ export class ShortcutAction extends EezObject {
     @observable type: IActionType;
     @observable data: string;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return ShortcutAction;
-        },
-
+    static classInfo: ClassInfo = {
         label: (shortcutAction: ShortcutAction) => {
             return shortcutAction.data;
         },
@@ -60,10 +57,7 @@ export class Shortcut extends EezObject {
     @observable requiresConfirmation: boolean;
     @observable selected: boolean;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return Shortcut;
-        },
+    static classInfo: ClassInfo = {
         label: (object: EezObject) => (object as Shortcut).name,
         properties: () => [
             {
@@ -83,7 +77,7 @@ export class Shortcut extends EezObject {
             {
                 name: "action",
                 type: PropertyType.Object,
-                typeClassInfo: ShortcutAction.classInfo
+                typeClass: ShortcutAction
             },
             {
                 name: "keybinding",
@@ -116,7 +110,7 @@ registerClass(Shortcut);
 export class Shortcuts extends EezObject {
     @observable shortcuts: EezArrayObject<Shortcut>;
 
-    static classInfo = {
+    static classInfo: ClassInfo = {
         getClass: function(jsObject: any) {
             return Shortcuts;
         },
@@ -125,7 +119,7 @@ export class Shortcuts extends EezObject {
             {
                 name: "shortcuts",
                 type: PropertyType.Array,
-                typeClassInfo: Shortcut.classInfo,
+                typeClass: Shortcut,
                 hideInPropertyGrid: true
             }
         ],
@@ -145,7 +139,7 @@ registerFeatureImplementation("shortcuts", {
         mandatory: false,
         key: "shortcuts",
         type: PropertyType.Object,
-        classInfo: Shortcuts.classInfo,
+        typeClass: Shortcuts,
         create: () => {
             return {
                 shortcuts: []

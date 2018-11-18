@@ -1,6 +1,7 @@
 import { observable } from "mobx";
 
 import {
+    ClassInfo,
     registerClass,
     EezObject,
     EezArrayObject,
@@ -37,35 +38,32 @@ export class Gui extends EezObject {
     @observable
     bitmaps: EezArrayObject<Bitmap>;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return Gui;
-        },
+    static classInfo: ClassInfo = {
         label: () => "GUI",
         properties: () => [
             {
                 name: "storyboard",
                 type: PropertyType.Object,
-                typeClassInfo: Storyboard.classInfo,
+                typeClass: Storyboard,
                 hideInPropertyGrid: true
             },
             {
                 name: "pages",
                 displayName: "Pages (Layouts)",
                 type: PropertyType.Array,
-                typeClassInfo: Page.classInfo,
+                typeClass: Page,
                 hideInPropertyGrid: true
             },
             {
                 name: "styles",
                 type: PropertyType.Array,
-                typeClassInfo: Style.classInfo,
+                typeClass: Style,
                 hideInPropertyGrid: true
             },
             {
                 name: "fonts",
                 type: PropertyType.Array,
-                typeClassInfo: Font.classInfo,
+                typeClass: Font,
                 hideInPropertyGrid: true,
                 check: (object: EezObject) => {
                     let messages: output.Message[] = [];
@@ -86,7 +84,7 @@ export class Gui extends EezObject {
             {
                 name: "bitmaps",
                 type: PropertyType.Array,
-                typeClassInfo: Bitmap.classInfo,
+                typeClass: Bitmap,
                 hideInPropertyGrid: true,
                 check: (object: EezObject) => {
                     let messages: output.Message[] = [];
@@ -131,7 +129,7 @@ registerFeatureImplementation("gui", {
         mandatory: false,
         key: "gui",
         type: PropertyType.Object,
-        classInfo: Gui.classInfo,
+        typeClass: Gui,
         create: () => {
             return {
                 pages: [],
@@ -148,10 +146,7 @@ registerFeatureImplementation("gui", {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getGui() {
-    return (
-        ProjectStore.project &&
-        (getProperty(ProjectStore.project, "gui") as Gui)
-    );
+    return ProjectStore.project && (getProperty(ProjectStore.project, "gui") as Gui);
 }
 
 export function getPages() {

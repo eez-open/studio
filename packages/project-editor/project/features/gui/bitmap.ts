@@ -5,7 +5,7 @@ import { validators } from "eez-studio-shared/model/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { ProjectStore } from "project-editor/core/store";
-import { EezObject, registerClass, PropertyType } from "project-editor/core/metaData";
+import { ClassInfo, EezObject, registerClass, PropertyType } from "project-editor/core/metaData";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
@@ -30,10 +30,7 @@ export class Bitmap extends EezObject {
     @observable
     alwaysBuild: boolean;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return Bitmap;
-        },
+    static classInfo: ClassInfo = {
         label: (bitmap: Bitmap) => {
             return bitmap.name;
         },

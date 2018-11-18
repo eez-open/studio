@@ -5,7 +5,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
 import { loadObject, objectToJS } from "project-editor/core/store";
-import { EezObject, registerClass, PropertyType } from "project-editor/core/metaData";
+import { ClassInfo, EezObject, registerClass, PropertyType } from "project-editor/core/metaData";
 import * as util from "project-editor/core/util";
 
 import { GlyphSelectFieldType } from "project-editor/project/features/gui/FontEditor";
@@ -92,7 +92,7 @@ export function selectGlyph(glyph: Glyph) {
             height: result.context.encoding.glyph.height,
             dx: result.context.encoding.glyph.dx,
             glyphBitmap: result.context.encoding.glyph.glyphBitmap,
-            source: loadObject(glyph, result.values, GlyphSource.classInfo)
+            source: loadObject(glyph, result.values, GlyphSource)
         };
     });
 }
@@ -107,11 +107,7 @@ export class GlyphSource extends EezObject {
     @observable
     encoding?: number;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return GlyphSource;
-        },
-
+    static classInfo: ClassInfo = {
         label: (glyphSource: GlyphSource) => {
             if (!glyphSource.filePath || !glyphSource.encoding) {
                 return "";
@@ -268,10 +264,7 @@ export class Glyph extends EezObject {
     @observable
     glyphBitmap?: GlyphBitmap;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return Glyph;
-        },
+    static classInfo: ClassInfo = {
         label: (glyph: Glyph) => {
             return glyph.encoding != undefined ? formatEncoding(glyph.encoding) : "";
         },
@@ -303,7 +296,7 @@ export class Glyph extends EezObject {
             {
                 name: "source",
                 type: PropertyType.Object,
-                typeClassInfo: GlyphSource.classInfo,
+                typeClass: GlyphSource,
                 onSelect: selectGlyph
             },
             {

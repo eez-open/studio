@@ -8,6 +8,7 @@ import * as notification from "eez-studio-ui/notification";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
 import {
+    ClassInfo,
     EezObject,
     registerClass,
     EezArrayObject,
@@ -31,7 +32,7 @@ export class FontSource extends EezObject {
     @observable
     size?: number;
 
-    static classInfo = {
+    static classInfo: ClassInfo = {
         getClass: (jsObject: any) => {
             return FontSource;
         },
@@ -85,7 +86,7 @@ export class Font extends EezObject {
     @observable
     alwaysBuild: boolean;
 
-    static classInfo = {
+    static classInfo: ClassInfo = {
         getClass: (jsObject: any) => {
             return Font;
         },
@@ -105,7 +106,7 @@ export class Font extends EezObject {
             {
                 name: "source",
                 type: PropertyType.Object,
-                typeClassInfo: FontSource.classInfo
+                typeClass: FontSource
             },
             {
                 name: "bpp",
@@ -128,7 +129,7 @@ export class Font extends EezObject {
             },
             {
                 name: "glyphs",
-                typeClassInfo: Glyph.classInfo,
+                typeClass: Glyph,
                 type: PropertyType.Array,
                 hideInPropertyGrid: true
             },

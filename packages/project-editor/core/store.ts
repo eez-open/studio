@@ -9,6 +9,7 @@ import * as notification from "eez-studio-ui/notification";
 
 import {
     EezObject,
+    EezClass,
     ClassInfo,
     PropertyInfo,
     findClass,
@@ -1149,7 +1150,7 @@ function loadArrayObject(arrayObject: any, parent: any, propertyInfo: PropertyIn
     eezArray._propertyInfo = propertyInfo;
 
     eezArray._array = arrayObject.map((object: any) =>
-        loadObject(eezArray, object, propertyInfo.typeClassInfo as ClassInfo)
+        loadObject(eezArray, object, propertyInfo.typeClass!)
     );
 
     return eezArray;
@@ -1158,7 +1159,7 @@ function loadArrayObject(arrayObject: any, parent: any, propertyInfo: PropertyIn
 export function loadObject(
     parent: EezObject | EezObject[] | undefined,
     jsObjectOrString: any | string,
-    classInfo: ClassInfo,
+    aClass: EezClass,
     key?: string
 ): EezObject {
     let jsObject: any =
@@ -1168,12 +1169,14 @@ export function loadObject(
         return loadArrayObject(jsObject, parent, {
             type: PropertyType.Array,
             name: key!,
-            typeClassInfo: classInfo
+            typeClass: aClass
         });
     }
 
-    let object = new (classInfo.getClass(jsObject))();
-    classInfo = object._classInfo;
+    let object = aClass.classInfo.getClass
+        ? new (aClass.classInfo.getClass(jsObject))()
+        : new aClass();
+    const classInfo = object._classInfo;
 
     object._id = getChildId(parent as EezObject);
     object._parent = parent as EezObject;
@@ -1188,10 +1191,10 @@ export function loadObject(
             let childObject: EezObject | undefined;
 
             if (value) {
-                childObject = loadObject(object, value, propertyInfo.typeClassInfo as ClassInfo);
+                childObject = loadObject(object, value, propertyInfo.typeClass!);
             } else if (!propertyInfo.isOptional) {
-                let typeClassInfo = propertyInfo.typeClassInfo as ClassInfo;
-                childObject = loadObject(object, typeClassInfo.defaultValue, typeClassInfo);
+                let typeClass = propertyInfo.typeClass!;
+                childObject = loadObject(object, typeClass.classInfo.defaultValue, typeClass);
             }
 
             if (childObject) {
@@ -1235,7 +1238,7 @@ export function objectToJS(object: EezObject | EezObject[]): any {
 }
 
 export function cloneObject(parent: EezObject | undefined, obj: EezObject) {
-    return loadObject(parent, objectToJson(obj), obj._classInfo);
+    return loadObject(parent, objectToJson(obj), obj.constructor as EezClass);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1268,12 +1271,11 @@ export function clipboardDataToObject(data: string) {
 
     const aClass = findClass(serializedData.objectClassName);
     if (aClass) {
-        const classInfo = aClass.classInfo;
         if (serializedData.object) {
-            serializedData.object = loadObject(undefined, serializedData.object, classInfo);
+            serializedData.object = loadObject(undefined, serializedData.object, aClass);
         } else if (serializedData.objects) {
             serializedData.objects = serializedData.objects.map(object =>
-                loadObject(undefined, object, classInfo)
+                loadObject(undefined, object, aClass)
             );
         }
     }
@@ -1387,7 +1389,7 @@ export function getChildOfObject(
 
     if (propertyInfo) {
         let childObjectOrValue = getProperty(object, propertyInfo.name);
-        if (propertyInfo.typeClassInfo) {
+        if (propertyInfo.typeClass) {
             return childObjectOrValue;
         } else {
             return EezValueObject.create(object, propertyInfo, childObjectOrValue);
@@ -1815,7 +1817,10 @@ export function findPastePlaceInside(
     // first, find among array properties
     for (let i = 0; i < properties.length; i++) {
         let propertyInfo = properties[i];
-        if (propertyInfo.type === PropertyType.Array && propertyInfo.typeClassInfo === classInfo) {
+        if (
+            propertyInfo.type === PropertyType.Array &&
+            propertyInfo.typeClass!.classInfo === classInfo
+        ) {
             let collectionObject = getChildOfObject(object, propertyInfo);
             if (collectionObject) {
                 return collectionObject;
@@ -1828,7 +1833,7 @@ export function findPastePlaceInside(
         let propertyInfo = properties[i];
         if (
             propertyInfo.type == PropertyType.Object &&
-            propertyInfo.typeClassInfo == classInfo &&
+            propertyInfo.typeClass!.classInfo == classInfo &&
             isSingleObject
         ) {
             let childObject = getChildOfObject(object, propertyInfo);
@@ -1928,7 +1933,7 @@ function onObjectModified(object: EezObject) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export let addObject = action((parentObject: EezObject, object: EezObject) => {
-    object = loadObject(parentObject, object, parentObject._classInfo);
+    object = loadObject(parentObject, object, parentObject.constructor as EezClass);
     ensureUniqueProperties(parentObject, [object]);
 
     UndoManager.executeCommand({
@@ -1952,7 +1957,9 @@ export let addObject = action((parentObject: EezObject, object: EezObject) => {
 });
 
 export let addObjects = action((parentObject: EezObject, objects: EezObject[]) => {
-    objects = objects.map(object => loadObject(parentObject, object, parentObject._classInfo));
+    objects = objects.map(object =>
+        loadObject(parentObject, object, parentObject.constructor as EezClass)
+    );
     ensureUniqueProperties(parentObject, objects);
 
     UndoManager.executeCommand({
@@ -1977,7 +1984,7 @@ export let addObjects = action((parentObject: EezObject, objects: EezObject[]) =
 });
 
 export let insertObject = action((parentObject: EezObject, index: number, object: EezObject) => {
-    object = loadObject(parentObject, object, parentObject._classInfo);
+    object = loadObject(parentObject, object, parentObject.constructor as EezClass);
     ensureUniqueProperties(parentObject, [object]);
 
     UndoManager.executeCommand({

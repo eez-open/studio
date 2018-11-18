@@ -3,6 +3,7 @@ import { observable, extendObservable } from "mobx";
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 import { loadObject, objectToJson, ProjectStore, getProperty } from "project-editor/core/store";
 import {
+    ClassInfo,
     PropertyInfo,
     registerClass,
     EezObject,
@@ -33,10 +34,7 @@ export class BuildConfiguration extends EezObject {
     @observable
     properties: string;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return BuildConfiguration;
-        },
+    static classInfo: ClassInfo = {
         label: (buildConfiguration: BuildConfiguration) => {
             return buildConfiguration.name;
         },
@@ -90,10 +88,7 @@ export class BuildFile extends EezObject {
     @observable
     template: string;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return BuildFile;
-        },
+    static classInfo: ClassInfo = {
         label: (buildFile: BuildFile) => {
             return buildFile.fileName;
         },
@@ -137,22 +132,19 @@ export class Build extends EezObject {
     @observable
     destinationFolder?: string;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return Build;
-        },
+    static classInfo: ClassInfo = {
         label: () => "Build",
         properties: () => [
             {
                 name: "configurations",
                 type: PropertyType.Array,
-                typeClassInfo: BuildConfiguration.classInfo,
+                typeClass: BuildConfiguration,
                 hideInPropertyGrid: true
             },
             {
                 name: "files",
                 type: PropertyType.Array,
-                typeClassInfo: BuildFile.classInfo,
+                typeClass: BuildFile,
                 hideInPropertyGrid: true
             },
             {
@@ -172,10 +164,7 @@ export class General extends EezObject {
     @observable
     scpiDocFolder?: string;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return General;
-        },
+    static classInfo: ClassInfo = {
         label: () => "General",
         properties: () => [
             {
@@ -200,22 +189,19 @@ export class Settings extends EezObject {
     @observable
     scpiHelpFolder?: string;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return Settings;
-        },
+    static classInfo: ClassInfo = {
         label: () => "Settings",
         properties: () => [
             {
                 name: "general",
                 type: PropertyType.Object,
-                typeClassInfo: General.classInfo,
+                typeClass: General,
                 hideInPropertyGrid: true
             },
             {
                 name: "build",
                 type: PropertyType.Object,
-                typeClassInfo: Build.classInfo,
+                typeClass: Build,
                 hideInPropertyGrid: true
             }
         ],
@@ -243,10 +229,7 @@ export class Project extends EezObject {
     @observable
     actions: EezArrayObject<Action>;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return Project;
-        },
+    static classInfo: ClassInfo = {
         label: () => "Project",
         properties: () => {
             let projectFeatures = getExtensionsByCategory("project-feature");
@@ -257,7 +240,7 @@ export class Project extends EezObject {
                     {
                         name: "settings",
                         type: PropertyType.Object,
-                        typeClassInfo: Settings.classInfo,
+                        typeClass: Settings,
                         hideInPropertyGrid: true
                     }
                 ];
@@ -273,9 +256,9 @@ export class Project extends EezObject {
                             type:
                                 projectFeature.eezStudioExtension.implementation.projectFeature
                                     .type,
-                            typeClassInfo:
+                            typeClass:
                                 projectFeature.eezStudioExtension.implementation.projectFeature
-                                    .classInfo,
+                                    .typeClass,
                             isOptional: !projectFeature.eezStudioExtension.implementation
                                 .projectFeature.mandatory,
                             hideInPropertyGrid: true,
@@ -328,7 +311,7 @@ export function getNewProject(): Project {
         }
     };
 
-    return loadObject(undefined, project as Project, Project.classInfo) as Project;
+    return loadObject(undefined, project as Project, Project) as Project;
 }
 
 export async function load(filePath: string) {
@@ -339,7 +322,7 @@ export async function load(filePath: string) {
             } else {
                 let projectJs = JSON.parse(data);
 
-                let project = loadObject(undefined, projectJs, Project.classInfo) as Project;
+                let project = loadObject(undefined, projectJs, Project) as Project;
 
                 resolve(project);
             }

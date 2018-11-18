@@ -18,6 +18,7 @@ import {
     isArray
 } from "project-editor/core/store";
 import {
+    ClassInfo,
     EezObject,
     PropertyInfo,
     registerClass,
@@ -67,7 +68,7 @@ export class Widget extends EezObject {
     @observable
     height: number;
 
-    static classInfo = {
+    static classInfo: ClassInfo = {
         getClass: function(jsObject: any) {
             return findClass(jsObject.type + "Widget");
         },
@@ -361,7 +362,7 @@ export class Widget extends EezObject {
 
         selectWidgetJsObject.widgets._array = [thisWidgetJsObject];
 
-        replaceObject(this, loadObject(undefined, selectWidgetJsObject, Widget.classInfo));
+        replaceObject(this, loadObject(undefined, selectWidgetJsObject, Widget));
     }
 
     static putInContainer(widgets: Widget[]) {
@@ -395,7 +396,7 @@ export class Widget extends EezObject {
             containerWidgetJsObject.widgets._array = [widgetJsObject];
         }
 
-        replaceObjects(widgets, loadObject(undefined, containerWidgetJsObject, Widget.classInfo));
+        replaceObjects(widgets, loadObject(undefined, containerWidgetJsObject, Widget));
     }
 
     async createLayout() {
@@ -442,7 +443,7 @@ export class Widget extends EezObject {
                             }
                         ]
                     },
-                    Page.classInfo
+                    Page
                 )
             );
 
@@ -458,7 +459,7 @@ export class Widget extends EezObject {
                     height: this.height,
                     layout: layoutName
                 },
-                Widget.classInfo
+                Widget
             );
 
             replaceObject(this, newWidget);
@@ -501,7 +502,7 @@ export class Widget extends EezObject {
                     height: this.height,
                     layout: layoutName
                 },
-                Widget.classInfo
+                Widget
             );
 
             replaceObject(this, newWidget);
@@ -607,7 +608,7 @@ export class ContainerWidget extends Widget {
                 {
                     name: "widgets",
                     type: PropertyType.Array,
-                    typeClassInfo: Widget.classInfo,
+                    typeClass: Widget,
                     hideInPropertyGrid: true
                 }
             ]),
@@ -706,7 +707,7 @@ export class ListWidget extends Widget {
                 {
                     name: "itemWidget",
                     type: PropertyType.Object,
-                    typeClassInfo: Widget.classInfo,
+                    typeClass: Widget,
                     hideInPropertyGrid: true,
                     isOptional: true
                 }
@@ -795,7 +796,7 @@ export class GridWidget extends Widget {
                 {
                     name: "itemWidget",
                     type: PropertyType.Object,
-                    typeClassInfo: Widget.classInfo,
+                    typeClass: Widget,
                     hideInPropertyGrid: true,
                     isOptional: true
                 }
@@ -854,11 +855,7 @@ export class SelectWidgetEditor extends EezObject {
     @observable
     y: number;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return SelectWidgetEditor;
-        },
-
+    static classInfo: ClassInfo = {
         label: (selectWidgetEditor: SelectWidgetEditor) => {
             const parent = selectWidgetEditor._parent!;
             return parent._classInfo.label(parent) + " Editor";
@@ -1070,7 +1067,7 @@ export class SelectWidget extends Widget {
                 {
                     name: "widgets",
                     type: PropertyType.Array,
-                    typeClassInfo: Widget.classInfo,
+                    typeClass: Widget,
                     hideInPropertyGrid: true,
                     childLabel: (childObject: EezObject, childLabel: string) => {
                         let label;
@@ -1088,7 +1085,7 @@ export class SelectWidget extends Widget {
                 {
                     name: "editor",
                     type: PropertyType.Object,
-                    typeClassInfo: SelectWidgetEditor.classInfo,
+                    typeClass: SelectWidgetEditor,
                     enumerable: false
                 }
             ]),
@@ -2352,7 +2349,7 @@ registerClass(AppViewWidget);
 export const widgetClasses = getClassesDerivedFrom(Widget);
 
 export function getWidgetType(widgetClass: typeof EezObject) {
-    if (widgetClass.name.endsWith('Widget')) {
+    if (widgetClass.name.endsWith("Widget")) {
         return widgetClass.name.substring(0, widgetClass.name.length - "Widget".length);
     }
     return widgetClass.name;
@@ -2362,4 +2359,3 @@ const typeProperty = widgetSharedProperties.find(propertyInfo => propertyInfo.na
 typeProperty.enumItems = widgetClasses.map(widgetClass => ({
     id: getWidgetType(widgetClass)
 }));
-

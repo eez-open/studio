@@ -329,10 +329,8 @@ function getChanges() {
             .then(subsystems => {
                 console.log(subsystems);
 
-                let existingSubsystems = (getProperty(
-                    ProjectStore.project,
-                    "scpi"
-                ) as Scpi).subsystems;
+                let existingSubsystems = (getProperty(ProjectStore.project, "scpi") as Scpi)
+                    .subsystems;
 
                 // added
                 let added = findMissingCommands(subsystems, existingSubsystems._array);
@@ -548,8 +546,7 @@ export class ImportScpiDocDialog extends React.Component<
 
         UndoManager.setCombineCommands(true);
 
-        let existingSubsystems = (getProperty(ProjectStore.project, "scpi") as Scpi)
-            .subsystems;
+        let existingSubsystems = (getProperty(ProjectStore.project, "scpi") as Scpi).subsystems;
 
         let getOrAddSubsystem = (subsystem: Subsystem) => {
             let existingSubsystem = existingSubsystems._array.find(
@@ -568,7 +565,7 @@ export class ImportScpiDocDialog extends React.Component<
                         helpLink: subsystem.helpLink,
                         commands: []
                     },
-                    ScpiSubsystem.classInfo
+                    ScpiSubsystem
                 )
             );
         };
@@ -586,7 +583,7 @@ export class ImportScpiDocDialog extends React.Component<
                         name: commandDefinition.command.name,
                         helpLink: commandDefinition.command.helpLink
                     },
-                    ScpiCommand.classInfo
+                    ScpiCommand
                 )
             );
         });

@@ -5,6 +5,7 @@ import { validators } from "eez-studio-shared/model/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import {
+    ClassInfo,
     registerClass,
     EezObject,
     EezArrayObject,
@@ -24,10 +25,7 @@ export class ScpiCommand extends EezObject {
     @observable helpLink?: string;
     @observable usedIn: string[] | undefined;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return ScpiCommand;
-        },
+    static classInfo: ClassInfo = {
         label: (object: EezObject) => (object as ScpiCommand).name,
         properties: () => [
             {
@@ -92,10 +90,7 @@ export class ScpiSubsystem extends EezObject {
     @observable helpLink?: string;
     @observable commands: EezArrayObject<ScpiCommand>;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return ScpiSubsystem;
-        },
+    static classInfo: ClassInfo = {
         label: (object: EezObject) => (object as ScpiSubsystem).name,
         properties: () => [
             {
@@ -114,7 +109,7 @@ export class ScpiSubsystem extends EezObject {
             {
                 name: "commands",
                 type: PropertyType.Array,
-                typeClassInfo: ScpiCommand.classInfo,
+                typeClass: ScpiCommand,
                 hideInPropertyGrid: true
             }
         ],
@@ -151,16 +146,13 @@ registerClass(ScpiSubsystem);
 export class Scpi extends EezObject {
     @observable subsystems: EezArrayObject<ScpiSubsystem>;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return Scpi;
-        },
+    static classInfo: ClassInfo = {
         label: () => "SCPI",
         properties: () => [
             {
                 name: "subsystems",
                 type: PropertyType.Array,
-                typeClassInfo: ScpiSubsystem.classInfo,
+                typeClass: ScpiSubsystem,
                 hideInPropertyGrid: true
             }
         ],
@@ -180,7 +172,7 @@ registerFeatureImplementation("scpi", {
         mandatory: false,
         key: "scpi",
         type: PropertyType.Object,
-        classInfo: Scpi.classInfo,
+        typeClass: Scpi,
         create: () => {
             return {
                 subsystems: []

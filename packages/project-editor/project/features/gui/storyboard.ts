@@ -1,6 +1,7 @@
 import { observable } from "mobx";
 
 import {
+    ClassInfo,
     registerClass,
     EezObject,
     EezArrayObject,
@@ -17,10 +18,7 @@ export class StoryboardPage extends EezObject {
     @observable y: number;
     @observable page: string;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return StoryboardPage;
-        },
+    static classInfo: ClassInfo = {
         label: (storyboardPageProperties: StoryboardPage) => storyboardPageProperties.page,
         properties: () => [
             {
@@ -47,10 +45,7 @@ registerClass(StoryboardPage);
 export class StoryboardLineSource extends EezObject {
     @observable page: string;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return StoryboardLineSource;
-        },
+    static classInfo: ClassInfo = {
         label: (storyboardLineSourceProperties: StoryboardLineSource) =>
             storyboardLineSourceProperties.page,
         properties: () => [
@@ -70,10 +65,7 @@ registerClass(StoryboardLineSource);
 export class StoryboardLineTarget extends EezObject {
     @observable page: string;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return StoryboardLineTarget;
-        },
+    static classInfo: ClassInfo = {
         label: (storyboardLineSourceProperties: StoryboardLineSource) =>
             storyboardLineSourceProperties.page,
         properties: () => [
@@ -94,22 +86,19 @@ export class StoryboardLine extends EezObject {
     @observable source: StoryboardLineSource;
     @observable target: StoryboardLineTarget;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return StoryboardLineTarget;
-        },
+    static classInfo: ClassInfo = {
         label: (storyboardLineProperties: StoryboardLine) =>
             storyboardLineProperties.source.page + "->" + storyboardLineProperties.target.page,
         properties: () => [
             {
                 name: "source",
                 type: PropertyType.Object,
-                typeClassInfo: StoryboardLineSource.classInfo
+                typeClass: StoryboardLineSource
             },
             {
                 name: "target",
                 type: PropertyType.Object,
-                typeClassInfo: StoryboardLineTarget.classInfo
+                typeClass: StoryboardLineTarget
             }
         ]
     };
@@ -123,22 +112,19 @@ export class Storyboard extends EezObject {
     @observable pages: EezArrayObject<StoryboardPage>;
     @observable lines: EezArrayObject<StoryboardLine>;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return Storyboard;
-        },
+    static classInfo: ClassInfo = {
         label: (storyboard: Storyboard) => "Storyboard",
         properties: () => [
             {
                 name: "pages",
                 type: PropertyType.Array,
-                typeClassInfo: StoryboardPage.classInfo,
+                typeClass: StoryboardPage,
                 hideInPropertyGrid: true
             },
             {
                 name: "lines",
                 type: PropertyType.Array,
-                typeClassInfo: StoryboardLine.classInfo,
+                typeClass: StoryboardLine,
                 hideInPropertyGrid: true,
                 skipSearch: true
             }

@@ -42,10 +42,7 @@ export class PageResolution extends EezObject {
     @observable
     widgets: EezArrayObject<Widget>;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return PageResolution;
-        },
+    static classInfo: ClassInfo = {
         label: (object: EezObject) => {
             return "PageResolution";
         },
@@ -74,7 +71,7 @@ export class PageResolution extends EezObject {
             {
                 name: "widgets",
                 type: PropertyType.Array,
-                typeClassInfo: Widget.classInfo,
+                typeClass: Widget,
                 hideInPropertyGrid: true
             }
         ],
@@ -133,10 +130,7 @@ export class Page extends EezObject {
     @observable
     usedIn: string[] | undefined;
 
-    static classInfo = {
-        getClass: function(jsObject: any) {
-            return Page;
-        },
+    static classInfo: ClassInfo = {
         label: (page: Page) => {
             return page.name;
         },
@@ -153,7 +147,7 @@ export class Page extends EezObject {
             {
                 name: "resolutions",
                 type: PropertyType.Array,
-                typeClassInfo: PageResolution.classInfo,
+                typeClass: PageResolution,
                 hideInPropertyGrid: true
             },
             {

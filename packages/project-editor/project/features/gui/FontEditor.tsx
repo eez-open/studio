@@ -138,7 +138,7 @@ export class GlyphSelectFieldType extends React.Component<
                     createGlyphs: true
                 })
                     .then((fontValue: FontValue) => {
-                        const font: Font = loadObject(undefined, fontValue, Font.classInfo) as Font;
+                        const font: Font = loadObject(undefined, fontValue, Font) as Font;
                         this.onChange(
                             font,
                             font.glyphs._array.find(
@@ -636,7 +636,7 @@ export class FontEditor extends EditorComponent {
                 projectFilePath: ProjectStore.filePath!
             });
 
-            replaceObject(font, loadObject(undefined, newFont, Font.classInfo));
+            replaceObject(font, loadObject(undefined, newFont, Font));
 
             notification.info(`Font rebuilded.`);
         } catch (err) {
