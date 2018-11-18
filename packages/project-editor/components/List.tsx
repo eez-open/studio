@@ -5,7 +5,7 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, PropertyMetaData } from "project-editor/core/metaData";
+import { EezObject, PropertyInfo } from "project-editor/core/metaData";
 
 import {
     NavigationStore,
@@ -221,7 +221,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                     if (
                         findPastePlaceInside(
                             this.props.item,
-                            DragAndDropManager.dragObject._metaData,
+                            DragAndDropManager.dragObject._classInfo,
                             true
                         )
                     ) {
@@ -303,7 +303,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                 DragAndDropManager.dropPosition == DropPosition.DROP_INSIDE
         });
 
-        const itemMetaData = this.props.item._metaData;
+        const itemClassInfo = this.props.item._classInfo;
 
         return (
             <ListItemDiv
@@ -320,8 +320,8 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                 onDragOver={this.onDragOver}
                 onDragLeave={this.onDragLeave}
             >
-                {itemMetaData.listLabel
-                    ? itemMetaData.listLabel(this.props.item)
+                {itemClassInfo.listLabel
+                    ? itemClassInfo.listLabel(this.props.item)
                     : objectToString(this.props.item)}
             </ListItemDiv>
         );
@@ -521,7 +521,7 @@ export class List extends React.Component<ListProps, {}> {
                 } else if (dropPosition == DropPosition.DROP_INSIDE) {
                     let dropPlace = findPastePlaceInside(
                         DragAndDropManager.dropObject,
-                        object._metaData,
+                        object._classInfo,
                         true
                     );
                     if (dropPlace) {
@@ -529,7 +529,7 @@ export class List extends React.Component<ListProps, {}> {
                             addObject(dropPlace as EezObject, object);
                         } else {
                             updateObject(DragAndDropManager.dropObject, {
-                                [(dropPlace as PropertyMetaData).name]: object
+                                [(dropPlace as PropertyInfo).name]: object
                             });
                         }
                     }
@@ -582,7 +582,7 @@ export class List extends React.Component<ListProps, {}> {
             } else {
                 let place = findPastePlaceInside(
                     this.props.navigationObject,
-                    DragAndDropManager.dragObject._metaData,
+                    DragAndDropManager.dragObject._classInfo,
                     true
                 );
                 if (place) {

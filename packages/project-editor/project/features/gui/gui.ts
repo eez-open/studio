@@ -1,7 +1,7 @@
 import { observable } from "mobx";
 
 import {
-    registerMetaData,
+    registerClass,
     EezObject,
     EezArrayObject,
     PropertyType
@@ -37,7 +37,7 @@ export class Gui extends EezObject {
     @observable
     bitmaps: EezArrayObject<Bitmap>;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return Gui;
         },
@@ -47,26 +47,26 @@ export class Gui extends EezObject {
             {
                 name: "storyboard",
                 type: PropertyType.Object,
-                typeMetaData: Storyboard.metaData,
+                typeClassInfo: Storyboard.classInfo,
                 hideInPropertyGrid: true
             },
             {
                 name: "pages",
                 displayName: "Pages (Layouts)",
                 type: PropertyType.Array,
-                typeMetaData: Page.metaData,
+                typeClassInfo: Page.classInfo,
                 hideInPropertyGrid: true
             },
             {
                 name: "styles",
                 type: PropertyType.Array,
-                typeMetaData: Style.metaData,
+                typeClassInfo: Style.classInfo,
                 hideInPropertyGrid: true
             },
             {
                 name: "fonts",
                 type: PropertyType.Array,
-                typeMetaData: Font.metaData,
+                typeClassInfo: Font.classInfo,
                 hideInPropertyGrid: true,
                 check: (object: EezObject) => {
                     let messages: output.Message[] = [];
@@ -87,7 +87,7 @@ export class Gui extends EezObject {
             {
                 name: "bitmaps",
                 type: PropertyType.Array,
-                typeMetaData: Bitmap.metaData,
+                typeClassInfo: Bitmap.classInfo,
                 hideInPropertyGrid: true,
                 check: (object: EezObject) => {
                     let messages: output.Message[] = [];
@@ -123,7 +123,7 @@ export class Gui extends EezObject {
     };
 }
 
-registerMetaData(Gui.metaData);
+registerClass(Gui);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,7 +132,7 @@ registerFeatureImplementation("gui", {
         mandatory: false,
         key: "gui",
         type: PropertyType.Object,
-        metaData: Gui.metaData,
+        classInfo: Gui.classInfo,
         create: () => {
             return {
                 pages: [],

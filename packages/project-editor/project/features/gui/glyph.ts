@@ -5,7 +5,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
 import { loadObject, objectToJS } from "project-editor/core/store";
-import { EezObject, registerMetaData, PropertyType } from "project-editor/core/metaData";
+import { EezObject, registerClass, PropertyType } from "project-editor/core/metaData";
 import * as util from "project-editor/core/util";
 
 import { GlyphSelectFieldType } from "project-editor/project/features/gui/FontEditor";
@@ -92,7 +92,7 @@ export function selectGlyph(glyph: Glyph) {
             height: result.context.encoding.glyph.height,
             dx: result.context.encoding.glyph.dx,
             glyphBitmap: result.context.encoding.glyph.glyphBitmap,
-            source: loadObject(glyph, result.values, GlyphSource.metaData)
+            source: loadObject(glyph, result.values, GlyphSource.classInfo)
         };
     });
 }
@@ -107,7 +107,7 @@ export class GlyphSource extends EezObject {
     @observable
     encoding?: number;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return GlyphSource;
         },
@@ -146,11 +146,11 @@ export class GlyphSource extends EezObject {
     };
 
     toString() {
-        return this._metaData.label(this);
+        return this._classInfo.label(this);
     }
 }
 
-registerMetaData(GlyphSource.metaData);
+registerClass(GlyphSource);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -269,7 +269,7 @@ export class Glyph extends EezObject {
     @observable
     glyphBitmap?: GlyphBitmap;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return Glyph;
         },
@@ -305,7 +305,7 @@ export class Glyph extends EezObject {
             {
                 name: "source",
                 type: PropertyType.Object,
-                typeMetaData: GlyphSource.metaData,
+                typeClassInfo: GlyphSource.classInfo,
                 onSelect: selectGlyph
             },
             {
@@ -811,4 +811,4 @@ export class Glyph extends EezObject {
     }
 }
 
-registerMetaData(Glyph.metaData);
+registerClass(Glyph);

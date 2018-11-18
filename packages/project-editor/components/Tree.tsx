@@ -8,7 +8,7 @@ import { _filter, _map } from "eez-studio-shared/algorithm";
 import { Icon } from "eez-studio-ui/icon";
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, PropertyMetaData } from "project-editor/core/metaData";
+import { EezObject, PropertyInfo } from "project-editor/core/metaData";
 
 import {
     cloneObject,
@@ -349,7 +349,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
                 } else {
                     let place = findPastePlaceInside(
                         this.props.item.object,
-                        DragAndDropManager.dragObject._metaData,
+                        DragAndDropManager.dragObject._classInfo,
                         true
                     );
                     if (place) {
@@ -662,7 +662,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                 } else if (dropPosition == DropPosition.DROP_INSIDE) {
                     let dropPlace = findPastePlaceInside(
                         DragAndDropManager.dropObject.object,
-                        object._metaData,
+                        object._classInfo,
                         true
                     );
                     if (dropPlace) {
@@ -670,7 +670,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                             addObject(dropPlace as EezObject, object);
                         } else {
                             updateObject(DragAndDropManager.dropObject.object, {
-                                [(dropPlace as PropertyMetaData).name]: object
+                                [(dropPlace as PropertyInfo).name]: object
                             });
                         }
                     }

@@ -3,8 +3,8 @@ import { observable, extendObservable } from "mobx";
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 import { loadObject, objectToJson, ProjectStore, getProperty } from "project-editor/core/store";
 import {
-    PropertyMetaData,
-    registerMetaData,
+    PropertyInfo,
+    registerClass,
     EezObject,
     EezArrayObject,
     PropertyType
@@ -33,7 +33,7 @@ export class BuildConfiguration extends EezObject {
     @observable
     properties: string;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return BuildConfiguration;
         },
@@ -79,7 +79,7 @@ export class BuildConfiguration extends EezObject {
     }
 }
 
-registerMetaData(BuildConfiguration.metaData);
+registerClass(BuildConfiguration);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -91,7 +91,7 @@ export class BuildFile extends EezObject {
     @observable
     template: string;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return BuildFile;
         },
@@ -125,7 +125,7 @@ export class BuildFile extends EezObject {
     };
 }
 
-registerMetaData(BuildFile.metaData);
+registerClass(BuildFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,7 +139,7 @@ export class Build extends EezObject {
     @observable
     destinationFolder?: string;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return Build;
         },
@@ -149,13 +149,13 @@ export class Build extends EezObject {
             {
                 name: "configurations",
                 type: PropertyType.Array,
-                typeMetaData: BuildConfiguration.metaData,
+                typeClassInfo: BuildConfiguration.classInfo,
                 hideInPropertyGrid: true
             },
             {
                 name: "files",
                 type: PropertyType.Array,
-                typeMetaData: BuildFile.metaData,
+                typeClassInfo: BuildFile.classInfo,
                 hideInPropertyGrid: true
             },
             {
@@ -167,7 +167,7 @@ export class Build extends EezObject {
     };
 }
 
-registerMetaData(Build.metaData);
+registerClass(Build);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -175,7 +175,7 @@ export class General extends EezObject {
     @observable
     scpiDocFolder?: string;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return General;
         },
@@ -192,7 +192,7 @@ export class General extends EezObject {
     };
 }
 
-registerMetaData(General.metaData);
+registerClass(General);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -204,7 +204,7 @@ export class Settings extends EezObject {
     @observable
     scpiHelpFolder?: string;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return Settings;
         },
@@ -214,13 +214,13 @@ export class Settings extends EezObject {
             {
                 name: "general",
                 type: PropertyType.Object,
-                typeMetaData: General.metaData,
+                typeClassInfo: General.classInfo,
                 hideInPropertyGrid: true
             },
             {
                 name: "build",
                 type: PropertyType.Object,
-                typeMetaData: Build.metaData,
+                typeClassInfo: Build.classInfo,
                 hideInPropertyGrid: true
             }
         ],
@@ -231,12 +231,12 @@ export class Settings extends EezObject {
     };
 }
 
-registerMetaData(Settings.metaData);
+registerClass(Settings);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 let numProjectFeatures = 0;
-let projectProperties: PropertyMetaData[];
+let projectProperties: PropertyInfo[];
 
 export class Project extends EezObject {
     @observable
@@ -248,7 +248,7 @@ export class Project extends EezObject {
     @observable
     actions: EezArrayObject<Action>;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return Project;
         },
@@ -259,16 +259,16 @@ export class Project extends EezObject {
             if (!projectProperties || numProjectFeatures != projectFeatures.length) {
                 numProjectFeatures = projectFeatures.length;
 
-                let builtinProjectProperties: PropertyMetaData[] = [
+                let builtinProjectProperties: PropertyInfo[] = [
                     {
                         name: "settings",
                         type: PropertyType.Object,
-                        typeMetaData: Settings.metaData,
+                        typeClassInfo: Settings.classInfo,
                         hideInPropertyGrid: true
                     }
                 ];
 
-                let projectFeatureProperties: PropertyMetaData[] = projectFeatures.map(
+                let projectFeatureProperties: PropertyInfo[] = projectFeatures.map(
                     projectFeature => {
                         return {
                             name:
@@ -279,9 +279,9 @@ export class Project extends EezObject {
                             type:
                                 projectFeature.eezStudioExtension.implementation.projectFeature
                                     .type,
-                            typeMetaData:
+                            typeClassInfo:
                                 projectFeature.eezStudioExtension.implementation.projectFeature
-                                    .metaData,
+                                    .classInfo,
                             isOptional: !projectFeature.eezStudioExtension.implementation
                                 .projectFeature.mandatory,
                             hideInPropertyGrid: true,
@@ -305,9 +305,9 @@ export class Project extends EezObject {
     callExtendObservableForAllOptionalProjectFeatures() {
         let optionalFeatures: any = {};
 
-        this._metaData.properties(this).forEach(propertyMetaData => {
-            if (propertyMetaData.isOptional && !(propertyMetaData.name in this)) {
-                optionalFeatures[propertyMetaData.name] = getProperty(this, propertyMetaData.name);
+        this._classInfo.properties(this).forEach(propertyInfo => {
+            if (propertyInfo.isOptional && !(propertyInfo.name in this)) {
+                optionalFeatures[propertyInfo.name] = getProperty(this, propertyInfo.name);
             }
         });
 
@@ -315,7 +315,7 @@ export class Project extends EezObject {
     }
 }
 
-registerMetaData(Project.metaData);
+registerClass(Project);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -334,11 +334,7 @@ export function getNewProject(): Project {
         }
     };
 
-    return loadObject(
-        undefined,
-        project as Project,
-        Project.metaData
-    ) as Project;
+    return loadObject(undefined, project as Project, Project.classInfo) as Project;
 }
 
 export async function load(filePath: string) {
@@ -349,11 +345,7 @@ export async function load(filePath: string) {
             } else {
                 let projectJs = JSON.parse(data);
 
-                let project = loadObject(
-                    undefined,
-                    projectJs,
-                    Project.metaData
-                ) as Project;
+                let project = loadObject(undefined, projectJs, Project.classInfo) as Project;
 
                 resolve(project);
             }
@@ -363,17 +355,12 @@ export async function load(filePath: string) {
 
 export function save(filePath: string) {
     return new Promise((resolve, reject) => {
-        fs.writeFile(
-            filePath,
-            objectToJson(ProjectStore.project, 2),
-            "utf8",
-            (err: any) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
+        fs.writeFile(filePath, objectToJson(ProjectStore.project, 2), "utf8", (err: any) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
             }
-        );
+        });
     });
 }

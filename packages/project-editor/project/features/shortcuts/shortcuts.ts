@@ -1,7 +1,7 @@
 import { observable } from "mobx";
 
 import {
-    registerMetaData,
+    registerClass,
     EezObject,
     EezArrayObject,
     PropertyType
@@ -21,7 +21,7 @@ export class ShortcutAction extends EezObject {
     @observable type: IActionType;
     @observable data: string;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return ShortcutAction;
         },
@@ -44,7 +44,7 @@ export class ShortcutAction extends EezObject {
     };
 }
 
-registerMetaData(ShortcutAction.metaData);
+registerClass(ShortcutAction);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +61,7 @@ export class Shortcut extends EezObject {
     @observable requiresConfirmation: boolean;
     @observable selected: boolean;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return Shortcut;
         },
@@ -85,7 +85,7 @@ export class Shortcut extends EezObject {
             {
                 name: "action",
                 type: PropertyType.Object,
-                typeMetaData: ShortcutAction.metaData
+                typeClassInfo: ShortcutAction.classInfo
             },
             {
                 name: "keybinding",
@@ -111,14 +111,14 @@ export class Shortcut extends EezObject {
     };
 }
 
-registerMetaData(Shortcut.metaData);
+registerClass(Shortcut);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Shortcuts extends EezObject {
     @observable shortcuts: EezArrayObject<Shortcut>;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return Shortcuts;
         },
@@ -128,7 +128,7 @@ export class Shortcuts extends EezObject {
             {
                 name: "shortcuts",
                 type: PropertyType.Array,
-                typeMetaData: Shortcut.metaData,
+                typeClassInfo: Shortcut.classInfo,
                 hideInPropertyGrid: true
             }
         ],
@@ -139,7 +139,7 @@ export class Shortcuts extends EezObject {
     };
 }
 
-registerMetaData(Shortcuts.metaData);
+registerClass(Shortcuts);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -148,7 +148,7 @@ registerFeatureImplementation("shortcuts", {
         mandatory: false,
         key: "shortcuts",
         type: PropertyType.Object,
-        metaData: Shortcuts.metaData,
+        classInfo: Shortcuts.classInfo,
         create: () => {
             return {
                 shortcuts: []

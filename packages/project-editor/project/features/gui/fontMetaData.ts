@@ -9,7 +9,7 @@ import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
 import {
     EezObject,
-    registerMetaData,
+    registerClass,
     EezArrayObject,
     PropertyType
 } from "project-editor/core/metaData";
@@ -31,7 +31,7 @@ export class FontSource extends EezObject {
     @observable
     size?: number;
 
-    static metaData = {
+    static classInfo = {
         getClass: (jsObject: any) => {
             return FontSource;
         },
@@ -60,7 +60,7 @@ export class FontSource extends EezObject {
     };
 }
 
-registerMetaData(FontSource.metaData);
+registerClass(FontSource);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -86,7 +86,7 @@ export class Font extends EezObject {
     @observable
     alwaysBuild: boolean;
 
-    static metaData = {
+    static classInfo = {
         getClass: (jsObject: any) => {
             return Font;
         },
@@ -107,7 +107,7 @@ export class Font extends EezObject {
             {
                 name: "source",
                 type: PropertyType.Object,
-                typeMetaData: FontSource.metaData
+                typeClassInfo: FontSource.classInfo
             },
             {
                 name: "bpp",
@@ -130,7 +130,7 @@ export class Font extends EezObject {
             },
             {
                 name: "glyphs",
-                typeMetaData: Glyph.metaData,
+                typeClassInfo: Glyph.classInfo,
                 type: PropertyType.Array,
                 hideInPropertyGrid: true
             },
@@ -254,10 +254,10 @@ export class Font extends EezObject {
 
                             if (errorMessage) {
                                 notification.error(
-                                    `Adding ${Font.metaData.className} failed: ${errorMessage}!`
+                                    `Adding ${Font.classInfo.className} failed: ${errorMessage}!`
                                 );
                             } else {
-                                notification.error(`Adding ${Font.metaData.className} failed!`);
+                                notification.error(`Adding ${Font.classInfo.className} failed!`);
                             }
 
                             return false;
@@ -275,4 +275,4 @@ export class Font extends EezObject {
     };
 }
 
-registerMetaData(Font.metaData);
+registerClass(Font);

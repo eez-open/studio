@@ -4,7 +4,7 @@ import { validators } from "eez-studio-shared/model/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { registerMetaData, EezObject, PropertyType } from "project-editor/core/metaData";
+import { registerClass, EezObject, PropertyType } from "project-editor/core/metaData";
 import { ProjectStore, asArray } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import * as output from "project-editor/core/output";
@@ -36,7 +36,7 @@ export class DataItem extends EezObject {
     @observable
     usedIn: string[] | undefined;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return DataItem;
         },
@@ -128,7 +128,7 @@ export class DataItem extends EezObject {
     };
 }
 
-registerMetaData(DataItem.metaData);
+registerClass(DataItem);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -137,7 +137,7 @@ registerFeatureImplementation("data", {
         mandatory: false,
         key: "data",
         type: PropertyType.Array,
-        metaData: DataItem.metaData,
+        classInfo: DataItem.classInfo,
         create: () => {
             return [];
         },

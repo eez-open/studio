@@ -168,7 +168,7 @@ class Editor extends React.Component<{}, {}> {
 
         let activeEditor = EditorsStore.activeEditor;
         if (activeEditor) {
-            let EditorComponent = activeEditor.object._metaData.editorComponent;
+            let EditorComponent = activeEditor.object._classInfo.editorComponent;
             if (EditorComponent) {
                 editor = <EditorComponent editor={activeEditor} />;
             }
@@ -231,8 +231,8 @@ class Content extends React.Component<{}, {}> {
     @computed
     get hideInProperties() {
         for (let object: EezObject | undefined = this.object; object; object = object._parent) {
-            if (!isArray(object) && object._metaData.editorComponent) {
-                return object._metaData.hideInProperties;
+            if (!isArray(object) && object._classInfo.editorComponent) {
+                return object._classInfo.hideInProperties;
             }
         }
         return false;

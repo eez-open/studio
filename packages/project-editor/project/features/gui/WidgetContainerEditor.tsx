@@ -59,7 +59,7 @@ export class WidgetContainerEditor extends CanvasEditor {
         let items: DisplayItem[] = [];
 
         function findItemsInsideRect(node: TreeNode) {
-            if (isObjectInstanceOf(node.item.object, Widget.metaData)) {
+            if (isObjectInstanceOf(node.item.object, Widget.classInfo)) {
                 if (rectContains(r, node.rect)) {
                     items.push(node.item);
                 }
@@ -105,7 +105,7 @@ export class WidgetContainerEditor extends CanvasEditor {
         const object = data && data.object;
         if (object) {
             if (
-                isObjectInstanceOf(object, Widget.metaData) &&
+                isObjectInstanceOf(object, Widget.classInfo) &&
                 event.dataTransfer.effectAllowed == "copy"
             ) {
                 event.preventDefault();

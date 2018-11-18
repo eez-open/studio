@@ -50,7 +50,7 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
                 this.props.item
         });
 
-        let icon = this.props.item._metaData.icon || "extension";
+        let icon = this.props.item._classInfo.icon || "extension";
 
         return (
             <NavigationMenuItemContainer
@@ -121,11 +121,11 @@ export class MenuNavigation extends React.Component<
             this.props.navigationObject
         );
         if (selectedItem) {
-            let NavigationComponent = selectedItem._metaData.navigationComponent;
+            let NavigationComponent = selectedItem._classInfo.navigationComponent;
             if (NavigationComponent) {
                 subNavigation = (
                     <NavigationComponent
-                        id={selectedItem._metaData.navigationComponentId || this.props.id}
+                        id={selectedItem._classInfo.navigationComponentId || this.props.id}
                         navigationObject={selectedItem}
                         content={this.props.content}
                     />

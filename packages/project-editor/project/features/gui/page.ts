@@ -4,9 +4,9 @@ import { _find } from "eez-studio-shared/algorithm";
 
 import {
     EezObject,
-    MetaData,
-    PropertyMetaData,
-    registerMetaData,
+    ClassInfo,
+    PropertyInfo,
+    registerClass,
     EezArrayObject,
     PropertyType
 } from "project-editor/core/metaData";
@@ -21,10 +21,7 @@ import { ListNavigationWithContent } from "project-editor/project/ListNavigation
 
 import * as data from "project-editor/project/features/data/data";
 
-import {
-    Widget,
-    SelectWidgetProperties
-} from "project-editor/project/features/gui/widget";
+import { Widget, SelectWidgetProperties } from "project-editor/project/features/gui/widget";
 import { PageEditor } from "project-editor/project/features/gui/PageEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +42,7 @@ export class PageResolution extends EezObject {
     @observable
     widgets: EezArrayObject<Widget>;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return PageResolution;
         },
@@ -78,7 +75,7 @@ export class PageResolution extends EezObject {
             {
                 name: "widgets",
                 type: PropertyType.Array,
-                typeMetaData: Widget.metaData,
+                typeClassInfo: Widget.classInfo,
                 hideInPropertyGrid: true
             }
         ],
@@ -93,10 +90,10 @@ export class PageResolution extends EezObject {
         },
         findPastePlaceInside: (
             object: EezObject,
-            metaData: MetaData,
+            classInfo: ClassInfo,
             isSingleObject: boolean
-        ): EezObject | PropertyMetaData | undefined => {
-            if (metaData == Widget.metaData) {
+        ): EezObject | PropertyInfo | undefined => {
+            if (classInfo == Widget.classInfo) {
                 let pageResolution = object as PageResolution;
                 if (pageResolution) {
                     return pageResolution.widgets;
@@ -117,7 +114,7 @@ export class PageResolution extends EezObject {
     }
 }
 
-registerMetaData(PageResolution.metaData);
+registerClass(PageResolution);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -137,7 +134,7 @@ export class Page extends EezObject {
     @observable
     usedIn: string[] | undefined;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return Page;
         },
@@ -158,7 +155,7 @@ export class Page extends EezObject {
             {
                 name: "resolutions",
                 type: PropertyType.Array,
-                typeMetaData: PageResolution.metaData,
+                typeClassInfo: PageResolution.classInfo,
                 hideInPropertyGrid: true
             },
             {
@@ -193,7 +190,7 @@ export class Page extends EezObject {
     };
 }
 
-registerMetaData(Page.metaData);
+registerClass(Page);
 
 export interface IWidgetContainerDisplayItem extends DisplayItem {
     getSelectedWidgetForSelectWidget(item: DisplayItem): DisplayItem | undefined;

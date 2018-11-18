@@ -116,7 +116,7 @@ function getCacheId(obj: EezObject) {
         id = obj._id;
     }
 
-    if (isObjectInstanceOf(obj, Style.metaData)) {
+    if (isObjectInstanceOf(obj, Style.classInfo)) {
         let style = obj as Style;
 
         const font = styleGetFont(style);

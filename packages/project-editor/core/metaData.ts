@@ -78,12 +78,12 @@ export enum PropertyType {
     Any
 }
 
-export interface PropertyMetaData {
+export interface PropertyInfo {
     name: string;
     displayName?: string;
     type: PropertyType;
     enumItems?: EnumItem[];
-    typeMetaData?: MetaData;
+    typeClassInfo?: ClassInfo;
     referencedObjectCollectionPath?: string[];
     matchObjectReference?: (object: EezObject, path: (string | number)[], value: string) => boolean;
     replaceObjectReference?: (value: string) => string;
@@ -121,7 +121,7 @@ export type InheritedValue =
       }
     | undefined;
 
-export interface MetaData {
+export interface ClassInfo {
     getClass: (jsObject: any) => any;
     className: string;
     label: (object: EezObject) => string;
@@ -135,27 +135,26 @@ export interface MetaData {
 
     editorComponent?: typeof EditorComponent;
     createEditorState?: (object: EezObject) => EditorState;
-    properties: (object: EezObject) => PropertyMetaData[];
+    properties: (object: EezObject) => PropertyInfo[];
     newItem?: (object: EezObject) => Promise<any>;
     getInheritedValue?: (object: EezObject, propertyName: string) => InheritedValue;
     defaultValue?: any;
     findPastePlaceInside?: (
         object: EezObject,
-        metaData: MetaData,
+        classInfo: ClassInfo,
         isSingleObject: boolean
-    ) => EezObject | PropertyMetaData | undefined;
+    ) => EezObject | PropertyInfo | undefined;
     icon?: string;
 }
 
-let metaDataMap: Map<string, MetaData> = new Map<string, MetaData>();
+let classInfoMap: Map<string, ClassInfo> = new Map<string, ClassInfo>();
 
-export function registerMetaData(metaData: MetaData) {
-    metaDataMap.set(metaData.className, metaData);
-    return metaData;
+export function registerClass(aClass: { classInfo: ClassInfo }) {
+    classInfoMap.set(aClass.classInfo.className, aClass.classInfo);
 }
 
-export function findMetaData(className: string) {
-    return metaDataMap.get(className);
+export function findClassInfo(className: string) {
+    return classInfoMap.get(className);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,33 +165,35 @@ export class EezObject {
     _parent?: EezObject;
     _lastChildId?: number;
     _modificationTime?: number;
-    _propertyMetaData?: PropertyMetaData;
+    _propertyInfo?: PropertyInfo;
 
-    get _metaData(): MetaData {
-        return (this.constructor as any).metaData;
+    static classInfo: ClassInfo;
+
+    get _classInfo(): ClassInfo {
+        return (this.constructor as any).classInfo;
     }
 }
 
 export class EezArrayObject<T> extends EezObject {
     @observable _array: T[] = [];
 
-    get _metaData(): MetaData {
-        return this._propertyMetaData!.typeMetaData!;
+    get _classInfo(): ClassInfo {
+        return this._propertyInfo!.typeClassInfo!;
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class EezValueObject extends EezObject {
-    constructor(object: EezObject, public propertyMetaData: PropertyMetaData, public value: any) {
+    constructor(object: EezObject, public propertyInfo: PropertyInfo, public value: any) {
         super();
 
-        this._id = object._id + "." + propertyMetaData.name;
-        this._key = propertyMetaData.name;
+        this._id = object._id + "." + propertyInfo.name;
+        this._key = propertyInfo.name;
         this._parent = object;
     }
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return undefined;
         },
@@ -204,4 +205,4 @@ export class EezValueObject extends EezObject {
     };
 }
 
-registerMetaData(EezValueObject.metaData);
+registerClass(EezValueObject);

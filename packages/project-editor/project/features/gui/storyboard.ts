@@ -1,7 +1,7 @@
 import { observable } from "mobx";
 
 import {
-    registerMetaData,
+    registerClass,
     EezObject,
     EezArrayObject,
     PropertyType
@@ -17,7 +17,7 @@ export class StoryboardPage extends EezObject {
     @observable y: number;
     @observable page: string;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return StoryboardPage;
         },
@@ -41,14 +41,14 @@ export class StoryboardPage extends EezObject {
     };
 }
 
-registerMetaData(StoryboardPage.metaData);
+registerClass(StoryboardPage);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class StoryboardLineSource extends EezObject {
     @observable page: string;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return StoryboardLineSource;
         },
@@ -65,14 +65,14 @@ export class StoryboardLineSource extends EezObject {
     };
 }
 
-registerMetaData(StoryboardLineSource.metaData);
+registerClass(StoryboardLineSource);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class StoryboardLineTarget extends EezObject {
     @observable page: string;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return StoryboardLineTarget;
         },
@@ -89,7 +89,7 @@ export class StoryboardLineTarget extends EezObject {
     };
 }
 
-registerMetaData(StoryboardLineTarget.metaData);
+registerClass(StoryboardLineTarget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -97,7 +97,7 @@ export class StoryboardLine extends EezObject {
     @observable source: StoryboardLineSource;
     @observable target: StoryboardLineTarget;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return StoryboardLineTarget;
         },
@@ -108,18 +108,18 @@ export class StoryboardLine extends EezObject {
             {
                 name: "source",
                 type: PropertyType.Object,
-                typeMetaData: StoryboardLineSource.metaData
+                typeClassInfo: StoryboardLineSource.classInfo
             },
             {
                 name: "target",
                 type: PropertyType.Object,
-                typeMetaData: StoryboardLineTarget.metaData
+                typeClassInfo: StoryboardLineTarget.classInfo
             }
         ]
     };
 }
 
-registerMetaData(StoryboardLine.metaData);
+registerClass(StoryboardLine);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -127,7 +127,7 @@ export class Storyboard extends EezObject {
     @observable pages: EezArrayObject<StoryboardPage>;
     @observable lines: EezArrayObject<StoryboardLine>;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return Storyboard;
         },
@@ -137,13 +137,13 @@ export class Storyboard extends EezObject {
             {
                 name: "pages",
                 type: PropertyType.Array,
-                typeMetaData: StoryboardPage.metaData,
+                typeClassInfo: StoryboardPage.classInfo,
                 hideInPropertyGrid: true
             },
             {
                 name: "lines",
                 type: PropertyType.Array,
-                typeMetaData: StoryboardLine.metaData,
+                typeClassInfo: StoryboardLine.classInfo,
                 hideInPropertyGrid: true,
                 skipSearch: true
             }
@@ -158,7 +158,7 @@ export class Storyboard extends EezObject {
     };
 }
 
-registerMetaData(Storyboard.metaData);
+registerClass(Storyboard);
 
 ////////////////////////////////////////////////////////////////////////////////
 

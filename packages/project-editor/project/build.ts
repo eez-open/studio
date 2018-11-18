@@ -15,7 +15,7 @@ import {
     getProperty,
     check
 } from "project-editor/core/store";
-import { EezObject, PropertyMetaData, PropertyType } from "project-editor/core/metaData";
+import { EezObject, PropertyInfo, PropertyType } from "project-editor/core/metaData";
 import { Message, Section, Type } from "project-editor/core/output";
 
 import { BuildFile } from "project-editor/project/project";
@@ -218,18 +218,18 @@ export async function build(onlyCheck: boolean) {
 
 var checkTransformer: (object: EezObject) => Message[] = createTransformer(
     (object: EezObject): Message[] => {
-        const children = object._metaData
+        const children = object._classInfo
             .properties(object)
             .filter(
-                propertyMetaData =>
-                    (propertyMetaData.type === PropertyType.Array ||
-                        propertyMetaData.type === PropertyType.Object) &&
-                    getProperty(object, propertyMetaData.name)
+                propertyInfo =>
+                    (propertyInfo.type === PropertyType.Array ||
+                        propertyInfo.type === PropertyType.Object) &&
+                    getProperty(object, propertyInfo.name)
             );
 
         const childrenMessages = children.reduce(
-            (result: Message[], propertyMetaData: PropertyMetaData) => {
-                const childObject = getProperty(object, propertyMetaData.name);
+            (result: Message[], propertyInfo: PropertyInfo) => {
+                const childObject = getProperty(object, propertyInfo.name);
 
                 let childrenMessages: Message[];
                 if (isArray(childObject)) {

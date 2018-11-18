@@ -329,7 +329,7 @@ class StoryboardLineConnecting implements LineConnecting {
         if (this.target) {
             let storyboard = getAncestorOfType(
                 this.source.item.object,
-                Storyboard.metaData
+                Storyboard.classInfo
             ) as Storyboard;
             let storyboardLines = storyboard.lines;
 
@@ -341,7 +341,7 @@ class StoryboardLineConnecting implements LineConnecting {
                     page: (this.target.item.object as StoryboardPage).page
                 }
             };
-            let lineObject = loadObject(storyboardLines, line, StoryboardLine.metaData);
+            let lineObject = loadObject(storyboardLines, line, StoryboardLine.classInfo);
 
             addObject(storyboardLines, lineObject);
         }
@@ -593,7 +593,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
         const object = data && data.object;
         if (object) {
             if (
-                isObjectInstanceOf(object, StoryboardPage.metaData) &&
+                isObjectInstanceOf(object, StoryboardPage.classInfo) &&
                 event.dataTransfer.effectAllowed == "copy"
             ) {
                 event.preventDefault();
@@ -692,7 +692,7 @@ export class StoryboardEditor extends EditorComponent {
     canvasEditor: CanvasEditor;
 
     get storyboard(): Storyboard {
-        return getAncestorOfType(this.props.editor.object, Storyboard.metaData) as Storyboard;
+        return getAncestorOfType(this.props.editor.object, Storyboard.classInfo) as Storyboard;
     }
 
     get storyboardPages() {

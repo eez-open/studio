@@ -26,19 +26,19 @@ function* visitWithPause(parentObject: EezObject): IterableIterator<VisitResult>
             yield* visitWithPause(arrayOfObjects[i]);
         }
     } else {
-        let properties = parentObject._metaData.properties(parentObject);
+        let properties = parentObject._classInfo.properties(parentObject);
         for (let i = 0; i < properties.length; i++) {
-            let propertyMetaData = properties[i];
-            if (!propertyMetaData.skipSearch) {
-                let value = getProperty(parentObject, propertyMetaData.name);
+            let propertyInfo = properties[i];
+            if (!propertyInfo.skipSearch) {
+                let value = getProperty(parentObject, propertyInfo.name);
                 if (value) {
                     if (
-                        propertyMetaData.type === PropertyType.Object ||
-                        propertyMetaData.type === PropertyType.Array
+                        propertyInfo.type === PropertyType.Object ||
+                        propertyInfo.type === PropertyType.Array
                     ) {
                         yield* visitWithPause(value);
                     } else {
-                        yield getObjectPropertyAsObject(parentObject, propertyMetaData);
+                        yield getObjectPropertyAsObject(parentObject, propertyInfo);
                     }
                 }
             }
@@ -56,19 +56,19 @@ function* visitWithoutPause(parentObject: EezObject): IterableIterator<VisitResu
             yield* visitWithoutPause(arrayOfObjects[i]);
         }
     } else {
-        let properties = parentObject._metaData.properties(parentObject);
+        let properties = parentObject._classInfo.properties(parentObject);
         for (let i = 0; i < properties.length; i++) {
-            let propertyMetaData = properties[i];
-            if (!propertyMetaData.skipSearch) {
-                let value = getProperty(parentObject, propertyMetaData.name);
+            let propertyInfo = properties[i];
+            if (!propertyInfo.skipSearch) {
+                let value = getProperty(parentObject, propertyInfo.name);
                 if (value) {
                     if (
-                        propertyMetaData.type === PropertyType.Object ||
-                        propertyMetaData.type === PropertyType.Array
+                        propertyInfo.type === PropertyType.Object ||
+                        propertyInfo.type === PropertyType.Array
                     ) {
                         yield* visitWithoutPause(value);
                     } else {
-                        yield getObjectPropertyAsObject(parentObject, propertyMetaData);
+                        yield getObjectPropertyAsObject(parentObject, propertyInfo);
                     }
                 }
             }
@@ -140,20 +140,20 @@ function* searchForReference(
 
         let valueObject = visitResult.value;
         if (valueObject) {
-            if (!valueObject.propertyMetaData.skipSearch) {
+            if (!valueObject.propertyInfo.skipSearch) {
                 if (valueObject.value) {
                     let match = false;
 
-                    if (valueObject.propertyMetaData.matchObjectReference) {
-                        match = valueObject.propertyMetaData.matchObjectReference(
+                    if (valueObject.propertyInfo.matchObjectReference) {
+                        match = valueObject.propertyInfo.matchObjectReference(
                             valueObject.value,
                             objectParentPath,
                             objectName
                         );
-                    } else if (valueObject.propertyMetaData.type === PropertyType.ObjectReference) {
+                    } else if (valueObject.propertyInfo.type === PropertyType.ObjectReference) {
                         if (
                             isEqual(
-                                valueObject.propertyMetaData.referencedObjectCollectionPath,
+                                valueObject.propertyInfo.referencedObjectCollectionPath,
                                 objectParentPath
                             )
                         ) {
@@ -162,7 +162,7 @@ function* searchForReference(
                             }
                         }
                     } else if (
-                        valueObject.propertyMetaData.type === PropertyType.ConfigurationReference
+                        valueObject.propertyInfo.type === PropertyType.ConfigurationReference
                     ) {
                         if (isEqual(["settings", "build", "configurations"], objectParentPath)) {
                             if (valueObject.value) {
@@ -289,9 +289,9 @@ export function replaceObjectReference(object: EezObject, newValue: string) {
         if (searchValue) {
             let value: string | string[] = newValue;
 
-            if (searchValue.propertyMetaData.replaceObjectReference) {
-                value = searchValue.propertyMetaData.replaceObjectReference(value);
-            } else if (searchValue.propertyMetaData.type === PropertyType.ConfigurationReference) {
+            if (searchValue.propertyInfo.replaceObjectReference) {
+                value = searchValue.propertyInfo.replaceObjectReference(value);
+            } else if (searchValue.propertyInfo.type === PropertyType.ConfigurationReference) {
                 value = [];
                 for (let i = 0; i < searchValue.value.length; i++) {
                     if (searchValue.value[i] !== getProperty(object, "name")) {

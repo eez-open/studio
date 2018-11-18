@@ -2,7 +2,7 @@ import { observable, computed } from "mobx";
 
 import { validators } from "eez-studio-shared/model/validation";
 
-import { registerMetaData, EezObject, PropertyType } from "project-editor/core/metaData";
+import { registerClass, EezObject, PropertyType } from "project-editor/core/metaData";
 import { ProjectStore, asArray } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import { Message, Type } from "project-editor/core/output";
@@ -30,7 +30,7 @@ export class Action extends EezObject {
     @observable
     usedIn: string[] | undefined;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return Action;
         },
@@ -127,7 +127,7 @@ export class Action extends EezObject {
     }
 }
 
-registerMetaData(Action.metaData);
+registerClass(Action);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -136,7 +136,7 @@ registerFeatureImplementation("action", {
         mandatory: false,
         key: "actions",
         type: PropertyType.Array,
-        metaData: Action.metaData,
+        classInfo: Action.classInfo,
         create: () => [],
         check: (object: EezObject) => {
             let messages: Message[] = [];

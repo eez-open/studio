@@ -20,8 +20,8 @@ import {
 import {
     EnumItem,
     EezObject,
-    PropertyMetaData,
-    registerMetaData,
+    PropertyInfo,
+    registerClass,
     EezArrayObject,
     PropertyType
 } from "project-editor/core/metaData";
@@ -102,7 +102,7 @@ export class Widget extends EezObject {
     @observable
     height: number;
 
-    static metaData = {
+    static classInfo = {
         className: "Widget",
         getClass: function(jsObject: any) {
             return getWidgetTypeClass()[jsObject.type];
@@ -405,7 +405,7 @@ export class Widget extends EezObject {
 
         selectWidgetJsObject.widgets._array = [thisWidgetJsObject];
 
-        replaceObject(this, loadObject(undefined, selectWidgetJsObject, Widget.metaData));
+        replaceObject(this, loadObject(undefined, selectWidgetJsObject, Widget.classInfo));
     }
 
     static putInContainer(widgets: Widget[]) {
@@ -442,7 +442,7 @@ export class Widget extends EezObject {
 
         replaceObjects(
             widgets,
-            loadObject(undefined, containerWidgetJsObject, Widget.metaData)
+            loadObject(undefined, containerWidgetJsObject, Widget.classInfo)
         );
     }
 
@@ -490,7 +490,7 @@ export class Widget extends EezObject {
                             }
                         ]
                     },
-                    Page.metaData
+                    Page.classInfo
                 )
             );
 
@@ -506,7 +506,7 @@ export class Widget extends EezObject {
                     height: this.height,
                     layout: layoutName
                 },
-                Widget.metaData
+                Widget.classInfo
             );
 
             replaceObject(this, newWidget);
@@ -549,7 +549,7 @@ export class Widget extends EezObject {
                     height: this.height,
                     layout: layoutName
                 },
-                Widget.metaData
+                Widget.classInfo
             );
 
             replaceObject(this, newWidget);
@@ -730,7 +730,7 @@ export class SelectWidgetEditor extends EezObject {
     @observable
     y: number;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return SelectWidgetEditor;
         },
@@ -738,7 +738,7 @@ export class SelectWidgetEditor extends EezObject {
 
         label: (selectWidgetEditor: SelectWidgetEditor) => {
             const parent = selectWidgetEditor._parent!;
-            return parent._metaData.label(parent) + " Editor";
+            return parent._classInfo.label(parent) + " Editor";
         },
 
         properties: () => [
@@ -932,7 +932,7 @@ export class SelectWidgetEditor extends EezObject {
     }
 }
 
-registerMetaData(SelectWidgetEditor.metaData);
+registerClass(SelectWidgetEditor);
 
 export class SelectWidgetProperties extends Widget {
     @observable
@@ -1681,11 +1681,11 @@ export class AppViewWidgetProperties extends Widget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-registerMetaData(Widget.metaData);
+registerClass(Widget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const widgetSharedProperties: PropertyMetaData[] = [
+export const widgetSharedProperties: PropertyInfo[] = [
     {
         name: "type",
         type: PropertyType.Enum
@@ -1732,7 +1732,7 @@ export const widgetSharedProperties: PropertyMetaData[] = [
 
 export interface WidgetType extends EnumItem {
     create(): Widget;
-    properties: PropertyMetaData[];
+    properties: PropertyInfo[];
     draw?: (widget: Widget, rect: Rect) => HTMLCanvasElement | undefined;
 }
 
@@ -1760,7 +1760,7 @@ export function getWidgetTypes() {
                     {
                         name: "widgets",
                         type: PropertyType.Array,
-                        typeMetaData: Widget.metaData,
+                        typeClassInfo: Widget.classInfo,
                         hideInPropertyGrid: true
                     }
                 ]),
@@ -1803,7 +1803,7 @@ export function getWidgetTypes() {
                     {
                         name: "itemWidget",
                         type: PropertyType.Object,
-                        typeMetaData: Widget.metaData,
+                        typeClassInfo: Widget.classInfo,
                         hideInPropertyGrid: true,
                         isOptional: true
                     }
@@ -1834,7 +1834,7 @@ export function getWidgetTypes() {
                     {
                         name: "itemWidget",
                         type: PropertyType.Object,
-                        typeMetaData: Widget.metaData,
+                        typeClassInfo: Widget.classInfo,
                         hideInPropertyGrid: true,
                         isOptional: true
                     }
@@ -1862,7 +1862,7 @@ export function getWidgetTypes() {
                     {
                         name: "widgets",
                         type: PropertyType.Array,
-                        typeMetaData: Widget.metaData,
+                        typeClassInfo: Widget.classInfo,
                         hideInPropertyGrid: true,
                         childLabel: (childObject: EezObject, childLabel: string) => {
                             let label;
@@ -1882,7 +1882,7 @@ export function getWidgetTypes() {
                     {
                         name: "editor",
                         type: PropertyType.Object,
-                        typeMetaData: SelectWidgetEditor.metaData,
+                        typeClassInfo: SelectWidgetEditor.classInfo,
                         enumerable: false
                     }
                 ]),
@@ -2346,8 +2346,8 @@ function getWidgetTypesMap() {
             _widgetTypesMap.set(widgetType.id.toString(), widgetType)
         );
 
-        (<PropertyMetaData>(
-            widgetSharedProperties.find(propertyMetaData => propertyMetaData.name == "type")
+        (<PropertyInfo>(
+            widgetSharedProperties.find(propertyInfo => propertyInfo.name == "type")
         )).enumItems = getWidgetTypes();
     }
     return _widgetTypesMap;

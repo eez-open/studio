@@ -84,11 +84,11 @@ interface TreeNavigationPanelProps {
 @observer
 export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProps, {}> {
     static navigationTreeFilter(object: EezObject) {
-        const metaData = object._metaData;
+        const classInfo = object._classInfo;
         return (
-            metaData.showInNavigation ||
-            !!metaData.navigationComponent ||
-            !!metaData.editorComponent
+            classInfo.showInNavigation ||
+            !!classInfo.navigationComponent ||
+            !!classInfo.editorComponent
         );
     }
 

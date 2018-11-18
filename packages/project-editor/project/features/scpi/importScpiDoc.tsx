@@ -568,7 +568,7 @@ export class ImportScpiDocDialog extends React.Component<
                         helpLink: subsystem.helpLink,
                         commands: []
                     },
-                    ScpiSubsystem.metaData
+                    ScpiSubsystem.classInfo
                 )
             );
         };
@@ -586,7 +586,7 @@ export class ImportScpiDocDialog extends React.Component<
                         name: commandDefinition.command.name,
                         helpLink: commandDefinition.command.helpLink
                     },
-                    ScpiCommand.metaData
+                    ScpiCommand.classInfo
                 )
             );
         });

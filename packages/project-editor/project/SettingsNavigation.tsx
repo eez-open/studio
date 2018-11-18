@@ -47,7 +47,7 @@ class ProjectFeature extends React.Component<
         let newFeatureObject = loadObject(
             ProjectStore.project,
             this.props.extension.eezStudioExtension.implementation.projectFeature.create(),
-            this.props.extension.eezStudioExtension.implementation.projectFeature.metaData,
+            this.props.extension.eezStudioExtension.implementation.projectFeature.classInfo,
             this.props.extension.eezStudioExtension.implementation.projectFeature.key
         );
 
@@ -149,10 +149,7 @@ const SettingsEditorDiv = styled.div`
 @observer
 export class SettingsEditor extends React.Component<{ object: EezObject | undefined }, {}> {
     render() {
-        if (
-            !this.props.object ||
-            this.props.object === ProjectStore.project.settings.general
-        ) {
+        if (!this.props.object || this.props.object === ProjectStore.project.settings.general) {
             let projectFeatures = getExtensionsByCategory("project-feature").map(extension => (
                 <ProjectFeature key={extension.name} extension={extension} />
             ));
@@ -182,7 +179,7 @@ export class SettingsNavigation extends NavigationComponent {
 
     render() {
         let content = this.props.content;
-        if (this.object && this.object._metaData.editorComponent) {
+        if (this.object && this.object._classInfo.editorComponent) {
             content = this.props.content;
         } else {
             content = <SettingsEditor object={this.object} />;

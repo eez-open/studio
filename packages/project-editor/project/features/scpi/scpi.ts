@@ -5,7 +5,7 @@ import { validators } from "eez-studio-shared/model/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import {
-    registerMetaData,
+    registerClass,
     EezObject,
     EezArrayObject,
     PropertyType
@@ -24,7 +24,7 @@ export class ScpiCommand extends EezObject {
     @observable helpLink?: string;
     @observable usedIn: string[] | undefined;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return ScpiCommand;
         },
@@ -83,7 +83,7 @@ export class ScpiCommand extends EezObject {
     }
 }
 
-registerMetaData(ScpiCommand.metaData);
+registerClass(ScpiCommand);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -93,7 +93,7 @@ export class ScpiSubsystem extends EezObject {
     @observable helpLink?: string;
     @observable commands: EezArrayObject<ScpiCommand>;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return ScpiSubsystem;
         },
@@ -116,7 +116,7 @@ export class ScpiSubsystem extends EezObject {
             {
                 name: "commands",
                 type: PropertyType.Array,
-                typeMetaData: ScpiCommand.metaData,
+                typeClassInfo: ScpiCommand.classInfo,
                 hideInPropertyGrid: true
             }
         ],
@@ -146,14 +146,14 @@ export class ScpiSubsystem extends EezObject {
     };
 }
 
-registerMetaData(ScpiSubsystem.metaData);
+registerClass(ScpiSubsystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Scpi extends EezObject {
     @observable subsystems: EezArrayObject<ScpiSubsystem>;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return Scpi;
         },
@@ -163,7 +163,7 @@ export class Scpi extends EezObject {
             {
                 name: "subsystems",
                 type: PropertyType.Array,
-                typeMetaData: ScpiSubsystem.metaData,
+                typeClassInfo: ScpiSubsystem.classInfo,
                 hideInPropertyGrid: true
             }
         ],
@@ -174,7 +174,7 @@ export class Scpi extends EezObject {
     };
 }
 
-registerMetaData(Scpi.metaData);
+registerClass(Scpi);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -183,7 +183,7 @@ registerFeatureImplementation("scpi", {
         mandatory: false,
         key: "scpi",
         type: PropertyType.Object,
-        metaData: Scpi.metaData,
+        classInfo: Scpi.classInfo,
         create: () => {
             return {
                 subsystems: []

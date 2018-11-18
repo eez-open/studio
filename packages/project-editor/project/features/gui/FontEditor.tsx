@@ -138,7 +138,7 @@ export class GlyphSelectFieldType extends React.Component<
                     createGlyphs: true
                 })
                     .then((fontValue: FontValue) => {
-                        const font: Font = loadObject(undefined, fontValue, Font.metaData) as Font;
+                        const font: Font = loadObject(undefined, fontValue, Font.classInfo) as Font;
                         this.onChange(
                             font,
                             font.glyphs._array.find(
@@ -239,7 +239,7 @@ class GlyphComponent extends React.Component<
             >
                 <div>
                     <img src={this.props.glyph.image} />
-                    <div>{Glyph.metaData.label(this.props.glyph)}</div>
+                    <div>{Glyph.classInfo.label(this.props.glyph)}</div>
                 </div>
             </li>
         );
@@ -348,7 +348,7 @@ class Glyphs extends React.Component<
         searchValue = searchValue.toLowerCase();
         let glyph = this.props.glyphs.find(
             glyph =>
-                Glyph.metaData
+                Glyph.classInfo
                     .label(glyph)
                     .toLowerCase()
                     .indexOf(searchValue) != -1
@@ -636,7 +636,7 @@ export class FontEditor extends EditorComponent {
                 projectFilePath: ProjectStore.filePath!
             });
 
-            replaceObject(font, loadObject(undefined, newFont, Font.metaData));
+            replaceObject(font, loadObject(undefined, newFont, Font.classInfo));
 
             notification.info(`Font rebuilded.`);
         } catch (err) {

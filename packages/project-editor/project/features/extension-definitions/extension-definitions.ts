@@ -6,7 +6,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { ProjectStore, getProperty } from "project-editor/core/store";
 import {
-    registerMetaData,
+    registerClass,
     EezObject,
     EezArrayObject,
     PropertyType
@@ -43,7 +43,7 @@ export class ExtensionDefinition extends EezObject {
 
     @observable sdlFriendlyName: string;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return ExtensionDefinition;
         },
@@ -231,7 +231,7 @@ export class ExtensionDefinition extends EezObject {
     }
 }
 
-registerMetaData(ExtensionDefinition.metaData);
+registerClass(ExtensionDefinition);
 
 export function findExtensionDefinition(name: string) {
     let extensionDefinitions = getProperty(
@@ -254,7 +254,7 @@ registerFeatureImplementation("extension-definitions", {
         key: "extensionDefinitions",
         displayName: "Extension definitions",
         type: PropertyType.Array,
-        metaData: ExtensionDefinition.metaData,
+        classInfo: ExtensionDefinition.classInfo,
         create: () => {
             return [];
         },

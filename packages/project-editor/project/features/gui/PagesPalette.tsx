@@ -66,7 +66,7 @@ class PageComponent extends React.Component<PageProps, PageState> {
                 y: 0,
                 page: this.props.page.name
             },
-            StoryboardPage.metaData
+            StoryboardPage.classInfo
         );
 
         setClipboardData(event, objectToClipboardData(object));

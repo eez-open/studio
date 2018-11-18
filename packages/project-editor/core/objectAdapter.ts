@@ -117,14 +117,14 @@ export class TreeObjectAdapter {
             return asArray(this.object).map(child => this.transformer(child));
         }
 
-        let properties = this.object._metaData
+        let properties = this.object._classInfo
             .properties(this.object)
             .filter(
-                propertyMetaData =>
-                    (propertyMetaData.type === PropertyType.Object ||
-                        propertyMetaData.type === PropertyType.Array) &&
-                    !(propertyMetaData.enumerable !== undefined && !propertyMetaData.enumerable) &&
-                    getProperty(this.object, propertyMetaData.name)
+                propertyInfo =>
+                    (propertyInfo.type === PropertyType.Object ||
+                        propertyInfo.type === PropertyType.Array) &&
+                    !(propertyInfo.enumerable !== undefined && !propertyInfo.enumerable) &&
+                    getProperty(this.object, propertyInfo.name)
             );
 
         if (properties.length == 1 && properties[0].type === PropertyType.Array) {
@@ -134,16 +134,16 @@ export class TreeObjectAdapter {
         }
 
         return properties.reduce(
-            (children, propertyMetaData) => {
-                const childObject = getProperty(this.object, propertyMetaData.name);
+            (children, propertyInfo) => {
+                const childObject = getProperty(this.object, propertyInfo.name);
 
                 if (isArray(childObject)) {
-                    children[propertyMetaData.name] = new TreeObjectAdapter(
+                    children[propertyInfo.name] = new TreeObjectAdapter(
                         childObject,
                         this.transformer
                     );
                 } else {
-                    children[propertyMetaData.name] = this.transformer(childObject);
+                    children[propertyInfo.name] = this.transformer(childObject);
                 }
 
                 return children;

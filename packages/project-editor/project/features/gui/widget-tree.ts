@@ -34,17 +34,17 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
         if (isArray(this.object)) {
             return asArray(this.object).map(child => new DummyWidgetContainerDisplayItem(child));
         } else {
-            let properties = this.object._metaData
+            let properties = this.object._classInfo
                 .properties(this.object)
                 .filter(
-                    propertyMetaData =>
-                        (propertyMetaData.type === PropertyType.Object ||
-                            propertyMetaData.type === PropertyType.Array) &&
+                    propertyInfo =>
+                        (propertyInfo.type === PropertyType.Object ||
+                            propertyInfo.type === PropertyType.Array) &&
                         !(
-                            propertyMetaData.enumerable !== undefined &&
-                            !propertyMetaData.enumerable
+                            propertyInfo.enumerable !== undefined &&
+                            !propertyInfo.enumerable
                         ) &&
-                        getProperty(this.object, propertyMetaData.name)
+                        getProperty(this.object, propertyInfo.name)
                 );
 
             if (properties.length == 1 && properties[0].type === PropertyType.Array) {
@@ -54,9 +54,9 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
             }
 
             return properties.reduce(
-                (children, propertyMetaData, i) => {
-                    children[propertyMetaData.name] = new DummyWidgetContainerDisplayItem(
-                        getProperty(this.object, propertyMetaData.name)
+                (children, propertyInfo, i) => {
+                    children[propertyInfo.name] = new DummyWidgetContainerDisplayItem(
+                        getProperty(this.object, propertyInfo.name)
                     );
                     return children;
                 },
@@ -87,7 +87,7 @@ function drawPageFrameForTreeNode(
     scale: number,
     callback: () => void
 ) {
-    if (isObjectInstanceOf(node.item.object, PageResolution.metaData)) {
+    if (isObjectInstanceOf(node.item.object, PageResolution.classInfo)) {
         let pageResolution = node.item.object as PageResolution;
         drawPageFrame(ctx, pageResolution, scale, pageResolution.style || "default");
     }

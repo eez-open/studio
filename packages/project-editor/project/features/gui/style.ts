@@ -4,8 +4,8 @@ import { observable, computed } from "mobx";
 
 import { loadObject, getProperty } from "project-editor/core/store";
 import {
-    PropertyMetaData,
-    registerMetaData,
+    PropertyInfo,
+    registerClass,
     EezObject,
     InheritedValue,
     PropertyType
@@ -23,24 +23,24 @@ import { findStyle, findStyleOrGetDefault } from "project-editor/project/feature
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const nameProperty: PropertyMetaData = {
+const nameProperty: PropertyInfo = {
     name: "name",
     type: PropertyType.String,
     unique: true
 };
 
-const descriptionProperty: PropertyMetaData = {
+const descriptionProperty: PropertyInfo = {
     name: "description",
     type: PropertyType.MultilineText
 };
 
-const inheritFromProperty: PropertyMetaData = {
+const inheritFromProperty: PropertyInfo = {
     name: "inheritFrom",
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: ["gui", "styles"]
 };
 
-const fontProperty: PropertyMetaData = {
+const fontProperty: PropertyInfo = {
     name: "font",
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: ["gui", "fonts"],
@@ -48,7 +48,7 @@ const fontProperty: PropertyMetaData = {
     inheritable: true
 };
 
-const alignHorizontalProperty: PropertyMetaData = {
+const alignHorizontalProperty: PropertyInfo = {
     name: "alignHorizontal",
     type: PropertyType.Enum,
     enumItems: [
@@ -66,7 +66,7 @@ const alignHorizontalProperty: PropertyMetaData = {
     inheritable: true
 };
 
-const alignVerticalProperty: PropertyMetaData = {
+const alignVerticalProperty: PropertyInfo = {
     name: "alignVertical",
     type: PropertyType.Enum,
     enumItems: [
@@ -84,63 +84,63 @@ const alignVerticalProperty: PropertyMetaData = {
     inheritable: true
 };
 
-const colorProperty: PropertyMetaData = {
+const colorProperty: PropertyInfo = {
     name: "color",
     type: PropertyType.Color,
     defaultValue: "#000000",
     inheritable: true
 };
 
-const backgroundColorProperty: PropertyMetaData = {
+const backgroundColorProperty: PropertyInfo = {
     name: "backgroundColor",
     type: PropertyType.Color,
     defaultValue: "#ffffff",
     inheritable: true
 };
 
-const borderSizeProperty: PropertyMetaData = {
+const borderSizeProperty: PropertyInfo = {
     name: "borderSize",
     type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true
 };
 
-const borderColorProperty: PropertyMetaData = {
+const borderColorProperty: PropertyInfo = {
     name: "borderColor",
     type: PropertyType.Color,
     defaultValue: "#000000",
     inheritable: true
 };
 
-const paddingHorizontalProperty: PropertyMetaData = {
+const paddingHorizontalProperty: PropertyInfo = {
     name: "paddingHorizontal",
     type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true
 };
 
-const paddingVerticalProperty: PropertyMetaData = {
+const paddingVerticalProperty: PropertyInfo = {
     name: "paddingVertical",
     type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true
 };
 
-const opacityProperty: PropertyMetaData = {
+const opacityProperty: PropertyInfo = {
     name: "opacity",
     type: PropertyType.Number,
     defaultValue: 255,
     inheritable: true
 };
 
-const blinkProperty: PropertyMetaData = {
+const blinkProperty: PropertyInfo = {
     name: "blink",
     type: PropertyType.Boolean,
     defaultValue: false,
     inheritable: true
 };
 
-const alwaysBuildProperty: PropertyMetaData = {
+const alwaysBuildProperty: PropertyInfo = {
     name: "alwaysBuild",
     type: PropertyType.Boolean,
     defaultValue: false,
@@ -165,7 +165,7 @@ const properties = [
     alwaysBuildProperty
 ];
 
-const propertiesMap: { [propertyName: string]: PropertyMetaData } = _zipObject(
+const propertiesMap: { [propertyName: string]: PropertyInfo } = _zipObject(
     _map(properties, p => p.name),
     _map(properties, p => p)
 ) as any;
@@ -227,7 +227,7 @@ export class Style extends EezObject {
     @observable
     alwaysBuild: boolean;
 
-    static metaData = {
+    static classInfo = {
         getClass: function(jsObject: any) {
             return Style;
         },
@@ -360,7 +360,7 @@ export class Style extends EezObject {
     }
 }
 
-registerMetaData(Style.metaData);
+registerClass(Style);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -412,7 +412,7 @@ export function getDefaultStyle(): Style {
                 opacity: opacityProperty.defaultValue,
                 blink: blinkProperty.defaultValue
             },
-            Style.metaData
+            Style.classInfo
         ) as Style;
     }
 
