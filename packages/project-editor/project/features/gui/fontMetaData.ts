@@ -35,7 +35,6 @@ export class FontSource extends EezObject {
         getClass: (jsObject: any) => {
             return FontSource;
         },
-        className: "FontSource",
 
         label: (fontSource: FontSource) => {
             let label = fontSource.filePath;
@@ -90,7 +89,6 @@ export class Font extends EezObject {
         getClass: (jsObject: any) => {
             return Font;
         },
-        className: "Font",
         label: (font: Font) => {
             return font.name;
         },
@@ -254,10 +252,10 @@ export class Font extends EezObject {
 
                             if (errorMessage) {
                                 notification.error(
-                                    `Adding ${Font.classInfo.className} failed: ${errorMessage}!`
+                                    `Adding ${Font.constructor.name} failed: ${errorMessage}!`
                                 );
                             } else {
-                                notification.error(`Adding ${Font.classInfo.className} failed!`);
+                                notification.error(`Adding ${Font.constructor.name} failed!`);
                             }
 
                             return false;

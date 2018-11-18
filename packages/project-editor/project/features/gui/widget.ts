@@ -24,7 +24,8 @@ import {
     registerClass,
     EezArrayObject,
     PropertyType,
-    makeDerivedClassInfo
+    makeDerivedClassInfo,
+    findClass
 } from "project-editor/core/metaData";
 import { Rect, htmlEncode } from "project-editor/core/util";
 import * as output from "project-editor/core/output";
@@ -40,38 +41,6 @@ import { PageResolution } from "project-editor/project/features/gui/page";
 import * as draw from "project-editor/project/features/gui/draw";
 
 const { MenuItem } = EEZStudio.electron.remote;
-
-////////////////////////////////////////////////////////////////////////////////
-
-var widgetTypeClasses: any;
-
-function getWidgetTypeClass() {
-    if (!widgetTypeClasses) {
-        widgetTypeClasses = {
-            Container: ContainerWidget,
-            List: ListWidget,
-            Grid: GridWidget,
-            Select: SelectWidget,
-            DisplayData: DisplayDataWidget,
-            Text: TextWidget,
-            MultilineText: MultilineTextWidget,
-            Rectangle: RectangleWidget,
-            Bitmap: BitmapWidget,
-            Button: ButtonWidget,
-            ToggleButton: ToggleButtonWidget,
-            ButtonGroup: ButtonGroupWidget,
-            Scale: ScaleWidget,
-            BarGraph: BarGraphWidget,
-            YTGraph: YTGraphWidget,
-            UpDown: UpDownWidget,
-            ListGraph: ListGraphWidget,
-            LayoutView: LayoutViewWidget,
-            AppView: AppViewWidget
-        };
-    }
-
-    return widgetTypeClasses;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -99,9 +68,8 @@ export class Widget extends EezObject {
     height: number;
 
     static classInfo = {
-        className: "Widget",
         getClass: function(jsObject: any) {
-            return getWidgetTypeClass()[jsObject.type];
+            return findClass(jsObject.type + "Widget");
         },
         label: (widget: Widget) => {
             if (widget.data) {
@@ -630,8 +598,6 @@ export class ContainerWidget extends Widget {
     widgets: EezArrayObject<Widget>;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "ContainerWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -715,8 +681,6 @@ export class ListWidget extends Widget {
     listType?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "ListWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -814,8 +778,6 @@ export class GridWidget extends Widget {
     itemWidget?: Widget;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "GridWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -880,7 +842,6 @@ export class SelectWidgetEditor extends EezObject {
         getClass: function(jsObject: any) {
             return SelectWidgetEditor;
         },
-        className: "SelectWidgetEditor",
 
         label: (selectWidgetEditor: SelectWidgetEditor) => {
             const parent = selectWidgetEditor._parent!;
@@ -1088,8 +1049,6 @@ export class SelectWidget extends Widget {
     editor: SelectWidgetEditor;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "SelectWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -1252,8 +1211,6 @@ export class DisplayDataWidget extends Widget {
     focusStyle?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "DisplayDataWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -1308,8 +1265,6 @@ export class TextWidget extends Widget {
     ignoreLuminocity: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "TextWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -1354,8 +1309,6 @@ export class MultilineTextWidget extends Widget {
     text?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "MultilineTextWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -1397,8 +1350,6 @@ export class RectangleWidget extends Widget {
     invertColors: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "RectangleWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -1436,8 +1387,6 @@ export class BitmapWidget extends Widget {
     bitmap?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "BitmapWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -1493,8 +1442,6 @@ export class ButtonWidget extends Widget {
     disabledStyle?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "ButtonWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -1571,8 +1518,6 @@ export class ToggleButtonWidget extends Widget {
     text2?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "ToggleButtonWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -1613,8 +1558,6 @@ registerClass(ToggleButtonWidget);
 
 export class ButtonGroupWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "ButtonGroupWidget",
-
         properties: () => widgetSharedProperties.concat([]),
 
         defaultValue: { type: "ButtonGroup", x: 0, y: 0, width: 64, height: 32, style: "default" }
@@ -1644,8 +1587,6 @@ export class ScaleWidget extends Widget {
     needleHeight: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "ScaleWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -1719,8 +1660,6 @@ export class BarGraphWidget extends Widget {
     line2Style?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "BarGraphWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -1883,8 +1822,6 @@ export class YTGraphWidget extends Widget {
     y2Style?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "YTGraphWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -1989,8 +1926,6 @@ export class UpDownWidget extends Widget {
     upButtonText?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "UpDownWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -2077,8 +2012,6 @@ export class ListGraphWidget extends Widget {
     cursorStyle?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "ListGraphWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -2266,8 +2199,6 @@ export class LayoutViewWidget extends Widget {
     layout: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "LayoutViewWidget",
-
         properties: () =>
             widgetSharedProperties.concat([
                 {
@@ -2319,10 +2250,7 @@ export class AppViewWidget extends Widget {
     page: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        className: "AppViewWidget",
-
         properties: () => widgetSharedProperties.concat([]),
-
         defaultValue: { type: "AppView", x: 0, y: 0, width: 64, height: 32, style: "default" }
     });
 

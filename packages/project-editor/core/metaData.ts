@@ -74,7 +74,6 @@ export type InheritedValue =
 
 export interface ClassInfo {
     getClass: (jsObject: any) => any;
-    className: string;
     label: (object: EezObject) => string;
     listLabel?: (object: EezObject) => JSX.Element | string;
 
@@ -111,14 +110,19 @@ export function makeDerivedClassInfo(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let classInfoMap: Map<string, ClassInfo> = new Map<string, ClassInfo>();
+type EezClass = {
+    name: string;
+    classInfo: ClassInfo;
+};
 
-export function registerClass(aClass: { classInfo: ClassInfo }) {
-    classInfoMap.set(aClass.classInfo.className, aClass.classInfo);
+let classes = new Map<string, EezClass>();
+
+export function registerClass(aClass: EezClass) {
+    classes.set(aClass.name, aClass);
 }
 
-export function findClassInfo(className: string) {
-    return classInfoMap.get(className);
+export function findClass(className: string) {
+    return classes.get(className);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +165,6 @@ export class EezValueObject extends EezObject {
         getClass: function(jsObject: any) {
             return undefined;
         },
-        className: "",
         label: (object: EezValueObject) => {
             return object.value && object.value.toString();
         },

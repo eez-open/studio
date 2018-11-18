@@ -37,7 +37,6 @@ export class BuildConfiguration extends EezObject {
         getClass: function(jsObject: any) {
             return BuildConfiguration;
         },
-        className: "BuildConfiguration",
         label: (buildConfiguration: BuildConfiguration) => {
             return buildConfiguration.name;
         },
@@ -95,7 +94,6 @@ export class BuildFile extends EezObject {
         getClass: function(jsObject: any) {
             return BuildFile;
         },
-        className: "BuildFile",
         label: (buildFile: BuildFile) => {
             return buildFile.fileName;
         },
@@ -143,7 +141,6 @@ export class Build extends EezObject {
         getClass: function(jsObject: any) {
             return Build;
         },
-        className: "Build",
         label: () => "Build",
         properties: () => [
             {
@@ -179,7 +176,6 @@ export class General extends EezObject {
         getClass: function(jsObject: any) {
             return General;
         },
-        className: "General",
         label: () => "General",
         properties: () => [
             {
@@ -208,7 +204,6 @@ export class Settings extends EezObject {
         getClass: function(jsObject: any) {
             return Settings;
         },
-        className: "Settings",
         label: () => "Settings",
         properties: () => [
             {
@@ -252,7 +247,6 @@ export class Project extends EezObject {
         getClass: function(jsObject: any) {
             return Project;
         },
-        className: "Project",
         label: () => "Project",
         properties: () => {
             let projectFeatures = getExtensionsByCategory("project-feature");

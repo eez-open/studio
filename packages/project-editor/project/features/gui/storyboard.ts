@@ -21,7 +21,6 @@ export class StoryboardPage extends EezObject {
         getClass: function(jsObject: any) {
             return StoryboardPage;
         },
-        className: "StoryboardPage",
         label: (storyboardPageProperties: StoryboardPage) => storyboardPageProperties.page,
         properties: () => [
             {
@@ -52,7 +51,6 @@ export class StoryboardLineSource extends EezObject {
         getClass: function(jsObject: any) {
             return StoryboardLineSource;
         },
-        className: "StoryboardLineSource",
         label: (storyboardLineSourceProperties: StoryboardLineSource) =>
             storyboardLineSourceProperties.page,
         properties: () => [
@@ -76,7 +74,6 @@ export class StoryboardLineTarget extends EezObject {
         getClass: function(jsObject: any) {
             return StoryboardLineTarget;
         },
-        className: "StoryboardLineTarget",
         label: (storyboardLineSourceProperties: StoryboardLineSource) =>
             storyboardLineSourceProperties.page,
         properties: () => [
@@ -101,7 +98,6 @@ export class StoryboardLine extends EezObject {
         getClass: function(jsObject: any) {
             return StoryboardLineTarget;
         },
-        className: "StoryboardLine",
         label: (storyboardLineProperties: StoryboardLine) =>
             storyboardLineProperties.source.page + "->" + storyboardLineProperties.target.page,
         properties: () => [
@@ -131,7 +127,6 @@ export class Storyboard extends EezObject {
         getClass: function(jsObject: any) {
             return Storyboard;
         },
-        className: "Storyboard",
         label: (storyboard: Storyboard) => "Storyboard",
         properties: () => [
             {

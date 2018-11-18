@@ -34,7 +34,6 @@ export class Action extends EezObject {
         getClass: function(jsObject: any) {
             return Action;
         },
-        className: "Action",
         label: (action: Action) => {
             return action.name;
         },

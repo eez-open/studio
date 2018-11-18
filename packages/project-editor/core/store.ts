@@ -11,7 +11,7 @@ import {
     EezObject,
     ClassInfo,
     PropertyInfo,
-    findClassInfo,
+    findClass,
     EezValueObject,
     EezArrayObject,
     PropertyType
@@ -1251,14 +1251,14 @@ export interface SerializedData {
 
 export function objectToClipboardData(object: EezObject): string {
     return JSON.stringify({
-        objectClassName: object._classInfo.className,
+        objectClassName: object.constructor.name,
         object: objectToJson(object)
     });
 }
 
 export function objectsToClipboardData(objects: EezObject[]): string {
     return JSON.stringify({
-        objectClassName: objects[0]._classInfo.className,
+        objectClassName: objects[0].constructor.name,
         objects: objects.map(object => objectToJson(object))
     });
 }
@@ -1266,10 +1266,9 @@ export function objectsToClipboardData(objects: EezObject[]): string {
 export function clipboardDataToObject(data: string) {
     let serializedData: SerializedData = JSON.parse(data);
 
-    serializedData.classInfo = findClassInfo(serializedData.objectClassName);
-
-    if (serializedData.classInfo) {
-        const classInfo = serializedData.classInfo;
+    const aClass = findClass(serializedData.objectClassName);
+    if (aClass) {
+        const classInfo = aClass.classInfo;
         if (serializedData.object) {
             serializedData.object = loadObject(undefined, serializedData.object, classInfo);
         } else if (serializedData.objects) {
@@ -2276,18 +2275,18 @@ export function insertObjectAfter(object: EezObject, objectToInsert: EezObject) 
 export function addItem(object: EezObject) {
     const parent = isArray(object) ? object : object._parent;
     if (parent) {
-        const classInfo = parent._classInfo;
-        if (classInfo.newItem) {
-            classInfo
+        const parentClassInfo = parent._classInfo;
+        if (parentClassInfo.newItem) {
+            parentClassInfo
                 .newItem(parent)
                 .then(object => {
                     if (object) {
                         addObject(parent, object);
                     } else {
-                        console.log(`Canceled adding ${classInfo.className}`);
+                        console.log(`Canceled adding ${parent.constructor.name}`);
                     }
                 })
-                .catch(err => notification.error(`Adding ${classInfo.className} failed: ${err}!`));
+                .catch(err => notification.error(`Adding ${parent.constructor.name} failed: ${err}!`));
         }
     }
 }

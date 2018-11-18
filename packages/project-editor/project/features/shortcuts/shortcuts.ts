@@ -25,7 +25,6 @@ export class ShortcutAction extends EezObject {
         getClass: function(jsObject: any) {
             return ShortcutAction;
         },
-        className: "ShortcutAction",
 
         label: (shortcutAction: ShortcutAction) => {
             return shortcutAction.data;
@@ -65,7 +64,6 @@ export class Shortcut extends EezObject {
         getClass: function(jsObject: any) {
             return Shortcut;
         },
-        className: "Shortcut",
         label: (object: EezObject) => (object as Shortcut).name,
         properties: () => [
             {
@@ -122,7 +120,6 @@ export class Shortcuts extends EezObject {
         getClass: function(jsObject: any) {
             return Shortcuts;
         },
-        className: "Shortcuts",
         label: () => "Shortcuts",
         properties: () => [
             {

@@ -41,7 +41,6 @@ export class Gui extends EezObject {
         getClass: function(jsObject: any) {
             return Gui;
         },
-        className: "Gui",
         label: () => "GUI",
         properties: () => [
             {

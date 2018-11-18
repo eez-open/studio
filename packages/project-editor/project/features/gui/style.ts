@@ -231,7 +231,6 @@ export class Style extends EezObject {
         getClass: function(jsObject: any) {
             return Style;
         },
-        className: "Style",
         label: (style: Style) => {
             return style.name;
         },

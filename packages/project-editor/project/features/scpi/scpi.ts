@@ -28,7 +28,6 @@ export class ScpiCommand extends EezObject {
         getClass: function(jsObject: any) {
             return ScpiCommand;
         },
-        className: "ScpiCommand",
         label: (object: EezObject) => (object as ScpiCommand).name,
         properties: () => [
             {
@@ -97,7 +96,6 @@ export class ScpiSubsystem extends EezObject {
         getClass: function(jsObject: any) {
             return ScpiSubsystem;
         },
-        className: "ScpiSubsystem",
         label: (object: EezObject) => (object as ScpiSubsystem).name,
         properties: () => [
             {
@@ -157,7 +155,6 @@ export class Scpi extends EezObject {
         getClass: function(jsObject: any) {
             return Scpi;
         },
-        className: "Scpi",
         label: () => "SCPI",
         properties: () => [
             {

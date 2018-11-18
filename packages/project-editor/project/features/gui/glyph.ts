@@ -111,7 +111,6 @@ export class GlyphSource extends EezObject {
         getClass: function(jsObject: any) {
             return GlyphSource;
         },
-        className: "GlyphSource",
 
         label: (glyphSource: GlyphSource) => {
             if (!glyphSource.filePath || !glyphSource.encoding) {
@@ -273,7 +272,6 @@ export class Glyph extends EezObject {
         getClass: function(jsObject: any) {
             return Glyph;
         },
-        className: "Glyph",
         label: (glyph: Glyph) => {
             return glyph.encoding != undefined ? formatEncoding(glyph.encoding) : "";
         },

@@ -46,7 +46,6 @@ export class PageResolution extends EezObject {
         getClass: function(jsObject: any) {
             return PageResolution;
         },
-        className: "PageResolution",
         label: (object: EezObject) => {
             return "PageResolution";
         },
@@ -138,7 +137,6 @@ export class Page extends EezObject {
         getClass: function(jsObject: any) {
             return Page;
         },
-        className: "Page",
         label: (page: Page) => {
             return page.name;
         },

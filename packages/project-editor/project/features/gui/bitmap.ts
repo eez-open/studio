@@ -34,7 +34,6 @@ export class Bitmap extends EezObject {
         getClass: function(jsObject: any) {
             return Bitmap;
         },
-        className: "Bitmap",
         label: (bitmap: Bitmap) => {
             return bitmap.name;
         },

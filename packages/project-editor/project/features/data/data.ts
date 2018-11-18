@@ -40,7 +40,6 @@ export class DataItem extends EezObject {
         getClass: function(jsObject: any) {
             return DataItem;
         },
-        className: "DataItem",
         label: (dataItem: DataItem) => {
             return dataItem.name;
         },

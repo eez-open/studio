@@ -47,7 +47,6 @@ export class ExtensionDefinition extends EezObject {
         getClass: function(jsObject: any) {
             return ExtensionDefinition;
         },
-        className: "ExtensionDefinition",
         label: (extensionDefinition: ExtensionDefinition) => {
             return extensionDefinition.name;
         },
