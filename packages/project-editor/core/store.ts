@@ -1528,14 +1528,6 @@ export function isArrayElement(object: EezObject) {
     return object._parent instanceof EezArrayObject;
 }
 
-export function isSameInstanceTypeAs(object1: EezObject, object2: EezObject) {
-    if (!object1 || !object2) {
-        return false;
-    }
-
-    return object1._classInfo === object2._classInfo;
-}
-
 export function objectToString(object: EezObject) {
     let label: string;
 

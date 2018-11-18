@@ -5,8 +5,7 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, PropertyInfo } from "project-editor/core/metaData";
-
+import { EezObject, PropertyInfo, isSameInstanceTypeAs } from "project-editor/core/metaData";
 import {
     NavigationStore,
     getChildren,
@@ -20,7 +19,6 @@ import {
     hasAncestor,
     isArray,
     isArrayElement,
-    isSameInstanceTypeAs,
     objectToString,
     setClipboardData,
     getObjectFromObjectId,

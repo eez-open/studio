@@ -8,8 +8,7 @@ import { _filter, _map } from "eez-studio-shared/algorithm";
 import { Icon } from "eez-studio-ui/icon";
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, PropertyInfo } from "project-editor/core/metaData";
-
+import { EezObject, PropertyInfo, isSameInstanceTypeAs } from "project-editor/core/metaData";
 import {
     cloneObject,
     objectToClipboardData,
@@ -21,7 +20,6 @@ import {
     hasAncestor,
     isArray,
     isArrayElement,
-    isSameInstanceTypeAs,
     objectToString,
     setClipboardData
 } from "project-editor/core/store";

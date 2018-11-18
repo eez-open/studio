@@ -133,6 +133,18 @@ export class EezArrayObject<T> extends EezObject {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+export type EezClass = typeof EezObject;
+
+let classes = new Map<string, EezClass>();
+
+export function registerClass(aClass: EezClass) {
+    classes.set(aClass.name, aClass);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class EezValueObject extends EezObject {
     public propertyInfo: PropertyInfo;
     public value: any;
@@ -165,14 +177,6 @@ registerClass(EezValueObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type EezClass = typeof EezObject;
-
-let classes = new Map<string, EezClass>();
-
-export function registerClass(aClass: EezClass) {
-    classes.set(aClass.name, aClass);
-}
-
 export function findClass(className: string) {
     return classes.get(className);
 }
@@ -189,12 +193,18 @@ export function getClassesDerivedFrom(parentClass: EezClass) {
 
 export function isObjectInstanceOf(object: EezObject, classInfo: ClassInfo) {
     let objectClassInfo: ClassInfo | undefined = object._classInfo;
-    while(objectClassInfo) {
+    while (objectClassInfo) {
         if (objectClassInfo === classInfo) {
             return true;
         }
         objectClassInfo = objectClassInfo.parentClassInfo;
     }
-
     return false;
+}
+
+export function isSameInstanceTypeAs(object1: EezObject, object2: EezObject) {
+    if (!object1 || !object2) {
+        return false;
+    }
+    return object1._classInfo === object2._classInfo;
 }

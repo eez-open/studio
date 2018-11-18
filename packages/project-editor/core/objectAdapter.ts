@@ -12,11 +12,14 @@ import {
     canDelete,
     hasAncestor,
     extendContextMenu,
-    isSameInstanceTypeAs
+    reduceUntilCommonParent as reduceObjectsUntilCommonParent
 } from "project-editor/core/store";
-import { reduceUntilCommonParent as reduceObjectsUntilCommonParent } from "project-editor/core/store";
-
-import { EezObject, EezArrayObject, PropertyType } from "project-editor/core/metaData";
+import {
+    EezObject,
+    EezArrayObject,
+    PropertyType,
+    isSameInstanceTypeAs
+} from "project-editor/core/metaData";
 import { objectsToClipboardData } from "project-editor/core/store";
 import {
     cutItem,
