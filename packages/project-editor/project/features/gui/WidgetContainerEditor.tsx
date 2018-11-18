@@ -1,11 +1,11 @@
 import { toJS } from "mobx";
 import { observer } from "mobx-react";
 
+import { isObjectInstanceOf } from "project-editor/core/metaData";
 import { DisplayItem, reduceUntilCommonParent } from "project-editor/core/objectAdapter";
 import {
     UIStateStore,
     addObject,
-    isObjectInstanceOf,
     getEezStudioDataFromDragEvent,
     getProperty
 } from "project-editor/core/store";
@@ -19,10 +19,7 @@ import {
     CanvasEditorUIState
 } from "project-editor/components/CanvasEditor";
 
-import {
-    Widget,
-    SelectWidget
-} from "project-editor/project/features/gui/widget";
+import { Widget, SelectWidget } from "project-editor/project/features/gui/widget";
 import { WidgetContainerDisplayItem } from "project-editor/project/features/gui/page";
 import { drawWidget } from "project-editor/project/features/gui/draw";
 import { createWidgetTree } from "project-editor/project/features/gui/widget-tree";

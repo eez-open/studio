@@ -41,8 +41,7 @@ import {
     ListWidget,
     GridWidget,
     SelectWidget,
-    SelectWidgetEditor,
-    getWidgetType
+    SelectWidgetEditor
 } from "project-editor/project/features/gui/widget";
 import { createWidgetTree } from "project-editor/project/features/gui/widget-tree";
 import { drawWidget } from "project-editor/project/features/gui/draw";
@@ -154,10 +153,6 @@ abstract class BaseObjectComponent extends React.Component<{ object: EezObject }
 class WidgetObjectComponent extends BaseObjectComponent {
     get widgetProperties() {
         return this.props.object as Widget;
-    }
-
-    get widgetType() {
-        return getWidgetType(this.widgetProperties);
     }
 
     @computed

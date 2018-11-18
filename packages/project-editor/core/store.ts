@@ -1390,7 +1390,7 @@ export function getChildOfObject(
         if (propertyInfo.typeClassInfo) {
             return childObjectOrValue;
         } else {
-            return new EezValueObject(object, propertyInfo, childObjectOrValue);
+            return EezValueObject.create(object, propertyInfo, childObjectOrValue);
         }
     }
 
@@ -1701,18 +1701,6 @@ export function getHumanReadableObjectPath(object: EezObject) {
 
 export function getObjectPropertiesInfo(object: EezObject) {
     return object._classInfo.properties(object);
-}
-
-export function isObjectInstanceOf(object: EezObject, classInfo: ClassInfo) {
-    let objectClassInfo: ClassInfo | undefined = object._classInfo;
-    do {
-        if (objectClassInfo === classInfo) {
-            return true;
-        }
-        objectClassInfo = objectClassInfo.parentClassInfo;
-    } while(objectClassInfo);
-
-    return false;
 }
 
 export function getInheritedValue(object: EezObject, propertyName: string) {
@@ -2286,7 +2274,9 @@ export function addItem(object: EezObject) {
                         console.log(`Canceled adding ${parent.constructor.name}`);
                     }
                 })
-                .catch(err => notification.error(`Adding ${parent.constructor.name} failed: ${err}!`));
+                .catch(err =>
+                    notification.error(`Adding ${parent.constructor.name} failed: ${err}!`)
+                );
         }
     }
 }

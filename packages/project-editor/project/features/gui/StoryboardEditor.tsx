@@ -11,11 +11,10 @@ import {
     EditorsStore,
     addObject,
     getAncestorOfType,
-    isObjectInstanceOf,
     loadObject,
     getEezStudioDataFromDragEvent
 } from "project-editor/core/store";
-import { EezObject, EditorComponent } from "project-editor/core/metaData";
+import { EezObject, EditorComponent, isObjectInstanceOf } from "project-editor/core/metaData";
 import {
     DisplayItemChildrenObject,
     DisplayItemChildrenArray

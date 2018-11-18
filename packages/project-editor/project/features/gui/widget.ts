@@ -18,14 +18,14 @@ import {
     isArray
 } from "project-editor/core/store";
 import {
-    EnumItem,
     EezObject,
     PropertyInfo,
     registerClass,
     EezArrayObject,
     PropertyType,
     makeDerivedClassInfo,
-    findClass
+    findClass,
+    getClassesDerivedFrom
 } from "project-editor/core/metaData";
 import { Rect, htmlEncode } from "project-editor/core/util";
 import * as output from "project-editor/core/output";
@@ -542,6 +542,10 @@ export class Widget extends EezObject {
 
         updateObject(this, changedGeometryProperties);
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return undefined;
+    }
 }
 
 registerClass(Widget);
@@ -668,6 +672,10 @@ export class ContainerWidget extends Widget {
             }
         }
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawDefaultWidget(this, rect);
+    }
 }
 
 registerClass(ContainerWidget);
@@ -767,6 +775,10 @@ export class ListWidget extends Widget {
             }
         }
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawDefaultWidget(this, rect);
+    }
 }
 
 registerClass(ListWidget);
@@ -821,6 +833,10 @@ export class GridWidget extends Widget {
         }
 
         return super.check().concat(messages);
+    }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawDefaultWidget(this, rect);
     }
 }
 
@@ -1200,6 +1216,10 @@ export class SelectWidget extends Widget {
 
         return undefined;
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawDefaultWidget(this, rect);
+    }
 }
 
 registerClass(SelectWidget);
@@ -1254,6 +1274,10 @@ export class DisplayDataWidget extends Widget {
 
         return super.check().concat(messages);
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawDisplayDataWidget(this, rect);
+    }
 }
 
 registerClass(DisplayDataWidget);
@@ -1298,6 +1322,10 @@ export class TextWidget extends Widget {
 
         return super.check().concat(messages);
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawTextWidget(this, rect);
+    }
 }
 
 registerClass(TextWidget);
@@ -1337,6 +1365,10 @@ export class MultilineTextWidget extends Widget {
 
         return super.check().concat(messages);
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawMultilineTextWidget(this, rect);
+    }
 }
 
 registerClass(MultilineTextWidget);
@@ -1375,6 +1407,10 @@ export class RectangleWidget extends Widget {
         }
 
         return super.check().concat(messages);
+    }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawRectangleWidget(this, rect);
     }
 }
 
@@ -1426,6 +1462,10 @@ export class BitmapWidget extends Widget {
         }
 
         return super.check().concat(messages);
+    }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawBitmapWidget(this, rect);
     }
 }
 
@@ -1505,6 +1545,10 @@ export class ButtonWidget extends Widget {
 
         return super.check().concat(messages);
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawButtonWidget(this, rect);
+    }
 }
 
 registerClass(ButtonWidget);
@@ -1550,6 +1594,10 @@ export class ToggleButtonWidget extends Widget {
 
         return super.check().concat(messages);
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawToggleButtonWidget(this, rect);
+    }
 }
 
 registerClass(ToggleButtonWidget);
@@ -1571,6 +1619,10 @@ export class ButtonGroupWidget extends Widget {
         }
 
         return super.check().concat(messages);
+    }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawButtonGroupWidget(this, rect);
     }
 }
 
@@ -1638,6 +1690,10 @@ export class ScaleWidget extends Widget {
         }
 
         return super.check().concat(messages);
+    }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawScaleWidget(this, rect);
     }
 }
 
@@ -1807,6 +1863,10 @@ export class BarGraphWidget extends Widget {
 
         return super.check().concat(messages);
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawBarGraphWidget(this, rect);
+    }
 }
 
 registerClass(BarGraphWidget);
@@ -1911,6 +1971,10 @@ export class YTGraphWidget extends Widget {
 
         return super.check().concat(messages);
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawYTGraphWidget(this, rect);
+    }
 }
 
 registerClass(YTGraphWidget);
@@ -1988,6 +2052,10 @@ export class UpDownWidget extends Widget {
         }
 
         return super.check().concat(messages);
+    }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawUpDownWidget(this, rect);
     }
 }
 
@@ -2188,6 +2256,10 @@ export class ListGraphWidget extends Widget {
 
         return super.check().concat(messages);
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawListGraphWidget(this, rect);
+    }
 }
 
 registerClass(ListGraphWidget);
@@ -2239,6 +2311,10 @@ export class LayoutViewWidget extends Widget {
 
         return super.check().concat(messages);
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawLayoutViewWidget(this, rect);
+    }
 }
 
 registerClass(LayoutViewWidget);
@@ -2263,140 +2339,27 @@ export class AppViewWidget extends Widget {
 
         return super.check().concat(messages);
     }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        return draw.drawAppViewWidget(this, rect);
+    }
 }
 
 registerClass(AppViewWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface WidgetType extends EnumItem {
-    draw?: (widget: Widget, rect: Rect) => HTMLCanvasElement | undefined;
-    widgetClass: typeof Widget;
-}
+export const widgetClasses = getClassesDerivedFrom(Widget);
 
-////////////////////////////////////////////////////////////////////////////////
-
-let _widgetTypes: WidgetType[];
-
-export function getWidgetTypes() {
-    if (!_widgetTypes) {
-        _widgetTypes = [
-            {
-                id: "Container",
-                draw: draw.drawDefaultWidget,
-                widgetClass: ContainerWidget
-            },
-            {
-                id: "List",
-                draw: draw.drawDefaultWidget,
-                widgetClass: ListWidget
-            },
-            {
-                id: "Grid",
-                draw: draw.drawDefaultWidget,
-                widgetClass: GridWidget
-            },
-            {
-                id: "Select",
-                draw: draw.drawDefaultWidget,
-                widgetClass: SelectWidget
-            },
-            {
-                id: "DisplayData",
-                draw: draw.drawDisplayDataWidget,
-                widgetClass: DisplayDataWidget
-            },
-            {
-                id: "Text",
-                draw: draw.drawTextWidget,
-                widgetClass: TextWidget
-            },
-            {
-                id: "MultilineText",
-                draw: draw.drawMultilineTextWidget,
-                widgetClass: MultilineTextWidget
-            },
-            {
-                id: "Rectangle",
-                draw: draw.drawRectangleWidget,
-                widgetClass: RectangleWidget
-            },
-            {
-                id: "Bitmap",
-                draw: draw.drawBitmapWidget,
-                widgetClass: BitmapWidget
-            },
-            {
-                id: "Button",
-                draw: draw.drawButtonWidget,
-                widgetClass: ButtonWidget
-            },
-            {
-                id: "ToggleButton",
-                draw: draw.drawToggleButtonWidget,
-                widgetClass: ToggleButtonWidget
-            },
-            {
-                id: "ButtonGroup",
-                draw: draw.drawButtonGroupWidget,
-                widgetClass: ButtonGroupWidget
-            },
-            {
-                id: "Scale",
-                draw: draw.drawScaleWidget,
-                widgetClass: ScaleWidget
-            },
-            {
-                id: "BarGraph",
-                draw: draw.drawBarGraphWidget,
-                widgetClass: BarGraphWidget
-            },
-            {
-                id: "YTGraph",
-                draw: draw.drawYTGraphWidget,
-                widgetClass: YTGraphWidget
-            },
-            {
-                id: "UpDown",
-                draw: draw.drawUpDownWidget,
-                widgetClass: UpDownWidget
-            },
-            {
-                id: "ListGraph",
-                draw: draw.drawListGraphWidget,
-                widgetClass: ListGraphWidget
-            },
-            {
-                id: "LayoutView",
-                draw: draw.drawLayoutViewWidget,
-                widgetClass: LayoutViewWidget
-            },
-            {
-                id: "AppView",
-                draw: draw.drawAppViewWidget,
-                widgetClass: AppViewWidget
-            }
-        ];
+export function getWidgetType(widgetClass: typeof EezObject) {
+    if (widgetClass.name.endsWith('Widget')) {
+        return widgetClass.name.substring(0, widgetClass.name.length - "Widget".length);
     }
-
-    return _widgetTypes;
+    return widgetClass.name;
 }
 
-let _widgetTypesMap: Map<string, WidgetType> = new Map<string, WidgetType>();
+const typeProperty = widgetSharedProperties.find(propertyInfo => propertyInfo.name == "type")!;
+typeProperty.enumItems = widgetClasses.map(widgetClass => ({
+    id: getWidgetType(widgetClass)
+}));
 
-function getWidgetTypesMap() {
-    if (!_widgetTypesMap.size) {
-        getWidgetTypes().forEach(widgetType =>
-            _widgetTypesMap.set(widgetType.id.toString(), widgetType)
-        );
-
-        (<PropertyInfo>(
-            widgetSharedProperties.find(propertyInfo => propertyInfo.name == "type")
-        )).enumItems = getWidgetTypes();
-    }
-    return _widgetTypesMap;
-}
-
-export function getWidgetType(widget: Widget) {
-    return getWidgetTypesMap().get(widget.type);
-}

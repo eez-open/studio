@@ -110,23 +110,6 @@ export function makeDerivedClassInfo(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type EezClass = {
-    name: string;
-    classInfo: ClassInfo;
-};
-
-let classes = new Map<string, EezClass>();
-
-export function registerClass(aClass: EezClass) {
-    classes.set(aClass.name, aClass);
-}
-
-export function findClass(className: string) {
-    return classes.get(className);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 export class EezObject {
     _id: string;
     _key?: string;
@@ -150,15 +133,21 @@ export class EezArrayObject<T> extends EezObject {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 export class EezValueObject extends EezObject {
-    constructor(object: EezObject, public propertyInfo: PropertyInfo, public value: any) {
-        super();
+    public propertyInfo: PropertyInfo;
+    public value: any;
 
-        this._id = object._id + "." + propertyInfo.name;
-        this._key = propertyInfo.name;
-        this._parent = object;
+    static create(object: EezObject, propertyInfo: PropertyInfo, value: any) {
+        const valueObject = new EezValueObject();
+
+        valueObject._id = object._id + "." + propertyInfo.name;
+        valueObject._key = propertyInfo.name;
+        valueObject._parent = object;
+
+        valueObject.propertyInfo = propertyInfo;
+        valueObject.value = value;
+
+        return valueObject;
     }
 
     static classInfo = {
@@ -173,3 +162,39 @@ export class EezValueObject extends EezObject {
 }
 
 registerClass(EezValueObject);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export type EezClass = typeof EezObject;
+
+let classes = new Map<string, EezClass>();
+
+export function registerClass(aClass: EezClass) {
+    classes.set(aClass.name, aClass);
+}
+
+export function findClass(className: string) {
+    return classes.get(className);
+}
+
+export function getClassesDerivedFrom(parentClass: EezClass) {
+    const derivedClasses = [];
+    for (const aClass of classes.values()) {
+        if (aClass.classInfo.parentClassInfo === parentClass.classInfo) {
+            derivedClasses.push(aClass);
+        }
+    }
+    return derivedClasses;
+}
+
+export function isObjectInstanceOf(object: EezObject, classInfo: ClassInfo) {
+    let objectClassInfo: ClassInfo | undefined = object._classInfo;
+    while(objectClassInfo) {
+        if (objectClassInfo === classInfo) {
+            return true;
+        }
+        objectClassInfo = objectClassInfo.parentClassInfo;
+    }
+
+    return false;
+}

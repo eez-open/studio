@@ -4,10 +4,10 @@ import classNames from "classnames";
 import styled from "eez-studio-ui/styled-components";
 
 import { objectToClipboardData, setClipboardData } from "project-editor/core/store";
+import { EezClass } from "project-editor/core/metaData";
 import { DragAndDropManager } from "project-editor/core/dd";
 
-import { WidgetType } from "project-editor/project/features/gui/widget";
-import { getWidgetTypes } from "project-editor/project/features/gui/widget";
+import { getWidgetType, widgetClasses } from "project-editor/project/features/gui/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -32,9 +32,9 @@ const WidgetDiv = styled.div`
 `;
 
 interface WidgetProps {
-    widget: WidgetType;
+    widgetClass: EezClass;
     selected: boolean;
-    onSelect: (widget: WidgetType | undefined) => void;
+    onSelect: (widget: EezClass | undefined) => void;
 }
 
 interface WidgetState {
@@ -56,7 +56,7 @@ class Widget extends React.Component<WidgetProps, WidgetState> {
             dragging: true
         });
 
-        let object = new this.props.widget.widgetClass();
+        let object = new this.props.widgetClass();
         Object.assign(object, object._classInfo.defaultValue!);
 
         if (!(object as any).style) {
@@ -88,7 +88,7 @@ class Widget extends React.Component<WidgetProps, WidgetState> {
             dragging: this.state.dragging
         });
 
-        let label = (this.props.widget as any)["id"] || (this.props.widget as any)["name"];
+        let label = getWidgetType(this.props.widgetClass);
 
         return (
             <WidgetDiv
@@ -114,30 +114,30 @@ const WidgetPaletteDiv = styled.div`
 export class WidgetPalette extends React.Component<
     {},
     {
-        selectedWidget: WidgetType | undefined;
+        selectedWidgetClass: EezClass | undefined;
     }
 > {
     constructor(props: {}) {
         super(props);
         this.state = {
-            selectedWidget: undefined
+            selectedWidgetClass: undefined
         };
     }
 
-    onSelect(widget: WidgetType | undefined) {
+    onSelect(widgetClass: EezClass | undefined) {
         this.setState({
-            selectedWidget: widget
+            selectedWidgetClass: widgetClass
         });
     }
 
     render() {
-        let widgets = getWidgetTypes().map(widget => {
+        let widgets = widgetClasses.map(widgetClass => {
             return (
                 <Widget
-                    key={widget.id}
-                    widget={widget}
-                    onSelect={this.onSelect.bind(this, widget)}
-                    selected={widget == this.state.selectedWidget}
+                    key={widgetClass.name}
+                    widgetClass={widgetClass}
+                    onSelect={this.onSelect.bind(this, widgetClass)}
+                    selected={widgetClass == this.state.selectedWidgetClass}
                 />
             );
         });

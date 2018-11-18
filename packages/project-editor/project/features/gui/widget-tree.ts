@@ -1,5 +1,5 @@
-import { isObjectInstanceOf, isArray, asArray, getProperty } from "project-editor/core/store";
-import { EezObject, PropertyType } from "project-editor/core/metaData";
+import { isArray, asArray, getProperty } from "project-editor/core/store";
+import { EezObject, PropertyType, isObjectInstanceOf } from "project-editor/core/metaData";
 import {
     DisplayItem,
     DisplayItemChildrenObject,
@@ -40,10 +40,7 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
                     propertyInfo =>
                         (propertyInfo.type === PropertyType.Object ||
                             propertyInfo.type === PropertyType.Array) &&
-                        !(
-                            propertyInfo.enumerable !== undefined &&
-                            !propertyInfo.enumerable
-                        ) &&
+                        !(propertyInfo.enumerable !== undefined && !propertyInfo.enumerable) &&
                         getProperty(this.object, propertyInfo.name)
                 );
 
@@ -128,10 +125,7 @@ export function createWidgetTree(
                 selectable: object instanceof Widget,
                 item: item,
                 draw: object instanceof Widget ? undefined : drawPageFrameForTreeNode,
-                image:
-                    draw && object instanceof Widget
-                        ? drawWidget(object, rect)
-                        : undefined
+                image: draw && object instanceof Widget ? drawWidget(object, rect) : undefined
             };
 
             if (parentNode) {

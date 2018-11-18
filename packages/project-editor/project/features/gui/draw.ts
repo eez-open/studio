@@ -1,6 +1,6 @@
 import { Rect } from "project-editor/core/util";
-import { isObjectInstanceOf, objectToJS } from "project-editor/core/store";
-import { EezObject, EezArrayObject } from "project-editor/core/metaData";
+import { objectToJS } from "project-editor/core/store";
+import { EezObject, EezArrayObject, isObjectInstanceOf } from "project-editor/core/metaData";
 
 import * as data from "project-editor/project/features/data/data";
 
@@ -1215,14 +1215,7 @@ export function drawAppViewWidget(widget: Widget.Widget, rect: Rect) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function drawWidget(widget: Widget.Widget, rect: Rect) {
-    let widgetType = Widget.getWidgetType(widget);
-    if (widgetType) {
-        let draw = widgetType.draw;
-        if (draw) {
-            return draw(widget, rect);
-        }
-    }
-    return undefined;
+    return widget.draw(rect);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
