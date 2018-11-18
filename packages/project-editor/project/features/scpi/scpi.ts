@@ -26,7 +26,6 @@ export class ScpiCommand extends EezObject {
     @observable usedIn: string[] | undefined;
 
     static classInfo: ClassInfo = {
-        label: (object: EezObject) => (object as ScpiCommand).name,
         properties: () => [
             {
                 name: "name",
@@ -91,7 +90,6 @@ export class ScpiSubsystem extends EezObject {
     @observable commands: EezArrayObject<ScpiCommand>;
 
     static classInfo: ClassInfo = {
-        label: (object: EezObject) => (object as ScpiSubsystem).name,
         properties: () => [
             {
                 name: "name",

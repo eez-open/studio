@@ -72,6 +72,7 @@ export class Widget extends EezObject {
         getClass: function(jsObject: any) {
             return findClass(jsObject.type + "Widget");
         },
+
         label: (widget: Widget) => {
             if (widget.data) {
                 return `${widget.type}: ${widget.data}`;
@@ -858,7 +859,7 @@ export class SelectWidgetEditor extends EezObject {
     static classInfo: ClassInfo = {
         label: (selectWidgetEditor: SelectWidgetEditor) => {
             const parent = selectWidgetEditor._parent!;
-            return parent._classInfo.label(parent) + " Editor";
+            return parent._label + " Editor";
         },
 
         properties: () => [

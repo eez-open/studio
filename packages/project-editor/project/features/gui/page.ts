@@ -43,7 +43,7 @@ export class PageResolution extends EezObject {
     widgets: EezArrayObject<Widget>;
 
     static classInfo: ClassInfo = {
-        label: (object: EezObject) => {
+        label: () => {
             return "PageResolution";
         },
         properties: () => [
@@ -131,9 +131,6 @@ export class Page extends EezObject {
     usedIn: string[] | undefined;
 
     static classInfo: ClassInfo = {
-        label: (page: Page) => {
-            return page.name;
-        },
         properties: () => [
             {
                 name: "name",

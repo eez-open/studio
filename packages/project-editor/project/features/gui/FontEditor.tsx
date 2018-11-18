@@ -239,7 +239,7 @@ class GlyphComponent extends React.Component<
             >
                 <div>
                     <img src={this.props.glyph.image} />
-                    <div>{Glyph.classInfo.label(this.props.glyph)}</div>
+                    <div>{this.props.glyph._label}</div>
                 </div>
             </li>
         );
@@ -347,11 +347,7 @@ class Glyphs extends React.Component<
 
         searchValue = searchValue.toLowerCase();
         let glyph = this.props.glyphs.find(
-            glyph =>
-                Glyph.classInfo
-                    .label(glyph)
-                    .toLowerCase()
-                    .indexOf(searchValue) != -1
+            glyph => glyph._label.toLowerCase().indexOf(searchValue) != -1
         );
 
         if (glyph) {

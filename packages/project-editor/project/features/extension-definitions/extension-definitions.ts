@@ -45,9 +45,6 @@ export class ExtensionDefinition extends EezObject {
     @observable sdlFriendlyName: string;
 
     static classInfo: ClassInfo = {
-        label: (extensionDefinition: ExtensionDefinition) => {
-            return extensionDefinition.name;
-        },
         listLabel: (extensionDefinition: ExtensionDefinition) => {
             return (
                 extensionDefinition.name +

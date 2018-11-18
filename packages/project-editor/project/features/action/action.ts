@@ -31,9 +31,6 @@ export class Action extends EezObject {
     usedIn: string[] | undefined;
 
     static classInfo: ClassInfo = {
-        label: (action: Action) => {
-            return action.name;
-        },
         properties: () => [
             {
                 name: "name",

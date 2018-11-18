@@ -58,7 +58,6 @@ export class Shortcut extends EezObject {
     @observable selected: boolean;
 
     static classInfo: ClassInfo = {
-        label: (object: EezObject) => (object as Shortcut).name,
         properties: () => [
             {
                 name: "id",

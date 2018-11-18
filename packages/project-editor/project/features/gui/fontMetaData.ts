@@ -39,11 +39,9 @@ export class FontSource extends EezObject {
 
         label: (fontSource: FontSource) => {
             let label = fontSource.filePath;
-
             if (fontSource.size != undefined) {
                 label += ", " + fontSource.size;
             }
-
             return label;
         },
 
@@ -87,12 +85,6 @@ export class Font extends EezObject {
     alwaysBuild: boolean;
 
     static classInfo: ClassInfo = {
-        getClass: (jsObject: any) => {
-            return Font;
-        },
-        label: (font: Font) => {
-            return font.name;
-        },
         properties: () => [
             {
                 name: "name",

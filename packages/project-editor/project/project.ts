@@ -35,9 +35,6 @@ export class BuildConfiguration extends EezObject {
     properties: string;
 
     static classInfo: ClassInfo = {
-        label: (buildConfiguration: BuildConfiguration) => {
-            return buildConfiguration.name;
-        },
         properties: () => [
             {
                 name: "name",

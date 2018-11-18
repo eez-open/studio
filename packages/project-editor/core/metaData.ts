@@ -77,13 +77,10 @@ export type InheritedValue =
 export interface ClassInfo {
     properties: (object: EezObject) => PropertyInfo[];
 
-    // TODO this should be optional
-    // default implementation should return (object.name || object.constructor.name)
-    label: (object: EezObject) => string;
-
     // optional properties
-    listLabel?: (object: EezObject) => JSX.Element | string;
     getClass?: (jsObject: any) => any;
+    label?: (object: EezObject) => string;
+    listLabel?: (object: EezObject) => JSX.Element | string;
 
     parentClassInfo?: ClassInfo;
 
@@ -129,6 +126,19 @@ export class EezObject {
 
     get _classInfo(): ClassInfo {
         return (this.constructor as any).classInfo;
+    }
+
+    get _label(): string {
+        if (this._classInfo.label) {
+            return this._classInfo.label(this);
+        }
+
+        let name = (this as any).name;
+        if (name) {
+            return name;
+        }
+
+        return this._id;
     }
 }
 

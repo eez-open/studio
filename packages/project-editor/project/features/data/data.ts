@@ -37,9 +37,6 @@ export class DataItem extends EezObject {
     usedIn: string[] | undefined;
 
     static classInfo: ClassInfo = {
-        label: (dataItem: DataItem) => {
-            return dataItem.name;
-        },
         properties: () => [
             {
                 name: "name",

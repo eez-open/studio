@@ -1539,19 +1539,7 @@ export function objectToString(object: EezObject) {
         let propertyInfo = findPropertyByName(object._parent!, object._key!);
         label = (propertyInfo && propertyInfo.displayName) || humanize(object._key);
     } else {
-        object = object;
-
-        const objectLabel = object._classInfo.label;
-        if (objectLabel) {
-            label = objectLabel(object);
-        } else {
-            let name = getProperty(object, "name");
-            if (name) {
-                label = humanize(name);
-            }
-
-            label = object._id;
-        }
+        label = object._label;
     }
 
     if (

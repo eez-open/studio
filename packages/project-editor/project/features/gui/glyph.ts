@@ -114,11 +114,9 @@ export class GlyphSource extends EezObject {
             }
 
             let label = glyphSource.filePath;
-
             if (glyphSource.size != undefined) {
                 label += ", " + glyphSource.size;
             }
-
             label += ", " + formatEncoding(glyphSource.encoding);
 
             return label;
@@ -141,7 +139,7 @@ export class GlyphSource extends EezObject {
     };
 
     toString() {
-        return this._classInfo.label(this);
+        return this._label;
     }
 }
 

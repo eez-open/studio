@@ -229,9 +229,6 @@ export class Style extends EezObject {
     alwaysBuild: boolean;
 
     static classInfo: ClassInfo = {
-        label: (style: Style) => {
-            return style.name;
-        },
         properties: () => properties,
         newItem: (object: EezObject) => {
             return Promise.resolve({

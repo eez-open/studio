@@ -31,9 +31,6 @@ export class Bitmap extends EezObject {
     alwaysBuild: boolean;
 
     static classInfo: ClassInfo = {
-        label: (bitmap: Bitmap) => {
-            return bitmap.name;
-        },
         properties: () => [
             {
                 name: "name",
