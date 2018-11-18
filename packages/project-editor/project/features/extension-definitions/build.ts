@@ -11,12 +11,12 @@ import { ProjectStore, OutputSectionsStore, getProperty } from "project-editor/c
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 import { Section, Type } from "project-editor/core/output";
 
-import { ScpiProperties } from "project-editor/project/features/scpi/scpi";
+import { Scpi } from "project-editor/project/features/scpi/scpi";
 
-import { ExtensionDefinitionProperties } from "project-editor/project/features/extension-definitions/extension-definitions";
+import { ExtensionDefinition } from "project-editor/project/features/extension-definitions/extension-definitions";
 
-function getInstrumentExtensionProperties(extensionDefinition: ExtensionDefinitionProperties) {
-    const project = ProjectStore.projectProperties;
+function getInstrumentExtensionProperties(extensionDefinition: ExtensionDefinition) {
+    const project = ProjectStore.project;
 
     let instrumentExtensionProperties: any = {};
 
@@ -43,9 +43,9 @@ function getInstrumentExtensionProperties(extensionDefinition: ExtensionDefiniti
 
 export async function extensionDefinitionBuild() {
     let extensionDefinitions = getProperty(
-        ProjectStore.projectProperties,
+        ProjectStore.project,
         "extensionDefinitions"
-    ) as EezArrayObject<ExtensionDefinitionProperties>;
+    ) as EezArrayObject<ExtensionDefinition>;
 
     if (extensionDefinitions) {
         await Promise.all(
@@ -60,7 +60,7 @@ export async function extensionDefinitionBuild() {
                     let properties = {};
 
                     // from configuration
-                    const configuration = ProjectStore.projectProperties.settings.build.configurations._array.find(
+                    const configuration = ProjectStore.project.settings.build.configurations._array.find(
                         configuration =>
                             configuration.name == extensionDefinition.buildConfiguration
                     );
@@ -104,9 +104,9 @@ export async function extensionDefinitionBuild() {
                         }
 
                         const subsystems = (getProperty(
-                            ProjectStore.projectProperties,
+                            ProjectStore.project,
                             "scpi"
-                        ) as ScpiProperties).subsystems._array.map(subsystem => ({
+                        ) as Scpi).subsystems._array.map(subsystem => ({
                             commands: subsystem.commands._array
                         }));
 
@@ -120,9 +120,9 @@ export async function extensionDefinitionBuild() {
                             instrumentIdf.image &&
                                 ProjectStore.getAbsoluteFilePath(instrumentIdf.image),
 
-                            ProjectStore.projectProperties.settings.general.scpiDocFolder &&
+                            ProjectStore.project.settings.general.scpiDocFolder &&
                                 ProjectStore.getAbsoluteFilePath(
-                                    ProjectStore.projectProperties.settings.general.scpiDocFolder
+                                    ProjectStore.project.settings.general.scpiDocFolder
                                 ),
 
                             properties

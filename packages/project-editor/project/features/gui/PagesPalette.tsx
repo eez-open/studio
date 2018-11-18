@@ -8,12 +8,8 @@ import { objectToClipboardData, loadObject, setClipboardData } from "project-edi
 import { DragAndDropManager } from "project-editor/core/dd";
 
 import { getPages } from "project-editor/project/features/gui/gui";
-import { PageProperties } from "project-editor/project/features/gui/page";
-import {
-    StoryboardProperties,
-    storyboardPageMetaData,
-    StoryboardPageProperties
-} from "project-editor/project/features/gui/storyboard";
+import { Page } from "project-editor/project/features/gui/page";
+import { Storyboard, StoryboardPage } from "project-editor/project/features/gui/storyboard";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +34,7 @@ const PageDiv = styled.div`
 `;
 
 class PageProps {
-    page: PageProperties;
+    page: Page;
     selected: boolean;
     onSelect: () => void;
 }
@@ -48,7 +44,7 @@ class PageState {
 }
 
 @observer
-class Page extends React.Component<PageProps, PageState> {
+class PageComponent extends React.Component<PageProps, PageState> {
     constructor(props: PageProps) {
         super(props);
         this.state = {
@@ -70,7 +66,7 @@ class Page extends React.Component<PageProps, PageState> {
                 y: 0,
                 page: this.props.page.name
             },
-            storyboardPageMetaData
+            StoryboardPage.metaData
         );
 
         setClipboardData(event, objectToClipboardData(object));
@@ -113,11 +109,11 @@ const PagesPaletteDiv = styled.div`
 `;
 
 interface PagesPaletteProps {
-    storyboard: StoryboardProperties;
+    storyboard: Storyboard;
 }
 
 interface PagesPaletteState {
-    selectedPage: PageProperties | undefined;
+    selectedPage: Page | undefined;
 }
 
 @observer
@@ -132,12 +128,12 @@ export class PagesPalette extends React.Component<PagesPaletteProps, PagesPalett
     getMissingPages() {
         return getPages()._array.filter(page => {
             return !this.props.storyboard.pages._array.find(storyboardPage => {
-                return (storyboardPage as StoryboardPageProperties).page == page.name;
+                return (storyboardPage as StoryboardPage).page == page.name;
             });
         });
     }
 
-    onSelect(page: PageProperties) {
+    onSelect(page: Page) {
         this.setState({
             selectedPage: page
         });
@@ -146,7 +142,7 @@ export class PagesPalette extends React.Component<PagesPaletteProps, PagesPalett
     render() {
         let pages = this.getMissingPages().map(page => {
             return (
-                <Page
+                <PageComponent
                     key={page.name}
                     page={page}
                     onSelect={this.onSelect.bind(this, page)}

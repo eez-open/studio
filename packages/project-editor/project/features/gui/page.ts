@@ -7,7 +7,8 @@ import {
     MetaData,
     PropertyMetaData,
     registerMetaData,
-    EezArrayObject
+    EezArrayObject,
+    PropertyType
 } from "project-editor/core/metaData";
 import {
     TreeObjectAdapter,
@@ -21,15 +22,14 @@ import { ListNavigationWithContent } from "project-editor/project/ListNavigation
 import * as data from "project-editor/project/features/data/data";
 
 import {
-    WidgetProperties,
-    widgetMetaData,
+    Widget,
     SelectWidgetProperties
 } from "project-editor/project/features/gui/widget";
 import { PageEditor } from "project-editor/project/features/gui/PageEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class PageResolutionProperties extends EezObject {
+export class PageResolution extends EezObject {
     @observable
     x: number;
     @observable
@@ -43,7 +43,68 @@ export class PageResolutionProperties extends EezObject {
     style?: string;
 
     @observable
-    widgets: EezArrayObject<WidgetProperties>;
+    widgets: EezArrayObject<Widget>;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return PageResolution;
+        },
+        className: "PageResolution",
+        label: (object: EezObject) => {
+            return "PageResolution";
+        },
+        properties: () => [
+            {
+                name: "x",
+                type: PropertyType.Number
+            },
+            {
+                name: "y",
+                type: PropertyType.Number
+            },
+            {
+                name: "width",
+                type: PropertyType.Number
+            },
+            {
+                name: "height",
+                type: PropertyType.Number
+            },
+            {
+                name: "style",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: ["gui", "styles"]
+            },
+            {
+                name: "widgets",
+                type: PropertyType.Array,
+                typeMetaData: Widget.metaData,
+                hideInPropertyGrid: true
+            }
+        ],
+        newItem: (parent: EezObject) => {
+            return Promise.resolve({
+                x: 0,
+                y: 0,
+                width: 240,
+                height: 320,
+                widgets: []
+            });
+        },
+        findPastePlaceInside: (
+            object: EezObject,
+            metaData: MetaData,
+            isSingleObject: boolean
+        ): EezObject | PropertyMetaData | undefined => {
+            if (metaData == Widget.metaData) {
+                let pageResolution = object as PageResolution;
+                if (pageResolution) {
+                    return pageResolution.widgets;
+                }
+            }
+            return undefined;
+        }
+    };
 
     @computed
     get boundingRect() {
@@ -56,70 +117,11 @@ export class PageResolutionProperties extends EezObject {
     }
 }
 
-export const pageResolutionMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return PageResolutionProperties;
-    },
-    className: "PageResolution",
-    label: (object: EezObject) => {
-        return "PageResolution";
-    },
-    properties: () => [
-        {
-            name: "x",
-            type: "number"
-        },
-        {
-            name: "y",
-            type: "number"
-        },
-        {
-            name: "width",
-            type: "number"
-        },
-        {
-            name: "height",
-            type: "number"
-        },
-        {
-            name: "style",
-            type: "object-reference",
-            referencedObjectCollectionPath: ["gui", "styles"]
-        },
-        {
-            name: "widgets",
-            type: "array",
-            typeMetaData: widgetMetaData,
-            hideInPropertyGrid: true
-        }
-    ],
-    newItem: (parent: EezObject) => {
-        return Promise.resolve({
-            x: 0,
-            y: 0,
-            width: 240,
-            height: 320,
-            widgets: []
-        });
-    },
-    findPastePlaceInside: (
-        object: EezObject,
-        metaData: MetaData,
-        isSingleObject: boolean
-    ): EezObject | PropertyMetaData | undefined => {
-        if (metaData == widgetMetaData) {
-            let pageResolution = object as PageResolutionProperties;
-            if (pageResolution) {
-                return pageResolution.widgets;
-            }
-        }
-        return undefined;
-    }
-});
+registerMetaData(PageResolution.metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class PageProperties extends EezObject {
+export class Page extends EezObject {
     @observable
     name: string;
 
@@ -127,14 +129,71 @@ export class PageProperties extends EezObject {
     description?: string;
 
     @observable
-    resolutions: EezArrayObject<PageResolutionProperties>;
+    resolutions: EezArrayObject<PageResolution>;
 
     @observable
     closePageIfTouchedOutside: boolean;
 
     @observable
     usedIn: string[] | undefined;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return Page;
+        },
+        className: "Page",
+        label: (page: Page) => {
+            return page.name;
+        },
+        properties: () => [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            {
+                name: "description",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "resolutions",
+                type: PropertyType.Array,
+                typeMetaData: PageResolution.metaData,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "closePageIfTouchedOutside",
+                type: PropertyType.Boolean
+            },
+            {
+                name: "usedIn",
+                type: PropertyType.ConfigurationReference
+            }
+        ],
+        newItem: (parent: EezObject) => {
+            return Promise.resolve({
+                name: "Page",
+                resolutions: [
+                    {
+                        x: 0,
+                        y: 0,
+                        width: 480,
+                        height: 272,
+                        widgets: []
+                    }
+                ],
+                closePageIfTouchedOutside: false
+            });
+        },
+        editorComponent: PageEditor,
+        createEditorState: (object: EezObject) => new PageTabState(object),
+        navigationComponent: ListNavigationWithContent,
+        navigationComponentId: "pages",
+        icon: "filter_none"
+    };
 }
+
+registerMetaData(Page.metaData);
 
 export interface IWidgetContainerDisplayItem extends DisplayItem {
     getSelectedWidgetForSelectWidget(item: DisplayItem): DisplayItem | undefined;
@@ -250,7 +309,7 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
 export class PageResolutionState {
     widgetContainerDisplayItem: WidgetContainerDisplayItem;
 
-    constructor(pageResolution: PageResolutionProperties) {
+    constructor(pageResolution: PageResolution) {
         this.widgetContainerDisplayItem = new WidgetContainerDisplayItem(pageResolution);
     }
 
@@ -264,13 +323,13 @@ export class PageResolutionState {
 }
 
 export class PageTabState {
-    pageProperties: PageProperties;
+    pageProperties: Page;
 
     @observable
     pageResolutionState: PageResolutionState;
 
     constructor(object: EezObject) {
-        this.pageProperties = object as PageProperties;
+        this.pageProperties = object as Page;
 
         this.pageResolutionState = new PageResolutionState(
             this.pageProperties.resolutions._array[0]
@@ -319,58 +378,3 @@ export class PageTabState {
         }
     }
 }
-
-export const pageMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return PageProperties;
-    },
-    className: "Page",
-    label: (page: PageProperties) => {
-        return page.name;
-    },
-    properties: () => [
-        {
-            name: "name",
-            type: "string",
-            unique: true
-        },
-        {
-            name: "description",
-            type: "multiline-text"
-        },
-        {
-            name: "resolutions",
-            type: "array",
-            typeMetaData: pageResolutionMetaData,
-            hideInPropertyGrid: true
-        },
-        {
-            name: "closePageIfTouchedOutside",
-            type: "boolean"
-        },
-        {
-            name: "usedIn",
-            type: "configuration-references"
-        }
-    ],
-    newItem: (parent: EezObject) => {
-        return Promise.resolve({
-            name: "Page",
-            resolutions: [
-                {
-                    x: 0,
-                    y: 0,
-                    width: 480,
-                    height: 272,
-                    widgets: []
-                }
-            ],
-            closePageIfTouchedOutside: false
-        });
-    },
-    editorComponent: PageEditor,
-    createEditorState: (object: EezObject) => new PageTabState(object),
-    navigationComponent: ListNavigationWithContent,
-    navigationComponentId: "pages",
-    icon: "filter_none"
-});

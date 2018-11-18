@@ -13,7 +13,7 @@ export class GuiNavigation extends NavigationComponent {
         return (
             <MenuNavigation
                 id={this.props.id}
-                navigationObject={getProperty(ProjectStore.projectProperties, "gui")}
+                navigationObject={getProperty(ProjectStore.project, "gui")}
                 content={this.props.content}
             />
         );

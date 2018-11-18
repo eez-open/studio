@@ -1,12 +1,12 @@
 import { getProperty } from "project-editor/core/store";
-import { ProjectProperties } from "project-editor/project/project";
+import { Project } from "project-editor/project/project";
 
-import { GuiProperties } from "project-editor/project/features/gui/gui";
+import { Gui } from "project-editor/project/features/gui/gui";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function metrics(project: ProjectProperties): { [key: string]: string | number } {
-    let gui = getProperty(project, "gui") as GuiProperties;
+export function metrics(project: Project): { [key: string]: string | number } {
+    let gui = getProperty(project, "gui") as Gui;
 
     return {
         GUI: "",

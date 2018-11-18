@@ -1,13 +1,13 @@
 import { getProperty } from "project-editor/core/store";
 
-import { ProjectProperties } from "project-editor/project/project";
+import { Project } from "project-editor/project/project";
 
-import { ScpiProperties } from "project-editor/project/features/scpi/scpi";
+import { Scpi } from "project-editor/project/features/scpi/scpi";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function metrics(project: ProjectProperties): { [key: string]: string | number } {
-    let scpi = getProperty(project, "scpi") as ScpiProperties;
+export function metrics(project: Project): { [key: string]: string | number } {
+    let scpi = getProperty(project, "scpi") as Scpi;
 
     return {
         SCPI: "",

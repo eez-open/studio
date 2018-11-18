@@ -12,7 +12,7 @@ import { EditorComponent } from "project-editor/core/metaData";
 import { Panel } from "project-editor/components/Panel";
 import { Tree } from "project-editor/components/Tree";
 
-import { PageProperties, PageTabState } from "project-editor/project/features/gui/page";
+import { Page, PageTabState } from "project-editor/project/features/gui/page";
 import { WidgetPalette } from "project-editor/project/features/gui/WidgetPalette";
 import { WidgetContainerEditor } from "project-editor/project/features/gui/WidgetContainerEditor";
 import { ExperimentalWidgetContainerEditor } from "project-editor/project/features/gui/experimental-page-editor/editor";
@@ -22,7 +22,7 @@ import { ExperimentalWidgetContainerEditor } from "project-editor/project/featur
 @observer
 export class PageEditor extends EditorComponent {
     get page() {
-        return this.props.editor.object as PageProperties;
+        return this.props.editor.object as Page;
     }
 
     @observable

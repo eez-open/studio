@@ -1,125 +1,129 @@
 import { observable } from "mobx";
 
-import { registerMetaData, EezObject, EezArrayObject } from "project-editor/core/metaData";
+import {
+    registerMetaData,
+    EezObject,
+    EezArrayObject,
+    PropertyType
+} from "project-editor/core/metaData";
 import { ProjectStore, asArray, getProperty } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import * as output from "project-editor/core/output";
 
-import {
-    storyboardMetaData,
-    StoryboardProperties
-} from "project-editor/project/features/gui/storyboard";
-import { pageMetaData, PageProperties } from "project-editor/project/features/gui/page";
-import {
-    styleMetaData,
-    StyleProperties,
-    getDefaultStyle
-} from "project-editor/project/features/gui/style";
-import { FontProperties, fontMetaData } from "project-editor/project/features/gui/fontMetaData";
-import { bitmapMetaData, BitmapProperties } from "project-editor/project/features/gui/bitmap";
+import { Storyboard } from "project-editor/project/features/gui/storyboard";
+import { Page } from "project-editor/project/features/gui/page";
+import { Style, getDefaultStyle } from "project-editor/project/features/gui/style";
+import { Font } from "project-editor/project/features/gui/fontMetaData";
+import { Bitmap } from "project-editor/project/features/gui/bitmap";
 import { build } from "project-editor/project/features/gui/build";
 import { metrics } from "project-editor/project/features/gui/metrics";
 import { GuiNavigation } from "project-editor/project/features/gui/GuiNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GuiProperties extends EezObject {
+export class Gui extends EezObject {
     @observable
-    storyboard: StoryboardProperties;
+    storyboard: Storyboard;
 
     @observable
-    pages: EezArrayObject<PageProperties>;
+    pages: EezArrayObject<Page>;
 
     @observable
-    styles: EezArrayObject<StyleProperties>;
+    styles: EezArrayObject<Style>;
 
     @observable
-    fonts: EezArrayObject<FontProperties>;
+    fonts: EezArrayObject<Font>;
 
     @observable
-    bitmaps: EezArrayObject<BitmapProperties>;
+    bitmaps: EezArrayObject<Bitmap>;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return Gui;
+        },
+        className: "Gui",
+        label: () => "GUI",
+        properties: () => [
+            {
+                name: "storyboard",
+                type: PropertyType.Object,
+                typeMetaData: Storyboard.metaData,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "pages",
+                displayName: "Pages (Layouts)",
+                type: PropertyType.Array,
+                typeMetaData: Page.metaData,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "styles",
+                type: PropertyType.Array,
+                typeMetaData: Style.metaData,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "fonts",
+                type: PropertyType.Array,
+                typeMetaData: Font.metaData,
+                hideInPropertyGrid: true,
+                check: (object: EezObject) => {
+                    let messages: output.Message[] = [];
+
+                    if (asArray(object).length >= 255) {
+                        messages.push(
+                            new output.Message(
+                                output.Type.ERROR,
+                                "Max. 254 fonts are supported",
+                                object
+                            )
+                        );
+                    }
+
+                    return messages;
+                }
+            },
+            {
+                name: "bitmaps",
+                type: PropertyType.Array,
+                typeMetaData: Bitmap.metaData,
+                hideInPropertyGrid: true,
+                check: (object: EezObject) => {
+                    let messages: output.Message[] = [];
+
+                    if (asArray(object).length >= 255) {
+                        messages.push(
+                            new output.Message(
+                                output.Type.ERROR,
+                                "Max. 254 bitmaps are supported",
+                                object
+                            )
+                        );
+                    }
+
+                    if (!findStyle("default")) {
+                        messages.push(
+                            new output.Message(
+                                output.Type.ERROR,
+                                "'Default' style is missing.",
+                                object
+                            )
+                        );
+                    }
+
+                    return messages;
+                }
+            }
+        ],
+        navigationComponent: GuiNavigation,
+        navigationComponentId: "gui",
+        defaultNavigationKey: "storyboard",
+        icon: "filter"
+    };
 }
 
-export const guiMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return GuiProperties;
-    },
-    className: "Gui",
-    label: () => "GUI",
-    properties: () => [
-        {
-            name: "storyboard",
-            type: "object",
-            typeMetaData: storyboardMetaData,
-            hideInPropertyGrid: true
-        },
-        {
-            name: "pages",
-            displayName: "Pages (Layouts)",
-            type: "array",
-            typeMetaData: pageMetaData,
-            hideInPropertyGrid: true
-        },
-        {
-            name: "styles",
-            type: "array",
-            typeMetaData: styleMetaData,
-            hideInPropertyGrid: true
-        },
-        {
-            name: "fonts",
-            type: "array",
-            typeMetaData: fontMetaData,
-            hideInPropertyGrid: true,
-            check: (object: EezObject) => {
-                let messages: output.Message[] = [];
-
-                if (asArray(object).length >= 255) {
-                    messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
-                            "Max. 254 fonts are supported",
-                            object
-                        )
-                    );
-                }
-
-                return messages;
-            }
-        },
-        {
-            name: "bitmaps",
-            type: "array",
-            typeMetaData: bitmapMetaData,
-            hideInPropertyGrid: true,
-            check: (object: EezObject) => {
-                let messages: output.Message[] = [];
-
-                if (asArray(object).length >= 255) {
-                    messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
-                            "Max. 254 bitmaps are supported",
-                            object
-                        )
-                    );
-                }
-
-                if (!findStyle("default")) {
-                    messages.push(
-                        new output.Message(output.Type.ERROR, "'Default' style is missing.", object)
-                    );
-                }
-
-                return messages;
-            }
-        }
-    ],
-    navigationComponent: GuiNavigation,
-    navigationComponentId: "gui",
-    defaultNavigationKey: "storyboard",
-    icon: "filter"
-});
+registerMetaData(Gui.metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -127,8 +131,8 @@ registerFeatureImplementation("gui", {
     projectFeature: {
         mandatory: false,
         key: "gui",
-        type: "object",
-        metaData: guiMetaData,
+        type: PropertyType.Object,
+        metaData: Gui.metaData,
         create: () => {
             return {
                 pages: [],
@@ -146,8 +150,8 @@ registerFeatureImplementation("gui", {
 
 export function getGui() {
     return (
-        ProjectStore.projectProperties &&
-        (getProperty(ProjectStore.projectProperties, "gui") as GuiProperties)
+        ProjectStore.project &&
+        (getProperty(ProjectStore.project, "gui") as Gui)
     );
 }
 

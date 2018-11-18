@@ -22,7 +22,8 @@ import {
     EezObject,
     PropertyMetaData,
     registerMetaData,
-    EezArrayObject
+    EezArrayObject,
+    PropertyType
 } from "project-editor/core/metaData";
 import { Rect, htmlEncode } from "project-editor/core/util";
 import * as output from "project-editor/core/output";
@@ -30,15 +31,16 @@ import * as output from "project-editor/core/output";
 import * as data from "project-editor/project/features/data/data";
 import { findActionIndex } from "project-editor/project/features/action/action";
 
+import { Page } from "project-editor/project/features/gui/page";
 import { GeometryProperties, ObjectGeometryChange } from "project-editor/components/CanvasEditor";
 
 import {
     findStyle,
     findBitmap,
-    GuiProperties,
+    Gui,
     findPage
 } from "project-editor/project/features/gui/gui";
-import { PageResolutionProperties, pageMetaData } from "project-editor/project/features/gui/page";
+import { PageResolution } from "project-editor/project/features/gui/page";
 import * as draw from "project-editor/project/features/gui/draw";
 
 const { MenuItem } = EEZStudio.electron.remote;
@@ -77,9 +79,9 @@ function getWidgetTypeClass() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type WidgetParent = PageResolutionProperties | WidgetProperties;
+export type WidgetParent = PageResolution | Widget;
 
-export class WidgetProperties extends EezObject {
+export class Widget extends EezObject {
     // shared properties
     @observable
     type: string;
@@ -99,6 +101,49 @@ export class WidgetProperties extends EezObject {
     width: number;
     @observable
     height: number;
+
+    static metaData = {
+        className: "Widget",
+        getClass: function(jsObject: any) {
+            return getWidgetTypeClass()[jsObject.type];
+        },
+        label: (widget: Widget) => {
+            if (widget.data) {
+                return `${widget.type}: ${widget.data}`;
+            }
+
+            if (
+                widget instanceof TextWidgetProperties ||
+                widget instanceof MultilineTextWidgetProperties
+            ) {
+                if (widget.text) {
+                    return `${widget.type}: "${widget.text}"`;
+                }
+            }
+
+            if (widget instanceof BitmapWidgetProperties) {
+                if (widget.bitmap) {
+                    return `${widget.type}: ${widget.bitmap}`;
+                }
+            }
+
+            if (widget instanceof LayoutViewWidgetProperties) {
+                if (widget.layout) {
+                    return `${widget.type}: ${widget.layout}`;
+                }
+            }
+
+            return widget.type;
+        },
+        properties: (widget: Widget) => {
+            let widgetType = getWidgetTypesMap().get(widget.type);
+            if (widgetType) {
+                return widgetType.properties;
+            }
+
+            return widgetSharedProperties;
+        }
+    };
 
     @computed
     get styleObject() {
@@ -131,12 +176,12 @@ export class WidgetProperties extends EezObject {
     //   - WidgetTyperProperties or
     //   - WidgetProperties, if that ancestor parent is SelectWidgetProperties
     get anchorParent() {
-        let widget: WidgetProperties = this;
+        let widget: Widget = this;
 
         while (true) {
             let parent = widget.parent;
 
-            if (parent instanceof PageResolutionProperties) {
+            if (parent instanceof PageResolution) {
                 return parent;
             }
 
@@ -166,7 +211,7 @@ export class WidgetProperties extends EezObject {
             height: this.height
         };
 
-        let object: WidgetProperties = this;
+        let object: Widget = this;
 
         while (true) {
             let parent = object.parent;
@@ -174,11 +219,11 @@ export class WidgetProperties extends EezObject {
             if (parent instanceof SelectWidgetProperties) {
                 let i = parent.widgets._array.indexOf(object);
 
-                rect.left += parent.editor.rect.left + SelectWidgetEditorProperties.EDITOR_PADDING;
+                rect.left += parent.editor.rect.left + SelectWidgetEditor.EDITOR_PADDING;
                 rect.top +=
                     parent.editor.rect.top +
-                    SelectWidgetEditorProperties.EDITOR_PADDING +
-                    i * (parent.height + SelectWidgetEditorProperties.EDITOR_PADDING);
+                    SelectWidgetEditor.EDITOR_PADDING +
+                    i * (parent.height + SelectWidgetEditor.EDITOR_PADDING);
 
                 break;
             }
@@ -186,7 +231,7 @@ export class WidgetProperties extends EezObject {
             rect.left += parent.x;
             rect.top += parent.y;
 
-            if (parent instanceof PageResolutionProperties) {
+            if (parent instanceof PageResolution) {
                 break;
             }
 
@@ -287,7 +332,7 @@ export class WidgetProperties extends EezObject {
             additionalMenuItems.push(
                 new MenuItem({
                     label: "Put in Select",
-                    click: () => (objects[0] as WidgetProperties).putInSelect()
+                    click: () => (objects[0] as Widget).putInSelect()
                 })
             );
         }
@@ -302,7 +347,7 @@ export class WidgetProperties extends EezObject {
             additionalMenuItems.push(
                 new MenuItem({
                     label: "Put in Container",
-                    click: () => WidgetProperties.putInContainer(objects as WidgetProperties[])
+                    click: () => Widget.putInContainer(objects as Widget[])
                 })
             );
         }
@@ -311,14 +356,14 @@ export class WidgetProperties extends EezObject {
             additionalMenuItems.push(
                 new MenuItem({
                     label: "Create Layout",
-                    click: () => (objects[0] as WidgetProperties).createLayout()
+                    click: () => (objects[0] as Widget).createLayout()
                 })
             );
 
             additionalMenuItems.push(
                 new MenuItem({
                     label: "Replace with Layout",
-                    click: () => (objects[0] as WidgetProperties).replaceWithLayout()
+                    click: () => (objects[0] as Widget).replaceWithLayout()
                 })
             );
 
@@ -327,7 +372,7 @@ export class WidgetProperties extends EezObject {
                 additionalMenuItems.push(
                     new MenuItem({
                         label: "Replace Parent",
-                        click: () => (objects[0] as WidgetProperties).replaceParent()
+                        click: () => (objects[0] as Widget).replaceParent()
                     })
                 );
             }
@@ -360,10 +405,10 @@ export class WidgetProperties extends EezObject {
 
         selectWidgetJsObject.widgets._array = [thisWidgetJsObject];
 
-        replaceObject(this, loadObject(undefined, selectWidgetJsObject, widgetMetaData));
+        replaceObject(this, loadObject(undefined, selectWidgetJsObject, Widget.metaData));
     }
 
-    static putInContainer(widgets: WidgetProperties[]) {
+    static putInContainer(widgets: Widget[]) {
         let containerWidgetType = getWidgetTypesMap().get("Container") as WidgetType;
 
         let x1 = widgets[0].x;
@@ -395,11 +440,14 @@ export class WidgetProperties extends EezObject {
             containerWidgetJsObject.widgets._array = [widgetJsObject];
         }
 
-        replaceObjects(widgets, loadObject(undefined, containerWidgetJsObject, widgetMetaData));
+        replaceObjects(
+            widgets,
+            loadObject(undefined, containerWidgetJsObject, Widget.metaData)
+        );
     }
 
     async createLayout() {
-        const layouts = (getProperty(ProjectStore.projectProperties, "gui") as GuiProperties).pages;
+        const layouts = (getProperty(ProjectStore.project, "gui") as Gui).pages;
 
         try {
             const result = await showGenericDialog({
@@ -442,7 +490,7 @@ export class WidgetProperties extends EezObject {
                             }
                         ]
                     },
-                    pageMetaData
+                    Page.metaData
                 )
             );
 
@@ -458,7 +506,7 @@ export class WidgetProperties extends EezObject {
                     height: this.height,
                     layout: layoutName
                 },
-                widgetMetaData
+                Widget.metaData
             );
 
             replaceObject(this, newWidget);
@@ -468,7 +516,7 @@ export class WidgetProperties extends EezObject {
     }
 
     async replaceWithLayout() {
-        const layouts = (getProperty(ProjectStore.projectProperties, "gui") as GuiProperties).pages;
+        const layouts = (getProperty(ProjectStore.project, "gui") as Gui).pages;
 
         try {
             const result = await showGenericDialog({
@@ -501,7 +549,7 @@ export class WidgetProperties extends EezObject {
                     height: this.height,
                     layout: layoutName
                 },
-                widgetMetaData
+                Widget.metaData
             );
 
             replaceObject(this, newWidget);
@@ -544,9 +592,9 @@ export class WidgetProperties extends EezObject {
     }
 }
 
-export class ContainerWidgetProperties extends WidgetProperties {
+export class ContainerWidgetProperties extends Widget {
     @observable
-    widgets: EezArrayObject<WidgetProperties>;
+    widgets: EezArrayObject<Widget>;
 
     check() {
         let messages: output.Message[] = [];
@@ -599,9 +647,9 @@ export class ContainerWidgetProperties extends WidgetProperties {
     }
 }
 
-export class ListWidgetProperties extends WidgetProperties {
+export class ListWidgetProperties extends Widget {
     @observable
-    itemWidget?: WidgetProperties;
+    itemWidget?: Widget;
     @observable
     listType?: string;
 
@@ -651,9 +699,9 @@ export class ListWidgetProperties extends WidgetProperties {
     }
 }
 
-export class GridWidgetProperties extends WidgetProperties {
+export class GridWidgetProperties extends Widget {
     @observable
-    itemWidget?: WidgetProperties;
+    itemWidget?: Widget;
 
     check() {
         let messages: output.Message[] = [];
@@ -674,13 +722,41 @@ export class GridWidgetProperties extends WidgetProperties {
 
 export type Position = "left" | "right" | "top" | "bottom";
 
-export class SelectWidgetEditorProperties extends EezObject {
+export class SelectWidgetEditor extends EezObject {
     static readonly EDITOR_PADDING = 10;
 
     @observable
     x: number;
     @observable
     y: number;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return SelectWidgetEditor;
+        },
+        className: "SelectWidgetEditor",
+
+        label: (selectWidgetEditor: SelectWidgetEditor) => {
+            const parent = selectWidgetEditor._parent!;
+            return parent._metaData.label(parent) + " Editor";
+        },
+
+        properties: () => [
+            {
+                name: "x",
+                type: PropertyType.Number
+            },
+            {
+                name: "y",
+                type: PropertyType.Number
+            }
+        ],
+
+        defaultValue: {
+            x: 350,
+            y: 0
+        }
+    };
 
     get parent() {
         return this._parent as SelectWidgetProperties;
@@ -834,17 +910,17 @@ export class SelectWidgetEditorProperties extends EezObject {
         const count = this.parent.widgets._array.length;
 
         if (this.editorOrientation === "vertical") {
-            width = this.parent.width + 2 * SelectWidgetEditorProperties.EDITOR_PADDING;
+            width = this.parent.width + 2 * SelectWidgetEditor.EDITOR_PADDING;
 
             height =
-                (this.parent.height + SelectWidgetEditorProperties.EDITOR_PADDING) * count +
-                SelectWidgetEditorProperties.EDITOR_PADDING;
+                (this.parent.height + SelectWidgetEditor.EDITOR_PADDING) * count +
+                SelectWidgetEditor.EDITOR_PADDING;
         } else {
             width =
-                (this.parent.width + SelectWidgetEditorProperties.EDITOR_PADDING) * count +
-                SelectWidgetEditorProperties.EDITOR_PADDING;
+                (this.parent.width + SelectWidgetEditor.EDITOR_PADDING) * count +
+                SelectWidgetEditor.EDITOR_PADDING;
 
-            height = this.parent.height + 2 * SelectWidgetEditorProperties.EDITOR_PADDING;
+            height = this.parent.height + 2 * SelectWidgetEditor.EDITOR_PADDING;
         }
 
         return {
@@ -856,40 +932,14 @@ export class SelectWidgetEditorProperties extends EezObject {
     }
 }
 
-export const selectWidgetEditorMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return SelectWidgetEditorProperties;
-    },
-    className: "SelectWidgetEditor",
+registerMetaData(SelectWidgetEditor.metaData);
 
-    label: (selectWidgetEditor: SelectWidgetEditorProperties) => {
-        const parent = selectWidgetEditor._parent!;
-        return parent._metaData.label(parent) + " Editor";
-    },
-
-    properties: () => [
-        {
-            name: "x",
-            type: "number"
-        },
-        {
-            name: "y",
-            type: "number"
-        }
-    ],
-
-    defaultValue: {
-        x: 350,
-        y: 0
-    }
-});
-
-export class SelectWidgetProperties extends WidgetProperties {
+export class SelectWidgetProperties extends Widget {
     @observable
-    widgets: EezArrayObject<WidgetProperties>;
+    widgets: EezArrayObject<Widget>;
 
     @observable
-    editor: SelectWidgetEditorProperties;
+    editor: SelectWidgetEditor;
 
     check() {
         let messages: output.Message[] = [];
@@ -965,7 +1015,7 @@ export class SelectWidgetProperties extends WidgetProperties {
         }
     }
 
-    getChildLabel(childObject: WidgetProperties) {
+    getChildLabel(childObject: Widget) {
         if (this.widgets) {
             let index = this.widgets._array.indexOf(childObject);
             if (index != -1) {
@@ -1001,7 +1051,7 @@ export class SelectWidgetProperties extends WidgetProperties {
     }
 }
 
-export class DisplayDataWidgetProperties extends WidgetProperties {
+export class DisplayDataWidgetProperties extends Widget {
     @observable
     focusStyle?: string;
 
@@ -1030,7 +1080,7 @@ export class DisplayDataWidgetProperties extends WidgetProperties {
     }
 }
 
-export class TextWidgetProperties extends WidgetProperties {
+export class TextWidgetProperties extends Widget {
     @observable
     text?: string;
     @observable
@@ -1047,7 +1097,7 @@ export class TextWidgetProperties extends WidgetProperties {
     }
 }
 
-export class MultilineTextWidgetProperties extends WidgetProperties {
+export class MultilineTextWidgetProperties extends Widget {
     @observable
     text?: string;
 
@@ -1062,7 +1112,7 @@ export class MultilineTextWidgetProperties extends WidgetProperties {
     }
 }
 
-export class RectangleWidgetProperties extends WidgetProperties {
+export class RectangleWidgetProperties extends Widget {
     @observable
     ignoreLuminocity: boolean;
     @observable
@@ -1079,7 +1129,7 @@ export class RectangleWidgetProperties extends WidgetProperties {
     }
 }
 
-export class BitmapWidgetProperties extends WidgetProperties {
+export class BitmapWidgetProperties extends Widget {
     @observable
     bitmap?: string;
 
@@ -1113,7 +1163,7 @@ export class BitmapWidgetProperties extends WidgetProperties {
     }
 }
 
-export class ButtonWidgetProperties extends WidgetProperties {
+export class ButtonWidgetProperties extends Widget {
     @observable
     text?: string;
     @observable
@@ -1165,7 +1215,7 @@ export class ButtonWidgetProperties extends WidgetProperties {
     }
 }
 
-export class ToggleButtonWidgetProperties extends WidgetProperties {
+export class ToggleButtonWidgetProperties extends Widget {
     @observable
     text1?: string;
     @observable
@@ -1190,7 +1240,7 @@ export class ToggleButtonWidgetProperties extends WidgetProperties {
     }
 }
 
-export class ButtonGroupWidgetProperties extends WidgetProperties {
+export class ButtonGroupWidgetProperties extends Widget {
     check() {
         let messages: output.Message[] = [];
 
@@ -1202,7 +1252,7 @@ export class ButtonGroupWidgetProperties extends WidgetProperties {
     }
 }
 
-export class ScaleWidgetProperties extends WidgetProperties {
+export class ScaleWidgetProperties extends Widget {
     @observable
     needlePosition: string;
     @observable
@@ -1221,7 +1271,7 @@ export class ScaleWidgetProperties extends WidgetProperties {
     }
 }
 
-export class BarGraphWidgetProperties extends WidgetProperties {
+export class BarGraphWidgetProperties extends Widget {
     @observable
     orientation?: string;
     @observable
@@ -1326,7 +1376,7 @@ export class BarGraphWidgetProperties extends WidgetProperties {
     }
 }
 
-export class YTGraphWidgetProperties extends WidgetProperties {
+export class YTGraphWidgetProperties extends Widget {
     @observable
     y1Style?: string;
     @observable
@@ -1394,7 +1444,7 @@ export class YTGraphWidgetProperties extends WidgetProperties {
     }
 }
 
-export class UpDownWidgetProperties extends WidgetProperties {
+export class UpDownWidgetProperties extends Widget {
     @observable
     buttonsStyle?: string;
     @observable
@@ -1437,7 +1487,7 @@ export class UpDownWidgetProperties extends WidgetProperties {
     }
 }
 
-export class ListGraphWidgetProperties extends WidgetProperties {
+export class ListGraphWidgetProperties extends Widget {
     @observable
     dwellData?: string;
     @observable
@@ -1580,7 +1630,7 @@ export class ListGraphWidgetProperties extends WidgetProperties {
     }
 }
 
-export class LayoutViewWidgetProperties extends WidgetProperties {
+export class LayoutViewWidgetProperties extends Widget {
     @observable
     layout: string;
 
@@ -1614,7 +1664,7 @@ export class LayoutViewWidgetProperties extends WidgetProperties {
     }
 }
 
-export class AppViewWidgetProperties extends WidgetProperties {
+export class AppViewWidgetProperties extends Widget {
     @observable
     page: string;
 
@@ -1631,90 +1681,49 @@ export class AppViewWidgetProperties extends WidgetProperties {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const widgetMetaData = registerMetaData({
-    className: "Widget",
-    getClass: function(jsObject: any) {
-        return getWidgetTypeClass()[jsObject.type];
-    },
-    label: (widget: WidgetProperties) => {
-        if (widget.data) {
-            return `${widget.type}: ${widget.data}`;
-        }
-
-        if (
-            widget instanceof TextWidgetProperties ||
-            widget instanceof MultilineTextWidgetProperties
-        ) {
-            if (widget.text) {
-                return `${widget.type}: "${widget.text}"`;
-            }
-        }
-
-        if (widget instanceof BitmapWidgetProperties) {
-            if (widget.bitmap) {
-                return `${widget.type}: ${widget.bitmap}`;
-            }
-        }
-
-        if (widget instanceof LayoutViewWidgetProperties) {
-            if (widget.layout) {
-                return `${widget.type}: ${widget.layout}`;
-            }
-        }
-
-        return widget.type;
-    },
-    properties: (widget: WidgetProperties) => {
-        let widgetType = getWidgetTypesMap().get(widget.type);
-        if (widgetType) {
-            return widgetType.properties;
-        }
-
-        return widgetSharedProperties;
-    }
-});
+registerMetaData(Widget.metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export const widgetSharedProperties: PropertyMetaData[] = [
     {
         name: "type",
-        type: "enum"
+        type: PropertyType.Enum
     },
     {
         name: "data",
-        type: "object-reference",
+        type: PropertyType.ObjectReference,
         referencedObjectCollectionPath: ["data"]
     },
     {
         name: "action",
-        type: "object-reference",
+        type: PropertyType.ObjectReference,
         referencedObjectCollectionPath: ["actions"]
     },
     {
         name: "x",
-        type: "number"
+        type: PropertyType.Number
     },
     {
         name: "y",
-        type: "number"
+        type: PropertyType.Number
     },
     {
         name: "width",
-        type: "number"
+        type: PropertyType.Number
     },
     {
         name: "height",
-        type: "number"
+        type: PropertyType.Number
     },
     {
         name: "style",
-        type: "object-reference",
+        type: PropertyType.ObjectReference,
         referencedObjectCollectionPath: ["gui", "styles"]
     },
     {
         name: "activeStyle",
-        type: "object-reference",
+        type: PropertyType.ObjectReference,
         referencedObjectCollectionPath: ["gui", "styles"]
     }
 ];
@@ -1722,9 +1731,9 @@ export const widgetSharedProperties: PropertyMetaData[] = [
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface WidgetType extends EnumItem {
-    create(): WidgetProperties;
+    create(): Widget;
     properties: PropertyMetaData[];
-    draw?: (widget: WidgetProperties, rect: Rect) => HTMLCanvasElement | undefined;
+    draw?: (widget: Widget, rect: Rect) => HTMLCanvasElement | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1750,8 +1759,8 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "widgets",
-                        type: "array",
-                        typeMetaData: widgetMetaData,
+                        type: PropertyType.Array,
+                        typeMetaData: Widget.metaData,
                         hideInPropertyGrid: true
                     }
                 ]),
@@ -1781,7 +1790,7 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "listType",
-                        type: "enum",
+                        type: PropertyType.Enum,
                         enumItems: [
                             {
                                 id: "vertical"
@@ -1793,8 +1802,8 @@ export function getWidgetTypes() {
                     },
                     {
                         name: "itemWidget",
-                        type: "object",
-                        typeMetaData: widgetMetaData,
+                        type: PropertyType.Object,
+                        typeMetaData: Widget.metaData,
                         hideInPropertyGrid: true,
                         isOptional: true
                     }
@@ -1824,8 +1833,8 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "itemWidget",
-                        type: "object",
-                        typeMetaData: widgetMetaData,
+                        type: PropertyType.Object,
+                        typeMetaData: Widget.metaData,
                         hideInPropertyGrid: true,
                         isOptional: true
                     }
@@ -1852,8 +1861,8 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "widgets",
-                        type: "array",
-                        typeMetaData: widgetMetaData,
+                        type: PropertyType.Array,
+                        typeMetaData: Widget.metaData,
                         hideInPropertyGrid: true,
                         childLabel: (childObject: EezObject, childLabel: string) => {
                             let label;
@@ -1863,7 +1872,7 @@ export function getWidgetTypes() {
                                     ._parent as SelectWidgetProperties;
 
                                 label = selectWidgetProperties.getChildLabel(
-                                    childObject as WidgetProperties
+                                    childObject as Widget
                                 );
                             }
 
@@ -1872,8 +1881,8 @@ export function getWidgetTypes() {
                     },
                     {
                         name: "editor",
-                        type: "object",
-                        typeMetaData: selectWidgetEditorMetaData,
+                        type: PropertyType.Object,
+                        typeMetaData: SelectWidgetEditor.metaData,
                         enumerable: false
                     }
                 ]),
@@ -1895,7 +1904,7 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "focusStyle",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "styles"]
                     }
                 ]),
@@ -1917,11 +1926,11 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "text",
-                        type: "string"
+                        type: PropertyType.String
                     },
                     {
                         name: "ignoreLuminocity",
-                        type: "boolean",
+                        type: PropertyType.Boolean,
                         defaultValue: false
                     }
                 ]),
@@ -1943,7 +1952,7 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "text",
-                        type: "string"
+                        type: PropertyType.String
                     }
                 ]),
                 draw: draw.drawMultilineTextWidget
@@ -1963,12 +1972,12 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "invertColors",
-                        type: "boolean",
+                        type: PropertyType.Boolean,
                         defaultValue: false
                     },
                     {
                         name: "ignoreLuminocity",
-                        type: "boolean",
+                        type: PropertyType.Boolean,
                         defaultValue: false
                     }
                 ]),
@@ -1989,7 +1998,7 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "bitmap",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "bitmaps"]
                     }
                 ]),
@@ -2010,16 +2019,16 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "text",
-                        type: "string"
+                        type: PropertyType.String
                     },
                     {
                         name: "enabled",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["data"]
                     },
                     {
                         name: "disabledStyle",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "styles"]
                     }
                 ]),
@@ -2040,11 +2049,11 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "text1",
-                        type: "string"
+                        type: PropertyType.String
                     },
                     {
                         name: "text2",
-                        type: "string"
+                        type: PropertyType.String
                     }
                 ]),
                 draw: draw.drawToggleButtonWidget
@@ -2082,7 +2091,7 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "needlePosition",
-                        type: "enum",
+                        type: PropertyType.Enum,
                         enumItems: [
                             {
                                 id: "left"
@@ -2100,11 +2109,11 @@ export function getWidgetTypes() {
                     },
                     {
                         name: "needleWidth",
-                        type: "number"
+                        type: PropertyType.Number
                     },
                     {
                         name: "needleHeight",
-                        type: "number"
+                        type: PropertyType.Number
                     }
                 ]),
                 draw: draw.drawScaleWidget
@@ -2125,7 +2134,7 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "orientation",
-                        type: "enum",
+                        type: PropertyType.Enum,
                         enumItems: [
                             {
                                 id: "left-right"
@@ -2143,27 +2152,27 @@ export function getWidgetTypes() {
                     },
                     {
                         name: "textStyle",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "styles"]
                     },
                     {
                         name: "line1Data",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["data"]
                     },
                     {
                         name: "line1Style",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "styles"]
                     },
                     {
                         name: "line2Data",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["data"]
                     },
                     {
                         name: "line2Style",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "styles"]
                     }
                 ]),
@@ -2186,17 +2195,17 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "y1Style",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "styles"]
                     },
                     {
                         name: "y2Data",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["data"]
                     },
                     {
                         name: "y2Style",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "styles"]
                     }
                 ]),
@@ -2220,16 +2229,16 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "buttonsStyle",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "styles"]
                     },
                     {
                         name: "downButtonText",
-                        type: "string"
+                        type: PropertyType.String
                     },
                     {
                         name: "upButtonText",
-                        type: "string"
+                        type: PropertyType.String
                     }
                 ]),
                 draw: draw.drawUpDownWidget
@@ -2251,37 +2260,37 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "dwellData",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["data"]
                     },
                     {
                         name: "y1Data",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["data"]
                     },
                     {
                         name: "y1Style",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "styles"]
                     },
                     {
                         name: "y2Data",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["data"]
                     },
                     {
                         name: "y2Style",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "styles"]
                     },
                     {
                         name: "cursorData",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["data"]
                     },
                     {
                         name: "cursorStyle",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "styles"]
                     }
                 ]),
@@ -2302,7 +2311,7 @@ export function getWidgetTypes() {
                 properties: widgetSharedProperties.concat([
                     {
                         name: "layout",
-                        type: "object-reference",
+                        type: PropertyType.ObjectReference,
                         referencedObjectCollectionPath: ["gui", "pages"]
                     }
                 ]),
@@ -2344,6 +2353,6 @@ function getWidgetTypesMap() {
     return _widgetTypesMap;
 }
 
-export function getWidgetType(widget: WidgetProperties) {
+export function getWidgetType(widget: Widget) {
     return getWidgetTypesMap().get(widget.type);
 }

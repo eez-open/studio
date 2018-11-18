@@ -2,7 +2,7 @@ import { observable, computed } from "mobx";
 
 import { validators } from "eez-studio-shared/model/validation";
 
-import { registerMetaData, EezObject } from "project-editor/core/metaData";
+import { registerMetaData, EezObject, PropertyType } from "project-editor/core/metaData";
 import { ProjectStore, asArray } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import { Message, Type } from "project-editor/core/output";
@@ -18,7 +18,7 @@ import { metrics } from "project-editor/project/features/action/metrics";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ActionProperties extends EezObject {
+export class Action extends EezObject {
     @observable
     name: string;
     @observable
@@ -29,6 +29,72 @@ export class ActionProperties extends EezObject {
     implementation?: string;
     @observable
     usedIn: string[] | undefined;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return Action;
+        },
+        className: "Action",
+        label: (action: Action) => {
+            return action.name;
+        },
+        properties: () => [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            {
+                name: "description",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "implementationType",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "graphical"
+                    },
+                    {
+                        id: "native"
+                    }
+                ]
+            },
+            {
+                name: "implementation",
+                type: PropertyType.String,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "usedIn",
+                type: PropertyType.ConfigurationReference
+            }
+        ],
+        newItem: (parent: EezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Action",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [validators.required, validators.unique({}, parent)]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name,
+                    implementationType: "native"
+                });
+            });
+        },
+        editorComponent: ActionEditor,
+        navigationComponent: ListNavigationWithContent,
+        navigationComponentId: "actions",
+        icon: "code"
+    };
 
     @computed
     get implementationCode() {
@@ -61,71 +127,7 @@ export class ActionProperties extends EezObject {
     }
 }
 
-export const actionMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return ActionProperties;
-    },
-    className: "Action",
-    label: (action: ActionProperties) => {
-        return action.name;
-    },
-    properties: () => [
-        {
-            name: "name",
-            type: "string",
-            unique: true
-        },
-        {
-            name: "description",
-            type: "multiline-text"
-        },
-        {
-            name: "implementationType",
-            type: "enum",
-            enumItems: [
-                {
-                    id: "graphical"
-                },
-                {
-                    id: "native"
-                }
-            ]
-        },
-        {
-            name: "implementation",
-            type: "string",
-            hideInPropertyGrid: true
-        },
-        {
-            name: "usedIn",
-            type: "configuration-references"
-        }
-    ],
-    newItem: (parent: EezObject) => {
-        return showGenericDialog({
-            dialogDefinition: {
-                title: "New Action",
-                fields: [
-                    {
-                        name: "name",
-                        type: "string",
-                        validators: [validators.required, validators.unique({}, parent)]
-                    }
-                ]
-            },
-            values: {}
-        }).then(result => {
-            return Promise.resolve({
-                name: result.values.name,
-                implementationType: "native"
-            });
-        });
-    },
-    editorComponent: ActionEditor,
-    navigationComponent: ListNavigationWithContent,
-    navigationComponentId: "actions",
-    icon: "code"
-});
+registerMetaData(Action.metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -133,8 +135,8 @@ registerFeatureImplementation("action", {
     projectFeature: {
         mandatory: false,
         key: "actions",
-        type: "array",
-        metaData: actionMetaData,
+        type: PropertyType.Array,
+        metaData: Action.metaData,
         create: () => [],
         check: (object: EezObject) => {
             let messages: Message[] = [];
@@ -153,7 +155,7 @@ registerFeatureImplementation("action", {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findAction(actionName: string) {
-    for (const action of ProjectStore.projectProperties.actions._array) {
+    for (const action of ProjectStore.project.actions._array) {
         if (action.name == actionName) {
             return action;
         }
@@ -162,7 +164,7 @@ export function findAction(actionName: string) {
 }
 
 export function findActionIndex(actionName: string) {
-    let actions = ProjectStore.projectProperties.actions._array;
+    let actions = ProjectStore.project.actions._array;
     for (let i = 0; i < actions.length; i++) {
         if (actions[i].name == actionName) {
             return i;

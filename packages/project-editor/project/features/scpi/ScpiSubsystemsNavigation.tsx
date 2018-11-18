@@ -11,11 +11,7 @@ import { ProjectStore, NavigationStore, getProperty } from "project-editor/core/
 import { ListNavigation, ListNavigationWithContent } from "project-editor/project/ListNavigation";
 
 import { showImportScpiDocDialog } from "project-editor/project/features/scpi/importScpiDoc";
-import {
-    ScpiCommandProperties,
-    ScpiSubsystemProperties,
-    ScpiProperties
-} from "project-editor/project/features/scpi/scpi";
+import { ScpiCommand, ScpiSubsystem, Scpi } from "project-editor/project/features/scpi/scpi";
 import { ScpiSubsystemOrCommandEditor } from "project-editor/project/features/scpi/ScpiSubsystemOrCommandEditor";
 
 @observer
@@ -33,15 +29,14 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
     }
 
     render() {
-        let subsystems = (getProperty(ProjectStore.projectProperties, "scpi") as ScpiProperties)
-            .subsystems;
+        let subsystems = (getProperty(ProjectStore.project, "scpi") as Scpi).subsystems;
 
         let selectedScpiSubsystem = NavigationStore.getNavigationSelectedItem(
             subsystems
-        ) as ScpiSubsystemProperties;
+        ) as ScpiSubsystem;
 
         let additionalButtons;
-        if (ProjectStore.projectProperties.settings.general.scpiDocFolder) {
+        if (ProjectStore.project.settings.general.scpiDocFolder) {
             additionalButtons = [
                 <IconAction
                     key="refresh"
@@ -54,9 +49,7 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
         }
 
         let content = (
-            <ScpiSubsystemOrCommandEditor
-                object={this.object as ScpiSubsystemProperties | ScpiCommandProperties}
-            />
+            <ScpiSubsystemOrCommandEditor object={this.object as ScpiSubsystem | ScpiCommand} />
         );
 
         if (selectedScpiSubsystem) {

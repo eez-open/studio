@@ -5,24 +5,21 @@ import { Splitter } from "eez-studio-ui/splitter";
 
 import { ProjectStore } from "project-editor/core/store";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
-import {
-    ScpiSubsystemProperties,
-    ScpiCommandProperties
-} from "project-editor/project/features/scpi/scpi";
+import { ScpiSubsystem, ScpiCommand } from "project-editor/project/features/scpi/scpi";
 
 @observer
 export class ScpiSubsystemOrCommandEditor extends React.Component<
-    { object: ScpiSubsystemProperties | ScpiCommandProperties },
+    { object: ScpiSubsystem | ScpiCommand },
     {}
 > {
     render() {
         if (
             this.props.object &&
             this.props.object.helpLink &&
-            ProjectStore.projectProperties.settings.general.scpiDocFolder
+            ProjectStore.project.settings.general.scpiDocFolder
         ) {
             let scpiHelpFolderPath = ProjectStore.getAbsoluteFilePath(
-                ProjectStore.projectProperties.settings.general.scpiDocFolder
+                ProjectStore.project.settings.general.scpiDocFolder
             );
 
             return (

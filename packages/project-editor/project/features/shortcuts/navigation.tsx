@@ -5,7 +5,7 @@ import { observer } from "mobx-react";
 import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
 
 import { IShortcut } from "shortcuts/interfaces";
-import { Shortcuts, ShortcutsToolbarButtons } from "shortcuts/shortcuts";
+import { Shortcuts as ShortcutsComponent, ShortcutsToolbarButtons } from "shortcuts/shortcuts";
 
 import { generateGuid } from "project-editor/core/util";
 import { NavigationComponent } from "project-editor/core/metaData";
@@ -19,10 +19,7 @@ import {
 } from "project-editor/core/store";
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/PropertyGrid";
 
-import {
-    ShortcutsProperties,
-    ShortcutProperties
-} from "project-editor/project/features/shortcuts/shortcuts";
+import { Shortcuts, Shortcut } from "project-editor/project/features/shortcuts/shortcuts";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,12 +35,10 @@ export class ShortcutsNavigation extends NavigationComponent {
 
     @computed
     get shortcutsStore() {
-        const shortcuts = (getProperty(
-            ProjectStore.projectProperties,
-            "shortcuts"
-        ) as ShortcutsProperties).shortcuts;
+        const shortcuts = (getProperty(ProjectStore.project, "shortcuts") as Shortcuts)
+            .shortcuts;
 
-        let shortcutsMap = new Map<string, ShortcutProperties>();
+        let shortcutsMap = new Map<string, Shortcut>();
         shortcuts._array.forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
 
         return {
@@ -94,7 +89,7 @@ export class ShortcutsNavigation extends NavigationComponent {
                     <ShortcutsToolbarButtons shortcutsStore={this.shortcutsStore} />
                 </ToolbarHeader>
                 <Body tabIndex={0}>
-                    <Shortcuts shortcutsStore={this.shortcutsStore} />
+                    <ShortcutsComponent shortcutsStore={this.shortcutsStore} />
                 </Body>
             </VerticalHeaderWithBody>
         );

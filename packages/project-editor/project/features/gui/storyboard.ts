@@ -1,119 +1,166 @@
 import { observable } from "mobx";
 
-import { registerMetaData, EezObject, EezArrayObject } from "project-editor/core/metaData";
+import {
+    registerMetaData,
+    EezObject,
+    EezArrayObject,
+    PropertyType
+} from "project-editor/core/metaData";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import { StoryboardEditor } from "project-editor/project/features/gui/StoryboardEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class StoryboardPageProperties extends EezObject {
+export class StoryboardPage extends EezObject {
     @observable x: number;
     @observable y: number;
     @observable page: string;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return StoryboardPage;
+        },
+        className: "StoryboardPage",
+        label: (storyboardPageProperties: StoryboardPage) => storyboardPageProperties.page,
+        properties: () => [
+            {
+                name: "x",
+                type: PropertyType.Number
+            },
+            {
+                name: "y",
+                type: PropertyType.Number
+            },
+            {
+                name: "page",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: ["gui", "pages"]
+            }
+        ]
+    };
 }
 
-export const storyboardPageMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return StoryboardPageProperties;
-    },
-    className: "StoryboardPage",
-    label: (storyboardPageProperties: StoryboardPageProperties) => storyboardPageProperties.page,
-    properties: () => [
-        {
-            name: "x",
-            type: "number"
-        },
-        {
-            name: "y",
-            type: "number"
-        },
-        {
-            name: "page",
-            type: "object-reference",
-            referencedObjectCollectionPath: ["gui", "pages"]
-        }
-    ]
-});
+registerMetaData(StoryboardPage.metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class StoryboardLineSourceProperties extends EezObject {
+export class StoryboardLineSource extends EezObject {
     @observable page: string;
-}
 
-export const storyboardLineSourceMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return StoryboardLineSourceProperties;
-    },
-    className: "StoryboardLineSource",
-    label: (storyboardLineSourceProperties: StoryboardLineSourceProperties) =>
-        storyboardLineSourceProperties.page,
-    properties: () => [
-        {
-            name: "page",
-            type: "object-reference",
-            referencedObjectCollectionPath: ["gui", "pages"]
-        }
-    ]
-});
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class StoryboardLineTargetProperties extends EezObject {
-    @observable page: string;
-}
-
-export const storyboardLineTargetMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return StoryboardLineTargetProperties;
-    },
-    className: "StoryboardLineTarget",
-    label: (storyboardLineSourceProperties: StoryboardLineSourceProperties) =>
-        storyboardLineSourceProperties.page,
-    properties: () => [
-        {
-            name: "page",
-            type: "object-reference",
-            referencedObjectCollectionPath: ["gui", "pages"]
-        }
-    ]
-});
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class StoryboardLineProperties extends EezObject {
-    @observable source: StoryboardLineSourceProperties;
-    @observable target: StoryboardLineTargetProperties;
-}
-
-export const storyboardLineMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return StoryboardLineTargetProperties;
-    },
-    className: "StoryboardLine",
-    label: (storyboardLineProperties: StoryboardLineProperties) =>
-        storyboardLineProperties.source.page + "->" + storyboardLineProperties.target.page,
-    properties: () => [
-        {
-            name: "source",
-            type: "object",
-            typeMetaData: storyboardLineSourceMetaData
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return StoryboardLineSource;
         },
-        {
-            name: "target",
-            type: "object",
-            typeMetaData: storyboardLineTargetMetaData
-        }
-    ]
-});
+        className: "StoryboardLineSource",
+        label: (storyboardLineSourceProperties: StoryboardLineSource) =>
+            storyboardLineSourceProperties.page,
+        properties: () => [
+            {
+                name: "page",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: ["gui", "pages"]
+            }
+        ]
+    };
+}
+
+registerMetaData(StoryboardLineSource.metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class StoryboardProperties extends EezObject {
-    @observable pages: EezArrayObject<StoryboardPageProperties>;
-    @observable lines: EezArrayObject<StoryboardLineProperties>;
+export class StoryboardLineTarget extends EezObject {
+    @observable page: string;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return StoryboardLineTarget;
+        },
+        className: "StoryboardLineTarget",
+        label: (storyboardLineSourceProperties: StoryboardLineSource) =>
+            storyboardLineSourceProperties.page,
+        properties: () => [
+            {
+                name: "page",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: ["gui", "pages"]
+            }
+        ]
+    };
 }
+
+registerMetaData(StoryboardLineTarget.metaData);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class StoryboardLine extends EezObject {
+    @observable source: StoryboardLineSource;
+    @observable target: StoryboardLineTarget;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return StoryboardLineTarget;
+        },
+        className: "StoryboardLine",
+        label: (storyboardLineProperties: StoryboardLine) =>
+            storyboardLineProperties.source.page + "->" + storyboardLineProperties.target.page,
+        properties: () => [
+            {
+                name: "source",
+                type: PropertyType.Object,
+                typeMetaData: StoryboardLineSource.metaData
+            },
+            {
+                name: "target",
+                type: PropertyType.Object,
+                typeMetaData: StoryboardLineTarget.metaData
+            }
+        ]
+    };
+}
+
+registerMetaData(StoryboardLine.metaData);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class Storyboard extends EezObject {
+    @observable pages: EezArrayObject<StoryboardPage>;
+    @observable lines: EezArrayObject<StoryboardLine>;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return Storyboard;
+        },
+        className: "Storyboard",
+        label: (storyboard: Storyboard) => "Storyboard",
+        properties: () => [
+            {
+                name: "pages",
+                type: PropertyType.Array,
+                typeMetaData: StoryboardPage.metaData,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "lines",
+                type: PropertyType.Array,
+                typeMetaData: StoryboardLine.metaData,
+                hideInPropertyGrid: true,
+                skipSearch: true
+            }
+        ],
+        editorComponent: StoryboardEditor,
+        createEditorState: (object: EezObject) => new StoryboardTabState(object),
+        defaultValue: {
+            pages: [],
+            lines: []
+        },
+        icon: "apps"
+    };
+}
+
+registerMetaData(Storyboard.metaData);
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class StoryboardTabState {
     storyboardAdapter: TreeObjectAdapter;
@@ -137,33 +184,3 @@ export class StoryboardTabState {
         }
     }
 }
-
-export const storyboardMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return StoryboardProperties;
-    },
-    className: "Storyboard",
-    label: (storyboard: StoryboardProperties) => "Storyboard",
-    properties: () => [
-        {
-            name: "pages",
-            type: "array",
-            typeMetaData: storyboardPageMetaData,
-            hideInPropertyGrid: true
-        },
-        {
-            name: "lines",
-            type: "array",
-            typeMetaData: storyboardLineMetaData,
-            hideInPropertyGrid: true,
-            skipSearch: true
-        }
-    ],
-    editorComponent: StoryboardEditor,
-    createEditorState: (object: EezObject) => new StoryboardTabState(object),
-    defaultValue: {
-        pages: [],
-        lines: []
-    },
-    icon: "apps"
-});

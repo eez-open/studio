@@ -5,11 +5,11 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
 import { loadObject, objectToJS } from "project-editor/core/store";
-import { EezObject, registerMetaData } from "project-editor/core/metaData";
+import { EezObject, registerMetaData, PropertyType } from "project-editor/core/metaData";
 import * as util from "project-editor/core/util";
 
 import { GlyphSelectFieldType } from "project-editor/project/features/gui/FontEditor";
-import { FontProperties } from "project-editor/project/features/gui/fontMetaData";
+import { Font } from "project-editor/project/features/gui/fontMetaData";
 
 let path = EEZStudio.electron.remote.require("path");
 
@@ -25,7 +25,7 @@ function formatEncoding(encoding: number) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function selectGlyph(glyph: GlyphProperties) {
+export function selectGlyph(glyph: Glyph) {
     function isFont(obj: any) {
         return obj["filePath"];
     }
@@ -92,14 +92,14 @@ export function selectGlyph(glyph: GlyphProperties) {
             height: result.context.encoding.glyph.height,
             dx: result.context.encoding.glyph.dx,
             glyphBitmap: result.context.encoding.glyph.glyphBitmap,
-            source: loadObject(glyph, result.values, glyphSourceMetaData)
+            source: loadObject(glyph, result.values, GlyphSource.metaData)
         };
     });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GlyphSourceProperties extends EezObject {
+export class GlyphSource extends EezObject {
     @observable
     filePath?: string;
     @observable
@@ -107,48 +107,50 @@ export class GlyphSourceProperties extends EezObject {
     @observable
     encoding?: number;
 
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return GlyphSource;
+        },
+        className: "GlyphSource",
+
+        label: (glyphSource: GlyphSource) => {
+            if (!glyphSource.filePath || !glyphSource.encoding) {
+                return "";
+            }
+
+            let label = glyphSource.filePath;
+
+            if (glyphSource.size != undefined) {
+                label += ", " + glyphSource.size;
+            }
+
+            label += ", " + formatEncoding(glyphSource.encoding);
+
+            return label;
+        },
+
+        properties: () => [
+            {
+                name: "filePath",
+                type: PropertyType.String
+            },
+            {
+                name: "size",
+                type: PropertyType.Number
+            },
+            {
+                name: "encoding",
+                type: PropertyType.Number
+            }
+        ]
+    };
+
     toString() {
         return this._metaData.label(this);
     }
 }
 
-export const glyphSourceMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return GlyphSourceProperties;
-    },
-    className: "GlyphSource",
-
-    label: (glyphSource: GlyphSourceProperties) => {
-        if (!glyphSource.filePath || !glyphSource.encoding) {
-            return "";
-        }
-
-        let label = glyphSource.filePath;
-
-        if (glyphSource.size != undefined) {
-            label += ", " + glyphSource.size;
-        }
-
-        label += ", " + formatEncoding(glyphSource.encoding);
-
-        return label;
-    },
-
-    properties: () => [
-        {
-            name: "filePath",
-            type: "string"
-        },
-        {
-            name: "size",
-            type: "number"
-        },
-        {
-            name: "encoding",
-            type: "number"
-        }
-    ]
-});
+registerMetaData(GlyphSource.metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -250,7 +252,7 @@ export interface EditorImageHitTestResult {
     rect: util.Rect;
 }
 
-export class GlyphProperties extends EezObject {
+export class Glyph extends EezObject {
     @observable
     encoding: number;
     @observable
@@ -266,6 +268,54 @@ export class GlyphProperties extends EezObject {
 
     @observable
     glyphBitmap?: GlyphBitmap;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return Glyph;
+        },
+        className: "Glyph",
+        label: (glyph: Glyph) => {
+            return glyph.encoding != undefined ? formatEncoding(glyph.encoding) : "";
+        },
+        properties: () => [
+            {
+                name: "encoding",
+                type: PropertyType.Number
+            },
+            {
+                name: "x",
+                type: PropertyType.Number
+            },
+            {
+                name: "y",
+                type: PropertyType.Number
+            },
+            {
+                name: "width",
+                type: PropertyType.Number
+            },
+            {
+                name: "height",
+                type: PropertyType.Number
+            },
+            {
+                name: "dx",
+                type: PropertyType.Number
+            },
+            {
+                name: "source",
+                type: PropertyType.Object,
+                typeMetaData: GlyphSource.metaData,
+                onSelect: selectGlyph
+            },
+            {
+                name: "glyphBitmap",
+                type: PropertyType.Any,
+                hideInPropertyGrid: true,
+                skipSearch: true
+            }
+        ]
+    };
 
     @computed
     get pixelArray(): number[] | undefined {
@@ -283,7 +333,7 @@ export class GlyphProperties extends EezObject {
     }
 
     @observable
-    source?: GlyphSourceProperties;
+    source?: GlyphSource;
 
     @computed
     get image(): string {
@@ -328,7 +378,7 @@ export class GlyphProperties extends EezObject {
     }
 
     getFont() {
-        return this._parent!._parent as FontProperties;
+        return this._parent!._parent as Font;
     }
 
     getPixel(x: number, y: number): number {
@@ -761,50 +811,4 @@ export class GlyphProperties extends EezObject {
     }
 }
 
-export const glyphMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return GlyphProperties;
-    },
-    className: "Glyph",
-    label: (glyph: GlyphProperties) => {
-        return glyph.encoding != undefined ? formatEncoding(glyph.encoding) : "";
-    },
-    properties: () => [
-        {
-            name: "encoding",
-            type: "number"
-        },
-        {
-            name: "x",
-            type: "number"
-        },
-        {
-            name: "y",
-            type: "number"
-        },
-        {
-            name: "width",
-            type: "number"
-        },
-        {
-            name: "height",
-            type: "number"
-        },
-        {
-            name: "dx",
-            type: "number"
-        },
-        {
-            name: "source",
-            type: "object",
-            typeMetaData: glyphSourceMetaData,
-            onSelect: selectGlyph
-        },
-        {
-            name: "glyphBitmap",
-            type: "any",
-            hideInPropertyGrid: true,
-            skipSearch: true
-        }
-    ]
-});
+registerMetaData(Glyph.metaData);

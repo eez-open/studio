@@ -1,13 +1,13 @@
 import { getProperty } from "project-editor/core/store";
 
-import { ProjectProperties } from "project-editor/project/project";
+import { Project } from "project-editor/project/project";
 
-import { ShortcutsProperties } from "project-editor/project/features/shortcuts/shortcuts";
+import { Shortcuts } from "project-editor/project/features/shortcuts/shortcuts";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function metrics(project: ProjectProperties): { [key: string]: string | number } {
-    let shortcuts = getProperty(project, "shortcuts") as ShortcutsProperties;
+export function metrics(project: Project): { [key: string]: string | number } {
+    let shortcuts = getProperty(project, "shortcuts") as Shortcuts;
 
     return {
         Shortcuts: shortcuts.shortcuts._array.length

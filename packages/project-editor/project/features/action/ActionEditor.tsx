@@ -6,7 +6,7 @@ import { CodeEditor } from "eez-studio-ui/code-editor";
 
 import { EditorComponent } from "project-editor/core/metaData";
 import { UndoManager, updateObject } from "project-editor/core/store";
-import { ActionProperties } from "project-editor/project/features/action/action";
+import { Action } from "project-editor/project/features/action/action";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -20,7 +20,7 @@ export class GraphicalImplementationEditor extends React.Component<{}, {}> {
 ////////////////////////////////////////////////////////////////////////////////
 
 interface NativeImplementationEditorProps {
-    action: ActionProperties;
+    action: Action;
 }
 
 @observer
@@ -74,7 +74,7 @@ export class NativeImplementationEditor extends React.Component<
 @observer
 export class ActionEditor extends EditorComponent {
     render() {
-        let action = this.props.editor.object as ActionProperties;
+        let action = this.props.editor.object as Action;
 
         if (action.implementationType == "graphical") {
             return <GraphicalImplementationEditor />;

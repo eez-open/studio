@@ -24,13 +24,13 @@ import {
 
 import { Loading } from "project-editor/components/Loading";
 
-import { FontProperties, fontMetaData } from "project-editor/project/features/gui/fontMetaData";
+import { Font } from "project-editor/project/features/gui/fontMetaData";
 import {
-    GlyphProperties,
+    Glyph,
     selectGlyph,
     EditorImageHitTestResult
 } from "project-editor/project/features/gui/glyph";
-import { glyphMetaData, setPixel } from "project-editor/project/features/gui/glyph";
+import { setPixel } from "project-editor/project/features/gui/glyph";
 import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";
 import { FontProperties as FontValue } from "font-services/interfaces";
@@ -48,8 +48,8 @@ export class GlyphSelectFieldType extends React.Component<
     IFieldComponentProps,
     {
         isLoading: boolean;
-        font?: FontProperties;
-        selectedGlyph?: GlyphProperties;
+        font?: Font;
+        selectedGlyph?: Glyph;
     }
 > {
     fontFilePath: string;
@@ -138,11 +138,7 @@ export class GlyphSelectFieldType extends React.Component<
                     createGlyphs: true
                 })
                     .then((fontValue: FontValue) => {
-                        const font: FontProperties = loadObject(
-                            undefined,
-                            fontValue,
-                            fontMetaData
-                        ) as FontProperties;
+                        const font: Font = loadObject(undefined, fontValue, Font.metaData) as Font;
                         this.onChange(
                             font,
                             font.glyphs._array.find(
@@ -170,7 +166,7 @@ export class GlyphSelectFieldType extends React.Component<
         }
     }
 
-    onChange(font: FontProperties | undefined, glyph: GlyphProperties | undefined) {
+    onChange(font: Font | undefined, glyph: Glyph | undefined) {
         this.setState({
             isLoading: false,
             font: font,
@@ -185,11 +181,11 @@ export class GlyphSelectFieldType extends React.Component<
         };
     }
 
-    onSelectGlyph(glyph: GlyphProperties) {
+    onSelectGlyph(glyph: Glyph) {
         this.onChange(this.state.font, glyph);
     }
 
-    onDoubleClickGlyph(glyph: GlyphProperties) {}
+    onDoubleClickGlyph(glyph: Glyph) {}
 
     render() {
         if (this.state.font) {
@@ -219,9 +215,9 @@ export class GlyphSelectFieldType extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class Glyph extends React.Component<
+class GlyphComponent extends React.Component<
     {
-        glyph: GlyphProperties;
+        glyph: Glyph;
         isSelected: boolean;
         onSelect: () => void;
         onDoubleClick: () => void;
@@ -243,7 +239,7 @@ class Glyph extends React.Component<
             >
                 <div>
                     <img src={this.props.glyph.image} />
-                    <div>{glyphMetaData.label(this.props.glyph)}</div>
+                    <div>{Glyph.metaData.label(this.props.glyph)}</div>
                 </div>
             </li>
         );
@@ -324,10 +320,10 @@ const GlyphsContentDiv = styled.div`
 @observer
 class Glyphs extends React.Component<
     {
-        glyphs: GlyphProperties[];
-        selectedGlyph: GlyphProperties | undefined;
-        onSelectGlyph: (glyph: GlyphProperties) => void;
-        onDoubleClickGlyph: (glyph: GlyphProperties) => void;
+        glyphs: Glyph[];
+        selectedGlyph: Glyph | undefined;
+        onSelectGlyph: (glyph: Glyph) => void;
+        onDoubleClickGlyph: (glyph: Glyph) => void;
         onRebuildGlyphs?: () => void;
         onAddGlyph?: () => void;
         onDeleteGlyph?: () => void;
@@ -352,7 +348,7 @@ class Glyphs extends React.Component<
         searchValue = searchValue.toLowerCase();
         let glyph = this.props.glyphs.find(
             glyph =>
-                glyphMetaData
+                Glyph.metaData
                     .label(glyph)
                     .toLowerCase()
                     .indexOf(searchValue) != -1
@@ -380,7 +376,7 @@ class Glyphs extends React.Component<
 
     render() {
         const glyphs: JSX.Element[] = this.props.glyphs.map(glyph => (
-            <Glyph
+            <GlyphComponent
                 key={glyph._id}
                 glyph={glyph}
                 isSelected={glyph == this.props.selectedGlyph}
@@ -454,7 +450,7 @@ class Glyphs extends React.Component<
 @observer
 class GlyphEditor extends React.Component<
     {
-        glyph: GlyphProperties | undefined;
+        glyph: Glyph | undefined;
     },
     {}
 > {
@@ -601,20 +597,20 @@ class GlyphEditor extends React.Component<
 @observer
 export class FontEditor extends EditorComponent {
     get glyphs() {
-        let font = this.props.editor.object as FontProperties;
+        let font = this.props.editor.object as Font;
         return font.glyphs;
     }
 
     @observable
-    selectedGlyph: GlyphProperties | undefined;
+    selectedGlyph: Glyph | undefined;
 
     @action.bound
-    onSelectGlyph(glyph: GlyphProperties) {
+    onSelectGlyph(glyph: Glyph) {
         this.selectedGlyph = glyph;
     }
 
     @bind
-    onDoubleClickGlyph(glyph: GlyphProperties) {
+    onDoubleClickGlyph(glyph: Glyph) {
         selectGlyph(glyph)
             .then(propertyValues => {
                 updateObject(glyph, propertyValues);
@@ -633,14 +629,14 @@ export class FontEditor extends EditorComponent {
     @action.bound
     async onRebuildGlyphs() {
         try {
-            const font = this.props.editor.object as FontProperties;
+            const font = this.props.editor.object as Font;
 
             const newFont = await rebuildFont({
                 font: objectToJS(font),
                 projectFilePath: ProjectStore.filePath!
             });
 
-            replaceObject(font, loadObject(undefined, newFont, fontMetaData));
+            replaceObject(font, loadObject(undefined, newFont, Font.metaData));
 
             notification.info(`Font rebuilded.`);
         } catch (err) {
@@ -650,19 +646,19 @@ export class FontEditor extends EditorComponent {
 
     @action.bound
     onAddGlyph() {
-        let font = this.props.editor.object as FontProperties;
+        let font = this.props.editor.object as Font;
         let newGlyph = cloneObject(
             undefined,
             font.glyphs._array[font.glyphs._array.length - 1]
-        ) as GlyphProperties;
+        ) as Glyph;
         newGlyph.encoding = newGlyph.encoding + 1;
-        newGlyph = addObject(font.glyphs, newGlyph) as GlyphProperties;
+        newGlyph = addObject(font.glyphs, newGlyph) as Glyph;
         this.selectedGlyph = newGlyph;
     }
 
     @action.bound
     onDeleteGlyph() {
-        let font = this.props.editor.object as FontProperties;
+        let font = this.props.editor.object as Font;
         let selectedGlyph = this.selectedGlyph;
         if (selectedGlyph && font.glyphs._array[font.glyphs._array.length - 1] == selectedGlyph) {
             deleteObject(selectedGlyph);
@@ -670,7 +666,7 @@ export class FontEditor extends EditorComponent {
     }
 
     render() {
-        let font = this.props.editor.object as FontProperties;
+        let font = this.props.editor.object as Font;
 
         let onDeleteGlyph: (() => void) | undefined;
         if (

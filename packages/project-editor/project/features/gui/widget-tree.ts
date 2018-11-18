@@ -1,5 +1,5 @@
 import { isObjectInstanceOf, isArray, asArray, getProperty } from "project-editor/core/store";
-import { EezObject } from "project-editor/core/metaData";
+import { EezObject, PropertyType } from "project-editor/core/metaData";
 import {
     DisplayItem,
     DisplayItemChildrenObject,
@@ -12,12 +12,11 @@ import { TreeNode } from "project-editor/components/CanvasEditorTreeNode";
 import * as data from "project-editor/project/features/data/data";
 
 import {
-    PageResolutionProperties,
-    pageResolutionMetaData,
+    PageResolution,
     IWidgetContainerDisplayItem
 } from "project-editor/project/features/gui/page";
 import {
-    WidgetProperties,
+    Widget,
     ListWidgetProperties,
     GridWidgetProperties,
     SelectWidgetProperties
@@ -39,7 +38,8 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
                 .properties(this.object)
                 .filter(
                     propertyMetaData =>
-                        (propertyMetaData.type === "object" || propertyMetaData.type === "array") &&
+                        (propertyMetaData.type === PropertyType.Object ||
+                            propertyMetaData.type === PropertyType.Array) &&
                         !(
                             propertyMetaData.enumerable !== undefined &&
                             !propertyMetaData.enumerable
@@ -47,7 +47,7 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
                         getProperty(this.object, propertyMetaData.name)
                 );
 
-            if (properties.length == 1 && properties[0].type === "array") {
+            if (properties.length == 1 && properties[0].type === PropertyType.Array) {
                 return asArray(getProperty(this.object, properties[0].name)).map(
                     child => new DummyWidgetContainerDisplayItem(child)
                 );
@@ -87,8 +87,8 @@ function drawPageFrameForTreeNode(
     scale: number,
     callback: () => void
 ) {
-    if (isObjectInstanceOf(node.item.object, pageResolutionMetaData)) {
-        let pageResolution = node.item.object as PageResolutionProperties;
+    if (isObjectInstanceOf(node.item.object, PageResolution.metaData)) {
+        let pageResolution = node.item.object as PageResolution;
         drawPageFrame(ctx, pageResolution, scale, pageResolution.style || "default");
     }
 }
@@ -104,9 +104,9 @@ export function createWidgetTree(
             x: number,
             y: number
         ) {
-            let object = item.object as WidgetProperties | PageResolutionProperties;
+            let object = item.object as Widget | PageResolution;
 
-            if (object instanceof WidgetProperties || object instanceof PageResolutionProperties) {
+            if (object instanceof Widget || object instanceof PageResolution) {
                 x += object.x || 0;
                 y += object.y || 0;
             }
@@ -122,14 +122,14 @@ export function createWidgetTree(
                 parent: <TreeNode>parentNode,
                 children: [],
                 rect: rect,
-                selected: object instanceof WidgetProperties && item.selected,
+                selected: object instanceof Widget && item.selected,
                 resizable: true,
-                movable: object instanceof WidgetProperties,
-                selectable: object instanceof WidgetProperties,
+                movable: object instanceof Widget,
+                selectable: object instanceof Widget,
                 item: item,
-                draw: object instanceof WidgetProperties ? undefined : drawPageFrameForTreeNode,
+                draw: object instanceof Widget ? undefined : drawPageFrameForTreeNode,
                 image:
-                    draw && object instanceof WidgetProperties
+                    draw && object instanceof Widget
                         ? drawWidget(object, rect)
                         : undefined
             };
@@ -138,7 +138,7 @@ export function createWidgetTree(
                 parentNode.children.push(treeNode);
             }
 
-            if (object instanceof PageResolutionProperties) {
+            if (object instanceof PageResolution) {
                 let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
                 widgetsItemChildren.forEach(child => {

@@ -34,14 +34,14 @@ import { EezObject } from "project-editor/core/metaData";
 import * as data from "project-editor/project/features/data/data";
 
 import { findStyleOrGetDefault } from "project-editor/project/features/gui/gui";
-import { PageResolutionProperties } from "project-editor/project/features/gui/page";
+import { PageResolution } from "project-editor/project/features/gui/page";
 import {
-    WidgetProperties,
+    Widget,
     ContainerWidgetProperties,
     ListWidgetProperties,
     GridWidgetProperties,
     SelectWidgetProperties,
-    SelectWidgetEditorProperties,
+    SelectWidgetEditor,
     getWidgetType
 } from "project-editor/project/features/gui/widget";
 import { createWidgetTree } from "project-editor/project/features/gui/widget-tree";
@@ -52,7 +52,7 @@ import { drawTree } from "project-editor/components/CanvasEditorUtil";
 ////////////////////////////////////////////////////////////////////////////////
 
 function getObjectComponentClass(object: EezObject): typeof BaseObjectComponent {
-    if (object instanceof SelectWidgetEditorProperties) {
+    if (object instanceof SelectWidgetEditor) {
         return SelectWidgetEditorObjectComponent;
     } else if (object instanceof ContainerWidgetProperties) {
         return ContainerWidgetObjectComponent;
@@ -153,7 +153,7 @@ abstract class BaseObjectComponent extends React.Component<{ object: EezObject }
 @observer
 class WidgetObjectComponent extends BaseObjectComponent {
     get widgetProperties() {
-        return this.props.object as WidgetProperties;
+        return this.props.object as Widget;
     }
 
     get widgetType() {
@@ -197,7 +197,7 @@ class WidgetObjectComponent extends BaseObjectComponent {
                 listWidget instanceof ListWidgetProperties ||
                 listWidget instanceof GridWidgetProperties
             ) &&
-            listWidget instanceof WidgetProperties
+            listWidget instanceof Widget
         ) {
             listWidget = listWidget._parent;
         }
@@ -507,7 +507,7 @@ class SelectWidgetObjectComponent extends WidgetObjectComponent {
 @observer
 class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
     get selectWidgetEditor() {
-        return this.props.object as SelectWidgetEditorProperties;
+        return this.props.object as SelectWidgetEditor;
     }
 
     get selectWidget() {
@@ -536,25 +536,25 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
     }
 
     getChildOffsetX(child: EezObject) {
-        return SelectWidgetEditorProperties.EDITOR_PADDING;
+        return SelectWidgetEditor.EDITOR_PADDING;
     }
 
     renderSelectChildren() {
         this.children = new Array(this.selectWidget.widgets._array.length);
 
         return this.selectWidget.widgets._array.map((child, i) => {
-            let x = this.rect.left + SelectWidgetEditorProperties.EDITOR_PADDING;
+            let x = this.rect.left + SelectWidgetEditor.EDITOR_PADDING;
             let y =
                 this.rect.top +
-                SelectWidgetEditorProperties.EDITOR_PADDING +
-                i * (this.selectWidget.height + SelectWidgetEditorProperties.EDITOR_PADDING);
+                SelectWidgetEditor.EDITOR_PADDING +
+                i * (this.selectWidget.height + SelectWidgetEditor.EDITOR_PADDING);
 
             let xLabel =
                 this.selectWidgetEditor.relativePosition === "left"
                     ? this.boundingRect.left +
                       this.boundingRect.width +
-                      SelectWidgetEditorProperties.EDITOR_PADDING
-                    : this.boundingRect.left - SelectWidgetEditorProperties.EDITOR_PADDING;
+                      SelectWidgetEditor.EDITOR_PADDING
+                    : this.boundingRect.left - SelectWidgetEditor.EDITOR_PADDING;
             let yLabel = y + this.selectWidget.height / 2;
             let textAnchor = this.selectWidgetEditor.relativePosition === "left" ? "begin" : "end";
 
@@ -693,12 +693,12 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function findSelectWidgetEditors(rootObject: WidgetProperties | PageResolutionProperties) {
-    const result: SelectWidgetEditorProperties[] = [];
+function findSelectWidgetEditors(rootObject: Widget | PageResolution) {
+    const result: SelectWidgetEditor[] = [];
 
-    function doFind(object: WidgetProperties | PageResolutionProperties) {
+    function doFind(object: Widget | PageResolution) {
         if (
-            object instanceof PageResolutionProperties ||
+            object instanceof PageResolution ||
             object instanceof ContainerWidgetProperties
         ) {
             object.widgets._array.forEach(doFind);
@@ -725,7 +725,7 @@ function findSelectWidgetEditors(rootObject: WidgetProperties | PageResolutionPr
 @observer
 class RootObjectComponent extends BaseObjectComponent {
     get rootObject() {
-        return this.props.object as PageResolutionProperties;
+        return this.props.object as PageResolution;
     }
 
     get childrenObjects() {
@@ -736,8 +736,8 @@ class RootObjectComponent extends BaseObjectComponent {
     @computed
     get rect() {
         return {
-            left: this.rootObject instanceof PageResolutionProperties ? this.rootObject.x : 0,
-            top: this.rootObject instanceof PageResolutionProperties ? this.rootObject.y : 0,
+            left: this.rootObject instanceof PageResolution ? this.rootObject.x : 0,
+            top: this.rootObject instanceof PageResolution ? this.rootObject.y : 0,
             width: this.rootObject.width,
             height: this.rootObject.height
         };
@@ -805,14 +805,14 @@ const ExperimentalCanvas = styled(Canvas)`
 `;
 
 interface ExperimentalWidgetContainerEditorProps {
-    container: PageResolutionProperties;
+    container: PageResolution;
 }
 
 @observer
 export class ExperimentalWidgetContainerEditor
     extends React.Component<ExperimentalWidgetContainerEditorProps>
     implements IDocument {
-    container: PageResolutionProperties;
+    container: PageResolution;
     @observable
     _selectedObjects: BaseObjectComponent[] = [];
     rootObjectComponent: RootObjectComponent;
@@ -840,7 +840,7 @@ export class ExperimentalWidgetContainerEditor
     }
 
     @action
-    loadContainer(container: PageResolutionProperties) {
+    loadContainer(container: PageResolution) {
         this.container = container;
         this._selectedObjects = [];
     }

@@ -1,19 +1,15 @@
-import {
-    OutputSectionsStore,
-    getProperty,
-    ProjectStore
-} from "project-editor/core/store";
+import { OutputSectionsStore, getProperty, ProjectStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 import { BuildResult } from "project-editor/core/extensions";
 
 import * as projectBuild from "project-editor/project/build";
-import { ProjectProperties } from "project-editor/project/project";
+import { Project } from "project-editor/project/project";
 
-import { DataItemProperties } from "project-editor/project/features/data/data";
-import { ActionProperties } from "project-editor/project/features/action/action";
+import { DataItem } from "project-editor/project/features/data/data";
+import { Action } from "project-editor/project/features/action/action";
 
 import {
-    GuiProperties,
+    Gui,
     findStyle,
     findFont,
     findBitmap
@@ -21,12 +17,12 @@ import {
 import { getData as getFontData } from "project-editor/project/features/gui/font";
 import {
     getData as getBitmapData,
-    BitmapProperties
+    Bitmap
 } from "project-editor/project/features/gui/bitmap";
-import { StyleProperties } from "project-editor/project/features/gui/style";
+import { Style } from "project-editor/project/features/gui/style";
 import * as Widget from "project-editor/project/features/gui/widget";
-import { PageProperties, PageResolutionProperties } from "project-editor/project/features/gui/page";
-import { FontProperties } from "./fontMetaData";
+import { Page, PageResolution } from "project-editor/project/features/gui/page";
+import { Font } from "./fontMetaData";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -438,7 +434,7 @@ function buildGuiStylesEnum(assets: Assets) {
 }
 
 function buildGuiStylesData(assets: Assets) {
-    function buildStyle(style: StyleProperties) {
+    function buildStyle(style: Style) {
         let result = new Struct();
 
         // flags
@@ -551,12 +547,12 @@ function buildGuiStylesData(assets: Assets) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildWidget(object: Widget.WidgetProperties | PageResolutionProperties, assets: Assets) {
+function buildWidget(object: Widget.Widget | PageResolution, assets: Assets) {
     let result = new Struct();
 
     // type
     let type: number;
-    if (object instanceof PageResolutionProperties) {
+    if (object instanceof PageResolution) {
         type = WIDGET_TYPE_CONTAINER;
     } else {
         let widget = object;
@@ -606,14 +602,14 @@ function buildWidget(object: Widget.WidgetProperties | PageResolutionProperties,
 
     // data
     let data = 0;
-    if (object instanceof Widget.WidgetProperties && object.data) {
+    if (object instanceof Widget.Widget && object.data) {
         data = assets.getDataItemIndex(object, "data");
     }
     result.addField(new UInt16(data));
 
     // action
     let action: number = 0;
-    if (object instanceof Widget.WidgetProperties) {
+    if (object instanceof Widget.Widget) {
         if (object.action) {
             action = assets.getActionIndex(object, "action");
         }
@@ -622,14 +618,14 @@ function buildWidget(object: Widget.WidgetProperties | PageResolutionProperties,
 
     // x
     let x: number = 0;
-    if (object instanceof Widget.WidgetProperties || object instanceof PageResolutionProperties) {
+    if (object instanceof Widget.Widget || object instanceof PageResolution) {
         x = object.x || 0;
     }
     result.addField(new Int16(x));
 
     // y
     let y: number = 0;
-    if (object instanceof Widget.WidgetProperties || object instanceof PageResolutionProperties) {
+    if (object instanceof Widget.Widget || object instanceof PageResolution) {
         y = object.y || 0;
     }
     result.addField(new Int16(y));
@@ -651,7 +647,7 @@ function buildWidget(object: Widget.WidgetProperties | PageResolutionProperties,
 
     // style
     let activeStyle: number;
-    if (object instanceof Widget.WidgetProperties && object.activeStyle) {
+    if (object instanceof Widget.Widget && object.activeStyle) {
         activeStyle = assets.getStyleIndex(object.activeStyle);
     } else {
         activeStyle = 0;
@@ -664,8 +660,8 @@ function buildWidget(object: Widget.WidgetProperties | PageResolutionProperties,
     if (type == WIDGET_TYPE_CONTAINER) {
         specific = new Struct();
 
-        let widgets: Widget.WidgetProperties[] | undefined;
-        if (object instanceof PageResolutionProperties) {
+        let widgets: Widget.Widget[] | undefined;
+        if (object instanceof PageResolution) {
             widgets = object.widgets._array;
         } else {
             widgets = (object as Widget.ContainerWidgetProperties).widgets._array;
@@ -681,9 +677,9 @@ function buildWidget(object: Widget.WidgetProperties | PageResolutionProperties,
 
         specific.addField(childWidgets);
 
-        if (object instanceof PageResolutionProperties) {
+        if (object instanceof PageResolution) {
             specific.addField(
-                new UInt8((object._parent as PageProperties).closePageIfTouchedOutside ? 1 : 0)
+                new UInt8((object._parent as Page).closePageIfTouchedOutside ? 1 : 0)
             );
         }
     } else if (type == WIDGET_TYPE_SELECT) {
@@ -1102,7 +1098,7 @@ function buildGuiPagesEnum(assets: Assets) {
 }
 
 function buildGuiDocumentData(assets: Assets) {
-    function buildPage(page: PageResolutionProperties) {
+    function buildPage(page: PageResolution) {
         return buildWidget(page, assets);
     }
 
@@ -1194,45 +1190,45 @@ function buildGuiAssetsDef(data: Buffer) {
 ////////////////////////////////////////////////////////////////////////////////
 
 class Assets {
-    dataItems: DataItemProperties[];
-    actions: ActionProperties[];
+    dataItems: DataItem[];
+    actions: Action[];
 
-    pages: PageProperties[];
-    styles: StyleProperties[] = [];
-    fonts: FontProperties[] = [];
-    bitmaps: BitmapProperties[] = [];
+    pages: Page[];
+    styles: Style[] = [];
+    fonts: Font[] = [];
+    bitmaps: Bitmap[] = [];
 
-    constructor(public project: ProjectProperties) {
-        this.dataItems = (project.data._array as DataItemProperties[]).filter(
+    constructor(public project: Project) {
+        this.dataItems = (project.data._array as DataItem[]).filter(
             dataItem =>
                 !ProjectStore.selectedBuildConfiguration ||
                 !dataItem.usedIn ||
                 dataItem.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
         );
 
-        this.actions = (project.actions._array as ActionProperties[]).filter(
+        this.actions = (project.actions._array as Action[]).filter(
             action =>
                 !ProjectStore.selectedBuildConfiguration ||
                 !action.usedIn ||
                 action.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
         );
 
-        this.pages = (getProperty(project, "gui") as GuiProperties).pages._array.filter(
+        this.pages = (getProperty(project, "gui") as Gui).pages._array.filter(
             page =>
                 !ProjectStore.selectedBuildConfiguration ||
                 !page.usedIn ||
                 page.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
         );
 
-        this.styles = (getProperty(project, "gui") as GuiProperties).styles._array.filter(
+        this.styles = (getProperty(project, "gui") as Gui).styles._array.filter(
             style => style.alwaysBuild
         );
 
-        this.fonts = (getProperty(project, "gui") as GuiProperties).fonts._array.filter(
+        this.fonts = (getProperty(project, "gui") as Gui).fonts._array.filter(
             bitmap => bitmap.alwaysBuild
         );
 
-        this.bitmaps = (getProperty(project, "gui") as GuiProperties).bitmaps._array.filter(
+        this.bitmaps = (getProperty(project, "gui") as Gui).bitmaps._array.filter(
             font => font.alwaysBuild
         );
 
@@ -1283,16 +1279,16 @@ class Assets {
         return this.pages.length + this.styles.length + this.fonts.length + this.bitmaps.length;
     }
 
-    add(object: StyleProperties | FontProperties | BitmapProperties) {
-        if (object instanceof StyleProperties && this.styles.indexOf(object) === -1) {
+    add(object: Style | Font | Bitmap) {
+        if (object instanceof Style && this.styles.indexOf(object) === -1) {
             this.styles.push(object);
         }
 
-        if (object instanceof FontProperties && this.fonts.indexOf(object) === -1) {
+        if (object instanceof Font && this.fonts.indexOf(object) === -1) {
             this.fonts.push(object);
         }
 
-        if (object instanceof BitmapProperties && this.bitmaps.indexOf(object) === -1) {
+        if (object instanceof Bitmap && this.bitmaps.indexOf(object) === -1) {
             this.bitmaps.push(object);
         }
     }
@@ -1353,7 +1349,7 @@ class Assets {
     }
 
     reportUnusedAssets() {
-        let gui = getProperty(this.project, "gui") as GuiProperties;
+        let gui = getProperty(this.project, "gui") as Gui;
 
         gui.pages._array.forEach(page => {
             if (this.pages.indexOf(page) === -1) {
@@ -1404,7 +1400,7 @@ class Assets {
 ////////////////////////////////////////////////////////////////////////////////
 
 export async function build(
-    project: ProjectProperties,
+    project: Project,
     sectionNames: string[] | undefined
 ): Promise<BuildResult> {
     const result: any = {};

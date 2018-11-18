@@ -15,10 +15,10 @@ import {
     getProperty,
     check
 } from "project-editor/core/store";
-import { EezObject, PropertyMetaData } from "project-editor/core/metaData";
+import { EezObject, PropertyMetaData, PropertyType } from "project-editor/core/metaData";
 import { Message, Section, Type } from "project-editor/core/output";
 
-import { BuildFileProperties } from "project-editor/project/project";
+import { BuildFile } from "project-editor/project/project";
 import { extensionDefinitionBuild } from "project-editor/project/features/extension-definitions/build";
 
 const fs = EEZStudio.electron.remote.require("fs");
@@ -102,7 +102,7 @@ class BuildException {
 }
 
 async function getBuildResults(sectionNames: string[] | undefined) {
-    const project = ProjectStore.projectProperties;
+    const project = ProjectStore.project;
 
     let buildResults: BuildResult[] = [];
 
@@ -130,7 +130,7 @@ async function getBuildResults(sectionNames: string[] | undefined) {
 const sectionNamesRegexp = /\/\/\$\{eez-studio (.*)\}/g;
 
 function getSectionNames(): string[] {
-    const project = ProjectStore.projectProperties;
+    const project = ProjectStore.project;
 
     const sectionNames: string[] = [];
 
@@ -145,7 +145,7 @@ function getSectionNames(): string[] {
 }
 
 async function doBuild(destinationFolderPath: string, buildResults: BuildResult[]) {
-    const project = ProjectStore.projectProperties;
+    const project = ProjectStore.project;
 
     if (project.settings.build.files._array.length > 0) {
         let parts: any = {};
@@ -153,21 +153,13 @@ async function doBuild(destinationFolderPath: string, buildResults: BuildResult[
             parts = Object.assign(parts, buildResults[i]);
         }
 
-        await project.settings.build.files._array.forEach(
-            async (buildFile: BuildFileProperties) => {
-                let buildFileContent = buildFile.template.replace(
-                    sectionNamesRegexp,
-                    (_1, part) => {
-                        return parts[part];
-                    }
-                );
+        await project.settings.build.files._array.forEach(async (buildFile: BuildFile) => {
+            let buildFileContent = buildFile.template.replace(sectionNamesRegexp, (_1, part) => {
+                return parts[part];
+            });
 
-                await writeTextFile(
-                    destinationFolderPath + "/" + buildFile.fileName,
-                    buildFileContent
-                );
-            }
-        );
+            await writeTextFile(destinationFolderPath + "/" + buildFile.fileName, buildFileContent);
+        });
     }
 }
 
@@ -181,7 +173,7 @@ export async function build(onlyCheck: boolean) {
         let destinationFolderPath;
         if (!onlyCheck) {
             // get and validate destination folder
-            const project = ProjectStore.projectProperties;
+            const project = ProjectStore.project;
             if (!project.settings.build.destinationFolder) {
                 throw new BuildException(
                     "Destination folder is not specified.",
@@ -230,7 +222,8 @@ var checkTransformer: (object: EezObject) => Message[] = createTransformer(
             .properties(object)
             .filter(
                 propertyMetaData =>
-                    (propertyMetaData.type === "array" || propertyMetaData.type === "object") &&
+                    (propertyMetaData.type === PropertyType.Array ||
+                        propertyMetaData.type === PropertyType.Object) &&
                     getProperty(object, propertyMetaData.name)
             );
 
@@ -262,6 +255,6 @@ var checkTransformer: (object: EezObject) => Message[] = createTransformer(
 export function backgroundCheck() {
     OutputSectionsStore.setMessages(
         Section.CHECKS,
-        checkTransformer(ProjectStore.projectProperties)
+        checkTransformer(ProjectStore.project)
     );
 }

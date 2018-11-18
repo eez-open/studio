@@ -59,23 +59,24 @@ export interface EnumItem {
     id: string | number;
 }
 
-export type PropertyType =
-    | "string"
-    | "multiline-text"
-    | "json"
-    | "number"
-    | "number[]"
-    | "array"
-    | "object"
-    | "enum"
-    | "image"
-    | "color"
-    | "project-relative-folder"
-    | "object-reference"
-    | "configuration-references"
-    | "boolean"
-    | "guid"
-    | "any";
+export enum PropertyType {
+    String,
+    MultilineText,
+    JSON,
+    Number,
+    NumberArray,
+    Array,
+    Object,
+    Enum,
+    Image,
+    Color,
+    ProjectRelativeFolder,
+    ObjectReference,
+    ConfigurationReference,
+    Boolean,
+    GUID,
+    Any
+}
 
 export interface PropertyMetaData {
     name: string;
@@ -164,27 +165,23 @@ export class EezObject {
     _key?: string;
     _parent?: EezObject;
     _lastChildId?: number;
-    _metaData: MetaData;
     _modificationTime?: number;
     _propertyMetaData?: PropertyMetaData;
+
+    get _metaData(): MetaData {
+        return (this.constructor as any).metaData;
+    }
 }
 
 export class EezArrayObject<T> extends EezObject {
     @observable _array: T[] = [];
+
+    get _metaData(): MetaData {
+        return this._propertyMetaData!.typeMetaData!;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const valueObjectMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return undefined;
-    },
-    className: "",
-    label: (object: EezValueObject) => {
-        return object.value && object.value.toString();
-    },
-    properties: () => []
-});
 
 export class EezValueObject extends EezObject {
     constructor(object: EezObject, public propertyMetaData: PropertyMetaData, public value: any) {
@@ -193,6 +190,18 @@ export class EezValueObject extends EezObject {
         this._id = object._id + "." + propertyMetaData.name;
         this._key = propertyMetaData.name;
         this._parent = object;
-        this._metaData = valueObjectMetaData;
     }
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return undefined;
+        },
+        className: "",
+        label: (object: EezValueObject) => {
+            return object.value && object.value.toString();
+        },
+        properties: () => []
+    };
 }
+
+registerMetaData(EezValueObject.metaData);

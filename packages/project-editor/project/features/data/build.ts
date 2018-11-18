@@ -1,14 +1,14 @@
 import { BuildResult } from "project-editor/core/extensions";
 
 import { ProjectStore } from "project-editor/core/store";
-import { ProjectProperties } from "project-editor/project/project";
+import { Project } from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
 
-import { DataItemProperties } from "project-editor/project/features/data/data";
+import { DataItem } from "project-editor/project/features/data/data";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildDataEnum(projectDataItems: DataItemProperties[]) {
+function buildDataEnum(projectDataItems: DataItem[]) {
     let dataItems = projectDataItems.map(
         (dataItem, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
@@ -23,7 +23,7 @@ function buildDataEnum(projectDataItems: DataItemProperties[]) {
     return `enum DataEnum {\n${dataItems.join(",\n")}\n};`;
 }
 
-function buildDataFuncsDecl(projectDataItems: DataItemProperties[]) {
+function buildDataFuncsDecl(projectDataItems: DataItem[]) {
     let dataItems = projectDataItems.map(dataItem => {
         return `void ${projectBuild.getName(
             "data_",
@@ -39,7 +39,7 @@ function buildDataArrayDecl() {
     return "typedef void (*DataOperationsFunction)(DataOperationEnum operation, Cursor &cursor, Value &value);\n\nextern DataOperationsFunction g_dataOperationsFunctions[];";
 }
 
-function buildDataArrayDef(projectDataItems: DataItemProperties[]) {
+function buildDataArrayDef(projectDataItems: DataItem[]) {
     let dataItems = projectDataItems.map(
         dataItem =>
             `${projectBuild.TAB}${projectBuild.getName(
@@ -55,7 +55,7 @@ function buildDataArrayDef(projectDataItems: DataItemProperties[]) {
 }
 
 export function build(
-    project: ProjectProperties,
+    project: Project,
     sectionNames: string[] | undefined
 ): Promise<BuildResult> {
     return new Promise((resolve, reject) => {

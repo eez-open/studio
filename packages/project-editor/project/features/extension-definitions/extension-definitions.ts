@@ -5,7 +5,12 @@ import { validators } from "eez-studio-shared/model/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { ProjectStore, getProperty } from "project-editor/core/store";
-import { registerMetaData, EezObject, EezArrayObject } from "project-editor/core/metaData";
+import {
+    registerMetaData,
+    EezObject,
+    EezArrayObject,
+    PropertyType
+} from "project-editor/core/metaData";
 import * as output from "project-editor/core/output";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
@@ -14,7 +19,7 @@ import { metrics } from "project-editor/project/features/extension-definitions/m
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ExtensionDefinitionProperties extends EezObject {
+export class ExtensionDefinition extends EezObject {
     @observable name: string;
     @observable description: string;
     @observable doNotBuild: boolean;
@@ -38,6 +43,154 @@ export class ExtensionDefinitionProperties extends EezObject {
 
     @observable sdlFriendlyName: string;
 
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return ExtensionDefinition;
+        },
+        className: "ExtensionDefinition",
+        label: (extensionDefinition: ExtensionDefinition) => {
+            return extensionDefinition.name;
+        },
+        listLabel: (extensionDefinition: ExtensionDefinition) => {
+            return (
+                extensionDefinition.name +
+                (extensionDefinition.doNotBuild ? " (build disabled)" : "")
+            );
+        },
+        properties: () => [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            {
+                name: "description",
+                type: PropertyType.MultilineText,
+                defaultValue: undefined
+            },
+            {
+                name: "doNotBuild",
+                type: PropertyType.Boolean,
+                defaultValue: false
+            },
+            {
+                name: "buildConfiguration",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: ["settings", "build", "configurations"],
+                defaultValue: undefined
+            },
+            {
+                name: "buildFolder",
+                type: PropertyType.String,
+                defaultValue: undefined
+            },
+            {
+                name: "extensionName",
+                type: PropertyType.String,
+                defaultValue: undefined
+            },
+            {
+                name: "image",
+                type: PropertyType.Image,
+                defaultValue: undefined
+            },
+            {
+                name: "idn",
+                displayName: "IDN",
+                type: PropertyType.String,
+                defaultValue: undefined
+            },
+            {
+                name: "properties",
+                type: PropertyType.JSON,
+                defaultValue: undefined
+            },
+            {
+                name: "idfName",
+                displayName: "IDF name",
+                type: PropertyType.String,
+                defaultValue: undefined
+            },
+            {
+                name: "idfShortName",
+                displayName: "IDF short name",
+                type: PropertyType.String,
+                defaultValue: undefined
+            },
+            {
+                name: "idfFirmwareVersion",
+                displayName: "IDF firmware version",
+                type: PropertyType.String,
+                defaultValue: undefined
+            },
+            {
+                name: "idfGuid",
+                displayName: "IDF GUID",
+                type: PropertyType.GUID,
+                defaultValue: undefined
+            },
+            {
+                name: "idfRevisionNumber",
+                displayName: "IDF revision number (extension version)",
+                type: PropertyType.String,
+                defaultValue: undefined
+            },
+            {
+                name: "idfDescription",
+                displayName: "IDF description",
+                type: PropertyType.String,
+                defaultValue: undefined
+            },
+            {
+                name: "idfSupportedModels",
+                displayName: "IDF supported models",
+                type: PropertyType.String,
+                defaultValue: undefined
+            },
+            {
+                name: "idfRevisionComments",
+                displayName: "IDF revision comments",
+                type: PropertyType.String,
+                defaultValue: undefined
+            },
+            {
+                name: "idfAuthor",
+                displayName: "IDF author",
+                type: PropertyType.String,
+                defaultValue: undefined
+            },
+            {
+                name: "sdlFriendlyName",
+                displayName: "SDL friendly name",
+                type: PropertyType.String,
+                defaultValue: undefined
+            }
+        ],
+        newItem: (object: EezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Instrument Definition File",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [validators.required, validators.unique({}, parent)]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name
+                });
+            });
+        },
+        navigationComponent: ExtensionDefinitionsNavigation,
+        hideInProperties: true,
+        navigationComponentId: "extension-definitions",
+        icon: "extension"
+    };
+
     check() {
         let messages: output.Message[] = [];
 
@@ -54,9 +207,9 @@ export class ExtensionDefinitionProperties extends EezObject {
         }
 
         let extensionDefinitions = getProperty(
-            ProjectStore.projectProperties,
+            ProjectStore.project,
             "extensionDefinitions"
-        ) as EezArrayObject<ExtensionDefinitionProperties>;
+        ) as EezArrayObject<ExtensionDefinition>;
         if (
             extensionDefinitions._array.find(
                 extensionDefinition =>
@@ -78,11 +231,13 @@ export class ExtensionDefinitionProperties extends EezObject {
     }
 }
 
+registerMetaData(ExtensionDefinition.metaData);
+
 export function findExtensionDefinition(name: string) {
     let extensionDefinitions = getProperty(
-        ProjectStore.projectProperties,
+        ProjectStore.project,
         "extensionDefinitions"
-    ) as EezArrayObject<ExtensionDefinitionProperties>;
+    ) as EezArrayObject<ExtensionDefinition>;
     for (const extensionDefinition of extensionDefinitions._array) {
         if (extensionDefinition.name == name) {
             return extensionDefinition;
@@ -91,153 +246,6 @@ export function findExtensionDefinition(name: string) {
     return undefined;
 }
 
-export const extensionDefinitionMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return ExtensionDefinitionProperties;
-    },
-    className: "ExtensionDefinition",
-    label: (extensionDefinition: ExtensionDefinitionProperties) => {
-        return extensionDefinition.name;
-    },
-    listLabel: (extensionDefinition: ExtensionDefinitionProperties) => {
-        return (
-            extensionDefinition.name + (extensionDefinition.doNotBuild ? " (build disabled)" : "")
-        );
-    },
-    properties: () => [
-        {
-            name: "name",
-            type: "string",
-            unique: true
-        },
-        {
-            name: "description",
-            type: "multiline-text",
-            defaultValue: undefined
-        },
-        {
-            name: "doNotBuild",
-            type: "boolean",
-            defaultValue: false
-        },
-        {
-            name: "buildConfiguration",
-            type: "object-reference",
-            referencedObjectCollectionPath: ["settings", "build", "configurations"],
-            defaultValue: undefined
-        },
-        {
-            name: "buildFolder",
-            type: "string",
-            defaultValue: undefined
-        },
-        {
-            name: "extensionName",
-            type: "string",
-            defaultValue: undefined
-        },
-        {
-            name: "image",
-            type: "image",
-            defaultValue: undefined
-        },
-        {
-            name: "idn",
-            displayName: "IDN",
-            type: "string",
-            defaultValue: undefined
-        },
-        {
-            name: "properties",
-            type: "json",
-            defaultValue: undefined
-        },
-        {
-            name: "idfName",
-            displayName: "IDF name",
-            type: "string",
-            defaultValue: undefined
-        },
-        {
-            name: "idfShortName",
-            displayName: "IDF short name",
-            type: "string",
-            defaultValue: undefined
-        },
-        {
-            name: "idfFirmwareVersion",
-            displayName: "IDF firmware version",
-            type: "string",
-            defaultValue: undefined
-        },
-        {
-            name: "idfGuid",
-            displayName: "IDF GUID",
-            type: "guid",
-            defaultValue: undefined
-        },
-        {
-            name: "idfRevisionNumber",
-            displayName: "IDF revision number (extension version)",
-            type: "string",
-            defaultValue: undefined
-        },
-        {
-            name: "idfDescription",
-            displayName: "IDF description",
-            type: "string",
-            defaultValue: undefined
-        },
-        {
-            name: "idfSupportedModels",
-            displayName: "IDF supported models",
-            type: "string",
-            defaultValue: undefined
-        },
-        {
-            name: "idfRevisionComments",
-            displayName: "IDF revision comments",
-            type: "string",
-            defaultValue: undefined
-        },
-        {
-            name: "idfAuthor",
-            displayName: "IDF author",
-            type: "string",
-            defaultValue: undefined
-        },
-        {
-            name: "sdlFriendlyName",
-            displayName: "SDL friendly name",
-            type: "string",
-            defaultValue: undefined
-        }
-    ],
-    newItem: (object: EezObject) => {
-        return showGenericDialog({
-            dialogDefinition: {
-                title: "New Instrument Definition File",
-                fields: [
-                    {
-                        name: "name",
-                        type: "string",
-                        validators: [validators.required, validators.unique({}, parent)]
-                    }
-                ]
-            },
-            values: {}
-        }).then(result => {
-            return Promise.resolve({
-                name: result.values.name
-            });
-        });
-    },
-    navigationComponent: ExtensionDefinitionsNavigation,
-    hideInProperties: true,
-    navigationComponentId: "extension-definitions",
-    icon: "extension"
-});
-
 ////////////////////////////////////////////////////////////////////////////////
 
 registerFeatureImplementation("extension-definitions", {
@@ -245,8 +253,8 @@ registerFeatureImplementation("extension-definitions", {
         mandatory: false,
         key: "extensionDefinitions",
         displayName: "Extension definitions",
-        type: "array",
-        metaData: extensionDefinitionMetaData,
+        type: PropertyType.Array,
+        metaData: ExtensionDefinition.metaData,
         create: () => {
             return [];
         },

@@ -13,7 +13,8 @@ import {
     PropertyMetaData,
     findMetaData,
     EezValueObject,
-    EezArrayObject
+    EezArrayObject,
+    PropertyType
 } from "project-editor/core/metaData";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { findAllReferences, isReferenced } from "project-editor/core/search";
@@ -21,7 +22,7 @@ import { OutputSections, OutputSection } from "project-editor/core/output";
 import { confirm } from "project-editor/core/util";
 
 import {
-    ProjectProperties,
+    Project,
     save as saveProject,
     load as loadProject,
     getNewProject
@@ -102,7 +103,7 @@ class NavigationStoreClass {
 
     @computed
     get selectedObject(): EezObject | undefined {
-        let object: EezObject = ProjectStore.projectProperties;
+        let object: EezObject = ProjectStore.project;
         if (!object) {
             return undefined;
         }
@@ -271,7 +272,7 @@ export class Editor {
     @computed
     get title() {
         if (isArrayElement(this.object)) {
-            return `${this.object._metaData.className}: ${objectToString(this.object)}`;
+            return `${this.object.constructor.name}: ${objectToString(this.object)}`;
         } else {
             return objectToString(this.object);
         }
@@ -816,7 +817,7 @@ function getUIStateFilePath(projectFilePath: string) {
 
 class ProjectStoreClass {
     @observable
-    properties: ProjectProperties | undefined;
+    private _project: Project | undefined;
     @observable
     filePath: string | undefined;
     @observable
@@ -829,7 +830,7 @@ class ProjectStoreClass {
 
         // check the project in the background
         autorun(() => {
-            if (this.properties) {
+            if (this._project) {
                 backgroundCheck();
             }
         });
@@ -838,7 +839,7 @@ class ProjectStoreClass {
     updateProjectWindowState() {
         let title = "";
 
-        if (this.properties) {
+        if (this._project) {
             if (this.modified) {
                 title += "\u25CF ";
             }
@@ -866,24 +867,24 @@ class ProjectStoreClass {
 
     @computed
     get isOpen() {
-        return this.properties != undefined;
+        return this._project != undefined;
     }
 
     @computed
-    get projectProperties(): ProjectProperties {
-        return this.properties as ProjectProperties;
+    get project(): Project {
+        return this._project as Project;
     }
 
     @computed
     get selectedBuildConfiguration() {
         let configuration =
-            this.projectProperties &&
-            this.projectProperties.settings.build.configurations._array.find(
+            this.project &&
+            this.project.settings.build.configurations._array.find(
                 configuration => configuration.name == UIStateStore.selectedBuildConfiguration
             );
         if (!configuration) {
-            if (this.projectProperties.settings.build.configurations._array.length > 0) {
-                configuration = this.projectProperties.settings.build.configurations._array[0];
+            if (this.project.settings.build.configurations._array.length > 0) {
+                configuration = this.project.settings.build.configurations._array[0];
             }
         }
         return configuration;
@@ -924,18 +925,14 @@ class ProjectStoreClass {
         ipcRenderer.send("setMruFilePath", this.filePath);
     }
 
-    changeProject(
-        projectFilePath: string | undefined,
-        project?: ProjectProperties,
-        uiState?: ProjectProperties
-    ) {
+    changeProject(projectFilePath: string | undefined, project?: Project, uiState?: Project) {
         if (project) {
             project.callExtendObservableForAllOptionalProjectFeatures();
         }
 
         action(() => {
             this.filePath = projectFilePath;
-            this.properties = project;
+            this._project = project;
         })();
 
         UIStateStore.load(uiState || {});
@@ -976,7 +973,7 @@ class ProjectStoreClass {
     }
 
     saveToFile(saveAs: boolean, callback: (() => void) | undefined) {
-        if (this.properties) {
+        if (this._project) {
             if (!this.filePath || saveAs) {
                 EEZStudio.electron.remote.dialog.showSaveDialog(
                     EEZStudio.electron.remote.getCurrentWindow(),
@@ -1040,7 +1037,7 @@ class ProjectStoreClass {
     }
 
     open(sender: any, filePath: any) {
-        if (!this.properties || (!this.filePath && !this.modified)) {
+        if (!this._project || (!this.filePath && !this.modified)) {
             this.openFile(filePath);
         }
     }
@@ -1048,7 +1045,7 @@ class ProjectStoreClass {
     saveModified(callback: any) {
         this.saveUIState();
 
-        if (this.properties && this.modified) {
+        if (this._project && this.modified) {
             confirmSave({
                 saveCallback: () => {
                     this.saveToFile(false, callback);
@@ -1147,7 +1144,6 @@ function loadArrayObject(arrayObject: any, parent: any, propertyMetaData: Proper
     const eezArray = new EezArrayObject<any>();
 
     eezArray._id = getChildId(parent);
-    eezArray._metaData = propertyMetaData.typeMetaData as MetaData;
     eezArray._parent = parent;
     eezArray._key = propertyMetaData.name;
     eezArray._propertyMetaData = propertyMetaData;
@@ -1170,7 +1166,7 @@ export function loadObject(
 
     if (Array.isArray(jsObject)) {
         return loadArrayObject(jsObject, parent, {
-            type: "array",
+            type: PropertyType.Array,
             name: key!,
             typeMetaData: metaData
         });
@@ -1179,7 +1175,6 @@ export function loadObject(
     let object = new (metaData.getClass(jsObject))();
 
     object._id = getChildId(parent as EezObject);
-    object._metaData = metaData;
     object._parent = parent as EezObject;
 
     let properties = metaData.properties(jsObject);
@@ -1188,7 +1183,7 @@ export function loadObject(
 
         let value = jsObject[propertyMetaData.name];
 
-        if (propertyMetaData.type == "object") {
+        if (propertyMetaData.type === PropertyType.Object) {
             let childObject: EezObject | undefined;
 
             if (value) {
@@ -1202,7 +1197,7 @@ export function loadObject(
                 childObject._key = propertyMetaData.name;
                 object[propertyMetaData.name] = childObject;
             }
-        } else if (propertyMetaData.type === "array") {
+        } else if (propertyMetaData.type === PropertyType.Array) {
             if (!value && !propertyMetaData.isOptional) {
                 value = [];
             }
@@ -1344,12 +1339,13 @@ export function getChildren(parent: EezObject): EezObject[] {
             .properties(parent)
             .filter(
                 propertyMetaData =>
-                    (propertyMetaData.type === "object" || propertyMetaData.type === "array") &&
+                    (propertyMetaData.type === PropertyType.Object ||
+                        propertyMetaData.type === PropertyType.Array) &&
                     !(propertyMetaData.enumerable !== undefined && !propertyMetaData.enumerable) &&
                     getProperty(parent, propertyMetaData.name)
             );
 
-        if (properties.length == 1 && properties[0].type === "array") {
+        if (properties.length == 1 && properties[0].type === PropertyType.Array) {
             return asArray(getProperty(parent, properties[0].name));
         }
 
@@ -1426,7 +1422,10 @@ export function getObjectFromObjectId(objectID: string): EezObject | undefined {
 
             for (let i = 0; i < properties.length; i++) {
                 let propertyMetaData = properties[i];
-                if (propertyMetaData.type === "object" || propertyMetaData.type === "array") {
+                if (
+                    propertyMetaData.type === PropertyType.Object ||
+                    propertyMetaData.type === PropertyType.Array
+                ) {
                     let childObject = getChildOfObject(object, propertyMetaData);
                     if (childObject) {
                         if (childObject._id == id) {
@@ -1443,7 +1442,7 @@ export function getObjectFromObjectId(objectID: string): EezObject | undefined {
         return undefined;
     }
 
-    return getDescendantObjectFromId(ProjectStore.projectProperties, objectID as string);
+    return getDescendantObjectFromId(ProjectStore.project, objectID as string);
 }
 
 export function getProperty(object: EezObject, name: string) {
@@ -1534,7 +1533,7 @@ export function isSameInstanceTypeAs(object1: EezObject, object2: EezObject) {
         return false;
     }
 
-    return object1._metaData == object2._metaData;
+    return object1._metaData === object2._metaData;
 }
 
 export function objectToString(object: EezObject) {
@@ -1579,7 +1578,7 @@ export function objectToString(object: EezObject) {
 
 export function getAncestorOfType(object: EezObject, metaData: MetaData): EezObject | undefined {
     if (object) {
-        if (object._metaData == metaData) {
+        if (object._metaData === metaData) {
             return object;
         }
         return object._parent && getAncestorOfType(object._parent!, metaData);
@@ -1600,7 +1599,7 @@ export function getObjectPath(object: EezObject): (string | number)[] {
 }
 
 export function getObjectFromPath(path: string[]) {
-    let object: EezObject = ProjectStore.projectProperties;
+    let object: EezObject = ProjectStore.project;
 
     for (let i = 0; i < path.length && object; i++) {
         object = getChildOfObject(object, path[i]) as EezObject;
@@ -1615,7 +1614,7 @@ export function getObjectPathAsString(object: EezObject) {
 
 export function getObjectFromStringPath(stringPath: string) {
     if (stringPath == "/") {
-        return ProjectStore.projectProperties;
+        return ProjectStore.project;
     }
     return getObjectFromPath(stringPath.split("/").slice(1));
 }
@@ -1626,7 +1625,7 @@ export function getAncestors(
     showSingleArrayChild?: boolean
 ): EezObject[] {
     if (!ancestor) {
-        ancestor = ProjectStore.projectProperties;
+        ancestor = ProjectStore.project;
     }
 
     if (isValue(object)) {
@@ -1659,7 +1658,10 @@ export function getAncestors(
         let numObjectOrArrayProperties = 0;
         for (let i = 0; i < properties.length; i++) {
             let propertyMetaData = properties[i];
-            if (propertyMetaData.type === "object" || propertyMetaData.type === "array") {
+            if (
+                propertyMetaData.type === PropertyType.Object ||
+                propertyMetaData.type === PropertyType.Array
+            ) {
                 numObjectOrArrayProperties++;
             }
         }
@@ -1667,7 +1669,10 @@ export function getAncestors(
         if (numObjectOrArrayProperties > 0) {
             for (let i = 0; i < properties.length; i++) {
                 let propertyMetaData = properties[i];
-                if (propertyMetaData.type === "object" || propertyMetaData.type === "array") {
+                if (
+                    propertyMetaData.type === PropertyType.Object ||
+                    propertyMetaData.type === PropertyType.Array
+                ) {
                     let possibleAncestor: EezObject = (ancestor as any)[propertyMetaData.name];
 
                     if (possibleAncestor === object) {
@@ -1699,7 +1704,7 @@ export function getObjectPropertiesMetaData(object: EezObject) {
 }
 
 export function isObjectInstanceOf(object: EezObject, eezMetaData: MetaData) {
-    return object._metaData == eezMetaData;
+    return object._metaData === eezMetaData;
 }
 
 export function getInheritedValue(object: EezObject, propertyName: string) {
@@ -1793,7 +1798,10 @@ export function canContainChildren(object: EezObject) {
 
     for (let i = 0; i < properties.length; i++) {
         let propertyMetaData = properties[i];
-        if (propertyMetaData.type === "array" || propertyMetaData.type === "object") {
+        if (
+            propertyMetaData.type === PropertyType.Array ||
+            propertyMetaData.type === PropertyType.Object
+        ) {
             return true;
         }
     }
@@ -1806,7 +1814,7 @@ export function findPastePlaceInside(
     metaData: MetaData,
     isSingleObject: boolean
 ) {
-    if (isArray(object) && object._metaData == metaData) {
+    if (isArray(object) && object._metaData === metaData) {
         return object;
     }
 
@@ -1822,7 +1830,10 @@ export function findPastePlaceInside(
     // first, find among array properties
     for (let i = 0; i < properties.length; i++) {
         let propertyMetaData = properties[i];
-        if (propertyMetaData.type === "array" && propertyMetaData.typeMetaData === metaData) {
+        if (
+            propertyMetaData.type === PropertyType.Array &&
+            propertyMetaData.typeMetaData === metaData
+        ) {
             let collectionObject = getChildOfObject(object, propertyMetaData);
             if (collectionObject) {
                 return collectionObject;
@@ -1834,7 +1845,7 @@ export function findPastePlaceInside(
     for (let i = 0; i < properties.length; i++) {
         let propertyMetaData = properties[i];
         if (
-            propertyMetaData.type == "object" &&
+            propertyMetaData.type == PropertyType.Object &&
             propertyMetaData.typeMetaData == metaData &&
             isSingleObject
         ) {
@@ -2022,7 +2033,7 @@ class UpdateCommand implements Command {
 
                 let value = values[propertyName];
 
-                if (propertyMetaData.type == "number") {
+                if (propertyMetaData.type == PropertyType.Number) {
                     if (value !== undefined) {
                         this.newValues[propertyName] = +value;
                     } else {

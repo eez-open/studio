@@ -45,7 +45,7 @@ class ProjectFeature extends React.Component<
 > {
     onAdd() {
         let newFeatureObject = loadObject(
-            ProjectStore.projectProperties,
+            ProjectStore.project,
             this.props.extension.eezStudioExtension.implementation.projectFeature.create(),
             this.props.extension.eezStudioExtension.implementation.projectFeature.metaData,
             this.props.extension.eezStudioExtension.implementation.projectFeature.key
@@ -56,13 +56,13 @@ class ProjectFeature extends React.Component<
                 .key]: newFeatureObject
         };
 
-        updateObject(ProjectStore.projectProperties, changes);
+        updateObject(ProjectStore.project, changes);
     }
 
     onRemove() {
         confirm("Are you sure you want to remove this feature?", undefined, () => {
-            if (ProjectStore.projectProperties) {
-                updateObject(ProjectStore.projectProperties, {
+            if (ProjectStore.project) {
+                updateObject(ProjectStore.project, {
                     [this.props.extension.eezStudioExtension.implementation.projectFeature
                         .key]: undefined
                 });
@@ -74,7 +74,7 @@ class ProjectFeature extends React.Component<
         let button: JSX.Element | undefined;
         if (
             getProperty(
-                ProjectStore.projectProperties,
+                ProjectStore.project,
                 this.props.extension.eezStudioExtension.implementation.projectFeature.key
             )
         ) {
@@ -151,7 +151,7 @@ export class SettingsEditor extends React.Component<{ object: EezObject | undefi
     render() {
         if (
             !this.props.object ||
-            this.props.object === ProjectStore.projectProperties.settings.general
+            this.props.object === ProjectStore.project.settings.general
         ) {
             let projectFeatures = getExtensionsByCategory("project-feature").map(extension => (
                 <ProjectFeature key={extension.name} extension={extension} />

@@ -6,12 +6,11 @@ import * as data from "project-editor/project/features/data/data";
 
 import * as Widget from "project-editor/project/features/gui/widget";
 import {
-    styleMetaData,
-    StyleProperties,
+    Style,
     getStyleProperty,
     getDefaultStyle
 } from "project-editor/project/features/gui/style";
-import { BitmapProperties } from "project-editor/project/features/gui/bitmap";
+import { Bitmap } from "project-editor/project/features/gui/bitmap";
 import {
     findPage,
     findStyle,
@@ -31,7 +30,7 @@ const MAX_DRAW_CACHE_SIZE = 1000;
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface WidgetCursor {
-    widget: Widget.WidgetProperties;
+    widget: Widget.Widget;
     x: number;
     y: number;
     width: number;
@@ -40,27 +39,27 @@ export interface WidgetCursor {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function styleHasBorder(style: StyleProperties) {
+function styleHasBorder(style: Style) {
     return getStyleProperty(style, "borderSize") == 1;
 }
 
-function styleIsHorzAlignLeft(style: StyleProperties) {
+function styleIsHorzAlignLeft(style: Style) {
     return getStyleProperty(style, "alignHorizontal") == "left";
 }
 
-function styleIsHorzAlignRight(style: StyleProperties) {
+function styleIsHorzAlignRight(style: Style) {
     return getStyleProperty(style, "alignHorizontal") == "right";
 }
 
-function styleIsVertAlignTop(style: StyleProperties) {
+function styleIsVertAlignTop(style: Style) {
     return getStyleProperty(style, "alignVertical") == "top";
 }
 
-function styleIsVertAlignBottom(style: StyleProperties) {
+function styleIsVertAlignBottom(style: Style) {
     return getStyleProperty(style, "alignVertical") == "bottom";
 }
 
-function styleGetFont(style: StyleProperties) {
+function styleGetFont(style: Style) {
     let font = getStyleProperty(style, "font");
     return font && findFont(font);
 }
@@ -117,8 +116,8 @@ function getCacheId(obj: EezObject) {
         id = obj._id;
     }
 
-    if (isObjectInstanceOf(obj, styleMetaData)) {
-        let style = obj as StyleProperties;
+    if (isObjectInstanceOf(obj, Style.metaData)) {
+        let style = obj as Style;
 
         const font = styleGetFont(style);
         if (font) {
@@ -145,7 +144,7 @@ export function drawText(
     text: string,
     w: number,
     h: number,
-    style: StyleProperties,
+    style: Style,
     inverse: boolean
 ) {
     return drawFromCache(
@@ -222,7 +221,7 @@ export function drawMultilineText(
     text: string,
     w: number,
     h: number,
-    style: StyleProperties,
+    style: Style,
     inverse: boolean
 ) {
     return drawFromCache(
@@ -340,10 +339,10 @@ export function drawMultilineText(
 ////////////////////////////////////////////////////////////////////////////////
 
 export function drawBitmap(
-    bitmap: BitmapProperties,
+    bitmap: Bitmap,
     w: number,
     h: number,
-    style: StyleProperties,
+    style: Style,
     inverse: boolean
 ) {
     const imageElement = bitmap.imageElement;
@@ -422,7 +421,7 @@ export function drawBitmap(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawRectangle(w: number, h: number, style: StyleProperties, inverse: boolean) {
+export function drawRectangle(w: number, h: number, style: Style, inverse: boolean) {
     if (w > 0 && h > 0) {
         return drawFromCache(
             "drawRectangle",
@@ -458,22 +457,22 @@ export function drawRectangle(w: number, h: number, style: StyleProperties, inve
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawDefaultWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawDefaultWidget(widget: Widget.Widget, rect: Rect) {
     return drawRectangle(rect.width, rect.height, findStyleOrGetDefault(widget.style), true);
 }
 
-export function drawDisplayDataWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawDisplayDataWidget(widget: Widget.Widget, rect: Rect) {
     let text = (widget.data && ((<string>data.get(widget.data)) as string)) || "";
     return drawText(text, rect.width, rect.height, findStyleOrGetDefault(widget.style), false);
 }
 
-export function drawTextWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawTextWidget(widget: Widget.Widget, rect: Rect) {
     let textWidget = widget as Widget.TextWidgetProperties;
     let text = (textWidget.data ? (data.get(textWidget.data) as string) : textWidget.text) || "";
     return drawText(text, rect.width, rect.height, findStyleOrGetDefault(textWidget.style), false);
 }
 
-export function drawMultilineTextWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawMultilineTextWidget(widget: Widget.Widget, rect: Rect) {
     let multilineTextWidget = widget as Widget.MultilineTextWidgetProperties;
     let text =
         (multilineTextWidget.data
@@ -488,7 +487,7 @@ export function drawMultilineTextWidget(widget: Widget.WidgetProperties, rect: R
     );
 }
 
-export function drawRectangleWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawRectangleWidget(widget: Widget.Widget, rect: Rect) {
     let rectangleWidget = widget as Widget.RectangleWidgetProperties;
     return drawRectangle(
         rect.width,
@@ -498,7 +497,7 @@ export function drawRectangleWidget(widget: Widget.WidgetProperties, rect: Rect)
     );
 }
 
-export function drawBitmapWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawBitmapWidget(widget: Widget.Widget, rect: Rect) {
     let bitmapWidget = widget as Widget.BitmapWidgetProperties;
 
     let bitmap;
@@ -522,7 +521,7 @@ export function drawBitmapWidget(widget: Widget.WidgetProperties, rect: Rect) {
     return undefined;
 }
 
-export function drawButtonWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawButtonWidget(widget: Widget.Widget, rect: Rect) {
     let buttonWidget = widget as Widget.ButtonWidgetProperties;
     let text = buttonWidget.data && data.get(buttonWidget.data);
     if (!text) {
@@ -535,7 +534,7 @@ export function drawButtonWidget(widget: Widget.WidgetProperties, rect: Rect) {
     return drawText(text, rect.width, rect.height, findStyleOrGetDefault(style), false);
 }
 
-export function drawToggleButtonWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawToggleButtonWidget(widget: Widget.Widget, rect: Rect) {
     let toggleButtonWidget = widget as Widget.ToggleButtonWidgetProperties;
     let text = toggleButtonWidget.text1 || "";
     return drawText(
@@ -547,7 +546,7 @@ export function drawToggleButtonWidget(widget: Widget.WidgetProperties, rect: Re
     );
 }
 
-export function drawButtonGroupWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawButtonGroupWidget(widget: Widget.Widget, rect: Rect) {
     let buttonLabels = (widget.data && data.getValueList(widget.data)) || [];
     let selectedButton = (widget.data && <number>data.get(widget.data)) || 0;
     let style = findStyleOrGetDefault(widget.style);
@@ -785,7 +784,7 @@ function drawScale(
     }
 }
 
-export function drawScaleWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawScaleWidget(widget: Widget.Widget, rect: Rect) {
     let scaleWidget = widget as Widget.ScaleWidgetProperties;
     let style = findStyleOrGetDefault(scaleWidget.style);
 
@@ -848,7 +847,7 @@ export function drawScaleWidget(widget: Widget.WidgetProperties, rect: Rect) {
     );
 }
 
-export function drawBarGraphWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
     let barGraphWidget = widget as Widget.BarGraphWidgetProperties;
     let style = findStyleOrGetDefault(barGraphWidget.style);
 
@@ -942,7 +941,7 @@ export function drawBarGraphWidget(widget: Widget.WidgetProperties, rect: Rect) 
                     let padding = getStyleProperty(textStyle, "paddingHorizontal");
                     w += padding;
 
-                    let modifiedTextStyle: StyleProperties = objectToJS(textStyle);
+                    let modifiedTextStyle: Style = objectToJS(textStyle);
 
                     let x: number;
                     if (pos + w <= rect.width) {
@@ -994,7 +993,7 @@ export function drawBarGraphWidget(widget: Widget.WidgetProperties, rect: Rect) 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawYTGraphWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawYTGraphWidget(widget: Widget.Widget, rect: Rect) {
     let ytGraphWidget = widget as Widget.YTGraphWidgetProperties;
     let style = findStyleOrGetDefault(ytGraphWidget.style);
 
@@ -1039,7 +1038,7 @@ export function drawYTGraphWidget(widget: Widget.WidgetProperties, rect: Rect) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawUpDownWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawUpDownWidget(widget: Widget.Widget, rect: Rect) {
     let upDownWidget = widget as Widget.UpDownWidgetProperties;
     let style = findStyleOrGetDefault(upDownWidget.style);
     let buttonsStyle = findStyleOrGetDefault(upDownWidget.buttonsStyle);
@@ -1100,7 +1099,7 @@ export function drawUpDownWidget(widget: Widget.WidgetProperties, rect: Rect) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawListGraphWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawListGraphWidget(widget: Widget.Widget, rect: Rect) {
     let listGraphWidget = widget as Widget.ListGraphWidgetProperties;
     let style = findStyleOrGetDefault(listGraphWidget.style);
 
@@ -1153,7 +1152,7 @@ export function drawListGraphWidget(widget: Widget.WidgetProperties, rect: Rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawLayoutViewWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect) {
     let pageViewWidget = widget as Widget.LayoutViewWidgetProperties;
 
     let layoutName;
@@ -1184,7 +1183,7 @@ export function drawLayoutViewWidget(widget: Widget.WidgetProperties, rect: Rect
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawAppViewWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawAppViewWidget(widget: Widget.Widget, rect: Rect) {
     let pageViewWidget = widget as Widget.AppViewWidgetProperties;
 
     if (pageViewWidget.data) {
@@ -1215,7 +1214,7 @@ export function drawAppViewWidget(widget: Widget.WidgetProperties, rect: Rect) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawWidget(widget: Widget.WidgetProperties, rect: Rect) {
+export function drawWidget(widget: Widget.Widget, rect: Rect) {
     let widgetType = Widget.getWidgetType(widget);
     if (widgetType) {
         let draw = widgetType.draw;
@@ -1261,7 +1260,7 @@ export function drawPage(
     pageResolution: {
         width: number;
         height: number;
-        widgets: EezArrayObject<Widget.WidgetProperties>;
+        widgets: EezArrayObject<Widget.Widget>;
     } & EezObject
 ) {
     let canvas = document.createElement("canvas");

@@ -4,7 +4,12 @@ import { validators } from "eez-studio-shared/model/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { registerMetaData, EezObject, EezArrayObject } from "project-editor/core/metaData";
+import {
+    registerMetaData,
+    EezObject,
+    EezArrayObject,
+    PropertyType
+} from "project-editor/core/metaData";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { ScpiSubsystemsNavigation } from "project-editor/project/features/scpi/ScpiSubsystemsNavigation";
@@ -13,11 +18,57 @@ import { metrics } from "project-editor/project/features/scpi/metrics";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ScpiCommandProperties extends EezObject {
+export class ScpiCommand extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable helpLink?: string;
     @observable usedIn: string[] | undefined;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return ScpiCommand;
+        },
+        className: "ScpiCommand",
+        label: (object: EezObject) => (object as ScpiCommand).name,
+        properties: () => [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            {
+                name: "description",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "helpLink",
+                type: PropertyType.String
+            },
+            {
+                name: "usedIn",
+                type: PropertyType.ConfigurationReference
+            }
+        ],
+        newItem: (parent: EezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Command",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [validators.required, validators.unique({}, parent)]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name
+                });
+            });
+        }
+    };
 
     @computed
     get shortCommand(): string {
@@ -32,138 +83,98 @@ export class ScpiCommandProperties extends EezObject {
     }
 }
 
-export const scpiCommandMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return ScpiCommandProperties;
-    },
-    className: "ScpiCommand",
-    label: (object: EezObject) => (object as ScpiCommandProperties).name,
-    properties: () => [
-        {
-            name: "name",
-            type: "string",
-            unique: true
-        },
-        {
-            name: "description",
-            type: "multiline-text"
-        },
-        {
-            name: "helpLink",
-            type: "string"
-        },
-        {
-            name: "usedIn",
-            type: "configuration-references"
-        }
-    ],
-    newItem: (parent: EezObject) => {
-        return showGenericDialog({
-            dialogDefinition: {
-                title: "New Command",
-                fields: [
-                    {
-                        name: "name",
-                        type: "string",
-                        validators: [validators.required, validators.unique({}, parent)]
-                    }
-                ]
-            },
-            values: {}
-        }).then(result => {
-            return Promise.resolve({
-                name: result.values.name
-            });
-        });
-    }
-});
+registerMetaData(ScpiCommand.metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ScpiSubsystemProperties extends EezObject {
+export class ScpiSubsystem extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable helpLink?: string;
-    @observable commands: EezArrayObject<ScpiCommandProperties>;
+    @observable commands: EezArrayObject<ScpiCommand>;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return ScpiSubsystem;
+        },
+        className: "ScpiSubsystem",
+        label: (object: EezObject) => (object as ScpiSubsystem).name,
+        properties: () => [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            {
+                name: "description",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "helpLink",
+                type: PropertyType.String
+            },
+            {
+                name: "commands",
+                type: PropertyType.Array,
+                typeMetaData: ScpiCommand.metaData,
+                hideInPropertyGrid: true
+            }
+        ],
+        newItem: (parent: EezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Subsystem",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [validators.required, validators.unique({}, parent)]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name,
+                    commands: []
+                });
+            });
+        },
+        navigationComponent: ScpiSubsystemsNavigation,
+        navigationComponentId: "scpi-subsystems",
+        icon: "list"
+    };
 }
 
-export const scpiSubsystemMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return ScpiSubsystemProperties;
-    },
-    className: "ScpiSubsystem",
-    label: (object: EezObject) => (object as ScpiSubsystemProperties).name,
-    properties: () => [
-        {
-            name: "name",
-            type: "string",
-            unique: true
-        },
-        {
-            name: "description",
-            type: "multiline-text"
-        },
-        {
-            name: "helpLink",
-            type: "string"
-        },
-        {
-            name: "commands",
-            type: "array",
-            typeMetaData: scpiCommandMetaData,
-            hideInPropertyGrid: true
-        }
-    ],
-    newItem: (parent: EezObject) => {
-        return showGenericDialog({
-            dialogDefinition: {
-                title: "New Subsystem",
-                fields: [
-                    {
-                        name: "name",
-                        type: "string",
-                        validators: [validators.required, validators.unique({}, parent)]
-                    }
-                ]
-            },
-            values: {}
-        }).then(result => {
-            return Promise.resolve({
-                name: result.values.name,
-                commands: []
-            });
-        });
-    },
-    navigationComponent: ScpiSubsystemsNavigation,
-    navigationComponentId: "scpi-subsystems",
-    icon: "list"
-});
+registerMetaData(ScpiSubsystem.metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ScpiProperties extends EezObject {
-    @observable subsystems: EezArrayObject<ScpiSubsystemProperties>;
+export class Scpi extends EezObject {
+    @observable subsystems: EezArrayObject<ScpiSubsystem>;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return Scpi;
+        },
+        className: "Scpi",
+        label: () => "SCPI",
+        properties: () => [
+            {
+                name: "subsystems",
+                type: PropertyType.Array,
+                typeMetaData: ScpiSubsystem.metaData,
+                hideInPropertyGrid: true
+            }
+        ],
+        navigationComponent: ScpiSubsystemsNavigation,
+        navigationComponentId: "scpi",
+        defaultNavigationKey: "subsystems",
+        icon: "navigate_next"
+    };
 }
 
-export const scpiMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return ScpiProperties;
-    },
-    className: "Scpi",
-    label: () => "SCPI",
-    properties: () => [
-        {
-            name: "subsystems",
-            type: "array",
-            typeMetaData: scpiSubsystemMetaData,
-            hideInPropertyGrid: true
-        }
-    ],
-    navigationComponent: ScpiSubsystemsNavigation,
-    navigationComponentId: "scpi",
-    defaultNavigationKey: "subsystems",
-    icon: "navigate_next"
-});
+registerMetaData(Scpi.metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -171,8 +182,8 @@ registerFeatureImplementation("scpi", {
     projectFeature: {
         mandatory: false,
         key: "scpi",
-        type: "object",
-        metaData: scpiMetaData,
+        type: PropertyType.Object,
+        metaData: Scpi.metaData,
         create: () => {
             return {
                 subsystems: []

@@ -1,14 +1,14 @@
 import { BuildResult } from "project-editor/core/extensions";
 
 import { ProjectStore } from "project-editor/core/store";
-import { ProjectProperties } from "project-editor/project/project";
+import { Project } from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
 
-import { ActionProperties } from "project-editor/project/features/action/action";
+import { Action } from "project-editor/project/features/action/action";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildActionsEnum(projectActions: ActionProperties[]) {
+function buildActionsEnum(projectActions: Action[]) {
     let actions = projectActions.map(
         (action, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
@@ -23,7 +23,7 @@ function buildActionsEnum(projectActions: ActionProperties[]) {
     return `enum ActionsEnum {\n${actions.join(",\n")}\n};`;
 }
 
-function buildActionsFuncsDef(projectActions: ActionProperties[]) {
+function buildActionsFuncsDef(projectActions: Action[]) {
     let actions = projectActions.map(action => {
         let implementationCode = action.implementationCode;
 
@@ -50,7 +50,7 @@ function buildActionsArrayDecl() {
     return "extern ActionExecFunc g_actionExecFunctions[];";
 }
 
-function buildActionsArrayDef(projectActions: ActionProperties[]) {
+function buildActionsArrayDef(projectActions: Action[]) {
     let actions = projectActions.map(
         action =>
             `${projectBuild.TAB}${projectBuild.getName(
@@ -66,7 +66,7 @@ function buildActionsArrayDef(projectActions: ActionProperties[]) {
 }
 
 export function build(
-    project: ProjectProperties,
+    project: Project,
     sectionNames: string[] | undefined
 ): Promise<BuildResult> {
     return new Promise((resolve, reject) => {

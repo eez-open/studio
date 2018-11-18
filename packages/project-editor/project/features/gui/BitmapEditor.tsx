@@ -5,7 +5,7 @@ import styled from "eez-studio-ui/styled-components";
 
 import { EditorComponent } from "project-editor/core/metaData";
 
-import { BitmapProperties } from "project-editor/project/features/gui/bitmap";
+import { Bitmap } from "project-editor/project/features/gui/bitmap";
 import { getStyleProperty } from "project-editor/project/features/gui/style";
 
 const BitmapEditorContainer = styled.div`
@@ -18,7 +18,7 @@ const BitmapEditorContainer = styled.div`
 @observer
 export class BitmapEditor extends EditorComponent {
     render() {
-        const bitmap = this.props.editor.object as BitmapProperties;
+        const bitmap = this.props.editor.object as Bitmap;
 
         const style = {
             backgroundColor:

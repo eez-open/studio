@@ -7,7 +7,8 @@ import {
     PropertyMetaData,
     registerMetaData,
     EezObject,
-    InheritedValue
+    InheritedValue,
+    PropertyType
 } from "project-editor/core/metaData";
 import * as output from "project-editor/core/output";
 import { strToColor16 } from "project-editor/core/util";
@@ -24,24 +25,24 @@ import { findStyle, findStyleOrGetDefault } from "project-editor/project/feature
 
 const nameProperty: PropertyMetaData = {
     name: "name",
-    type: "string",
+    type: PropertyType.String,
     unique: true
 };
 
 const descriptionProperty: PropertyMetaData = {
     name: "description",
-    type: "multiline-text"
+    type: PropertyType.MultilineText
 };
 
 const inheritFromProperty: PropertyMetaData = {
     name: "inheritFrom",
-    type: "object-reference",
+    type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: ["gui", "styles"]
 };
 
 const fontProperty: PropertyMetaData = {
     name: "font",
-    type: "object-reference",
+    type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: ["gui", "fonts"],
     defaultValue: undefined,
     inheritable: true
@@ -49,7 +50,7 @@ const fontProperty: PropertyMetaData = {
 
 const alignHorizontalProperty: PropertyMetaData = {
     name: "alignHorizontal",
-    type: "enum",
+    type: PropertyType.Enum,
     enumItems: [
         {
             id: "center"
@@ -67,7 +68,7 @@ const alignHorizontalProperty: PropertyMetaData = {
 
 const alignVerticalProperty: PropertyMetaData = {
     name: "alignVertical",
-    type: "enum",
+    type: PropertyType.Enum,
     enumItems: [
         {
             id: "center"
@@ -85,63 +86,63 @@ const alignVerticalProperty: PropertyMetaData = {
 
 const colorProperty: PropertyMetaData = {
     name: "color",
-    type: "color",
+    type: PropertyType.Color,
     defaultValue: "#000000",
     inheritable: true
 };
 
 const backgroundColorProperty: PropertyMetaData = {
     name: "backgroundColor",
-    type: "color",
+    type: PropertyType.Color,
     defaultValue: "#ffffff",
     inheritable: true
 };
 
 const borderSizeProperty: PropertyMetaData = {
     name: "borderSize",
-    type: "number",
+    type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true
 };
 
 const borderColorProperty: PropertyMetaData = {
     name: "borderColor",
-    type: "color",
+    type: PropertyType.Color,
     defaultValue: "#000000",
     inheritable: true
 };
 
 const paddingHorizontalProperty: PropertyMetaData = {
     name: "paddingHorizontal",
-    type: "number",
+    type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true
 };
 
 const paddingVerticalProperty: PropertyMetaData = {
     name: "paddingVertical",
-    type: "number",
+    type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true
 };
 
 const opacityProperty: PropertyMetaData = {
     name: "opacity",
-    type: "number",
+    type: PropertyType.Number,
     defaultValue: 255,
     inheritable: true
 };
 
 const blinkProperty: PropertyMetaData = {
     name: "blink",
-    type: "boolean",
+    type: PropertyType.Boolean,
     defaultValue: false,
     inheritable: true
 };
 
 const alwaysBuildProperty: PropertyMetaData = {
     name: "alwaysBuild",
-    type: "boolean",
+    type: PropertyType.Boolean,
     defaultValue: false,
     inheritable: false
 };
@@ -172,7 +173,7 @@ const propertiesMap: { [propertyName: string]: PropertyMetaData } = _zipObject(
 ////////////////////////////////////////////////////////////////////////////////
 
 function getInheritedValue(object: EezObject, propertyName: string): InheritedValue {
-    let styleProperties = object as StyleProperties;
+    let styleProperties = object as Style;
 
     let value = getProperty(styleProperties, propertyName);
     if (value !== undefined) {
@@ -194,7 +195,7 @@ function getInheritedValue(object: EezObject, propertyName: string): InheritedVa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class StyleProperties extends EezObject {
+export class Style extends EezObject {
     @observable
     name: string;
     @observable
@@ -225,6 +226,27 @@ export class StyleProperties extends EezObject {
     blink?: boolean;
     @observable
     alwaysBuild: boolean;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return Style;
+        },
+        className: "Style",
+        label: (style: Style) => {
+            return style.name;
+        },
+        properties: () => properties,
+        newItem: (object: EezObject) => {
+            return Promise.resolve({
+                name: "Style"
+            });
+        },
+        editorComponent: StyleEditor,
+        getInheritedValue: getInheritedValue,
+        navigationComponent: ListNavigationWithContent,
+        navigationComponentId: "styles",
+        icon: "format_color_fill"
+    };
 
     @computed
     get fontName(): string {
@@ -338,34 +360,15 @@ export class StyleProperties extends EezObject {
     }
 }
 
-export const styleMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return StyleProperties;
-    },
-    className: "Style",
-    label: (style: StyleProperties) => {
-        return style.name;
-    },
-    properties: () => properties,
-    newItem: (object: EezObject) => {
-        return Promise.resolve({
-            name: "Style"
-        });
-    },
-    editorComponent: StyleEditor,
-    getInheritedValue: getInheritedValue,
-    navigationComponent: ListNavigationWithContent,
-    navigationComponentId: "styles",
-    icon: "format_color_fill"
-});
+registerMetaData(Style.metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getStyleProperty(
-    styleOrString: StyleProperties | string | undefined,
+    styleOrString: Style | string | undefined,
     propertyName: string
 ): any {
-    let style: StyleProperties;
+    let style: Style;
     if (!styleOrString) {
         style = getDefaultStyle();
     } else if (typeof styleOrString == "string") {
@@ -384,9 +387,9 @@ export function getStyleProperty(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let DEFAULT_STYLE: StyleProperties;
+let DEFAULT_STYLE: Style;
 
-export function getDefaultStyle(): StyleProperties {
+export function getDefaultStyle(): Style {
     let defaultStyle = findStyle("default");
     if (defaultStyle) {
         return defaultStyle;
@@ -409,8 +412,8 @@ export function getDefaultStyle(): StyleProperties {
                 opacity: opacityProperty.defaultValue,
                 blink: blinkProperty.defaultValue
             },
-            styleMetaData
-        ) as StyleProperties;
+            Style.metaData
+        ) as Style;
     }
 
     return DEFAULT_STYLE;
@@ -418,7 +421,7 @@ export function getDefaultStyle(): StyleProperties {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawStylePreview(canvas: HTMLCanvasElement, style: StyleProperties) {
+export function drawStylePreview(canvas: HTMLCanvasElement, style: Style) {
     let ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
     ctx.save();
     ctx.translate(Math.floor((canvas.width - 240) / 2), Math.floor((canvas.height - 320) / 2));

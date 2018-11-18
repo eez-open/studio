@@ -1,10 +1,10 @@
 import { _minBy, _maxBy } from "eez-studio-shared/algorithm";
 
-import { FontProperties } from "project-editor/project/features/gui/fontMetaData";
+import { Font } from "project-editor/project/features/gui/fontMetaData";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function getData(font: FontProperties) {
+export function getData(font: Font) {
     /*
     Font header:
 

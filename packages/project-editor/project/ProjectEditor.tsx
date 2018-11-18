@@ -31,7 +31,7 @@ import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Output } from "project-editor/components/Output";
 
 import { MenuNavigation } from "project-editor/project/MenuNavigation";
-import { BuildConfigurationProperties } from "project-editor/project/project";
+import { BuildConfiguration } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,8 +76,8 @@ class Toolbar extends React.Component<
     }
 
     render() {
-        let configurations = ProjectStore.projectProperties.settings.build.configurations._array.map(
-            (item: BuildConfigurationProperties) => {
+        let configurations = ProjectStore.project.settings.build.configurations._array.map(
+            (item: BuildConfiguration) => {
                 return (
                     <option key={item.name} value={item.name}>
                         {objectToString(item)}
@@ -239,7 +239,7 @@ class Content extends React.Component<{}, {}> {
     }
 
     render() {
-        if (!ProjectStore.projectProperties) {
+        if (!ProjectStore.project) {
             return <div />;
         }
 
@@ -264,7 +264,7 @@ class Content extends React.Component<{}, {}> {
             return (
                 <MenuNavigation
                     id="project"
-                    navigationObject={ProjectStore.projectProperties}
+                    navigationObject={ProjectStore.project}
                     content={content}
                 />
             );

@@ -1,18 +1,18 @@
 import { camelize } from "eez-studio-shared/string";
 
-import { ProjectProperties } from "project-editor/project/project";
+import { Project } from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
-import { ScpiProperties, ScpiCommandProperties } from "project-editor/project/features/scpi/scpi";
+import { Scpi, ScpiCommand } from "project-editor/project/features/scpi/scpi";
 import { BuildResult } from "project-editor/core/extensions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function cleanUpCommandName(command: ScpiCommandProperties) {
+function cleanUpCommandName(command: ScpiCommand) {
     // replace '[<n>]' and '<n>' with '#'
     return command.name.replace(/\[\<n\>\]/g, "<n>").replace(/\<n\>/g, "#");
 }
 
-function getCommandFuncName(command: ScpiCommandProperties) {
+function getCommandFuncName(command: ScpiCommand) {
     let name = cleanUpCommandName(command)
         .replace(/\*/g, "core_")
         .replace(/:/g, "_")
@@ -25,8 +25,8 @@ function getCommandFuncName(command: ScpiCommandProperties) {
     return "scpi_cmd_" + camelize(name);
 }
 
-function buildScpiCommandsDecl(project: ProjectProperties) {
-    let projectActions = (project as any).scpi as ScpiProperties;
+function buildScpiCommandsDecl(project: Project) {
+    let projectActions = (project as any).scpi as Scpi;
 
     let commands: string[] = [];
 
@@ -44,7 +44,7 @@ function buildScpiCommandsDecl(project: ProjectProperties) {
 }
 
 export function build(
-    project: ProjectProperties,
+    project: Project,
     sectionNames: string[] | undefined
 ): Promise<BuildResult> {
     return new Promise((resolve, reject) => {

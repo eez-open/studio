@@ -1,6 +1,6 @@
 import { blendColor } from "eez-studio-shared/color";
 
-import { FontProperties } from "project-editor/project/features/gui/fontMetaData";
+import { Font } from "project-editor/project/features/gui/fontMetaData";
 
 let fgColor: string;
 let bgColor: string;
@@ -81,11 +81,11 @@ function setXY(x1_: number, y1_: number, x2_: number, y2_: number) {
     y = y1;
 }
 
-function getGlyph(font: FontProperties, encoding: number) {
+function getGlyph(font: Font, encoding: number) {
     return font && font.glyphs._array.find(glyph => glyph.encoding == encoding);
 }
 
-function measureGlyph(encoding: number, font: FontProperties): number {
+function measureGlyph(encoding: number, font: Font): number {
     let glyph = getGlyph(font, encoding);
     if (!glyph) {
         return 0;
@@ -94,7 +94,7 @@ function measureGlyph(encoding: number, font: FontProperties): number {
     return glyph.dx || 0;
 }
 
-export function measureStr(text: string, font: FontProperties, maxWidth: number): number {
+export function measureStr(text: string, font: Font, maxWidth: number): number {
     let width = 0;
 
     for (let i = 0; i < text.length; i++) {
@@ -114,7 +114,7 @@ function drawGlyph(
     x: number,
     y: number,
     encoding: number,
-    font: FontProperties
+    font: Font
 ): number {
     let glyph = getGlyph(font, encoding);
     if (!glyph || !glyph.glyphBitmap) {
@@ -148,7 +148,7 @@ export function drawStr(
     text: string,
     x: number,
     y: number,
-    font: FontProperties
+    font: Font
 ) {
     for (let i = 0; i < text.length; i++) {
         let encoding = text.charCodeAt(i);

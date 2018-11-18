@@ -18,12 +18,7 @@ import {
 
 import { Loading } from "project-editor/components/Loading";
 
-import {
-    ScpiProperties,
-    ScpiCommandProperties,
-    scpiCommandMetaData,
-    scpiSubsystemMetaData
-} from "project-editor/project/features/scpi/scpi";
+import { Scpi, ScpiCommand, ScpiSubsystem } from "project-editor/project/features/scpi/scpi";
 
 const fs = EEZStudio.electron.remote.require("fs");
 
@@ -228,13 +223,13 @@ function getSubsystemFromScpiFileDoc(file: string, aElements: NodeListOf<Element
 
 function getCommandsFromScpiDoc() {
     return new Promise<Subsystem[]>((resolve, reject) => {
-        if (ProjectStore.projectProperties.settings.general.scpiDocFolder === undefined) {
+        if (ProjectStore.project.settings.general.scpiDocFolder === undefined) {
             reject("SCPI help folder is not defined");
             return;
         }
 
         let scpiHelpFolderPath = ProjectStore.getAbsoluteFilePath(
-            ProjectStore.projectProperties.settings.general.scpiDocFolder
+            ProjectStore.project.settings.general.scpiDocFolder
         );
 
         fs.exists(scpiHelpFolderPath, (exists: boolean) => {
@@ -335,9 +330,9 @@ function getChanges() {
                 console.log(subsystems);
 
                 let existingSubsystems = (getProperty(
-                    ProjectStore.projectProperties,
+                    ProjectStore.project,
                     "scpi"
-                ) as ScpiProperties).subsystems;
+                ) as Scpi).subsystems;
 
                 // added
                 let added = findMissingCommands(subsystems, existingSubsystems._array);
@@ -553,10 +548,8 @@ export class ImportScpiDocDialog extends React.Component<
 
         UndoManager.setCombineCommands(true);
 
-        let existingSubsystems = (getProperty(
-            ProjectStore.projectProperties,
-            "scpi"
-        ) as ScpiProperties).subsystems;
+        let existingSubsystems = (getProperty(ProjectStore.project, "scpi") as Scpi)
+            .subsystems;
 
         let getOrAddSubsystem = (subsystem: Subsystem) => {
             let existingSubsystem = existingSubsystems._array.find(
@@ -575,7 +568,7 @@ export class ImportScpiDocDialog extends React.Component<
                         helpLink: subsystem.helpLink,
                         commands: []
                     },
-                    scpiSubsystemMetaData
+                    ScpiSubsystem.metaData
                 )
             );
         };
@@ -593,7 +586,7 @@ export class ImportScpiDocDialog extends React.Component<
                         name: commandDefinition.command.name,
                         helpLink: commandDefinition.command.helpLink
                     },
-                    scpiCommandMetaData
+                    ScpiCommand.metaData
                 )
             );
         });
@@ -614,7 +607,7 @@ export class ImportScpiDocDialog extends React.Component<
                 commandDefinition.command.name
             );
             if (result) {
-                let command = result.command as ScpiCommandProperties;
+                let command = result.command as ScpiCommand;
                 deleteObject(command);
 
                 command.helpLink = commandDefinition.command.helpLink;

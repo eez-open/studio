@@ -20,8 +20,7 @@ import {
 } from "project-editor/components/CanvasEditor";
 
 import {
-    WidgetProperties,
-    widgetMetaData,
+    Widget,
     SelectWidgetProperties
 } from "project-editor/project/features/gui/widget";
 import { WidgetContainerDisplayItem } from "project-editor/project/features/gui/page";
@@ -51,7 +50,7 @@ export class WidgetContainerEditor extends CanvasEditor {
     applyGeometryChanges(geometryChanges: ObjectGeometryChange[]) {
         for (let i = 0; i < geometryChanges.length; i++) {
             let geometryChange = geometryChanges[i];
-            let widget = geometryChange.object as WidgetProperties;
+            let widget = geometryChange.object as Widget;
             widget.applyGeometryChange(geometryChange.changedProperties, geometryChanges);
         }
     }
@@ -60,7 +59,7 @@ export class WidgetContainerEditor extends CanvasEditor {
         let items: DisplayItem[] = [];
 
         function findItemsInsideRect(node: TreeNode) {
-            if (isObjectInstanceOf(node.item.object, widgetMetaData)) {
+            if (isObjectInstanceOf(node.item.object, Widget.metaData)) {
                 if (rectContains(r, node.rect)) {
                     items.push(node.item);
                 }
@@ -89,7 +88,7 @@ export class WidgetContainerEditor extends CanvasEditor {
     }
 
     findSnapLinesFilter(node: TreeNode) {
-        let type = (node.item.object as WidgetProperties).type;
+        let type = (node.item.object as Widget).type;
         return type != "Container" && type != "List" && type != "Select";
     }
 
@@ -106,7 +105,7 @@ export class WidgetContainerEditor extends CanvasEditor {
         const object = data && data.object;
         if (object) {
             if (
-                isObjectInstanceOf(object, widgetMetaData) &&
+                isObjectInstanceOf(object, Widget.metaData) &&
                 event.dataTransfer.effectAllowed == "copy"
             ) {
                 event.preventDefault();
@@ -120,8 +119,8 @@ export class WidgetContainerEditor extends CanvasEditor {
                     let rect = {
                         x: Math.round(p.x),
                         y: Math.round(p.y),
-                        width: (object as WidgetProperties).width,
-                        height: (object as WidgetProperties).height
+                        width: (object as Widget).width,
+                        height: (object as Widget).height
                     };
 
                     let dropItem: TreeNode = {
@@ -140,7 +139,7 @@ export class WidgetContainerEditor extends CanvasEditor {
                             children: []
                         },
 
-                        image: drawWidget(object as WidgetProperties, rect)
+                        image: drawWidget(object as Widget, rect)
                     };
 
                     this.tree.children.push(dropItem);
@@ -169,7 +168,7 @@ export class WidgetContainerEditor extends CanvasEditor {
 
     onDrop(event: any) {
         if (this.dropItem) {
-            let dropItemWidgetObj = toJS(this.dropItem.item.object) as WidgetProperties;
+            let dropItemWidgetObj = toJS(this.dropItem.item.object) as Widget;
 
             dropItemWidgetObj.x = this.dropItem.rect.x;
             dropItemWidgetObj.y = this.dropItem.rect.y;

@@ -39,16 +39,13 @@ import {
 } from "project-editor/components/CanvasEditor";
 
 import {
-    storyboardPageMetaData,
-    StoryboardPageProperties,
-    storyboardMetaData,
-    StoryboardProperties,
-    storyboardLineMetaData,
-    StoryboardLineProperties,
+    StoryboardPage,
+    Storyboard,
+    StoryboardLine,
     StoryboardTabState
 } from "project-editor/project/features/gui/storyboard";
 import { getPages, findPage } from "project-editor/project/features/gui/gui";
-import { PageResolutionProperties } from "project-editor/project/features/gui/page";
+import { PageResolution } from "project-editor/project/features/gui/page";
 import {
     drawPageFrame,
     drawNotFoundPageFrame,
@@ -79,7 +76,7 @@ function getCacheId(object: EezObject) {
 class RenderTask {
     callbacks: (() => void)[] = [];
 
-    constructor(public id: string, public pageResolution: PageResolutionProperties) {}
+    constructor(public id: string, public pageResolution: PageResolution) {}
 
     addCallback(callback: () => void) {
         for (var i = 0; i < this.callbacks.length; i++) {
@@ -134,11 +131,7 @@ function renderLoop() {
     requestAnimationFrame(renderLoop);
 }
 
-function createRenderTask(
-    id: string,
-    pageResolution: PageResolutionProperties,
-    callback: () => void
-) {
+function createRenderTask(id: string, pageResolution: PageResolution, callback: () => void) {
     let renderTask = renderQueue.find(renderTask => renderTask.id == id);
 
     if (!renderTask) {
@@ -155,7 +148,7 @@ renderLoop();
 
 function drawPageFromCache(
     ctx: CanvasRenderingContext2D,
-    pageResolution: PageResolutionProperties,
+    pageResolution: PageResolution,
     callback: () => void
 ) {
     let id = getCacheId(pageResolution);
@@ -173,7 +166,7 @@ function drawPageNode(
     scale: number,
     callback: () => void
 ) {
-    let storyboardPage = node.item.object as StoryboardPageProperties;
+    let storyboardPage = node.item.object as StoryboardPage;
     let pageResolution = node.custom.pageResolution;
 
     ctx.save();
@@ -336,19 +329,19 @@ class StoryboardLineConnecting implements LineConnecting {
         if (this.target) {
             let storyboard = getAncestorOfType(
                 this.source.item.object,
-                storyboardMetaData
-            ) as StoryboardProperties;
+                Storyboard.metaData
+            ) as Storyboard;
             let storyboardLines = storyboard.lines;
 
             let line = {
                 source: {
-                    page: (this.source.item.object as StoryboardPageProperties).page
+                    page: (this.source.item.object as StoryboardPage).page
                 },
                 target: {
-                    page: (this.target.item.object as StoryboardPageProperties).page
+                    page: (this.target.item.object as StoryboardPage).page
                 }
             };
-            let lineObject = loadObject(storyboardLines, line, storyboardLineMetaData);
+            let lineObject = loadObject(storyboardLines, line, StoryboardLine.metaData);
 
             addObject(storyboardLines, lineObject);
         }
@@ -485,10 +478,9 @@ class StoryboardCanvasEditor extends CanvasEditor {
         _each(
             (this.props.displaySelection.children as DisplayItemChildrenObject)["pages"].children,
             (storyboardPageItem: any) => {
-                let storyboardPage = storyboardPageItem.object as StoryboardPageProperties;
+                let storyboardPage = storyboardPageItem.object as StoryboardPage;
                 let page = findPage(storyboardPage.page);
-                let pageResolution =
-                    page && (page.resolutions._array[0] as PageResolutionProperties);
+                let pageResolution = page && (page.resolutions._array[0] as PageResolution);
 
                 pageNodes.push({
                     parent: tree,
@@ -525,11 +517,11 @@ class StoryboardCanvasEditor extends CanvasEditor {
             (storyboardLineItem: any) => {
                 function findPageNode(page: string) {
                     return pageNodes.find(node => {
-                        return (node.item.object as StoryboardPageProperties).page == page;
+                        return (node.item.object as StoryboardPage).page == page;
                     });
                 }
 
-                let storyboardLine = storyboardLineItem.object as StoryboardLineProperties;
+                let storyboardLine = storyboardLineItem.object as StoryboardLine;
 
                 let source = findPageNode(storyboardLine.source.page);
                 let target = findPageNode(storyboardLine.target.page);
@@ -601,7 +593,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
         const object = data && data.object;
         if (object) {
             if (
-                isObjectInstanceOf(object, storyboardPageMetaData) &&
+                isObjectInstanceOf(object, StoryboardPage.metaData) &&
                 event.dataTransfer.effectAllowed == "copy"
             ) {
                 event.preventDefault();
@@ -611,7 +603,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
 
                 this.props.displaySelection.selectItems([]);
 
-                let storyboardPage = object as StoryboardPageProperties;
+                let storyboardPage = object as StoryboardPage;
 
                 let page = findPage(storyboardPage.page);
                 let pageResolution = page && page.resolutions._array[0];
@@ -676,15 +668,12 @@ class StoryboardCanvasEditor extends CanvasEditor {
     @action
     onDrop(event: any) {
         if (this.dropItem) {
-            let dropItemObj = this.dropItem.item.object as StoryboardPageProperties;
+            let dropItemObj = this.dropItem.item.object as StoryboardPage;
 
             dropItemObj.x = this.dropItem.rect.x;
             dropItemObj.y = this.dropItem.rect.y;
 
-            addObject(
-                (this.props.displaySelection.object as StoryboardProperties).pages,
-                dropItemObj
-            );
+            addObject((this.props.displaySelection.object as Storyboard).pages, dropItemObj);
         }
     }
 
@@ -702,15 +691,12 @@ class StoryboardCanvasEditor extends CanvasEditor {
 export class StoryboardEditor extends EditorComponent {
     canvasEditor: CanvasEditor;
 
-    get storyboard(): StoryboardProperties {
-        return getAncestorOfType(
-            this.props.editor.object,
-            storyboardMetaData
-        ) as StoryboardProperties;
+    get storyboard(): Storyboard {
+        return getAncestorOfType(this.props.editor.object, Storyboard.metaData) as Storyboard;
     }
 
     get storyboardPages() {
-        return this.storyboard && (this.storyboard as StoryboardProperties).pages;
+        return this.storyboard && (this.storyboard as Storyboard).pages;
     }
 
     getMissingPages() {
@@ -718,7 +704,7 @@ export class StoryboardEditor extends EditorComponent {
             let storyboardPages = this.storyboardPages;
             if (storyboardPages) {
                 return !storyboardPages._array.find(storyboardPage => {
-                    return (storyboardPage as StoryboardPageProperties).page == page.name;
+                    return (storyboardPage as StoryboardPage).page == page.name;
                 });
             } else {
                 return false;

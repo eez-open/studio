@@ -6,7 +6,7 @@ import styled from "eez-studio-ui/styled-components";
 import { objectToClipboardData, setClipboardData } from "project-editor/core/store";
 import { DragAndDropManager } from "project-editor/core/dd";
 
-import { widgetMetaData, WidgetType } from "project-editor/project/features/gui/widget";
+import { WidgetType } from "project-editor/project/features/gui/widget";
 import { getWidgetTypes } from "project-editor/project/features/gui/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,6 @@ class Widget extends React.Component<WidgetProps, WidgetState> {
         }
 
         object._id = "undefined";
-        object._metaData = widgetMetaData;
 
         setClipboardData(event, objectToClipboardData(object));
 

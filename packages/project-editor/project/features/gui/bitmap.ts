@@ -5,7 +5,7 @@ import { validators } from "eez-studio-shared/model/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { ProjectStore } from "project-editor/core/store";
-import { EezObject, registerMetaData } from "project-editor/core/metaData";
+import { EezObject, registerMetaData, PropertyType } from "project-editor/core/metaData";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
@@ -16,7 +16,7 @@ import { getStyleProperty } from "project-editor/project/features/gui/style";
 
 let fs = EEZStudio.electron.remote.require("fs");
 
-export class BitmapProperties extends EezObject {
+export class Bitmap extends EezObject {
     @observable
     name: string;
     @observable
@@ -29,6 +29,98 @@ export class BitmapProperties extends EezObject {
     style?: string;
     @observable
     alwaysBuild: boolean;
+
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return Bitmap;
+        },
+        className: "Bitmap",
+        label: (bitmap: Bitmap) => {
+            return bitmap.name;
+        },
+        properties: () => [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            {
+                name: "description",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "image",
+                type: PropertyType.Image,
+                hideInPropertyGrid: true,
+                skipSearch: true
+            },
+            {
+                name: "bpp",
+                type: PropertyType.Enum,
+                enumItems: [{ id: 16 }, { id: 32 }],
+                defaultValue: 16
+            },
+            {
+                name: "style",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: ["gui", "styles"]
+            },
+            {
+                name: "alwaysBuild",
+                type: PropertyType.Boolean
+            }
+        ],
+        newItem: (parent: EezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Bitmap",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [validators.required, validators.unique({}, parent)]
+                        },
+                        {
+                            name: "imageFilePath",
+                            displayName: "Image",
+                            type: RelativeFileInput,
+                            validators: [validators.required],
+                            options: {
+                                filters: [
+                                    { name: "PNG Image files", extensions: ["png"] },
+                                    { name: "All Files", extensions: ["*"] }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return new Promise<Bitmap>((resolve, reject) => {
+                    fs.readFile(
+                        ProjectStore.getAbsoluteFilePath(result.values.imageFilePath),
+                        "base64",
+                        (err: any, data: any) => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                let newBitmap: Bitmap = <any>{
+                                    name: result.values.name,
+                                    image: "data:image/png;base64," + data
+                                };
+
+                                resolve(newBitmap);
+                            }
+                        }
+                    );
+                });
+            });
+        },
+        editorComponent: BitmapEditor,
+        navigationComponent: ListNavigationWithContent,
+        navigationComponentId: "bitmaps",
+        icon: "image"
+    };
 
     private _imageElementLoading: boolean = false;
     @observable
@@ -47,97 +139,7 @@ export class BitmapProperties extends EezObject {
     }
 }
 
-export const bitmapMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return BitmapProperties;
-    },
-    className: "Bitmap",
-    label: (bitmap: BitmapProperties) => {
-        return bitmap.name;
-    },
-    properties: () => [
-        {
-            name: "name",
-            type: "string",
-            unique: true
-        },
-        {
-            name: "description",
-            type: "multiline-text"
-        },
-        {
-            name: "image",
-            type: "image",
-            hideInPropertyGrid: true,
-            skipSearch: true
-        },
-        {
-            name: "bpp",
-            type: "enum",
-            enumItems: [{ id: 16 }, { id: 32 }],
-            defaultValue: 16
-        },
-        {
-            name: "style",
-            type: "object-reference",
-            referencedObjectCollectionPath: ["gui", "styles"]
-        },
-        {
-            name: "alwaysBuild",
-            type: "boolean"
-        }
-    ],
-    newItem: (parent: EezObject) => {
-        return showGenericDialog({
-            dialogDefinition: {
-                title: "New Bitmap",
-                fields: [
-                    {
-                        name: "name",
-                        type: "string",
-                        validators: [validators.required, validators.unique({}, parent)]
-                    },
-                    {
-                        name: "imageFilePath",
-                        displayName: "Image",
-                        type: RelativeFileInput,
-                        validators: [validators.required],
-                        options: {
-                            filters: [
-                                { name: "PNG Image files", extensions: ["png"] },
-                                { name: "All Files", extensions: ["*"] }
-                            ]
-                        }
-                    }
-                ]
-            },
-            values: {}
-        }).then(result => {
-            return new Promise<BitmapProperties>((resolve, reject) => {
-                fs.readFile(
-                    ProjectStore.getAbsoluteFilePath(result.values.imageFilePath),
-                    "base64",
-                    (err: any, data: any) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            let newBitmap: BitmapProperties = <any>{
-                                name: result.values.name,
-                                image: "data:image/png;base64," + data
-                            };
-
-                            resolve(newBitmap);
-                        }
-                    }
-                );
-            });
-        });
-    },
-    editorComponent: BitmapEditor,
-    navigationComponent: ListNavigationWithContent,
-    navigationComponentId: "bitmaps",
-    icon: "image"
-});
+registerMetaData(Bitmap.metaData);
 
 export interface BitmapData {
     width: number;
@@ -146,7 +148,7 @@ export interface BitmapData {
     pixels: number[];
 }
 
-export function getData(bitmap: BitmapProperties): Promise<BitmapData> {
+export function getData(bitmap: Bitmap): Promise<BitmapData> {
     return new Promise((resolve, reject) => {
         let image = new Image();
 

@@ -5,7 +5,7 @@ import styled from "eez-studio-ui/styled-components";
 
 import { EditorComponent } from "project-editor/core/metaData";
 
-import { StyleProperties, drawStylePreview } from "project-editor/project/features/gui/style";
+import { Style, drawStylePreview } from "project-editor/project/features/gui/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -25,7 +25,7 @@ export class StyleEditor extends EditorComponent {
         let canvas = document.createElement("canvas");
         canvas.width = 240;
         canvas.height = 320;
-        drawStylePreview(canvas, this.props.editor.object as StyleProperties);
+        drawStylePreview(canvas, this.props.editor.object as Style);
 
         return <Image src={canvas.toDataURL()} />;
     }

@@ -4,7 +4,7 @@ import { validators } from "eez-studio-shared/model/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { registerMetaData, EezObject } from "project-editor/core/metaData";
+import { registerMetaData, EezObject, PropertyType } from "project-editor/core/metaData";
 import { ProjectStore, asArray } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import * as output from "project-editor/core/output";
@@ -16,7 +16,7 @@ import { metrics } from "project-editor/project/features/data/metrics";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DataItemProperties extends EezObject {
+export class DataItem extends EezObject {
     @observable
     name: string;
     @observable
@@ -35,98 +35,100 @@ export class DataItemProperties extends EezObject {
     defaultMaxValue: number;
     @observable
     usedIn: string[] | undefined;
-}
 
-export const dataItemMetaData = registerMetaData({
-    getClass: function(jsObject: any) {
-        return DataItemProperties;
-    },
-    className: "DataItem",
-    label: (dataItem: DataItemProperties) => {
-        return dataItem.name;
-    },
-    properties: () => [
-        {
-            name: "name",
-            type: "string",
-            unique: true
+    static metaData = {
+        getClass: function(jsObject: any) {
+            return DataItem;
         },
-        {
-            name: "description",
-            type: "multiline-text"
+        className: "DataItem",
+        label: (dataItem: DataItem) => {
+            return dataItem.name;
         },
-        {
-            name: "type",
-            type: "enum",
-            enumItems: [
-                {
-                    id: "integer"
-                },
-                {
-                    id: "float"
-                },
-                {
-                    id: "boolean"
-                },
-                {
-                    id: "string"
-                },
-                {
-                    id: "enum"
-                },
-                {
-                    id: "list"
-                }
-            ]
-        },
-        {
-            name: "enumItems",
-            type: "multiline-text"
-        },
-        {
-            name: "defaultValue",
-            type: "multiline-text"
-        },
-        {
-            name: "defaultValueList",
-            type: "multiline-text"
-        },
-        {
-            name: "defaultMinValue",
-            type: "number"
-        },
-        {
-            name: "defaultMaxValue",
-            type: "number"
-        },
-        {
-            name: "usedIn",
-            type: "configuration-references"
-        }
-    ],
-    newItem: (parent: EezObject) => {
-        return showGenericDialog({
-            dialogDefinition: {
-                title: "New Data Item",
-                fields: [
+        properties: () => [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            {
+                name: "description",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "type",
+                type: PropertyType.Enum,
+                enumItems: [
                     {
-                        name: "name",
-                        type: "string",
-                        validators: [validators.required, validators.unique({}, parent)]
+                        id: "integer"
+                    },
+                    {
+                        id: "float"
+                    },
+                    {
+                        id: "boolean"
+                    },
+                    {
+                        id: "string"
+                    },
+                    {
+                        id: "enum"
+                    },
+                    {
+                        id: "list"
                     }
                 ]
             },
-            values: {}
-        }).then(result => {
-            return Promise.resolve({
-                name: result.values.name
+            {
+                name: "enumItems",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "defaultValue",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "defaultValueList",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "defaultMinValue",
+                type: PropertyType.Number
+            },
+            {
+                name: "defaultMaxValue",
+                type: PropertyType.Number
+            },
+            {
+                name: "usedIn",
+                type: PropertyType.ConfigurationReference
+            }
+        ],
+        newItem: (parent: EezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Data Item",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [validators.required, validators.unique({}, parent)]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name
+                });
             });
-        });
-    },
-    navigationComponent: ListNavigationWithContent,
-    navigationComponentId: "data-items",
-    icon: "dns"
-});
+        },
+        navigationComponent: ListNavigationWithContent,
+        navigationComponentId: "data-items",
+        icon: "dns"
+    };
+}
+
+registerMetaData(DataItem.metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -134,8 +136,8 @@ registerFeatureImplementation("data", {
     projectFeature: {
         mandatory: false,
         key: "data",
-        type: "array",
-        metaData: dataItemMetaData,
+        type: PropertyType.Array,
+        metaData: DataItem.metaData,
         create: () => {
             return [];
         },
@@ -162,7 +164,7 @@ registerFeatureImplementation("data", {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findDataItem(dataItemName: string) {
-    for (const dataItem of ProjectStore.projectProperties.data._array) {
+    for (const dataItem of ProjectStore.project.data._array) {
         if (dataItem.name == dataItemName) {
             return dataItem;
         }
@@ -171,7 +173,7 @@ export function findDataItem(dataItemName: string) {
 }
 
 export function findDataItemIndex(dataItemName: string) {
-    let dataItems = ProjectStore.projectProperties.data._array;
+    let dataItems = ProjectStore.project.data._array;
     for (let i = 0; i < dataItems.length; i++) {
         if (dataItems[i].name == dataItemName) {
             return i;

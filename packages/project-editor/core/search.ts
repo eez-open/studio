@@ -9,7 +9,7 @@ import {
     isArray,
     asArray
 } from "project-editor/core/store";
-import { EezObject, EezValueObject } from "project-editor/core/metaData";
+import { EezObject, EezValueObject, PropertyType } from "project-editor/core/metaData";
 
 import { Section, Type } from "project-editor/core/output";
 
@@ -32,7 +32,10 @@ function* visitWithPause(parentObject: EezObject): IterableIterator<VisitResult>
             if (!propertyMetaData.skipSearch) {
                 let value = getProperty(parentObject, propertyMetaData.name);
                 if (value) {
-                    if (propertyMetaData.type === "object" || propertyMetaData.type === "array") {
+                    if (
+                        propertyMetaData.type === PropertyType.Object ||
+                        propertyMetaData.type === PropertyType.Array
+                    ) {
                         yield* visitWithPause(value);
                     } else {
                         yield getObjectPropertyAsObject(parentObject, propertyMetaData);
@@ -59,7 +62,10 @@ function* visitWithoutPause(parentObject: EezObject): IterableIterator<VisitResu
             if (!propertyMetaData.skipSearch) {
                 let value = getProperty(parentObject, propertyMetaData.name);
                 if (value) {
-                    if (propertyMetaData.type === "object" || propertyMetaData.type === "array") {
+                    if (
+                        propertyMetaData.type === PropertyType.Object ||
+                        propertyMetaData.type === PropertyType.Array
+                    ) {
                         yield* visitWithoutPause(value);
                     } else {
                         yield getObjectPropertyAsObject(parentObject, propertyMetaData);
@@ -144,7 +150,7 @@ function* searchForReference(
                             objectParentPath,
                             objectName
                         );
-                    } else if (valueObject.propertyMetaData.type === "object-reference") {
+                    } else if (valueObject.propertyMetaData.type === PropertyType.ObjectReference) {
                         if (
                             isEqual(
                                 valueObject.propertyMetaData.referencedObjectCollectionPath,
@@ -155,7 +161,9 @@ function* searchForReference(
                                 match = true;
                             }
                         }
-                    } else if (valueObject.propertyMetaData.type === "configuration-references") {
+                    } else if (
+                        valueObject.propertyMetaData.type === PropertyType.ConfigurationReference
+                    ) {
                         if (isEqual(["settings", "build", "configurations"], objectParentPath)) {
                             if (valueObject.value) {
                                 for (let i = 0; i < valueObject.value.length; i++) {
@@ -243,18 +251,18 @@ function startNewSearch(root: EezObject, patternOrObject: string | EezObject) {
 
 export function startSearch(pattern: string) {
     OutputSectionsStore.setActiveSection(Section.SEARCH);
-    startNewSearch(ProjectStore.projectProperties, pattern);
+    startNewSearch(ProjectStore.project, pattern);
 }
 
 export function findAllReferences(object: EezObject) {
     OutputSectionsStore.setActiveSection(Section.SEARCH);
-    startNewSearch(ProjectStore.projectProperties, object);
+    startNewSearch(ProjectStore.project, object);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function isReferenced(object: EezObject) {
-    let resultsGenerator = searchForReference(ProjectStore.projectProperties, object, false);
+    let resultsGenerator = searchForReference(ProjectStore.project, object, false);
 
     while (true) {
         let searchResult = resultsGenerator.next();
@@ -269,7 +277,7 @@ export function isReferenced(object: EezObject) {
 }
 
 export function replaceObjectReference(object: EezObject, newValue: string) {
-    let resultsGenerator = searchForReference(ProjectStore.projectProperties, object, false);
+    let resultsGenerator = searchForReference(ProjectStore.project, object, false);
 
     while (true) {
         let searchResult = resultsGenerator.next();
@@ -283,7 +291,7 @@ export function replaceObjectReference(object: EezObject, newValue: string) {
 
             if (searchValue.propertyMetaData.replaceObjectReference) {
                 value = searchValue.propertyMetaData.replaceObjectReference(value);
-            } else if (searchValue.propertyMetaData.type === "configuration-references") {
+            } else if (searchValue.propertyMetaData.type === PropertyType.ConfigurationReference) {
                 value = [];
                 for (let i = 0; i < searchValue.value.length; i++) {
                     if (searchValue.value[i] !== getProperty(object, "name")) {

@@ -16,7 +16,7 @@ import {
 } from "project-editor/core/store";
 import { reduceUntilCommonParent as reduceObjectsUntilCommonParent } from "project-editor/core/store";
 
-import { EezObject, EezArrayObject } from "project-editor/core/metaData";
+import { EezObject, EezArrayObject, PropertyType } from "project-editor/core/metaData";
 import { objectsToClipboardData } from "project-editor/core/store";
 import {
     cutItem,
@@ -121,12 +121,13 @@ export class TreeObjectAdapter {
             .properties(this.object)
             .filter(
                 propertyMetaData =>
-                    (propertyMetaData.type === "object" || propertyMetaData.type === "array") &&
+                    (propertyMetaData.type === PropertyType.Object ||
+                        propertyMetaData.type === PropertyType.Array) &&
                     !(propertyMetaData.enumerable !== undefined && !propertyMetaData.enumerable) &&
                     getProperty(this.object, propertyMetaData.name)
             );
 
-        if (properties.length == 1 && properties[0].type === "array") {
+        if (properties.length == 1 && properties[0].type === PropertyType.Array) {
             return asArray(getProperty(this.object, properties[0].name)).map(child =>
                 this.transformer(child)
             );

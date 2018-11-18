@@ -27,7 +27,7 @@ import {
     updateObject
 } from "project-editor/core/store";
 
-import { EezObject, PropertyMetaData } from "project-editor/core/metaData";
+import { EezObject, PropertyMetaData, PropertyType } from "project-editor/core/metaData";
 import { replaceObjectReference } from "project-editor/core/search";
 import { generateGuid } from "project-editor/core/util";
 
@@ -199,7 +199,7 @@ export class ConfigurationReferencesPropertyValue extends React.Component<
                 </div>
                 {this.props.value && (
                     <ConfigurationReferencesPropertyValueConfigurationsDiv>
-                        {ProjectStore.projectProperties.settings.build.configurations._array.map(
+                        {ProjectStore.project.settings.build.configurations._array.map(
                             configuration => {
                                 return (
                                     <div key={configuration.name} className="checkbox">
@@ -397,13 +397,13 @@ class Property extends React.Component<PropertyProps, {}> {
     @bind
     onChange(event: any) {
         const target = event.target;
-        if (this.props.propertyMetaData.type === "configuration-references") {
+        if (this.props.propertyMetaData.type === PropertyType.ConfigurationReference) {
             if (target.value === "all") {
                 this.changeValue(undefined);
             } else {
                 this.changeValue([]);
             }
-        } else if (this.props.propertyMetaData.type === "enum") {
+        } else if (this.props.propertyMetaData.type === PropertyType.Enum) {
             const id = target.value.toString();
             const enumItem = this.props.propertyMetaData.enumItems!.find(
                 enumItem => enumItem.id.toString() === id
@@ -494,7 +494,7 @@ class Property extends React.Component<PropertyProps, {}> {
             return <input type="text" className="form-control" value={this.value} readOnly />;
         }
 
-        if (propertyMetaData.type == "string" && propertyMetaData.unique) {
+        if (propertyMetaData.type === PropertyType.String && propertyMetaData.unique) {
             return (
                 <div className="input-group">
                     <input
@@ -515,7 +515,7 @@ class Property extends React.Component<PropertyProps, {}> {
                     </div>
                 </div>
             );
-        } else if (propertyMetaData.type == "multiline-text") {
+        } else if (propertyMetaData.type === PropertyType.MultilineText) {
             return (
                 <textarea
                     ref="textarea"
@@ -525,9 +525,9 @@ class Property extends React.Component<PropertyProps, {}> {
                     style={{ resize: "none" }}
                 />
             );
-        } else if (propertyMetaData.type == "json") {
+        } else if (propertyMetaData.type === PropertyType.JSON) {
             return <CodeEditorProperty {...this.props} />;
-        } else if (propertyMetaData.type == "object") {
+        } else if (propertyMetaData.type === PropertyType.Object) {
             let value = getPropertyAsString(this.props.object, propertyMetaData);
             if (propertyMetaData.onSelect) {
                 return (
@@ -553,7 +553,7 @@ class Property extends React.Component<PropertyProps, {}> {
             } else {
                 return <input type="text" className="form-control" value={value} readOnly />;
             }
-        } else if (propertyMetaData.type == "enum") {
+        } else if (propertyMetaData.type === PropertyType.Enum) {
             let options: JSX.Element[];
 
             if (propertyMetaData.enumItems) {
@@ -581,7 +581,7 @@ class Property extends React.Component<PropertyProps, {}> {
                     {options}
                 </select>
             );
-        } else if (propertyMetaData.type == "image") {
+        } else if (propertyMetaData.type === PropertyType.Image) {
             return (
                 <div>
                     <div className="input-group">
@@ -615,7 +615,7 @@ class Property extends React.Component<PropertyProps, {}> {
                     )}
                 </div>
             );
-        } else if (propertyMetaData.type == "project-relative-folder") {
+        } else if (propertyMetaData.type === PropertyType.ProjectRelativeFolder) {
             let clearButton: JSX.Element | undefined;
 
             if (this.value !== undefined) {
@@ -647,7 +647,7 @@ class Property extends React.Component<PropertyProps, {}> {
                     </div>
                 </div>
             );
-        } else if (propertyMetaData.type == "object-reference") {
+        } else if (propertyMetaData.type === PropertyType.ObjectReference) {
             let objects: EezObject[] = [];
 
             if (propertyMetaData.referencedObjectCollectionPath) {
@@ -687,14 +687,14 @@ class Property extends React.Component<PropertyProps, {}> {
                     {options}
                 </select>
             );
-        } else if (propertyMetaData.type == "configuration-references") {
+        } else if (propertyMetaData.type === PropertyType.ConfigurationReference) {
             return (
                 <ConfigurationReferencesPropertyValue
                     value={this.value}
                     onChange={value => this.changeValue(value)}
                 />
             );
-        } else if (propertyMetaData.type == "boolean") {
+        } else if (propertyMetaData.type === PropertyType.Boolean) {
             return (
                 <label>
                     <input
@@ -706,7 +706,7 @@ class Property extends React.Component<PropertyProps, {}> {
                     {" " + (propertyMetaData.displayName || humanize(propertyMetaData.name))}
                 </label>
             );
-        } else if (propertyMetaData.type == "guid") {
+        } else if (propertyMetaData.type === PropertyType.GUID) {
             return (
                 <div className="input-group">
                     <input
@@ -728,17 +728,38 @@ class Property extends React.Component<PropertyProps, {}> {
                     </div>
                 </div>
             );
-        } else {
+        } else if (propertyMetaData.type === PropertyType.String) {
             return (
                 <input
                     ref="input"
-                    type={propertyMetaData.type}
+                    type="text"
+                    className="form-control"
+                    value={this.value}
+                    onChange={this.onChange}
+                />
+            );
+        } else if (propertyMetaData.type === PropertyType.Number) {
+            return (
+                <input
+                    ref="input"
+                    type="number"
+                    className="form-control"
+                    value={this.value}
+                    onChange={this.onChange}
+                />
+            );
+        } else if (propertyMetaData.type === PropertyType.Color) {
+            return (
+                <input
+                    ref="input"
+                    type="color"
                     className="form-control"
                     value={this.value}
                     onChange={this.onChange}
                 />
             );
         }
+        return null;
     }
 }
 
@@ -816,7 +837,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
 
         for (let propertyMetaData of getObjectPropertiesMetaData(object)) {
             if (!isArray(object) && !propertyMetaData.hideInPropertyGrid) {
-                const colSpan = propertyMetaData.type == "boolean";
+                const colSpan = propertyMetaData.type === PropertyType.Boolean;
 
                 let property;
                 if (colSpan) {

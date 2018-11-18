@@ -4,7 +4,7 @@ import { getExtensionsByCategory } from "project-editor/core/extensions";
 export function getAllMetrics() {
     let allMetrics: any = {};
 
-    const project = ProjectStore.projectProperties;
+    const project = ProjectStore.project;
     let projectFeatures = getExtensionsByCategory("project-feature");
     for (let projectFeature of projectFeatures) {
         if (

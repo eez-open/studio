@@ -1,11 +1,11 @@
 import { EezObject, MetaData, PropertyType } from "project-editor/core/metaData";
 import { Message } from "project-editor/core/output";
-import { ProjectProperties } from "project-editor/project/project";
+import { Project } from "project-editor/project/project";
 
 let fs = EEZStudio.electron.remote.require("fs");
 let path = EEZStudio.electron.remote.require("path");
 
-import { ExtensionDefinitionProperties } from "project-editor/project/features/extension-definitions/extension-definitions";
+import { ExtensionDefinition } from "project-editor/project/features/extension-definitions/extension-definitions";
 
 export type BuildResult = { [key: string]: string };
 
@@ -19,15 +19,15 @@ interface ExtensionImplementation {
         create: () => any;
         check?: (object: EezObject) => Message[];
         build?: (
-            project: ProjectProperties,
+            project: Project,
             sectionNames: string[] | undefined
         ) => Promise<BuildResult>;
         collectExtensionDefinitions?: (
-            project: ProjectProperties,
-            extensionDefinition: ExtensionDefinitionProperties,
+            project: Project,
+            extensionDefinition: ExtensionDefinition,
             properties: any
         ) => void;
-        metrics?: (project: ProjectProperties) => { [key: string]: string | number };
+        metrics?: (project: Project) => { [key: string]: string | number };
     };
 }
 

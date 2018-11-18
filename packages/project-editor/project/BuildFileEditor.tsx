@@ -6,7 +6,7 @@ import { CodeEditor } from "eez-studio-ui/code-editor";
 
 import { EditorComponent } from "project-editor/core/metaData";
 import { UndoManager, updateObject } from "project-editor/core/store";
-import { BuildFileProperties } from "project-editor/project/project";
+import { BuildFile } from "project-editor/project/project";
 
 @observer
 export class BuildFileEditor extends EditorComponent {
@@ -38,7 +38,7 @@ export class BuildFileEditor extends EditorComponent {
     }
 
     render() {
-        let buildFile = this.props.editor.object as BuildFileProperties;
+        let buildFile = this.props.editor.object as BuildFile;
         return (
             <CodeEditor
                 ref={ref => (this.codeEditor = ref!)}
