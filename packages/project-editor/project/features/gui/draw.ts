@@ -467,13 +467,13 @@ export function drawDisplayDataWidget(widget: Widget.Widget, rect: Rect) {
 }
 
 export function drawTextWidget(widget: Widget.Widget, rect: Rect) {
-    let textWidget = widget as Widget.TextWidgetProperties;
+    let textWidget = widget as Widget.TextWidget;
     let text = (textWidget.data ? (data.get(textWidget.data) as string) : textWidget.text) || "";
     return drawText(text, rect.width, rect.height, findStyleOrGetDefault(textWidget.style), false);
 }
 
 export function drawMultilineTextWidget(widget: Widget.Widget, rect: Rect) {
-    let multilineTextWidget = widget as Widget.MultilineTextWidgetProperties;
+    let multilineTextWidget = widget as Widget.MultilineTextWidget;
     let text =
         (multilineTextWidget.data
             ? (data.get(multilineTextWidget.data) as string)
@@ -488,7 +488,7 @@ export function drawMultilineTextWidget(widget: Widget.Widget, rect: Rect) {
 }
 
 export function drawRectangleWidget(widget: Widget.Widget, rect: Rect) {
-    let rectangleWidget = widget as Widget.RectangleWidgetProperties;
+    let rectangleWidget = widget as Widget.RectangleWidget;
     return drawRectangle(
         rect.width,
         rect.height,
@@ -498,7 +498,7 @@ export function drawRectangleWidget(widget: Widget.Widget, rect: Rect) {
 }
 
 export function drawBitmapWidget(widget: Widget.Widget, rect: Rect) {
-    let bitmapWidget = widget as Widget.BitmapWidgetProperties;
+    let bitmapWidget = widget as Widget.BitmapWidget;
 
     let bitmap;
 
@@ -522,7 +522,7 @@ export function drawBitmapWidget(widget: Widget.Widget, rect: Rect) {
 }
 
 export function drawButtonWidget(widget: Widget.Widget, rect: Rect) {
-    let buttonWidget = widget as Widget.ButtonWidgetProperties;
+    let buttonWidget = widget as Widget.ButtonWidget;
     let text = buttonWidget.data && data.get(buttonWidget.data);
     if (!text) {
         text = buttonWidget.text;
@@ -535,7 +535,7 @@ export function drawButtonWidget(widget: Widget.Widget, rect: Rect) {
 }
 
 export function drawToggleButtonWidget(widget: Widget.Widget, rect: Rect) {
-    let toggleButtonWidget = widget as Widget.ToggleButtonWidgetProperties;
+    let toggleButtonWidget = widget as Widget.ToggleButtonWidget;
     let text = toggleButtonWidget.text1 || "";
     return drawText(
         text,
@@ -623,7 +623,7 @@ export function drawButtonGroupWidget(widget: Widget.Widget, rect: Rect) {
 
 function drawScale(
     ctx: CanvasRenderingContext2D,
-    scaleWidget: Widget.ScaleWidgetProperties,
+    scaleWidget: Widget.ScaleWidget,
     rect: Rect,
     y_from: number,
     y_to: number,
@@ -785,7 +785,7 @@ function drawScale(
 }
 
 export function drawScaleWidget(widget: Widget.Widget, rect: Rect) {
-    let scaleWidget = widget as Widget.ScaleWidgetProperties;
+    let scaleWidget = widget as Widget.ScaleWidget;
     let style = findStyleOrGetDefault(scaleWidget.style);
 
     return drawFromCache(
@@ -848,7 +848,7 @@ export function drawScaleWidget(widget: Widget.Widget, rect: Rect) {
 }
 
 export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
-    let barGraphWidget = widget as Widget.BarGraphWidgetProperties;
+    let barGraphWidget = widget as Widget.BarGraphWidget;
     let style = findStyleOrGetDefault(barGraphWidget.style);
 
     return drawFromCache(
@@ -994,7 +994,7 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function drawYTGraphWidget(widget: Widget.Widget, rect: Rect) {
-    let ytGraphWidget = widget as Widget.YTGraphWidgetProperties;
+    let ytGraphWidget = widget as Widget.YTGraphWidget;
     let style = findStyleOrGetDefault(ytGraphWidget.style);
 
     return drawFromCache(
@@ -1039,7 +1039,7 @@ export function drawYTGraphWidget(widget: Widget.Widget, rect: Rect) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function drawUpDownWidget(widget: Widget.Widget, rect: Rect) {
-    let upDownWidget = widget as Widget.UpDownWidgetProperties;
+    let upDownWidget = widget as Widget.UpDownWidget;
     let style = findStyleOrGetDefault(upDownWidget.style);
     let buttonsStyle = findStyleOrGetDefault(upDownWidget.buttonsStyle);
 
@@ -1100,7 +1100,7 @@ export function drawUpDownWidget(widget: Widget.Widget, rect: Rect) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function drawListGraphWidget(widget: Widget.Widget, rect: Rect) {
-    let listGraphWidget = widget as Widget.ListGraphWidgetProperties;
+    let listGraphWidget = widget as Widget.ListGraphWidget;
     let style = findStyleOrGetDefault(listGraphWidget.style);
 
     return drawFromCache(
@@ -1153,7 +1153,7 @@ export function drawListGraphWidget(widget: Widget.Widget, rect: Rect) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect) {
-    let pageViewWidget = widget as Widget.LayoutViewWidgetProperties;
+    let pageViewWidget = widget as Widget.LayoutViewWidget;
 
     let layoutName;
     if (pageViewWidget.layout) {
@@ -1184,7 +1184,7 @@ export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function drawAppViewWidget(widget: Widget.Widget, rect: Rect) {
-    let pageViewWidget = widget as Widget.AppViewWidgetProperties;
+    let pageViewWidget = widget as Widget.AppViewWidget;
 
     if (pageViewWidget.data) {
         const pageName = data.get(pageViewWidget.data) as string;

@@ -21,7 +21,7 @@ import { ListNavigationWithContent } from "project-editor/project/ListNavigation
 
 import * as data from "project-editor/project/features/data/data";
 
-import { Widget, SelectWidgetProperties } from "project-editor/project/features/gui/widget";
+import { Widget, SelectWidget } from "project-editor/project/features/gui/widget";
 import { PageEditor } from "project-editor/project/features/gui/PageEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +219,7 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
 
                 // remember from selectedObject up to the root
                 while (selectedObject._parent && selectedObject._parent!._parent) {
-                    if (selectedObject._parent!._parent instanceof SelectWidgetProperties) {
+                    if (selectedObject._parent!._parent instanceof SelectWidget) {
                         this.selectWidgetToSelectedWidget[selectedObject._parent!._parent!._id] =
                             selectedObject._id;
                     }
@@ -257,7 +257,7 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
     }
 
     getSelectedWidgetForSelectWidget(item: DisplayItem): DisplayItem | undefined {
-        let widget = item.object as SelectWidgetProperties;
+        let widget = item.object as SelectWidget;
         let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
         let selectedWidgetItem: DisplayItem | undefined;

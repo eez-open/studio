@@ -1,52 +1,3 @@
-// ProjectProperties => actions, data, extensionDefinitions
-// BuildProperties => configurations, files
-// GuiProperties => pages, styles, fonts, bitmaps
-// StoryboardProperties => pages, lines
-// PageProperties => resolutions
-// PageResolutionProperties => widgets
-// SelectWidgetProperties => widgets
-// ContainerWidgetProperties => widgets
-// FontProperties => glyphs
-// ScpiProperties => subsystems
-// ScpiSubsystemProperties => commands
-// ShortcutsProperties => shortcuts
-
-// SettingsProperties =>
-// GeneralProperties =>
-// BuildConfigurationProperties =>
-// BuildFileProperties =>
-// ActionProperties =>
-// DataItemProperties =>
-// ExtensionDefinitionProperties =>
-// StoryboardPageProperties =>
-// StoryboardLineTargetProperties =>
-// StoryboardLineSourceProperties =>
-// TextWidgetProperties =>
-// BitmapWidgetProperties =>
-// DisplayDataWidgetProperties =>
-// MultilineTextWidgetProperties =>
-// SelectWidgetEditorProperties =>
-// RectangleWidgetProperties =>
-// AppViewWidgetProperties =>
-// GridWidgetProperties =>
-// ListWidgetProperties =>
-// LayoutViewWidgetProperties =>
-// ButtonWidgetProperties =>
-// BarGraphWidgetProperties =>
-// YTGraphWidgetProperties =>
-// ToggleButtonWidgetProperties =>
-// ButtonGroupWidgetProperties =>
-// ListGraphWidgetProperties =>
-// UpDownWidgetProperties =>
-// StyleProperties =>
-// FontSourceProperties =>
-// GlyphProperties =>
-// GlyphSourceProperties =>
-// BitmapProperties =>
-// ScpiCommandProperties =>
-// ShortcutProperties =>
-// ShortcutActionProperties =>
-
 import React from "react";
 import { observable } from "mobx";
 
@@ -127,6 +78,8 @@ export interface ClassInfo {
     label: (object: EezObject) => string;
     listLabel?: (object: EezObject) => JSX.Element | string;
 
+    parentClassInfo?: ClassInfo;
+
     showInNavigation?: boolean;
     hideInProperties?: boolean;
     navigationComponent?: typeof NavigationComponent | null;
@@ -146,6 +99,17 @@ export interface ClassInfo {
     ) => EezObject | PropertyInfo | undefined;
     icon?: string;
 }
+
+export function makeDerivedClassInfo(
+    baseClassInfo: ClassInfo,
+    derivedClassInfoProperties: Partial<ClassInfo>
+): ClassInfo {
+    const derivedClassInfo = Object.assign({}, baseClassInfo, derivedClassInfoProperties);
+    derivedClassInfo.parentClassInfo = baseClassInfo;
+    return derivedClassInfo;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 let classInfoMap: Map<string, ClassInfo> = new Map<string, ClassInfo>();
 

@@ -1173,6 +1173,7 @@ export function loadObject(
     }
 
     let object = new (classInfo.getClass(jsObject))();
+    classInfo = object._classInfo;
 
     object._id = getChildId(parent as EezObject);
     object._parent = parent as EezObject;
@@ -1704,7 +1705,15 @@ export function getObjectPropertiesInfo(object: EezObject) {
 }
 
 export function isObjectInstanceOf(object: EezObject, classInfo: ClassInfo) {
-    return object._classInfo === classInfo;
+    let objectClassInfo: ClassInfo | undefined = object._classInfo;
+    do {
+        if (objectClassInfo === classInfo) {
+            return true;
+        }
+        objectClassInfo = objectClassInfo.parentClassInfo;
+    } while(objectClassInfo);
+
+    return false;
 }
 
 export function getInheritedValue(object: EezObject, propertyName: string) {

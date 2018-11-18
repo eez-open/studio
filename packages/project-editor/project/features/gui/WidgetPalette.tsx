@@ -56,7 +56,8 @@ class Widget extends React.Component<WidgetProps, WidgetState> {
             dragging: true
         });
 
-        let object = (this.props.widget as WidgetType)["create"]();
+        let object = new this.props.widget.widgetClass();
+        Object.assign(object, object._classInfo.defaultValue!);
 
         if (!(object as any).style) {
             (object as any).style = "default";

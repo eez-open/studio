@@ -21,7 +21,7 @@ import {
 
 import {
     Widget,
-    SelectWidgetProperties
+    SelectWidget
 } from "project-editor/project/features/gui/widget";
 import { WidgetContainerDisplayItem } from "project-editor/project/features/gui/page";
 import { drawWidget } from "project-editor/project/features/gui/draw";
@@ -78,7 +78,7 @@ export class WidgetContainerEditor extends CanvasEditor {
     hitTestFilter(nodes: TreeNode[]): TreeNode[] {
         if (nodes.length > 1) {
             let i = nodes.length - 1;
-            while (i > 0 && nodes[i - 1].item.object instanceof SelectWidgetProperties) {
+            while (i > 0 && nodes[i - 1].item.object instanceof SelectWidget) {
                 i--;
             }
             return [nodes[i]];

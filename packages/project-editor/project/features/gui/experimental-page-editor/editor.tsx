@@ -37,10 +37,10 @@ import { findStyleOrGetDefault } from "project-editor/project/features/gui/gui";
 import { PageResolution } from "project-editor/project/features/gui/page";
 import {
     Widget,
-    ContainerWidgetProperties,
-    ListWidgetProperties,
-    GridWidgetProperties,
-    SelectWidgetProperties,
+    ContainerWidget,
+    ListWidget,
+    GridWidget,
+    SelectWidget,
     SelectWidgetEditor,
     getWidgetType
 } from "project-editor/project/features/gui/widget";
@@ -54,13 +54,13 @@ import { drawTree } from "project-editor/components/CanvasEditorUtil";
 function getObjectComponentClass(object: EezObject): typeof BaseObjectComponent {
     if (object instanceof SelectWidgetEditor) {
         return SelectWidgetEditorObjectComponent;
-    } else if (object instanceof ContainerWidgetProperties) {
+    } else if (object instanceof ContainerWidget) {
         return ContainerWidgetObjectComponent;
-    } else if (object instanceof ListWidgetProperties) {
+    } else if (object instanceof ListWidget) {
         return ListWidgetObjectComponent;
-    } else if (object instanceof GridWidgetProperties) {
+    } else if (object instanceof GridWidget) {
         return GridWidgetObjectComponent;
-    } else if (object instanceof SelectWidgetProperties) {
+    } else if (object instanceof SelectWidget) {
         return SelectWidgetObjectComponent;
     } else {
         return WidgetObjectComponent;
@@ -193,21 +193,13 @@ class WidgetObjectComponent extends BaseObjectComponent {
 
         let listWidget = this.widgetProperties._parent;
         while (
-            !(
-                listWidget instanceof ListWidgetProperties ||
-                listWidget instanceof GridWidgetProperties
-            ) &&
+            !(listWidget instanceof ListWidget || listWidget instanceof GridWidget) &&
             listWidget instanceof Widget
         ) {
             listWidget = listWidget._parent;
         }
 
-        if (
-            !(
-                listWidget instanceof ListWidgetProperties ||
-                listWidget instanceof GridWidgetProperties
-            )
-        ) {
+        if (!(listWidget instanceof ListWidget || listWidget instanceof GridWidget)) {
             return rects;
         }
 
@@ -215,7 +207,7 @@ class WidgetObjectComponent extends BaseObjectComponent {
         if (itemWidget) {
             let count = listWidget.data ? data.count(listWidget.data) : 0;
 
-            if (listWidget instanceof ListWidgetProperties) {
+            if (listWidget instanceof ListWidget) {
                 for (let i = 1; i < count; i++) {
                     if (listWidget.listType === "horizontal") {
                         rects.push({
@@ -300,7 +292,7 @@ class WidgetObjectComponent extends BaseObjectComponent {
 @observer
 class ContainerWidgetObjectComponent extends WidgetObjectComponent {
     get containerWidgetProperties() {
-        return this.widgetProperties as ContainerWidgetProperties;
+        return this.widgetProperties as ContainerWidget;
     }
 
     render() {
@@ -317,7 +309,7 @@ class ContainerWidgetObjectComponent extends WidgetObjectComponent {
 @observer
 class ListWidgetObjectComponent extends WidgetObjectComponent {
     get listWidgetProperties() {
-        return this.widgetProperties as ListWidgetProperties;
+        return this.widgetProperties as ListWidget;
     }
 
     get itemWidget() {
@@ -384,7 +376,7 @@ class ListWidgetObjectComponent extends WidgetObjectComponent {
 @observer
 class GridWidgetObjectComponent extends WidgetObjectComponent {
     get gridWidgetProperties() {
-        return this.widgetProperties as GridWidgetProperties;
+        return this.widgetProperties as GridWidget;
     }
 
     get itemWidget() {
@@ -457,7 +449,7 @@ class GridWidgetObjectComponent extends WidgetObjectComponent {
 @observer
 class SelectWidgetObjectComponent extends WidgetObjectComponent {
     get selectWidgetProperties() {
-        return this.widgetProperties as SelectWidgetProperties;
+        return this.widgetProperties as SelectWidget;
     }
 
     get count() {
@@ -511,7 +503,7 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
     }
 
     get selectWidget() {
-        return this.props.object._parent! as SelectWidgetProperties;
+        return this.props.object._parent! as SelectWidget;
     }
 
     get rect() {
@@ -697,19 +689,13 @@ function findSelectWidgetEditors(rootObject: Widget | PageResolution) {
     const result: SelectWidgetEditor[] = [];
 
     function doFind(object: Widget | PageResolution) {
-        if (
-            object instanceof PageResolution ||
-            object instanceof ContainerWidgetProperties
-        ) {
+        if (object instanceof PageResolution || object instanceof ContainerWidget) {
             object.widgets._array.forEach(doFind);
-        } else if (
-            object instanceof ListWidgetProperties ||
-            object instanceof GridWidgetProperties
-        ) {
+        } else if (object instanceof ListWidget || object instanceof GridWidget) {
             if (object.itemWidget) {
                 doFind(object.itemWidget);
             }
-        } else if (object instanceof SelectWidgetProperties) {
+        } else if (object instanceof SelectWidget) {
             result.push(object.editor);
             object.widgets._array.forEach(doFind);
         }

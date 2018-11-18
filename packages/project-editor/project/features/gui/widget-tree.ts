@@ -17,9 +17,9 @@ import {
 } from "project-editor/project/features/gui/page";
 import {
     Widget,
-    ListWidgetProperties,
-    GridWidgetProperties,
-    SelectWidgetProperties
+    ListWidget,
+    GridWidget,
+    SelectWidget
 } from "project-editor/project/features/gui/widget";
 import { drawWidget, drawPageFrame } from "project-editor/project/features/gui/draw";
 
@@ -66,7 +66,7 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
     }
 
     getSelectedWidgetForSelectWidget(item: DisplayItem): DisplayItem | undefined {
-        let widget = item.object as SelectWidgetProperties;
+        let widget = item.object as SelectWidget;
         if (widget.data && widget.widgets) {
             let index: number = data.getEnumValue(widget.data);
             if (index >= 0 && index < widget.widgets._array.length) {
@@ -152,7 +152,7 @@ export function createWidgetTree(
                         enumWidget(treeNode, child, x, y);
                     });
                 } else if (object.type == "List") {
-                    let widget = object as ListWidgetProperties;
+                    let widget = object as ListWidget;
                     let itemWidget = widget.itemWidget;
                     if (itemWidget) {
                         let itemWidgetItem = (item.children as DisplayItemChildrenObject)[
@@ -170,7 +170,7 @@ export function createWidgetTree(
                         }
                     }
                 } else if (object.type == "Grid") {
-                    let widget = object as GridWidgetProperties;
+                    let widget = object as GridWidget;
                     let itemWidget = widget.itemWidget;
                     if (itemWidget) {
                         let itemWidgetItem = (item.children as DisplayItemChildrenObject)[
