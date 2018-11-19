@@ -11,10 +11,7 @@ import { TreeNode } from "project-editor/components/CanvasEditorTreeNode";
 
 import * as data from "project-editor/project/features/data/data";
 
-import {
-    PageResolution,
-    IWidgetContainerDisplayItem
-} from "project-editor/project/features/gui/page";
+import { Page, IWidgetContainerDisplayItem } from "project-editor/project/features/gui/page";
 import {
     Widget,
     ListWidget,
@@ -84,9 +81,9 @@ function drawPageFrameForTreeNode(
     scale: number,
     callback: () => void
 ) {
-    if (isObjectInstanceOf(node.item.object, PageResolution.classInfo)) {
-        let pageResolution = node.item.object as PageResolution;
-        drawPageFrame(ctx, pageResolution, scale, pageResolution.style || "default");
+    if (isObjectInstanceOf(node.item.object, Page.classInfo)) {
+        let page = node.item.object as Page;
+        drawPageFrame(ctx, page, scale, page.style || "default");
     }
 }
 
@@ -101,9 +98,9 @@ export function createWidgetTree(
             x: number,
             y: number
         ) {
-            let object = item.object as Widget | PageResolution;
+            let object = item.object as Widget | Page;
 
-            if (object instanceof Widget || object instanceof PageResolution) {
+            if (object instanceof Widget || object instanceof Page) {
                 x += object.x || 0;
                 y += object.y || 0;
             }
@@ -132,7 +129,7 @@ export function createWidgetTree(
                 parentNode.children.push(treeNode);
             }
 
-            if (object instanceof PageResolution) {
+            if (object instanceof Page) {
                 let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
                 widgetsItemChildren.forEach(child => {

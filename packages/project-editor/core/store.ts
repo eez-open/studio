@@ -1221,11 +1221,11 @@ export function objectToJson(object: EezObject | EezObject[], space?: number) {
     return JSON.stringify(
         toJS(object),
         (key: string | number, value: any) => {
-            if (value && typeof value === "object" && "_array" in value) {
-                return value.array;
-            }
             if (typeof key === "string" && key[0] === "_") {
                 return undefined;
+            }
+            if (value && typeof value === "object" && "_array" in value) {
+                return value._array;
             }
             return value;
         },

@@ -13,7 +13,7 @@ import { getData as getFontData } from "project-editor/project/features/gui/font
 import { getData as getBitmapData, Bitmap } from "project-editor/project/features/gui/bitmap";
 import { Style } from "project-editor/project/features/gui/style";
 import * as Widget from "project-editor/project/features/gui/widget";
-import { Page, PageResolution } from "project-editor/project/features/gui/page";
+import { Page } from "project-editor/project/features/gui/page";
 import { Font } from "project-editor/project/features/gui/font";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -539,12 +539,12 @@ function buildGuiStylesData(assets: Assets) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildWidget(object: Widget.Widget | PageResolution, assets: Assets) {
+function buildWidget(object: Widget.Widget | Page, assets: Assets) {
     let result = new Struct();
 
     // type
     let type: number;
-    if (object instanceof PageResolution) {
+    if (object instanceof Page) {
         type = WIDGET_TYPE_CONTAINER;
     } else {
         let widget = object;
@@ -610,14 +610,14 @@ function buildWidget(object: Widget.Widget | PageResolution, assets: Assets) {
 
     // x
     let x: number = 0;
-    if (object instanceof Widget.Widget || object instanceof PageResolution) {
+    if (object instanceof Widget.Widget || object instanceof Page) {
         x = object.x || 0;
     }
     result.addField(new Int16(x));
 
     // y
     let y: number = 0;
-    if (object instanceof Widget.Widget || object instanceof PageResolution) {
+    if (object instanceof Widget.Widget || object instanceof Page) {
         y = object.y || 0;
     }
     result.addField(new Int16(y));
@@ -653,7 +653,7 @@ function buildWidget(object: Widget.Widget | PageResolution, assets: Assets) {
         specific = new Struct();
 
         let widgets: Widget.Widget[] | undefined;
-        if (object instanceof PageResolution) {
+        if (object instanceof Page) {
             widgets = object.widgets._array;
         } else {
             widgets = (object as Widget.ContainerWidget).widgets._array;
@@ -669,7 +669,7 @@ function buildWidget(object: Widget.Widget | PageResolution, assets: Assets) {
 
         specific.addField(childWidgets);
 
-        if (object instanceof PageResolution) {
+        if (object instanceof Page) {
             specific.addField(
                 new UInt8((object._parent as Page).closePageIfTouchedOutside ? 1 : 0)
             );
@@ -1090,7 +1090,7 @@ function buildGuiPagesEnum(assets: Assets) {
 }
 
 function buildGuiDocumentData(assets: Assets) {
-    function buildPage(page: PageResolution) {
+    function buildPage(page: Page) {
         return buildWidget(page, assets);
     }
 
@@ -1098,7 +1098,7 @@ function buildGuiDocumentData(assets: Assets) {
         let pages = new ObjectList();
 
         assets.pages.forEach(page => {
-            pages.addItem(buildPage(page.resolutions._array[0]));
+            pages.addItem(buildPage(page));
         });
 
         document.addField(pages);

@@ -44,7 +44,7 @@ import {
     StoryboardTabState
 } from "project-editor/project/features/gui/storyboard";
 import { getPages, findPage } from "project-editor/project/features/gui/gui";
-import { PageResolution } from "project-editor/project/features/gui/page";
+import { Page } from "project-editor/project/features/gui/page";
 import {
     drawPageFrame,
     drawNotFoundPageFrame,
@@ -75,7 +75,7 @@ function getCacheId(object: EezObject) {
 class RenderTask {
     callbacks: (() => void)[] = [];
 
-    constructor(public id: string, public pageResolution: PageResolution) {}
+    constructor(public id: string, public page: Page) {}
 
     addCallback(callback: () => void) {
         for (var i = 0; i < this.callbacks.length; i++) {
@@ -87,7 +87,7 @@ class RenderTask {
     }
 
     render() {
-        return drawPage(this.pageResolution);
+        return drawPage(this.page);
     }
 
     callCallbacks() {
@@ -130,11 +130,11 @@ function renderLoop() {
     requestAnimationFrame(renderLoop);
 }
 
-function createRenderTask(id: string, pageResolution: PageResolution, callback: () => void) {
+function createRenderTask(id: string, page: Page, callback: () => void) {
     let renderTask = renderQueue.find(renderTask => renderTask.id == id);
 
     if (!renderTask) {
-        renderTask = new RenderTask(id, pageResolution);
+        renderTask = new RenderTask(id, page);
         renderQueue.push(renderTask);
     }
 
@@ -145,17 +145,13 @@ renderLoop();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function drawPageFromCache(
-    ctx: CanvasRenderingContext2D,
-    pageResolution: PageResolution,
-    callback: () => void
-) {
-    let id = getCacheId(pageResolution);
+function drawPageFromCache(ctx: CanvasRenderingContext2D, page: Page, callback: () => void) {
+    let id = getCacheId(page);
     let canvas = cacheMap.get(id);
     if (canvas) {
         ctx.drawImage(canvas, 0, 0);
     } else {
-        createRenderTask(id, pageResolution, callback);
+        createRenderTask(id, page, callback);
     }
 }
 
@@ -166,7 +162,7 @@ function drawPageNode(
     callback: () => void
 ) {
     let storyboardPage = node.item.object as StoryboardPage;
-    let pageResolution = node.custom.pageResolution;
+    let page = node.custom.page;
 
     ctx.save();
 
@@ -177,7 +173,7 @@ function drawPageNode(
     ctx.font = TITLE_FONT;
     let tm = ctx.measureText(storyboardPage.page);
 
-    if (pageResolution) {
+    if (page) {
         ctx.fillStyle = "black";
     } else {
         ctx.fillStyle = "red";
@@ -187,9 +183,9 @@ function drawPageNode(
 
     ctx.translate(0, DISTANCE_BETWEEN_TITLE_AND_PAGE);
 
-    if (pageResolution) {
-        drawPageFrame(ctx, pageResolution, scale, pageResolution.style);
-        drawPageFromCache(ctx, node.custom.pageResolution, callback);
+    if (page) {
+        drawPageFrame(ctx, page, scale, page.style);
+        drawPageFromCache(ctx, node.custom.page, callback);
     } else {
         drawNotFoundPageFrame(
             ctx,
@@ -479,7 +475,6 @@ class StoryboardCanvasEditor extends CanvasEditor {
             (storyboardPageItem: any) => {
                 let storyboardPage = storyboardPageItem.object as StoryboardPage;
                 let page = findPage(storyboardPage.page);
-                let pageResolution = page && (page.resolutions._array[0] as PageResolution);
 
                 pageNodes.push({
                     parent: tree,
@@ -488,8 +483,8 @@ class StoryboardCanvasEditor extends CanvasEditor {
                     rect: {
                         x: storyboardPage.x,
                         y: storyboardPage.y,
-                        width: pageResolution ? pageResolution.width : 480,
-                        height: pageResolution ? pageResolution.height : 272
+                        width: page ? page.width : 480,
+                        height: page ? page.height : 272
                     },
                     selected: storyboardPageItem.selected,
                     resizable: false,
@@ -499,8 +494,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
                     item: storyboardPageItem,
 
                     custom: {
-                        page,
-                        pageResolution
+                        page
                     },
 
                     draw: drawPageNode,
@@ -605,13 +599,12 @@ class StoryboardCanvasEditor extends CanvasEditor {
                 let storyboardPage = object as StoryboardPage;
 
                 let page = findPage(storyboardPage.page);
-                let pageResolution = page && page.resolutions._array[0];
 
                 let rect = {
                     x: Math.round(p.x),
                     y: Math.round(p.y),
-                    width: pageResolution ? pageResolution.width : 480,
-                    height: pageResolution ? pageResolution.height : 272
+                    width: page ? page.width : 480,
+                    height: page ? page.height : 272
                 };
 
                 setTimeout(() => {
@@ -632,8 +625,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
                         },
 
                         custom: {
-                            page,
-                            pageResolution
+                            page
                         },
 
                         draw: drawPageNode,

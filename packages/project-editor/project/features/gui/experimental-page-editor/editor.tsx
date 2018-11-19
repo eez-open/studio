@@ -34,7 +34,7 @@ import { EezObject } from "project-editor/core/metaData";
 import * as data from "project-editor/project/features/data/data";
 
 import { findStyleOrGetDefault } from "project-editor/project/features/gui/gui";
-import { PageResolution } from "project-editor/project/features/gui/page";
+import { Page } from "project-editor/project/features/gui/page";
 import {
     Widget,
     ContainerWidget,
@@ -680,11 +680,11 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function findSelectWidgetEditors(rootObject: Widget | PageResolution) {
+function findSelectWidgetEditors(rootObject: Widget | Page) {
     const result: SelectWidgetEditor[] = [];
 
-    function doFind(object: Widget | PageResolution) {
-        if (object instanceof PageResolution || object instanceof ContainerWidget) {
+    function doFind(object: Widget | Page) {
+        if (object instanceof Page || object instanceof ContainerWidget) {
             object.widgets._array.forEach(doFind);
         } else if (object instanceof ListWidget || object instanceof GridWidget) {
             if (object.itemWidget) {
@@ -706,7 +706,7 @@ function findSelectWidgetEditors(rootObject: Widget | PageResolution) {
 @observer
 class RootObjectComponent extends BaseObjectComponent {
     get rootObject() {
-        return this.props.object as PageResolution;
+        return this.props.object as Page;
     }
 
     get childrenObjects() {
@@ -717,8 +717,8 @@ class RootObjectComponent extends BaseObjectComponent {
     @computed
     get rect() {
         return {
-            left: this.rootObject instanceof PageResolution ? this.rootObject.x : 0,
-            top: this.rootObject instanceof PageResolution ? this.rootObject.y : 0,
+            left: this.rootObject instanceof Page ? this.rootObject.x : 0,
+            top: this.rootObject instanceof Page ? this.rootObject.y : 0,
             width: this.rootObject.width,
             height: this.rootObject.height
         };
@@ -786,14 +786,14 @@ const ExperimentalCanvas = styled(Canvas)`
 `;
 
 interface ExperimentalWidgetContainerEditorProps {
-    container: PageResolution;
+    container: Page;
 }
 
 @observer
 export class ExperimentalWidgetContainerEditor
     extends React.Component<ExperimentalWidgetContainerEditorProps>
     implements IDocument {
-    container: PageResolution;
+    container: Page;
     @observable
     _selectedObjects: BaseObjectComponent[] = [];
     rootObjectComponent: RootObjectComponent;
@@ -821,7 +821,7 @@ export class ExperimentalWidgetContainerEditor
     }
 
     @action
-    loadContainer(container: PageResolution) {
+    loadContainer(container: Page) {
         this.container = container;
         this._selectedObjects = [];
     }

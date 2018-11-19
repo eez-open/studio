@@ -31,21 +31,20 @@ import {
 import { Rect, htmlEncode } from "project-editor/core/util";
 import * as output from "project-editor/core/output";
 
+import { GeometryProperties, ObjectGeometryChange } from "project-editor/components/CanvasEditor";
+
 import * as data from "project-editor/project/features/data/data";
 import { findActionIndex } from "project-editor/project/features/action/action";
 
-import { Page } from "project-editor/project/features/gui/page";
-import { GeometryProperties, ObjectGeometryChange } from "project-editor/components/CanvasEditor";
-
 import { findStyle, findBitmap, Gui, findPage } from "project-editor/project/features/gui/gui";
-import { PageResolution } from "project-editor/project/features/gui/page";
+import { Page } from "project-editor/project/features/gui/page";
 import * as draw from "project-editor/project/features/gui/draw";
 
 const { MenuItem } = EEZStudio.electron.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type WidgetParent = PageResolution | Widget;
+export type WidgetParent = Page | Widget;
 
 export class Widget extends EezObject {
     // shared properties
@@ -119,8 +118,8 @@ export class Widget extends EezObject {
         return undefined;
     }
 
-    // Return immediate parent, which can be of type PageResolutionProperties, WidgetTyperProperties
-    // or WidgetProperties (i.e. ContainerWidgetProperties, ListWidgetProperties, GridWidgetProperties, SelectWidgetPropertis)
+    // Return immediate parent, which can be of type Page or Widget
+    // (i.e. ContainerWidget, ListWidget, GridWidget, SelectWidget)
     get parent(): WidgetParent {
         let parent = this._parent!;
         if (isArray(parent)) {
@@ -130,16 +129,15 @@ export class Widget extends EezObject {
     }
 
     // Return first ancestor of type:
-    //   - PageResolutionProperties or
-    //   - WidgetTyperProperties or
-    //   - WidgetProperties, if that ancestor parent is SelectWidgetProperties
+    //   - Page
+    //   - Widget, if that ancestor parent is SelectWidget
     get anchorParent() {
         let widget: Widget = this;
 
         while (true) {
             let parent = widget.parent;
 
-            if (parent instanceof PageResolution) {
+            if (parent instanceof Page) {
                 return parent;
             }
 
@@ -189,7 +187,7 @@ export class Widget extends EezObject {
             rect.left += parent.x;
             rect.top += parent.y;
 
-            if (parent instanceof PageResolution) {
+            if (parent instanceof Page) {
                 break;
             }
 
@@ -433,16 +431,12 @@ export class Widget extends EezObject {
                     undefined,
                     {
                         name: layoutName,
-                        resolutions: [
-                            {
-                                x: 0,
-                                y: 0,
-                                width: this.width,
-                                height: this.height,
-                                style: "default",
-                                widgets: [thisWidgetJS]
-                            }
-                        ]
+                        x: 0,
+                        y: 0,
+                        width: this.width,
+                        height: this.height,
+                        style: "default",
+                        widgets: [thisWidgetJS]
                     },
                     Page
                 )
@@ -529,16 +523,16 @@ export class Widget extends EezObject {
     ) {
         let changedGeometryProperties: Partial<GeometryProperties> = {};
 
-        if (geometryProperties.x !== this.x) {
+        if (geometryProperties.x !== undefined && geometryProperties.x !== this.x) {
             changedGeometryProperties.x = geometryProperties.x;
         }
-        if (geometryProperties.y !== this.y) {
+        if (geometryProperties.y !== undefined && geometryProperties.y !== this.y) {
             changedGeometryProperties.y = geometryProperties.y;
         }
-        if (geometryProperties.width !== this.width) {
+        if (geometryProperties.width !== undefined && geometryProperties.width !== this.width) {
             changedGeometryProperties.width = geometryProperties.width;
         }
-        if (geometryProperties.height !== this.height) {
+        if (geometryProperties.height !== undefined && geometryProperties.height !== this.height) {
             changedGeometryProperties.height = geometryProperties.height;
         }
 

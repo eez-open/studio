@@ -140,13 +140,7 @@ function getCacheId(obj: EezObject) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawText(
-    text: string,
-    w: number,
-    h: number,
-    style: Style,
-    inverse: boolean
-) {
+export function drawText(text: string, w: number, h: number, style: Style, inverse: boolean) {
     return drawFromCache(
         "drawText",
         getCacheId(style) + "." + text + "." + w + "." + h + "." + inverse,
@@ -338,13 +332,7 @@ export function drawMultilineText(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawBitmap(
-    bitmap: Bitmap,
-    w: number,
-    h: number,
-    style: Style,
-    inverse: boolean
-) {
+export function drawBitmap(bitmap: Bitmap, w: number, h: number, style: Style, inverse: boolean) {
     const imageElement = bitmap.imageElement;
     if (!imageElement) {
         return undefined;
@@ -1171,7 +1159,7 @@ export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect) {
                 rect.width,
                 rect.height,
                 (ctx: CanvasRenderingContext2D) => {
-                    let tree = createWidgetTree(layout.resolutions._array[0], true);
+                    let tree = createWidgetTree(layout, true);
                     drawTree(ctx, tree, 1, () => {});
                 }
             );
@@ -1198,7 +1186,7 @@ export function drawAppViewWidget(widget: Widget.Widget, rect: Rect) {
                     rect.width,
                     rect.height,
                     (ctx: CanvasRenderingContext2D) => {
-                        let tree = createWidgetTree(page.resolutions._array[0], true);
+                        let tree = createWidgetTree(page, true);
                         drawTree(ctx, tree, 1, () => {});
                     }
                 );
@@ -1250,7 +1238,7 @@ export function drawNotFoundPageFrame(ctx: CanvasRenderingContext2D, rect: Rect,
 }
 
 export function drawPage(
-    pageResolution: {
+    page: {
         width: number;
         height: number;
         widgets: EezArrayObject<Widget.Widget>;
@@ -1258,12 +1246,12 @@ export function drawPage(
 ) {
     let canvas = document.createElement("canvas");
 
-    canvas.width = pageResolution.width;
-    canvas.height = pageResolution.height;
+    canvas.width = page.width;
+    canvas.height = page.height;
 
     let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-    let tree = createWidgetTree(pageResolution, true);
+    let tree = createWidgetTree(page, true);
     drawTree(ctx, tree, 1, () => {});
 
     return canvas;

@@ -26,7 +26,13 @@ import { PageEditor } from "project-editor/project/features/gui/PageEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class PageResolution extends EezObject {
+export class Page extends EezObject {
+    @observable
+    name: string;
+
+    @observable
+    description?: string;
+
     @observable
     x: number;
     @observable
@@ -42,11 +48,23 @@ export class PageResolution extends EezObject {
     @observable
     widgets: EezArrayObject<Widget>;
 
+    @observable
+    closePageIfTouchedOutside: boolean;
+
+    @observable
+    usedIn: string[] | undefined;
+
     static classInfo: ClassInfo = {
-        label: () => {
-            return "PageResolution";
-        },
         properties: () => [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            {
+                name: "description",
+                type: PropertyType.MultilineText
+            },
             {
                 name: "x",
                 type: PropertyType.Number
@@ -73,79 +91,6 @@ export class PageResolution extends EezObject {
                 type: PropertyType.Array,
                 typeClass: Widget,
                 hideInPropertyGrid: true
-            }
-        ],
-        newItem: (parent: EezObject) => {
-            return Promise.resolve({
-                x: 0,
-                y: 0,
-                width: 240,
-                height: 320,
-                widgets: []
-            });
-        },
-        findPastePlaceInside: (
-            object: EezObject,
-            classInfo: ClassInfo,
-            isSingleObject: boolean
-        ): EezObject | PropertyInfo | undefined => {
-            if (classInfo == Widget.classInfo) {
-                let pageResolution = object as PageResolution;
-                if (pageResolution) {
-                    return pageResolution.widgets;
-                }
-            }
-            return undefined;
-        }
-    };
-
-    @computed
-    get boundingRect() {
-        return {
-            left: this.x,
-            top: this.y,
-            width: this.width,
-            height: this.height
-        };
-    }
-}
-
-registerClass(PageResolution);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class Page extends EezObject {
-    @observable
-    name: string;
-
-    @observable
-    description?: string;
-
-    @observable
-    resolutions: EezArrayObject<PageResolution>;
-
-    @observable
-    closePageIfTouchedOutside: boolean;
-
-    @observable
-    usedIn: string[] | undefined;
-
-    static classInfo: ClassInfo = {
-        properties: () => [
-            {
-                name: "name",
-                type: PropertyType.String,
-                unique: true
-            },
-            {
-                name: "description",
-                type: PropertyType.MultilineText
-            },
-            {
-                name: "resolutions",
-                type: PropertyType.Array,
-                typeClass: PageResolution,
-                hideInPropertyGrid: true
             },
             {
                 name: "closePageIfTouchedOutside",
@@ -159,15 +104,11 @@ export class Page extends EezObject {
         newItem: (parent: EezObject) => {
             return Promise.resolve({
                 name: "Page",
-                resolutions: [
-                    {
-                        x: 0,
-                        y: 0,
-                        width: 480,
-                        height: 272,
-                        widgets: []
-                    }
-                ],
+                x: 0,
+                y: 0,
+                width: 480,
+                height: 272,
+                widgets: [],
                 closePageIfTouchedOutside: false
             });
         },
@@ -175,8 +116,28 @@ export class Page extends EezObject {
         createEditorState: (object: EezObject) => new PageTabState(object),
         navigationComponent: ListNavigationWithContent,
         navigationComponentId: "pages",
+        findPastePlaceInside: (
+            object: EezObject,
+            classInfo: ClassInfo,
+            isSingleObject: boolean
+        ): EezObject | PropertyInfo | undefined => {
+            if (object && classInfo == Widget.classInfo) {
+                return (object as Page).widgets;
+            }
+            return undefined;
+        },
         icon: "filter_none"
     };
+
+    @computed
+    get boundingRect() {
+        return {
+            left: this.x,
+            top: this.y,
+            width: this.width,
+            height: this.height
+        };
+    }
 }
 
 registerClass(Page);
@@ -292,75 +253,37 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
     }
 }
 
-export class PageResolutionState {
+export class PageTabState {
+    page: Page;
     widgetContainerDisplayItem: WidgetContainerDisplayItem;
 
-    constructor(pageResolution: PageResolution) {
-        this.widgetContainerDisplayItem = new WidgetContainerDisplayItem(pageResolution);
+    constructor(object: EezObject) {
+        this.page = object as Page;
+        this.widgetContainerDisplayItem = new WidgetContainerDisplayItem(this.page);
+    }
+
+    @computed
+    get selectedObject(): EezObject | undefined {
+        let object = this.widgetContainerDisplayItem.selectedObject;
+        if (object) {
+            return object;
+        }
+        return this.page;
+    }
+
+    loadState(state: any) {
+        this.widgetContainerDisplayItem.loadState(state);
     }
 
     saveState() {
         return this.widgetContainerDisplayItem.saveState();
     }
 
-    loadState(state: any) {
-        this.widgetContainerDisplayItem.loadState(state);
-    }
-}
-
-export class PageTabState {
-    pageProperties: Page;
-
-    @observable
-    pageResolutionState: PageResolutionState;
-
-    constructor(object: EezObject) {
-        this.pageProperties = object as Page;
-
-        this.pageResolutionState = new PageResolutionState(
-            this.pageProperties.resolutions._array[0]
-        );
-    }
-
-    @computed
-    get selectedPageResolution() {
-        return this.pageProperties.resolutions._array[0];
-    }
-
-    @computed
-    get selectedPageResolutionState() {
-        return this.pageResolutionState;
-    }
-
-    @computed
-    get selectedObject(): EezObject | undefined {
-        let object = this.selectedPageResolutionState.widgetContainerDisplayItem.selectedObject;
-        if (object) {
-            return object;
-        }
-        if (this.selectedPageResolutionState.widgetContainerDisplayItem.selectedItems.length == 0) {
-            return this.selectedPageResolution;
-        }
-        return undefined;
-    }
-
-    loadState(state: any) {
-        this.pageResolutionState.loadState(state.pageResolutionState);
-    }
-
-    saveState() {
-        return {
-            pageResolutionState: this.pageResolutionState.saveState()
-        };
-    }
-
     @action
     selectObject(object: EezObject) {
-        let item = this.selectedPageResolutionState.widgetContainerDisplayItem.getObjectAdapter(
-            object
-        );
+        let item = this.widgetContainerDisplayItem.getObjectAdapter(object);
         if (item) {
-            this.selectedPageResolutionState.widgetContainerDisplayItem.selectItems([item]);
+            this.widgetContainerDisplayItem.selectItems([item]);
         }
     }
 }

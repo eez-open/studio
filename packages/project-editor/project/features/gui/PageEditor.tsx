@@ -51,19 +51,13 @@ export class PageEditor extends EditorComponent {
 
         let editor;
         if (this.isExperimentalEditor) {
-            editor = (
-                <ExperimentalWidgetContainerEditor
-                    container={pageTabState.selectedPageResolution}
-                />
-            );
+            editor = <ExperimentalWidgetContainerEditor container={pageTabState.page} />;
         } else {
             editor = (
                 <WidgetContainerEditor
-                    displaySelection={
-                        pageTabState.selectedPageResolutionState.widgetContainerDisplayItem
-                    }
-                    pageWidth={pageTabState.selectedPageResolution.width}
-                    pageHeight={pageTabState.selectedPageResolution.height}
+                    displaySelection={pageTabState.widgetContainerDisplayItem}
+                    pageWidth={pageTabState.page.width}
+                    pageHeight={pageTabState.page.height}
                 />
             );
         }
@@ -91,7 +85,7 @@ export class PageEditor extends EditorComponent {
         } else {
             let pageStructure = (
                 <Tree
-                    rootItem={pageTabState.selectedPageResolutionState.widgetContainerDisplayItem}
+                    rootItem={pageTabState.widgetContainerDisplayItem}
                     tabIndex={0}
                     collapsable={true}
                 />
