@@ -218,12 +218,14 @@ export async function build(onlyCheck: boolean) {
 
 var checkTransformer: (object: EezObject) => Message[] = createTransformer(
     (object: EezObject): Message[] => {
-        const children = object._classInfo.properties.filter(
-            propertyInfo =>
-                (propertyInfo.type === PropertyType.Array ||
-                    propertyInfo.type === PropertyType.Object) &&
-                getProperty(object, propertyInfo.name)
-        );
+        const children = object._classInfo
+            .properties(object)
+            .filter(
+                propertyInfo =>
+                    (propertyInfo.type === PropertyType.Array ||
+                        propertyInfo.type === PropertyType.Object) &&
+                    getProperty(object, propertyInfo.name)
+            );
 
         const childrenMessages = children.reduce(
             (result: Message[], propertyInfo: PropertyInfo) => {
@@ -251,5 +253,8 @@ var checkTransformer: (object: EezObject) => Message[] = createTransformer(
 );
 
 export function backgroundCheck() {
-    OutputSectionsStore.setMessages(Section.CHECKS, checkTransformer(ProjectStore.project));
+    OutputSectionsStore.setMessages(
+        Section.CHECKS,
+        checkTransformer(ProjectStore.project)
+    );
 }

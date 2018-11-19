@@ -229,7 +229,7 @@ export class Style extends EezObject {
     alwaysBuild: boolean;
 
     static classInfo: ClassInfo = {
-        properties,
+        properties: () => properties,
         newItem: (object: EezObject) => {
             return Promise.resolve({
                 name: "Style"

@@ -37,7 +37,7 @@ export class DataItem extends EezObject {
     usedIn: string[] | undefined;
 
     static classInfo: ClassInfo = {
-        properties: [
+        properties: () => [
             {
                 name: "name",
                 type: PropertyType.String,

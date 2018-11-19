@@ -75,7 +75,7 @@ export type InheritedValue =
     | undefined;
 
 export interface ClassInfo {
-    properties: PropertyInfo[];
+    properties: (object: EezObject) => PropertyInfo[];
 
     // optional properties
     getClass?: (jsObject: any) => any;
@@ -124,12 +124,8 @@ export class EezObject {
 
     static classInfo: ClassInfo;
 
-    get _class() {
-        return this.constructor as EezClass;
-    }
-
     get _classInfo(): ClassInfo {
-        return this._class.classInfo;
+        return (this.constructor as any).classInfo;
     }
 
     get _label(): string {
@@ -149,8 +145,8 @@ export class EezObject {
 export class EezArrayObject<T> extends EezObject {
     @observable _array: T[] = [];
 
-    get _class() {
-        return this._propertyInfo!.typeClass!;
+    get _classInfo(): ClassInfo {
+        return this._propertyInfo!.typeClass!.classInfo;
     }
 }
 
@@ -187,7 +183,7 @@ export class EezValueObject extends EezObject {
         label: (object: EezValueObject) => {
             return object.value && object.value.toString();
         },
-        properties: []
+        properties: () => []
     };
 }
 
@@ -209,18 +205,15 @@ export function getClassesDerivedFrom(parentClass: EezClass) {
     return derivedClasses;
 }
 
-export function isSubclassOf(classInfo: ClassInfo | undefined, baseClassInfo: ClassInfo) {
-    while (classInfo) {
-        if (classInfo === baseClassInfo) {
+export function isObjectInstanceOf(object: EezObject, classInfo: ClassInfo) {
+    let objectClassInfo: ClassInfo | undefined = object._classInfo;
+    while (objectClassInfo) {
+        if (objectClassInfo === classInfo) {
             return true;
         }
-        classInfo = classInfo.parentClassInfo;
+        objectClassInfo = objectClassInfo.parentClassInfo;
     }
     return false;
-}
-
-export function isObjectInstanceOf(object: EezObject, baseClassInfo: ClassInfo) {
-    return isSubclassOf(object._classInfo, baseClassInfo);
 }
 
 export function isSameInstanceTypeAs(object1: EezObject, object2: EezObject) {

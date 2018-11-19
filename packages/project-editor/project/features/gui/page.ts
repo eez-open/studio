@@ -8,8 +8,7 @@ import {
     PropertyInfo,
     registerClass,
     EezArrayObject,
-    PropertyType,
-    isSubclassOf
+    PropertyType
 } from "project-editor/core/metaData";
 import {
     TreeObjectAdapter,
@@ -56,7 +55,7 @@ export class Page extends EezObject {
     usedIn: string[] | undefined;
 
     static classInfo: ClassInfo = {
-        properties: [
+        properties: () => [
             {
                 name: "name",
                 type: PropertyType.String,
@@ -122,7 +121,7 @@ export class Page extends EezObject {
             classInfo: ClassInfo,
             isSingleObject: boolean
         ): EezObject | PropertyInfo | undefined => {
-            if (object && isSubclassOf(classInfo, Widget.classInfo)) {
+            if (object && classInfo == Widget.classInfo) {
                 return (object as Page).widgets;
             }
             return undefined;

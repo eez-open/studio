@@ -5,12 +5,7 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 
-import {
-    EezObject,
-    PropertyInfo,
-    isObjectInstanceOf,
-    isSameInstanceTypeAs
-} from "project-editor/core/metaData";
+import { EezObject, PropertyInfo, isSameInstanceTypeAs } from "project-editor/core/metaData";
 import {
     NavigationStore,
     getChildren,
@@ -21,7 +16,7 @@ import {
     addObject,
     insertObjectBefore,
     findPastePlaceInside,
-    isAncestor,
+    hasAncestor,
     isArray,
     isArrayElement,
     objectToString,
@@ -194,7 +189,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
             return;
         }
 
-        if (isAncestor(this.props.item, DragAndDropManager.dragObject)) {
+        if (hasAncestor(this.props.item, DragAndDropManager.dragObject)) {
             return;
         }
 
@@ -203,7 +198,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                 return;
             }
 
-            if (isAncestor(this.props.item, DragAndDropManager.dragObject)) {
+            if (hasAncestor(this.props.item, DragAndDropManager.dragObject)) {
                 return;
             }
 
@@ -217,12 +212,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                 dropPosition = DropPosition.DROP_BEFORE;
             } else {
                 if (isArray(this.props.item)) {
-                    if (
-                        isObjectInstanceOf(
-                            DragAndDropManager.dragObject,
-                            this.props.item._classInfo
-                        )
-                    ) {
+                    if (isSameInstanceTypeAs(this.props.item, DragAndDropManager.dragObject)) {
                         dropPosition = DropPosition.DROP_INSIDE;
                     }
                 } else {
@@ -577,7 +567,7 @@ export class List extends React.Component<ListProps, {}> {
 
         if (
             DragAndDropManager.dragObject &&
-            !isAncestor(this.props.navigationObject, DragAndDropManager.dragObject)
+            !hasAncestor(this.props.navigationObject, DragAndDropManager.dragObject)
         ) {
             let addDropPlaceholder = false;
 

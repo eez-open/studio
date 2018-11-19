@@ -10,7 +10,7 @@ import {
     canCut,
     canPaste,
     canDelete,
-    isAncestor,
+    hasAncestor,
     extendContextMenu,
     reduceUntilCommonParent as reduceObjectsUntilCommonParent
 } from "project-editor/core/store";
@@ -120,13 +120,15 @@ export class TreeObjectAdapter {
             return asArray(this.object).map(child => this.transformer(child));
         }
 
-        let properties = this.object._classInfo.properties.filter(
-            propertyInfo =>
-                (propertyInfo.type === PropertyType.Object ||
-                    propertyInfo.type === PropertyType.Array) &&
-                !(propertyInfo.enumerable !== undefined && !propertyInfo.enumerable) &&
-                getProperty(this.object, propertyInfo.name)
-        );
+        let properties = this.object._classInfo
+            .properties(this.object)
+            .filter(
+                propertyInfo =>
+                    (propertyInfo.type === PropertyType.Object ||
+                        propertyInfo.type === PropertyType.Array) &&
+                    !(propertyInfo.enumerable !== undefined && !propertyInfo.enumerable) &&
+                    getProperty(this.object, propertyInfo.name)
+            );
 
         if (properties.length == 1 && properties[0].type === PropertyType.Array) {
             return asArray(getProperty(this.object, properties[0].name)).map(child =>
@@ -312,7 +314,7 @@ export class TreeObjectAdapter {
     }
 
     getAncestorObjectAdapter(object: EezObject) {
-        if (!isAncestor(object, this.object)) {
+        if (!hasAncestor(object, this.object)) {
             return undefined;
         }
 
@@ -320,7 +322,7 @@ export class TreeObjectAdapter {
         while (true) {
             let childObjectAdapter = _find(objectAdapter.children, (treeObjectAdpterChild: any) => {
                 let child: TreeObjectAdapter = treeObjectAdpterChild;
-                return isAncestor(object, child.object);
+                return hasAncestor(object, child.object);
             });
             if (!childObjectAdapter) {
                 return objectAdapter;

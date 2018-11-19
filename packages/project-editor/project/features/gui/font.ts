@@ -46,7 +46,7 @@ export class FontSource extends EezObject {
             return label;
         },
 
-        properties: [
+        properties: () => [
             {
                 name: "filePath",
                 type: PropertyType.String
@@ -86,7 +86,7 @@ export class Font extends EezObject {
     alwaysBuild: boolean;
 
     static classInfo: ClassInfo = {
-        properties: [
+        properties: () => [
             {
                 name: "name",
                 type: PropertyType.String,
@@ -245,9 +245,11 @@ export class Font extends EezObject {
                             }
 
                             if (errorMessage) {
-                                notification.error(`Adding ${Font.name} failed: ${errorMessage}!`);
+                                notification.error(
+                                    `Adding ${Font.constructor.name} failed: ${errorMessage}!`
+                                );
                             } else {
-                                notification.error(`Adding ${Font.name} failed!`);
+                                notification.error(`Adding ${Font.constructor.name} failed!`);
                             }
 
                             return false;

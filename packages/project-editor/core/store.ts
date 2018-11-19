@@ -15,8 +15,7 @@ import {
     findClass,
     EezValueObject,
     EezArrayObject,
-    PropertyType,
-    isSubclassOf
+    PropertyType
 } from "project-editor/core/metaData";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { findAllReferences, isReferenced } from "project-editor/core/search";
@@ -274,7 +273,7 @@ export class Editor {
     @computed
     get title() {
         if (isArrayElement(this.object)) {
-            return `${this.object._class.name}: ${objectToString(this.object)}`;
+            return `${this.object.constructor.name}: ${objectToString(this.object)}`;
         } else {
             return objectToString(this.object);
         }
@@ -1174,7 +1173,7 @@ export function loadObject(
         });
     }
 
-    let object: EezObject = aClass.classInfo.getClass
+    let object = aClass.classInfo.getClass
         ? new (aClass.classInfo.getClass(jsObject))()
         : new aClass();
     const classInfo = object._classInfo;
@@ -1182,7 +1181,10 @@ export function loadObject(
     object._id = getChildId(parent as EezObject);
     object._parent = parent as EezObject;
 
-    for (const propertyInfo of classInfo.properties) {
+    let properties = classInfo.properties(jsObject);
+    for (let i = 0; i < properties.length; i++) {
+        let propertyInfo = properties[i];
+
         let value = jsObject[propertyInfo.name];
 
         if (propertyInfo.type === PropertyType.Object) {
@@ -1197,7 +1199,7 @@ export function loadObject(
 
             if (childObject) {
                 childObject._key = propertyInfo.name;
-                (object as any)[propertyInfo.name] = childObject;
+                object[propertyInfo.name] = childObject;
             }
         } else if (propertyInfo.type === PropertyType.Array) {
             if (!value && !propertyInfo.isOptional) {
@@ -1205,10 +1207,10 @@ export function loadObject(
             }
 
             if (value) {
-                (object as any)[propertyInfo.name] = loadArrayObject(value, object, propertyInfo);
+                object[propertyInfo.name] = loadArrayObject(value, object, propertyInfo);
             }
         } else {
-            (object as any)[propertyInfo.name] = value;
+            object[propertyInfo.name] = value;
         }
     }
 
@@ -1236,7 +1238,7 @@ export function objectToJS(object: EezObject | EezObject[]): any {
 }
 
 export function cloneObject(parent: EezObject | undefined, obj: EezObject) {
-    return loadObject(parent, objectToJson(obj), obj._class);
+    return loadObject(parent, objectToJson(obj), obj.constructor as EezClass);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1252,14 +1254,14 @@ export interface SerializedData {
 
 export function objectToClipboardData(object: EezObject): string {
     return JSON.stringify({
-        objectClassName: object._class.name,
+        objectClassName: object.constructor.name,
         object: objectToJson(object)
     });
 }
 
 export function objectsToClipboardData(objects: EezObject[]): string {
     return JSON.stringify({
-        objectClassName: objects[0]._class.name,
+        objectClassName: objects[0].constructor.name,
         objects: objects.map(object => objectToJson(object))
     });
 }
@@ -1335,13 +1337,15 @@ export function getChildren(parent: EezObject): EezObject[] {
     if (isArray(parent)) {
         return asArray(parent);
     } else {
-        let properties = parent._classInfo.properties.filter(
-            propertyInfo =>
-                (propertyInfo.type === PropertyType.Object ||
-                    propertyInfo.type === PropertyType.Array) &&
-                !(propertyInfo.enumerable !== undefined && !propertyInfo.enumerable) &&
-                getProperty(parent, propertyInfo.name)
-        );
+        let properties = parent._classInfo
+            .properties(parent)
+            .filter(
+                propertyInfo =>
+                    (propertyInfo.type === PropertyType.Object ||
+                        propertyInfo.type === PropertyType.Array) &&
+                    !(propertyInfo.enumerable !== undefined && !propertyInfo.enumerable) &&
+                    getProperty(parent, propertyInfo.name)
+            );
 
         if (properties.length == 1 && properties[0].type === PropertyType.Array) {
             return asArray(getProperty(parent, properties[0].name));
@@ -1416,7 +1420,10 @@ export function getObjectFromObjectId(objectID: string): EezObject | undefined {
                 return getDescendantObjectFromId(childObject, id);
             }
         } else {
-            for (const propertyInfo of object._classInfo.properties) {
+            let properties = object._classInfo.properties(object);
+
+            for (let i = 0; i < properties.length; i++) {
+                let propertyInfo = properties[i];
                 if (
                     propertyInfo.type === PropertyType.Object ||
                     propertyInfo.type === PropertyType.Array
@@ -1468,7 +1475,7 @@ export function extendContextMenu(
     }
 }
 
-export function isAncestor(object: EezObject, ancestor: EezObject): boolean {
+export function hasAncestor(object: EezObject, ancestor: EezObject): boolean {
     if (object == undefined || ancestor == undefined) {
         return false;
     }
@@ -1478,20 +1485,23 @@ export function isAncestor(object: EezObject, ancestor: EezObject): boolean {
     }
 
     let parent = object._parent;
-    return !!parent && isAncestor(parent, ancestor);
+    return !!parent && hasAncestor(parent, ancestor);
 }
 
-export function isProperAncestor(object: EezObject, ancestor: EezObject) {
+export function hasProperAncestor(object: EezObject, ancestor: EezObject) {
     if (object == undefined || object == ancestor) {
         return false;
     }
 
     let parent = object._parent;
-    return !!parent && isAncestor(parent, ancestor);
+    return !!parent && hasAncestor(parent, ancestor);
 }
 
 function uniqueTop(objects: EezObject[]): EezObject[] {
-    return _uniqWith(objects, (a: EezObject, b: EezObject) => isAncestor(a, b) || isAncestor(b, a));
+    return _uniqWith(
+        objects,
+        (a: EezObject, b: EezObject) => hasAncestor(a, b) || hasAncestor(b, a)
+    );
 }
 
 function getParents(objects: EezObject[]): EezObject[] {
@@ -1625,8 +1635,11 @@ export function getAncestors(
             }
         }
     } else {
+        let properties = ancestor._classInfo.properties(ancestor);
+
         let numObjectOrArrayProperties = 0;
-        for (const propertyInfo of ancestor._classInfo.properties) {
+        for (let i = 0; i < properties.length; i++) {
+            let propertyInfo = properties[i];
             if (
                 propertyInfo.type === PropertyType.Object ||
                 propertyInfo.type === PropertyType.Array
@@ -1636,7 +1649,8 @@ export function getAncestors(
         }
 
         if (numObjectOrArrayProperties > 0) {
-            for (const propertyInfo of ancestor._classInfo.properties) {
+            for (let i = 0; i < properties.length; i++) {
+                let propertyInfo = properties[i];
                 if (
                     propertyInfo.type === PropertyType.Object ||
                     propertyInfo.type === PropertyType.Array
@@ -1665,6 +1679,10 @@ export function getHumanReadableObjectPath(object: EezObject) {
         .slice(1)
         .map(object => objectToString(object))
         .join(" / ");
+}
+
+export function getObjectPropertiesInfo(object: EezObject) {
+    return object._classInfo.properties(object);
 }
 
 export function getInheritedValue(object: EezObject, propertyName: string) {
@@ -1710,8 +1728,12 @@ export function canDuplicate(object: EezObject) {
     return isArrayElement(object);
 }
 
+export function getProperties(object: EezObject) {
+    return object._classInfo.properties(object);
+}
+
 export function findPropertyByName(object: EezObject, propertyName: string) {
-    return object._classInfo.properties.find(propertyInfo => propertyInfo.name == propertyName);
+    return getProperties(object).find(propertyInfo => propertyInfo.name == propertyName);
 }
 
 export function humanizePropertyName(object: EezObject, propertyName: string) {
@@ -1750,7 +1772,10 @@ export function canCopy(object: EezObject) {
 }
 
 export function canContainChildren(object: EezObject) {
-    for (const propertyInfo of object._classInfo.properties) {
+    let properties = getProperties(object);
+
+    for (let i = 0; i < properties.length; i++) {
+        let propertyInfo = properties[i];
         if (propertyInfo.type === PropertyType.Array || propertyInfo.type === PropertyType.Object) {
             return true;
         }
@@ -1764,7 +1789,7 @@ export function findPastePlaceInside(
     classInfo: ClassInfo,
     isSingleObject: boolean
 ) {
-    if (isArray(object) && isSubclassOf(classInfo, object._classInfo)) {
+    if (isArray(object) && object._classInfo === classInfo) {
         return object;
     }
 
@@ -1775,11 +1800,14 @@ export function findPastePlaceInside(
         }
     }
 
+    let properties = getProperties(object);
+
     // first, find among array properties
-    for (const propertyInfo of object._classInfo.properties) {
+    for (let i = 0; i < properties.length; i++) {
+        let propertyInfo = properties[i];
         if (
             propertyInfo.type === PropertyType.Array &&
-            isSubclassOf(classInfo, propertyInfo.typeClass!.classInfo)
+            propertyInfo.typeClass!.classInfo === classInfo
         ) {
             let collectionObject = getChildOfObject(object, propertyInfo);
             if (collectionObject) {
@@ -1789,10 +1817,11 @@ export function findPastePlaceInside(
     }
 
     // then, find among object properties
-    for (const propertyInfo of object._classInfo.properties) {
+    for (let i = 0; i < properties.length; i++) {
+        let propertyInfo = properties[i];
         if (
             propertyInfo.type == PropertyType.Object &&
-            isSubclassOf(classInfo, propertyInfo.typeClass!.classInfo) &&
+            propertyInfo.typeClass!.classInfo == classInfo &&
             isSingleObject
         ) {
             let childObject = getChildOfObject(object, propertyInfo);
@@ -1867,7 +1896,7 @@ function getUniquePropertyValue(existingObjects: EezObject[], key: string, value
 function ensureUniqueProperties(parentObject: EezObject, objects: EezObject[]) {
     let existingObjects = asArray(parentObject).map((object: EezObject) => object);
     objects.forEach(object => {
-        for (const propertyInfo of object._classInfo.properties) {
+        for (let propertyInfo of object._classInfo.properties(object)) {
             if (propertyInfo.unique) {
                 (object as any)[propertyInfo.name] = getUniquePropertyValue(
                     existingObjects,
@@ -1892,7 +1921,7 @@ function onObjectModified(object: EezObject) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export let addObject = action((parentObject: EezObject, object: EezObject) => {
-    object = loadObject(parentObject, object, parentObject._class);
+    object = loadObject(parentObject, object, parentObject.constructor as EezClass);
     ensureUniqueProperties(parentObject, [object]);
 
     UndoManager.executeCommand({
@@ -1916,7 +1945,9 @@ export let addObject = action((parentObject: EezObject, object: EezObject) => {
 });
 
 export let addObjects = action((parentObject: EezObject, objects: EezObject[]) => {
-    objects = objects.map(object => loadObject(parentObject, object, parentObject._class));
+    objects = objects.map(object =>
+        loadObject(parentObject, object, parentObject.constructor as EezClass)
+    );
     ensureUniqueProperties(parentObject, objects);
 
     UndoManager.executeCommand({
@@ -1941,7 +1972,7 @@ export let addObjects = action((parentObject: EezObject, objects: EezObject[]) =
 });
 
 export let insertObject = action((parentObject: EezObject, index: number, object: EezObject) => {
-    object = loadObject(parentObject, object, parentObject._class);
+    object = loadObject(parentObject, object, parentObject.constructor as EezClass);
     ensureUniqueProperties(parentObject, [object]);
 
     UndoManager.executeCommand({
@@ -2227,10 +2258,12 @@ export function addItem(object: EezObject) {
                     if (object) {
                         addObject(parent, object);
                     } else {
-                        console.log(`Canceled adding ${parent._class.name}`);
+                        console.log(`Canceled adding ${parent.constructor.name}`);
                     }
                 })
-                .catch(err => notification.error(`Adding ${parent._class.name} failed: ${err}!`));
+                .catch(err =>
+                    notification.error(`Adding ${parent.constructor.name} failed: ${err}!`)
+                );
         }
     }
 }

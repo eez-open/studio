@@ -20,7 +20,7 @@ export class StoryboardPage extends EezObject {
 
     static classInfo: ClassInfo = {
         label: (storyboardPageProperties: StoryboardPage) => storyboardPageProperties.page,
-        properties: [
+        properties: () => [
             {
                 name: "x",
                 type: PropertyType.Number
@@ -49,7 +49,7 @@ export class StoryboardLineSource extends EezObject {
         label: (storyboardLineSourceProperties: StoryboardLineSource) =>
             storyboardLineSourceProperties.page,
 
-        properties: [
+        properties: () => [
             {
                 name: "page",
                 type: PropertyType.ObjectReference,
@@ -70,7 +70,7 @@ export class StoryboardLineTarget extends EezObject {
         label: (storyboardLineSourceProperties: StoryboardLineSource) =>
             storyboardLineSourceProperties.page,
 
-        properties: [
+        properties: () => [
             {
                 name: "page",
                 type: PropertyType.ObjectReference,
@@ -92,7 +92,7 @@ export class StoryboardLine extends EezObject {
         label: (storyboardLineProperties: StoryboardLine) =>
             storyboardLineProperties.source.page + "->" + storyboardLineProperties.target.page,
 
-        properties: [
+        properties: () => [
             {
                 name: "source",
                 type: PropertyType.Object,
@@ -118,7 +118,7 @@ export class Storyboard extends EezObject {
     static classInfo: ClassInfo = {
         label: (storyboard: Storyboard) => "Storyboard",
 
-        properties: [
+        properties: () => [
             {
                 name: "pages",
                 type: PropertyType.Array,

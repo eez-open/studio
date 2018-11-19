@@ -31,13 +31,15 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
         if (isArray(this.object)) {
             return asArray(this.object).map(child => new DummyWidgetContainerDisplayItem(child));
         } else {
-            let properties = this.object._classInfo.properties.filter(
-                propertyInfo =>
-                    (propertyInfo.type === PropertyType.Object ||
-                        propertyInfo.type === PropertyType.Array) &&
-                    !(propertyInfo.enumerable !== undefined && !propertyInfo.enumerable) &&
-                    getProperty(this.object, propertyInfo.name)
-            );
+            let properties = this.object._classInfo
+                .properties(this.object)
+                .filter(
+                    propertyInfo =>
+                        (propertyInfo.type === PropertyType.Object ||
+                            propertyInfo.type === PropertyType.Array) &&
+                        !(propertyInfo.enumerable !== undefined && !propertyInfo.enumerable) &&
+                        getProperty(this.object, propertyInfo.name)
+                );
 
             if (properties.length == 1 && properties[0].type === PropertyType.Array) {
                 return asArray(getProperty(this.object, properties[0].name)).map(

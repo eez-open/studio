@@ -27,7 +27,7 @@ export class ShortcutAction extends EezObject {
             return shortcutAction.data;
         },
 
-        properties: [
+        properties: () => [
             {
                 name: "type",
                 type: PropertyType.String
@@ -58,7 +58,7 @@ export class Shortcut extends EezObject {
     @observable selected: boolean;
 
     static classInfo: ClassInfo = {
-        properties: [
+        properties: () => [
             {
                 name: "id",
                 type: PropertyType.String,
@@ -111,7 +111,7 @@ export class Shortcuts extends EezObject {
 
     static classInfo: ClassInfo = {
         label: () => "Shortcuts",
-        properties: [
+        properties: () => [
             {
                 name: "shortcuts",
                 type: PropertyType.Array,

@@ -8,7 +8,7 @@ import { _filter, _map } from "eez-studio-shared/algorithm";
 import { Icon } from "eez-studio-ui/icon";
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, PropertyInfo, isObjectInstanceOf } from "project-editor/core/metaData";
+import { EezObject, PropertyInfo, isSameInstanceTypeAs } from "project-editor/core/metaData";
 import {
     cloneObject,
     objectToClipboardData,
@@ -17,7 +17,7 @@ import {
     insertObjectBefore,
     findPastePlaceInside,
     canContainChildren,
-    isAncestor,
+    hasAncestor,
     isArray,
     isArrayElement,
     objectToString,
@@ -204,7 +204,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
             return;
         }
 
-        if (isAncestor(this.props.item.object, DragAndDropManager.dragObject)) {
+        if (hasAncestor(this.props.item.object, DragAndDropManager.dragObject)) {
             return;
         }
 
@@ -213,17 +213,14 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
                 return;
             }
 
-            if (isAncestor(this.props.item.object, DragAndDropManager.dragObject)) {
+            if (hasAncestor(this.props.item.object, DragAndDropManager.dragObject)) {
                 return;
             }
 
             if (
                 isArrayElement(this.props.item.object) &&
                 DragAndDropManager.dragObject &&
-                isObjectInstanceOf(
-                    DragAndDropManager.dragObject,
-                    this.props.item.object._parent!._classInfo
-                )
+                isSameInstanceTypeAs(this.props.item.object, DragAndDropManager.dragObject)
             ) {
                 DragAndDropManager.setDropObjectAndPosition(
                     this.props.item,
@@ -337,16 +334,13 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
 
             if (
                 DragAndDropManager.dragObject &&
-                !isAncestor(this.props.item.object, DragAndDropManager.dragObject)
+                !hasAncestor(this.props.item.object, DragAndDropManager.dragObject)
             ) {
                 let addDropPlaceholder = false;
 
                 if (isArray(this.props.item.object)) {
                     if (
-                        isObjectInstanceOf(
-                            DragAndDropManager.dragObject,
-                            this.props.item.object._classInfo
-                        )
+                        isSameInstanceTypeAs(this.props.item.object, DragAndDropManager.dragObject)
                     ) {
                         addDropPlaceholder = true;
                     }

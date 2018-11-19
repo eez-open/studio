@@ -20,6 +20,7 @@ import {
 import {
     ClassInfo,
     EezObject,
+    PropertyInfo,
     registerClass,
     EezArrayObject,
     PropertyType,
@@ -96,48 +97,9 @@ export class Widget extends EezObject {
 
             return widget.type;
         },
-        properties: [
-            {
-                name: "type",
-                type: PropertyType.Enum
-            },
-            {
-                name: "data",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
-            {
-                name: "action",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["actions"]
-            },
-            {
-                name: "x",
-                type: PropertyType.Number
-            },
-            {
-                name: "y",
-                type: PropertyType.Number
-            },
-            {
-                name: "width",
-                type: PropertyType.Number
-            },
-            {
-                name: "height",
-                type: PropertyType.Number
-            },
-            {
-                name: "style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            },
-            {
-                name: "activeStyle",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            }
-        ]
+        properties: (widget: Widget) => {
+            return widgetSharedProperties;
+        }
     };
 
     @computed
@@ -586,19 +548,65 @@ registerClass(Widget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const widgetSharedProperties: PropertyInfo[] = [
+    {
+        name: "type",
+        type: PropertyType.Enum
+    },
+    {
+        name: "data",
+        type: PropertyType.ObjectReference,
+        referencedObjectCollectionPath: ["data"]
+    },
+    {
+        name: "action",
+        type: PropertyType.ObjectReference,
+        referencedObjectCollectionPath: ["actions"]
+    },
+    {
+        name: "x",
+        type: PropertyType.Number
+    },
+    {
+        name: "y",
+        type: PropertyType.Number
+    },
+    {
+        name: "width",
+        type: PropertyType.Number
+    },
+    {
+        name: "height",
+        type: PropertyType.Number
+    },
+    {
+        name: "style",
+        type: PropertyType.ObjectReference,
+        referencedObjectCollectionPath: ["gui", "styles"]
+    },
+    {
+        name: "activeStyle",
+        type: PropertyType.ObjectReference,
+        referencedObjectCollectionPath: ["gui", "styles"]
+    }
+];
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class ContainerWidget extends Widget {
     @observable
     widgets: EezArrayObject<Widget>;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "widgets",
-                type: PropertyType.Array,
-                typeClass: Widget,
-                hideInPropertyGrid: true
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "widgets",
+                    type: PropertyType.Array,
+                    typeClass: Widget,
+                    hideInPropertyGrid: true
+                }
+            ]),
 
         defaultValue: {
             type: "Container",
@@ -677,27 +685,28 @@ export class ListWidget extends Widget {
     listType?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "listType",
-                type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "vertical"
-                    },
-                    {
-                        id: "horizontal"
-                    }
-                ]
-            },
-            {
-                name: "itemWidget",
-                type: PropertyType.Object,
-                typeClass: Widget,
-                hideInPropertyGrid: true,
-                isOptional: true
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "listType",
+                    type: PropertyType.Enum,
+                    enumItems: [
+                        {
+                            id: "vertical"
+                        },
+                        {
+                            id: "horizontal"
+                        }
+                    ]
+                },
+                {
+                    name: "itemWidget",
+                    type: PropertyType.Object,
+                    typeClass: Widget,
+                    hideInPropertyGrid: true,
+                    isOptional: true
+                }
+            ]),
 
         defaultValue: {
             type: "List",
@@ -777,15 +786,16 @@ export class GridWidget extends Widget {
     itemWidget?: Widget;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "itemWidget",
-                type: PropertyType.Object,
-                typeClass: Widget,
-                hideInPropertyGrid: true,
-                isOptional: true
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "itemWidget",
+                    type: PropertyType.Object,
+                    typeClass: Widget,
+                    hideInPropertyGrid: true,
+                    isOptional: true
+                }
+            ]),
 
         defaultValue: {
             type: "Grid",
@@ -846,7 +856,7 @@ export class SelectWidgetEditor extends EezObject {
             return parent._label + " Editor";
         },
 
-        properties: [
+        properties: () => [
             {
                 name: "x",
                 type: PropertyType.Number
@@ -1047,31 +1057,33 @@ export class SelectWidget extends Widget {
     editor: SelectWidgetEditor;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "widgets",
-                type: PropertyType.Array,
-                typeClass: Widget,
-                hideInPropertyGrid: true,
-                childLabel: (childObject: EezObject, childLabel: string) => {
-                    let label;
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "widgets",
+                    type: PropertyType.Array,
+                    typeClass: Widget,
+                    hideInPropertyGrid: true,
+                    childLabel: (childObject: EezObject, childLabel: string) => {
+                        let label;
 
-                    if (childObject._parent) {
-                        let selectWidgetProperties = childObject._parent!._parent as SelectWidget;
+                        if (childObject._parent) {
+                            let selectWidgetProperties = childObject._parent!
+                                ._parent as SelectWidget;
 
-                        label = selectWidgetProperties.getChildLabel(childObject as Widget);
+                            label = selectWidgetProperties.getChildLabel(childObject as Widget);
+                        }
+
+                        return `${label || "???"} ➔ ${childLabel}`;
                     }
-
-                    return `${label || "???"} ➔ ${childLabel}`;
+                },
+                {
+                    name: "editor",
+                    type: PropertyType.Object,
+                    typeClass: SelectWidgetEditor,
+                    enumerable: false
                 }
-            },
-            {
-                name: "editor",
-                type: PropertyType.Object,
-                typeClass: SelectWidgetEditor,
-                enumerable: false
-            }
-        ]),
+            ]),
 
         defaultValue: {
             type: "Select",
@@ -1211,13 +1223,14 @@ export class DisplayDataWidget extends Widget {
     focusStyle?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "focusStyle",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "focusStyle",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "styles"]
+                }
+            ]),
 
         defaultValue: {
             type: "DisplayData",
@@ -1268,17 +1281,18 @@ export class TextWidget extends Widget {
     ignoreLuminocity: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "text",
-                type: PropertyType.String
-            },
-            {
-                name: "ignoreLuminocity",
-                type: PropertyType.Boolean,
-                defaultValue: false
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "text",
+                    type: PropertyType.String
+                },
+                {
+                    name: "ignoreLuminocity",
+                    type: PropertyType.Boolean,
+                    defaultValue: false
+                }
+            ]),
 
         defaultValue: {
             type: "Text",
@@ -1315,12 +1329,13 @@ export class MultilineTextWidget extends Widget {
     text?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "text",
-                type: PropertyType.String
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "text",
+                    type: PropertyType.String
+                }
+            ]),
 
         defaultValue: {
             type: "MultilineText",
@@ -1359,18 +1374,19 @@ export class RectangleWidget extends Widget {
     invertColors: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "invertColors",
-                type: PropertyType.Boolean,
-                defaultValue: false
-            },
-            {
-                name: "ignoreLuminocity",
-                type: PropertyType.Boolean,
-                defaultValue: false
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "invertColors",
+                    type: PropertyType.Boolean,
+                    defaultValue: false
+                },
+                {
+                    name: "ignoreLuminocity",
+                    type: PropertyType.Boolean,
+                    defaultValue: false
+                }
+            ]),
 
         defaultValue: { type: "Rectangle", x: 0, y: 0, width: 64, height: 32, style: "default" }
     });
@@ -1399,13 +1415,14 @@ export class BitmapWidget extends Widget {
     bitmap?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "bitmap",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "bitmaps"]
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "bitmap",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "bitmaps"]
+                }
+            ]),
 
         defaultValue: { type: "Bitmap", x: 0, y: 0, width: 64, height: 32, style: "default" }
     });
@@ -1457,22 +1474,23 @@ export class ButtonWidget extends Widget {
     disabledStyle?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "text",
-                type: PropertyType.String
-            },
-            {
-                name: "enabled",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
-            {
-                name: "disabledStyle",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "text",
+                    type: PropertyType.String
+                },
+                {
+                    name: "enabled",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["data"]
+                },
+                {
+                    name: "disabledStyle",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "styles"]
+                }
+            ]),
 
         defaultValue: { type: "Button", x: 0, y: 0, width: 32, height: 32, style: "default" }
     });
@@ -1536,16 +1554,17 @@ export class ToggleButtonWidget extends Widget {
     text2?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "text1",
-                type: PropertyType.String
-            },
-            {
-                name: "text2",
-                type: PropertyType.String
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "text1",
+                    type: PropertyType.String
+                },
+                {
+                    name: "text2",
+                    type: PropertyType.String
+                }
+            ]),
 
         defaultValue: { type: "ToggleButton", x: 0, y: 0, width: 32, height: 32, style: "default" }
     });
@@ -1579,6 +1598,8 @@ registerClass(ToggleButtonWidget);
 
 export class ButtonGroupWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        properties: () => widgetSharedProperties.concat([]),
+
         defaultValue: { type: "ButtonGroup", x: 0, y: 0, width: 64, height: 32, style: "default" }
     });
 
@@ -1610,34 +1631,35 @@ export class ScaleWidget extends Widget {
     needleHeight: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "needlePosition",
-                type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "left"
-                    },
-                    {
-                        id: "right"
-                    },
-                    {
-                        id: "top"
-                    },
-                    {
-                        id: "bottom"
-                    }
-                ]
-            },
-            {
-                name: "needleWidth",
-                type: PropertyType.Number
-            },
-            {
-                name: "needleHeight",
-                type: PropertyType.Number
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "needlePosition",
+                    type: PropertyType.Enum,
+                    enumItems: [
+                        {
+                            id: "left"
+                        },
+                        {
+                            id: "right"
+                        },
+                        {
+                            id: "top"
+                        },
+                        {
+                            id: "bottom"
+                        }
+                    ]
+                },
+                {
+                    name: "needleWidth",
+                    type: PropertyType.Number
+                },
+                {
+                    name: "needleHeight",
+                    type: PropertyType.Number
+                }
+            ]),
 
         defaultValue: {
             type: "Scale",
@@ -1686,51 +1708,52 @@ export class BarGraphWidget extends Widget {
     line2Style?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "orientation",
-                type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "left-right"
-                    },
-                    {
-                        id: "right-left"
-                    },
-                    {
-                        id: "top-bottom"
-                    },
-                    {
-                        id: "bottom-top"
-                    }
-                ]
-            },
-            {
-                name: "textStyle",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            },
-            {
-                name: "line1Data",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
-            {
-                name: "line1Style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            },
-            {
-                name: "line2Data",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
-            {
-                name: "line2Style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "orientation",
+                    type: PropertyType.Enum,
+                    enumItems: [
+                        {
+                            id: "left-right"
+                        },
+                        {
+                            id: "right-left"
+                        },
+                        {
+                            id: "top-bottom"
+                        },
+                        {
+                            id: "bottom-top"
+                        }
+                    ]
+                },
+                {
+                    name: "textStyle",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "styles"]
+                },
+                {
+                    name: "line1Data",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["data"]
+                },
+                {
+                    name: "line1Style",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "styles"]
+                },
+                {
+                    name: "line2Data",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["data"]
+                },
+                {
+                    name: "line2Style",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "styles"]
+                }
+            ]),
 
         defaultValue: {
             type: "BarGraph",
@@ -1851,23 +1874,24 @@ export class YTGraphWidget extends Widget {
     y2Style?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "y1Style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            },
-            {
-                name: "y2Data",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
-            {
-                name: "y2Style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "y1Style",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "styles"]
+                },
+                {
+                    name: "y2Data",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["data"]
+                },
+                {
+                    name: "y2Style",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "styles"]
+                }
+            ]),
 
         defaultValue: {
             type: "YTGraph",
@@ -1958,21 +1982,22 @@ export class UpDownWidget extends Widget {
     upButtonText?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "buttonsStyle",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            },
-            {
-                name: "downButtonText",
-                type: PropertyType.String
-            },
-            {
-                name: "upButtonText",
-                type: PropertyType.String
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "buttonsStyle",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "styles"]
+                },
+                {
+                    name: "downButtonText",
+                    type: PropertyType.String
+                },
+                {
+                    name: "upButtonText",
+                    type: PropertyType.String
+                }
+            ]),
 
         defaultValue: {
             type: "UpDown",
@@ -2047,43 +2072,44 @@ export class ListGraphWidget extends Widget {
     cursorStyle?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "dwellData",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
-            {
-                name: "y1Data",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
-            {
-                name: "y1Style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            },
-            {
-                name: "y2Data",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
-            {
-                name: "y2Style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            },
-            {
-                name: "cursorData",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
-            {
-                name: "cursorStyle",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "dwellData",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["data"]
+                },
+                {
+                    name: "y1Data",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["data"]
+                },
+                {
+                    name: "y1Style",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "styles"]
+                },
+                {
+                    name: "y2Data",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["data"]
+                },
+                {
+                    name: "y2Style",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "styles"]
+                },
+                {
+                    name: "cursorData",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["data"]
+                },
+                {
+                    name: "cursorStyle",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "styles"]
+                }
+            ]),
 
         defaultValue: {
             type: "ListGraph",
@@ -2237,13 +2263,14 @@ export class LayoutViewWidget extends Widget {
     layout: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
-            {
-                name: "layout",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "pages"]
-            }
-        ]),
+        properties: () =>
+            widgetSharedProperties.concat([
+                {
+                    name: "layout",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["gui", "pages"]
+                }
+            ]),
 
         defaultValue: { type: "LayoutView", x: 0, y: 0, width: 64, height: 32, style: "default" }
     });
@@ -2291,6 +2318,7 @@ export class AppViewWidget extends Widget {
     page: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        properties: () => widgetSharedProperties.concat([]),
         defaultValue: { type: "AppView", x: 0, y: 0, width: 64, height: 32, style: "default" }
     });
 
@@ -2322,7 +2350,7 @@ export function getWidgetType(widgetClass: typeof EezObject) {
     return widgetClass.name;
 }
 
-const typeProperty = Widget.classInfo.properties.find(propertyInfo => propertyInfo.name == "type")!;
+const typeProperty = widgetSharedProperties.find(propertyInfo => propertyInfo.name == "type")!;
 typeProperty.enumItems = widgetClasses.map(widgetClass => ({
     id: getWidgetType(widgetClass)
 }));
