@@ -53,6 +53,7 @@ export const selectToolHandler: IToolHandler = {
                     label: "Delete",
                     click: () => {
                         context.document.deleteObjects(context.viewState.selectedObjects);
+                        context.viewState.deselectAllObjects();
                     }
                 });
 
