@@ -122,7 +122,7 @@ export class GlyphSource extends EezObject {
             return label;
         },
 
-        properties: () => [
+        properties: [
             {
                 name: "filePath",
                 type: PropertyType.String
@@ -266,7 +266,7 @@ export class Glyph extends EezObject {
         label: (glyph: Glyph) => {
             return glyph.encoding != undefined ? formatEncoding(glyph.encoding) : "";
         },
-        properties: () => [
+        properties: [
             {
                 name: "encoding",
                 type: PropertyType.Number

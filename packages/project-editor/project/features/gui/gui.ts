@@ -40,7 +40,7 @@ export class Gui extends EezObject {
 
     static classInfo: ClassInfo = {
         label: () => "GUI",
-        properties: () => [
+        properties: [
             {
                 name: "storyboard",
                 type: PropertyType.Object,

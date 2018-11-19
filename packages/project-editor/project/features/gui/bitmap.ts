@@ -31,7 +31,7 @@ export class Bitmap extends EezObject {
     alwaysBuild: boolean;
 
     static classInfo: ClassInfo = {
-        properties: () => [
+        properties: [
             {
                 name: "name",
                 type: PropertyType.String,
