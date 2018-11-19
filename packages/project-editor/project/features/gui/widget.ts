@@ -442,7 +442,7 @@ export class Widget extends EezObject {
         try {
             const result = await showGenericDialog({
                 dialogDefinition: {
-                    title: "Layou name",
+                    title: "Layout name",
                     fields: [
                         {
                             name: "name",

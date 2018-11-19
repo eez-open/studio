@@ -159,7 +159,7 @@ export function drawTree(
     traverseTree(tree, node => {
         if (node.draw) {
             node.draw(node, ctx, scale, callback);
-        } else if (node.image) {
+        } else if (node.image && node.image.width && node.image.height) {
             ctx.drawImage(node.image, node.rect.x, node.rect.y);
             if (
                 node.rect.x < tree.rect.x ||

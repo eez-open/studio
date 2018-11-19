@@ -157,15 +157,22 @@ interface TreeRowProps {
 export class TreeRow extends React.Component<TreeRowProps, {}> {
     row: HTMLDivElement;
     index: number;
+    ensureVisibleTimeout: any;
 
     ensureVisible() {
-        setTimeout(() => {
+        if (this.ensureVisibleTimeout) {
+            clearTimeout(this.ensureVisibleTimeout);
+        }
+
+        this.ensureVisibleTimeout = setTimeout(() => {
+            this.ensureVisibleTimeout = undefined;
+
             if (!DragAndDropManager.dragObject) {
                 if ($(this.row).hasClass("selected")) {
                     ($(this.row)[0] as any).scrollIntoViewIfNeeded();
                 }
             }
-        }, 0);
+        }, 100);
     }
 
     componentDidMount() {
