@@ -51,7 +51,7 @@ export class ExtensionDefinition extends EezObject {
                 (extensionDefinition.doNotBuild ? " (build disabled)" : "")
             );
         },
-        properties: () => [
+        properties: [
             {
                 name: "name",
                 type: PropertyType.String,

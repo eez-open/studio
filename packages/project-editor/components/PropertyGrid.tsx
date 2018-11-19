@@ -18,7 +18,6 @@ import {
     getObjectFromPath,
     objectToString,
     getProperty,
-    getObjectPropertiesInfo,
     getInheritedValue,
     getPropertyAsString,
     isArray,
@@ -830,7 +829,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
 
         let properties: JSX.Element[] = [];
 
-        for (let propertyInfo of getObjectPropertiesInfo(object)) {
+        for (let propertyInfo of object._classInfo.properties) {
             if (!isArray(object) && !propertyInfo.hideInPropertyGrid) {
                 const colSpan = propertyInfo.type === PropertyType.Boolean;
 
@@ -848,9 +847,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
                 } else {
                     property = (
                         <React.Fragment>
-                            <td>
-                                {propertyInfo.displayName || humanize(propertyInfo.name)}
-                            </td>
+                            <td>{propertyInfo.displayName || humanize(propertyInfo.name)}</td>
                             <td>
                                 <Property
                                     propertyInfo={propertyInfo}

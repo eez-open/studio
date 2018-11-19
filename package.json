@@ -22,7 +22,8 @@
     "build-catalog": "cd extensions && tsc && node build-catalog.js",
     "build-installation": "cd installation && tsc && electron extra-resource.js && cd .. && node installation/build-installation.js",
     "tslint": "tslint --project ./packages/tsconfig.json 'packages/**/*.{ts,tsx}'",
-    "tsc-version": "tsc --version"
+    "tsc-version": "tsc --version",
+    "link": "npm link eez-studio-shared && npm link eez-studio-ui && npm link eez-studio-designer"
   },
   "prettier": {
     "printWidth": 100,

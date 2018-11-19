@@ -35,7 +35,7 @@ export class BuildConfiguration extends EezObject {
     properties: string;
 
     static classInfo: ClassInfo = {
-        properties: () => [
+        properties: [
             {
                 name: "name",
                 type: PropertyType.String,
@@ -89,7 +89,7 @@ export class BuildFile extends EezObject {
         label: (buildFile: BuildFile) => {
             return buildFile.fileName;
         },
-        properties: () => [
+        properties: [
             {
                 name: "fileName",
                 type: PropertyType.String,
@@ -131,7 +131,7 @@ export class Build extends EezObject {
 
     static classInfo: ClassInfo = {
         label: () => "Build",
-        properties: () => [
+        properties: [
             {
                 name: "configurations",
                 type: PropertyType.Array,
@@ -163,7 +163,7 @@ export class General extends EezObject {
 
     static classInfo: ClassInfo = {
         label: () => "General",
-        properties: () => [
+        properties: [
             {
                 name: "scpiDocFolder",
                 displayName: "SCPI documentation folder",
@@ -188,7 +188,7 @@ export class Settings extends EezObject {
 
     static classInfo: ClassInfo = {
         label: () => "Settings",
-        properties: () => [
+        properties: [
             {
                 name: "general",
                 type: PropertyType.Object,
@@ -213,8 +213,57 @@ registerClass(Settings);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+let projectClassInfo: ClassInfo;
 let numProjectFeatures = 0;
-let projectProperties: PropertyInfo[];
+let builtinProjectProperties: PropertyInfo[] = [
+    {
+        name: "settings",
+        type: PropertyType.Object,
+        typeClass: Settings,
+        hideInPropertyGrid: true
+    }
+];
+let projectProperties = builtinProjectProperties;
+
+function getProjectClassInfo() {
+    if (!projectClassInfo) {
+        projectClassInfo = {
+            label: () => "Project",
+            properties: projectProperties,
+            navigationComponent: MenuNavigation,
+            navigationComponentId: "project",
+            defaultNavigationKey: "settings"
+        };
+    }
+
+    let projectFeatures = getExtensionsByCategory("project-feature");
+    if (numProjectFeatures != projectFeatures.length) {
+        numProjectFeatures = projectFeatures.length;
+
+        let projectFeatureProperties: PropertyInfo[] = projectFeatures.map(projectFeature => {
+            return {
+                name: projectFeature.eezStudioExtension.implementation.projectFeature.key,
+                displayName:
+                    projectFeature.eezStudioExtension.implementation.projectFeature.displayName,
+                type: projectFeature.eezStudioExtension.implementation.projectFeature.type,
+                typeClass:
+                    projectFeature.eezStudioExtension.implementation.projectFeature.typeClass,
+                isOptional: !projectFeature.eezStudioExtension.implementation.projectFeature
+                    .mandatory,
+                hideInPropertyGrid: true,
+                check: projectFeature.eezStudioExtension.implementation.projectFeature.check
+            };
+        });
+
+        projectProperties.splice(
+            0,
+            projectProperties.length,
+            ...builtinProjectProperties.concat(projectFeatureProperties)
+        );
+    }
+
+    return projectClassInfo;
+}
 
 export class Project extends EezObject {
     @observable
@@ -226,60 +275,14 @@ export class Project extends EezObject {
     @observable
     actions: EezArrayObject<Action>;
 
-    static classInfo: ClassInfo = {
-        label: () => "Project",
-        properties: () => {
-            let projectFeatures = getExtensionsByCategory("project-feature");
-            if (!projectProperties || numProjectFeatures != projectFeatures.length) {
-                numProjectFeatures = projectFeatures.length;
-
-                let builtinProjectProperties: PropertyInfo[] = [
-                    {
-                        name: "settings",
-                        type: PropertyType.Object,
-                        typeClass: Settings,
-                        hideInPropertyGrid: true
-                    }
-                ];
-
-                let projectFeatureProperties: PropertyInfo[] = projectFeatures.map(
-                    projectFeature => {
-                        return {
-                            name:
-                                projectFeature.eezStudioExtension.implementation.projectFeature.key,
-                            displayName:
-                                projectFeature.eezStudioExtension.implementation.projectFeature
-                                    .displayName,
-                            type:
-                                projectFeature.eezStudioExtension.implementation.projectFeature
-                                    .type,
-                            typeClass:
-                                projectFeature.eezStudioExtension.implementation.projectFeature
-                                    .typeClass,
-                            isOptional: !projectFeature.eezStudioExtension.implementation
-                                .projectFeature.mandatory,
-                            hideInPropertyGrid: true,
-                            check:
-                                projectFeature.eezStudioExtension.implementation.projectFeature
-                                    .check
-                        };
-                    }
-                );
-
-                projectProperties = builtinProjectProperties.concat(projectFeatureProperties);
-            }
-
-            return projectProperties;
-        },
-        navigationComponent: MenuNavigation,
-        navigationComponentId: "project",
-        defaultNavigationKey: "settings"
-    };
+    static get classInfo(): ClassInfo {
+        return getProjectClassInfo();
+    }
 
     callExtendObservableForAllOptionalProjectFeatures() {
         let optionalFeatures: any = {};
 
-        this._classInfo.properties(this).forEach(propertyInfo => {
+        this._classInfo.properties.forEach(propertyInfo => {
             if (propertyInfo.isOptional && !(propertyInfo.name in this)) {
                 optionalFeatures[propertyInfo.name] = getProperty(this, propertyInfo.name);
             }

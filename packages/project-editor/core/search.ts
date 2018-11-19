@@ -26,9 +26,7 @@ function* visitWithPause(parentObject: EezObject): IterableIterator<VisitResult>
             yield* visitWithPause(arrayOfObjects[i]);
         }
     } else {
-        let properties = parentObject._classInfo.properties(parentObject);
-        for (let i = 0; i < properties.length; i++) {
-            let propertyInfo = properties[i];
+        for (const propertyInfo of parentObject._classInfo.properties) {
             if (!propertyInfo.skipSearch) {
                 let value = getProperty(parentObject, propertyInfo.name);
                 if (value) {
@@ -56,9 +54,7 @@ function* visitWithoutPause(parentObject: EezObject): IterableIterator<VisitResu
             yield* visitWithoutPause(arrayOfObjects[i]);
         }
     } else {
-        let properties = parentObject._classInfo.properties(parentObject);
-        for (let i = 0; i < properties.length; i++) {
-            let propertyInfo = properties[i];
+        for (const propertyInfo of parentObject._classInfo.properties) {
             if (!propertyInfo.skipSearch) {
                 let value = getProperty(parentObject, propertyInfo.name);
                 if (value) {
