@@ -9,8 +9,10 @@ import {
     getChildOfObject,
     humanizePropertyName
 } from "project-editor/core/store";
-import { EezObject } from "project-editor/core/object";
+import { EezObject, IMessage, MessageType } from "project-editor/core/object";
 import { generateObjectId } from "project-editor/core/util";
+
+export { MessageType as Type } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -20,17 +22,11 @@ export enum Section {
     SEARCH
 }
 
-export enum Type {
-    INFO,
-    ERROR,
-    WARNING
-}
-
-export class Message {
+export class Message implements IMessage {
     id: string = generateObjectId();
     @observable selected: boolean = false;
 
-    constructor(public type: Type, public text: string, public object?: EezObject) {}
+    constructor(public type: MessageType, public text: string, public object?: EezObject) {}
 }
 
 export class OutputSection {
@@ -65,13 +61,12 @@ export class OutputSection {
                         </React.Fragment>
                     )}
 
-                    {this.numErrors === 0 &&
-                        this.numWarnings === 0 && (
-                            <React.Fragment>
-                                <span>&nbsp;</span>
-                                <Icon icon="material:check" className="info" />
-                            </React.Fragment>
-                        )}
+                    {this.numErrors === 0 && this.numWarnings === 0 && (
+                        <React.Fragment>
+                            <span>&nbsp;</span>
+                            <Icon icon="material:check" className="info" />
+                        </React.Fragment>
+                    )}
                 </React.Fragment>
             );
         }
@@ -83,7 +78,7 @@ export class OutputSection {
     get numErrors() {
         let n = 0;
         for (let i = 0; i < this.messages.length; i++) {
-            if (this.messages[i].type == Type.ERROR) {
+            if (this.messages[i].type == MessageType.ERROR) {
                 n++;
             }
         }
@@ -94,7 +89,7 @@ export class OutputSection {
     get numWarnings() {
         let n = 0;
         for (let i = 0; i < this.messages.length; i++) {
-            if (this.messages[i].type == Type.WARNING) {
+            if (this.messages[i].type == MessageType.WARNING) {
                 n++;
             }
         }
@@ -160,7 +155,7 @@ export class OutputSections {
     }
 
     @action
-    write(sectionType: Section, type: Type, text: string, object?: EezObject) {
+    write(sectionType: Section, type: MessageType, text: string, object?: EezObject) {
         let section = this.sections[sectionType];
         section.messages.push(new Message(type, text, object));
     }
@@ -177,7 +172,7 @@ export class OutputSections {
 export function propertyNotSetMessage(
     object: EezObject,
     propertyName: string,
-    type: Type = Type.ERROR
+    type: MessageType = MessageType.ERROR
 ) {
     return new Message(
         type,
@@ -189,7 +184,7 @@ export function propertyNotSetMessage(
 export function propertyNotUniqueMessage(
     object: EezObject,
     propertyName: string,
-    type: Type = Type.ERROR
+    type: MessageType = MessageType.ERROR
 ) {
     return new Message(
         type,
@@ -201,7 +196,7 @@ export function propertyNotUniqueMessage(
 export function propertySetButNotUsedMessage(
     object: EezObject,
     propertyName: string,
-    type: Type = Type.ERROR
+    type: MessageType = MessageType.ERROR
 ) {
     return new Message(
         type,
@@ -213,7 +208,7 @@ export function propertySetButNotUsedMessage(
 export function propertyNotFoundMessage(
     object: EezObject,
     propertyName: string,
-    type: Type = Type.ERROR
+    type: MessageType = MessageType.ERROR
 ) {
     return new Message(
         type,
@@ -225,7 +220,7 @@ export function propertyNotFoundMessage(
 export function propertyInvalidValueMessage(
     object: EezObject,
     propertyName: string,
-    type: Type = Type.ERROR
+    type: MessageType = MessageType.ERROR
 ) {
     return new Message(
         type,

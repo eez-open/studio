@@ -16,7 +16,8 @@ import {
     EezValueObject,
     EezArrayObject,
     PropertyType,
-    isSubclassOf
+    isSubclassOf,
+    IEditorState
 } from "project-editor/core/object";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { findAllReferences, isReferenced } from "project-editor/core/search";
@@ -250,12 +251,6 @@ class NavigationStoreClass {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface EditorState {
-    loadState(state: any): void;
-    saveState(): any;
-    selectObject(object: EezObject): void;
-}
-
 export class Editor {
     @observable
     object: EezObject;
@@ -264,7 +259,7 @@ export class Editor {
     @observable
     permanent: boolean;
     @observable
-    state: EditorState | undefined;
+    state: IEditorState | undefined;
 
     @computed
     get id() {

@@ -1,9 +1,6 @@
 import React from "react";
 import { observable } from "mobx";
 
-import { Editor, EditorState } from "project-editor/core/store";
-import { Message } from "project-editor/core/output";
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface EnumItem {
@@ -29,6 +26,18 @@ export enum PropertyType {
     Any
 }
 
+export enum MessageType {
+    INFO,
+    ERROR,
+    WARNING
+}
+
+export interface IMessage {
+    type: MessageType;
+    text: string;
+    object?: EezObject;
+}
+
 export interface PropertyInfo {
     name: string;
     type: PropertyType;
@@ -50,7 +59,7 @@ export interface PropertyInfo {
     unique?: boolean;
     skipSearch?: boolean;
     childLabel?: (childObject: EezObject, childLabel: string) => string;
-    check?: (object: EezObject) => Message[];
+    check?: (object: EezObject) => IMessage[];
 }
 
 export interface NavigationComponentProps {
@@ -61,8 +70,19 @@ export interface NavigationComponentProps {
 
 export class NavigationComponent extends React.Component<NavigationComponentProps, {}> {}
 
+export interface IEditorState {
+    loadState(state: any): void;
+    saveState(): any;
+    selectObject(object: EezObject): void;
+}
+
+export interface IEditor {
+    object: EezObject;
+    state: IEditorState | undefined;
+}
+
 export interface EditorComponentProps {
-    editor: Editor;
+    editor: IEditor;
 }
 
 export class EditorComponent extends React.Component<EditorComponentProps, {}> {}
@@ -91,7 +111,7 @@ export interface ClassInfo {
     defaultNavigationKey?: string;
 
     editorComponent?: typeof EditorComponent;
-    createEditorState?: (object: EezObject) => EditorState;
+    createEditorState?: (object: EezObject) => IEditorState;
     newItem?: (object: EezObject) => Promise<any>;
     getInheritedValue?: (object: EezObject, propertyName: string) => InheritedValue;
     defaultValue?: any;
