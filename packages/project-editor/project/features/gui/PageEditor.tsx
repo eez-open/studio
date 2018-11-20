@@ -51,7 +51,11 @@ export class PageEditor extends EditorComponent {
 
         let editor;
         if (this.isExperimentalEditor) {
-            editor = <ExperimentalWidgetContainerEditor container={pageTabState.page} />;
+            editor = (
+                <ExperimentalWidgetContainerEditor
+                    widgetContainer={pageTabState.widgetContainerDisplayItem}
+                />
+            );
         } else {
             editor = (
                 <WidgetContainerEditor
@@ -80,38 +84,34 @@ export class PageEditor extends EditorComponent {
             />
         );
 
-        if (this.isExperimentalEditor) {
-            return panel;
-        } else {
-            let pageStructure = (
-                <Tree
-                    rootItem={pageTabState.widgetContainerDisplayItem}
-                    tabIndex={0}
-                    collapsable={true}
-                />
-            );
+        let pageStructure = (
+            <Tree
+                rootItem={pageTabState.widgetContainerDisplayItem}
+                tabIndex={0}
+                collapsable={true}
+            />
+        );
 
-            return (
+        return (
+            <Splitter
+                type="horizontal"
+                persistId="page-editor/horizontal"
+                sizes={`100%|240px`}
+                tabIndex={0}
+                onFocus={this.focusHandler}
+                childrenOverflow="hidden"
+            >
+                {panel}
                 <Splitter
-                    type="horizontal"
-                    persistId="page-editor/horizontal"
+                    type="vertical"
+                    persistId="page-editor/vertical"
                     sizes={`100%|240px`}
-                    tabIndex={0}
-                    onFocus={this.focusHandler}
                     childrenOverflow="hidden"
                 >
-                    {panel}
-                    <Splitter
-                        type="vertical"
-                        persistId="page-editor/vertical"
-                        sizes={`100%|240px`}
-                        childrenOverflow="hidden"
-                    >
-                        <Panel id="page-structure" title="Page Structure" body={pageStructure} />
-                        <Panel id="widgets" title="Widget Palette" body={<WidgetPalette />} />
-                    </Splitter>
+                    <Panel id="page-structure" title="Page Structure" body={pageStructure} />
+                    <Panel id="widgets" title="Widget Palette" body={<WidgetPalette />} />
                 </Splitter>
-            );
-        }
+            </Splitter>
+        );
     }
 }

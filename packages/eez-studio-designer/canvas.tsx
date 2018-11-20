@@ -292,6 +292,12 @@ export class Canvas extends React.Component<
         let xt = transform.clientRect.width / 2 + transform.translate.x + transform.scrollOffset.x;
         let yt = transform.clientRect.height / 2 + transform.translate.y + transform.scrollOffset.y;
 
+        const CENTER_LINES_COLOR = "rgba(0, 0, 0, 0.2)";
+        const CENTER_LINES_WIDTH = 1 / transform.scale;
+        const centerLineStyle = { stroke: CENTER_LINES_COLOR, strokeWidth: CENTER_LINES_WIDTH };
+
+        const modelRect = transform.clientToModelRect(transform.clientRect);
+
         return (
             <div
                 ref={ref => (this.div = ref!)}
@@ -315,6 +321,24 @@ export class Canvas extends React.Component<
                         height={transform.clientRect.height}
                     >
                         <g transform={`translate(${xt}, ${yt}) scale(${transform.scale})`}>
+                            {this.designerContext.options && this.designerContext.options.center && (
+                                <React.Fragment>
+                                    <line
+                                        x1={modelRect.left}
+                                        y1={this.designerContext.options.center.y}
+                                        x2={modelRect.left + modelRect.width}
+                                        y2={this.designerContext.options.center.y}
+                                        style={centerLineStyle}
+                                    />
+                                    <line
+                                        x1={this.designerContext.options.center.x}
+                                        y1={modelRect.top}
+                                        x2={this.designerContext.options.center.x}
+                                        y2={modelRect.top + modelRect.height}
+                                        style={centerLineStyle}
+                                    />
+                                </React.Fragment>
+                            )}
                             {this.props.children}
                         </g>
                     </svg>

@@ -1,4 +1,4 @@
-import { Point, Rect, Transform } from "eez-studio-shared/geometry";
+import { Point, Rect, ITransform, Transform } from "eez-studio-shared/geometry";
 
 export interface IContextMenuItem {
     label: string;
@@ -31,6 +31,7 @@ export interface IDocument {
     // view
     objectFromPoint(point: Point): IBaseObject | undefined;
     getObjectsInsideRect(rect: Rect): IBaseObject[];
+    resetTransform?(transform: ITransform): void;
 
     // misc.
     createContextMenu(objects: IBaseObject[]): IContextMenu;
@@ -57,16 +58,23 @@ export interface IViewState {
     selectObject(object: IBaseObject): void;
     selectObjects(objects: IBaseObject[]): void;
     deselectAllObjects(): void;
+
+    persistentState: IViewStatePersistantState;
+}
+
+export interface IDesignerOptions {
+    center?: Point;
 }
 
 export interface IDesignerContext {
     document: IDocument;
     viewState: IViewState;
+    options: IDesignerOptions;
 }
 
-export interface IViewStatePersistanceHandler {
-    load(): any;
-    save(viewState: any): void;
+export interface IViewStatePersistantState {
+    transform: ITransform;
+    selectedObjects: string[];
 }
 
 export interface IToolbarButton {

@@ -170,7 +170,12 @@ const SCALES = [
     8
 ];
 
-export class Transform {
+export interface ITransform {
+    translate: Point;
+    scale: number;
+}
+
+export class Transform implements ITransform {
     @observable _translate: Point;
     @observable _scale: number;
 
@@ -377,6 +382,18 @@ export class Transform {
             x: 0,
             y: 0
         };
+    }
+
+    cloneWithScrollOffsetApplied() {
+        const transform = new Transform({
+            translate: {
+                x: this.translate.x + this.scrollOffset.x,
+                y: this.translate.y + this.scrollOffset.y
+            },
+            scale: this.scale
+        });
+        transform.clientRect = this.clientRect;
+        return transform;
     }
 
     @action

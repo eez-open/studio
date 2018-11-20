@@ -143,6 +143,8 @@ export class Page extends EezObject {
 
 registerClass(Page);
 
+////////////////////////////////////////////////////////////////////////////////
+
 export interface IWidgetContainerDisplayItem extends DisplayItem {
     getSelectedWidgetForSelectWidget(item: DisplayItem): DisplayItem | undefined;
 }
@@ -254,6 +256,8 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 export class PageTabState {
     page: Page;
     widgetContainerDisplayItem: WidgetContainerDisplayItem;
@@ -265,11 +269,7 @@ export class PageTabState {
 
     @computed
     get selectedObject(): EezObject | undefined {
-        let object = this.widgetContainerDisplayItem.selectedObject;
-        if (object) {
-            return object;
-        }
-        return this.page;
+        return this.widgetContainerDisplayItem.selectedObject || this.page;
     }
 
     loadState(state: any) {

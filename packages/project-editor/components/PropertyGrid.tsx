@@ -78,8 +78,9 @@ interface PropertyValueSourceInfo {
 @observer
 class PropertyMenu extends React.Component<PropertyProps, {}> {
     get sourceInfo(): PropertyValueSourceInfo {
+        let value = (this.props.object as any)[this.props.propertyInfo.name];
+
         if (this.props.propertyInfo.inheritable) {
-            let value = (this.props.object as any)[this.props.propertyInfo.name];
             if (value === undefined) {
                 let inheritedValue = getInheritedValue(
                     this.props.object,
@@ -95,12 +96,17 @@ class PropertyMenu extends React.Component<PropertyProps, {}> {
         }
 
         if ("defaultValue" in this.props.propertyInfo) {
-            let value = (this.props.object as any)[this.props.propertyInfo.name];
             if (value !== this.props.propertyInfo.defaultValue) {
                 return {
                     source: "modified"
                 };
             }
+        }
+
+        if (value !== undefined) {
+            return {
+                source: "modified"
+            };
         }
 
         return {
@@ -112,13 +118,13 @@ class PropertyMenu extends React.Component<PropertyProps, {}> {
     onClicked() {
         let menuItems: Electron.MenuItem[] = [];
 
-        if (this.sourceInfo.source == "modified") {
+        if (this.sourceInfo.source === "modified") {
             menuItems.push(
                 new MenuItem({
                     label: "Reset",
                     click: () => {
                         this.props.updateObject({
-                            [this.props.propertyInfo.name]: undefined
+                            [this.props.propertyInfo.name]: this.props.propertyInfo.defaultValue
                         });
                     }
                 })

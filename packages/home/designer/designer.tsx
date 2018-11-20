@@ -22,7 +22,8 @@ import { ButtonAction } from "eez-studio-ui/action";
 import {
     IBaseObject,
     IToolbarButton,
-    IDesignerContext
+    IDesignerContext,
+    IViewStatePersistantState
 } from "eez-studio-designer/designer-interfaces";
 import { DesignerContext } from "eez-studio-designer/context";
 import { Canvas } from "eez-studio-designer/canvas";
@@ -246,24 +247,31 @@ export class WorkbenchDocument extends React.Component {
 
 @observer
 export class Designer extends React.Component<{}, {}> {
-    @bind
-    loadViewState() {
+    @computed
+    get viewStatePersistantState(): IViewStatePersistantState {
         let viewStateJSON = window.localStorage.getItem("home/designer/transform");
         if (viewStateJSON) {
             try {
-                const viewState = JSON.parse(viewStateJSON);
+                const viewState: IViewStatePersistantState = JSON.parse(viewStateJSON);
 
                 if (!viewState.transform) {
-                    if (viewState.scale !== undefined && viewState.translate !== undefined) {
+                    if (
+                        (viewState as any).scale !== undefined &&
+                        (viewState as any).translate !== undefined
+                    ) {
                         // migration
                         // TODO remove this in the feature
                         viewState.transform = {
-                            scale: viewState.scale,
-                            translate: viewState.translate
+                            scale: (viewState as any).scale,
+                            translate: (viewState as any).translate
                         };
-                        delete viewState.scale;
-                        delete viewState.translate;
+                        delete (viewState as any).scale;
+                        delete (viewState as any).translate;
                     }
+                }
+
+                if (!viewState.selectedObjects) {
+                    viewState.selectedObjects = [];
                 }
 
                 return viewState;
@@ -279,12 +287,13 @@ export class Designer extends React.Component<{}, {}> {
                     y: 0
                 },
                 scale: 1
-            }
+            },
+            selectedObjects: []
         };
     }
 
     @bind
-    saveViewState(viewState: any) {
+    onSavePersistantState(viewState: IViewStatePersistantState) {
         window.localStorage.setItem("home/designer/transform", JSON.stringify(viewState));
     }
 
@@ -292,10 +301,8 @@ export class Designer extends React.Component<{}, {}> {
         return (
             <DesignerContext
                 document={workbenchDocument}
-                viewStatePersistanceHandler={{
-                    load: this.loadViewState,
-                    save: this.saveViewState
-                }}
+                viewStatePersistantState={this.viewStatePersistantState}
+                onSavePersistantState={this.onSavePersistantState}
             >
                 <VerticalHeaderWithBody>
                     <Header>

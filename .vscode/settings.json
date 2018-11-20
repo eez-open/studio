@@ -13,7 +13,7 @@
     },
     "editor.formatOnSave": true,
     "typescript.reportStyleChecksAsWarnings": false,
-    "typescript.suggest.autoImports": true,
+    "typescript.suggest.autoImports": false,
     "files.associations": {
         "iosfwd": "cpp",
         "xiosbase": "cpp",

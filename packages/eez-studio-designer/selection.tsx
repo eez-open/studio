@@ -125,6 +125,9 @@ export class Selection extends React.Component<
         let selectedObjectRects;
         let selectedObjectsBoundingRect;
         let resizeHandlers;
+
+        const transform = this.props.context.viewState.transform.cloneWithScrollOffsetApplied();
+
         if (this.props.context.viewState.selectedObjects.length > 0) {
             const selectedObjectClassName =
                 this.props.context.viewState.selectedObjects.length > 1
@@ -137,13 +140,13 @@ export class Selection extends React.Component<
                     className={selectedObjectClassName}
                     key={object.id}
                     object={object}
-                    transform={this.props.context.viewState.transform}
+                    transform={transform}
                 />
             ));
 
             //
-            let boundingRect = this.props.context.viewState.transform.modelToOffsetRect(this.props
-                .context.viewState.selectedObjectsBoundingRect as Rect);
+            let boundingRect = transform.modelToOffsetRect(this.props.context.viewState
+                .selectedObjectsBoundingRect as Rect);
 
             if (this.props.context.viewState.selectedObjects.length > 1) {
                 let style: React.CSSProperties = {

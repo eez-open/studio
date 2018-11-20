@@ -12,7 +12,8 @@ import {
     canDelete,
     isAncestor,
     extendContextMenu,
-    reduceUntilCommonParent as reduceObjectsUntilCommonParent
+    reduceUntilCommonParent as reduceObjectsUntilCommonParent,
+    getObjectFromObjectId
 } from "project-editor/core/store";
 import {
     EezObject,
@@ -205,6 +206,30 @@ export class TreeObjectAdapter {
 
         // select items
         items.forEach(item => this.selectItem(item));
+    }
+
+    @action
+    selectObjects(objects: EezObject[]) {
+        const items: TreeObjectAdapter[] = [];
+        for (const object of objects) {
+            const item = this.getAncestorObjectAdapter(object);
+            if (item) {
+                items.push(item);
+            }
+        }
+        this.selectItems(items);
+    }
+
+    @action
+    selectObjectIds(objectIds: string[]) {
+        const objects: EezObject[] = [];
+        for (const objectId of objectIds) {
+            const object = getObjectFromObjectId(objectId);
+            if (object) {
+                objects.push(object);
+            }
+        }
+        this.selectObjects(objects);
     }
 
     @action

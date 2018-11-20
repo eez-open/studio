@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, reaction, runInAction } from "mobx";
+import { observable, computed, action, reaction, runInAction } from "mobx";
 import { Provider } from "mobx-react";
 
 import { Rect, Transform, BoundingRectBuilder } from "eez-studio-shared/geometry";
@@ -8,61 +8,83 @@ import {
     IBaseObject,
     IDocument,
     IViewState,
-    IViewStatePersistanceHandler,
-    IDesignerContext
+    IViewStatePersistantState,
+    IDesignerContext,
+    IDesignerOptions
 } from "eez-studio-designer/designer-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class ViewState implements IViewState {
     @observable
-    transform: Transform = new Transform({
+    transform = new Transform({
         scale: 1,
         translate: { x: 0, y: 0 }
     });
-
-    constructor(document: IDocument, viewStatePersistanceHandler: IViewStatePersistanceHandler) {
-        const viewState = viewStatePersistanceHandler.load();
-
-        if (viewState) {
-            if (viewState.transform) {
-                this.transform.scale = viewState.transform.scale;
-                this.transform.translate = viewState.transform.translate;
-            }
-
-            if (viewState.selectedObjects) {
-                this.selectedObjects = viewState.selectedObjects
-                    .map((id: string) => document.findObjectById(id))
-                    .filter((object: IBaseObject | undefined) => !!object);
-            }
-        }
-
-        reaction(
-            () => ({
-                transform: {
-                    translate: this.transform.translate,
-                    scale: this.transform.scale
-                },
-                selectedObjects: this.selectedObjects.map(object => object.id)
-            }),
-            viewState => viewStatePersistanceHandler.save(viewState)
-        );
-    }
-
-    @action
-    resetTransform() {
-        this.transform.scale = 1;
-        this.transform.translate = {
-            x: 0,
-            y: 0
-        };
-    }
 
     @observable
     isIdle: boolean = true;
 
     @observable
     selectedObjects: IBaseObject[] = [];
+
+    constructor(
+        private document: IDocument,
+        viewStatePersistantState: IViewStatePersistantState,
+        onSavePersistantState: (viewStatePersistantState: IViewStatePersistantState) => void,
+        lastViewState?: ViewState
+    ) {
+        if (viewStatePersistantState) {
+            if (viewStatePersistantState.transform) {
+                this.transform.scale = viewStatePersistantState.transform.scale;
+                this.transform.translate = viewStatePersistantState.transform.translate;
+            }
+
+            if (viewStatePersistantState.selectedObjects) {
+                const selectedObjects: IBaseObject[] = [];
+                for (const id of viewStatePersistantState.selectedObjects) {
+                    const object = document.findObjectById(id);
+                    if (object) {
+                        selectedObjects.push(object);
+                    }
+                }
+                this.selectedObjects = selectedObjects;
+            }
+        }
+
+        if (lastViewState) {
+            this.transform.clientRect = lastViewState.transform.clientRect;
+        }
+
+        reaction(() => this.persistentState, viewState => onSavePersistantState(viewState));
+    }
+
+    @computed
+    get persistentState(): IViewStatePersistantState {
+        const selectedObjects = this.selectedObjects.map(object => object.id);
+        selectedObjects.sort();
+
+        return {
+            transform: {
+                translate: this.transform.translate,
+                scale: this.transform.scale
+            },
+            selectedObjects
+        };
+    }
+
+    @action
+    resetTransform() {
+        if (this.document.resetTransform) {
+            this.document.resetTransform(this.transform);
+        } else {
+            this.transform.scale = 1;
+            this.transform.translate = {
+                x: 0,
+                y: 0
+            };
+        }
+    }
 
     get isSelectionResizable() {
         for (const object of this.selectedObjects) {
@@ -109,21 +131,29 @@ class ViewState implements IViewState {
 
 export class DesignerContext extends React.Component<{
     document: IDocument;
-    viewStatePersistanceHandler: IViewStatePersistanceHandler;
+    viewStatePersistantState: IViewStatePersistantState;
+    onSavePersistantState: (viewStatePersistantState: IViewStatePersistantState) => void;
+    options?: IDesignerOptions;
 }> {
+    viewStateCache: ViewState;
     designerContextCache: IDesignerContext;
 
     get designerContext() {
         if (
             !this.designerContextCache ||
-            this.designerContextCache.document !== this.props.document
+            this.designerContextCache.document !== this.props.document ||
+            JSON.stringify(this.props.viewStatePersistantState) !==
+                JSON.stringify(this.designerContextCache.viewState.persistentState)
         ) {
             this.designerContextCache = {
                 document: this.props.document,
                 viewState: new ViewState(
                     this.props.document,
-                    this.props.viewStatePersistanceHandler
-                )
+                    this.props.viewStatePersistantState,
+                    this.props.onSavePersistantState,
+                    this.designerContextCache && (this.designerContextCache.viewState as ViewState)
+                ),
+                options: this.props.options || {}
             };
         }
         return this.designerContextCache;

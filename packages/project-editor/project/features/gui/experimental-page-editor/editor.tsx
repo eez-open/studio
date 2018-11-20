@@ -1,12 +1,12 @@
 import React from "react";
-import { observable, computed, action, runInAction, autorun } from "mobx";
+import { computed } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
 import { _range } from "eez-studio-shared/algorithm";
-import { Point, Rect, pointInRect, isRectInsideRect } from "eez-studio-shared/geometry";
+import { Point, Rect, ITransform, pointInRect, isRectInsideRect } from "eez-studio-shared/geometry";
 
 import { SvgLabel } from "eez-studio-ui/svg-label";
 import {
@@ -14,7 +14,8 @@ import {
     IDocument,
     IContextMenu,
     IContextMenuItem,
-    IContextMenuPopupOptions
+    IContextMenuPopupOptions,
+    IViewStatePersistantState
 } from "eez-studio-designer/designer-interfaces";
 import { DesignerContext } from "eez-studio-designer/context";
 import { Canvas } from "eez-studio-designer/canvas";
@@ -26,15 +27,14 @@ import {
     updateObject,
     deleteItems,
     UndoManager,
-    UIStateStore,
-    isObjectExists
+    UIStateStore
 } from "project-editor/core/store";
 import { EezObject } from "project-editor/core/metaData";
 
 import * as data from "project-editor/project/features/data/data";
 
 import { findStyleOrGetDefault } from "project-editor/project/features/gui/gui";
-import { Page } from "project-editor/project/features/gui/page";
+import { Page, WidgetContainerDisplayItem } from "project-editor/project/features/gui/page";
 import {
     Widget,
     ContainerWidget,
@@ -491,6 +491,8 @@ class SelectWidgetObjectComponent extends WidgetObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const SELECT_WIDGET_LINES_COLOR = "rgba(255, 128, 128, 0.9)";
+
 @observer
 class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
     get selectWidgetEditor() {
@@ -555,6 +557,16 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
                         {label}
                     </text>
                     <g transform={`translate(${x} ${y})`}>
+                        <rect
+                            x={1}
+                            y={1}
+                            width={this.selectWidget.width - 2}
+                            height={this.selectWidget.height - 2}
+                            fill="transparent"
+                            stroke={SELECT_WIDGET_LINES_COLOR}
+                            strokeDasharray="4 2"
+                            strokeWidth="1"
+                        />
                         <ChildObjectComponent
                             ref={ref => {
                                 if (ref) {
@@ -625,8 +637,6 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
 
         const label = this.selectWidget.data;
 
-        const COLOR = "rgba(255, 128, 128, 0.9)";
-
         return (
             <React.Fragment>
                 <rect
@@ -635,18 +645,18 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
                     width={this.selectWidget.boundingRect.width}
                     height={this.selectWidget.boundingRect.height}
                     fill="transparent"
-                    stroke={COLOR}
+                    stroke={SELECT_WIDGET_LINES_COLOR}
                 />
 
-                <circle cx={x1} cy={y1} r={2} fill={COLOR} />
+                <circle cx={x1} cy={y1} r={2} fill={SELECT_WIDGET_LINES_COLOR} />
 
                 <path
                     d={`M${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`}
-                    stroke={COLOR}
+                    stroke={SELECT_WIDGET_LINES_COLOR}
                     fill="transparent"
                 />
 
-                <circle cx={x2} cy={y2} r={3} fill={COLOR} />
+                <circle cx={x2} cy={y2} r={3} fill={SELECT_WIDGET_LINES_COLOR} />
 
                 {label && (
                     <SvgLabel
@@ -658,7 +668,7 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
                         backgroundColor="white"
                         textColor="#333"
                         border={{
-                            color: COLOR
+                            color: SELECT_WIDGET_LINES_COLOR
                         }}
                     />
                 )}
@@ -669,7 +679,7 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
                     width={this.boundingRect.width}
                     height={this.boundingRect.height}
                     fill="transparent"
-                    stroke={COLOR}
+                    stroke={SELECT_WIDGET_LINES_COLOR}
                 />
 
                 {this.renderSelectChildren()}
@@ -786,62 +796,36 @@ const ExperimentalCanvas = styled(Canvas)`
 `;
 
 interface ExperimentalWidgetContainerEditorProps {
-    container: Page;
+    widgetContainer: WidgetContainerDisplayItem;
 }
 
 @observer
 export class ExperimentalWidgetContainerEditor
     extends React.Component<ExperimentalWidgetContainerEditorProps>
     implements IDocument {
-    container: Page;
-    @observable
-    _selectedObjects: BaseObjectComponent[] = [];
     rootObjectComponent: RootObjectComponent;
-
-    constructor(props: ExperimentalWidgetContainerEditorProps) {
-        super(props);
-
-        this.loadContainer(this.props.container);
-    }
-
-    componentWillMount() {
-        autorun(() => {
-            const selectedObjects = this._selectedObjects.filter(objectComponent =>
-                isObjectExists(objectComponent.props.object)
-            );
-
-            if (selectedObjects.length !== this._selectedObjects.length) {
-                runInAction(() => (this._selectedObjects = selectedObjects));
-            }
-        });
-    }
-
-    componentWillReceiveProps(props: ExperimentalWidgetContainerEditorProps) {
-        this.loadContainer(props.container);
-    }
-
-    @action
-    loadContainer(container: Page) {
-        this.container = container;
-        this._selectedObjects = [];
-    }
+    designerContextComponent: DesignerContext | null;
 
     findObjectById(id: string) {
-        return this.rootObjectComponent.findObjectById(id);
+        return this.rootObjectComponent && this.rootObjectComponent.findObjectById(id);
     }
 
     createObject(params: any) {
         // TODO ???
     }
 
-    get selectedObjects() {
-        return this._selectedObjects;
-    }
-
     getObjectsInsideRect(rect: Rect) {
         return this.rootObjectComponent.children.filter(object =>
             isRectInsideRect(object.boundingRect, rect)
         );
+    }
+
+    resetTransform(transform: ITransform) {
+        transform.translate = {
+            x: -(this.props.widgetContainer.object as Page).width / 2,
+            y: -(this.props.widgetContainer.object as Page).height / 2
+        };
+        transform.scale = 1;
     }
 
     deleteObjects(objects: BaseObjectComponent[]) {
@@ -876,9 +860,15 @@ export class ExperimentalWidgetContainerEditor
 
     @computed
     get selectedObject() {
-        if (this.selectedObjects.length === 1) {
-            return this.selectedObjects[0].props.object;
+        const selectedObject =
+            this.designerContextComponent &&
+            this.designerContextComponent.designerContext.viewState.selectedObjects.length === 1 &&
+            this.designerContextComponent.designerContext.viewState.selectedObjects[0];
+
+        if (selectedObject && selectedObject instanceof WidgetObjectComponent) {
+            return selectedObject.props.object;
         }
+
         return undefined;
     }
 
@@ -887,40 +877,54 @@ export class ExperimentalWidgetContainerEditor
         NavigationStore.setSelectedPanel(this);
     }
 
-    @bind
-    loadViewState() {
-        const uiState = UIStateStore.getObjectUIState(this.container);
+    @computed
+    get viewStatePersistantState(): IViewStatePersistantState {
+        const uiState = UIStateStore.getObjectUIState(this.props.widgetContainer.object);
 
-        if (uiState && uiState.experimentalCanvasViewState) {
-            return uiState.experimentalCanvasViewState;
+        let transform: ITransform;
+        if (uiState && uiState.experimentalCanvasViewState1) {
+            transform = uiState.experimentalCanvasViewState1.transform;
+        } else {
+            transform = {
+                translate: {
+                    x: 0,
+                    y: 0
+                },
+                scale: 1
+            };
+            this.resetTransform(transform);
         }
 
         return {
-            transform: {
-                translate: {
-                    x: -160,
-                    y: -120
-                },
-                scale: 1
-            }
+            transform,
+            selectedObjects: this.props.widgetContainer.selectedItems.map(item => item.object._id)
         };
     }
 
     @bind
-    saveViewState(viewState: any) {
-        UIStateStore.updateObjectUIState(this.container, {
-            experimentalCanvasViewState: viewState
+    onSavePersistantState(viewState: IViewStatePersistantState) {
+        UIStateStore.updateObjectUIState(this.props.widgetContainer.object, {
+            experimentalCanvasViewState1: {
+                transform: viewState.transform
+            }
         });
+
+        this.props.widgetContainer.selectObjectIds(viewState.selectedObjects);
     }
 
     render() {
         return (
             <DesignerContext
                 document={this}
-                viewStatePersistanceHandler={{
-                    load: this.loadViewState,
-                    save: this.saveViewState
+                viewStatePersistantState={this.viewStatePersistantState}
+                onSavePersistantState={this.onSavePersistantState}
+                options={{
+                    center: {
+                        x: 0,
+                        y: 0
+                    }
                 }}
+                ref={ref => (this.designerContextComponent = ref)}
             >
                 <ExperimentalCanvasContainer tabIndex={0} onFocus={this.focusHander}>
                     <ExperimentalCanvas toolHandler={selectToolHandler}>
@@ -930,7 +934,7 @@ export class ExperimentalWidgetContainerEditor
                                     this.rootObjectComponent = ref;
                                 }
                             }}
-                            object={this.props.container}
+                            object={this.props.widgetContainer.object}
                         />
                     </ExperimentalCanvas>
                 </ExperimentalCanvasContainer>
