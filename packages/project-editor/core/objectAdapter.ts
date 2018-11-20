@@ -20,7 +20,7 @@ import {
     EezArrayObject,
     PropertyType,
     isSameInstanceTypeAs
-} from "project-editor/core/metaData";
+} from "project-editor/core/object";
 import { objectsToClipboardData } from "project-editor/core/store";
 import {
     cutItem,

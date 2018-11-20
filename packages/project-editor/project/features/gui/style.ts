@@ -10,7 +10,7 @@ import {
     EezObject,
     InheritedValue,
     PropertyType
-} from "project-editor/core/metaData";
+} from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import { strToColor16 } from "project-editor/core/util";
 

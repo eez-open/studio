@@ -1,6 +1,6 @@
 import { Rect } from "project-editor/core/util";
 import { objectToJS } from "project-editor/core/store";
-import { EezObject, EezArrayObject, isObjectInstanceOf } from "project-editor/core/metaData";
+import { EezObject, EezArrayObject, isObjectInstanceOf } from "project-editor/core/object";
 
 import * as data from "project-editor/project/features/data/data";
 

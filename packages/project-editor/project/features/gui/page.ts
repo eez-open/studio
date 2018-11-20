@@ -10,7 +10,7 @@ import {
     EezArrayObject,
     PropertyType,
     isSubclassOf
-} from "project-editor/core/metaData";
+} from "project-editor/core/object";
 import {
     TreeObjectAdapter,
     DisplayItem,

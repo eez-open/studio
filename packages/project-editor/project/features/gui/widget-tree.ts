@@ -1,5 +1,5 @@
 import { isArray, asArray, getProperty } from "project-editor/core/store";
-import { EezObject, PropertyType, isObjectInstanceOf } from "project-editor/core/metaData";
+import { EezObject, PropertyType, isObjectInstanceOf } from "project-editor/core/object";
 import {
     DisplayItem,
     DisplayItemChildrenObject,

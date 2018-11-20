@@ -4,7 +4,7 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject } from "project-editor/core/metaData";
+import { EezObject } from "project-editor/core/object";
 import { NavigationStore, getChildren, objectToString } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////

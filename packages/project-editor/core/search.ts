@@ -9,7 +9,7 @@ import {
     isArray,
     asArray
 } from "project-editor/core/store";
-import { EezObject, EezValueObject, PropertyType } from "project-editor/core/metaData";
+import { EezObject, EezValueObject, PropertyType } from "project-editor/core/object";
 
 import { Section, Type } from "project-editor/core/output";
 

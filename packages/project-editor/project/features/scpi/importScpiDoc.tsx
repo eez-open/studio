@@ -6,7 +6,7 @@ import { observer } from "mobx-react";
 import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 
-import { EezArrayObject } from "project-editor/core/metaData";
+import { EezArrayObject } from "project-editor/core/object";
 import {
     ProjectStore,
     UndoManager,

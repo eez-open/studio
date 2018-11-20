@@ -9,7 +9,7 @@ import styled from "eez-studio-ui/styled-components";
 import * as notification from "eez-studio-ui/notification";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { EditorComponent } from "project-editor/core/metaData";
+import { EditorComponent } from "project-editor/core/object";
 import {
     NavigationStore,
     loadObject,

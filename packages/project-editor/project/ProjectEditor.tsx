@@ -20,7 +20,7 @@ import {
     objectToString,
     isArray
 } from "project-editor/core/store";
-import { EezObject } from "project-editor/core/metaData";
+import { EezObject } from "project-editor/core/object";
 import { startSearch } from "project-editor/core/search";
 import { Debug } from "project-editor/core/debug";
 import { Section } from "project-editor/core/output";

@@ -26,7 +26,7 @@ import {
     makeDerivedClassInfo,
     findClass,
     getClassesDerivedFrom
-} from "project-editor/core/metaData";
+} from "project-editor/core/object";
 import { Rect, htmlEncode } from "project-editor/core/util";
 import * as output from "project-editor/core/output";
 

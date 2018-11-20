@@ -17,7 +17,7 @@ import {
     EezArrayObject,
     PropertyType,
     isSubclassOf
-} from "project-editor/core/metaData";
+} from "project-editor/core/object";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { findAllReferences, isReferenced } from "project-editor/core/search";
 import { OutputSections, OutputSection } from "project-editor/core/output";

@@ -9,7 +9,7 @@ import {
     EezObject,
     EezArrayObject,
     PropertyType
-} from "project-editor/core/metaData";
+} from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 
 import { BuildFileEditor } from "project-editor/project/BuildFileEditor";

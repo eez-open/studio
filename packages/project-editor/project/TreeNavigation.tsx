@@ -12,7 +12,7 @@ import {
     addItem,
     canAdd
 } from "project-editor/core/store";
-import { EezObject, NavigationComponent } from "project-editor/core/metaData";
+import { EezObject, NavigationComponent } from "project-editor/core/object";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import { Panel } from "project-editor/components/Panel";

@@ -15,7 +15,7 @@ import {
     canAdd,
     canDelete
 } from "project-editor/core/store";
-import { EezObject, NavigationComponentProps } from "project-editor/core/metaData";
+import { EezObject, NavigationComponentProps } from "project-editor/core/object";
 
 import { Panel } from "project-editor/components/Panel";
 import { List } from "project-editor/components/List";

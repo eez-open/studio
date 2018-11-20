@@ -3,7 +3,7 @@ import React from "react";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { EditorComponent } from "project-editor/core/metaData";
+import { EditorComponent } from "project-editor/core/object";
 
 import { Style, drawStylePreview } from "project-editor/project/features/gui/style";
 

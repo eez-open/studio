@@ -1,4 +1,4 @@
-import { EezObject, EezClass, PropertyType } from "project-editor/core/metaData";
+import { EezObject, EezClass, PropertyType } from "project-editor/core/object";
 import { Message } from "project-editor/core/output";
 import { Project } from "project-editor/project/project";
 

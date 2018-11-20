@@ -15,7 +15,7 @@ import {
     getProperty,
     check
 } from "project-editor/core/store";
-import { EezObject, PropertyInfo, PropertyType } from "project-editor/core/metaData";
+import { EezObject, PropertyInfo, PropertyType } from "project-editor/core/object";
 import { Message, Section, Type } from "project-editor/core/output";
 
 import { BuildFile } from "project-editor/project/project";

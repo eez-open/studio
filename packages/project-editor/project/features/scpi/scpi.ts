@@ -10,7 +10,7 @@ import {
     EezObject,
     EezArrayObject,
     PropertyType
-} from "project-editor/core/metaData";
+} from "project-editor/core/object";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { ScpiSubsystemsNavigation } from "project-editor/project/features/scpi/ScpiSubsystemsNavigation";

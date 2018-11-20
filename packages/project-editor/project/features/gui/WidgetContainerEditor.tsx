@@ -1,7 +1,7 @@
 import { toJS } from "mobx";
 import { observer } from "mobx-react";
 
-import { isObjectInstanceOf } from "project-editor/core/metaData";
+import { isObjectInstanceOf } from "project-editor/core/object";
 import { DisplayItem, reduceUntilCommonParent } from "project-editor/core/objectAdapter";
 import {
     UIStateStore,

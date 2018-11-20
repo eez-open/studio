@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import React from "react";
 
 import { NavigationStore, UIStateStore } from "project-editor/core/store";
-import { NavigationComponent } from "project-editor/core/metaData";
+import { NavigationComponent } from "project-editor/core/object";
 
 import { Splitter } from "eez-studio-ui/splitter";
 

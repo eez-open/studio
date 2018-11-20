@@ -29,7 +29,7 @@ import {
     UndoManager,
     UIStateStore
 } from "project-editor/core/store";
-import { EezObject } from "project-editor/core/metaData";
+import { EezObject } from "project-editor/core/object";
 
 import * as data from "project-editor/project/features/data/data";
 

@@ -8,7 +8,7 @@ import { IShortcut } from "shortcuts/interfaces";
 import { Shortcuts as ShortcutsComponent, ShortcutsToolbarButtons } from "shortcuts/shortcuts";
 
 import { generateGuid } from "project-editor/core/util";
-import { NavigationComponent } from "project-editor/core/metaData";
+import { NavigationComponent } from "project-editor/core/object";
 import {
     addObject,
     updateObject,

@@ -6,7 +6,7 @@ import {
     EezObject,
     EezArrayObject,
     PropertyType
-} from "project-editor/core/metaData";
+} from "project-editor/core/object";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import { StoryboardEditor } from "project-editor/project/features/gui/StoryboardEditor";

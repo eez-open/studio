@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { EditorComponent } from "project-editor/core/metaData";
+import { EditorComponent } from "project-editor/core/object";
 
 import { Bitmap } from "project-editor/project/features/gui/bitmap";
 import { getStyleProperty } from "project-editor/project/features/gui/style";

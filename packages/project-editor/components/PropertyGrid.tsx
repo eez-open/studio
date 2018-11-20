@@ -26,7 +26,7 @@ import {
     updateObject
 } from "project-editor/core/store";
 
-import { EezObject, PropertyInfo, PropertyType } from "project-editor/core/metaData";
+import { EezObject, PropertyInfo, PropertyType } from "project-editor/core/object";
 import { replaceObjectReference } from "project-editor/core/search";
 import { generateGuid } from "project-editor/core/util";
 

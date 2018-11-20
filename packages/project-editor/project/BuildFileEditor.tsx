@@ -4,7 +4,7 @@ import { bind } from "bind-decorator";
 
 import { CodeEditor } from "eez-studio-ui/code-editor";
 
-import { EditorComponent } from "project-editor/core/metaData";
+import { EditorComponent } from "project-editor/core/object";
 import { UndoManager, updateObject } from "project-editor/core/store";
 import { BuildFile } from "project-editor/project/project";
 

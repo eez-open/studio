@@ -10,7 +10,7 @@ import {
     PropertyInfo,
     isObjectInstanceOf,
     isSameInstanceTypeAs
-} from "project-editor/core/metaData";
+} from "project-editor/core/object";
 import {
     NavigationStore,
     getChildren,

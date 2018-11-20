@@ -6,7 +6,7 @@ import styled from "eez-studio-ui/styled-components";
 
 import { Point, Rect, boundingRect } from "project-editor/core/util";
 import { updateObject, UndoManager, objectToString } from "project-editor/core/store";
-import { EezObject } from "project-editor/core/metaData";
+import { EezObject } from "project-editor/core/object";
 import { DisplayItem, DisplayItemSelection } from "project-editor/core/objectAdapter";
 
 import { findSnapLines, drawSnapLines } from "project-editor/components/CanvasEditorSnapLines";

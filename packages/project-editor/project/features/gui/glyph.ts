@@ -5,7 +5,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
 import { loadObject, objectToJS } from "project-editor/core/store";
-import { ClassInfo, EezObject, registerClass, PropertyType } from "project-editor/core/metaData";
+import { ClassInfo, EezObject, registerClass, PropertyType } from "project-editor/core/object";
 import * as util from "project-editor/core/util";
 
 import { GlyphSelectFieldType } from "project-editor/project/features/gui/FontEditor";

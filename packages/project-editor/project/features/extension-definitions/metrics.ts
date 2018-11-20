@@ -1,4 +1,4 @@
-import { EezArrayObject } from "project-editor/core/metaData";
+import { EezArrayObject } from "project-editor/core/object";
 import { getProperty } from "project-editor/core/store";
 import { Project } from "project-editor/project/project";
 

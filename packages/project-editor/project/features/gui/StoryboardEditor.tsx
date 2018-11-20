@@ -14,7 +14,7 @@ import {
     loadObject,
     getEezStudioDataFromDragEvent
 } from "project-editor/core/store";
-import { EezObject, EditorComponent, isObjectInstanceOf } from "project-editor/core/metaData";
+import { EezObject, EditorComponent, isObjectInstanceOf } from "project-editor/core/object";
 import {
     DisplayItemChildrenObject,
     DisplayItemChildrenArray

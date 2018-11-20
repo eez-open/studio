@@ -14,7 +14,7 @@ import {
     registerClass,
     EezArrayObject,
     PropertyType
-} from "project-editor/core/metaData";
+} from "project-editor/core/object";
 import { getProperty, ProjectStore } from "project-editor/core/store";
 
 import { ListNavigationWithContent } from "project-editor/project/ListNavigation";

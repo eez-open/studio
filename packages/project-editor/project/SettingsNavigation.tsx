@@ -5,7 +5,7 @@ import React from "react";
 import { Splitter } from "eez-studio-ui/splitter";
 import styled from "eez-studio-ui/styled-components";
 
-import { NavigationComponent, EezObject } from "project-editor/core/metaData";
+import { NavigationComponent, EezObject } from "project-editor/core/object";
 import {
     ProjectStore,
     updateObject,

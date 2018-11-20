@@ -6,7 +6,7 @@ import {
     EezObject,
     EezArrayObject,
     PropertyType
-} from "project-editor/core/metaData";
+} from "project-editor/core/object";
 import { ProjectStore, asArray, getProperty } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import * as output from "project-editor/core/output";

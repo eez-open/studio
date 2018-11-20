@@ -1,4 +1,4 @@
-import { EezObject } from "project-editor/core/metaData";
+import { EezObject } from "project-editor/core/object";
 import { Point, Rect } from "project-editor/core/util";
 
 import {
