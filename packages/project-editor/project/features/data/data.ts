@@ -15,7 +15,7 @@ import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import * as output from "project-editor/core/output";
 
-import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
+import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
 
 import { build } from "project-editor/project/features/data/build";
 import { metrics } from "project-editor/project/features/data/metrics";

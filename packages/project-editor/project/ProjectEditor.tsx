@@ -28,7 +28,7 @@ import { Panel } from "project-editor/components/Panel";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Output } from "project-editor/components/Output";
 
-import { MenuNavigation } from "project-editor/project/MenuNavigation";
+import { MenuNavigation } from "project-editor/project/ui/MenuNavigation";
 import { BuildConfiguration } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////

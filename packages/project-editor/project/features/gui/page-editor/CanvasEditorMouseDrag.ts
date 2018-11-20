@@ -6,9 +6,9 @@ import {
     SnapLines,
     findClosestHorizontalSnapLinesToPosition,
     findClosestVerticalSnapLinesToPosition
-} from "project-editor/components/CanvasEditorSnapLines";
-import { TreeNode } from "project-editor/components/CanvasEditorTreeNode";
-import { HitRegion } from "project-editor/components/CanvasEditorHitTest";
+} from "project-editor/project/features/gui/page-editor/CanvasEditorSnapLines";
+import { TreeNode } from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
+import { HitRegion } from "project-editor/project/features/gui/page-editor/CanvasEditorHitTest";
 
 ////////////////////////////////////////////////////////////////////////////////
 

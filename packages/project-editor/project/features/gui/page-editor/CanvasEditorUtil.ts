@@ -4,8 +4,8 @@ import {
     TreeNode,
     traverseTree,
     TraverseTreeContinuation
-} from "project-editor/components/CanvasEditorTreeNode";
-import { RESIZE_HANDLE_SIZE } from "project-editor/components/CanvasEditorHitTest";
+} from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
+import { RESIZE_HANDLE_SIZE } from "project-editor/project/features/gui/page-editor/CanvasEditorHitTest";
 
 ////////////////////////////////////////////////////////////////////////////////
 

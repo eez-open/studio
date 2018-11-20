@@ -9,7 +9,7 @@ import { ClassInfo, EezObject, registerClass, PropertyType } from "project-edito
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
-import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
+import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
 
 import { BitmapEditor } from "project-editor/project/features/gui/BitmapEditor";
 import { getStyleProperty } from "project-editor/project/features/gui/style";

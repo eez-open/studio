@@ -22,7 +22,7 @@ import {
 import * as lcd from "project-editor/project/features/gui/lcd";
 import { createWidgetTree } from "project-editor/project/features/gui/widget-tree";
 
-import { drawTree } from "project-editor/components/CanvasEditorUtil";
+import { drawTree } from "project-editor/project/features/gui/page-editor/CanvasEditorUtil";
 
 ////////////////////////////////////////////////////////////////////////////////
 

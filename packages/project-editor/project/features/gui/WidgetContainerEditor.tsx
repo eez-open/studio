@@ -8,13 +8,13 @@ import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
 import { DisplayItem, reduceUntilCommonParent } from "project-editor/core/objectAdapter";
 import { UIStateStore, ProjectStore } from "project-editor/core/store";
 
-import { TreeNode } from "project-editor/components/CanvasEditorTreeNode";
+import { TreeNode } from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
 import {
     CanvasEditor,
     CanvasEditorProps,
     ObjectGeometryChange,
     CanvasEditorUIState
-} from "project-editor/components/CanvasEditor";
+} from "project-editor/project/features/gui/page-editor/CanvasEditor";
 
 import { Widget, SelectWidget } from "project-editor/project/features/gui/widget";
 import { WidgetContainerDisplayItem } from "project-editor/project/features/gui/page";

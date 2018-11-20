@@ -15,7 +15,7 @@ import {
 import * as output from "project-editor/core/output";
 import { strToColor16 } from "project-editor/core/util";
 
-import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
+import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
 
 import { findFont } from "project-editor/project/features/gui/gui";
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 
-import { MenuNavigation } from "project-editor/project/MenuNavigation";
+import { MenuNavigation } from "project-editor/project/ui/MenuNavigation";
 import { NavigationComponent, getProperty } from "project-editor/core/object";
 import { ProjectStore } from "project-editor/core/store";
 

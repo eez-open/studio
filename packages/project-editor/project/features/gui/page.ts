@@ -19,7 +19,7 @@ import {
     getDisplayItemFromObjectId
 } from "project-editor/core/objectAdapter";
 
-import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
+import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
 
 import * as data from "project-editor/project/features/data/data";
 

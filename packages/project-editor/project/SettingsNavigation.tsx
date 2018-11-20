@@ -15,7 +15,7 @@ import { ProjectStore, NavigationStore, UIStateStore } from "project-editor/core
 import { confirm } from "project-editor/core/util";
 import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
 
-import { TreeNavigationPanel } from "project-editor/project/TreeNavigation";
+import { TreeNavigationPanel } from "project-editor/project/ui/TreeNavigation";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 
 ////////////////////////////////////////////////////////////////////////////////

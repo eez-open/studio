@@ -26,7 +26,10 @@ import { ProjectStore } from "project-editor/core/store";
 import { htmlEncode } from "project-editor/core/util";
 import * as output from "project-editor/core/output";
 
-import { GeometryProperties, ObjectGeometryChange } from "project-editor/components/CanvasEditor";
+import {
+    GeometryProperties,
+    ObjectGeometryChange
+} from "project-editor/project/features/gui/page-editor/CanvasEditor";
 
 import * as data from "project-editor/project/features/data/data";
 import { findActionIndex } from "project-editor/project/features/action/action";

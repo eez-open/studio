@@ -46,7 +46,7 @@ import {
 import { createWidgetTree } from "project-editor/project/features/gui/widget-tree";
 import { drawWidget } from "project-editor/project/features/gui/draw";
 
-import { drawTree } from "project-editor/components/CanvasEditorUtil";
+import { drawTree } from "project-editor/project/features/gui/page-editor/CanvasEditorUtil";
 
 ////////////////////////////////////////////////////////////////////////////////
 

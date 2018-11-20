@@ -15,7 +15,7 @@ import { Message, Type } from "project-editor/core/output";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
+import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
 
 import { ActionEditor } from "project-editor/project/features/action/ActionEditor";
 

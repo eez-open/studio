@@ -29,12 +29,15 @@ import {
 } from "project-editor/core/objectAdapter";
 
 import { Panel } from "project-editor/components/Panel";
-import { TreeNode, LineConnecting } from "project-editor/components/CanvasEditorTreeNode";
+import {
+    TreeNode,
+    LineConnecting
+} from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
 import {
     CanvasEditor,
     CanvasEditorProps,
     CanvasEditorUIState
-} from "project-editor/components/CanvasEditor";
+} from "project-editor/project/features/gui/page-editor/CanvasEditor";
 
 import {
     StoryboardPage,

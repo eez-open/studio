@@ -18,7 +18,7 @@ import {
 } from "project-editor/core/object";
 import { ProjectStore } from "project-editor/core/store";
 
-import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
+import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
 
 import { Glyph } from "project-editor/project/features/gui/glyph";
 import { FontEditor } from "project-editor/project/features/gui/FontEditor";

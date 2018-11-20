@@ -8,7 +8,10 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { NavigationComponent, getProperty } from "project-editor/core/object";
 import { ProjectStore, NavigationStore } from "project-editor/core/store";
 
-import { ListNavigation, ListNavigationWithContent } from "project-editor/project/ListNavigation";
+import {
+    ListNavigation,
+    ListNavigationWithContent
+} from "project-editor/project/ui/ListNavigation";
 
 import { showImportScpiDocDialog } from "project-editor/project/features/scpi/importScpiDoc";
 import { ScpiCommand, ScpiSubsystem, Scpi } from "project-editor/project/features/scpi/scpi";

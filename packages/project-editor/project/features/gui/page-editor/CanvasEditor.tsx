@@ -10,28 +10,28 @@ import { EezObject, objectToString } from "project-editor/core/object";
 import { ProjectStore, UndoManager } from "project-editor/core/store";
 import { DisplayItem, DisplayItemSelection } from "project-editor/core/objectAdapter";
 
-import { findSnapLines, drawSnapLines } from "project-editor/components/CanvasEditorSnapLines";
+import { findSnapLines, drawSnapLines } from "project-editor/project/features/gui/page-editor/CanvasEditorSnapLines";
 import {
     CanvasEditorScrollBars,
     ScrollBarsHitRegion
-} from "project-editor/components/CanvasEditorScrollBars";
+} from "project-editor/project/features/gui/page-editor/CanvasEditorScrollBars";
 import {
     TreeNode,
     LineConnecting,
     traverseTree
-} from "project-editor/components/CanvasEditorTreeNode";
+} from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
 import {
     HitRegion,
     HitTestResult,
     hitTestSelectionRect
-} from "project-editor/components/CanvasEditorHitTest";
-import { MouseDrag, RubberBandSelection } from "project-editor/components/CanvasEditorMouseDrag";
+} from "project-editor/project/features/gui/page-editor/CanvasEditorHitTest";
+import { MouseDrag, RubberBandSelection } from "project-editor/project/features/gui/page-editor/CanvasEditorMouseDrag";
 import {
     drawTree,
     drawSelectedDecoration,
     drawSelection,
     nodesFromPoint
-} from "project-editor/components/CanvasEditorUtil";
+} from "project-editor/project/features/gui/page-editor/CanvasEditorUtil";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 

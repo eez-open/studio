@@ -7,7 +7,7 @@ import { NavigationComponent } from "project-editor/core/object";
 
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { ListNavigation } from "project-editor/project/ListNavigation";
+import { ListNavigation } from "project-editor/project/ui/ListNavigation";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 
 @observer

@@ -13,7 +13,7 @@ import {
     DisplayItemChildren
 } from "project-editor/core/objectAdapter";
 
-import { TreeNode } from "project-editor/components/CanvasEditorTreeNode";
+import { TreeNode } from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
 
 import * as data from "project-editor/project/features/data/data";
 
