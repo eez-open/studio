@@ -8,11 +8,10 @@ import { IFieldComponentProps } from "eez-studio-ui/generic-dialog";
 import styled from "eez-studio-ui/styled-components";
 import * as notification from "eez-studio-ui/notification";
 import { Splitter } from "eez-studio-ui/splitter";
+import { Loader } from "eez-studio-ui/loader";
 
 import { EditorComponent, loadObject, objectToJS, cloneObject } from "project-editor/core/object";
 import { NavigationStore, ProjectStore } from "project-editor/core/store";
-
-import { Loading } from "project-editor/components/Loading";
 
 import { Font } from "project-editor/project/features/gui/font";
 import {
@@ -193,7 +192,7 @@ export class GlyphSelectFieldType extends React.Component<
         } else if (this.state.isLoading) {
             return (
                 <div className="form-control-static">
-                    <Loading size={6} />
+                    <Loader />
                 </div>
             );
         } else {
@@ -553,8 +552,8 @@ class GlyphEditor extends React.Component<
                 <div
                     style={{
                         position: "absolute",
-                        left: this.hitTestResult.rect.x,
-                        top: this.hitTestResult.rect.y,
+                        left: this.hitTestResult.rect.left,
+                        top: this.hitTestResult.rect.top,
                         width: this.hitTestResult.rect.width,
                         height: this.hitTestResult.rect.height,
                         backgroundColor: "blue",

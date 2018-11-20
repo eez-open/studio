@@ -5,11 +5,10 @@ import { observer } from "mobx-react";
 
 import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
+import { Loader } from "eez-studio-ui/loader";
 
 import { EezArrayObject, getProperty, loadObject } from "project-editor/core/object";
 import { ProjectStore, UndoManager } from "project-editor/core/store";
-
-import { Loading } from "project-editor/components/Loading";
 
 import { Scpi, ScpiCommand, ScpiSubsystem } from "project-editor/project/features/scpi/scpi";
 
@@ -877,7 +876,7 @@ export class ImportScpiDocDialog extends React.Component<
                 ];
             }
         } else {
-            content = <Loading />;
+            content = <Loader />;
         }
 
         let footer;
