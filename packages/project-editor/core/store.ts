@@ -69,6 +69,7 @@ type NavigationItem = EezObject | TreeObjectAdapter;
 class NavigationStoreClass {
     @observable
     navigationMap = new Map<string, NavigationItem>();
+
     @observable
     selectedPanel: IPanel | undefined;
 
@@ -507,10 +508,13 @@ class EditorsStoreClass {
 export class ViewOptions {
     @observable
     navigationVisible: boolean = true;
+
     @observable
     outputVisible: boolean = true;
+
     @observable
     propertiesVisible: boolean = true;
+
     @observable
     debugVisible: boolean = false;
 
@@ -540,12 +544,13 @@ export class ViewOptions {
 class UIStateStoreClass {
     @observable
     viewOptions: ViewOptions = new ViewOptions();
+
     @observable
     selectedBuildConfiguration: string;
-    @observable
-    splitters = new Map<string, number>();
+
     @observable
     features: any;
+
     @observable
     objects = new Map<string, any>();
 
@@ -571,13 +576,6 @@ class UIStateStoreClass {
         );
     }
 
-    loadSplitters(splitters: any) {
-        this.splitters.clear();
-        _each(splitters, (value: any, name: any) => {
-            this.splitters.set(name, value);
-        });
-    }
-
     loadObjects(objects: any) {
         this.objects.clear();
         _each(objects, (value: any, objectPath: any) => {
@@ -591,18 +589,8 @@ class UIStateStoreClass {
         NavigationStore.load(uiState.navigationMap);
         EditorsStore.load(uiState.editors);
         this.selectedBuildConfiguration = uiState.selectedBuildConfiguration || "Default";
-        this.loadSplitters(uiState.splitters);
         this.features = observable(uiState.features || {});
         this.loadObjects(uiState.objects);
-    }
-
-    @computed
-    get splittersJS() {
-        let map: any = {};
-        for (var [name, value] of this.splitters) {
-            map[name] = value;
-        }
-        return map;
     }
 
     @computed
@@ -628,7 +616,6 @@ class UIStateStoreClass {
             navigationMap: NavigationStore.toJS,
             editors: EditorsStore.toJS,
             selectedBuildConfiguration: this.selectedBuildConfiguration,
-            splitters: this.splittersJS,
             features: this.featuresJS,
             objects: this.objectsJS
         };
@@ -829,8 +816,10 @@ function getUIStateFilePath(projectFilePath: string) {
 class ProjectStoreClass {
     @observable
     private _project: Project | undefined;
+
     @observable
     filePath: string | undefined;
+
     @observable
     modified: boolean = false;
 
@@ -883,7 +872,7 @@ class ProjectStoreClass {
 
     @computed
     get project(): Project {
-        return this._project as Project;
+        return this._project!;
     }
 
     getObjectFromPath(path: string[]) {
@@ -1624,18 +1613,9 @@ export function init() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export let ProjectStore = new ProjectStoreClass();
-export let NavigationStore = new NavigationStoreClass();
-export let EditorsStore = new EditorsStoreClass();
-export let OutputSectionsStore = new OutputSections();
-export let UIStateStore = new UIStateStoreClass();
-export let UndoManager = new UndoManagerClass();
-
-(<any>window).EezStudio = {
-    NavigationStore,
-    EditorsStore,
-    OutputSectionsStore,
-    UIStateStore,
-    UndoManager,
-    ProjectStore
-};
+export const ProjectStore = new ProjectStoreClass();
+export const NavigationStore = new NavigationStoreClass();
+export const EditorsStore = new EditorsStoreClass();
+export const OutputSectionsStore = new OutputSections();
+export const UIStateStore = new UIStateStoreClass();
+export const UndoManager = new UndoManagerClass();

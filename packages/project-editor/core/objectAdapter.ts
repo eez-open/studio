@@ -12,7 +12,8 @@ import {
     PropertyType,
     isSameInstanceTypeAs,
     isAncestor,
-    reduceUntilCommonParent as reduceObjectsUntilCommonParent
+    reduceUntilCommonParent as reduceObjectsUntilCommonParent,
+    IEditorState
 } from "project-editor/core/object";
 import {
     ProjectStore,
@@ -99,7 +100,7 @@ export type TreeObjectAdapterChildren =
     | TreeObjectAdapterChildrenArray
     | TreeObjectAdapterChildrenObject;
 
-export class TreeObjectAdapter {
+export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEditorState {
     private transformer: (object: EezObject) => TreeObjectAdapter;
 
     @observable selected: boolean = false;

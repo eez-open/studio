@@ -553,8 +553,8 @@ class GlyphEditor extends React.Component<
                 <div
                     style={{
                         position: "absolute",
-                        left: this.hitTestResult.rect.left,
-                        top: this.hitTestResult.rect.top,
+                        left: this.hitTestResult.rect.x,
+                        top: this.hitTestResult.rect.y,
                         width: this.hitTestResult.rect.width,
                         height: this.hitTestResult.rect.height,
                         backgroundColor: "blue",

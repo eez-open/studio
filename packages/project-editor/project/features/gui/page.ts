@@ -9,7 +9,8 @@ import {
     registerClass,
     EezArrayObject,
     PropertyType,
-    isSubclassOf
+    isSubclassOf,
+    IEditorState
 } from "project-editor/core/object";
 import {
     TreeObjectAdapter,
@@ -258,7 +259,7 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class PageTabState {
+export class PageTabState implements IEditorState {
     page: Page;
     widgetContainerDisplayItem: WidgetContainerDisplayItem;
 

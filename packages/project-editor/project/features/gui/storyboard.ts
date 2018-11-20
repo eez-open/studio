@@ -5,7 +5,8 @@ import {
     registerClass,
     EezObject,
     EezArrayObject,
-    PropertyType
+    PropertyType,
+    IEditorState
 } from "project-editor/core/object";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
@@ -147,7 +148,7 @@ registerClass(Storyboard);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class StoryboardTabState {
+export class StoryboardTabState implements IEditorState {
     storyboardAdapter: TreeObjectAdapter;
 
     constructor(object: EezObject) {
