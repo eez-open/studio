@@ -1,16 +1,18 @@
 import React from "react";
 import { observable, action, computed } from "mobx";
 
+import { guid } from "eez-studio-shared/util";
+
 import { Icon } from "eez-studio-ui/icon";
 
 import {
-    OutputSectionsStore,
-    UIStateStore,
+    EezObject,
+    IMessage,
+    MessageType,
     getChildOfObject,
     humanizePropertyName
-} from "project-editor/core/store";
-import { EezObject, IMessage, MessageType } from "project-editor/core/object";
-import { generateObjectId } from "project-editor/core/util";
+} from "project-editor/core/object";
+import { OutputSectionsStore, UIStateStore } from "project-editor/core/store";
 
 export { MessageType as Type } from "project-editor/core/object";
 
@@ -23,7 +25,7 @@ export enum Section {
 }
 
 export class Message implements IMessage {
-    id: string = generateObjectId();
+    id: string = guid();
     @observable selected: boolean = false;
 
     constructor(public type: MessageType, public text: string, public object?: EezObject) {}
@@ -161,9 +163,9 @@ export class OutputSections {
     }
 
     @action
-    setMessages(sectionType: Section, messages: Message[]) {
+    setMessages(sectionType: Section, messages: IMessage[]) {
         let section = this.sections[sectionType];
-        section.messages = messages;
+        section.messages = messages as Message[];
     }
 }
 

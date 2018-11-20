@@ -4,15 +4,14 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
+import { EezObject, NavigationComponent, objectToString } from "project-editor/core/object";
 import {
     EditorsStore,
     NavigationStore,
     UIStateStore,
-    objectToString,
     addItem,
     canAdd
 } from "project-editor/core/store";
-import { EezObject, NavigationComponent } from "project-editor/core/object";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import { Panel } from "project-editor/components/Panel";

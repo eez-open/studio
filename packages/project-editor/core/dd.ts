@@ -1,6 +1,6 @@
 import { observable, action } from "mobx";
 
-import { UndoManager, deleteObject } from "project-editor/core/store";
+import { ProjectStore, UndoManager } from "project-editor/core/store";
 import { EezObject } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ class DragAndDropManagerClass {
     deleteDragItem() {
         if (this.dropEffect == "move") {
             if (this.dragObject) {
-                deleteObject(this.dragObject);
+                ProjectStore.deleteObject(this.dragObject);
             }
             this.dropEffect = undefined;
             this.dragItemDeleted = true;

@@ -2,14 +2,15 @@ import { _map, _zipObject } from "eez-studio-shared/algorithm";
 
 import { observable, computed } from "mobx";
 
-import { loadObject, getProperty } from "project-editor/core/store";
 import {
     ClassInfo,
     PropertyInfo,
     registerClass,
     EezObject,
     InheritedValue,
-    PropertyType
+    PropertyType,
+    getProperty,
+    loadObject
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import { strToColor16 } from "project-editor/core/util";

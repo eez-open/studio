@@ -1,4 +1,5 @@
-import { OutputSectionsStore, getProperty, ProjectStore } from "project-editor/core/store";
+import { getProperty } from "project-editor/core/object";
+import { OutputSectionsStore, ProjectStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 import { BuildResult } from "project-editor/core/extensions";
 

@@ -23,8 +23,8 @@ import { selectToolHandler } from "eez-studio-designer/select-tool";
 import styled from "eez-studio-ui/styled-components";
 
 import {
+    ProjectStore,
     NavigationStore,
-    updateObject,
     deleteItems,
     UndoManager,
     UIStateStore
@@ -260,8 +260,8 @@ class WidgetObjectComponent extends BaseObjectComponent {
 
     render(): React.ReactNode {
         const canvas = drawWidget(this.widgetProperties, {
-            x: this.rect.left,
-            y: this.rect.top,
+            left: this.rect.left,
+            top: this.rect.top,
             width: this.rect.width,
             height: this.rect.height
         });
@@ -508,7 +508,7 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
     }
 
     set rect(value: Rect) {
-        updateObject(this.selectWidgetEditor, {
+        ProjectStore.updateObject(this.selectWidgetEditor, {
             x: value.left + Math.round(this.rect.width / 2),
             y: value.top + Math.round(this.rect.height / 2)
         });

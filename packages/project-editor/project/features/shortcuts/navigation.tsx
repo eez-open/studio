@@ -2,21 +2,15 @@ import React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 
+import { guid } from "eez-studio-shared/util";
+
 import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
 
 import { IShortcut } from "shortcuts/interfaces";
 import { Shortcuts as ShortcutsComponent, ShortcutsToolbarButtons } from "shortcuts/shortcuts";
 
-import { generateGuid } from "project-editor/core/util";
-import { NavigationComponent } from "project-editor/core/object";
-import {
-    addObject,
-    updateObject,
-    deleteObject,
-    NavigationStore,
-    ProjectStore,
-    getProperty
-} from "project-editor/core/store";
+import { NavigationComponent, getProperty } from "project-editor/core/object";
+import { NavigationStore, ProjectStore } from "project-editor/core/store";
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/PropertyGrid";
 
 import { Shortcuts, Shortcut } from "project-editor/project/features/shortcuts/shortcuts";
@@ -35,8 +29,7 @@ export class ShortcutsNavigation extends NavigationComponent {
 
     @computed
     get shortcutsStore() {
-        const shortcuts = (getProperty(ProjectStore.project, "shortcuts") as Shortcuts)
-            .shortcuts;
+        const shortcuts = (getProperty(ProjectStore.project, "shortcuts") as Shortcuts).shortcuts;
 
         let shortcutsMap = new Map<string, Shortcut>();
         shortcuts._array.forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
@@ -45,22 +38,22 @@ export class ShortcutsNavigation extends NavigationComponent {
             shortcuts: observable.map(shortcutsMap),
 
             addShortcut(shortcut: Partial<IShortcut>) {
-                shortcut.id = generateGuid();
-                addObject(shortcuts, shortcut as any);
+                shortcut.id = guid();
+                ProjectStore.addObject(shortcuts, shortcut as any);
                 return shortcut.id;
             },
 
             updateShortcut(shortcut: Partial<IShortcut>): void {
                 let shortcutObject = shortcutsMap.get(shortcut.id!);
                 if (shortcutObject) {
-                    updateObject(shortcutObject, shortcut);
+                    ProjectStore.updateObject(shortcutObject, shortcut);
                 }
             },
 
             deleteShortcut(shortcut: Partial<IShortcut>): void {
                 let shortcutObject = shortcutsMap.get(shortcut.id!);
                 if (shortcutObject) {
-                    deleteObject(shortcutObject);
+                    ProjectStore.deleteObject(shortcutObject);
                 }
             },
 

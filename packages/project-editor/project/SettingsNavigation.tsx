@@ -5,15 +5,13 @@ import React from "react";
 import { Splitter } from "eez-studio-ui/splitter";
 import styled from "eez-studio-ui/styled-components";
 
-import { NavigationComponent, EezObject } from "project-editor/core/object";
 import {
-    ProjectStore,
-    updateObject,
+    NavigationComponent,
     loadObject,
-    NavigationStore,
-    UIStateStore,
+    EezObject,
     getProperty
-} from "project-editor/core/store";
+} from "project-editor/core/object";
+import { ProjectStore, NavigationStore, UIStateStore } from "project-editor/core/store";
 import { confirm } from "project-editor/core/util";
 import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
 
@@ -56,13 +54,13 @@ class ProjectFeature extends React.Component<
                 .key]: newFeatureObject
         };
 
-        updateObject(ProjectStore.project, changes);
+        ProjectStore.updateObject(ProjectStore.project, changes);
     }
 
     onRemove() {
         confirm("Are you sure you want to remove this feature?", undefined, () => {
             if (ProjectStore.project) {
-                updateObject(ProjectStore.project, {
+                ProjectStore.updateObject(ProjectStore.project, {
                     [this.props.extension.eezStudioExtension.implementation.projectFeature
                         .key]: undefined
                 });

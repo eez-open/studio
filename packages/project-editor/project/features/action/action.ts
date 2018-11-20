@@ -2,8 +2,14 @@ import { observable, computed } from "mobx";
 
 import { validators } from "eez-studio-shared/model/validation";
 
-import { ClassInfo, registerClass, EezObject, PropertyType } from "project-editor/core/object";
-import { ProjectStore, asArray } from "project-editor/core/store";
+import {
+    ClassInfo,
+    registerClass,
+    EezObject,
+    PropertyType,
+    asArray
+} from "project-editor/core/object";
+import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import { Message, Type } from "project-editor/core/output";
 

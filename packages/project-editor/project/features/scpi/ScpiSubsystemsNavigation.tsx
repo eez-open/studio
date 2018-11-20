@@ -5,8 +5,8 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { NavigationComponent } from "project-editor/core/object";
-import { ProjectStore, NavigationStore, getProperty } from "project-editor/core/store";
+import { NavigationComponent, getProperty } from "project-editor/core/object";
+import { ProjectStore, NavigationStore } from "project-editor/core/store";
 
 import { ListNavigation, ListNavigationWithContent } from "project-editor/project/ListNavigation";
 

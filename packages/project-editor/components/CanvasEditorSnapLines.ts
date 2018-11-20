@@ -1,4 +1,4 @@
-import { Point, Rect } from "project-editor/core/util";
+import { Point, Rect } from "eez-studio-shared/geometry";
 
 import { TreeNode } from "project-editor/components/CanvasEditorTreeNode";
 
@@ -132,7 +132,7 @@ function combineSnapLines(
 }
 
 function findVerticalSnapLinesClosestToRect(snapLines: SnapLines, rect: Rect) {
-    let x = rect.x;
+    let x = rect.left;
     let width = rect.width;
     let topLines = findClosestVerticalSnapLinesToPosition(snapLines, x);
     let bottomLines = findClosestVerticalSnapLinesToPosition(snapLines, x + width);
@@ -140,7 +140,7 @@ function findVerticalSnapLinesClosestToRect(snapLines: SnapLines, rect: Rect) {
 }
 
 function findHorizontalSnapLinesClosestToRect(snapLines: SnapLines, rect: Rect) {
-    let y = rect.y;
+    let y = rect.top;
     let height = rect.height;
     let leftLines = findClosestHorizontalSnapLinesToPosition(snapLines, y);
     let rightLines = findClosestHorizontalSnapLinesToPosition(snapLines, y + height);

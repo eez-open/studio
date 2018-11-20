@@ -1,15 +1,18 @@
 import { observable, extendObservable } from "mobx";
 
 import { getExtensionsByCategory } from "project-editor/core/extensions";
-import { loadObject, objectToJson, ProjectStore, getProperty } from "project-editor/core/store";
 import {
     ClassInfo,
     PropertyInfo,
     registerClass,
     EezObject,
     EezArrayObject,
-    PropertyType
+    PropertyType,
+    getProperty,
+    loadObject,
+    objectToJson
 } from "project-editor/core/object";
+import { ProjectStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
 import { BuildFileEditor } from "project-editor/project/BuildFileEditor";
@@ -146,7 +149,7 @@ export class Build extends EezObject {
             },
             {
                 name: "destinationFolder",
-                type: PropertyType.ProjectRelativeFolder
+                type: PropertyType.RelativeFolder
             }
         ],
         showInNavigation: true
@@ -167,7 +170,7 @@ export class General extends EezObject {
             {
                 name: "scpiDocFolder",
                 displayName: "SCPI documentation folder",
-                type: PropertyType.ProjectRelativeFolder
+                type: PropertyType.RelativeFolder
             }
         ],
         showInNavigation: true

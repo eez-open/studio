@@ -7,21 +7,21 @@ import {
     isArray,
     asArray,
     getProperty,
-    canCut,
-    canPaste,
-    canDelete,
-    isAncestor,
-    extendContextMenu,
-    reduceUntilCommonParent as reduceObjectsUntilCommonParent,
-    getObjectFromObjectId
-} from "project-editor/core/store";
-import {
     EezObject,
     EezArrayObject,
     PropertyType,
-    isSameInstanceTypeAs
+    isSameInstanceTypeAs,
+    isAncestor,
+    reduceUntilCommonParent as reduceObjectsUntilCommonParent
 } from "project-editor/core/object";
-import { objectsToClipboardData } from "project-editor/core/store";
+import {
+    ProjectStore,
+    canCut,
+    canPaste,
+    canDelete,
+    extendContextMenu
+} from "project-editor/core/store";
+import { objectsToClipboardData } from "project-editor/core/clipboard";
 import {
     cutItem,
     copyItem,
@@ -224,7 +224,7 @@ export class TreeObjectAdapter {
     selectObjectIds(objectIds: string[]) {
         const objects: EezObject[] = [];
         for (const objectId of objectIds) {
-            const object = getObjectFromObjectId(objectId);
+            const object = ProjectStore.getObjectFromObjectId(objectId);
             if (object) {
                 objects.push(object);
             }

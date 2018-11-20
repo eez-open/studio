@@ -9,18 +9,8 @@ import styled from "eez-studio-ui/styled-components";
 import * as notification from "eez-studio-ui/notification";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { EditorComponent } from "project-editor/core/object";
-import {
-    NavigationStore,
-    loadObject,
-    addObject,
-    deleteObject,
-    cloneObject,
-    updateObject,
-    replaceObject,
-    ProjectStore,
-    objectToJS
-} from "project-editor/core/store";
+import { EditorComponent, loadObject, objectToJS, cloneObject } from "project-editor/core/object";
+import { NavigationStore, ProjectStore } from "project-editor/core/store";
 
 import { Loading } from "project-editor/components/Loading";
 
@@ -485,7 +475,7 @@ class GlyphEditor extends React.Component<
                 font.bpp
             );
 
-            updateObject(this.props.glyph, {
+            ProjectStore.updateObject(this.props.glyph, {
                 glyphBitmap: newGlyphBitmap
             });
 
@@ -563,8 +553,8 @@ class GlyphEditor extends React.Component<
                 <div
                     style={{
                         position: "absolute",
-                        left: this.hitTestResult.rect.x,
-                        top: this.hitTestResult.rect.y,
+                        left: this.hitTestResult.rect.left,
+                        top: this.hitTestResult.rect.top,
                         width: this.hitTestResult.rect.width,
                         height: this.hitTestResult.rect.height,
                         backgroundColor: "blue",
@@ -609,7 +599,7 @@ export class FontEditor extends EditorComponent {
     onDoubleClickGlyph(glyph: Glyph) {
         selectGlyph(glyph)
             .then(propertyValues => {
-                updateObject(glyph, propertyValues);
+                ProjectStore.updateObject(glyph, propertyValues);
             })
             .catch(error => console.error(error));
     }
@@ -632,7 +622,7 @@ export class FontEditor extends EditorComponent {
                 projectFilePath: ProjectStore.filePath!
             });
 
-            replaceObject(font, loadObject(undefined, newFont, Font));
+            ProjectStore.replaceObject(font, loadObject(undefined, newFont, Font));
 
             notification.info(`Font rebuilded.`);
         } catch (err) {
@@ -648,7 +638,7 @@ export class FontEditor extends EditorComponent {
             font.glyphs._array[font.glyphs._array.length - 1]
         ) as Glyph;
         newGlyph.encoding = newGlyph.encoding + 1;
-        newGlyph = addObject(font.glyphs, newGlyph) as Glyph;
+        newGlyph = ProjectStore.addObject(font.glyphs, newGlyph) as Glyph;
         this.selectedGlyph = newGlyph;
     }
 
@@ -657,7 +647,7 @@ export class FontEditor extends EditorComponent {
         let font = this.props.editor.object as Font;
         let selectedGlyph = this.selectedGlyph;
         if (selectedGlyph && font.glyphs._array[font.glyphs._array.length - 1] == selectedGlyph) {
-            deleteObject(selectedGlyph);
+            ProjectStore.deleteObject(selectedGlyph);
         }
     }
 

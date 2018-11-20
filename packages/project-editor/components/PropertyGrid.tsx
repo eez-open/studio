@@ -3,6 +3,7 @@ import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
+import { guid } from "eez-studio-shared/util";
 import { humanize } from "eez-studio-shared/string";
 import { Icon } from "eez-studio-ui/icon";
 import styled from "eez-studio-ui/styled-components";
@@ -13,22 +14,19 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { CodeEditor } from "eez-studio-ui/code-editor";
 
 import {
-    UndoManager,
-    ProjectStore,
-    getObjectFromPath,
-    objectToString,
+    EezObject,
+    PropertyInfo,
+    PropertyType,
     getProperty,
-    getInheritedValue,
-    getPropertyAsString,
     isArray,
     asArray,
     isValue,
-    updateObject
-} from "project-editor/core/store";
-
-import { EezObject, PropertyInfo, PropertyType } from "project-editor/core/object";
+    objectToString,
+    getInheritedValue,
+    getPropertyAsString
+} from "project-editor/core/object";
+import { UndoManager, ProjectStore } from "project-editor/core/store";
 import { replaceObjectReference } from "project-editor/core/search";
-import { generateGuid } from "project-editor/core/util";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -486,7 +484,7 @@ class Property extends React.Component<PropertyProps, {}> {
 
     @bind
     onGenerateGuid() {
-        this.changeValue(generateGuid());
+        this.changeValue(guid());
     }
 
     render() {
@@ -617,7 +615,7 @@ class Property extends React.Component<PropertyProps, {}> {
                     )}
                 </div>
             );
-        } else if (propertyInfo.type === PropertyType.ProjectRelativeFolder) {
+        } else if (propertyInfo.type === PropertyType.RelativeFolder) {
             let clearButton: JSX.Element | undefined;
 
             if (this.value !== undefined) {
@@ -653,7 +651,9 @@ class Property extends React.Component<PropertyProps, {}> {
             let objects: EezObject[] = [];
 
             if (propertyInfo.referencedObjectCollectionPath) {
-                objects = asArray(getObjectFromPath(propertyInfo.referencedObjectCollectionPath));
+                objects = asArray(
+                    ProjectStore.getObjectFromPath(propertyInfo.referencedObjectCollectionPath)
+                );
                 if (!objects) {
                     objects = [];
                 }
@@ -814,7 +814,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
             if (isValue(object)) {
                 object = object._parent as EezObject;
             }
-            updateObject(object, propertyValues);
+            ProjectStore.updateObject(object, propertyValues);
         }
     }
 

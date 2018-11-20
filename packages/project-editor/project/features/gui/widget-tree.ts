@@ -1,5 +1,11 @@
-import { isArray, asArray, getProperty } from "project-editor/core/store";
-import { EezObject, PropertyType, isObjectInstanceOf } from "project-editor/core/object";
+import {
+    EezObject,
+    PropertyType,
+    isObjectInstanceOf,
+    isArray,
+    asArray,
+    getProperty
+} from "project-editor/core/object";
 import {
     DisplayItem,
     DisplayItemChildrenObject,
@@ -81,7 +87,17 @@ function drawPageFrameForTreeNode(
 ) {
     if (isObjectInstanceOf(node.item.object, Page.classInfo)) {
         let page = node.item.object as Page;
-        drawPageFrame(ctx, page, scale, page.style || "default");
+        drawPageFrame(
+            ctx,
+            {
+                left: page.x,
+                top: page.y,
+                width: page.width,
+                height: page.height
+            },
+            scale,
+            page.style || "default"
+        );
     }
 }
 
@@ -104,8 +120,8 @@ export function createWidgetTree(
             }
 
             let rect = {
-                x: x,
-                y: y,
+                left: x,
+                top: y,
                 width: object.width,
                 height: object.height
             };
@@ -113,7 +129,7 @@ export function createWidgetTree(
             let treeNode: TreeNode = {
                 parent: <TreeNode>parentNode,
                 children: [],
-                rect: rect,
+                rect,
                 selected: object instanceof Widget && item.selected,
                 resizable: true,
                 movable: object instanceof Widget,
@@ -174,7 +190,7 @@ export function createWidgetTree(
                             } else {
                                 if (y + itemWidget.height < widget.height) {
                                     y += itemWidget.height;
-                                    x = rect.x;
+                                    x = rect.left;
                                 } else {
                                     break;
                                 }

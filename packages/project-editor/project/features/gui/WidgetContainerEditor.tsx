@@ -1,15 +1,12 @@
 import { toJS } from "mobx";
 import { observer } from "mobx-react";
 
-import { isObjectInstanceOf } from "project-editor/core/object";
+import { Rect, rectContains } from "eez-studio-shared/geometry";
+
+import { isObjectInstanceOf, getProperty } from "project-editor/core/object";
+import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
 import { DisplayItem, reduceUntilCommonParent } from "project-editor/core/objectAdapter";
-import {
-    UIStateStore,
-    addObject,
-    getEezStudioDataFromDragEvent,
-    getProperty
-} from "project-editor/core/store";
-import { Rect, rectContains } from "project-editor/core/util";
+import { UIStateStore, ProjectStore } from "project-editor/core/store";
 
 import { TreeNode } from "project-editor/components/CanvasEditorTreeNode";
 import {
@@ -114,8 +111,8 @@ export class WidgetContainerEditor extends CanvasEditor {
 
                 setTimeout(() => {
                     let rect = {
-                        x: Math.round(p.x),
-                        y: Math.round(p.y),
+                        left: Math.round(p.x),
+                        top: Math.round(p.y),
                         width: (object as Widget).width,
                         height: (object as Widget).height
                     };
@@ -156,8 +153,8 @@ export class WidgetContainerEditor extends CanvasEditor {
 
             let p = this.mouseToDocument(event.nativeEvent);
 
-            this.dropItem.rect.x = Math.round(p.x);
-            this.dropItem.rect.y = Math.round(p.y);
+            this.dropItem.rect.left = Math.round(p.x);
+            this.dropItem.rect.top = Math.round(p.y);
 
             this.redraw();
         }
@@ -167,9 +164,9 @@ export class WidgetContainerEditor extends CanvasEditor {
         if (this.dropItem) {
             let dropItemWidgetObj = toJS(this.dropItem.item.object) as Widget;
 
-            dropItemWidgetObj.x = this.dropItem.rect.x;
-            dropItemWidgetObj.y = this.dropItem.rect.y;
-            addObject(
+            dropItemWidgetObj.x = this.dropItem.rect.left;
+            dropItemWidgetObj.y = this.dropItem.rect.top;
+            ProjectStore.addObject(
                 getProperty(this.props.displaySelection.object, "widgets"),
                 dropItemWidgetObj
             );

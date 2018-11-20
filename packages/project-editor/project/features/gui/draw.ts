@@ -1,5 +1,6 @@
-import { Rect } from "project-editor/core/util";
-import { objectToJS } from "project-editor/core/store";
+import { Rect } from "eez-studio-shared/geometry";
+
+import { objectToJS } from "project-editor/core/serialization";
 import { EezObject, EezArrayObject, isObjectInstanceOf } from "project-editor/core/object";
 
 import * as data from "project-editor/project/features/data/data";
@@ -1220,7 +1221,7 @@ function drawPageFrameWithColor(
     ctx.shadowBlur = Math.max(5, Math.ceil(20 * scale));
     ctx.shadowOffsetX = Math.max(2, Math.ceil(5 * scale));
     ctx.shadowOffsetY = Math.max(2, Math.ceil(5 * scale));
-    lcd.fillRect(ctx, rect.x, rect.y, rect.x + rect.width - 1, rect.y + rect.height - 1);
+    lcd.fillRect(ctx, rect.left, rect.top, rect.left + rect.width - 1, rect.top + rect.height - 1);
     ctx.restore();
 }
 

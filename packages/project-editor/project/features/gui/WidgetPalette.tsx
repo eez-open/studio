@@ -3,8 +3,8 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { objectToClipboardData, setClipboardData } from "project-editor/core/store";
 import { EezClass } from "project-editor/core/object";
+import { objectToClipboardData, setClipboardData } from "project-editor/core/clipboard";
 import { DragAndDropManager } from "project-editor/core/dd";
 
 import { getWidgetType, widgetClasses } from "project-editor/project/features/gui/widget";

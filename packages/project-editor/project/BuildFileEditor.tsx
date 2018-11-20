@@ -5,7 +5,7 @@ import { bind } from "bind-decorator";
 import { CodeEditor } from "eez-studio-ui/code-editor";
 
 import { EditorComponent } from "project-editor/core/object";
-import { UndoManager, updateObject } from "project-editor/core/store";
+import { ProjectStore, UndoManager } from "project-editor/core/store";
 import { BuildFile } from "project-editor/project/project";
 
 @observer
@@ -14,7 +14,7 @@ export class BuildFileEditor extends EditorComponent {
 
     @bind
     onChange(value: string) {
-        updateObject(this.props.editor.object, {
+        ProjectStore.updateObject(this.props.editor.object, {
             template: value
         });
     }

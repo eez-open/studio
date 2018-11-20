@@ -4,14 +4,15 @@ import { validators } from "eez-studio-shared/model/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { ProjectStore, getProperty } from "project-editor/core/store";
 import {
     ClassInfo,
     registerClass,
     EezObject,
     EezArrayObject,
-    PropertyType
+    PropertyType,
+    getProperty
 } from "project-editor/core/object";
+import { ProjectStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 

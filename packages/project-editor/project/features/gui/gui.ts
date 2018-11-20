@@ -5,9 +5,11 @@ import {
     registerClass,
     EezObject,
     EezArrayObject,
-    PropertyType
+    PropertyType,
+    asArray,
+    getProperty
 } from "project-editor/core/object";
-import { ProjectStore, asArray, getProperty } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import * as output from "project-editor/core/output";
 

@@ -3,23 +3,6 @@ import { observer } from "mobx-react";
 import React from "react";
 
 import { _each } from "eez-studio-shared/algorithm";
-
-import { Splitter } from "eez-studio-ui/splitter";
-
-import {
-    UIStateStore,
-    EditorsStore,
-    addObject,
-    getAncestorOfType,
-    loadObject,
-    getEezStudioDataFromDragEvent
-} from "project-editor/core/store";
-import { EezObject, EditorComponent, isObjectInstanceOf } from "project-editor/core/object";
-import {
-    DisplayItemChildrenObject,
-    DisplayItemChildrenArray
-} from "project-editor/core/objectAdapter";
-
 import {
     Point,
     Rect,
@@ -27,7 +10,23 @@ import {
     rectCenter,
     rectSegmentIntersection,
     pointSegmentDistance
-} from "project-editor/core/util";
+} from "eez-studio-shared/geometry";
+
+import { Splitter } from "eez-studio-ui/splitter";
+
+import {
+    EezObject,
+    EditorComponent,
+    isObjectInstanceOf,
+    loadObject,
+    getAncestorOfType
+} from "project-editor/core/object";
+import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
+import { UIStateStore, EditorsStore, ProjectStore } from "project-editor/core/store";
+import {
+    DisplayItemChildrenObject,
+    DisplayItemChildrenArray
+} from "project-editor/core/objectAdapter";
 
 import { Panel } from "project-editor/components/Panel";
 import { TreeNode, LineConnecting } from "project-editor/components/CanvasEditorTreeNode";
@@ -168,7 +167,7 @@ function drawPageNode(
 
     let DISTANCE_BETWEEN_TITLE_AND_PAGE = 8;
 
-    ctx.translate(node.rect.x, node.rect.y - DISTANCE_BETWEEN_TITLE_AND_PAGE);
+    ctx.translate(node.rect.left, node.rect.top - DISTANCE_BETWEEN_TITLE_AND_PAGE);
 
     ctx.font = TITLE_FONT;
     let tm = ctx.measureText(storyboardPage.page);
@@ -190,8 +189,8 @@ function drawPageNode(
         drawNotFoundPageFrame(
             ctx,
             {
-                x: 0,
-                y: 0,
+                left: 0,
+                top: 0,
                 width: node.rect.width,
                 height: node.rect.height
             },
@@ -279,8 +278,8 @@ class StoryboardLineConnecting implements LineConnecting {
         // draw source rect
         ctx.beginPath();
         ctx.rect(
-            this.source.rect.x,
-            this.source.rect.y,
+            this.source.rect.left,
+            this.source.rect.top,
             this.source.rect.width,
             this.source.rect.height
         );
@@ -290,8 +289,8 @@ class StoryboardLineConnecting implements LineConnecting {
             // draw target rect
             ctx.beginPath();
             ctx.rect(
-                this.target.rect.x,
-                this.target.rect.y,
+                this.target.rect.left,
+                this.target.rect.top,
                 this.target.rect.width,
                 this.target.rect.height
             );
@@ -338,7 +337,7 @@ class StoryboardLineConnecting implements LineConnecting {
             };
             let lineObject = loadObject(storyboardLines, line, StoryboardLine);
 
-            addObject(storyboardLines, lineObject);
+            ProjectStore.addObject(storyboardLines, lineObject);
         }
     }
 }
@@ -481,8 +480,8 @@ class StoryboardCanvasEditor extends CanvasEditor {
                     children: [],
 
                     rect: {
-                        x: storyboardPage.x,
-                        y: storyboardPage.y,
+                        left: storyboardPage.x,
+                        top: storyboardPage.y,
                         width: page ? page.width : 480,
                         height: page ? page.height : 272
                     },
@@ -524,7 +523,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
                         parent: tree,
                         children: [],
 
-                        rect: { x: 0, y: 0, width: 0, height: 0 },
+                        rect: { left: 0, top: 0, width: 0, height: 0 },
                         selected: false,
                         resizable: false,
                         movable: false,
@@ -601,8 +600,8 @@ class StoryboardCanvasEditor extends CanvasEditor {
                 let page = findPage(storyboardPage.page);
 
                 let rect = {
-                    x: Math.round(p.x),
-                    y: Math.round(p.y),
+                    left: Math.round(p.x),
+                    top: Math.round(p.y),
                     width: page ? page.width : 480,
                     height: page ? page.height : 272
                 };
@@ -649,8 +648,8 @@ class StoryboardCanvasEditor extends CanvasEditor {
 
             let p = this.mouseToDocument(event.nativeEvent);
 
-            this.dropItem.rect.x = Math.round(p.x);
-            this.dropItem.rect.y = Math.round(p.y);
+            this.dropItem.rect.left = Math.round(p.x);
+            this.dropItem.rect.top = Math.round(p.y);
 
             this.redraw();
         }
@@ -661,10 +660,13 @@ class StoryboardCanvasEditor extends CanvasEditor {
         if (this.dropItem) {
             let dropItemObj = this.dropItem.item.object as StoryboardPage;
 
-            dropItemObj.x = this.dropItem.rect.x;
-            dropItemObj.y = this.dropItem.rect.y;
+            dropItemObj.x = this.dropItem.rect.left;
+            dropItemObj.y = this.dropItem.rect.top;
 
-            addObject((this.props.displaySelection.object as Storyboard).pages, dropItemObj);
+            ProjectStore.addObject(
+                (this.props.displaySelection.object as Storyboard).pages,
+                dropItemObj
+            );
         }
     }
 

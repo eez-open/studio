@@ -1,4 +1,4 @@
-import { getProperty } from "project-editor/core/store";
+import { getProperty } from "project-editor/core/object";
 
 import { Project } from "project-editor/project/project";
 

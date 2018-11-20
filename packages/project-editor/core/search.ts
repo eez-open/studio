@@ -1,19 +1,19 @@
+import { _isEqual } from "eez-studio-shared/algorithm";
+
 import {
-    ProjectStore,
-    OutputSectionsStore,
-    updateObject,
+    EezObject,
+    EezValueObject,
+    PropertyType,
     getProperty,
+    isArray,
+    asArray,
     getObjectPath,
     objectToString,
-    getObjectPropertyAsObject,
-    isArray,
-    asArray
-} from "project-editor/core/store";
-import { EezObject, EezValueObject, PropertyType } from "project-editor/core/object";
+    getObjectPropertyAsObject
+} from "project-editor/core/object";
+import { ProjectStore, OutputSectionsStore } from "project-editor/core/store";
 
 import { Section, Type } from "project-editor/core/output";
-
-import { isEqual } from "project-editor/core/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -148,7 +148,7 @@ function* searchForReference(
                         );
                     } else if (valueObject.propertyInfo.type === PropertyType.ObjectReference) {
                         if (
-                            isEqual(
+                            _isEqual(
                                 valueObject.propertyInfo.referencedObjectCollectionPath,
                                 objectParentPath
                             )
@@ -160,7 +160,7 @@ function* searchForReference(
                     } else if (
                         valueObject.propertyInfo.type === PropertyType.ConfigurationReference
                     ) {
-                        if (isEqual(["settings", "build", "configurations"], objectParentPath)) {
+                        if (_isEqual(["settings", "build", "configurations"], objectParentPath)) {
                             if (valueObject.value) {
                                 for (let i = 0; i < valueObject.value.length; i++) {
                                     if (valueObject.value[i] === objectName) {
@@ -302,7 +302,7 @@ export function replaceObjectReference(object: EezObject, newValue: string) {
             if (parent) {
                 let key = searchValue._key;
                 if (parent && key && typeof key == "string") {
-                    updateObject(parent, {
+                    ProjectStore.updateObject(parent, {
                         [key]: value
                     });
                 }

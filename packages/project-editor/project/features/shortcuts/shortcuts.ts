@@ -5,10 +5,11 @@ import {
     registerClass,
     EezObject,
     EezArrayObject,
-    PropertyType
+    PropertyType,
+    getProperty,
+    objectToJS
 } from "project-editor/core/object";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
-import { objectToJS, getProperty } from "project-editor/core/store";
 
 import { ExtensionDefinition } from "project-editor/project/features/extension-definitions/extension-definitions";
 

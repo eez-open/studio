@@ -10,17 +10,15 @@ import { TabsView } from "eez-studio-ui/tabs";
 import * as notification from "eez-studio-ui/notification";
 import { Splitter } from "eez-studio-ui/splitter";
 
+import { EezObject, isArray, objectToString } from "project-editor/core/object";
 import {
     UndoManager,
     ProjectStore,
     UIStateStore,
     EditorsStore,
     NavigationStore,
-    OutputSectionsStore,
-    objectToString,
-    isArray
+    OutputSectionsStore
 } from "project-editor/core/store";
-import { EezObject } from "project-editor/core/object";
 import { startSearch } from "project-editor/core/search";
 import { Debug } from "project-editor/core/debug";
 import { Section } from "project-editor/core/output";

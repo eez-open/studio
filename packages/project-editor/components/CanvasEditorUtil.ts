@@ -1,4 +1,4 @@
-import { Point, Rect, pointInRect } from "project-editor/core/util";
+import { Point, Rect, pointInRect } from "eez-studio-shared/geometry";
 
 import {
     TreeNode,
@@ -19,7 +19,7 @@ export function drawSelection(
     const COLOR_BORDER = "rgb(0, 0, 0)";
 
     ctx.beginPath();
-    ctx.rect(rect.x, rect.y, rect.width, rect.height);
+    ctx.rect(rect.left, rect.top, rect.width, rect.height);
     ctx.fillStyle = COLOR;
     ctx.fill();
     ctx.strokeStyle = COLOR_BORDER;
@@ -32,8 +32,8 @@ export function drawSelection(
 
         ctx.beginPath();
         ctx.rect(
-            rect.x - RESIZE_HANDLE_SIZE / 2,
-            rect.y - RESIZE_HANDLE_SIZE / 2,
+            rect.left - RESIZE_HANDLE_SIZE / 2,
+            rect.top - RESIZE_HANDLE_SIZE / 2,
             RESIZE_HANDLE_SIZE,
             RESIZE_HANDLE_SIZE
         );
@@ -42,8 +42,8 @@ export function drawSelection(
 
         ctx.beginPath();
         ctx.rect(
-            rect.x + rect.width / 2 - RESIZE_HANDLE_SIZE / 2,
-            rect.y - RESIZE_HANDLE_SIZE / 2,
+            rect.left + rect.width / 2 - RESIZE_HANDLE_SIZE / 2,
+            rect.top - RESIZE_HANDLE_SIZE / 2,
             RESIZE_HANDLE_SIZE,
             RESIZE_HANDLE_SIZE
         );
@@ -52,8 +52,8 @@ export function drawSelection(
 
         ctx.beginPath();
         ctx.rect(
-            rect.x + rect.width - RESIZE_HANDLE_SIZE / 2,
-            rect.y - RESIZE_HANDLE_SIZE / 2,
+            rect.left + rect.width - RESIZE_HANDLE_SIZE / 2,
+            rect.top - RESIZE_HANDLE_SIZE / 2,
             RESIZE_HANDLE_SIZE,
             RESIZE_HANDLE_SIZE
         );
@@ -62,8 +62,8 @@ export function drawSelection(
 
         ctx.beginPath();
         ctx.rect(
-            rect.x - RESIZE_HANDLE_SIZE / 2,
-            rect.y + rect.height / 2 - RESIZE_HANDLE_SIZE / 2,
+            rect.left - RESIZE_HANDLE_SIZE / 2,
+            rect.top + rect.height / 2 - RESIZE_HANDLE_SIZE / 2,
             RESIZE_HANDLE_SIZE,
             RESIZE_HANDLE_SIZE
         );
@@ -72,8 +72,8 @@ export function drawSelection(
 
         ctx.beginPath();
         ctx.rect(
-            rect.x + rect.width - RESIZE_HANDLE_SIZE / 2,
-            rect.y + rect.height / 2 - RESIZE_HANDLE_SIZE / 2,
+            rect.left + rect.width - RESIZE_HANDLE_SIZE / 2,
+            rect.top + rect.height / 2 - RESIZE_HANDLE_SIZE / 2,
             RESIZE_HANDLE_SIZE,
             RESIZE_HANDLE_SIZE
         );
@@ -82,8 +82,8 @@ export function drawSelection(
 
         ctx.beginPath();
         ctx.rect(
-            rect.x - RESIZE_HANDLE_SIZE / 2,
-            rect.y + rect.height - RESIZE_HANDLE_SIZE / 2,
+            rect.left - RESIZE_HANDLE_SIZE / 2,
+            rect.top + rect.height - RESIZE_HANDLE_SIZE / 2,
             RESIZE_HANDLE_SIZE,
             RESIZE_HANDLE_SIZE
         );
@@ -92,8 +92,8 @@ export function drawSelection(
 
         ctx.beginPath();
         ctx.rect(
-            rect.x + rect.width / 2 - RESIZE_HANDLE_SIZE / 2,
-            rect.y + rect.height - RESIZE_HANDLE_SIZE / 2,
+            rect.left + rect.width / 2 - RESIZE_HANDLE_SIZE / 2,
+            rect.top + rect.height - RESIZE_HANDLE_SIZE / 2,
             RESIZE_HANDLE_SIZE,
             RESIZE_HANDLE_SIZE
         );
@@ -102,8 +102,8 @@ export function drawSelection(
 
         ctx.beginPath();
         ctx.rect(
-            rect.x + rect.width - RESIZE_HANDLE_SIZE / 2,
-            rect.y + rect.height - RESIZE_HANDLE_SIZE / 2,
+            rect.left + rect.width - RESIZE_HANDLE_SIZE / 2,
+            rect.top + rect.height - RESIZE_HANDLE_SIZE / 2,
             RESIZE_HANDLE_SIZE,
             RESIZE_HANDLE_SIZE
         );
@@ -116,7 +116,7 @@ export function drawSelectedDecoration(ctx: CanvasRenderingContext2D, rect: Rect
     const COLOR_BORDER = "rgb(0, 0, 0)";
 
     ctx.beginPath();
-    ctx.rect(rect.x, rect.y, rect.width, rect.height);
+    ctx.rect(rect.left, rect.top, rect.width, rect.height);
 
     ctx.strokeStyle = COLOR_BORDER;
     ctx.lineWidth = 1;
@@ -160,17 +160,17 @@ export function drawTree(
         if (node.draw) {
             node.draw(node, ctx, scale, callback);
         } else if (node.image && node.image.width && node.image.height) {
-            ctx.drawImage(node.image, node.rect.x, node.rect.y);
+            ctx.drawImage(node.image, node.rect.left, node.rect.top);
             if (
-                node.rect.x < tree.rect.x ||
-                node.rect.x + node.rect.width > tree.rect.x + tree.rect.width ||
-                node.rect.y < tree.rect.y ||
-                node.rect.y + node.rect.height > tree.rect.y + tree.rect.height
+                node.rect.left < tree.rect.left ||
+                node.rect.left + node.rect.width > tree.rect.left + tree.rect.width ||
+                node.rect.top < tree.rect.top ||
+                node.rect.top + node.rect.height > tree.rect.top + tree.rect.height
             ) {
                 ctx.save();
 
                 ctx.beginPath();
-                ctx.rect(node.rect.x, node.rect.y, node.rect.width, node.rect.height);
+                ctx.rect(node.rect.left, node.rect.top, node.rect.width, node.rect.height);
                 ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
                 ctx.stroke();
 
@@ -187,8 +187,8 @@ export function drawTree(
                         Math.min(node.rect.width, node.rect.height);
                     y += OFFSET
                 ) {
-                    ctx.moveTo(node.rect.x, node.rect.y + y);
-                    ctx.lineTo(node.rect.x + y, node.rect.y);
+                    ctx.moveTo(node.rect.left, node.rect.top + y);
+                    ctx.lineTo(node.rect.left + y, node.rect.top);
                 }
 
                 ctx.strokeStyle = "rgba(255, 0, 0, 0.2)";

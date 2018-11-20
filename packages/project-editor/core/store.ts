@@ -1,7 +1,6 @@
 import { observable, extendObservable, computed, action, toJS, reaction, autorun } from "mobx";
 
 import { confirmSave } from "eez-studio-shared/util";
-import { humanize } from "eez-studio-shared/string";
 import { _each, _isArray, _map, _uniqWith } from "eez-studio-shared/algorithm";
 
 import { showGenericDialog, TableField } from "eez-studio-ui/generic-dialog";
@@ -9,16 +8,37 @@ import * as notification from "eez-studio-ui/notification";
 
 import {
     EezObject,
-    EezClass,
-    ClassInfo,
     PropertyInfo,
-    findClass,
-    EezValueObject,
-    EezArrayObject,
     PropertyType,
-    isSubclassOf,
-    IEditorState
+    IEditorState,
+    IEditor,
+    getProperty,
+    isValue,
+    isArray,
+    isArrayElement,
+    getObjectPathAsString,
+    objectToString,
+    isObjectExists,
+    findPropertyByName,
+    getObjectFromPath,
+    getObjectFromStringPath,
+    getObjectFromObjectId,
+    cloneObject
 } from "project-editor/core/object";
+import { checkClipboard, objectToClipboardData } from "project-editor/core/clipboard";
+import {
+    ICommand,
+    addObject,
+    addObjects,
+    insertObject,
+    updateObject,
+    deleteObject,
+    deleteObjects,
+    replaceObject,
+    replaceObjects,
+    insertObjectBefore,
+    insertObjectAfter
+} from "project-editor/core/commands";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { findAllReferences, isReferenced } from "project-editor/core/search";
 import { OutputSections, OutputSection } from "project-editor/core/output";
@@ -40,7 +60,7 @@ const fs = EEZStudio.electron.remote.require("fs");
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface Panel {
+interface IPanel {
     selectedObject: EezObject | undefined;
 }
 
@@ -50,13 +70,13 @@ class NavigationStoreClass {
     @observable
     navigationMap = new Map<string, NavigationItem>();
     @observable
-    selectedPanel: Panel | undefined;
+    selectedPanel: IPanel | undefined;
 
     load(map: { [stringPath: string]: string }) {
         let navigationMap = new Map<string, NavigationItem>();
 
         for (let stringPath in map) {
-            let navigationObject = getObjectFromStringPath(stringPath);
+            let navigationObject = ProjectStore.getObjectFromStringPath(stringPath);
             if (navigationObject) {
                 let navigationItemStr = map[stringPath];
                 if (navigationItemStr === stringPath) {
@@ -64,7 +84,7 @@ class NavigationStoreClass {
                 }
                 let navigationItem: NavigationItem | undefined;
                 if (typeof navigationItemStr == "string") {
-                    navigationItem = getObjectFromStringPath(navigationItemStr);
+                    navigationItem = ProjectStore.getObjectFromStringPath(navigationItemStr);
                 } else {
                     let navigationObjectAdapter = new TreeObjectAdapter(navigationObject);
                     setTimeout(() => {
@@ -86,7 +106,7 @@ class NavigationStoreClass {
     get toJS() {
         let map: any = {};
         for (var [id, navigationItem] of this.navigationMap) {
-            let navigationObject = getObjectFromObjectId(id);
+            let navigationObject = ProjectStore.getObjectFromObjectId(id);
             if (navigationObject) {
                 let navigationObjectPath = getObjectPathAsString(navigationObject);
                 if (navigationItem instanceof TreeObjectAdapter) {
@@ -100,7 +120,7 @@ class NavigationStoreClass {
     }
 
     @action
-    setSelectedPanel(selectedPanel: Panel | undefined) {
+    setSelectedPanel(selectedPanel: IPanel | undefined) {
         this.selectedPanel = selectedPanel;
     }
 
@@ -186,7 +206,7 @@ class NavigationStoreClass {
 
         if (item && !(item instanceof TreeObjectAdapter)) {
             // is this maybe deleted object?
-            item = getObjectFromObjectId(item._id);
+            item = ProjectStore.getObjectFromObjectId(item._id);
         }
 
         if (!item) {
@@ -251,7 +271,7 @@ class NavigationStoreClass {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Editor {
+export class Editor implements IEditor {
     @observable
     object: EezObject;
     @observable
@@ -349,9 +369,9 @@ class EditorsStoreClass {
                 .map((editor: any) => {
                     let object;
                     if (_isArray(editor.object)) {
-                        object = getObjectFromPath(editor.object);
+                        object = ProjectStore.getObjectFromPath(editor.object);
                     } else {
-                        object = getObjectFromStringPath(editor.object);
+                        object = ProjectStore.getObjectFromStringPath(editor.object);
                     }
                     if (object) {
                         let newEditor = new Editor();
@@ -594,7 +614,7 @@ class UIStateStoreClass {
     get objectsJS() {
         let map: any = {};
         for (var [objectPath, value] of this.objects) {
-            if (getObjectFromStringPath(objectPath)) {
+            if (ProjectStore.getObjectFromStringPath(objectPath)) {
                 map[objectPath] = value;
             }
         }
@@ -667,25 +687,19 @@ class UIStateStoreClass {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface Command {
-    execute(): void;
-    undo(): void;
-    description: string;
-}
-
-interface UndoItem {
-    commands: Command[];
+interface IUndoItem {
+    commands: ICommand[];
     selectionBefore: any;
     selectionAfter: any;
 }
 
 export class UndoManagerClass {
     @observable
-    undoStack: UndoItem[] = [];
+    undoStack: IUndoItem[] = [];
     @observable
-    redoStack: UndoItem[] = [];
+    redoStack: IUndoItem[] = [];
     @observable
-    commands: Command[] = [];
+    commands: ICommand[] = [];
 
     private selectionBeforeFirstCommand: any;
     public combineCommands: boolean = false;
@@ -718,7 +732,7 @@ export class UndoManagerClass {
     }
 
     @action
-    executeCommand(command: Command) {
+    executeCommand(command: ICommand) {
         if (this.commands.length == 0) {
             this.selectionBeforeFirstCommand = NavigationStore.getSelection();
         } else {
@@ -735,7 +749,7 @@ export class UndoManagerClass {
         ProjectStore.setModified(true);
     }
 
-    static getCommandsDescription(commands: Command[]) {
+    static getCommandsDescription(commands: ICommand[]) {
         return commands[commands.length - 1].description;
     }
 
@@ -870,6 +884,18 @@ class ProjectStoreClass {
     @computed
     get project(): Project {
         return this._project as Project;
+    }
+
+    getObjectFromPath(path: string[]) {
+        return getObjectFromPath(this.project, path);
+    }
+
+    getObjectFromStringPath(objectID: string) {
+        return getObjectFromStringPath(this.project, objectID);
+    }
+
+    getObjectFromObjectId(objectID: string) {
+        return getObjectFromObjectId(this.project, objectID);
     }
 
     @computed
@@ -1116,342 +1142,118 @@ class ProjectStoreClass {
             }).catch(() => {});
         }
     }
-}
 
-////////////////////////////////////////////////////////////////////////////////
-
-function getChildId(parent: EezObject | undefined) {
-    let id;
-    if (parent) {
-        if (parent._lastChildId === undefined) {
-            parent._lastChildId = 1;
-        } else {
-            parent._lastChildId++;
-        }
-
-        id = parent._id + "." + parent._lastChildId;
-    } else {
-        id = "1";
-    }
-
-    return id;
-}
-
-function loadArrayObject(arrayObject: any, parent: any, propertyInfo: PropertyInfo) {
-    const eezArray = new EezArrayObject<any>();
-
-    eezArray._id = getChildId(parent);
-    eezArray._parent = parent;
-    eezArray._key = propertyInfo.name;
-    eezArray._propertyInfo = propertyInfo;
-
-    eezArray._array = arrayObject.map((object: any) =>
-        loadObject(eezArray, object, propertyInfo.typeClass!)
-    );
-
-    return eezArray;
-}
-
-export function loadObject(
-    parent: EezObject | EezObject[] | undefined,
-    jsObjectOrString: any | string,
-    aClass: EezClass,
-    key?: string
-): EezObject {
-    let jsObject: any =
-        typeof jsObjectOrString == "string" ? JSON.parse(jsObjectOrString) : jsObjectOrString;
-
-    if (Array.isArray(jsObject)) {
-        return loadArrayObject(jsObject, parent, {
-            type: PropertyType.Array,
-            name: key!,
-            typeClass: aClass
-        });
-    }
-
-    let object: EezObject = aClass.classInfo.getClass
-        ? new (aClass.classInfo.getClass(jsObject))()
-        : new aClass();
-    const classInfo = object._classInfo;
-
-    object._id = getChildId(parent as EezObject);
-    object._parent = parent as EezObject;
-
-    for (const propertyInfo of classInfo.properties) {
-        let value = jsObject[propertyInfo.name];
-
-        if (propertyInfo.type === PropertyType.Object) {
-            let childObject: EezObject | undefined;
-
-            if (value) {
-                childObject = loadObject(object, value, propertyInfo.typeClass!);
-            } else if (!propertyInfo.isOptional) {
-                let typeClass = propertyInfo.typeClass!;
-                childObject = loadObject(object, typeClass.classInfo.defaultValue, typeClass);
-            }
-
-            if (childObject) {
-                childObject._key = propertyInfo.name;
-                (object as any)[propertyInfo.name] = childObject;
-            }
-        } else if (propertyInfo.type === PropertyType.Array) {
-            if (!value && !propertyInfo.isOptional) {
-                value = [];
-            }
-
-            if (value) {
-                (object as any)[propertyInfo.name] = loadArrayObject(value, object, propertyInfo);
-            }
-        } else {
-            (object as any)[propertyInfo.name] = value;
-        }
-    }
-
-    return object;
-}
-
-export function objectToJson(object: EezObject | EezObject[], space?: number) {
-    return JSON.stringify(
-        toJS(object),
-        (key: string | number, value: any) => {
-            if (typeof key === "string" && key[0] === "_") {
-                return undefined;
-            }
-            if (value && typeof value === "object" && "_array" in value) {
-                return value._array;
-            }
-            return value;
-        },
-        space
-    );
-}
-
-export function objectToJS(object: EezObject | EezObject[]): any {
-    return JSON.parse(objectToJson(object));
-}
-
-export function cloneObject(parent: EezObject | undefined, obj: EezObject) {
-    return loadObject(parent, objectToJson(obj), obj._class);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const EEZ_STUDIO_DATA_TYPE = "text/eez-studio-project-editor-data";
-
-export interface SerializedData {
-    objectClassName: string;
-    classInfo?: ClassInfo;
-    object?: EezObject;
-    objects?: EezObject[];
-}
-
-export function objectToClipboardData(object: EezObject): string {
-    return JSON.stringify({
-        objectClassName: object._class.name,
-        object: objectToJson(object)
-    });
-}
-
-export function objectsToClipboardData(objects: EezObject[]): string {
-    return JSON.stringify({
-        objectClassName: objects[0]._class.name,
-        objects: objects.map(object => objectToJson(object))
-    });
-}
-
-export function clipboardDataToObject(data: string) {
-    let serializedData: SerializedData = JSON.parse(data);
-
-    const aClass = findClass(serializedData.objectClassName);
-    if (aClass) {
-        if (serializedData.object) {
-            serializedData.object = loadObject(undefined, serializedData.object, aClass);
-        } else if (serializedData.objects) {
-            serializedData.objects = serializedData.objects.map(object =>
-                loadObject(undefined, object, aClass)
-            );
-        }
-    }
-
-    return serializedData;
-}
-
-let clipboardData: string;
-
-export function setClipboardData(event: any, value: string) {
-    clipboardData = value;
-    event.dataTransfer.setData(EEZ_STUDIO_DATA_TYPE, clipboardData);
-}
-
-export function getEezStudioDataFromDragEvent(event: any) {
-    let data = event.dataTransfer.getData(EEZ_STUDIO_DATA_TYPE);
-    if (!data) {
-        data = clipboardData;
-    }
-    if (data) {
-        return clipboardDataToObject(data);
-    }
-    return undefined;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function isEqual(object1: EezObject, object2: EezObject) {
-    if (isValue(object1)) {
-        if (!isValue(object1)) {
-            return false;
-        }
-        return object1._parent == object2._parent && object1._key == object2._key;
-    } else {
-        if (isValue(object1)) {
-            return false;
-        }
-        return object1 == object2;
-    }
-}
-
-export function isValue(object: EezObject | undefined) {
-    return !!object && object instanceof EezValueObject;
-}
-
-export function isObject(object: EezObject | undefined) {
-    return !!object && !isValue(object) && !isArray(object);
-}
-
-export function isArray(object: EezObject | undefined) {
-    return !!object && !isValue(object) && object instanceof EezArrayObject;
-}
-
-export function asArray(object: EezObject) {
-    return (object as EezArrayObject<EezObject>)._array;
-}
-
-export function getChildren(parent: EezObject): EezObject[] {
-    if (isArray(parent)) {
-        return asArray(parent);
-    } else {
-        let properties = parent._classInfo.properties.filter(
-            propertyInfo =>
-                (propertyInfo.type === PropertyType.Object ||
-                    propertyInfo.type === PropertyType.Array) &&
-                !(propertyInfo.enumerable !== undefined && !propertyInfo.enumerable) &&
-                getProperty(parent, propertyInfo.name)
+    addObject(parentObject: EezObject, object: EezObject) {
+        return addObject(
+            {
+                undoManager: UndoManager,
+                selectionManager: NavigationStore
+            },
+            parentObject,
+            object
         );
+    }
 
-        if (properties.length == 1 && properties[0].type === PropertyType.Array) {
-            return asArray(getProperty(parent, properties[0].name));
-        }
+    addObjects(parentObject: EezObject, objects: EezObject[]) {
+        return addObjects(
+            {
+                undoManager: UndoManager,
+                selectionManager: NavigationStore
+            },
+            parentObject,
+            objects
+        );
+    }
 
-        return properties.map(propertyInfo => getProperty(parent, propertyInfo.name));
+    insertObject(parentObject: EezObject, index: number, object: EezObject) {
+        return insertObject(
+            {
+                undoManager: UndoManager,
+                selectionManager: NavigationStore
+            },
+            parentObject,
+            index,
+            object
+        );
+    }
+
+    updateObject(object: EezObject, values: any) {
+        return updateObject(
+            {
+                undoManager: UndoManager,
+                selectionManager: NavigationStore
+            },
+            object,
+            values
+        );
+    }
+
+    deleteObject(object: EezObject) {
+        return deleteObject(
+            {
+                undoManager: UndoManager,
+                selectionManager: NavigationStore
+            },
+            object
+        );
+    }
+
+    deleteObjects(objects: EezObject[]) {
+        return deleteObjects(
+            {
+                undoManager: UndoManager,
+                selectionManager: NavigationStore
+            },
+            objects
+        );
+    }
+
+    replaceObject(object: EezObject, replaceWithObject: EezObject) {
+        return replaceObject(
+            {
+                undoManager: UndoManager,
+                selectionManager: NavigationStore
+            },
+            object,
+            replaceWithObject
+        );
+    }
+
+    replaceObjects(objects: EezObject[], replaceWithObject: EezObject) {
+        return replaceObjects(
+            {
+                undoManager: UndoManager,
+                selectionManager: NavigationStore
+            },
+            objects,
+            replaceWithObject
+        );
+    }
+
+    insertObjectBefore(object: EezObject, objectToInsert: EezObject) {
+        return insertObjectBefore(
+            {
+                undoManager: UndoManager,
+                selectionManager: NavigationStore
+            },
+            object,
+            objectToInsert
+        );
+    }
+
+    insertObjectAfter(object: EezObject, objectToInsert: EezObject) {
+        return insertObjectAfter(
+            {
+                undoManager: UndoManager,
+                selectionManager: NavigationStore
+            },
+            object,
+            objectToInsert
+        );
     }
 }
 
-export function getChildOfObject(
-    object: EezObject,
-    key: PropertyInfo | string | number
-): EezObject | undefined {
-    let propertyInfo: PropertyInfo | undefined;
-
-    if (isArray(object)) {
-        let elementIndex: number | undefined = undefined;
-
-        if (typeof key == "string") {
-            elementIndex = parseInt(key);
-        } else if (typeof key == "number") {
-            elementIndex = key;
-        }
-
-        const array = asArray(object);
-
-        if (elementIndex !== undefined && elementIndex >= 0 && elementIndex < array.length) {
-            return array[elementIndex];
-        } else {
-            console.error("invalid array index");
-        }
-    } else {
-        if (typeof key == "string") {
-            propertyInfo = findPropertyByName(object, key);
-        } else if (typeof key == "number") {
-            console.error("invalid key type");
-        } else {
-            propertyInfo = key;
-        }
-    }
-
-    if (propertyInfo) {
-        let childObjectOrValue = getProperty(object, propertyInfo.name);
-        if (propertyInfo.typeClass) {
-            return childObjectOrValue;
-        } else {
-            return EezValueObject.create(object, propertyInfo, childObjectOrValue);
-        }
-    }
-
-    return undefined;
-}
-
-export function getObjectPropertyAsObject(object: EezObject, propertyInfo: PropertyInfo) {
-    return getChildOfObject(object, propertyInfo) as EezValueObject;
-}
-
-export function getObjectFromObjectId(objectID: string): EezObject | undefined {
-    function getDescendantObjectFromId(object: EezObject, id: string): EezObject | undefined {
-        if (object._id == id) {
-            return object;
-        }
-
-        if (isArray(object)) {
-            let childObject = asArray(object).find(
-                child => id == child._id || id.startsWith(child._id + ".")
-            );
-            if (childObject) {
-                if (childObject._id == id) {
-                    return childObject;
-                }
-                return getDescendantObjectFromId(childObject, id);
-            }
-        } else {
-            for (const propertyInfo of object._classInfo.properties) {
-                if (
-                    propertyInfo.type === PropertyType.Object ||
-                    propertyInfo.type === PropertyType.Array
-                ) {
-                    let childObject = getChildOfObject(object, propertyInfo);
-                    if (childObject) {
-                        if (childObject._id == id) {
-                            return childObject;
-                        }
-                        if (id.startsWith(childObject._id + ".")) {
-                            return getDescendantObjectFromId(childObject, id);
-                        }
-                    }
-                }
-            }
-        }
-
-        return undefined;
-    }
-
-    return getDescendantObjectFromId(ProjectStore.project, objectID as string);
-}
-
-export function getProperty(object: EezObject, name: string) {
-    return (object as any)[name];
-}
-
-export function check(object: EezObject) {
-    if (isArray(object)) {
-        const check = object._propertyInfo!.check;
-        if (check) {
-            return check(object);
-        }
-    } else {
-        if ((object as any).check) {
-            return (object as any).check();
-        }
-    }
-    return [];
-}
+////////////////////////////////////////////////////////////////////////////////
 
 export function extendContextMenu(
     object: EezObject,
@@ -1463,258 +1265,12 @@ export function extendContextMenu(
     }
 }
 
-export function isAncestor(object: EezObject, ancestor: EezObject): boolean {
-    if (object == undefined || ancestor == undefined) {
-        return false;
-    }
-
-    if (object == ancestor) {
-        return true;
-    }
-
-    let parent = object._parent;
-    return !!parent && isAncestor(parent, ancestor);
-}
-
-export function isProperAncestor(object: EezObject, ancestor: EezObject) {
-    if (object == undefined || object == ancestor) {
-        return false;
-    }
-
-    let parent = object._parent;
-    return !!parent && isAncestor(parent, ancestor);
-}
-
-function uniqueTop(objects: EezObject[]): EezObject[] {
-    return _uniqWith(objects, (a: EezObject, b: EezObject) => isAncestor(a, b) || isAncestor(b, a));
-}
-
-function getParents(objects: EezObject[]): EezObject[] {
-    return uniqueTop(objects
-        .map(object => object._parent)
-        .filter(object => !!object) as EezObject[]);
-}
-
-export function reduceUntilCommonParent(objects: EezObject[]): EezObject[] {
-    let uniqueTopObjects = uniqueTop(objects);
-
-    let parents = getParents(uniqueTopObjects);
-
-    if (parents.length == 1) {
-        return uniqueTopObjects;
-    }
-
-    if (parents.length > 1) {
-        return reduceUntilCommonParent(parents);
-    }
-
-    return [];
-}
-
-export function isArrayElement(object: EezObject) {
-    return object._parent instanceof EezArrayObject;
-}
-
-export function objectToString(object: EezObject) {
-    let label: string;
-
-    if (isValue(object)) {
-        label = getProperty(object._parent!, object._key!);
-    } else if (isArray(object)) {
-        let propertyInfo = findPropertyByName(object._parent!, object._key!);
-        label = (propertyInfo && propertyInfo.displayName) || humanize(object._key);
-    } else {
-        label = object._label;
-    }
-
-    if (
-        object &&
-        object._parent &&
-        object._parent instanceof EezArrayObject &&
-        object._parent!._parent &&
-        object._parent!._key
-    ) {
-        let propertyInfo = findPropertyByName(object._parent!._parent!, object._parent!._key!);
-        if (propertyInfo && propertyInfo.childLabel) {
-            label = propertyInfo.childLabel(object, label);
-        }
-    }
-
-    return label;
-}
-
-export function getAncestorOfType(object: EezObject, classInfo: ClassInfo): EezObject | undefined {
-    if (object) {
-        if (object._classInfo === classInfo) {
-            return object;
-        }
-        return object._parent && getAncestorOfType(object._parent!, classInfo);
-    }
-    return undefined;
-}
-
-export function getObjectPath(object: EezObject): (string | number)[] {
-    let parent = object._parent;
-    if (parent) {
-        if (isArrayElement(object)) {
-            return getObjectPath(parent).concat(asArray(parent).indexOf(object as EezObject));
-        } else {
-            return getObjectPath(parent).concat(object._key as string);
-        }
-    }
-    return [];
-}
-
-export function getObjectFromPath(path: string[]) {
-    let object: EezObject = ProjectStore.project;
-
-    for (let i = 0; i < path.length && object; i++) {
-        object = getChildOfObject(object, path[i]) as EezObject;
-    }
-
-    return object;
-}
-
-export function getObjectPathAsString(object: EezObject) {
-    return "/" + getObjectPath(object).join("/");
-}
-
-export function getObjectFromStringPath(stringPath: string) {
-    if (stringPath == "/") {
-        return ProjectStore.project;
-    }
-    return getObjectFromPath(stringPath.split("/").slice(1));
-}
-
-export function getAncestors(
-    object: EezObject,
-    ancestor?: EezObject,
-    showSingleArrayChild?: boolean
-): EezObject[] {
-    if (!ancestor) {
-        ancestor = ProjectStore.project;
-    }
-
-    if (isValue(object)) {
-        object = object._parent as EezObject;
-    }
-
-    if (isArray(ancestor)) {
-        let possibleAncestor = asArray(ancestor).find(
-            possibleAncestor =>
-                object == possibleAncestor || object._id.startsWith(possibleAncestor._id + ".")
-        );
-        if (possibleAncestor) {
-            if (possibleAncestor == object) {
-                if (showSingleArrayChild) {
-                    return [ancestor, object];
-                } else {
-                    return [object];
-                }
-            } else {
-                if (showSingleArrayChild) {
-                    return [ancestor as EezObject].concat(getAncestors(object, possibleAncestor));
-                } else {
-                    return getAncestors(object, possibleAncestor);
-                }
-            }
-        }
-    } else {
-        let numObjectOrArrayProperties = 0;
-        for (const propertyInfo of ancestor._classInfo.properties) {
-            if (
-                propertyInfo.type === PropertyType.Object ||
-                propertyInfo.type === PropertyType.Array
-            ) {
-                numObjectOrArrayProperties++;
-            }
-        }
-
-        if (numObjectOrArrayProperties > 0) {
-            for (const propertyInfo of ancestor._classInfo.properties) {
-                if (
-                    propertyInfo.type === PropertyType.Object ||
-                    propertyInfo.type === PropertyType.Array
-                ) {
-                    let possibleAncestor: EezObject = (ancestor as any)[propertyInfo.name];
-
-                    if (possibleAncestor === object) {
-                        return [];
-                    }
-
-                    if (possibleAncestor && object._id.startsWith(possibleAncestor._id + ".")) {
-                        return [ancestor].concat(
-                            getAncestors(object, possibleAncestor, numObjectOrArrayProperties > 1)
-                        );
-                    }
-                }
-            }
-        }
-    }
-    return [];
-}
-
-export function getHumanReadableObjectPath(object: EezObject) {
-    let ancestors = getAncestors(object);
-    return ancestors
-        .slice(1)
-        .map(object => objectToString(object))
-        .join(" / ");
-}
-
-export function getInheritedValue(object: EezObject, propertyName: string) {
-    const getInheritedValue = object._classInfo.getInheritedValue;
-    if (getInheritedValue) {
-        return getInheritedValue(object, propertyName);
-    }
-    return undefined;
-}
-
-export function getPropertyAsString(object: EezObject, propertyInfo: PropertyInfo) {
-    let value = getProperty(object, propertyInfo.name);
-    if (value) {
-        if (value instanceof EezObject) {
-            return objectToString(value);
-        }
-        return value.toString();
-    }
-}
-
-export function isObjectExists(object: EezObject) {
-    let parent = object._parent;
-    if (parent) {
-        if (isArray(parent)) {
-            if (asArray(parent).indexOf(object) === -1) {
-                return false;
-            }
-        } else {
-            const key = object._key;
-            if (key && (parent as any)[key] !== object) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
 export function canAdd(object: EezObject) {
     return (isArrayElement(object) || isArray(object)) && object._classInfo.newItem != undefined;
 }
 
-export function canDuplicate(object: EezObject) {
+function canDuplicate(object: EezObject) {
     return isArrayElement(object);
-}
-
-export function findPropertyByName(object: EezObject, propertyName: string) {
-    return object._classInfo.properties.find(propertyInfo => propertyInfo.name == propertyName);
-}
-
-export function humanizePropertyName(object: EezObject, propertyName: string) {
-    const property = findPropertyByName(object, propertyName);
-    if (property && property.displayName) {
-        return property.displayName;
-    }
-    return humanize(propertyName);
 }
 
 function isOptional(object: EezObject) {
@@ -1754,459 +1310,12 @@ export function canContainChildren(object: EezObject) {
     return false;
 }
 
-export function findPastePlaceInside(
-    object: EezObject,
-    classInfo: ClassInfo,
-    isSingleObject: boolean
-) {
-    if (isArray(object) && isSubclassOf(classInfo, object._classInfo)) {
-        return object;
-    }
-
-    if (isObject(object)) {
-        const findPastePlaceInside = object._classInfo.findPastePlaceInside;
-        if (findPastePlaceInside) {
-            return findPastePlaceInside(object, classInfo, isSingleObject);
-        }
-    }
-
-    // first, find among array properties
-    for (const propertyInfo of object._classInfo.properties) {
-        if (
-            propertyInfo.type === PropertyType.Array &&
-            isSubclassOf(classInfo, propertyInfo.typeClass!.classInfo)
-        ) {
-            let collectionObject = getChildOfObject(object, propertyInfo);
-            if (collectionObject) {
-                return collectionObject;
-            }
-        }
-    }
-
-    // then, find among object properties
-    for (const propertyInfo of object._classInfo.properties) {
-        if (
-            propertyInfo.type == PropertyType.Object &&
-            isSubclassOf(classInfo, propertyInfo.typeClass!.classInfo) &&
-            isSingleObject
-        ) {
-            let childObject = getChildOfObject(object, propertyInfo);
-            if (!childObject) {
-                return propertyInfo;
-            }
-        }
-    }
-
-    return undefined;
-}
-
-function findPastePlaceInsideAndOutside(object: EezObject, serializedData: SerializedData) {
-    if (!serializedData.classInfo) {
-        return undefined;
-    }
-
-    let place = findPastePlaceInside(object, serializedData.classInfo, !!serializedData.object);
-    if (place) {
-        return place;
-    }
-
-    let parent = object._parent;
-    return (
-        parent && findPastePlaceInside(parent, serializedData.classInfo, !!serializedData.object)
-    );
-}
-
-export function checkClipboard(object: EezObject) {
-    let text = EEZStudio.electron.remote.clipboard.readText();
-    if (text) {
-        let serializedData = clipboardDataToObject(atob(text));
-        if (serializedData) {
-            let pastePlace = findPastePlaceInsideAndOutside(object, serializedData);
-            if (pastePlace) {
-                return {
-                    serializedData: serializedData,
-                    pastePlace: pastePlace
-                };
-            }
-        }
-    }
-    return undefined;
-}
-
 export function canPaste(object: EezObject) {
     try {
         return checkClipboard(object);
     } catch (e) {
         return undefined;
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function getUniquePropertyValue(existingObjects: EezObject[], key: string, value: string) {
-    while (true) {
-        if (!existingObjects.find(object => getProperty(object, key) == value)) {
-            return value;
-        }
-
-        var groups = value.match(/(.+) \((\d+)\)/);
-        if (groups) {
-            value = groups[1] + " (" + (parseInt(groups[2]) + 1) + ")";
-        } else {
-            value += " (1)";
-        }
-    }
-}
-
-// ensure that unique properties are unique inside parent
-function ensureUniqueProperties(parentObject: EezObject, objects: EezObject[]) {
-    let existingObjects = asArray(parentObject).map((object: EezObject) => object);
-    objects.forEach(object => {
-        for (const propertyInfo of object._classInfo.properties) {
-            if (propertyInfo.unique) {
-                (object as any)[propertyInfo.name] = getUniquePropertyValue(
-                    existingObjects,
-                    propertyInfo.name,
-                    getProperty(object, propertyInfo.name)
-                );
-            }
-        }
-        existingObjects.push(object);
-    });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function onObjectModified(object: EezObject) {
-    object._modificationTime = new Date().getTime();
-    if (object._parent) {
-        onObjectModified(object._parent);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export let addObject = action((parentObject: EezObject, object: EezObject) => {
-    object = loadObject(parentObject, object, parentObject._class);
-    ensureUniqueProperties(parentObject, [object]);
-
-    UndoManager.executeCommand({
-        execute: action(() => {
-            asArray(parentObject).push(object);
-            onObjectModified(parentObject);
-        }),
-
-        undo: action(() => {
-            asArray(parentObject).pop();
-        }),
-
-        get description() {
-            return "Added: " + getHumanReadableObjectPath(object);
-        }
-    });
-
-    NavigationStore.setSelection([object]);
-
-    return object;
-});
-
-export let addObjects = action((parentObject: EezObject, objects: EezObject[]) => {
-    objects = objects.map(object => loadObject(parentObject, object, parentObject._class));
-    ensureUniqueProperties(parentObject, objects);
-
-    UndoManager.executeCommand({
-        execute: action(() => {
-            asArray(parentObject).push.apply(parentObject, objects);
-            onObjectModified(parentObject);
-        }),
-
-        undo: action(() => {
-            for (let i = 0; i < objects.length; i++) {
-                asArray(parentObject).pop();
-            }
-            onObjectModified(parentObject);
-        }),
-
-        get description() {
-            return "Added: " + objects.map(object => getHumanReadableObjectPath(object)).join(", ");
-        }
-    });
-
-    NavigationStore.setSelection(objects);
-});
-
-export let insertObject = action((parentObject: EezObject, index: number, object: EezObject) => {
-    object = loadObject(parentObject, object, parentObject._class);
-    ensureUniqueProperties(parentObject, [object]);
-
-    UndoManager.executeCommand({
-        execute: action(() => {
-            asArray(parentObject).splice(index, 0, object);
-            onObjectModified(parentObject);
-        }),
-
-        undo: action(() => {
-            asArray(parentObject).splice(index, 1);
-            onObjectModified(parentObject);
-        }),
-
-        get description() {
-            return "Inserted: " + getHumanReadableObjectPath(object);
-        }
-    });
-
-    NavigationStore.setSelection([object]);
-});
-
-class UpdateCommand implements Command {
-    private oldValues: any = {};
-    private newValues: any = {};
-
-    constructor(public object: EezObject, private values: any, lastCommand?: UpdateCommand) {
-        if (lastCommand) {
-            this.oldValues = lastCommand.oldValues;
-        }
-
-        for (let propertyName in values) {
-            let propertyInfo = findPropertyByName(object, propertyName);
-            if (propertyInfo) {
-                if (!lastCommand) {
-                    this.oldValues[propertyName] = getProperty(object, propertyName);
-                }
-
-                let value = values[propertyName];
-
-                if (propertyInfo.type == PropertyType.Number) {
-                    if (value !== undefined) {
-                        this.newValues[propertyName] = +value;
-                    } else {
-                        this.newValues[propertyName] = undefined;
-                    }
-                } else {
-                    this.newValues[propertyName] = values[propertyName];
-                }
-            }
-        }
-    }
-
-    static assignValues(dest: any, src: any) {
-        for (let propertyName in src) {
-            dest[propertyName] = src[propertyName];
-        }
-    }
-
-    @action
-    execute() {
-        UpdateCommand.assignValues(this.object, this.newValues);
-        onObjectModified(this.object);
-    }
-
-    @action
-    undo() {
-        UpdateCommand.assignValues(this.object, this.oldValues);
-        onObjectModified(this.object);
-    }
-
-    @computed
-    get description() {
-        return (
-            `Changed (${_map(this.values, (value, name) => humanize(name)).join(", ")}): ` +
-            getHumanReadableObjectPath(this.object)
-        );
-    }
-}
-
-export let updateObject = action((object: EezObject, values: any) => {
-    let previousCommand;
-
-    if (UndoManager.combineCommands && UndoManager.commands.length > 0) {
-        let command = UndoManager.commands[UndoManager.commands.length - 1];
-        if (command instanceof UpdateCommand && command.object == object) {
-            // merge with previous command
-            UndoManager.commands.pop();
-            previousCommand = command;
-        }
-    }
-
-    UndoManager.executeCommand(new UpdateCommand(object, values, previousCommand));
-});
-
-export let deleteObject = action((object: any) => {
-    if (isArrayElement(object)) {
-        const parent = object._parent!;
-        const array = asArray(parent);
-        const index = array.indexOf(object);
-
-        UndoManager.executeCommand({
-            execute: action(() => {
-                array.splice(index, 1);
-                onObjectModified(parent);
-            }),
-
-            undo: action(() => {
-                array.splice(index, 0, object);
-                onObjectModified(parent);
-            }),
-
-            get description() {
-                return "Deleted: " + getHumanReadableObjectPath(object);
-            }
-        });
-
-        if (array.length > 0) {
-            if (index == array.length) {
-                NavigationStore.setSelection([array[index - 1]]);
-            } else {
-                NavigationStore.setSelection([array[index]]);
-            }
-        } else {
-            NavigationStore.setSelection([parent]);
-        }
-    } else {
-        updateObject(object, {
-            [object._key as string]: undefined
-        });
-    }
-});
-
-export let deleteObjects = action((objects: EezObject[]) => {
-    let undoIndexes: number[];
-
-    UndoManager.executeCommand({
-        execute: action(() => {
-            undoIndexes = [];
-            for (let i = 0; i < objects.length; i++) {
-                let object = objects[i];
-                let parent = object._parent!;
-
-                if (isArrayElement(object)) {
-                    const array = asArray(parent!);
-                    let index = array.indexOf(object);
-                    undoIndexes.push(index);
-                    array.splice(index, 1);
-                } else {
-                    undoIndexes.push(-1);
-                    (parent as any)[object._key as string] = undefined;
-                }
-
-                onObjectModified(parent);
-            }
-        }),
-
-        undo: action(() => {
-            for (let i = objects.length - 1; i >= 0; i--) {
-                let object = objects[i];
-                let parent = object._parent!;
-                if (isArrayElement(object)) {
-                    const array = asArray(parent);
-                    let index = undoIndexes[i];
-                    array.splice(index, 0, object);
-                } else {
-                    (parent as any)[object._key as string] = object;
-                }
-                onObjectModified(parent);
-            }
-        }),
-
-        get description() {
-            return (
-                "Deleted: " + objects.map(object => getHumanReadableObjectPath(object)).join(", ")
-            );
-        }
-    });
-});
-
-export let replaceObject = action((object: EezObject, replaceWithObject: EezObject) => {
-    replaceWithObject._id = object._id;
-    replaceWithObject._key = object._key;
-    replaceWithObject._parent = object._parent;
-
-    let parent = object._parent!;
-    if (isArrayElement(object)) {
-        const array = asArray(parent);
-
-        let index = array.indexOf(object);
-
-        UndoManager.executeCommand({
-            execute: action(() => {
-                array[index] = replaceWithObject;
-            }),
-
-            undo: action(() => {
-                array[index] = object;
-            }),
-
-            get description() {
-                return "Replaced: " + getHumanReadableObjectPath(object);
-            }
-        });
-
-        NavigationStore.setSelection([replaceWithObject]);
-    } else {
-        updateObject(parent as any, {
-            [object._key!]: replaceWithObject
-        });
-    }
-});
-
-export let replaceObjects = action((objects: EezObject[], replaceWithObject: EezObject) => {
-    const parent = objects[0]._parent;
-    const array = asArray(parent!);
-    const index = array.indexOf(objects[0]);
-
-    replaceWithObject._id = objects[0]._id;
-    replaceWithObject._key = objects[0]._key;
-    replaceWithObject._parent = parent;
-
-    let undoIndexes: number[];
-
-    UndoManager.executeCommand({
-        execute: action(() => {
-            array[index] = replaceWithObject;
-
-            undoIndexes = [];
-            for (let i = 1; i < objects.length; i++) {
-                let object = objects[i];
-                let index = array.indexOf(object);
-                undoIndexes.push(index);
-                array.splice(index, 1);
-            }
-        }),
-
-        undo: action(() => {
-            for (let i = objects.length - 1; i >= 1; i--) {
-                let object = objects[i];
-                let index = undoIndexes[i - 1];
-                array.splice(index, 0, object);
-            }
-
-            array[index] = objects[0];
-        }),
-
-        get description() {
-            return (
-                "Replaced: " + objects.map(object => getHumanReadableObjectPath(object)).join(", ")
-            );
-        }
-    });
-
-    NavigationStore.setSelection([replaceWithObject]);
-});
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function insertObjectBefore(object: EezObject, objectToInsert: EezObject) {
-    const parent = object._parent!;
-    const array = asArray(parent);
-    const index = array.indexOf(object);
-    insertObject(parent, index, objectToInsert);
-}
-
-export function insertObjectAfter(object: EezObject, objectToInsert: EezObject) {
-    const parent = object._parent!;
-    const array = asArray(parent);
-    const index = array.indexOf(object);
-    insertObject(parent, index + 1, objectToInsert);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2220,7 +1329,7 @@ export function addItem(object: EezObject) {
                 .newItem(parent)
                 .then(object => {
                     if (object) {
-                        addObject(parent, object);
+                        ProjectStore.addObject(parent, object);
                     } else {
                         console.log(`Canceled adding ${parent._class.name}`);
                     }
@@ -2235,14 +1344,14 @@ export function pasteItem(object: EezObject) {
         let c = checkClipboard(object);
         if (c) {
             if (typeof c.pastePlace === "string") {
-                updateObject(object, {
+                ProjectStore.updateObject(object, {
                     [c.pastePlace]: c.serializedData.object
                 });
             } else {
                 if (c.serializedData.object) {
-                    addObject(c.pastePlace as EezObject, c.serializedData.object);
+                    ProjectStore.addObject(c.pastePlace as EezObject, c.serializedData.object);
                 } else if (c.serializedData.objects) {
-                    addObjects(c.pastePlace as EezObject, c.serializedData.objects);
+                    ProjectStore.addObjects(c.pastePlace as EezObject, c.serializedData.objects);
                 }
             }
         }
@@ -2274,7 +1383,7 @@ export function copyItem(object: EezObject) {
 function duplicateItem(object: EezObject) {
     let parent = object._parent as EezObject;
     let duplicate = cloneObject(parent, object);
-    addObject(parent, duplicate);
+    ProjectStore.addObject(parent, duplicate);
 }
 
 export function showContextMenu(object: EezObject) {
@@ -2399,7 +1508,7 @@ export function showContextMenu(object: EezObject) {
 
 export function deleteItems(objects: EezObject[], callback?: () => void) {
     function doDelete() {
-        deleteObjects(objects);
+        ProjectStore.deleteObjects(objects);
         if (callback) {
             callback();
         }

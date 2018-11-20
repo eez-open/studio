@@ -1,4 +1,4 @@
-import { Point, Rect, pointInRect } from "project-editor/core/util";
+import { Point, Rect, pointInRect } from "eez-studio-shared/geometry";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,15 +46,15 @@ interface IScrollBarState {
 function drawScrollBar(ctx: CanvasRenderingContext2D, scrollBar: IScrollBarState) {
     ctx.fillStyle = SCROLL_BAR_TRACK_BACKGROUND_COLOR;
     ctx.fillRect(
-        scrollBar.trackRect.x,
-        scrollBar.trackRect.y,
+        scrollBar.trackRect.left,
+        scrollBar.trackRect.top,
         scrollBar.trackRect.width,
         scrollBar.trackRect.height
     );
     ctx.fillStyle = SCROLL_BAR_THUMB_BACKGROUND_COLOR;
     ctx.fillRect(
-        scrollBar.thumbRect.x,
-        scrollBar.thumbRect.y,
+        scrollBar.thumbRect.left,
+        scrollBar.thumbRect.top,
         scrollBar.thumbRect.width,
         scrollBar.thumbRect.height
     );
@@ -93,8 +93,8 @@ export class CanvasEditorScrollBars {
             Math.floor(this.canvasEditor.documentRect.height) >
             Math.ceil(this.canvasEditor.deviceRect.height);
 
-        const x = this.canvasEditor.canvas.width - SCROLL_BAR_SIZE;
-        const y = this.canvasEditor.canvas.height - SCROLL_BAR_SIZE;
+        const left = this.canvasEditor.canvas.width - SCROLL_BAR_SIZE;
+        const top = this.canvasEditor.canvas.height - SCROLL_BAR_SIZE;
         let width = this.canvasEditor.canvas.width;
         let height = this.canvasEditor.canvas.height;
 
@@ -103,8 +103,8 @@ export class CanvasEditorScrollBars {
             width -= SCROLL_BAR_SIZE;
             height -= SCROLL_BAR_SIZE;
             this.cornerRect = {
-                x: width,
-                y: height,
+                left: width,
+                top: height,
                 width: SCROLL_BAR_SIZE,
                 height: SCROLL_BAR_SIZE
             };
@@ -117,14 +117,14 @@ export class CanvasEditorScrollBars {
         if (isHorizontalVisible) {
             this.horizontal = {
                 trackRect: {
-                    x: 0,
-                    y,
+                    left: 0,
+                    top,
                     width,
                     height: SCROLL_BAR_SIZE
                 },
                 thumbRect: {
-                    x: (scroll.x * width) / this.canvasEditor.documentRect.width,
-                    y,
+                    left: (scroll.x * width) / this.canvasEditor.documentRect.width,
+                    top,
                     width:
                         (this.canvasEditor.deviceRect.width * width) /
                         this.canvasEditor.documentRect.width,
@@ -138,14 +138,14 @@ export class CanvasEditorScrollBars {
         if (isVerticalVisible) {
             this.vertical = {
                 trackRect: {
-                    x,
-                    y: 0,
+                    left,
+                    top: 0,
                     width: SCROLL_BAR_SIZE,
                     height
                 },
                 thumbRect: {
-                    x,
-                    y: (scroll.y * height) / this.canvasEditor.documentRect.height,
+                    left,
+                    top: (scroll.y * height) / this.canvasEditor.documentRect.height,
                     width: SCROLL_BAR_SIZE,
                     height:
                         (this.canvasEditor.deviceRect.height * height) /
@@ -161,12 +161,12 @@ export class CanvasEditorScrollBars {
         return {
             x:
                 documentTranslate.x +
-                this.canvasEditor.nonTranslatedDeviceRect.x -
-                this.canvasEditor.documentRect.x,
+                this.canvasEditor.nonTranslatedDeviceRect.left -
+                this.canvasEditor.documentRect.left,
             y:
                 documentTranslate.y +
-                this.canvasEditor.nonTranslatedDeviceRect.y -
-                this.canvasEditor.documentRect.y
+                this.canvasEditor.nonTranslatedDeviceRect.top -
+                this.canvasEditor.documentRect.top
         };
     }
 
@@ -174,10 +174,11 @@ export class CanvasEditorScrollBars {
         return {
             x:
                 scroll.x -
-                (this.canvasEditor.nonTranslatedDeviceRect.x - this.canvasEditor.documentRect.x),
+                (this.canvasEditor.nonTranslatedDeviceRect.left -
+                    this.canvasEditor.documentRect.left),
             y:
                 scroll.y -
-                (this.canvasEditor.nonTranslatedDeviceRect.y - this.canvasEditor.documentRect.y)
+                (this.canvasEditor.nonTranslatedDeviceRect.top - this.canvasEditor.documentRect.top)
         };
     }
 
@@ -229,8 +230,8 @@ export class CanvasEditorScrollBars {
             // draw white corner
             ctx.fillStyle = "white";
             ctx.fillRect(
-                this.cornerRect.x,
-                this.cornerRect.y,
+                this.cornerRect.left,
+                this.cornerRect.top,
                 this.cornerRect.width,
                 this.cornerRect.height
             );

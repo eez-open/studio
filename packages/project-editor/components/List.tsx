@@ -9,24 +9,23 @@ import {
     EezObject,
     PropertyInfo,
     isObjectInstanceOf,
-    isSameInstanceTypeAs
-} from "project-editor/core/object";
-import {
-    NavigationStore,
+    isSameInstanceTypeAs,
     getChildren,
-    showContextMenu,
-    cloneObject,
-    objectToClipboardData,
-    updateObject,
-    addObject,
-    insertObjectBefore,
-    findPastePlaceInside,
-    isAncestor,
     isArray,
+    isAncestor,
     isArrayElement,
     objectToString,
+    cloneObject
+} from "project-editor/core/object";
+import {
+    objectToClipboardData,
     setClipboardData,
-    getObjectFromObjectId,
+    findPastePlaceInside
+} from "project-editor/core/clipboard";
+import {
+    ProjectStore,
+    NavigationStore,
+    showContextMenu,
     canCut,
     cutItem,
     canCopy,
@@ -415,7 +414,7 @@ export class List extends React.Component<ListProps, {}> {
     }
 
     onSelect(objectId: string) {
-        let item = getObjectFromObjectId(objectId);
+        let item = ProjectStore.getObjectFromObjectId(objectId);
         if (item) {
             NavigationStore.setNavigationSelectedItem(this.props.navigationObject, item);
         }
@@ -430,7 +429,7 @@ export class List extends React.Component<ListProps, {}> {
             return;
         }
 
-        let focusedItem = getObjectFromObjectId(focusedItemId);
+        let focusedItem = ProjectStore.getObjectFromObjectId(focusedItemId);
 
         let $focusedItem = $(this.list).find(`.list-item[data-object-id="${focusedItemId}"]`);
 
@@ -525,7 +524,7 @@ export class List extends React.Component<ListProps, {}> {
                 let object = cloneObject(undefined, DragAndDropManager.dragObject);
 
                 if (dropPosition == DropPosition.DROP_BEFORE) {
-                    insertObjectBefore(DragAndDropManager.dropObject, object);
+                    ProjectStore.insertObjectBefore(DragAndDropManager.dropObject, object);
                 } else if (dropPosition == DropPosition.DROP_INSIDE) {
                     let dropPlace = findPastePlaceInside(
                         DragAndDropManager.dropObject,
@@ -534,9 +533,9 @@ export class List extends React.Component<ListProps, {}> {
                     );
                     if (dropPlace) {
                         if (isArray(dropPlace as EezObject)) {
-                            addObject(dropPlace as EezObject, object);
+                            ProjectStore.addObject(dropPlace as EezObject, object);
                         } else {
-                            updateObject(DragAndDropManager.dropObject, {
+                            ProjectStore.updateObject(DragAndDropManager.dropObject, {
                                 [(dropPlace as PropertyInfo).name]: object
                             });
                         }

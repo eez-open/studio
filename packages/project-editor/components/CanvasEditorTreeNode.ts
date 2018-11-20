@@ -1,4 +1,5 @@
-import { Point, Rect } from "project-editor/core/util";
+import { Point, Rect } from "eez-studio-shared/geometry";
+
 import { DisplayItem } from "project-editor/core/objectAdapter";
 
 export interface LineConnecting {

@@ -1,22 +1,11 @@
 import { observable, computed, action } from "mobx";
 
+import { Rect } from "eez-studio-shared/geometry";
+
 import { validators } from "eez-studio-shared/model/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import {
-    getChildOfObject,
-    loadObject,
-    objectToJS,
-    addObject,
-    replaceObject,
-    replaceObjects,
-    updateObject,
-    cloneObject,
-    getProperty,
-    ProjectStore,
-    isArray
-} from "project-editor/core/store";
 import {
     ClassInfo,
     EezObject,
@@ -25,9 +14,16 @@ import {
     PropertyType,
     makeDerivedClassInfo,
     findClass,
-    getClassesDerivedFrom
+    getClassesDerivedFrom,
+    getProperty,
+    isArray,
+    getChildOfObject,
+    loadObject,
+    objectToJS,
+    cloneObject
 } from "project-editor/core/object";
-import { Rect, htmlEncode } from "project-editor/core/util";
+import { ProjectStore } from "project-editor/core/store";
+import { htmlEncode } from "project-editor/core/util";
 import * as output from "project-editor/core/output";
 
 import { GeometryProperties, ObjectGeometryChange } from "project-editor/components/CanvasEditor";
@@ -399,7 +395,7 @@ export class Widget extends EezObject {
 
         selectWidgetJsObject.widgets._array = [thisWidgetJsObject];
 
-        replaceObject(this, loadObject(undefined, selectWidgetJsObject, Widget));
+        ProjectStore.replaceObject(this, loadObject(undefined, selectWidgetJsObject, Widget));
     }
 
     static putInContainer(widgets: Widget[]) {
@@ -433,7 +429,10 @@ export class Widget extends EezObject {
             containerWidgetJsObject.widgets._array = [widgetJsObject];
         }
 
-        replaceObjects(widgets, loadObject(undefined, containerWidgetJsObject, Widget));
+        ProjectStore.replaceObjects(
+            widgets,
+            loadObject(undefined, containerWidgetJsObject, Widget)
+        );
     }
 
     async createLayout() {
@@ -463,7 +462,7 @@ export class Widget extends EezObject {
             thisWidgetJS.x = 0;
             thisWidgetJS.y = 0;
 
-            addObject(
+            ProjectStore.addObject(
                 layouts,
                 loadObject(
                     undefined,
@@ -495,7 +494,7 @@ export class Widget extends EezObject {
                 Widget
             );
 
-            replaceObject(this, newWidget);
+            ProjectStore.replaceObject(this, newWidget);
         } catch (error) {
             console.error(error);
         }
@@ -538,7 +537,7 @@ export class Widget extends EezObject {
                 Widget
             );
 
-            replaceObject(this, newWidget);
+            ProjectStore.replaceObject(this, newWidget);
         } catch (error) {
             console.error(error);
         }
@@ -549,7 +548,7 @@ export class Widget extends EezObject {
         if (parent) {
             let selectWidget = parent._parent;
             if (selectWidget instanceof SelectWidget) {
-                replaceObject(selectWidget, cloneObject(undefined, this));
+                ProjectStore.replaceObject(selectWidget, cloneObject(undefined, this));
             }
         }
     }
@@ -574,7 +573,7 @@ export class Widget extends EezObject {
             changedGeometryProperties.height = geometryProperties.height;
         }
 
-        updateObject(this, changedGeometryProperties);
+        ProjectStore.updateObject(this, changedGeometryProperties);
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
@@ -629,7 +628,7 @@ export class ContainerWidget extends Widget {
         let widthBefore = this.width;
         let heightBefore = this.height;
 
-        updateObject(this, changedProperties);
+        ProjectStore.updateObject(this, changedProperties);
 
         for (const childWidget of this.widgets._array) {
             if (!geometryChanges.find(geometryChange => geometryChange.object == childWidget)) {
@@ -739,7 +738,7 @@ export class ListWidget extends Widget {
         changedProperties: GeometryProperties,
         geometryChanges: ObjectGeometryChange[]
     ) {
-        updateObject(this, changedProperties);
+        ProjectStore.updateObject(this, changedProperties);
 
         if (this.itemWidget) {
             if (!geometryChanges.find(geometryChange => geometryChange.object == this.itemWidget)) {
@@ -1136,7 +1135,7 @@ export class SelectWidget extends Widget {
         changedProperties: GeometryProperties,
         geometryChanges: ObjectGeometryChange[]
     ) {
-        updateObject(this, changedProperties);
+        ProjectStore.updateObject(this, changedProperties);
 
         for (const childWidget of this.widgets._array) {
             if (!geometryChanges.find(geometryChange => geometryChange.object == childWidget)) {

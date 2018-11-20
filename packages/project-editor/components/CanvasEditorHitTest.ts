@@ -1,4 +1,4 @@
-import { Point, Rect } from "project-editor/core/util";
+import { Point, Rect } from "eez-studio-shared/geometry";
 
 import { TreeNode } from "project-editor/components/CanvasEditorTreeNode";
 
@@ -27,62 +27,67 @@ export function hitTestSelectionRect(selectionRect: Rect, p: Point, resizable: b
     if (selectionRect) {
         if (resizable) {
             if (
-                Math.abs(selectionRect.x - p.x) <= RESIZE_HANDLE_SIZE / 2 &&
-                Math.abs(selectionRect.y - p.y) <= RESIZE_HANDLE_SIZE / 2
+                Math.abs(selectionRect.left - p.x) <= RESIZE_HANDLE_SIZE / 2 &&
+                Math.abs(selectionRect.top - p.y) <= RESIZE_HANDLE_SIZE / 2
             ) {
                 return HitRegion.NW;
             }
             if (
-                Math.abs(selectionRect.x + selectionRect.width / 2 - p.x) <=
+                Math.abs(selectionRect.left + selectionRect.width / 2 - p.x) <=
                     RESIZE_HANDLE_SIZE / 2 &&
-                Math.abs(selectionRect.y - p.y) <= RESIZE_HANDLE_SIZE / 2
+                Math.abs(selectionRect.top - p.y) <= RESIZE_HANDLE_SIZE / 2
             ) {
                 return HitRegion.N;
             }
             if (
-                Math.abs(selectionRect.x + selectionRect.width - p.x) <= RESIZE_HANDLE_SIZE / 2 &&
-                Math.abs(selectionRect.y - p.y) <= RESIZE_HANDLE_SIZE / 2
+                Math.abs(selectionRect.left + selectionRect.width - p.x) <=
+                    RESIZE_HANDLE_SIZE / 2 &&
+                Math.abs(selectionRect.top - p.y) <= RESIZE_HANDLE_SIZE / 2
             ) {
                 return HitRegion.NE;
             }
             if (
-                Math.abs(selectionRect.x - p.x) <= RESIZE_HANDLE_SIZE / 2 &&
-                Math.abs(selectionRect.y + selectionRect.height / 2 - p.y) <= RESIZE_HANDLE_SIZE / 2
+                Math.abs(selectionRect.left - p.x) <= RESIZE_HANDLE_SIZE / 2 &&
+                Math.abs(selectionRect.top + selectionRect.height / 2 - p.y) <=
+                    RESIZE_HANDLE_SIZE / 2
             ) {
                 return HitRegion.W;
             }
             if (
-                Math.abs(selectionRect.x + selectionRect.width - p.x) <= RESIZE_HANDLE_SIZE / 2 &&
-                Math.abs(selectionRect.y + selectionRect.height / 2 - p.y) <= RESIZE_HANDLE_SIZE / 2
+                Math.abs(selectionRect.left + selectionRect.width - p.x) <=
+                    RESIZE_HANDLE_SIZE / 2 &&
+                Math.abs(selectionRect.top + selectionRect.height / 2 - p.y) <=
+                    RESIZE_HANDLE_SIZE / 2
             ) {
                 return HitRegion.E;
             }
             if (
-                Math.abs(selectionRect.x - p.x) <= RESIZE_HANDLE_SIZE / 2 &&
-                Math.abs(selectionRect.y + selectionRect.height - p.y) <= RESIZE_HANDLE_SIZE / 2
+                Math.abs(selectionRect.left - p.x) <= RESIZE_HANDLE_SIZE / 2 &&
+                Math.abs(selectionRect.top + selectionRect.height - p.y) <= RESIZE_HANDLE_SIZE / 2
             ) {
                 return HitRegion.SW;
             }
             if (
-                Math.abs(selectionRect.x + selectionRect.width / 2 - p.x) <=
+                Math.abs(selectionRect.left + selectionRect.width / 2 - p.x) <=
                     RESIZE_HANDLE_SIZE / 2 &&
-                Math.abs(selectionRect.y + selectionRect.height - p.y) <= RESIZE_HANDLE_SIZE / 2
+                Math.abs(selectionRect.top + selectionRect.height - p.y) <= RESIZE_HANDLE_SIZE / 2
             ) {
                 return HitRegion.S;
             }
             if (
-                Math.abs(selectionRect.x + selectionRect.width - p.x) <= RESIZE_HANDLE_SIZE / 2 &&
-                Math.abs(selectionRect.y + selectionRect.height - p.y) <= RESIZE_HANDLE_SIZE / 2
+                Math.abs(selectionRect.left + selectionRect.width - p.x) <=
+                    RESIZE_HANDLE_SIZE / 2 &&
+                Math.abs(selectionRect.top + selectionRect.height - p.y) <= RESIZE_HANDLE_SIZE / 2
             ) {
                 return HitRegion.SE;
             }
         }
 
         if (
-            p.x >= selectionRect.x &&
-            p.x < selectionRect.x + selectionRect.width &&
-            p.y >= selectionRect.y &&
-            p.y < selectionRect.y + selectionRect.height
+            p.x >= selectionRect.left &&
+            p.x < selectionRect.left + selectionRect.width &&
+            p.y >= selectionRect.top &&
+            p.y < selectionRect.top + selectionRect.height
         ) {
             return HitRegion.INSIDE;
         }

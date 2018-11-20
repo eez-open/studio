@@ -355,6 +355,10 @@ export function getBoundingClientRectIncludingChildNodes(element: Element) {
     return boundingRectBuilder.getRect()!;
 }
 
+export function formatNumber(value: number, base: number, width: number): string {
+    return ("0".repeat(width) + value.toString(base)).substr(-width).toUpperCase();
+}
+
 export function formatBytes(a: number, b?: number) {
     if (a == 0) {
         return "0 Bytes";

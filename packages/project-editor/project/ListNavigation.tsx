@@ -5,17 +5,16 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
+import { EezObject, NavigationComponentProps, objectToString } from "project-editor/core/object";
 import {
     NavigationStore,
     EditorsStore,
     UIStateStore,
-    objectToString,
     addItem,
     deleteItem,
     canAdd,
     canDelete
 } from "project-editor/core/store";
-import { EezObject, NavigationComponentProps } from "project-editor/core/object";
 
 import { Panel } from "project-editor/components/Panel";
 import { List } from "project-editor/components/List";

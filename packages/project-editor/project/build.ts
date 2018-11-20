@@ -1,22 +1,23 @@
 import { createTransformer } from "mobx-utils";
 
-import { writeTextFile } from "eez-studio-shared/util";
+import { writeTextFile, formatNumber } from "eez-studio-shared/util";
 import { _map } from "eez-studio-shared/algorithm";
 import { underscore } from "eez-studio-shared/string";
 
 import { getExtensionsByCategory, BuildResult } from "project-editor/core/extensions";
-import { formatNumber } from "project-editor/core/util";
 import {
-    ProjectStore,
-    OutputSectionsStore,
-    getChildOfObject,
+    EezObject,
+    PropertyInfo,
+    PropertyType,
     isArray,
     asArray,
     getProperty,
-    check
-} from "project-editor/core/store";
-import { EezObject, PropertyInfo, PropertyType } from "project-editor/core/object";
-import { Message, Section, Type } from "project-editor/core/output";
+    getChildOfObject,
+    checkObject,
+    IMessage
+} from "project-editor/core/object";
+import { ProjectStore, OutputSectionsStore } from "project-editor/core/store";
+import { Section, Type } from "project-editor/core/output";
 
 import { BuildFile } from "project-editor/project/project";
 import { extensionDefinitionBuild } from "project-editor/project/features/extension-definitions/build";
@@ -216,8 +217,8 @@ export async function build(onlyCheck: boolean) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-var checkTransformer: (object: EezObject) => Message[] = createTransformer(
-    (object: EezObject): Message[] => {
+var checkTransformer: (object: EezObject) => IMessage[] = createTransformer(
+    (object: EezObject): IMessage[] => {
         const children = object._classInfo.properties.filter(
             propertyInfo =>
                 (propertyInfo.type === PropertyType.Array ||
@@ -226,16 +227,16 @@ var checkTransformer: (object: EezObject) => Message[] = createTransformer(
         );
 
         const childrenMessages = children.reduce(
-            (result: Message[], propertyInfo: PropertyInfo) => {
+            (result: IMessage[], propertyInfo: PropertyInfo) => {
                 const childObject = getProperty(object, propertyInfo.name);
 
-                let childrenMessages: Message[];
+                let childrenMessages: IMessage[];
                 if (isArray(childObject)) {
-                    childrenMessages = asArray(childObject).reduce<Message[]>(
-                        (result: Message[], object: EezObject) => {
+                    childrenMessages = asArray(childObject).reduce<IMessage[]>(
+                        (result: IMessage[], object: EezObject) => {
                             return result.concat(checkTransformer(object));
                         },
-                        [] as Message[]
+                        [] as IMessage[]
                     );
                 } else {
                     childrenMessages = checkTransformer(childObject);
@@ -246,7 +247,7 @@ var checkTransformer: (object: EezObject) => Message[] = createTransformer(
             []
         );
 
-        return check(object).concat(childrenMessages);
+        return checkObject(object).concat(childrenMessages);
     }
 );
 

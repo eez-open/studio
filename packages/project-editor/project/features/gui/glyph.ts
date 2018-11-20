@@ -1,12 +1,20 @@
 import { observable, computed } from "mobx";
 
+import { formatNumber } from "eez-studio-shared/util";
+import { Rect } from "eez-studio-shared/geometry";
+
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
-import { loadObject, objectToJS } from "project-editor/core/store";
-import { ClassInfo, EezObject, registerClass, PropertyType } from "project-editor/core/object";
-import * as util from "project-editor/core/util";
+import {
+    ClassInfo,
+    EezObject,
+    registerClass,
+    PropertyType,
+    loadObject,
+    objectToJS
+} from "project-editor/core/object";
 
 import { GlyphSelectFieldType } from "project-editor/project/features/gui/FontEditor";
 import { Font } from "project-editor/project/features/gui/font";
@@ -16,7 +24,7 @@ let path = EEZStudio.electron.remote.require("path");
 ////////////////////////////////////////////////////////////////////////////////
 
 function formatEncoding(encoding: number) {
-    return `${util.formatNumber(encoding, 10, 4)}/0x${util.formatNumber(
+    return `${formatNumber(encoding, 10, 4)}/0x${formatNumber(
         encoding,
         16,
         4
@@ -242,7 +250,7 @@ const GLYPH_EDITOR_PADDING_BOTTOM = 100;
 export interface EditorImageHitTestResult {
     x: number;
     y: number;
-    rect: util.Rect;
+    rect: Rect;
 }
 
 export class Glyph extends EezObject {
@@ -791,8 +799,8 @@ export class Glyph extends EezObject {
             x: xResult,
             y: yResult,
             rect: {
-                x: xOffset + xResult * GLYPH_EDITOR_PIXEL_SIZE,
-                y: yOffset + yResult * GLYPH_EDITOR_PIXEL_SIZE,
+                left: xOffset + xResult * GLYPH_EDITOR_PIXEL_SIZE,
+                top: yOffset + yResult * GLYPH_EDITOR_PIXEL_SIZE,
                 width: GLYPH_EDITOR_PIXEL_SIZE,
                 height: GLYPH_EDITOR_PIXEL_SIZE
             }

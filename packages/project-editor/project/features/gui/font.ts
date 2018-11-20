@@ -13,9 +13,10 @@ import {
     EezObject,
     registerClass,
     EezArrayObject,
-    PropertyType
+    PropertyType,
+    getProperty
 } from "project-editor/core/object";
-import { getProperty, ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/core/store";
 
 import { ListNavigationWithContent } from "project-editor/project/ListNavigation";
 

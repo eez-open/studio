@@ -4,9 +4,10 @@ import { bind } from "bind-decorator";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { Point, Rect, boundingRect } from "project-editor/core/util";
-import { updateObject, UndoManager, objectToString } from "project-editor/core/store";
-import { EezObject } from "project-editor/core/object";
+import { Point, Rect, boundingRect } from "eez-studio-shared/geometry";
+
+import { EezObject, objectToString } from "project-editor/core/object";
+import { ProjectStore, UndoManager } from "project-editor/core/store";
 import { DisplayItem, DisplayItemSelection } from "project-editor/core/objectAdapter";
 
 import { findSnapLines, drawSnapLines } from "project-editor/components/CanvasEditorSnapLines";
@@ -198,8 +199,8 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
             y: this.canvas.height
         });
         return {
-            x: topLeft.x,
-            y: topLeft.y,
+            left: topLeft.x,
+            top: topLeft.y,
             width: bottomRight.x - topLeft.x,
             height: bottomRight.y - topLeft.y
         };
@@ -220,29 +221,29 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
     }
 
     getDocumentRect() {
-        let x1: number = this.nonTranslatedDeviceRect.x;
-        let y1: number = this.nonTranslatedDeviceRect.y;
-        let x2: number = this.nonTranslatedDeviceRect.x + this.nonTranslatedDeviceRect.width;
-        let y2: number = this.nonTranslatedDeviceRect.y + this.nonTranslatedDeviceRect.height;
+        let x1: number = this.nonTranslatedDeviceRect.left;
+        let y1: number = this.nonTranslatedDeviceRect.top;
+        let x2: number = this.nonTranslatedDeviceRect.left + this.nonTranslatedDeviceRect.width;
+        let y2: number = this.nonTranslatedDeviceRect.top + this.nonTranslatedDeviceRect.height;
 
         traverseTree(this.tree, node => {
             if (node.rect) {
-                let x = node.rect.x - BOUNDING_RECT_MARGIN;
+                let x = node.rect.left - BOUNDING_RECT_MARGIN;
                 if (x < x1) {
                     x1 = x;
                 }
 
-                x = node.rect.x + node.rect.width + BOUNDING_RECT_MARGIN;
+                x = node.rect.left + node.rect.width + BOUNDING_RECT_MARGIN;
                 if (x > x2) {
                     x2 = x;
                 }
 
-                let y = node.rect.y - BOUNDING_RECT_MARGIN;
+                let y = node.rect.top - BOUNDING_RECT_MARGIN;
                 if (y < y1) {
                     y1 = y;
                 }
 
-                y = node.rect.y + node.rect.height + BOUNDING_RECT_MARGIN;
+                y = node.rect.top + node.rect.height + BOUNDING_RECT_MARGIN;
                 if (y > y2) {
                     y2 = y;
                 }
@@ -250,8 +251,8 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
         });
 
         return {
-            x: x1,
-            y: y1,
+            left: x1,
+            top: y1,
             width: x2 - x1,
             height: y2 - y1
         };
@@ -342,13 +343,13 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
         ctx.lineWidth = CENTER_LINES_WIDTH / this.scale;
         // draw vertical line
         ctx.beginPath();
-        ctx.moveTo(0, this.deviceRect.y);
-        ctx.lineTo(0, this.deviceRect.y + this.deviceRect.height);
+        ctx.moveTo(0, this.deviceRect.top);
+        ctx.lineTo(0, this.deviceRect.top + this.deviceRect.height);
         ctx.stroke();
         // draw horizontal line
         ctx.beginPath();
-        ctx.moveTo(this.deviceRect.x, 0);
-        ctx.lineTo(this.deviceRect.x + this.deviceRect.width, 0);
+        ctx.moveTo(this.deviceRect.left, 0);
+        ctx.lineTo(this.deviceRect.left + this.deviceRect.width, 0);
         ctx.stroke();
 
         // draw nodes
@@ -377,10 +378,13 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
         ) {
             drawSnapLines(
                 ctx,
-                this.deviceRect,
                 {
-                    x: this.deviceRect.x + this.deviceRect.width,
-                    y: this.deviceRect.y + this.deviceRect.height
+                    x: this.deviceRect.left,
+                    y: this.deviceRect.top
+                },
+                {
+                    x: this.deviceRect.left + this.deviceRect.width,
+                    y: this.deviceRect.top + this.deviceRect.height
                 },
                 this.mouseDrag.snapLines,
                 this.selectionRect,
@@ -394,7 +398,7 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
             if (r) {
                 ctx.beginPath();
 
-                ctx.rect(r.x, r.y, r.width, r.height);
+                ctx.rect(r.left, r.top, r.width, r.height);
 
                 ctx.fillStyle = "rgba(51, 122, 183, 0.5)";
                 ctx.fill();
@@ -686,8 +690,8 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
                         };
                     });
                     this.mouseDrag.savedSelectionRect = Object.assign({}, this.selectionRect);
-                    this.mouseDrag.offset.x = this.selectionRect.x - this.mouseDrag.offset.x;
-                    this.mouseDrag.offset.y = this.selectionRect.y - this.mouseDrag.offset.y;
+                    this.mouseDrag.offset.x = this.selectionRect.left - this.mouseDrag.offset.x;
+                    this.mouseDrag.offset.y = this.selectionRect.top - this.mouseDrag.offset.y;
                     this.mouseDrag.snapLines = findSnapLines(
                         this.tree,
                         nodes,
@@ -702,8 +706,8 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
                 this.mouseDrag.move(rect, p);
 
                 if (
-                    rect.x != this.selectionRect.x ||
-                    rect.y != this.selectionRect.y ||
+                    rect.left != this.selectionRect.left ||
+                    rect.top != this.selectionRect.top ||
                     rect.width != this.selectionRect.width ||
                     rect.height != this.selectionRect.height
                 ) {
@@ -715,20 +719,21 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
                                 x:
                                     mouseDragNode.objectStartingPosition.x +
                                     Math.round(
-                                        rect.x +
-                                            ((mouseDragNode.nodeRect.x - savedSelectionRect.x) *
+                                        rect.left +
+                                            ((mouseDragNode.nodeRect.left -
+                                                savedSelectionRect.left) *
                                                 rect.width) /
                                                 savedSelectionRect.width -
-                                            mouseDragNode.nodeRect.x
+                                            mouseDragNode.nodeRect.left
                                     ),
                                 y:
                                     mouseDragNode.objectStartingPosition.y +
                                     Math.round(
-                                        rect.y +
-                                            ((mouseDragNode.nodeRect.y - savedSelectionRect.y) *
+                                        rect.top +
+                                            ((mouseDragNode.nodeRect.top - savedSelectionRect.top) *
                                                 rect.height) /
                                                 savedSelectionRect.height -
-                                            mouseDragNode.nodeRect.y
+                                            mouseDragNode.nodeRect.top
                                     )
                             };
 
@@ -785,7 +790,7 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
                     h = p1.y - p2.y;
                 }
 
-                let r = { x: x, y: y, width: w, height: h };
+                let r = { left: x, top: y, width: w, height: h };
 
                 this.setRubberBandSelection({
                     fromPoint: this.rubberBandSelection.fromPoint,
@@ -913,30 +918,30 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
 
                     if (event.keyCode == 37) {
                         // left
-                        rect.x--;
+                        rect.left--;
                     } else if (event.keyCode == 39) {
                         // right
-                        rect.x++;
+                        rect.left++;
                     } else if (event.keyCode == 38) {
                         // up
-                        rect.y--;
+                        rect.top--;
                     } else if (event.keyCode == 40) {
                         // down
-                        rect.y++;
+                        rect.top++;
                     } else if (event.keyCode == 36) {
                         // home
-                        rect.x = 0;
-                        rect.y = 0;
+                        rect.left = 0;
+                        rect.top = 0;
                     } else if (event.keyCode == 35) {
                         // end
                     }
 
-                    let dx = rect.x - this.selectionRect.x;
-                    let dy = rect.y - this.selectionRect.y;
+                    let dx = rect.left - this.selectionRect.left;
+                    let dy = rect.top - this.selectionRect.top;
                     if (dx || dy) {
                         for (let i = 0; i < nodes.length; i++) {
                             let nodeObj = nodes[i].item.object as any;
-                            updateObject(nodeObj, {
+                            ProjectStore.updateObject(nodeObj, {
                                 x: nodeObj.x + dx,
                                 y: nodeObj.y + dy
                             });
@@ -1000,7 +1005,7 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
     abstract createTree(): TreeNode;
     applyGeometryChanges(geometryChanges: ObjectGeometryChange[]) {
         geometryChanges.forEach(geometryChange =>
-            updateObject(geometryChange.object, geometryChange.changedProperties)
+            ProjectStore.updateObject(geometryChange.object, geometryChange.changedProperties)
         );
     }
     abstract getItemsInsideRect(r: Rect): DisplayItem[];

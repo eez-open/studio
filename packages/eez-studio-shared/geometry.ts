@@ -72,6 +72,31 @@ export function pointDistance(p1: Point, p2?: Point) {
     return Math.sqrt(pointDistanceSquared(p1, p2));
 }
 
+export function pointDotProduct(p1: Point, p2: Point) {
+    return p1.x * p2.x + p1.y * p2.y;
+}
+
+export function pointAdd(p1: Point, p2: Point) {
+    return {
+        x: p1.x + p2.x,
+        y: p1.y + p2.y
+    };
+}
+
+export function pointSub(p1: Point, p2: Point) {
+    return {
+        x: p1.x - p2.x,
+        y: p1.y - p2.y
+    };
+}
+
+export function pointMul(p: Point, f: number) {
+    return {
+        x: p.x * f,
+        y: p.y * f
+    };
+}
+
 export function pointInRect(point: Point, rect: Rect) {
     return (
         point.x >= rect.left &&
@@ -79,6 +104,101 @@ export function pointInRect(point: Point, rect: Rect) {
         point.y >= rect.top &&
         point.y < rect.top + rect.height
     );
+}
+
+export function pointSegmentDistance(p: Point, s: Segment) {
+    // Return minimum distance between line segment vw and point p
+    // http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+
+    let l2 = segmentLengthSquared(s); // i.e. |s|^2 -  avoid a sqrt
+    if (l2 == 0.0) {
+        // s.p1 == s.p2 case
+        return pointDistance(p, s.p1);
+    }
+
+    // Consider the line extending the segment, parameterized as s.p1 + t (s.p2 - s.p1).
+    // We find projection of point p onto the line.
+    // It falls where t = [(p-s.p1) . (s.p2-s.p1)] / |s|^2
+    // We clamp t from [0,1] to handle points outside the segment s.
+    let t = Math.max(0, Math.min(1, pointDotProduct(pointSub(p, s.p1), pointSub(s.p2, s.p1)) / l2));
+    let projection = pointAdd(s.p1, pointMul(pointSub(s.p2, s.p1), t)); // Projection falls on the segment
+    return pointDistance(p, projection);
+}
+
+export function rectCenter(rect: Rect): Point {
+    return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+    };
+}
+
+export function rectOverlap(r1: Rect, r2: Rect) {
+    return (
+        r1.left < r2.left + r2.width &&
+        r1.left + r1.width > r2.left &&
+        r1.top < r2.top + r2.height &&
+        r1.top + r1.height > r2.top
+    );
+}
+
+export function rectContains(r1: Rect, r2: Rect) {
+    return (
+        r1.left <= r2.left &&
+        r1.left + r1.width >= r2.left + r2.width &&
+        r1.top <= r2.top &&
+        r1.top + r1.height >= r2.top + r2.height
+    );
+}
+
+export function boundingRect(r1?: Rect, r2?: Rect): Rect | undefined {
+    if (!r1) {
+        return r2 && Object.assign({}, r2);
+    }
+
+    if (!r2) {
+        return Object.assign({}, r1);
+    }
+
+    let x = Math.min(r1.left, r2.left);
+    let y = Math.min(r1.top, r2.top);
+
+    return {
+        left: x,
+        top: y,
+        width: Math.max(r1.left + r1.width, r2.left + r2.width) - x,
+        height: Math.max(r1.top + r1.height, r2.top + r2.height) - y
+    };
+}
+
+export function rectSegmentIntersection(rect: Rect, s: Segment): Point | undefined {
+    let topLeft = { x: rect.left, y: rect.top };
+    let topRight = { x: rect.left + rect.width, y: rect.top };
+
+    let p = segmentSegmentIntersecttion({ p1: topLeft, p2: topRight }, s);
+    if (p) {
+        return p;
+    }
+
+    let bottomLeft = { x: rect.left, y: rect.top + rect.height };
+
+    p = segmentSegmentIntersecttion({ p1: topLeft, p2: bottomLeft }, s);
+    if (p) {
+        return p;
+    }
+
+    let bottomRight = { x: rect.left + rect.width, y: rect.top + rect.height };
+
+    p = segmentSegmentIntersecttion({ p1: bottomLeft, p2: bottomRight }, s);
+    if (p) {
+        return p;
+    }
+
+    p = segmentSegmentIntersecttion({ p1: topRight, p2: bottomRight }, s);
+    if (p) {
+        return p;
+    }
+
+    return undefined;
 }
 
 export function isRectInsideRect(r1: Rect, r2: Rect) {
@@ -403,4 +523,42 @@ export class Transform implements ITransform {
             y: this.translate.y + translate.y
         };
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface Segment {
+    p1: Point;
+    p2: Point;
+}
+
+export function segmentSegmentIntersecttion(s1: Segment, s2: Segment): Point | undefined {
+    // http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+    let s1_x = s1.p2.x - s1.p1.x;
+    let s1_y = s1.p2.y - s1.p1.y;
+    let s2_x = s2.p2.x - s2.p1.x;
+    let s2_y = s2.p2.y - s2.p1.y;
+
+    let s =
+        (-s1_y * (s1.p1.x - s2.p1.x) + s1_x * (s1.p1.y - s2.p1.y)) / (-s2_x * s1_y + s1_x * s2_y);
+    let t =
+        (s2_x * (s1.p1.y - s2.p1.y) - s2_y * (s1.p1.x - s2.p1.x)) / (-s2_x * s1_y + s1_x * s2_y);
+
+    if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+        // Collision detected
+        return {
+            x: s1.p1.x + t * s1_x,
+            y: s1.p1.y + t * s1_y
+        };
+    }
+
+    return undefined;
+}
+
+export function segmentLengthSquared(s: Segment) {
+    return pointDistanceSquared(s.p1, s.p2);
+}
+
+export function segmentLength(s: Segment) {
+    return pointDistance(s.p1, s.p2);
 }

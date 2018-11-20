@@ -1,5 +1,6 @@
+import { Point, Rect } from "eez-studio-shared/geometry";
+
 import { EezObject } from "project-editor/core/object";
-import { Point, Rect } from "project-editor/core/util";
 
 import {
     SnapLines,
@@ -26,8 +27,8 @@ interface MouseDragNode {
 export class MouseDrag {
     nodes: MouseDragNode[];
     savedSelectionRect: Rect = {
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         width: 0,
         height: 0
     };
@@ -49,7 +50,7 @@ export class MouseDrag {
             }
         }
 
-        rect.x = x;
+        rect.left = x;
     }
 
     moveY(rect: Rect, p: Point) {
@@ -66,7 +67,7 @@ export class MouseDrag {
             }
         }
 
-        rect.y = y;
+        rect.top = y;
     }
 
     snapX(x: number) {
@@ -89,30 +90,30 @@ export class MouseDrag {
 
     resizeWest(rect: Rect, p: Point) {
         let x = this.snapX(p.x + this.offset.x);
-        let width = this.savedSelectionRect.width + this.savedSelectionRect.x - x;
+        let width = this.savedSelectionRect.width + this.savedSelectionRect.left - x;
         if (width < 0) {
-            x = this.savedSelectionRect.x + this.savedSelectionRect.width;
+            x = this.savedSelectionRect.left + this.savedSelectionRect.width;
             width = 0;
         }
-        rect.x = x;
+        rect.left = x;
         rect.width = width;
     }
 
     resizeNorth(rect: Rect, p: Point) {
         let y = this.snapY(p.y + this.offset.y);
-        let height = this.savedSelectionRect.height + this.savedSelectionRect.y - y;
+        let height = this.savedSelectionRect.height + this.savedSelectionRect.top - y;
         if (height < 0) {
-            y = this.savedSelectionRect.y + this.savedSelectionRect.height;
+            y = this.savedSelectionRect.top + this.savedSelectionRect.height;
             height = 0;
         }
-        rect.y = y;
+        rect.top = y;
         rect.height = height;
     }
 
     resizeEast(rect: Rect, p: Point) {
         let width =
             this.snapX(p.x + this.offset.x + this.savedSelectionRect.width) -
-            this.savedSelectionRect.x;
+            this.savedSelectionRect.left;
         if (width < 0) {
             width = 0;
         }
@@ -122,7 +123,7 @@ export class MouseDrag {
     resizeSouth(rect: Rect, p: Point) {
         let height =
             this.snapY(p.y + this.offset.y + this.savedSelectionRect.height) -
-            this.savedSelectionRect.y;
+            this.savedSelectionRect.top;
         if (height < 0) {
             height = 0;
         }

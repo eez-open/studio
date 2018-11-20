@@ -6,15 +6,8 @@ import { observer } from "mobx-react";
 import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 
-import { EezArrayObject } from "project-editor/core/object";
-import {
-    ProjectStore,
-    UndoManager,
-    loadObject,
-    addObject,
-    deleteObject,
-    getProperty
-} from "project-editor/core/store";
+import { EezArrayObject, getProperty, loadObject } from "project-editor/core/object";
+import { ProjectStore, UndoManager } from "project-editor/core/store";
 
 import { Loading } from "project-editor/components/Loading";
 
@@ -556,7 +549,7 @@ export class ImportScpiDocDialog extends React.Component<
                 return existingSubsystem;
             }
 
-            return addObject(
+            return ProjectStore.addObject(
                 existingSubsystems,
                 loadObject(
                     existingSubsystems,
@@ -575,7 +568,7 @@ export class ImportScpiDocDialog extends React.Component<
         this.selectedChanges.added.forEach(commandDefinition => {
             let subsystem = getOrAddSubsystem(commandDefinition.subsystem);
 
-            addObject(
+            ProjectStore.addObject(
                 getProperty(subsystem, "commands"),
                 loadObject(
                     getProperty(subsystem, "commands"),
@@ -594,7 +587,7 @@ export class ImportScpiDocDialog extends React.Component<
                 commandDefinition.command.name
             );
             if (result) {
-                deleteObject(result.command);
+                ProjectStore.deleteObject(result.command as ScpiCommand);
             }
         });
 
@@ -605,13 +598,13 @@ export class ImportScpiDocDialog extends React.Component<
             );
             if (result) {
                 let command = result.command as ScpiCommand;
-                deleteObject(command);
+                ProjectStore.deleteObject(command);
 
                 command.helpLink = commandDefinition.command.helpLink;
 
                 let subsystem = getOrAddSubsystem(commandDefinition.toSubsystem);
 
-                addObject(getProperty(subsystem, "commands"), command);
+                ProjectStore.addObject(getProperty(subsystem, "commands"), command);
             }
         });
 
