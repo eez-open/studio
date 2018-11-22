@@ -317,7 +317,7 @@ class Measurement {
 
             if (this.lastTask) {
                 if (!this.worker) {
-                    this.worker = new Worker("../eez-studio-shared/ui/chart/measurement-worker.js");
+                    this.worker = new Worker("../eez-studio-ui/chart/measurement-worker.js");
 
                     this.workerReadyReceived = false;
 
