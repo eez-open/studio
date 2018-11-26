@@ -1,6 +1,6 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
 
-import { EezObject } from "project-editor/core/object";
+import { EezObject } from "eez-studio-shared/model/object";
 
 import {
     SnapLines,

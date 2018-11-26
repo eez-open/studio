@@ -10,10 +10,11 @@ import {
     EezObject,
     PropertyType,
     asArray
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
+import * as output from "eez-studio-shared/model/output";
+
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
-import * as output from "project-editor/core/output";
 
 import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
 

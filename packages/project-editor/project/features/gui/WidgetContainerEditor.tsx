@@ -3,10 +3,10 @@ import { observer } from "mobx-react";
 
 import { Rect, rectContains } from "eez-studio-shared/geometry";
 
-import { isObjectInstanceOf, getProperty } from "project-editor/core/object";
-import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
-import { DisplayItem, reduceUntilCommonParent } from "project-editor/core/objectAdapter";
-import { UIStateStore, ProjectStore } from "project-editor/core/store";
+import { isObjectInstanceOf, getProperty } from "eez-studio-shared/model/object";
+import { getEezStudioDataFromDragEvent } from "eez-studio-shared/model/clipboard";
+import { DisplayItem, reduceUntilCommonParent } from "eez-studio-shared/model/objectAdapter";
+import { UIStateStore, DocumentStore } from "eez-studio-shared/model/store";
 
 import { TreeNode } from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
 import {
@@ -166,7 +166,7 @@ export class WidgetContainerEditor extends CanvasEditor {
 
             dropItemWidgetObj.x = this.dropItem.rect.left;
             dropItemWidgetObj.y = this.dropItem.rect.top;
-            ProjectStore.addObject(
+            DocumentStore.addObject(
                 getProperty(this.props.displaySelection.object, "widgets"),
                 dropItemWidgetObj
             );

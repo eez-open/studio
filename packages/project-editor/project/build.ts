@@ -15,9 +15,11 @@ import {
     getChildOfObject,
     checkObject,
     IMessage
-} from "project-editor/core/object";
-import { ProjectStore, OutputSectionsStore } from "project-editor/core/store";
-import { Section, Type } from "project-editor/core/output";
+} from "eez-studio-shared/model/object";
+import { OutputSectionsStore } from "eez-studio-shared/model/store";
+import { Section, Type } from "eez-studio-shared/model/output";
+
+import { ProjectStore } from "project-editor/core/store";
 
 import { BuildFile } from "project-editor/project/project";
 import { extensionDefinitionBuild } from "project-editor/project/features/extension-definitions/build";

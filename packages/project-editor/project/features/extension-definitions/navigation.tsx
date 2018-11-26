@@ -2,13 +2,13 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 
-import { NavigationStore, UIStateStore } from "project-editor/core/store";
-import { NavigationComponent } from "project-editor/core/object";
+import { NavigationStore, UIStateStore } from "eez-studio-shared/model/store";
+import { NavigationComponent } from "eez-studio-shared/model/object";
 
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { ListNavigation } from "project-editor/project/ui/ListNavigation";
-import { PropertyGrid } from "project-editor/components/PropertyGrid";
+import { PropertyGrid } from "eez-studio-shared/model/components/PropertyGrid";
 
 @observer
 export class ExtensionDefinitionsNavigation extends NavigationComponent {

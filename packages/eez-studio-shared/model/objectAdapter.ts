@@ -13,23 +13,22 @@ import {
     isSameInstanceTypeAs,
     isAncestor,
     reduceUntilCommonParent as reduceObjectsUntilCommonParent,
-    IEditorState
-} from "project-editor/core/object";
+    IEditorState,
+    getRootObject,
+    getObjectFromObjectId
+} from "eez-studio-shared/model/object";
+import { objectsToClipboardData } from "eez-studio-shared/model/clipboard";
 import {
-    ProjectStore,
     canCut,
     canPaste,
     canDelete,
-    extendContextMenu
-} from "project-editor/core/store";
-import { objectsToClipboardData } from "project-editor/core/clipboard";
-import {
+    extendContextMenu,
     cutItem,
     copyItem,
     pasteItem,
     deleteItems,
     showContextMenu as showSingleItemContextMenu
-} from "project-editor/core/store";
+} from "eez-studio-shared/model/store";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -223,9 +222,11 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
 
     @action
     selectObjectIds(objectIds: string[]) {
+        const rootObject = getRootObject(this.object);
+
         const objects: EezObject[] = [];
         for (const objectId of objectIds) {
-            const object = ProjectStore.getObjectFromObjectId(objectId);
+            const object = getObjectFromObjectId(rootObject, objectId);
             if (object) {
                 objects.push(object);
             }

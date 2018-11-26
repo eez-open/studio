@@ -4,7 +4,7 @@ import React from "react";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { UIStateStore } from "project-editor/core/store";
+import { UIStateStore } from "eez-studio-shared/model/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

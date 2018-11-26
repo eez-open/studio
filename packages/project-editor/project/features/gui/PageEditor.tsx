@@ -6,11 +6,11 @@ import { bind } from "bind-decorator";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { NavigationStore } from "project-editor/core/store";
-import { EditorComponent } from "project-editor/core/object";
+import { EditorComponent } from "eez-studio-shared/model/object";
+import { NavigationStore } from "eez-studio-shared/model/store";
 
 import { Panel } from "project-editor/components/Panel";
-import { Tree } from "project-editor/components/Tree";
+import { Tree } from "eez-studio-shared/model/components/Tree";
 
 import { Page, PageTabState } from "project-editor/project/features/gui/page";
 import { WidgetPalette } from "project-editor/project/features/gui/WidgetPalette";

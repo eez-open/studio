@@ -11,13 +11,13 @@ import {
     PropertyType,
     isSubclassOf,
     IEditorState
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
 import {
     TreeObjectAdapter,
     DisplayItem,
     DisplayItemChildrenArray,
     getDisplayItemFromObjectId
-} from "project-editor/core/objectAdapter";
+} from "eez-studio-shared/model/objectAdapter";
 
 import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
 

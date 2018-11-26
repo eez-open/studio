@@ -7,8 +7,10 @@ import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 
-import { EezArrayObject, getProperty, loadObject } from "project-editor/core/object";
-import { ProjectStore, UndoManager } from "project-editor/core/store";
+import { EezArrayObject, getProperty, loadObject } from "eez-studio-shared/model/object";
+import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
+
+import { ProjectStore } from "project-editor/core/store";
 
 import { Scpi, ScpiCommand, ScpiSubsystem } from "project-editor/project/features/scpi/scpi";
 
@@ -548,7 +550,7 @@ export class ImportScpiDocDialog extends React.Component<
                 return existingSubsystem;
             }
 
-            return ProjectStore.addObject(
+            return DocumentStore.addObject(
                 existingSubsystems,
                 loadObject(
                     existingSubsystems,
@@ -567,7 +569,7 @@ export class ImportScpiDocDialog extends React.Component<
         this.selectedChanges.added.forEach(commandDefinition => {
             let subsystem = getOrAddSubsystem(commandDefinition.subsystem);
 
-            ProjectStore.addObject(
+            DocumentStore.addObject(
                 getProperty(subsystem, "commands"),
                 loadObject(
                     getProperty(subsystem, "commands"),
@@ -586,7 +588,7 @@ export class ImportScpiDocDialog extends React.Component<
                 commandDefinition.command.name
             );
             if (result) {
-                ProjectStore.deleteObject(result.command as ScpiCommand);
+                DocumentStore.deleteObject(result.command as ScpiCommand);
             }
         });
 
@@ -597,13 +599,13 @@ export class ImportScpiDocDialog extends React.Component<
             );
             if (result) {
                 let command = result.command as ScpiCommand;
-                ProjectStore.deleteObject(command);
+                DocumentStore.deleteObject(command);
 
                 command.helpLink = commandDefinition.command.helpLink;
 
                 let subsystem = getOrAddSubsystem(commandDefinition.toSubsystem);
 
-                ProjectStore.addObject(getProperty(subsystem, "commands"), command);
+                DocumentStore.addObject(getProperty(subsystem, "commands"), command);
             }
         });
 

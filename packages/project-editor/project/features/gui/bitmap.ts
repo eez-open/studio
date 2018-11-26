@@ -5,7 +5,7 @@ import { validators } from "eez-studio-shared/model/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { ProjectStore } from "project-editor/core/store";
-import { ClassInfo, EezObject, registerClass, PropertyType } from "project-editor/core/object";
+import { ClassInfo, EezObject, registerClass, PropertyType } from "eez-studio-shared/model/object";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 

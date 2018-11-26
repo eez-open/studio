@@ -4,9 +4,9 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { loadObject } from "project-editor/core/object";
-import { objectToClipboardData, setClipboardData } from "project-editor/core/clipboard";
-import { DragAndDropManager } from "project-editor/core/dd";
+import { loadObject } from "eez-studio-shared/model/object";
+import { objectToClipboardData, setClipboardData } from "eez-studio-shared/model/clipboard";
+import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
 import { getPages } from "project-editor/project/features/gui/gui";
 import { Page } from "project-editor/project/features/gui/page";

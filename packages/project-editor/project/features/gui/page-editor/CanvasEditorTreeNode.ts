@@ -1,6 +1,6 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
 
-import { DisplayItem } from "project-editor/core/objectAdapter";
+import { DisplayItem } from "eez-studio-shared/model/objectAdapter";
 
 export interface LineConnecting {
     move(target: TreeNode | undefined, p: Point): void;

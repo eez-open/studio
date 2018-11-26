@@ -6,10 +6,12 @@ import {
     buildInstrumentExtension,
     IdfProperties as InstrumentIdfProperties
 } from "instrument/export";
-import { EezArrayObject, getProperty } from "project-editor/core/object";
-import { ProjectStore, OutputSectionsStore } from "project-editor/core/store";
+import { EezArrayObject, getProperty } from "eez-studio-shared/model/object";
+import { OutputSectionsStore } from "eez-studio-shared/model/store";
+import { Section, Type } from "eez-studio-shared/model/output";
+
+import { ProjectStore } from "project-editor/core/store";
 import { getExtensionsByCategory } from "project-editor/core/extensions";
-import { Section, Type } from "project-editor/core/output";
 
 import { Scpi } from "project-editor/project/features/scpi/scpi";
 

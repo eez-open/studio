@@ -2,7 +2,7 @@ import React from "react";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, objectToString, getAncestors } from "project-editor/core/object";
+import { EezObject, objectToString, getAncestors } from "eez-studio-shared/model/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 

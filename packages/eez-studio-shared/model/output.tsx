@@ -11,10 +11,10 @@ import {
     MessageType,
     getChildOfObject,
     humanizePropertyName
-} from "project-editor/core/object";
-import { OutputSectionsStore, UIStateStore } from "project-editor/core/store";
+} from "eez-studio-shared/model/object";
+import { OutputSectionsStore, UIStateStore } from "eez-studio-shared/model/store";
 
-export { MessageType as Type } from "project-editor/core/object";
+export { MessageType as Type } from "eez-studio-shared/model/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 

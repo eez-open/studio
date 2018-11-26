@@ -1,7 +1,7 @@
 import { observable, action } from "mobx";
 
-import { ProjectStore, UndoManager } from "project-editor/core/store";
-import { EezObject } from "project-editor/core/object";
+import { EezObject } from "eez-studio-shared/model/object";
+import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +59,7 @@ class DragAndDropManagerClass {
     deleteDragItem() {
         if (this.dropEffect == "move") {
             if (this.dragObject) {
-                ProjectStore.deleteObject(this.dragObject);
+                DocumentStore.deleteObject(this.dragObject);
             }
             this.dropEffect = undefined;
             this.dragItemDeleted = true;

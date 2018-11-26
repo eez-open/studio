@@ -5,7 +5,11 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { EezObject, NavigationComponentProps, objectToString } from "project-editor/core/object";
+import {
+    EezObject,
+    NavigationComponentProps,
+    objectToString
+} from "eez-studio-shared/model/object";
 import {
     NavigationStore,
     EditorsStore,
@@ -14,10 +18,10 @@ import {
     deleteItem,
     canAdd,
     canDelete
-} from "project-editor/core/store";
+} from "eez-studio-shared/model/store";
+import { List } from "eez-studio-shared/model/components/List";
 
 import { Panel } from "project-editor/components/Panel";
-import { List } from "project-editor/components/List";
 
 ////////////////////////////////////////////////////////////////////////////////
 

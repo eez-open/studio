@@ -6,7 +6,7 @@ import {
     EezArrayObject,
     PropertyType,
     PropertyInfo
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
 
 function getChildId(parent: EezObject | undefined) {
     let id;

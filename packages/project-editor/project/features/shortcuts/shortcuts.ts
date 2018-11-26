@@ -8,7 +8,7 @@ import {
     PropertyType,
     getProperty,
     objectToJS
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { ExtensionDefinition } from "project-editor/project/features/extension-definitions/extension-definitions";

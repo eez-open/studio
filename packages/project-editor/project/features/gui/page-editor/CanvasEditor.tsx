@@ -6,11 +6,14 @@ import styled from "eez-studio-ui/styled-components";
 
 import { Point, Rect, boundingRect } from "eez-studio-shared/geometry";
 
-import { EezObject, objectToString } from "project-editor/core/object";
-import { ProjectStore, UndoManager } from "project-editor/core/store";
-import { DisplayItem, DisplayItemSelection } from "project-editor/core/objectAdapter";
+import { EezObject, objectToString } from "eez-studio-shared/model/object";
+import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
+import { DisplayItem, DisplayItemSelection } from "eez-studio-shared/model/objectAdapter";
 
-import { findSnapLines, drawSnapLines } from "project-editor/project/features/gui/page-editor/CanvasEditorSnapLines";
+import {
+    findSnapLines,
+    drawSnapLines
+} from "project-editor/project/features/gui/page-editor/CanvasEditorSnapLines";
 import {
     CanvasEditorScrollBars,
     ScrollBarsHitRegion
@@ -25,7 +28,10 @@ import {
     HitTestResult,
     hitTestSelectionRect
 } from "project-editor/project/features/gui/page-editor/CanvasEditorHitTest";
-import { MouseDrag, RubberBandSelection } from "project-editor/project/features/gui/page-editor/CanvasEditorMouseDrag";
+import {
+    MouseDrag,
+    RubberBandSelection
+} from "project-editor/project/features/gui/page-editor/CanvasEditorMouseDrag";
 import {
     drawTree,
     drawSelectedDecoration,
@@ -941,7 +947,7 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
                     if (dx || dy) {
                         for (let i = 0; i < nodes.length; i++) {
                             let nodeObj = nodes[i].item.object as any;
-                            ProjectStore.updateObject(nodeObj, {
+                            DocumentStore.updateObject(nodeObj, {
                                 x: nodeObj.x + dx,
                                 y: nodeObj.y + dy
                             });
@@ -1005,7 +1011,7 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
     abstract createTree(): TreeNode;
     applyGeometryChanges(geometryChanges: ObjectGeometryChange[]) {
         geometryChanges.forEach(geometryChange =>
-            ProjectStore.updateObject(geometryChange.object, geometryChange.changedProperties)
+            DocumentStore.updateObject(geometryChange.object, geometryChange.changedProperties)
         );
     }
     abstract getItemsInsideRect(r: Rect): DisplayItem[];

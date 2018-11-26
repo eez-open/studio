@@ -1,7 +1,7 @@
 import { Rect } from "eez-studio-shared/geometry";
 
-import { objectToJS } from "project-editor/core/serialization";
-import { EezObject, EezArrayObject, isObjectInstanceOf } from "project-editor/core/object";
+import { EezObject, EezArrayObject, isObjectInstanceOf } from "eez-studio-shared/model/object";
+import { objectToJS } from "eez-studio-shared/model/serialization";
 
 import * as data from "project-editor/project/features/data/data";
 

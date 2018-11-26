@@ -1,5 +1,5 @@
-import { EezObject, EezClass, PropertyType } from "project-editor/core/object";
-import { Message } from "project-editor/core/output";
+import { EezObject, EezClass, PropertyType } from "eez-studio-shared/model/object";
+import { Message } from "eez-studio-shared/model/output";
 import { Project } from "project-editor/project/project";
 
 let fs = EEZStudio.electron.remote.require("fs");

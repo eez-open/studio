@@ -5,13 +5,13 @@ import {
     isArray,
     asArray,
     getProperty
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
 import {
     DisplayItem,
     DisplayItemChildrenObject,
     DisplayItemChildrenArray,
     DisplayItemChildren
-} from "project-editor/core/objectAdapter";
+} from "eez-studio-shared/model/objectAdapter";
 
 import { TreeNode } from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
 

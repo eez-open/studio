@@ -14,7 +14,7 @@ import {
     PropertyType,
     loadObject,
     objectToJS
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
 
 import { GlyphSelectFieldType } from "project-editor/project/features/gui/FontEditor";
 import { Font } from "project-editor/project/features/gui/font";

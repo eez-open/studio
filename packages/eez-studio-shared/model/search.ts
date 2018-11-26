@@ -10,10 +10,10 @@ import {
     getObjectPath,
     objectToString,
     getObjectPropertyAsObject
-} from "project-editor/core/object";
-import { ProjectStore, OutputSectionsStore } from "project-editor/core/store";
+} from "eez-studio-shared/model/object";
+import { DocumentStore, OutputSectionsStore } from "eez-studio-shared/model/store";
 
-import { Section, Type } from "project-editor/core/output";
+import { Section, Type } from "eez-studio-shared/model/output";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -247,18 +247,18 @@ function startNewSearch(root: EezObject, patternOrObject: string | EezObject) {
 
 export function startSearch(pattern: string) {
     OutputSectionsStore.setActiveSection(Section.SEARCH);
-    startNewSearch(ProjectStore.project, pattern);
+    startNewSearch(DocumentStore.document, pattern);
 }
 
 export function findAllReferences(object: EezObject) {
     OutputSectionsStore.setActiveSection(Section.SEARCH);
-    startNewSearch(ProjectStore.project, object);
+    startNewSearch(DocumentStore.document, object);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function isReferenced(object: EezObject) {
-    let resultsGenerator = searchForReference(ProjectStore.project, object, false);
+    let resultsGenerator = searchForReference(DocumentStore.document, object, false);
 
     while (true) {
         let searchResult = resultsGenerator.next();
@@ -273,7 +273,7 @@ export function isReferenced(object: EezObject) {
 }
 
 export function replaceObjectReference(object: EezObject, newValue: string) {
-    let resultsGenerator = searchForReference(ProjectStore.project, object, false);
+    let resultsGenerator = searchForReference(DocumentStore.document, object, false);
 
     while (true) {
         let searchResult = resultsGenerator.next();
@@ -302,7 +302,7 @@ export function replaceObjectReference(object: EezObject, newValue: string) {
             if (parent) {
                 let key = searchValue._key;
                 if (parent && key && typeof key == "string") {
-                    ProjectStore.updateObject(parent, {
+                    DocumentStore.updateObject(parent, {
                         [key]: value
                     });
                 }

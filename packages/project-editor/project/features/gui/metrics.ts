@@ -1,4 +1,4 @@
-import { getProperty } from "project-editor/core/object";
+import { getProperty } from "eez-studio-shared/model/object";
 import { Project } from "project-editor/project/project";
 
 import { Gui } from "project-editor/project/features/gui/gui";

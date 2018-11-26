@@ -15,7 +15,7 @@ import {
     EezArrayObject,
     PropertyType,
     getProperty
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
 import { ProjectStore } from "project-editor/core/store";
 
 import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";

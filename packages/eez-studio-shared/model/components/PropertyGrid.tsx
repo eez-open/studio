@@ -5,7 +5,6 @@ import { bind } from "bind-decorator";
 
 import { guid } from "eez-studio-shared/util";
 import { humanize } from "eez-studio-shared/string";
-import { Icon } from "eez-studio-ui/icon";
 import styled from "eez-studio-ui/styled-components";
 
 import { validators } from "eez-studio-shared/model/validation";
@@ -24,11 +23,16 @@ import {
     objectToString,
     getInheritedValue,
     getPropertyAsString
-} from "project-editor/core/object";
-import { UndoManager, ProjectStore } from "project-editor/core/store";
-import { replaceObjectReference } from "project-editor/core/search";
+} from "eez-studio-shared/model/object";
+import {
+    UndoManager,
+    DocumentStore,
+    UIElementsFactory,
+    IMenuItem
+} from "eez-studio-shared/model/store";
+import { replaceObjectReference } from "eez-studio-shared/model/search";
 
-const { Menu, MenuItem } = EEZStudio.electron.remote;
+//import { ProjectStore } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -114,11 +118,11 @@ class PropertyMenu extends React.Component<PropertyProps, {}> {
 
     @bind
     onClicked() {
-        let menuItems: Electron.MenuItem[] = [];
+        let menuItems: IMenuItem[] = [];
 
         if (this.sourceInfo.source === "modified") {
             menuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     label: "Reset",
                     click: () => {
                         this.props.updateObject({
@@ -130,7 +134,7 @@ class PropertyMenu extends React.Component<PropertyProps, {}> {
         }
 
         if (menuItems.length > 0) {
-            const menu = new Menu();
+            const menu = UIElementsFactory.createMenu();
             menuItems.forEach(menuItem => menu.append(menuItem));
             menu.popup({});
         }
@@ -150,93 +154,6 @@ class PropertyMenu extends React.Component<PropertyProps, {}> {
             >
                 <div />
             </PropertyMenuDiv>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-const ConfigurationReferencesPropertyValueDiv = styled.div`
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-    padding: 0.375rem 0.75rem;
-`;
-
-const ConfigurationReferencesPropertyValueConfigurationsDiv = styled.div`
-    padding-left: 1.25rem;
-`;
-
-export class ConfigurationReferencesPropertyValue extends React.Component<
-    {
-        value: string[] | undefined;
-        onChange: (value: string[] | undefined) => void;
-    },
-    {}
-> {
-    render() {
-        return (
-            <ConfigurationReferencesPropertyValueDiv className="EezStudio_ProjectEditor_PropertyGrid">
-                <div className="form-check">
-                    <label>
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            value="all"
-                            checked={!this.props.value}
-                            onChange={() => this.props.onChange(undefined)}
-                        />
-                        All build configurations
-                    </label>
-                </div>
-                <div className="form-check">
-                    <label>
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            value="selected"
-                            checked={!!this.props.value}
-                            onChange={() => this.props.onChange([])}
-                        />
-                        Selected build configurations
-                    </label>
-                </div>
-                {this.props.value && (
-                    <ConfigurationReferencesPropertyValueConfigurationsDiv>
-                        {ProjectStore.project.settings.build.configurations._array.map(
-                            configuration => {
-                                return (
-                                    <div key={configuration.name} className="checkbox">
-                                        <label>
-                                            <input
-                                                ref="input"
-                                                type="checkbox"
-                                                checked={
-                                                    this.props.value!.indexOf(
-                                                        configuration.name
-                                                    ) !== -1
-                                                }
-                                                onChange={event => {
-                                                    let value = this.props.value!.slice();
-                                                    if (event.target.checked) {
-                                                        value.push(configuration.name);
-                                                    } else {
-                                                        value.splice(
-                                                            value.indexOf(configuration.name),
-                                                            1
-                                                        );
-                                                    }
-                                                    this.props.onChange(value);
-                                                }}
-                                            />
-                                            {" " + configuration.name}
-                                        </label>
-                                    </div>
-                                );
-                            }
-                        )}
-                    </ConfigurationReferencesPropertyValueConfigurationsDiv>
-                )}
-            </ConfigurationReferencesPropertyValueDiv>
         );
     }
 }
@@ -415,43 +332,6 @@ class Property extends React.Component<PropertyProps, {}> {
     }
 
     @bind
-    onClear() {
-        this.changeValue(undefined);
-    }
-
-    @bind
-    onSelectImageFile() {
-        EEZStudio.electron.remote.dialog.showOpenDialog(
-            {
-                properties: ["openFile"],
-                filters: [
-                    { name: "Image files", extensions: ["png", "jpg", "jpeg"] },
-                    { name: "All Files", extensions: ["*"] }
-                ]
-            },
-            filePaths => {
-                if (filePaths[0]) {
-                    this.changeValue(ProjectStore.getFilePathRelativeToProjectPath(filePaths[0]));
-                }
-            }
-        );
-    }
-
-    @bind
-    onSelectFolder() {
-        EEZStudio.electron.remote.dialog.showOpenDialog(
-            {
-                properties: ["openDirectory"]
-            },
-            filePaths => {
-                if (filePaths[0]) {
-                    this.changeValue(ProjectStore.getFolderPathRelativeToProjectPath(filePaths[0]));
-                }
-            }
-        );
-    }
-
-    @bind
     onEditUnique() {
         showGenericDialog({
             dialogDefinition: {
@@ -581,78 +461,12 @@ class Property extends React.Component<PropertyProps, {}> {
                     {options}
                 </select>
             );
-        } else if (propertyInfo.type === PropertyType.Image) {
-            return (
-                <div>
-                    <div className="input-group">
-                        <input
-                            ref="input"
-                            type="text"
-                            className="form-control"
-                            value={this.value}
-                            readOnly
-                        />
-                        <div className="input-group-append">
-                            <button
-                                className="btn btn-secondary"
-                                type="button"
-                                onClick={this.onSelectImageFile}
-                            >
-                                &hellip;
-                            </button>
-                        </div>
-                    </div>
-                    {this.value && (
-                        <img
-                            src={ProjectStore.getAbsoluteFilePath(this.value)}
-                            style={{
-                                display: "block",
-                                maxWidth: "100%",
-                                margin: "auto",
-                                paddingTop: "5px"
-                            }}
-                        />
-                    )}
-                </div>
-            );
-        } else if (propertyInfo.type === PropertyType.RelativeFolder) {
-            let clearButton: JSX.Element | undefined;
-
-            if (this.value !== undefined) {
-                clearButton = (
-                    <button className="btn btn-secondary" type="button" onClick={this.onClear}>
-                        <Icon icon="material:close" size={14} />
-                    </button>
-                );
-            }
-
-            return (
-                <div className="input-group">
-                    <input
-                        ref="input"
-                        type="text"
-                        className="form-control"
-                        value={this.value}
-                        readOnly
-                    />
-                    <div className="input-group-append">
-                        {clearButton}
-                        <button
-                            className="btn btn-secondary"
-                            type="button"
-                            onClick={this.onSelectFolder}
-                        >
-                            &hellip;
-                        </button>
-                    </div>
-                </div>
-            );
         } else if (propertyInfo.type === PropertyType.ObjectReference) {
             let objects: EezObject[] = [];
 
             if (propertyInfo.referencedObjectCollectionPath) {
                 objects = asArray(
-                    ProjectStore.getObjectFromPath(propertyInfo.referencedObjectCollectionPath)
+                    DocumentStore.getObjectFromPath(propertyInfo.referencedObjectCollectionPath)
                 );
                 if (!objects) {
                     objects = [];
@@ -686,13 +500,6 @@ class Property extends React.Component<PropertyProps, {}> {
                 >
                     {options}
                 </select>
-            );
-        } else if (propertyInfo.type === PropertyType.ConfigurationReference) {
-            return (
-                <ConfigurationReferencesPropertyValue
-                    value={this.value}
-                    onChange={value => this.changeValue(value)}
-                />
             );
         } else if (propertyInfo.type === PropertyType.Boolean) {
             return (
@@ -758,6 +565,10 @@ class Property extends React.Component<PropertyProps, {}> {
                     onChange={this.onChange}
                 />
             );
+        } else {
+            return UIElementsFactory.renderProperty(propertyInfo, this.value, value =>
+                this.changeValue(value)
+            );
         }
         return null;
     }
@@ -814,7 +625,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
             if (isValue(object)) {
                 object = object._parent as EezObject;
             }
-            ProjectStore.updateObject(object, propertyValues);
+            DocumentStore.updateObject(object, propertyValues);
         }
     }
 

@@ -9,9 +9,11 @@ import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/heade
 import { IShortcut } from "shortcuts/interfaces";
 import { Shortcuts as ShortcutsComponent, ShortcutsToolbarButtons } from "shortcuts/shortcuts";
 
-import { NavigationComponent, getProperty } from "project-editor/core/object";
-import { NavigationStore, ProjectStore } from "project-editor/core/store";
-import { ConfigurationReferencesPropertyValue } from "project-editor/components/PropertyGrid";
+import { NavigationComponent, getProperty } from "eez-studio-shared/model/object";
+import { NavigationStore, DocumentStore } from "eez-studio-shared/model/store";
+
+import { ProjectStore } from "project-editor/core/store";
+import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
 import { Shortcuts, Shortcut } from "project-editor/project/features/shortcuts/shortcuts";
 
@@ -39,21 +41,21 @@ export class ShortcutsNavigation extends NavigationComponent {
 
             addShortcut(shortcut: Partial<IShortcut>) {
                 shortcut.id = guid();
-                ProjectStore.addObject(shortcuts, shortcut as any);
+                DocumentStore.addObject(shortcuts, shortcut as any);
                 return shortcut.id;
             },
 
             updateShortcut(shortcut: Partial<IShortcut>): void {
                 let shortcutObject = shortcutsMap.get(shortcut.id!);
                 if (shortcutObject) {
-                    ProjectStore.updateObject(shortcutObject, shortcut);
+                    DocumentStore.updateObject(shortcutObject, shortcut);
                 }
             },
 
             deleteShortcut(shortcut: Partial<IShortcut>): void {
                 let shortcutObject = shortcutsMap.get(shortcut.id!);
                 if (shortcutObject) {
-                    ProjectStore.deleteObject(shortcutObject);
+                    DocumentStore.deleteObject(shortcutObject);
                 }
             },
 

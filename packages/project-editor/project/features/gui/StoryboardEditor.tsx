@@ -20,13 +20,13 @@ import {
     isObjectInstanceOf,
     loadObject,
     getAncestorOfType
-} from "project-editor/core/object";
-import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
-import { UIStateStore, EditorsStore, ProjectStore } from "project-editor/core/store";
+} from "eez-studio-shared/model/object";
+import { getEezStudioDataFromDragEvent } from "eez-studio-shared/model/clipboard";
+import { UIStateStore, EditorsStore, DocumentStore } from "eez-studio-shared/model/store";
 import {
     DisplayItemChildrenObject,
     DisplayItemChildrenArray
-} from "project-editor/core/objectAdapter";
+} from "eez-studio-shared/model/objectAdapter";
 
 import { Panel } from "project-editor/components/Panel";
 import {
@@ -340,7 +340,7 @@ class StoryboardLineConnecting implements LineConnecting {
             };
             let lineObject = loadObject(storyboardLines, line, StoryboardLine);
 
-            ProjectStore.addObject(storyboardLines, lineObject);
+            DocumentStore.addObject(storyboardLines, lineObject);
         }
     }
 }
@@ -666,7 +666,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
             dropItemObj.x = this.dropItem.rect.left;
             dropItemObj.y = this.dropItem.rect.top;
 
-            ProjectStore.addObject(
+            DocumentStore.addObject(
                 (this.props.displaySelection.object as Storyboard).pages,
                 dropItemObj
             );

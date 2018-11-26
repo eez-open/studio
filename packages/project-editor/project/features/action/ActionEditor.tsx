@@ -4,8 +4,9 @@ import { bind } from "bind-decorator";
 
 import { CodeEditor } from "eez-studio-ui/code-editor";
 
-import { EditorComponent } from "project-editor/core/object";
-import { ProjectStore, UndoManager } from "project-editor/core/store";
+import { EditorComponent } from "eez-studio-shared/model/object";
+import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
+
 import { Action } from "project-editor/project/features/action/action";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +33,7 @@ export class NativeImplementationEditor extends React.Component<
 
     @bind
     onChange(value: string) {
-        ProjectStore.updateObject(this.props.action, {
+        DocumentStore.updateObject(this.props.action, {
             implementation: value
         });
     }

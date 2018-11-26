@@ -8,10 +8,11 @@ import {
     PropertyType,
     asArray,
     getProperty
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
+import * as output from "eez-studio-shared/model/output";
+
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
-import * as output from "project-editor/core/output";
 
 import { Storyboard } from "project-editor/project/features/gui/storyboard";
 import { Page } from "project-editor/project/features/gui/page";

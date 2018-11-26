@@ -3,8 +3,6 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-const { Menu, MenuItem } = EEZStudio.electron.remote;
-
 import { _range } from "eez-studio-shared/algorithm";
 import { Point, Rect, ITransform, pointInRect, isRectInsideRect } from "eez-studio-shared/geometry";
 
@@ -22,14 +20,15 @@ import { Canvas } from "eez-studio-designer/canvas";
 import { selectToolHandler } from "eez-studio-designer/select-tool";
 import styled from "eez-studio-ui/styled-components";
 
+import { EezObject } from "eez-studio-shared/model/object";
 import {
-    ProjectStore,
+    DocumentStore,
     NavigationStore,
     deleteItems,
     UndoManager,
-    UIStateStore
-} from "project-editor/core/store";
-import { EezObject } from "project-editor/core/object";
+    UIStateStore,
+    UIElementsFactory
+} from "eez-studio-shared/model/store";
 
 import * as data from "project-editor/project/features/data/data";
 
@@ -508,7 +507,7 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
     }
 
     set rect(value: Rect) {
-        ProjectStore.updateObject(this.selectWidgetEditor, {
+        DocumentStore.updateObject(this.selectWidgetEditor, {
             x: value.left + Math.round(this.rect.width / 2),
             y: value.top + Math.round(this.rect.height / 2)
         });
@@ -843,10 +842,10 @@ export class ExperimentalWidgetContainerEditor
     }
 
     createContextMenu(objects: IBaseObject[]): IContextMenu {
-        const menu = new Menu();
+        const menu = UIElementsFactory.createMenu();
         return {
             appendMenuItem: (menuItem: IContextMenuItem) => {
-                menu.append(new MenuItem(menuItem));
+                menu.append(UIElementsFactory.createMenuItem(menuItem));
             },
             popup: (options: IContextMenuPopupOptions) => {
                 menu.popup(options);

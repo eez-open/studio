@@ -11,9 +11,10 @@ import {
     getProperty,
     loadObject,
     objectToJson
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
+import * as output from "eez-studio-shared/model/output";
+
 import { ProjectStore } from "project-editor/core/store";
-import * as output from "project-editor/core/output";
 
 import { BuildFileEditor } from "project-editor/project/BuildFileEditor";
 import { SettingsNavigation } from "project-editor/project/SettingsNavigation";

@@ -5,8 +5,10 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { NavigationComponent, getProperty } from "project-editor/core/object";
-import { ProjectStore, NavigationStore } from "project-editor/core/store";
+import { NavigationComponent, getProperty } from "eez-studio-shared/model/object";
+import { NavigationStore } from "eez-studio-shared/model/store";
+
+import { ProjectStore } from "project-editor/core/store";
 
 import {
     ListNavigation,

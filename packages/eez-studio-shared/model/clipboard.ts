@@ -9,9 +9,8 @@ import {
     isSubclassOf,
     getChildOfObject,
     PropertyType
-} from "project-editor/core/object";
-
-export const EEZ_STUDIO_DATA_TYPE = "text/eez-studio-project-editor-data";
+} from "eez-studio-shared/model/object";
+import { DocumentStore } from "eez-studio-shared/model/store";
 
 export interface SerializedData {
     objectClassName: string;
@@ -55,11 +54,11 @@ let clipboardData: string;
 
 export function setClipboardData(event: any, value: string) {
     clipboardData = value;
-    event.dataTransfer.setData(EEZ_STUDIO_DATA_TYPE, clipboardData);
+    event.dataTransfer.setData(DocumentStore.clipboardDataId, clipboardData);
 }
 
 export function getEezStudioDataFromDragEvent(event: any) {
-    let data = event.dataTransfer.getData(EEZ_STUDIO_DATA_TYPE);
+    let data = event.dataTransfer.getData(DocumentStore.clipboardDataId);
     if (!data) {
         data = clipboardData;
     }

@@ -1,17 +1,17 @@
 import { observable, computed } from "mobx";
 
 import { validators } from "eez-studio-shared/model/validation";
-
 import {
     ClassInfo,
     registerClass,
     EezObject,
     PropertyType,
     asArray
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
+import { Message, Type } from "eez-studio-shared/model/output";
+
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
-import { Message, Type } from "project-editor/core/output";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 

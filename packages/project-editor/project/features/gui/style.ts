@@ -11,8 +11,8 @@ import {
     PropertyType,
     getProperty,
     loadObject
-} from "project-editor/core/object";
-import * as output from "project-editor/core/output";
+} from "eez-studio-shared/model/object";
+import * as output from "eez-studio-shared/model/output";
 import { strToColor16 } from "project-editor/core/util";
 
 import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";

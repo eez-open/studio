@@ -10,23 +10,25 @@ import { TabsView } from "eez-studio-ui/tabs";
 import * as notification from "eez-studio-ui/notification";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { EezObject, isArray, objectToString } from "project-editor/core/object";
+import { EezObject, isArray, objectToString } from "eez-studio-shared/model/object";
 import {
     UndoManager,
-    ProjectStore,
+    DocumentStore,
     UIStateStore,
     EditorsStore,
     NavigationStore,
     OutputSectionsStore
-} from "project-editor/core/store";
-import { startSearch } from "project-editor/core/search";
+} from "eez-studio-shared/model/store";
+import { startSearch } from "eez-studio-shared/model/search";
+import { Section } from "eez-studio-shared/model/output";
+
+import { ProjectStore } from "project-editor/core/store";
 import { Debug } from "project-editor/core/debug";
-import { Section } from "project-editor/core/output";
 
 import { IconAction } from "eez-studio-ui/action";
 import { Panel } from "project-editor/components/Panel";
-import { PropertyGrid } from "project-editor/components/PropertyGrid";
-import { Output } from "project-editor/components/Output";
+import { PropertyGrid } from "eez-studio-shared/model/components/PropertyGrid";
+import { Output } from "eez-studio-shared/model/components/Output";
 
 import { MenuNavigation } from "project-editor/project/ui/MenuNavigation";
 import { BuildConfiguration } from "project-editor/project/project";
@@ -92,7 +94,7 @@ class Toolbar extends React.Component<
                             title="Save"
                             icon="material:save"
                             onClick={() => ProjectStore.save()}
-                            enabled={ProjectStore.isModified}
+                            enabled={DocumentStore.isModified}
                         />
                     </div>
 
@@ -360,7 +362,7 @@ const MainContent = styled.div`
 @observer
 export class ProjectEditor extends React.Component<{}, {}> {
     render() {
-        if (!ProjectStore.isOpen) {
+        if (!ProjectStore.project) {
             return null;
         }
 

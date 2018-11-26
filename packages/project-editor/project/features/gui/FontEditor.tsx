@@ -10,8 +10,15 @@ import * as notification from "eez-studio-ui/notification";
 import { Splitter } from "eez-studio-ui/splitter";
 import { Loader } from "eez-studio-ui/loader";
 
-import { EditorComponent, loadObject, objectToJS, cloneObject } from "project-editor/core/object";
-import { NavigationStore, ProjectStore } from "project-editor/core/store";
+import {
+    EditorComponent,
+    loadObject,
+    objectToJS,
+    cloneObject
+} from "eez-studio-shared/model/object";
+import { NavigationStore, DocumentStore } from "eez-studio-shared/model/store";
+
+import { ProjectStore } from "project-editor/core/store";
 
 import { Font } from "project-editor/project/features/gui/font";
 import {
@@ -474,7 +481,7 @@ class GlyphEditor extends React.Component<
                 font.bpp
             );
 
-            ProjectStore.updateObject(this.props.glyph, {
+            DocumentStore.updateObject(this.props.glyph, {
                 glyphBitmap: newGlyphBitmap
             });
 
@@ -598,7 +605,7 @@ export class FontEditor extends EditorComponent {
     onDoubleClickGlyph(glyph: Glyph) {
         selectGlyph(glyph)
             .then(propertyValues => {
-                ProjectStore.updateObject(glyph, propertyValues);
+                DocumentStore.updateObject(glyph, propertyValues);
             })
             .catch(error => console.error(error));
     }
@@ -621,7 +628,7 @@ export class FontEditor extends EditorComponent {
                 projectFilePath: ProjectStore.filePath!
             });
 
-            ProjectStore.replaceObject(font, loadObject(undefined, newFont, Font));
+            DocumentStore.replaceObject(font, loadObject(undefined, newFont, Font));
 
             notification.info(`Font rebuilded.`);
         } catch (err) {
@@ -637,7 +644,7 @@ export class FontEditor extends EditorComponent {
             font.glyphs._array[font.glyphs._array.length - 1]
         ) as Glyph;
         newGlyph.encoding = newGlyph.encoding + 1;
-        newGlyph = ProjectStore.addObject(font.glyphs, newGlyph) as Glyph;
+        newGlyph = DocumentStore.addObject(font.glyphs, newGlyph) as Glyph;
         this.selectedGlyph = newGlyph;
     }
 
@@ -646,7 +653,7 @@ export class FontEditor extends EditorComponent {
         let font = this.props.editor.object as Font;
         let selectedGlyph = this.selectedGlyph;
         if (selectedGlyph && font.glyphs._array[font.glyphs._array.length - 1] == selectedGlyph) {
-            ProjectStore.deleteObject(selectedGlyph);
+            DocumentStore.deleteObject(selectedGlyph);
         }
     }
 

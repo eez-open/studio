@@ -21,10 +21,12 @@ import {
     loadObject,
     objectToJS,
     cloneObject
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
+import { DocumentStore, IMenuItem, UIElementsFactory } from "eez-studio-shared/model/store";
+import * as output from "eez-studio-shared/model/output";
+
 import { ProjectStore } from "project-editor/core/store";
 import { htmlEncode } from "project-editor/core/util";
-import * as output from "project-editor/core/output";
 
 import {
     GeometryProperties,
@@ -37,8 +39,6 @@ import { findActionIndex } from "project-editor/project/features/action/action";
 import { findStyle, findBitmap, Gui, findPage } from "project-editor/project/features/gui/gui";
 import { Page } from "project-editor/project/features/gui/page";
 import * as draw from "project-editor/project/features/gui/draw";
-
-const { MenuItem } = EEZStudio.electron.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -318,12 +318,12 @@ export class Widget extends EezObject {
         return messages;
     }
 
-    extendContextMenu(objects: EezObject[], menuItems: Electron.MenuItem[]): void {
-        var additionalMenuItems: Electron.MenuItem[] = [];
+    extendContextMenu(objects: EezObject[], menuItems: IMenuItem[]): void {
+        var additionalMenuItems: IMenuItem[] = [];
 
         if (objects.length === 1) {
             additionalMenuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     label: "Put in Select",
                     click: () => (objects[0] as Widget).putInSelect()
                 })
@@ -338,7 +338,7 @@ export class Widget extends EezObject {
         }
         if (i == objects.length) {
             additionalMenuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     label: "Put in Container",
                     click: () => Widget.putInContainer(objects as Widget[])
                 })
@@ -347,14 +347,14 @@ export class Widget extends EezObject {
 
         if (objects.length === 1) {
             additionalMenuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     label: "Create Layout",
                     click: () => (objects[0] as Widget).createLayout()
                 })
             );
 
             additionalMenuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     label: "Replace with Layout",
                     click: () => (objects[0] as Widget).replaceWithLayout()
                 })
@@ -363,7 +363,7 @@ export class Widget extends EezObject {
             let parent = objects[0]._parent;
             if (parent && parent._parent instanceof SelectWidget) {
                 additionalMenuItems.push(
-                    new MenuItem({
+                    UIElementsFactory.createMenuItem({
                         label: "Replace Parent",
                         click: () => (objects[0] as Widget).replaceParent()
                     })
@@ -373,7 +373,7 @@ export class Widget extends EezObject {
 
         if (additionalMenuItems.length > 0) {
             additionalMenuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     type: "separator"
                 })
             );
@@ -398,7 +398,7 @@ export class Widget extends EezObject {
 
         selectWidgetJsObject.widgets._array = [thisWidgetJsObject];
 
-        ProjectStore.replaceObject(this, loadObject(undefined, selectWidgetJsObject, Widget));
+        DocumentStore.replaceObject(this, loadObject(undefined, selectWidgetJsObject, Widget));
     }
 
     static putInContainer(widgets: Widget[]) {
@@ -432,7 +432,7 @@ export class Widget extends EezObject {
             containerWidgetJsObject.widgets._array = [widgetJsObject];
         }
 
-        ProjectStore.replaceObjects(
+        DocumentStore.replaceObjects(
             widgets,
             loadObject(undefined, containerWidgetJsObject, Widget)
         );
@@ -465,7 +465,7 @@ export class Widget extends EezObject {
             thisWidgetJS.x = 0;
             thisWidgetJS.y = 0;
 
-            ProjectStore.addObject(
+            DocumentStore.addObject(
                 layouts,
                 loadObject(
                     undefined,
@@ -497,7 +497,7 @@ export class Widget extends EezObject {
                 Widget
             );
 
-            ProjectStore.replaceObject(this, newWidget);
+            DocumentStore.replaceObject(this, newWidget);
         } catch (error) {
             console.error(error);
         }
@@ -540,7 +540,7 @@ export class Widget extends EezObject {
                 Widget
             );
 
-            ProjectStore.replaceObject(this, newWidget);
+            DocumentStore.replaceObject(this, newWidget);
         } catch (error) {
             console.error(error);
         }
@@ -551,7 +551,7 @@ export class Widget extends EezObject {
         if (parent) {
             let selectWidget = parent._parent;
             if (selectWidget instanceof SelectWidget) {
-                ProjectStore.replaceObject(selectWidget, cloneObject(undefined, this));
+                DocumentStore.replaceObject(selectWidget, cloneObject(undefined, this));
             }
         }
     }
@@ -576,7 +576,7 @@ export class Widget extends EezObject {
             changedGeometryProperties.height = geometryProperties.height;
         }
 
-        ProjectStore.updateObject(this, changedGeometryProperties);
+        DocumentStore.updateObject(this, changedGeometryProperties);
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
@@ -631,7 +631,7 @@ export class ContainerWidget extends Widget {
         let widthBefore = this.width;
         let heightBefore = this.height;
 
-        ProjectStore.updateObject(this, changedProperties);
+        DocumentStore.updateObject(this, changedProperties);
 
         for (const childWidget of this.widgets._array) {
             if (!geometryChanges.find(geometryChange => geometryChange.object == childWidget)) {
@@ -741,7 +741,7 @@ export class ListWidget extends Widget {
         changedProperties: GeometryProperties,
         geometryChanges: ObjectGeometryChange[]
     ) {
-        ProjectStore.updateObject(this, changedProperties);
+        DocumentStore.updateObject(this, changedProperties);
 
         if (this.itemWidget) {
             if (!geometryChanges.find(geometryChange => geometryChange.object == this.itemWidget)) {
@@ -1138,7 +1138,7 @@ export class SelectWidget extends Widget {
         changedProperties: GeometryProperties,
         geometryChanges: ObjectGeometryChange[]
     ) {
-        ProjectStore.updateObject(this, changedProperties);
+        DocumentStore.updateObject(this, changedProperties);
 
         for (const childWidget of this.widgets._array) {
             if (!geometryChanges.find(geometryChange => geometryChange.object == childWidget)) {

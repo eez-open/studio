@@ -17,17 +17,18 @@ import {
     isArrayElement,
     objectToString,
     cloneObject
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
 import {
     objectToClipboardData,
     setClipboardData,
     findPastePlaceInside
-} from "project-editor/core/clipboard";
-import { ProjectStore, canContainChildren } from "project-editor/core/store";
-
-import { DragAndDropManager } from "project-editor/core/dd";
-import { DropPosition } from "project-editor/core/dd";
-import { TreeObjectAdapter, TreeObjectAdapterChildren } from "project-editor/core/objectAdapter";
+} from "eez-studio-shared/model/clipboard";
+import { DocumentStore, canContainChildren } from "eez-studio-shared/model/store";
+import { DragAndDropManager, DropPosition } from "eez-studio-shared/model/dd";
+import {
+    TreeObjectAdapter,
+    TreeObjectAdapterChildren
+} from "eez-studio-shared/model/objectAdapter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -670,7 +671,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                 let object = cloneObject(undefined, DragAndDropManager.dragObject);
 
                 if (dropPosition == DropPosition.DROP_BEFORE) {
-                    ProjectStore.insertObjectBefore(DragAndDropManager.dropObject.object, object);
+                    DocumentStore.insertObjectBefore(DragAndDropManager.dropObject.object, object);
                 } else if (dropPosition == DropPosition.DROP_INSIDE) {
                     let dropPlace = findPastePlaceInside(
                         DragAndDropManager.dropObject.object,
@@ -679,9 +680,9 @@ export class Tree extends React.Component<TreeProps, {}> {
                     );
                     if (dropPlace) {
                         if (isArray(dropPlace as EezObject)) {
-                            ProjectStore.addObject(dropPlace as EezObject, object);
+                            DocumentStore.addObject(dropPlace as EezObject, object);
                         } else {
-                            ProjectStore.updateObject(DragAndDropManager.dropObject.object, {
+                            DocumentStore.updateObject(DragAndDropManager.dropObject.object, {
                                 [(dropPlace as PropertyInfo).name]: object
                             });
                         }

@@ -12,7 +12,7 @@ import {
     isArrayElement,
     findPropertyByName,
     PropertyType
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 

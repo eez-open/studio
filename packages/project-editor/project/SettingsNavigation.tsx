@@ -10,13 +10,15 @@ import {
     loadObject,
     EezObject,
     getProperty
-} from "project-editor/core/object";
-import { ProjectStore, NavigationStore, UIStateStore } from "project-editor/core/store";
+} from "eez-studio-shared/model/object";
+import { DocumentStore, NavigationStore, UIStateStore } from "eez-studio-shared/model/store";
+
+import { ProjectStore } from "project-editor/core/store";
 import { confirm } from "project-editor/core/util";
 import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
 
 import { TreeNavigationPanel } from "project-editor/project/ui/TreeNavigation";
-import { PropertyGrid } from "project-editor/components/PropertyGrid";
+import { PropertyGrid } from "eez-studio-shared/model/components/PropertyGrid";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,13 +56,13 @@ class ProjectFeature extends React.Component<
                 .key]: newFeatureObject
         };
 
-        ProjectStore.updateObject(ProjectStore.project, changes);
+        DocumentStore.updateObject(ProjectStore.project, changes);
     }
 
     onRemove() {
         confirm("Are you sure you want to remove this feature?", undefined, () => {
             if (ProjectStore.project) {
-                ProjectStore.updateObject(ProjectStore.project, {
+                DocumentStore.updateObject(ProjectStore.project, {
                     [this.props.extension.eezStudioExtension.implementation.projectFeature
                         .key]: undefined
                 });

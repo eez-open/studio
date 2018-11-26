@@ -1,9 +1,7 @@
 import { observable, extendObservable, computed, action, toJS, reaction, autorun } from "mobx";
 
-import { confirmSave } from "eez-studio-shared/util";
 import { _each, _isArray, _map, _uniqWith } from "eez-studio-shared/algorithm";
 
-import { showGenericDialog, TableField } from "eez-studio-ui/generic-dialog";
 import * as notification from "eez-studio-ui/notification";
 
 import {
@@ -24,8 +22,8 @@ import {
     getObjectFromStringPath,
     getObjectFromObjectId,
     cloneObject
-} from "project-editor/core/object";
-import { checkClipboard, objectToClipboardData } from "project-editor/core/clipboard";
+} from "eez-studio-shared/model/object";
+import { checkClipboard, objectToClipboardData } from "eez-studio-shared/model/clipboard";
 import {
     ICommand,
     addObject,
@@ -38,25 +36,10 @@ import {
     replaceObjects,
     insertObjectBefore,
     insertObjectAfter
-} from "project-editor/core/commands";
-import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { findAllReferences, isReferenced } from "project-editor/core/search";
-import { OutputSections, OutputSection } from "project-editor/core/output";
-import { confirm } from "project-editor/core/util";
-
-import {
-    Project,
-    save as saveProject,
-    load as loadProject,
-    getNewProject
-} from "project-editor/project/project";
-import { build as buildProject, backgroundCheck } from "project-editor/project/build";
-import { getAllMetrics } from "project-editor/project/metrics";
-
-const { Menu, MenuItem } = EEZStudio.electron.remote;
-const path = EEZStudio.electron.remote.require("path");
-const ipcRenderer = EEZStudio.electron.ipcRenderer;
-const fs = EEZStudio.electron.remote.require("fs");
+} from "eez-studio-shared/model/commands";
+import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
+import { findAllReferences, isReferenced } from "eez-studio-shared/model/search";
+import { OutputSections, OutputSection } from "eez-studio-shared/model/output";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +60,7 @@ class NavigationStoreClass {
         let navigationMap = new Map<string, NavigationItem>();
 
         for (let stringPath in map) {
-            let navigationObject = ProjectStore.getObjectFromStringPath(stringPath);
+            let navigationObject = DocumentStore.getObjectFromStringPath(stringPath);
             if (navigationObject) {
                 let navigationItemStr = map[stringPath];
                 if (navigationItemStr === stringPath) {
@@ -85,7 +68,7 @@ class NavigationStoreClass {
                 }
                 let navigationItem: NavigationItem | undefined;
                 if (typeof navigationItemStr == "string") {
-                    navigationItem = ProjectStore.getObjectFromStringPath(navigationItemStr);
+                    navigationItem = DocumentStore.getObjectFromStringPath(navigationItemStr);
                 } else {
                     let navigationObjectAdapter = new TreeObjectAdapter(navigationObject);
                     setTimeout(() => {
@@ -107,7 +90,7 @@ class NavigationStoreClass {
     get toJS() {
         let map: any = {};
         for (var [id, navigationItem] of this.navigationMap) {
-            let navigationObject = ProjectStore.getObjectFromObjectId(id);
+            let navigationObject = DocumentStore.getObjectFromObjectId(id);
             if (navigationObject) {
                 let navigationObjectPath = getObjectPathAsString(navigationObject);
                 if (navigationItem instanceof TreeObjectAdapter) {
@@ -127,7 +110,7 @@ class NavigationStoreClass {
 
     @computed
     get selectedObject(): EezObject | undefined {
-        let object: EezObject = ProjectStore.project;
+        let object: EezObject = DocumentStore.document;
         if (!object) {
             return undefined;
         }
@@ -207,7 +190,7 @@ class NavigationStoreClass {
 
         if (item && !(item instanceof TreeObjectAdapter)) {
             // is this maybe deleted object?
-            item = ProjectStore.getObjectFromObjectId(item._id);
+            item = DocumentStore.getObjectFromObjectId(item._id);
         }
 
         if (!item) {
@@ -370,9 +353,9 @@ class EditorsStoreClass {
                 .map((editor: any) => {
                     let object;
                     if (_isArray(editor.object)) {
-                        object = ProjectStore.getObjectFromPath(editor.object);
+                        object = DocumentStore.getObjectFromPath(editor.object);
                     } else {
-                        object = ProjectStore.getObjectFromStringPath(editor.object);
+                        object = DocumentStore.getObjectFromStringPath(editor.object);
                     }
                     if (object) {
                         let newEditor = new Editor();
@@ -602,7 +585,7 @@ class UIStateStoreClass {
     get objectsJS() {
         let map: any = {};
         for (var [objectPath, value] of this.objects) {
-            if (ProjectStore.getObjectFromStringPath(objectPath)) {
+            if (DocumentStore.getObjectFromStringPath(objectPath)) {
                 map[objectPath] = value;
             }
         }
@@ -733,7 +716,7 @@ export class UndoManagerClass {
 
         this.redoStack = [];
 
-        ProjectStore.setModified(true);
+        DocumentStore.setModified(true);
     }
 
     static getCommandsDescription(commands: ICommand[]) {
@@ -809,97 +792,30 @@ export class UndoManagerClass {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getUIStateFilePath(projectFilePath: string) {
-    return projectFilePath + "-ui-state";
-}
-
-class ProjectStoreClass {
+class DocumentStoreClass {
     @observable
-    private _project: Project | undefined;
-
-    @observable
-    filePath: string | undefined;
+    private _document: EezObject | undefined;
 
     @observable
     modified: boolean = false;
 
-    constructor() {
-        autorun(() => {
-            this.updateProjectWindowState();
-        });
-
-        // check the project in the background
-        autorun(() => {
-            if (this._project) {
-                backgroundCheck();
-            }
-        });
-    }
-
-    updateProjectWindowState() {
-        let title = "";
-
-        if (this._project) {
-            if (this.modified) {
-                title += "\u25CF ";
-            }
-
-            if (this.filePath) {
-                title += path.basename(this.filePath) + " - ";
-            } else {
-                title += "untitled - ";
-            }
-        }
-
-        title += EEZStudio.title;
-
-        if (title != document.title) {
-            document.title = title;
-        }
-
-        EEZStudio.electron.ipcRenderer.send("windowSetState", {
-            modified: this.modified,
-            projectFilePath: this.filePath,
-            undo: (UndoManager && UndoManager.canUndo && UndoManager.undoDescription) || null,
-            redo: (UndoManager && UndoManager.canRedo && UndoManager.redoDescription) || null
-        });
-    }
-
     @computed
-    get isOpen() {
-        return this._project != undefined;
+    get document(): EezObject {
+        return this._document!;
     }
 
-    @computed
-    get project(): Project {
-        return this._project!;
-    }
+    clipboardDataId: string = "";
 
     getObjectFromPath(path: string[]) {
-        return getObjectFromPath(this.project, path);
+        return getObjectFromPath(this.document, path);
     }
 
     getObjectFromStringPath(objectID: string) {
-        return getObjectFromStringPath(this.project, objectID);
+        return getObjectFromStringPath(this.document, objectID);
     }
 
     getObjectFromObjectId(objectID: string) {
-        return getObjectFromObjectId(this.project, objectID);
-    }
-
-    @computed
-    get selectedBuildConfiguration() {
-        let configuration =
-            this.project &&
-            this.project.settings.build.configurations._array.find(
-                configuration => configuration.name == UIStateStore.selectedBuildConfiguration
-            );
-        if (!configuration) {
-            if (this.project.settings.build.configurations._array.length > 0) {
-                configuration = this.project.settings.build.configurations._array[0];
-            }
-        }
-        return configuration;
+        return getObjectFromObjectId(this.document, objectID);
     }
 
     @computed
@@ -907,229 +823,23 @@ class ProjectStoreClass {
         return this.modified;
     }
 
-    getFilePathRelativeToProjectPath(absoluteFilePath: string) {
-        return path.relative(path.dirname(this.filePath), absoluteFilePath);
-    }
-
-    getAbsoluteFilePath(relativeFilePath: string) {
-        return this.filePath
-            ? path.resolve(
-                  path.dirname(this.filePath),
-                  relativeFilePath.replace(/(\\|\/)/g, path.sep)
-              )
-            : relativeFilePath;
-    }
-
-    getFolderPathRelativeToProjectPath(absoluteFolderPath: string) {
-        let folder = path.relative(path.dirname(this.filePath), absoluteFolderPath);
-        if (folder == "") {
-            folder = ".";
-        }
-        return folder;
-    }
-
     @action
     setModified(modified_: boolean) {
         this.modified = modified_;
     }
 
-    updateMruFilePath() {
-        ipcRenderer.send("setMruFilePath", this.filePath);
-    }
-
-    changeProject(projectFilePath: string | undefined, project?: Project, uiState?: Project) {
-        if (project) {
-            project.callExtendObservableForAllOptionalProjectFeatures();
-        }
-
+    changeDocument(document?: EezObject, uiState?: EezObject) {
         action(() => {
-            this.filePath = projectFilePath;
-            this._project = project;
+            this._document = document;
         })();
 
         UIStateStore.load(uiState || {});
 
-        if (this.filePath) {
-            this.updateMruFilePath();
-        }
-
         UndoManager.clear();
-    }
-
-    doSave(callback: (() => void) | undefined) {
-        if (this.filePath) {
-            saveProject(this.filePath)
-                .then(() => {
-                    this.setModified(false);
-
-                    if (callback) {
-                        callback();
-                    }
-                })
-                .catch(error => console.error("Save", error));
-        }
-    }
-
-    @action
-    savedAsFilePath(filePath: string, callback: (() => void) | undefined) {
-        if (filePath) {
-            this.filePath = filePath;
-            this.updateMruFilePath();
-            this.doSave(() => {
-                this.saveUIState();
-                if (callback) {
-                    callback();
-                }
-            });
-        }
-    }
-
-    saveToFile(saveAs: boolean, callback: (() => void) | undefined) {
-        if (this._project) {
-            if (!this.filePath || saveAs) {
-                EEZStudio.electron.remote.dialog.showSaveDialog(
-                    EEZStudio.electron.remote.getCurrentWindow(),
-                    {
-                        filters: [
-                            { name: "EEZ Project", extensions: ["eez-project"] },
-                            { name: "All Files", extensions: ["*"] }
-                        ]
-                    },
-                    (filePath: any) => this.savedAsFilePath(filePath, callback)
-                );
-            } else {
-                this.doSave(callback);
-            }
-        }
-    }
-
-    newProject() {
-        this.changeProject(undefined, getNewProject());
-    }
-
-    loadUIState(projectFilePath: string) {
-        return new Promise<any>((resolve, reject) => {
-            fs.readFile(getUIStateFilePath(projectFilePath), "utf8", (err: any, data: string) => {
-                if (err) {
-                    resolve({});
-                } else {
-                    resolve(JSON.parse(data));
-                }
-            });
-        });
-    }
-
-    saveUIState() {
-        if (this.filePath && UIStateStore.isModified) {
-            fs.writeFile(
-                getUIStateFilePath(this.filePath),
-                UIStateStore.save(),
-                "utf8",
-                (err: any) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        console.log("UI state saved");
-                    }
-                }
-            );
-        }
-    }
-
-    openFile(filePath: string) {
-        loadProject(filePath)
-            .then(project => {
-                this.loadUIState(filePath)
-                    .then(uiState => {
-                        this.changeProject(filePath, project, uiState);
-                    })
-                    .catch(error => console.error(error));
-            })
-            .catch(error => console.error(error));
-    }
-
-    open(sender: any, filePath: any) {
-        if (!this._project || (!this.filePath && !this.modified)) {
-            this.openFile(filePath);
-        }
-    }
-
-    saveModified(callback: any) {
-        this.saveUIState();
-
-        if (this._project && this.modified) {
-            confirmSave({
-                saveCallback: () => {
-                    this.saveToFile(false, callback);
-                },
-
-                dontSaveCallback: () => {
-                    callback();
-                },
-
-                cancelCallback: () => {}
-            });
-        } else {
-            callback();
-        }
     }
 
     canSave() {
         return this.modified;
-    }
-
-    save() {
-        this.saveToFile(false, undefined);
-    }
-
-    saveAs() {
-        this.saveToFile(true, undefined);
-    }
-
-    check() {
-        buildProject(true);
-    }
-
-    build() {
-        buildProject(false);
-    }
-
-    closeWindow() {
-        if (this.isOpen) {
-            this.saveModified(() => {
-                this.changeProject(undefined);
-                EEZStudio.electron.ipcRenderer.send("readyToClose");
-            });
-        } else {
-            EEZStudio.electron.ipcRenderer.send("readyToClose");
-        }
-    }
-
-    noProject() {
-        this.changeProject(undefined);
-    }
-
-    showMetrics() {
-        const ID = "eez-project-editor-project-metrics";
-        if (!document.getElementById(ID)) {
-            showGenericDialog({
-                dialogDefinition: {
-                    id: ID,
-                    title: "Project Metrics",
-                    fields: [
-                        {
-                            name: "metrics",
-                            fullLine: true,
-                            type: TableField
-                        }
-                    ]
-                },
-                values: {
-                    metrics: getAllMetrics()
-                },
-                showOkButton: false
-            }).catch(() => {});
-        }
     }
 
     addObject(parentObject: EezObject, object: EezObject) {
@@ -1244,11 +954,7 @@ class ProjectStoreClass {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function extendContextMenu(
-    object: EezObject,
-    objects: EezObject[],
-    menuItems: Electron.MenuItem[]
-) {
+export function extendContextMenu(object: EezObject, objects: EezObject[], menuItems: IMenuItem[]) {
     if ((object as any).extendContextMenu) {
         return (object as any).extendContextMenu(objects, menuItems);
     }
@@ -1318,7 +1024,7 @@ export function addItem(object: EezObject) {
                 .newItem(parent)
                 .then(object => {
                     if (object) {
-                        ProjectStore.addObject(parent, object);
+                        DocumentStore.addObject(parent, object);
                     } else {
                         console.log(`Canceled adding ${parent._class.name}`);
                     }
@@ -1333,14 +1039,14 @@ export function pasteItem(object: EezObject) {
         let c = checkClipboard(object);
         if (c) {
             if (typeof c.pastePlace === "string") {
-                ProjectStore.updateObject(object, {
+                DocumentStore.updateObject(object, {
                     [c.pastePlace]: c.serializedData.object
                 });
             } else {
                 if (c.serializedData.object) {
-                    ProjectStore.addObject(c.pastePlace as EezObject, c.serializedData.object);
+                    DocumentStore.addObject(c.pastePlace as EezObject, c.serializedData.object);
                 } else if (c.serializedData.objects) {
-                    ProjectStore.addObjects(c.pastePlace as EezObject, c.serializedData.objects);
+                    DocumentStore.addObjects(c.pastePlace as EezObject, c.serializedData.objects);
                 }
             }
         }
@@ -1372,15 +1078,15 @@ export function copyItem(object: EezObject) {
 function duplicateItem(object: EezObject) {
     let parent = object._parent as EezObject;
     let duplicate = cloneObject(parent, object);
-    ProjectStore.addObject(parent, duplicate);
+    DocumentStore.addObject(parent, duplicate);
 }
 
 export function showContextMenu(object: EezObject) {
-    let menuItems: Electron.MenuItem[] = [];
+    let menuItems: IMenuItem[] = [];
 
     if (canAdd(object)) {
         menuItems.push(
-            new MenuItem({
+            UIElementsFactory.createMenuItem({
                 label: "Add",
                 click: () => {
                     addItem(object);
@@ -1391,7 +1097,7 @@ export function showContextMenu(object: EezObject) {
 
     if (canDuplicate(object)) {
         menuItems.push(
-            new MenuItem({
+            UIElementsFactory.createMenuItem({
                 label: "Duplicate",
                 click: () => {
                     duplicateItem(object);
@@ -1403,14 +1109,14 @@ export function showContextMenu(object: EezObject) {
     if (isArrayElement(object)) {
         if (menuItems.length > 0) {
             menuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     type: "separator"
                 })
             );
         }
 
         menuItems.push(
-            new MenuItem({
+            UIElementsFactory.createMenuItem({
                 label: "Find All References",
                 click: () => {
                     findAllReferences(object);
@@ -1419,11 +1125,11 @@ export function showContextMenu(object: EezObject) {
         );
     }
 
-    let clipboardMenuItems: Electron.MenuItem[] = [];
+    let clipboardMenuItems: IMenuItem[] = [];
 
     if (canCut(object)) {
         clipboardMenuItems.push(
-            new MenuItem({
+            UIElementsFactory.createMenuItem({
                 label: "Cut",
                 click: () => {
                     cutItem(object);
@@ -1434,7 +1140,7 @@ export function showContextMenu(object: EezObject) {
 
     if (canCopy(object)) {
         clipboardMenuItems.push(
-            new MenuItem({
+            UIElementsFactory.createMenuItem({
                 label: "Copy",
                 click: () => {
                     copyItem(object);
@@ -1445,7 +1151,7 @@ export function showContextMenu(object: EezObject) {
 
     if (canPaste(object)) {
         clipboardMenuItems.push(
-            new MenuItem({
+            UIElementsFactory.createMenuItem({
                 label: "Paste",
                 click: () => {
                     pasteItem(object);
@@ -1457,7 +1163,7 @@ export function showContextMenu(object: EezObject) {
     if (clipboardMenuItems.length > 0) {
         if (menuItems.length > 0) {
             menuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     type: "separator"
                 })
             );
@@ -1468,14 +1174,14 @@ export function showContextMenu(object: EezObject) {
     if (canDelete(object)) {
         if (menuItems.length > 0) {
             menuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     type: "separator"
                 })
             );
         }
 
         menuItems.push(
-            new MenuItem({
+            UIElementsFactory.createMenuItem({
                 label: "Delete",
                 click: () => {
                     deleteItems([object]);
@@ -1487,7 +1193,7 @@ export function showContextMenu(object: EezObject) {
     extendContextMenu(object, [object], menuItems);
 
     if (menuItems.length > 0) {
-        const menu = new Menu();
+        const menu = UIElementsFactory.createMenu();
         menuItems.forEach(menuItem => menu.append(menuItem));
         menu.popup({});
     }
@@ -1497,7 +1203,7 @@ export function showContextMenu(object: EezObject) {
 
 export function deleteItems(objects: EezObject[], callback?: () => void) {
     function doDelete() {
-        ProjectStore.deleteObjects(objects);
+        DocumentStore.deleteObjects(objects);
         if (callback) {
             callback();
         }
@@ -1505,9 +1211,9 @@ export function deleteItems(objects: EezObject[], callback?: () => void) {
 
     if (objects.length === 1) {
         if (isReferenced(objects[0])) {
-            confirm(
+            UIElementsFactory.confirm(
                 "Are you sure you want to delete this item?",
-                "It is used in project.",
+                "It is used in other parts.",
                 doDelete
             );
         } else {
@@ -1524,9 +1230,9 @@ export function deleteItems(objects: EezObject[], callback?: () => void) {
         }
 
         if (isAnyItemReferenced) {
-            confirm(
+            UIElementsFactory.confirm(
                 "Are you sure you want to delete this items?",
-                "Some of them are used in project.",
+                "Some of them are used in other parts.",
                 doDelete
             );
         } else {
@@ -1537,83 +1243,62 @@ export function deleteItems(objects: EezObject[], callback?: () => void) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function init() {
-    EEZStudio.electron.ipcRenderer.on("newProject", () => ProjectStore.newProject());
+export type IMenuItemConfig =
+    | {
+          label: string;
+          click: () => void;
+      }
+    | {
+          type: "separator";
+      };
 
-    EEZStudio.electron.ipcRenderer.on("open", (sender: any, filePath: any) =>
-        ProjectStore.open(sender, filePath)
-    );
+export interface IMenuItem {}
 
-    EEZStudio.electron.ipcRenderer.on("save", () => ProjectStore.save());
-    EEZStudio.electron.ipcRenderer.on("saveAs", () => ProjectStore.saveAs());
+export interface IMenuPopupOptions {}
 
-    EEZStudio.electron.ipcRenderer.on("check", () => ProjectStore.check());
-    EEZStudio.electron.ipcRenderer.on("build", () => ProjectStore.build());
-
-    EEZStudio.electron.ipcRenderer.on("undo", () => UndoManager.undo());
-    EEZStudio.electron.ipcRenderer.on("redo", () => UndoManager.redo());
-
-    // EEZStudio.electron.ipcRenderer.on('cut', () => ProjectStore.selection.cutSelection());
-    // EEZStudio.electron.ipcRenderer.on('copy', () => ProjectStore.selection.copySelection());
-    // EEZStudio.electron.ipcRenderer.on('paste', () => ProjectStore.selection.pasteSelection());
-    // EEZStudio.electron.ipcRenderer.on('delete', () => ProjectStore.selection.deleteSelection());
-
-    // EEZStudio.electron.ipcRenderer.on('goBack', () => ProjectStore.selection.selectionGoBack());
-    // EEZStudio.electron.ipcRenderer.on('goForward', () => ProjectStore.selection.selectionGoForward());
-
-    EEZStudio.electron.ipcRenderer.on(
-        "toggleNavigation",
-        action(
-            () =>
-                (UIStateStore.viewOptions.navigationVisible = !UIStateStore.viewOptions
-                    .navigationVisible)
-        )
-    );
-    EEZStudio.electron.ipcRenderer.on(
-        "toggleOutput",
-        action(
-            () => (UIStateStore.viewOptions.outputVisible = !UIStateStore.viewOptions.outputVisible)
-        )
-    );
-    EEZStudio.electron.ipcRenderer.on(
-        "toggleProperties",
-        action(
-            () =>
-                (UIStateStore.viewOptions.propertiesVisible = !UIStateStore.viewOptions
-                    .propertiesVisible)
-        )
-    );
-    EEZStudio.electron.ipcRenderer.on(
-        "toggleDebug",
-        action(
-            () => (UIStateStore.viewOptions.debugVisible = !UIStateStore.viewOptions.debugVisible)
-        )
-    );
-
-    EEZStudio.electron.ipcRenderer.on("showProjectMetrics", () => ProjectStore.showMetrics());
-
-    if (window.location.search == "?mru") {
-        let mruFilePath = ipcRenderer.sendSync("getMruFilePath");
-        if (mruFilePath) {
-            ProjectStore.openFile(mruFilePath);
-        } else {
-            ProjectStore.newProject();
-        }
-    } else if (window.location.search.startsWith("?open=")) {
-        let ProjectStorePath = decodeURIComponent(
-            window.location.search.substring("?open=".length)
-        );
-        ProjectStore.openFile(ProjectStorePath);
-    } else if (window.location.search.startsWith("?new")) {
-        ProjectStore.newProject();
-    } else {
-        ProjectStore.noProject();
-    }
+export interface IMenu {
+    append(menuItem: IMenuItem): void;
+    popup(options: IMenuPopupOptions): void;
 }
+
+export interface IUIElementsFactory {
+    createMenuItem(menuItemConfig: IMenuItemConfig): IMenuItem;
+    createMenu(): IMenu;
+    confirm(message: string, detail: string | undefined, callback: () => void): void;
+    renderProperty(
+        propertyInfo: PropertyInfo,
+        value: any,
+        onChange: (value: any) => void
+    ): React.ReactNode;
+}
+
+export function setUIElementsFactory(factory: IUIElementsFactory) {
+    UIElementsFactory = factory;
+}
+
+export let UIElementsFactory: IUIElementsFactory = {
+    createMenuItem(config: IMenuItemConfig) {
+        // todo
+        return {};
+    },
+    createMenu() {
+        // todo
+        return {
+            append(menuItem: IMenuItem) {},
+            popup(options: IMenuPopupOptions) {}
+        };
+    },
+    confirm(message: string, detail: string | undefined, callback: () => void) {
+        // todo
+    },
+    renderProperty(propertyInfo: PropertyInfo, value: any, onChange: (value: any) => void) {
+        return null;
+    }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const ProjectStore = new ProjectStoreClass();
+export const DocumentStore = new DocumentStoreClass();
 export const NavigationStore = new NavigationStoreClass();
 export const EditorsStore = new EditorsStoreClass();
 export const OutputSectionsStore = new OutputSections();

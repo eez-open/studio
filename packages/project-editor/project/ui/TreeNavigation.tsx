@@ -4,18 +4,18 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { EezObject, NavigationComponent, objectToString } from "project-editor/core/object";
+import { EezObject, NavigationComponent, objectToString } from "eez-studio-shared/model/object";
 import {
     EditorsStore,
     NavigationStore,
     UIStateStore,
     addItem,
     canAdd
-} from "project-editor/core/store";
-import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
+} from "eez-studio-shared/model/store";
+import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 
 import { Panel } from "project-editor/components/Panel";
-import { Tree } from "project-editor/components/Tree";
+import { Tree } from "eez-studio-shared/model/components/Tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -7,8 +7,8 @@ import {
     EezArrayObject,
     PropertyType,
     IEditorState
-} from "project-editor/core/object";
-import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
+} from "eez-studio-shared/model/object";
+import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 
 import { StoryboardEditor } from "project-editor/project/features/gui/StoryboardEditor";
 

@@ -10,7 +10,7 @@ import {
     EezObject,
     EezArrayObject,
     PropertyType
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { ScpiSubsystemsNavigation } from "project-editor/project/features/scpi/ScpiSubsystemsNavigation";

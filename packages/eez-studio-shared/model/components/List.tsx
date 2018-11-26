@@ -16,14 +16,14 @@ import {
     isArrayElement,
     objectToString,
     cloneObject
-} from "project-editor/core/object";
+} from "eez-studio-shared/model/object";
 import {
     objectToClipboardData,
     setClipboardData,
     findPastePlaceInside
-} from "project-editor/core/clipboard";
+} from "eez-studio-shared/model/clipboard";
 import {
-    ProjectStore,
+    DocumentStore,
     NavigationStore,
     showContextMenu,
     canCut,
@@ -34,9 +34,9 @@ import {
     pasteItem,
     canDelete,
     deleteItem
-} from "project-editor/core/store";
+} from "eez-studio-shared/model/store";
 
-import { DragAndDropManager, DropPosition } from "project-editor/core/dd";
+import { DragAndDropManager, DropPosition } from "eez-studio-shared/model/dd";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -414,7 +414,7 @@ export class List extends React.Component<ListProps, {}> {
     }
 
     onSelect(objectId: string) {
-        let item = ProjectStore.getObjectFromObjectId(objectId);
+        let item = DocumentStore.getObjectFromObjectId(objectId);
         if (item) {
             NavigationStore.setNavigationSelectedItem(this.props.navigationObject, item);
         }
@@ -429,7 +429,7 @@ export class List extends React.Component<ListProps, {}> {
             return;
         }
 
-        let focusedItem = ProjectStore.getObjectFromObjectId(focusedItemId);
+        let focusedItem = DocumentStore.getObjectFromObjectId(focusedItemId);
 
         let $focusedItem = $(this.list).find(`.list-item[data-object-id="${focusedItemId}"]`);
 
@@ -524,7 +524,7 @@ export class List extends React.Component<ListProps, {}> {
                 let object = cloneObject(undefined, DragAndDropManager.dragObject);
 
                 if (dropPosition == DropPosition.DROP_BEFORE) {
-                    ProjectStore.insertObjectBefore(DragAndDropManager.dropObject, object);
+                    DocumentStore.insertObjectBefore(DragAndDropManager.dropObject, object);
                 } else if (dropPosition == DropPosition.DROP_INSIDE) {
                     let dropPlace = findPastePlaceInside(
                         DragAndDropManager.dropObject,
@@ -533,9 +533,9 @@ export class List extends React.Component<ListProps, {}> {
                     );
                     if (dropPlace) {
                         if (isArray(dropPlace as EezObject)) {
-                            ProjectStore.addObject(dropPlace as EezObject, object);
+                            DocumentStore.addObject(dropPlace as EezObject, object);
                         } else {
-                            ProjectStore.updateObject(DragAndDropManager.dropObject, {
+                            DocumentStore.updateObject(DragAndDropManager.dropObject, {
                                 [(dropPlace as PropertyInfo).name]: object
                             });
                         }
