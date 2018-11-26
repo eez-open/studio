@@ -30,10 +30,6 @@ import {
 
 import { Panel } from "project-editor/components/Panel";
 import {
-    TreeNode,
-    LineConnecting
-} from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
-import {
     CanvasEditor,
     CanvasEditorProps,
     CanvasEditorUIState
@@ -53,6 +49,7 @@ import {
     drawPage
 } from "project-editor/project/features/gui/draw";
 import { PagesPalette } from "project-editor/project/features/gui/PagesPalette";
+import { TreeNode, LineConnecting } from "project-editor/project/features/gui/widget-tree";
 
 const TITLE_FONT = "24px Segoe UI";
 

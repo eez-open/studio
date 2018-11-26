@@ -8,7 +8,6 @@ import { getEezStudioDataFromDragEvent } from "eez-studio-shared/model/clipboard
 import { DisplayItem, reduceUntilCommonParent } from "eez-studio-shared/model/objectAdapter";
 import { UIStateStore, DocumentStore } from "eez-studio-shared/model/store";
 
-import { TreeNode } from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
 import {
     CanvasEditor,
     CanvasEditorProps,
@@ -18,8 +17,7 @@ import {
 
 import { Widget, SelectWidget } from "project-editor/project/features/gui/widget";
 import { WidgetContainerDisplayItem } from "project-editor/project/features/gui/page";
-import { drawWidget } from "project-editor/project/features/gui/draw";
-import { createWidgetTree } from "project-editor/project/features/gui/widget-tree";
+import { TreeNode, createWidgetTree } from "project-editor/project/features/gui/widget-tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -133,7 +131,7 @@ export class WidgetContainerEditor extends CanvasEditor {
                             children: []
                         },
 
-                        image: drawWidget(object as Widget, rect)
+                        image: (object as Widget).draw(rect)
                     };
 
                     this.tree.children.push(dropItem);

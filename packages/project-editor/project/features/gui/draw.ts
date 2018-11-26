@@ -20,9 +20,7 @@ import {
     findBitmap
 } from "project-editor/project/features/gui/gui";
 import * as lcd from "project-editor/project/features/gui/lcd";
-import { createWidgetTree } from "project-editor/project/features/gui/widget-tree";
-
-import { drawTree } from "project-editor/project/features/gui/page-editor/CanvasEditorUtil";
+import { createWidgetTree, drawTree } from "project-editor/project/features/gui/widget-tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1199,12 +1197,6 @@ export function drawAppViewWidget(widget: Widget.Widget, rect: Rect) {
     }
 
     return undefined;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function drawWidget(widget: Widget.Widget, rect: Rect) {
-    return widget.draw(rect);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

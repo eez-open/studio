@@ -11,6 +11,14 @@ import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
 import { DisplayItem, DisplayItemSelection } from "eez-studio-shared/model/objectAdapter";
 
 import {
+    TreeNode,
+    LineConnecting,
+    traverseTree,
+    drawTree,
+    nodesFromPoint
+} from "project-editor/project/features/gui/widget-tree";
+
+import {
     findSnapLines,
     drawSnapLines
 } from "project-editor/project/features/gui/page-editor/CanvasEditorSnapLines";
@@ -18,11 +26,6 @@ import {
     CanvasEditorScrollBars,
     ScrollBarsHitRegion
 } from "project-editor/project/features/gui/page-editor/CanvasEditorScrollBars";
-import {
-    TreeNode,
-    LineConnecting,
-    traverseTree
-} from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
 import {
     HitRegion,
     HitTestResult,
@@ -33,10 +36,8 @@ import {
     RubberBandSelection
 } from "project-editor/project/features/gui/page-editor/CanvasEditorMouseDrag";
 import {
-    drawTree,
     drawSelectedDecoration,
-    drawSelection,
-    nodesFromPoint
+    drawSelection
 } from "project-editor/project/features/gui/page-editor/CanvasEditorUtil";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;

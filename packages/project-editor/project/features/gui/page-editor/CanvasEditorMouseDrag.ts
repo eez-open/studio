@@ -7,7 +7,7 @@ import {
     findClosestHorizontalSnapLinesToPosition,
     findClosestVerticalSnapLinesToPosition
 } from "project-editor/project/features/gui/page-editor/CanvasEditorSnapLines";
-import { TreeNode } from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
+import { TreeNode } from "project-editor/project/features/gui/widget-tree";
 import { HitRegion } from "project-editor/project/features/gui/page-editor/CanvasEditorHitTest";
 
 ////////////////////////////////////////////////////////////////////////////////

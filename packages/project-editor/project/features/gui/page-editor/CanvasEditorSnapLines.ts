@@ -1,6 +1,6 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
 
-import { TreeNode } from "project-editor/project/features/gui/page-editor/CanvasEditorTreeNode";
+import { TreeNode } from "project-editor/project/features/gui/widget-tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { computed } from "mobx";
-import { observer } from "mobx-react";
+import { observer, inject } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _range } from "eez-studio-shared/algorithm";
@@ -30,9 +30,6 @@ import {
     UIElementsFactory
 } from "eez-studio-shared/model/store";
 
-import * as data from "project-editor/project/features/data/data";
-
-import { findStyleOrGetDefault } from "project-editor/project/features/gui/gui";
 import { Page, WidgetContainerDisplayItem } from "project-editor/project/features/gui/page";
 import {
     Widget,
@@ -42,10 +39,7 @@ import {
     SelectWidget,
     SelectWidgetEditor
 } from "project-editor/project/features/gui/widget";
-import { createWidgetTree } from "project-editor/project/features/gui/widget-tree";
-import { drawWidget } from "project-editor/project/features/gui/draw";
-
-import { drawTree } from "project-editor/project/features/gui/page-editor/CanvasEditorUtil";
+import { createWidgetTree, drawTree } from "project-editor/project/features/gui/widget-tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -67,7 +61,27 @@ function getObjectComponentClass(object: EezObject): typeof BaseObjectComponent 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-abstract class BaseObjectComponent extends React.Component<{ object: EezObject }>
+interface IData {
+    count(dataItemId: string): number;
+    getEnumValue(dataItemId: string): number;
+}
+
+interface IStyle {
+    backgroundColor: string;
+}
+
+interface IStyleProvider {
+    findStyleOrGetDefault(styleName: any): IStyle;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+abstract class BaseObjectComponent
+    extends React.Component<{
+        object: EezObject;
+        data?: IData;
+        style?: IStyleProvider;
+    }>
     implements IBaseObject {
     children: BaseObjectComponent[] = [];
 
@@ -148,24 +162,23 @@ abstract class BaseObjectComponent extends React.Component<{ object: EezObject }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class WidgetObjectComponent extends BaseObjectComponent {
-    get widgetProperties() {
+abstract class BaseWidgetObjectComponent extends BaseObjectComponent {
+    get widget() {
         return this.props.object as Widget;
     }
 
     @computed
     get rect() {
         return {
-            left: this.widgetProperties.x,
-            top: this.widgetProperties.y,
-            width: this.widgetProperties.width,
-            height: this.widgetProperties.height
+            left: this.widget.x,
+            top: this.widget.y,
+            width: this.widget.width,
+            height: this.widget.height
         };
     }
 
     set rect(value: Rect) {
-        this.widgetProperties.applyGeometryChange(
+        this.widget.applyGeometryChange(
             {
                 x: value.left,
                 y: value.top,
@@ -178,14 +191,14 @@ class WidgetObjectComponent extends BaseObjectComponent {
 
     @computed
     get boundingRect(): Rect {
-        return this.widgetProperties.boundingRect;
+        return this.widget.boundingRect;
     }
 
     @computed
     get selectionRects() {
         let rects = [this.boundingRect];
 
-        let listWidget = this.widgetProperties._parent;
+        let listWidget = this.widget._parent;
         while (
             !(listWidget instanceof ListWidget || listWidget instanceof GridWidget) &&
             listWidget instanceof Widget
@@ -199,7 +212,7 @@ class WidgetObjectComponent extends BaseObjectComponent {
 
         const itemWidget = listWidget.itemWidget;
         if (itemWidget) {
-            let count = listWidget.data ? data.count(listWidget.data) : 0;
+            let count = listWidget.data ? this.props.data!.count(listWidget.data) : 0;
 
             if (listWidget instanceof ListWidget) {
                 for (let i = 1; i < count; i++) {
@@ -244,7 +257,7 @@ class WidgetObjectComponent extends BaseObjectComponent {
     }
 
     renderBackgroundRect() {
-        const style = findStyleOrGetDefault(this.widgetProperties.style);
+        const style = this.props.style!.findStyleOrGetDefault(this.widget.style);
 
         return (
             <rect
@@ -258,12 +271,7 @@ class WidgetObjectComponent extends BaseObjectComponent {
     }
 
     render(): React.ReactNode {
-        const canvas = drawWidget(this.widgetProperties, {
-            left: this.rect.left,
-            top: this.rect.top,
-            width: this.rect.width,
-            height: this.rect.height
-        });
+        const canvas = this.widget.draw(this.rect);
 
         if (canvas) {
             return (
@@ -283,16 +291,25 @@ class WidgetObjectComponent extends BaseObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@inject("data")
+@inject("style")
 @observer
-class ContainerWidgetObjectComponent extends WidgetObjectComponent {
-    get containerWidgetProperties() {
-        return this.widgetProperties as ContainerWidget;
+class WidgetObjectComponent extends BaseWidgetObjectComponent {}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@inject("data")
+@inject("style")
+@observer
+class ContainerWidgetObjectComponent extends BaseWidgetObjectComponent {
+    get containerWidget() {
+        return this.widget as ContainerWidget;
     }
 
     render() {
         return (
             <React.Fragment>
-                {this.renderChildren(this.containerWidgetProperties.widgets._array)}
+                {this.renderChildren(this.containerWidget.widgets._array)}
             </React.Fragment>
         );
     }
@@ -300,19 +317,21 @@ class ContainerWidgetObjectComponent extends WidgetObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@inject("data")
+@inject("style")
 @observer
-class ListWidgetObjectComponent extends WidgetObjectComponent {
-    get listWidgetProperties() {
-        return this.widgetProperties as ListWidget;
+class ListWidgetObjectComponent extends BaseWidgetObjectComponent {
+    get listWidget() {
+        return this.widget as ListWidget;
     }
 
     get itemWidget() {
-        return this.listWidgetProperties.itemWidget;
+        return this.listWidget.itemWidget;
     }
 
     get count() {
-        if (this.itemWidget && this.listWidgetProperties.data) {
-            return data.count(this.listWidgetProperties.data);
+        if (this.itemWidget && this.listWidget.data) {
+            return this.props.data!.count(this.listWidget.data);
         } else {
             return 0;
         }
@@ -332,7 +351,7 @@ class ListWidgetObjectComponent extends WidgetObjectComponent {
             let xListItem = this.rect.left;
             let yListItem = this.rect.top;
 
-            if (this.listWidgetProperties.listType === "horizontal") {
+            if (this.listWidget.listType === "horizontal") {
                 xListItem += i * itemWidget.width;
             } else {
                 yListItem += i * itemWidget.height;
@@ -367,19 +386,21 @@ class ListWidgetObjectComponent extends WidgetObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@inject("data")
+@inject("style")
 @observer
-class GridWidgetObjectComponent extends WidgetObjectComponent {
-    get gridWidgetProperties() {
-        return this.widgetProperties as GridWidget;
+class GridWidgetObjectComponent extends BaseWidgetObjectComponent {
+    get gridWidget() {
+        return this.widget as GridWidget;
     }
 
     get itemWidget() {
-        return this.gridWidgetProperties.itemWidget;
+        return this.gridWidget.itemWidget;
     }
 
     get count() {
-        if (this.itemWidget && this.gridWidgetProperties.data) {
-            return data.count(this.gridWidgetProperties.data);
+        if (this.itemWidget && this.gridWidget.data) {
+            return this.props.data!.count(this.gridWidget.data);
         } else {
             return 0;
         }
@@ -440,19 +461,21 @@ class GridWidgetObjectComponent extends WidgetObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@inject("data")
+@inject("style")
 @observer
-class SelectWidgetObjectComponent extends WidgetObjectComponent {
-    get selectWidgetProperties() {
-        return this.widgetProperties as SelectWidget;
+class SelectWidgetObjectComponent extends BaseWidgetObjectComponent {
+    get selectWidget() {
+        return this.widget as SelectWidget;
     }
 
     get count() {
-        return this.selectWidgetProperties.widgets._array.length;
+        return this.selectWidget.widgets._array.length;
     }
 
     get index() {
-        if (this.selectWidgetProperties.data) {
-            let index: number = data.getEnumValue(this.selectWidgetProperties.data);
+        if (this.selectWidget.data) {
+            let index: number = this.props.data!.getEnumValue(this.selectWidget.data);
             if (index >= 0 && index < this.count) {
                 return index;
             }
@@ -473,7 +496,7 @@ class SelectWidgetObjectComponent extends WidgetObjectComponent {
 
         let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-        let tree = createWidgetTree(this.selectWidgetProperties.widgets._array[index], true);
+        let tree = createWidgetTree(this.selectWidget.widgets._array[index], true);
         drawTree(ctx, tree, 1, () => {});
 
         return (
@@ -492,7 +515,6 @@ class SelectWidgetObjectComponent extends WidgetObjectComponent {
 
 const SELECT_WIDGET_LINES_COLOR = "rgba(255, 128, 128, 0.9)";
 
-@observer
 class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
     get selectWidgetEditor() {
         return this.props.object as SelectWidgetEditor;
@@ -712,6 +734,7 @@ function findSelectWidgetEditors(rootObject: Widget | Page) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@inject("style")
 @observer
 class RootObjectComponent extends BaseObjectComponent {
     get rootObject() {
@@ -744,7 +767,7 @@ class RootObjectComponent extends BaseObjectComponent {
     }
 
     render() {
-        const style = findStyleOrGetDefault(this.rootObject.style);
+        const style = this.props.style!.findStyleOrGetDefault(this.rootObject.style);
         return (
             <React.Fragment>
                 <rect
