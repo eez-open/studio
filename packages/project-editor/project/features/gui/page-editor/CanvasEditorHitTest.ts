@@ -1,6 +1,6 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
 
-import { TreeNode } from "project-editor/project/features/gui/widget-tree";
+import { TreeNode } from "eez-studio-page-editor/widget-tree";
 
 export const RESIZE_HANDLE_SIZE = 8;
 

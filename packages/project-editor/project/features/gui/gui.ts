@@ -11,6 +11,12 @@ import {
 } from "eez-studio-shared/model/object";
 import * as output from "eez-studio-shared/model/output";
 
+import { setPageEditorContext } from "eez-studio-page-editor/context";
+
+import * as data from "project-editor/project/features/data/data";
+import { findActionIndex } from "project-editor/project/features/action/action";
+import * as draw from "project-editor/project/features/gui/draw";
+
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
@@ -22,6 +28,19 @@ import { Bitmap } from "project-editor/project/features/gui/bitmap";
 import { build } from "project-editor/project/features/gui/build";
 import { metrics } from "project-editor/project/features/gui/metrics";
 import { GuiNavigation } from "project-editor/project/features/gui/GuiNavigation";
+
+////////////////////////////////////////////////////////////////////////////////
+
+setPageEditorContext({
+    data,
+    draw,
+    findStyle,
+    findActionIndex,
+    getPages() {
+        return (getProperty(ProjectStore.project, "gui") as Gui).pages;
+    },
+    findPage
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 

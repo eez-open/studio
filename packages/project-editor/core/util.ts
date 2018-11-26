@@ -18,12 +18,6 @@ export function confirm(message: string, detail: string | undefined, callback: (
     );
 }
 
-export function htmlEncode(value: string) {
-    return $("<div/>")
-        .text(value)
-        .html();
-}
-
 export function strToColor16(colorStr: string) {
     let color24: any;
 

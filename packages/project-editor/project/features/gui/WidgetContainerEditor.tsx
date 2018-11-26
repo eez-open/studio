@@ -9,15 +9,18 @@ import { DisplayItem, reduceUntilCommonParent } from "eez-studio-shared/model/ob
 import { UIStateStore, DocumentStore } from "eez-studio-shared/model/store";
 
 import {
+    Widget,
+    SelectWidget,
+    WidgetContainerDisplayItem,
+    ObjectGeometryChange
+} from "eez-studio-page-editor/widget";
+import { TreeNode, createWidgetTree } from "eez-studio-page-editor/widget-tree";
+
+import {
     CanvasEditor,
     CanvasEditorProps,
-    ObjectGeometryChange,
     CanvasEditorUIState
 } from "project-editor/project/features/gui/page-editor/CanvasEditor";
-
-import { Widget, SelectWidget } from "project-editor/project/features/gui/widget";
-import { WidgetContainerDisplayItem } from "project-editor/project/features/gui/page";
-import { TreeNode, createWidgetTree } from "project-editor/project/features/gui/widget-tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 

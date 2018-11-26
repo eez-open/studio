@@ -6,17 +6,18 @@ import styled from "eez-studio-ui/styled-components";
 
 import { Point, Rect, boundingRect } from "eez-studio-shared/geometry";
 
-import { EezObject, objectToString } from "eez-studio-shared/model/object";
+import { objectToString } from "eez-studio-shared/model/object";
 import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
 import { DisplayItem, DisplayItemSelection } from "eez-studio-shared/model/objectAdapter";
 
+import { GeometryProperties, ObjectGeometryChange } from "eez-studio-page-editor/widget";
 import {
     TreeNode,
     LineConnecting,
-    traverseTree,
     drawTree,
+    traverseTree,
     nodesFromPoint
-} from "project-editor/project/features/gui/widget-tree";
+} from "eez-studio-page-editor/widget-tree";
 
 import {
     findSnapLines,
@@ -48,20 +49,6 @@ const BOUNDING_RECT_MARGIN = 100;
 
 const CENTER_LINES_COLOR = "rgba(255, 0, 0, 0.2)";
 const CENTER_LINES_WIDTH = 1;
-
-////////////////////////////////////////////////////////////////////////////////
-
-export interface GeometryProperties {
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-}
-
-export interface ObjectGeometryChange {
-    object: EezObject;
-    changedProperties: GeometryProperties;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

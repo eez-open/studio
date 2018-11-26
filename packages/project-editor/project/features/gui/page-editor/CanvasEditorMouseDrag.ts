@@ -2,12 +2,13 @@ import { Point, Rect } from "eez-studio-shared/geometry";
 
 import { EezObject } from "eez-studio-shared/model/object";
 
+import { TreeNode } from "eez-studio-page-editor/widget-tree";
+
 import {
     SnapLines,
     findClosestHorizontalSnapLinesToPosition,
     findClosestVerticalSnapLinesToPosition
 } from "project-editor/project/features/gui/page-editor/CanvasEditorSnapLines";
-import { TreeNode } from "project-editor/project/features/gui/widget-tree";
 import { HitRegion } from "project-editor/project/features/gui/page-editor/CanvasEditorHitTest";
 
 ////////////////////////////////////////////////////////////////////////////////

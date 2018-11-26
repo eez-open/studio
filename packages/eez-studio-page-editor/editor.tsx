@@ -30,16 +30,18 @@ import {
     UIElementsFactory
 } from "eez-studio-shared/model/store";
 
-import { Page, WidgetContainerDisplayItem } from "project-editor/project/features/gui/page";
+import { IDataContext } from "eez-studio-page-editor/context";
+import { Page } from "eez-studio-page-editor/page";
 import {
     Widget,
     ContainerWidget,
     ListWidget,
     GridWidget,
     SelectWidget,
-    SelectWidgetEditor
-} from "project-editor/project/features/gui/widget";
-import { createWidgetTree, drawTree } from "project-editor/project/features/gui/widget-tree";
+    SelectWidgetEditor,
+    WidgetContainerDisplayItem
+} from "eez-studio-page-editor/widget";
+import { createWidgetTree, drawTree } from "eez-studio-page-editor/widget-tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,11 +63,6 @@ function getObjectComponentClass(object: EezObject): typeof BaseObjectComponent 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface IData {
-    count(dataItemId: string): number;
-    getEnumValue(dataItemId: string): number;
-}
-
 interface IStyle {
     backgroundColor: string;
 }
@@ -79,7 +76,7 @@ interface IStyleProvider {
 abstract class BaseObjectComponent
     extends React.Component<{
         object: EezObject;
-        data?: IData;
+        data?: IDataContext;
         style?: IStyleProvider;
     }>
     implements IBaseObject {
@@ -715,7 +712,7 @@ function findSelectWidgetEditors(rootObject: Widget | Page) {
     const result: SelectWidgetEditor[] = [];
 
     function doFind(object: Widget | Page) {
-        if (object instanceof Page || object instanceof ContainerWidget) {
+        if (!(object instanceof Widget) || object instanceof ContainerWidget) {
             object.widgets._array.forEach(doFind);
         } else if (object instanceof ListWidget || object instanceof GridWidget) {
             if (object.itemWidget) {
@@ -749,8 +746,8 @@ class RootObjectComponent extends BaseObjectComponent {
     @computed
     get rect() {
         return {
-            left: this.rootObject instanceof Page ? this.rootObject.x : 0,
-            top: this.rootObject instanceof Page ? this.rootObject.y : 0,
+            left: !(this.rootObject instanceof Widget) ? this.rootObject.x : 0,
+            top: !(this.rootObject instanceof Widget) ? this.rootObject.y : 0,
             width: this.rootObject.width,
             height: this.rootObject.height
         };
@@ -785,7 +782,7 @@ class RootObjectComponent extends BaseObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ExperimentalCanvasContainer = styled.div`
+const PageEditorCanvasContainer = styled.div`
     flex-grow: 1;
     overflow: hidden;
     display: flex;
@@ -812,19 +809,17 @@ const ExperimentalCanvasContainer = styled.div`
     }
 `;
 
-const ExperimentalCanvas = styled(Canvas)`
+const PageEditorCanvas = styled(Canvas)`
     flex-grow: 1;
     position: relative;
 `;
 
-interface ExperimentalWidgetContainerEditorProps {
+interface PageEditorPrope {
     widgetContainer: WidgetContainerDisplayItem;
 }
 
 @observer
-export class ExperimentalWidgetContainerEditor
-    extends React.Component<ExperimentalWidgetContainerEditorProps>
-    implements IDocument {
+export class PageEditor extends React.Component<PageEditorPrope> implements IDocument {
     rootObjectComponent: RootObjectComponent;
     designerContextComponent: DesignerContext | null;
 
@@ -904,8 +899,8 @@ export class ExperimentalWidgetContainerEditor
         const uiState = UIStateStore.getObjectUIState(this.props.widgetContainer.object);
 
         let transform: ITransform;
-        if (uiState && uiState.experimentalCanvasViewState1) {
-            transform = uiState.experimentalCanvasViewState1.transform;
+        if (uiState && uiState.pageEditorCanvasViewState) {
+            transform = uiState.pageEditorCanvasViewState.transform;
         } else {
             transform = {
                 translate: {
@@ -926,7 +921,7 @@ export class ExperimentalWidgetContainerEditor
     @bind
     onSavePersistantState(viewState: IViewStatePersistantState) {
         UIStateStore.updateObjectUIState(this.props.widgetContainer.object, {
-            experimentalCanvasViewState1: {
+            pageEditorCanvasViewState: {
                 transform: viewState.transform
             }
         });
@@ -948,8 +943,8 @@ export class ExperimentalWidgetContainerEditor
                 }}
                 ref={ref => (this.designerContextComponent = ref)}
             >
-                <ExperimentalCanvasContainer tabIndex={0} onFocus={this.focusHander}>
-                    <ExperimentalCanvas toolHandler={selectToolHandler}>
+                <PageEditorCanvasContainer tabIndex={0} onFocus={this.focusHander}>
+                    <PageEditorCanvas toolHandler={selectToolHandler}>
                         <RootObjectComponent
                             ref={ref => {
                                 if (ref) {
@@ -958,8 +953,8 @@ export class ExperimentalWidgetContainerEditor
                             }}
                             object={this.props.widgetContainer.object}
                         />
-                    </ExperimentalCanvas>
-                </ExperimentalCanvasContainer>
+                    </PageEditorCanvas>
+                </PageEditorCanvasContainer>
             </DesignerContext>
         );
     }

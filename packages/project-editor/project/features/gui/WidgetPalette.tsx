@@ -7,7 +7,7 @@ import { EezClass } from "eez-studio-shared/model/object";
 import { objectToClipboardData, setClipboardData } from "eez-studio-shared/model/clipboard";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
-import { getWidgetType, widgetClasses } from "project-editor/project/features/gui/widget";
+import { getWidgetType, getWidgetClasses } from "project-editor/project/features/gui/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -131,7 +131,7 @@ export class WidgetPalette extends React.Component<
     }
 
     render() {
-        let widgets = widgetClasses.map(widgetClass => {
+        let widgets = getWidgetClasses().map(widgetClass => {
             return (
                 <Widget
                     key={widgetClass.name}

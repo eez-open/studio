@@ -3,6 +3,8 @@ import { Rect } from "eez-studio-shared/geometry";
 import { EezObject, EezArrayObject, isObjectInstanceOf } from "eez-studio-shared/model/object";
 import { objectToJS } from "eez-studio-shared/model/serialization";
 
+import { createWidgetTree, drawTree } from "eez-studio-page-editor/widget-tree";
+
 import * as data from "project-editor/project/features/data/data";
 
 import * as Widget from "project-editor/project/features/gui/widget";
@@ -20,7 +22,6 @@ import {
     findBitmap
 } from "project-editor/project/features/gui/gui";
 import * as lcd from "project-editor/project/features/gui/lcd";
-import { createWidgetTree, drawTree } from "project-editor/project/features/gui/widget-tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 

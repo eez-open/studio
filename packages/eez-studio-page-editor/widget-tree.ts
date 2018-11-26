@@ -3,7 +3,6 @@ import { Point, Rect, pointInRect } from "eez-studio-shared/geometry";
 import {
     EezObject,
     PropertyType,
-    isObjectInstanceOf,
     isArray,
     asArray,
     getProperty
@@ -15,16 +14,15 @@ import {
     DisplayItemChildren
 } from "eez-studio-shared/model/objectAdapter";
 
-import * as data from "project-editor/project/features/data/data";
-
-import { Page, IWidgetContainerDisplayItem } from "project-editor/project/features/gui/page";
+import { PageEditorContext } from "eez-studio-page-editor/context";
+import { Page } from "eez-studio-page-editor/page";
 import {
     Widget,
     ListWidget,
     GridWidget,
-    SelectWidget
-} from "project-editor/project/features/gui/widget";
-import { drawPageFrame } from "project-editor/project/features/gui/draw";
+    SelectWidget,
+    IWidgetContainerDisplayItem
+} from "eez-studio-page-editor/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -141,7 +139,7 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
     getSelectedWidgetForSelectWidget(item: DisplayItem): DisplayItem | undefined {
         let widget = item.object as SelectWidget;
         if (widget.data && widget.widgets) {
-            let index: number = data.getEnumValue(widget.data);
+            let index: number = PageEditorContext.data.getEnumValue(widget.data);
             if (index >= 0 && index < widget.widgets._array.length) {
                 let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
@@ -160,20 +158,18 @@ function drawPageFrameForTreeNode(
     scale: number,
     callback: () => void
 ) {
-    if (isObjectInstanceOf(node.item.object, Page.classInfo)) {
-        let page = node.item.object as Page;
-        drawPageFrame(
-            ctx,
-            {
-                left: page.x,
-                top: page.y,
-                width: page.width,
-                height: page.height
-            },
-            scale,
-            page.style || "default"
-        );
-    }
+    let page = node.item.object as Page;
+    PageEditorContext.draw.drawPageFrame(
+        ctx,
+        {
+            left: page.x,
+            top: page.y,
+            width: page.width,
+            height: page.height
+        },
+        scale,
+        page.style || "default"
+    );
 }
 
 export function createWidgetTree(
@@ -189,10 +185,8 @@ export function createWidgetTree(
         ) {
             let object = item.object as Widget | Page;
 
-            if (object instanceof Widget || object instanceof Page) {
-                x += object.x || 0;
-                y += object.y || 0;
-            }
+            x += object.x || 0;
+            y += object.y || 0;
 
             let rect = {
                 left: x,
@@ -218,13 +212,7 @@ export function createWidgetTree(
                 parentNode.children.push(treeNode);
             }
 
-            if (object instanceof Page) {
-                let widgetsItemChildren = item.children as DisplayItemChildrenArray;
-
-                widgetsItemChildren.forEach(child => {
-                    enumWidget(treeNode, child, x, y);
-                });
-            } else {
+            if (object instanceof Widget) {
                 if (object.type == "Container") {
                     let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
@@ -239,7 +227,11 @@ export function createWidgetTree(
                             "itemWidget"
                         ];
 
-                        for (let i = 0; i < data.count(<string>widget.data); i++) {
+                        for (
+                            let i = 0;
+                            i < PageEditorContext.data.count(<string>widget.data);
+                            i++
+                        ) {
                             enumWidget(treeNode, itemWidgetItem, x, y);
 
                             if (widget.listType == "vertical") {
@@ -257,7 +249,11 @@ export function createWidgetTree(
                             "itemWidget"
                         ];
 
-                        for (let i = 0; i < data.count(<string>widget.data); i++) {
+                        for (
+                            let i = 0;
+                            i < PageEditorContext.data.count(<string>widget.data);
+                            i++
+                        ) {
                             enumWidget(treeNode, itemWidgetItem, x, y);
 
                             if (x + itemWidget.width < widget.width) {
@@ -280,6 +276,12 @@ export function createWidgetTree(
                         enumWidget(treeNode, selectedWidgetItem, x, y);
                     }
                 }
+            } else {
+                let widgetsItemChildren = item.children as DisplayItemChildrenArray;
+
+                widgetsItemChildren.forEach(child => {
+                    enumWidget(treeNode, child, x, y);
+                });
             }
 
             return treeNode;

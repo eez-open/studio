@@ -9,16 +9,17 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { EditorComponent } from "eez-studio-shared/model/object";
 import { NavigationStore } from "eez-studio-shared/model/store";
 
-import { Panel } from "project-editor/components/Panel";
 import { Tree } from "eez-studio-shared/model/components/Tree";
+import { Panel } from "project-editor/components/Panel";
 
 import * as data from "project-editor/project/features/data/data";
+
 import { findStyleOrGetDefault } from "project-editor/project/features/gui/gui";
 
 import { Page, PageTabState } from "project-editor/project/features/gui/page";
 import { WidgetPalette } from "project-editor/project/features/gui/WidgetPalette";
 import { WidgetContainerEditor } from "project-editor/project/features/gui/WidgetContainerEditor";
-import { ExperimentalWidgetContainerEditor } from "project-editor/project/features/gui/experimental-page-editor/editor";
+import { PageEditor as ExperimentalWidgetContainerEditor } from "eez-studio-page-editor/editor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
