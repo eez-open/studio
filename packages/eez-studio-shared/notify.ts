@@ -1,4 +1,5 @@
-import { guid, isRenderer } from "eez-studio-shared/util";
+import { isRenderer } from "eez-studio-shared/util";
+import { guid } from "eez-studio-shared/guid";
 
 ////////////////////////////////////////////////////////////////////////////////
 

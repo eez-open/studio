@@ -1,6 +1,6 @@
 import React from "react";
 import { observable, computed, action } from "mobx";
-import { observer, Provider } from "mobx-react";
+import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-ui/action";
@@ -10,16 +10,13 @@ import { EditorComponent } from "eez-studio-shared/model/object";
 import { NavigationStore } from "eez-studio-shared/model/store";
 
 import { Tree } from "eez-studio-shared/model/components/Tree";
-import { Panel } from "project-editor/components/Panel";
+import { Panel } from "eez-studio-shared/model/components/Panel";
 
-import * as data from "project-editor/project/features/data/data";
-
-import { findStyleOrGetDefault } from "project-editor/project/features/gui/gui";
+import { WidgetPalette } from "eez-studio-page-editor/components/WidgetPalette";
+import { PageEditor as ExperimentalWidgetContainerEditor } from "eez-studio-page-editor/editor";
 
 import { Page, PageTabState } from "project-editor/project/features/gui/page";
-import { WidgetPalette } from "project-editor/project/features/gui/WidgetPalette";
 import { WidgetContainerEditor } from "project-editor/project/features/gui/WidgetContainerEditor";
-import { PageEditor as ExperimentalWidgetContainerEditor } from "eez-studio-page-editor/editor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,11 +53,9 @@ export class PageEditor extends EditorComponent {
         let editor;
         if (this.isExperimentalEditor) {
             editor = (
-                <Provider data={data} style={{ findStyleOrGetDefault }}>
-                    <ExperimentalWidgetContainerEditor
-                        widgetContainer={pageTabState.widgetContainerDisplayItem}
-                    />
-                </Provider>
+                <ExperimentalWidgetContainerEditor
+                    widgetContainer={pageTabState.widgetContainerDisplayItem}
+                />
             );
         } else {
             editor = (

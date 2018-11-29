@@ -5,7 +5,8 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
 
-import { clamp, guid } from "eez-studio-shared/util";
+import { clamp } from "eez-studio-shared/util";
+import { guid } from "eez-studio-shared/guid";
 import { capitalize } from "eez-studio-shared/string";
 import { Point, pointDistance } from "eez-studio-shared/geometry";
 import { IUnit } from "eez-studio-shared/units";

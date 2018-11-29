@@ -5,6 +5,7 @@ import MomentModule from "moment";
 import * as GeometryModule from "eez-studio-shared/geometry";
 
 import * as I10nModule from "eez-studio-shared/i10n";
+import { roundNumber } from "./roundNumber";
 
 export let app: Electron.App;
 if (isRenderer()) {
@@ -14,15 +15,6 @@ if (isRenderer()) {
 }
 
 export const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(process.execPath);
-
-export function guid() {
-    var d = new Date().getTime();
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
-        var r = (d + Math.random() * 16) % 16 | 0;
-        d = Math.floor(d / 16);
-        return (c == "x" ? r : (r & 0x7) | 0x8).toString(16);
-    });
-}
 
 export function getUserDataPath(relativePath: string) {
     return app.getPath("userData") + path.sep + relativePath;
@@ -359,17 +351,6 @@ export function formatNumber(value: number, base: number, width: number): string
     return ("0".repeat(width) + value.toString(base)).substr(-width).toUpperCase();
 }
 
-export function formatBytes(a: number, b?: number) {
-    if (a == 0) {
-        return "0 Bytes";
-    }
-    var c = 1024,
-        d = b || 2,
-        e = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
-        f = Math.floor(Math.log(a) / Math.log(c));
-    return parseFloat((a / Math.pow(c, f)).toFixed(d)) + " " + e[f];
-}
-
 export function formatTransferSpeed(speed: number) {
     let ordinals = ["", "K", "M", "G", "T", "P", "E"];
 
@@ -629,27 +610,6 @@ export function getDayOfWeekName(dayOfWeek: number) {
 
 export function getWeekNumber(date: Date) {
     return getMoment()(date).week();
-}
-
-export function filterFloat(value: string) {
-    if (/^(\-|\+)?([0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?|Infinity)$/.test(value)) {
-        return Number(value);
-    }
-    return NaN;
-}
-
-export function filterInteger(value: string) {
-    if (/^(\-|\+)?[0-9]+$/.test(value)) {
-        return Number(value);
-    }
-    return NaN;
-}
-
-export function roundNumber(value: number, digits: number) {
-    if (digits < 0) {
-        digits = 0;
-    }
-    return parseFloat(value.toFixed(digits));
 }
 
 let reservedKeybindings: string[] | undefined = undefined;

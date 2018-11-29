@@ -23,7 +23,9 @@ export interface IDrawContext {
     drawLayoutViewWidget(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
 }
 
-export interface IStyle {}
+export interface IStyle {
+    backgroundColor?: string;
+}
 
 export interface IPageEditorContext {
     data: IDataContext;
@@ -33,6 +35,7 @@ export interface IPageEditorContext {
     getPages(): EezArrayObject<Page>;
     findPage(pageName: string): Page | undefined;
     findStyle(styleName: any): IStyle | undefined;
+    findStyleOrGetDefault(styleName: any): IStyle;
 }
 
 export let PageEditorContext: IPageEditorContext;

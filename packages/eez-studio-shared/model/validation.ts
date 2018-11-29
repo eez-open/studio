@@ -1,6 +1,5 @@
 import { observable, runInAction } from "mobx";
 
-import { filterInteger } from "eez-studio-shared/util";
 import { UNITS } from "eez-studio-shared/units";
 
 const VALIDATION_MESSAGE_INVALID_VALUE = "Invalid value.";
@@ -12,6 +11,13 @@ const VALIDATION_MESSAGE_RANGE_EXCLUSIVE =
     "Please enter value between (not included) ${min} and ${max}.";
 const VALIDATION_MESSAGE_RANGE_EXCLUSIVE_WITHOUT_MAX = "Please enter value greater than ${min}.";
 const VALIDATION_MESSAGE_NOT_UNIQUE = "This field has no unique value.";
+
+function filterInteger(value: string) {
+    if (/^(\-|\+)?[0-9]+$/.test(value)) {
+        return Number(value);
+    }
+    return NaN;
+}
 
 export type Rule = (object: any, ruleName: string) => Promise<string | null> | string | null;
 

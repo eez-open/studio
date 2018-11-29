@@ -4,6 +4,7 @@ import { bind } from "bind-decorator";
 import classNames from "classnames";
 
 import { _filter, _map } from "eez-studio-shared/algorithm";
+import { hasClass } from "eez-studio-shared/dom";
 
 import { Icon } from "eez-studio-ui/icon";
 import styled from "eez-studio-ui/styled-components";
@@ -170,8 +171,8 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
             this.ensureVisibleTimeout = undefined;
 
             if (!DragAndDropManager.dragObject) {
-                if ($(this.row).hasClass("selected")) {
-                    ($(this.row)[0] as any).scrollIntoViewIfNeeded();
+                if (hasClass(this.row, "selected")) {
+                    (this.row as any).scrollIntoViewIfNeeded();
                 }
             }
         }, 100);

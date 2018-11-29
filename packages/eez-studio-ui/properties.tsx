@@ -4,7 +4,8 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
 
-import { guid, formatBytes } from "eez-studio-shared/util";
+import { formatBytes } from "eez-studio-shared/formatBytes";
+import { guid } from "eez-studio-shared/guid";
 import { capitalize } from "eez-studio-shared/string";
 
 import { ListContainer, List, IListNode } from "eez-studio-ui/list";

@@ -5,7 +5,8 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _map, _difference, _range } from "eez-studio-shared/algorithm";
-import { guid, clamp } from "eez-studio-shared/util";
+import { clamp } from "eez-studio-shared/util";
+import { guid } from "eez-studio-shared/guid";
 import { stringCompare } from "eez-studio-shared/string";
 
 import { IMeasurementFunction, IChart } from "eez-studio-shared/extensions/extension";

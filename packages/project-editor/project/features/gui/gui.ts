@@ -34,12 +34,13 @@ import { GuiNavigation } from "project-editor/project/features/gui/GuiNavigation
 setPageEditorContext({
     data,
     draw,
-    findStyle,
     findActionIndex,
     getPages() {
         return (getProperty(ProjectStore.project, "gui") as Gui).pages;
     },
-    findPage
+    findPage,
+    findStyle,
+    findStyleOrGetDefault
 });
 
 ////////////////////////////////////////////////////////////////////////////////

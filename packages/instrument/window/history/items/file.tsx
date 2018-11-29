@@ -11,11 +11,11 @@ import {
     writeBinaryData,
     formatTransferSpeed,
     getFileName,
-    formatBytes,
     formatDateTimeLong,
     getTempDirPath,
     fileExists
 } from "eez-studio-shared/util";
+import { formatBytes } from "eez-studio-shared/formatBytes";
 
 import * as notification from "eez-studio-ui/notification";
 

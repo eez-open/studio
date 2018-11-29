@@ -1,6 +1,6 @@
 import React from "react";
-import { computed } from "mobx";
-import { observer, inject } from "mobx-react";
+import { observable, computed, action, toJS } from "mobx";
+import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _range } from "eez-studio-shared/algorithm";
@@ -20,7 +20,7 @@ import { Canvas } from "eez-studio-designer/canvas";
 import { selectToolHandler } from "eez-studio-designer/select-tool";
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject } from "eez-studio-shared/model/object";
+import { EezObject, isObjectInstanceOf, getProperty } from "eez-studio-shared/model/object";
 import {
     DocumentStore,
     NavigationStore,
@@ -29,8 +29,9 @@ import {
     UIStateStore,
     UIElementsFactory
 } from "eez-studio-shared/model/store";
+import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
-import { IDataContext } from "eez-studio-page-editor/context";
+import { PageEditorContext } from "eez-studio-page-editor/context";
 import { Page } from "eez-studio-page-editor/page";
 import {
     Widget,
@@ -63,21 +64,10 @@ function getObjectComponentClass(object: EezObject): typeof BaseObjectComponent 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface IStyle {
-    backgroundColor: string;
-}
-
-interface IStyleProvider {
-    findStyleOrGetDefault(styleName: any): IStyle;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 abstract class BaseObjectComponent
     extends React.Component<{
         object: EezObject;
-        data?: IDataContext;
-        style?: IStyleProvider;
+        dragWidget?: Widget;
     }>
     implements IBaseObject {
     children: BaseObjectComponent[] = [];
@@ -209,7 +199,7 @@ abstract class BaseWidgetObjectComponent extends BaseObjectComponent {
 
         const itemWidget = listWidget.itemWidget;
         if (itemWidget) {
-            let count = listWidget.data ? this.props.data!.count(listWidget.data) : 0;
+            let count = listWidget.data ? PageEditorContext.data.count(listWidget.data) : 0;
 
             if (listWidget instanceof ListWidget) {
                 for (let i = 1; i < count; i++) {
@@ -254,7 +244,7 @@ abstract class BaseWidgetObjectComponent extends BaseObjectComponent {
     }
 
     renderBackgroundRect() {
-        const style = this.props.style!.findStyleOrGetDefault(this.widget.style);
+        const style = PageEditorContext.findStyleOrGetDefault(this.widget.style);
 
         return (
             <rect
@@ -288,15 +278,11 @@ abstract class BaseWidgetObjectComponent extends BaseObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@inject("data")
-@inject("style")
 @observer
 class WidgetObjectComponent extends BaseWidgetObjectComponent {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@inject("data")
-@inject("style")
 @observer
 class ContainerWidgetObjectComponent extends BaseWidgetObjectComponent {
     get containerWidget() {
@@ -314,8 +300,6 @@ class ContainerWidgetObjectComponent extends BaseWidgetObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@inject("data")
-@inject("style")
 @observer
 class ListWidgetObjectComponent extends BaseWidgetObjectComponent {
     get listWidget() {
@@ -328,7 +312,7 @@ class ListWidgetObjectComponent extends BaseWidgetObjectComponent {
 
     get count() {
         if (this.itemWidget && this.listWidget.data) {
-            return this.props.data!.count(this.listWidget.data);
+            return PageEditorContext.data.count(this.listWidget.data);
         } else {
             return 0;
         }
@@ -383,8 +367,6 @@ class ListWidgetObjectComponent extends BaseWidgetObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@inject("data")
-@inject("style")
 @observer
 class GridWidgetObjectComponent extends BaseWidgetObjectComponent {
     get gridWidget() {
@@ -397,7 +379,7 @@ class GridWidgetObjectComponent extends BaseWidgetObjectComponent {
 
     get count() {
         if (this.itemWidget && this.gridWidget.data) {
-            return this.props.data!.count(this.gridWidget.data);
+            return PageEditorContext.data.count(this.gridWidget.data);
         } else {
             return 0;
         }
@@ -458,8 +440,6 @@ class GridWidgetObjectComponent extends BaseWidgetObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@inject("data")
-@inject("style")
 @observer
 class SelectWidgetObjectComponent extends BaseWidgetObjectComponent {
     get selectWidget() {
@@ -472,7 +452,7 @@ class SelectWidgetObjectComponent extends BaseWidgetObjectComponent {
 
     get index() {
         if (this.selectWidget.data) {
-            let index: number = this.props.data!.getEnumValue(this.selectWidget.data);
+            let index: number = PageEditorContext.data.getEnumValue(this.selectWidget.data);
             if (index >= 0 && index < this.count) {
                 return index;
             }
@@ -512,6 +492,7 @@ class SelectWidgetObjectComponent extends BaseWidgetObjectComponent {
 
 const SELECT_WIDGET_LINES_COLOR = "rgba(255, 128, 128, 0.9)";
 
+@observer
 class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
     get selectWidgetEditor() {
         return this.props.object as SelectWidgetEditor;
@@ -731,7 +712,6 @@ function findSelectWidgetEditors(rootObject: Widget | Page) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@inject("style")
 @observer
 class RootObjectComponent extends BaseObjectComponent {
     get rootObject() {
@@ -739,7 +719,10 @@ class RootObjectComponent extends BaseObjectComponent {
     }
 
     get childrenObjects() {
-        const childrenObjects = this.rootObject.widgets._array as EezObject[];
+        let childrenObjects = this.rootObject.widgets._array as EezObject[];
+        if (this.props.dragWidget) {
+            childrenObjects = [...childrenObjects, this.props.dragWidget];
+        }
         return childrenObjects.concat(findSelectWidgetEditors(this.rootObject));
     }
 
@@ -764,9 +747,9 @@ class RootObjectComponent extends BaseObjectComponent {
     }
 
     render() {
-        const style = this.props.style!.findStyleOrGetDefault(this.rootObject.style);
+        const style = PageEditorContext.findStyleOrGetDefault(this.rootObject.style);
         return (
-            <React.Fragment>
+            <g style={{ pointerEvents: "none" }}>
                 <rect
                     x={this.rect.left}
                     y={this.rect.top}
@@ -775,7 +758,7 @@ class RootObjectComponent extends BaseObjectComponent {
                     fill={style.backgroundColor}
                 />
                 {this.renderChildren(this.childrenObjects)}
-            </React.Fragment>
+            </g>
         );
     }
 }
@@ -822,6 +805,9 @@ interface PageEditorPrope {
 export class PageEditor extends React.Component<PageEditorPrope> implements IDocument {
     rootObjectComponent: RootObjectComponent;
     designerContextComponent: DesignerContext | null;
+
+    @observable
+    dragEnterCounter = 0;
 
     findObjectById(id: string) {
         return this.rootObjectComponent && this.rootObjectComponent.findObjectById(id);
@@ -929,6 +915,65 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
         this.props.widgetContainer.selectObjectIds(viewState.selectedObjects);
     }
 
+    getDragWidget(event: React.DragEvent) {
+        if (
+            DragAndDropManager.dragObject &&
+            isObjectInstanceOf(DragAndDropManager.dragObject, Widget.classInfo) &&
+            event.dataTransfer.effectAllowed === "copy"
+        ) {
+            return DragAndDropManager.dragObject as Widget;
+        }
+        return undefined;
+    }
+
+    @action.bound
+    onDragEnter(event: React.DragEvent) {
+        const widget = this.getDragWidget(event);
+        if (widget) {
+            ++this.dragEnterCounter;
+        }
+    }
+
+    @action.bound
+    onDragOver(event: React.DragEvent) {
+        const widget = this.getDragWidget(event);
+        if (widget) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const widget = DragAndDropManager.dragObject as Widget;
+
+            const p = this.designerContextComponent!.designerContext.viewState.transform.offsetToModelPoint(
+                {
+                    x: event.nativeEvent.offsetX,
+                    y: event.nativeEvent.offsetY
+                }
+            );
+
+            widget.x = Math.round(p.x);
+            widget.y = Math.round(p.y);
+        }
+    }
+
+    @bind
+    onDrop(event: React.DragEvent) {
+        const widget = this.getDragWidget(event);
+        if (widget) {
+            DocumentStore.addObject(
+                getProperty(this.props.widgetContainer.object, "widgets"),
+                toJS(widget)
+            );
+        }
+    }
+
+    @action.bound
+    onDragLeave(event: React.DragEvent) {
+        const widget = this.getDragWidget(event);
+        if (widget) {
+            --this.dragEnterCounter;
+        }
+    }
+
     render() {
         return (
             <DesignerContext
@@ -943,7 +988,14 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
                 }}
                 ref={ref => (this.designerContextComponent = ref)}
             >
-                <PageEditorCanvasContainer tabIndex={0} onFocus={this.focusHander}>
+                <PageEditorCanvasContainer
+                    tabIndex={0}
+                    onFocus={this.focusHander}
+                    onDragEnter={this.onDragEnter}
+                    onDragOver={this.onDragOver}
+                    onDrop={this.onDrop}
+                    onDragLeave={this.onDragLeave}
+                >
                     <PageEditorCanvas toolHandler={selectToolHandler}>
                         <RootObjectComponent
                             ref={ref => {
@@ -952,6 +1004,11 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
                                 }
                             }}
                             object={this.props.widgetContainer.object}
+                            dragWidget={
+                                this.dragEnterCounter > 0
+                                    ? (DragAndDropManager.dragObject as Widget)
+                                    : undefined
+                            }
                         />
                     </PageEditorCanvas>
                 </PageEditorCanvasContainer>

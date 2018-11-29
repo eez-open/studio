@@ -3,7 +3,7 @@ import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { guid } from "eez-studio-shared/util";
+import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
 import styled from "eez-studio-ui/styled-components";
 

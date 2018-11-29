@@ -27,10 +27,10 @@ import {
     copyItem,
     pasteItem,
     deleteItems,
-    showContextMenu as showSingleItemContextMenu
+    showContextMenu as showSingleItemContextMenu,
+    IMenuItem,
+    UIElementsFactory
 } from "eez-studio-shared/model/store";
-
-const { Menu, MenuItem } = EEZStudio.electron.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -518,13 +518,13 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
             return;
         }
 
-        let menuItems: Electron.MenuItem[] = [];
+        let menuItems: IMenuItem[] = [];
 
-        let clipboardMenuItems: Electron.MenuItem[] = [];
+        let clipboardMenuItems: IMenuItem[] = [];
 
         if (this.canCut()) {
             clipboardMenuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     label: "Cut",
                     click: () => {
                         this.cutSelection();
@@ -535,7 +535,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
 
         if (this.canCopy()) {
             clipboardMenuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     label: "Copy",
                     click: () => {
                         this.copySelection();
@@ -546,7 +546,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
 
         if (this.canPaste()) {
             clipboardMenuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     label: "Paste",
                     click: () => {
                         this.pasteSelection();
@@ -558,7 +558,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
         if (clipboardMenuItems.length > 0) {
             if (menuItems.length > 0) {
                 menuItems.push(
-                    new MenuItem({
+                    UIElementsFactory.createMenuItem({
                         type: "separator"
                     })
                 );
@@ -569,14 +569,14 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
         if (this.canDelete()) {
             if (menuItems.length > 0) {
                 menuItems.push(
-                    new MenuItem({
+                    UIElementsFactory.createMenuItem({
                         type: "separator"
                     })
                 );
             }
 
             menuItems.push(
-                new MenuItem({
+                UIElementsFactory.createMenuItem({
                     label: "Delete",
                     click: () => {
                         this.deleteSelection();
@@ -599,7 +599,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
         }
 
         if (menuItems.length > 0) {
-            const menu = new Menu();
+            const menu = UIElementsFactory.createMenu();
             menuItems.forEach(menuItem => menu.append(menuItem));
             menu.popup({});
         }

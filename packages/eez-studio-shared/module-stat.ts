@@ -1,5 +1,5 @@
 import { _each } from "eez-studio-shared/algorithm";
-import { formatBytes } from "eez-studio-shared/util";
+import { formatBytes } from "eez-studio-shared/formatBytes";
 import { stringCompare } from "eez-studio-shared/string";
 
 const TP_MODULE_PREFIX = "\\node_modules\\";

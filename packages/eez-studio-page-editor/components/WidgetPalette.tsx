@@ -1,4 +1,6 @@
 import React from "react";
+import { observable, action } from "mobx";
+import { observer } from "mobx-react";
 import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
@@ -7,7 +9,7 @@ import { EezClass } from "eez-studio-shared/model/object";
 import { objectToClipboardData, setClipboardData } from "eez-studio-shared/model/clipboard";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
-import { getWidgetType, getWidgetClasses } from "project-editor/project/features/gui/widget";
+import { getWidgetType, getWidgetClasses } from "eez-studio-page-editor/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,24 +39,11 @@ interface WidgetProps {
     onSelect: (widget: EezClass | undefined) => void;
 }
 
-interface WidgetState {
-    dragging: boolean;
-}
-
-class Widget extends React.Component<WidgetProps, WidgetState> {
-    constructor(props: WidgetProps) {
-        super(props);
-        this.state = {
-            dragging: false
-        };
-    }
-
+@observer
+class Widget extends React.Component<WidgetProps> {
+    @action.bound
     onDragStart(event: any) {
         this.props.onSelect(undefined);
-
-        this.setState({
-            dragging: true
-        });
 
         let object = new this.props.widgetClass();
         Object.assign(object, object._classInfo.defaultValue!);
@@ -70,22 +59,24 @@ class Widget extends React.Component<WidgetProps, WidgetState> {
         event.dataTransfer.effectAllowed = "copy";
 
         event.dataTransfer.setDragImage(DragAndDropManager.blankDragImage, 0, 0);
-    }
 
-    onDragEnd() {
-        this.setState({
-            dragging: false
+        // postpone render, otherwise we can receive onDragEnd immediatelly
+        setTimeout(() => {
+            DragAndDropManager.start(event, object);
         });
     }
 
-    onSelect() {
-        this.props.onSelect(undefined);
+    @action.bound
+    onDragEnd(event: any) {
+        DragAndDropManager.end(event);
     }
 
     render() {
         let className = classNames({
             selected: this.props.selected,
-            dragging: this.state.dragging
+            dragging:
+                DragAndDropManager.dragObject &&
+                DragAndDropManager.dragObject._class === this.props.widgetClass
         });
 
         let label = getWidgetType(this.props.widgetClass);
@@ -93,10 +84,10 @@ class Widget extends React.Component<WidgetProps, WidgetState> {
         return (
             <WidgetDiv
                 className={className}
-                onClick={this.onSelect.bind(this)}
+                onClick={() => this.props.onSelect(this.props.widgetClass)}
                 draggable={true}
-                onDragStart={this.onDragStart.bind(this)}
-                onDragEnd={this.onDragEnd.bind(this)}
+                onDragStart={this.onDragStart}
+                onDragEnd={this.onDragEnd}
             >
                 {label}
             </WidgetDiv>
@@ -111,23 +102,14 @@ const WidgetPaletteDiv = styled.div`
     padding: 10px;
 `;
 
-export class WidgetPalette extends React.Component<
-    {},
-    {
-        selectedWidgetClass: EezClass | undefined;
-    }
-> {
-    constructor(props: {}) {
-        super(props);
-        this.state = {
-            selectedWidgetClass: undefined
-        };
-    }
+@observer
+export class WidgetPalette extends React.Component {
+    @observable
+    selectedWidgetClass: EezClass | undefined;
 
+    @action.bound
     onSelect(widgetClass: EezClass | undefined) {
-        this.setState({
-            selectedWidgetClass: widgetClass
-        });
+        this.selectedWidgetClass = widgetClass;
     }
 
     render() {
@@ -136,8 +118,8 @@ export class WidgetPalette extends React.Component<
                 <Widget
                     key={widgetClass.name}
                     widgetClass={widgetClass}
-                    onSelect={this.onSelect.bind(this, widgetClass)}
-                    selected={widgetClass == this.state.selectedWidgetClass}
+                    onSelect={this.onSelect}
+                    selected={widgetClass === this.selectedWidgetClass}
                 />
             );
         });

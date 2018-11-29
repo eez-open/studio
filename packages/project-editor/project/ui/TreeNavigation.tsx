@@ -14,7 +14,7 @@ import {
 } from "eez-studio-shared/model/store";
 import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 
-import { Panel } from "project-editor/components/Panel";
+import { Panel } from "eez-studio-shared/model/components/Panel";
 import { Tree } from "eez-studio-shared/model/components/Tree";
 
 ////////////////////////////////////////////////////////////////////////////////

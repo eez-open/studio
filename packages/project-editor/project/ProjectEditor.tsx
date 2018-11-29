@@ -26,7 +26,7 @@ import { ProjectStore } from "project-editor/core/store";
 import { Debug } from "project-editor/core/debug";
 
 import { IconAction } from "eez-studio-ui/action";
-import { Panel } from "project-editor/components/Panel";
+import { Panel } from "eez-studio-shared/model/components/Panel";
 import { PropertyGrid } from "eez-studio-shared/model/components/PropertyGrid";
 import { Output } from "eez-studio-shared/model/components/Output";
 

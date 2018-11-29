@@ -3,7 +3,6 @@ const EventEmitter = require("events");
 const fs = require("fs");
 
 import {
-    guid,
     localPathToFileUrl,
     zipExtract,
     fileExists,
@@ -15,6 +14,7 @@ import {
     writeJsObjectToFile,
     delay
 } from "eez-studio-shared/util";
+import { guid } from "eez-studio-shared/guid";
 
 import { registerSource, sendMessage, watch } from "eez-studio-shared/notify";
 

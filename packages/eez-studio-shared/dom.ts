@@ -22,3 +22,11 @@ export function closestBySelector(element: any, selector: string) {
         return element.matches && element.matches(selector);
     });
 }
+
+export function hasClass(element: any, className: string) {
+    return (
+        element &&
+        element.className &&
+        element.className.match(new RegExp("\\b" + className + "\\b"))
+    );
+}

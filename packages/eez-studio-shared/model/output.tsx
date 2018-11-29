@@ -1,7 +1,7 @@
 import React from "react";
 import { observable, action, computed } from "mobx";
 
-import { guid } from "eez-studio-shared/util";
+import { guid } from "eez-studio-shared/guid";
 
 import { Icon } from "eez-studio-ui/icon";
 

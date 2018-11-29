@@ -2,7 +2,7 @@ import React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 
-import { guid } from "eez-studio-shared/util";
+import { guid } from "eez-studio-shared/guid";
 
 import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
 

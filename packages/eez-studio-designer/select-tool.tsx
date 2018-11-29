@@ -181,8 +181,12 @@ class DragMouseHandler extends MouseHandler {
 
         for (const object of context.viewState.selectedObjects) {
             let rect = {
-                left: object.rect.left + this.movement.x / context.viewState.transform.scale,
-                top: object.rect.top + this.movement.y / context.viewState.transform.scale,
+                left: Math.round(
+                    object.rect.left + this.movement.x / context.viewState.transform.scale
+                ),
+                top: Math.round(
+                    object.rect.top + this.movement.y / context.viewState.transform.scale
+                ),
                 width: object.rect.width,
                 height: object.rect.height
             };
@@ -387,13 +391,14 @@ class ResizeMouseHandler extends MouseHandler {
             let savedRect = this.savedRects[i];
             let rect = this.rects[i];
 
-            rect.left =
-                this.boundingRect.left +
-                (savedRect.left - this.savedBoundingRect.left) * scaleWidth;
-            rect.top =
-                this.boundingRect.top + (savedRect.top - this.savedBoundingRect.top) * scaleHeight;
-            rect.width = savedRect.width * scaleWidth;
-            rect.height = savedRect.height * scaleHeight;
+            rect.left = Math.round(
+                this.boundingRect.left + (savedRect.left - this.savedBoundingRect.left) * scaleWidth
+            );
+            rect.top = Math.round(
+                this.boundingRect.top + (savedRect.top - this.savedBoundingRect.top) * scaleHeight
+            );
+            rect.width = Math.round(savedRect.width * scaleWidth);
+            rect.height = Math.round(savedRect.height * scaleHeight);
 
             if (!rectEqual(rect, objects[i].rect)) {
                 this.changed = true;

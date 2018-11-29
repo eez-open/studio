@@ -1,7 +1,7 @@
 import React from "react";
 import { bind } from "bind-decorator";
 
-import { guid } from "eez-studio-shared/util";
+import { guid } from "eez-studio-shared/guid";
 
 import styled from "eez-studio-ui/styled-components";
 import { PropertyEnclosure } from "eez-studio-ui/properties";

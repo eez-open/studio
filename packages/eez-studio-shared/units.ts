@@ -1,4 +1,5 @@
-import { filterFloat, roundNumber } from "eez-studio-shared/util";
+import { roundNumber } from "eez-studio-shared/roundNumber";
+import { filterFloat } from "eez-studio-shared/filterFloat";
 import { _mapValues } from "eez-studio-shared/algorithm";
 
 ////////////////////////////////////////////////////////////////////////////////

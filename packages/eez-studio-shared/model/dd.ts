@@ -8,7 +8,8 @@ import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
 export enum DropPosition {
     DROP_NONE,
     DROP_BEFORE,
-    DROP_INSIDE
+    DROP_INSIDE,
+    DROP_APPEND
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,6 +76,9 @@ class DragAndDropManagerClass {
 
         this.dragObject = undefined;
 
+        if (this.dropObject && this.dropPosition === DropPosition.DROP_APPEND) {
+            DocumentStore.deleteObject(this.dropObject);
+        }
         this.unsetDropObjectAndPosition();
 
         UndoManager.setCombineCommands(false);

@@ -30,7 +30,7 @@ import {
 
 import { TreeNode, LineConnecting } from "eez-studio-page-editor/widget-tree";
 
-import { Panel } from "project-editor/components/Panel";
+import { Panel } from "eez-studio-shared/model/components/Panel";
 import {
     CanvasEditor,
     CanvasEditorProps,

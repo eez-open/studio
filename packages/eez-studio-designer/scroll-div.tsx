@@ -8,6 +8,7 @@ import { Rect, Transform } from "eez-studio-shared/geometry";
 const CONF_TIMEOUT_FOR_TRANSLATE_ADJUSTMENT_AFTER_ON_SCROLL_EVENT = 1000; // ms
 const CONF_CHANGE_SCROLL_TIMEOUT = 1; // ms
 const CONF_GUARD_ON_SCROLL_TIMEOUT = 50; // ms
+const CONF_SCROLLBAR_TOLERANCE = 10; // px
 
 @observer
 export class ScrollDiv extends React.Component<{
@@ -32,6 +33,9 @@ export class ScrollDiv extends React.Component<{
 
     @observable scrollLeft: number = 0;
     @observable scrollTop: number = 0;
+
+    @observable overflowX: "auto" | "hidden" = "hidden";
+    @observable overflowY: "auto" | "hidden" = "hidden";
 
     get isScrolling() {
         return !!this.scrollStopTimeout;
@@ -98,6 +102,15 @@ export class ScrollDiv extends React.Component<{
                 this.boundingRect.top = top;
                 this.boundingRect.width = width;
                 this.boundingRect.height = height;
+
+                this.overflowX =
+                    width - this.scrollDiv.clientWidth > CONF_SCROLLBAR_TOLERANCE
+                        ? "auto"
+                        : "hidden";
+                this.overflowY =
+                    height - this.scrollDiv.clientHeight > CONF_SCROLLBAR_TOLERANCE
+                        ? "auto"
+                        : "hidden";
 
                 this.props.transform.scrollOffset = {
                     x: 0,
@@ -173,7 +186,8 @@ export class ScrollDiv extends React.Component<{
                     top: 0,
                     width: "100%",
                     height: "100%",
-                    overflow: "auto"
+                    overflowX: this.overflowX,
+                    overflowY: this.overflowY
                 }}
                 onScroll={this.onScroll}
             >

@@ -21,7 +21,7 @@ import {
 } from "eez-studio-shared/model/store";
 import { List } from "eez-studio-shared/model/components/List";
 
-import { Panel } from "project-editor/components/Panel";
+import { Panel } from "eez-studio-shared/model/components/Panel";
 
 ////////////////////////////////////////////////////////////////////////////////
 
