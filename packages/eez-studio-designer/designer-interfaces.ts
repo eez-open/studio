@@ -29,6 +29,7 @@ export interface IDocument {
     deleteObjects(objects: IBaseObject[]): void;
 
     // view
+    boundingRect: Rect | undefined;
     objectFromPoint(point: Point): IBaseObject | undefined;
     getObjectsInsideRect(rect: Rect): IBaseObject[];
     resetTransform?(transform: ITransform): void;

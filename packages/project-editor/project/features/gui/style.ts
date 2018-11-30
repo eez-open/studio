@@ -9,9 +9,9 @@ import {
     EezObject,
     InheritedValue,
     PropertyType,
-    getProperty,
-    loadObject
+    getProperty
 } from "eez-studio-shared/model/object";
+import { loadObject } from "eez-studio-shared/model/serialization";
 import * as output from "eez-studio-shared/model/output";
 import { strToColor16 } from "project-editor/core/util";
 

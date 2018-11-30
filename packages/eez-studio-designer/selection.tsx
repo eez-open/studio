@@ -126,7 +126,7 @@ export class Selection extends React.Component<
         let selectedObjectsBoundingRect;
         let resizeHandlers;
 
-        const transform = this.props.context.viewState.transform.cloneWithScrollOffsetApplied();
+        const transform = this.props.context.viewState.transform.clone();
 
         if (this.props.context.viewState.selectedObjects.length > 0) {
             const selectedObjectClassName =

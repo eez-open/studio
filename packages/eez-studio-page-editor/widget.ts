@@ -19,10 +19,10 @@ import {
     getClassesDerivedFrom,
     isArray,
     getChildOfObject,
-    loadObject,
     objectToJS,
     cloneObject
 } from "eez-studio-shared/model/object";
+import { loadObject } from "eez-studio-shared/model/serialization";
 import {
     TreeObjectAdapter,
     DisplayItem,
@@ -51,10 +51,10 @@ export interface ObjectGeometryChange {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function htmlEncode(value: string) {
-    return $("<div/>")
-        .text(value)
-        .html();
+function htmlEncode(value: string) {
+    const el = document.createElement("div");
+    el.innerText = value;
+    return el.innerHTML;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -589,6 +589,14 @@ export class Widget extends EezObject {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
+        return undefined;
+    }
+
+    renderSvg(): React.ReactNode {
+        return undefined;
+    }
+
+    render(): React.ReactNode {
         return undefined;
     }
 }

@@ -5,7 +5,6 @@ import { humanize } from "eez-studio-shared/string";
 
 import {
     EezObject,
-    loadObject,
     asArray,
     getProperty,
     getHumanReadableObjectPath,
@@ -13,6 +12,7 @@ import {
     findPropertyByName,
     PropertyType
 } from "eez-studio-shared/model/object";
+import { loadObject } from "eez-studio-shared/model/serialization";
 
 ////////////////////////////////////////////////////////////////////////////////
 

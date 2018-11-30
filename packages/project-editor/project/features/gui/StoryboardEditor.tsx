@@ -18,9 +18,9 @@ import {
     EezObject,
     EditorComponent,
     isObjectInstanceOf,
-    loadObject,
     getAncestorOfType
 } from "eez-studio-shared/model/object";
+import { loadObject } from "eez-studio-shared/model/serialization";
 import { getEezStudioDataFromDragEvent } from "eez-studio-shared/model/clipboard";
 import { UIStateStore, EditorsStore, DocumentStore } from "eez-studio-shared/model/store";
 import {

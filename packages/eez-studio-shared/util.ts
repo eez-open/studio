@@ -307,27 +307,6 @@ export function parseXmlString(xmlString: string) {
     return parser.parseFromString(xmlString, "text/xml");
 }
 
-export function addScript(src: string) {
-    return new Promise(resolve => {
-        let script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = src;
-        script.onload = resolve;
-        document.body.appendChild(script);
-    });
-}
-
-export function addCssStylesheet(id: string, href: string) {
-    if (!document.getElementById(id) && document.head) {
-        let link = document.createElement("link");
-        link.id = id;
-        link.rel = "stylesheet";
-        link.type = "text/css";
-        link.href = href;
-        document.head.appendChild(link);
-    }
-}
-
 export function getBoundingClientRectOfChildNodes(element: Element) {
     const { BoundingRectBuilder } = require("eez-studio-shared/geometry") as typeof GeometryModule;
     let boundingRectBuilder = new BoundingRectBuilder();

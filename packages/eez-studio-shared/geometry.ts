@@ -307,12 +307,6 @@ export class Transform implements ITransform {
         height: 1
     };
 
-    @observable
-    scrollOffset = {
-        x: 0,
-        y: 0
-    };
-
     constructor(params: { translate: Point; scale: number }) {
         Object.assign(this, params);
     }
@@ -492,23 +486,11 @@ export class Transform implements ITransform {
         };
     }
 
-    @action
-    translateByScrollOffset() {
-        this.translate = {
-            x: this.translate.x + this.scrollOffset.x,
-            y: this.translate.y + this.scrollOffset.y
-        };
-        this.scrollOffset = {
-            x: 0,
-            y: 0
-        };
-    }
-
-    cloneWithScrollOffsetApplied() {
+    clone() {
         const transform = new Transform({
             translate: {
-                x: this.translate.x + this.scrollOffset.x,
-                y: this.translate.y + this.scrollOffset.y
+                x: this.translate.x,
+                y: this.translate.y
             },
             scale: this.scale
         });

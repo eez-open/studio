@@ -110,6 +110,7 @@ class ViewState implements IViewState {
     }
 
     selectObject(object: IBaseObject) {
+        console.log(object);
         runInAction(() => {
             this.selectedObjects.push(object);
         });

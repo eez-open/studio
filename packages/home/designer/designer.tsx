@@ -197,18 +197,18 @@ class ObjectComponent extends React.Component<
 
     render() {
         return (
-            <g style={{ transformOrigin: "50% 50%" }}>
-                <foreignObject
-                    ref={ref => (this.element = ref!)}
-                    data-oid={this.props.object.id}
-                    x={this.props.object.rect.left}
-                    y={this.props.object.rect.top}
-                    width={this.props.object.rect.width}
-                    height={this.props.object.rect.height}
-                >
-                    {this.props.object.content}
-                </foreignObject>
-            </g>
+            <div
+                ref={ref => (this.element = ref!)}
+                style={{
+                    position: "absolute",
+                    left: this.props.object.rect.left,
+                    top: this.props.object.rect.top,
+                    width: this.props.object.rect.width,
+                    height: this.props.object.rect.height
+                }}
+            >
+                {this.props.object.content}
+            </div>
         );
     }
 }
@@ -228,7 +228,7 @@ export class WorkbenchDocument extends React.Component {
         return (
             <WorkbenchCanvas toolHandler={selectToolHandler}>
                 <TransitionGroup
-                    component="g"
+                    component="div"
                     className="EezStudio_Layer"
                     style={{ pointerEvents: "none" }}
                 >

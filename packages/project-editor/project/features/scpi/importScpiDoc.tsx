@@ -7,7 +7,8 @@ import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 
-import { EezArrayObject, getProperty, loadObject } from "eez-studio-shared/model/object";
+import { EezArrayObject, getProperty } from "eez-studio-shared/model/object";
+import { loadObject } from "eez-studio-shared/model/serialization";
 import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
 
 import { ProjectStore } from "project-editor/core/store";

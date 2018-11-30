@@ -1,10 +1,11 @@
 import React from "react";
 import { observable, computed, action, toJS } from "mobx";
-import { observer } from "mobx-react";
+import { observer, inject, IWrappedComponent } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _range } from "eez-studio-shared/algorithm";
 import { Point, Rect, ITransform, pointInRect, isRectInsideRect } from "eez-studio-shared/geometry";
+import { addAlphaToColor } from "eez-studio-shared/color";
 
 import { SvgLabel } from "eez-studio-ui/svg-label";
 import {
@@ -13,7 +14,8 @@ import {
     IContextMenu,
     IContextMenuItem,
     IContextMenuPopupOptions,
-    IViewStatePersistantState
+    IViewStatePersistantState,
+    IDesignerContext
 } from "eez-studio-designer/designer-interfaces";
 import { DesignerContext } from "eez-studio-designer/context";
 import { Canvas } from "eez-studio-designer/canvas";
@@ -66,6 +68,7 @@ function getObjectComponentClass(object: EezObject): typeof BaseObjectComponent 
 
 abstract class BaseObjectComponent
     extends React.Component<{
+        designerContext?: IDesignerContext;
         object: EezObject;
         dragWidget?: Widget;
     }>
@@ -127,14 +130,27 @@ abstract class BaseObjectComponent
     renderChildren(childrenObjects: EezObject[]) {
         this.children = new Array(childrenObjects.length);
         return (
-            <g transform={`translate(${this.rect.left} ${this.rect.top})`}>
+            <div
+                style={{
+                    transform: `translate(${this.rect.left}px, ${this.rect.top}px)`,
+                    transformOrigin: "0 0"
+                }}
+            >
                 {childrenObjects.map((child, i) => {
                     const ChildObjectComponent = getObjectComponentClass(child);
                     return (
                         <ChildObjectComponent
                             ref={ref => {
                                 if (ref) {
-                                    this.children[i] = ref;
+                                    // careful, ref could be ...
+                                    if (ref instanceof BaseObjectComponent) {
+                                        this.children[i] = ref;
+                                    } else {
+                                        // ... injector
+                                        this.children[i] = (ref as IWrappedComponent<
+                                            BaseObjectComponent
+                                        >).wrappedInstance as BaseObjectComponent;
+                                    }
                                 }
                             }}
                             key={child._id}
@@ -142,7 +158,7 @@ abstract class BaseObjectComponent
                         />
                     );
                 })}
-            </g>
+            </div>
         );
     }
 }
@@ -247,32 +263,72 @@ abstract class BaseWidgetObjectComponent extends BaseObjectComponent {
         const style = PageEditorContext.findStyleOrGetDefault(this.widget.style);
 
         return (
-            <rect
-                x={this.rect.left}
-                y={this.rect.top}
-                width={this.rect.width}
-                height={this.rect.height}
-                fill={style.backgroundColor}
+            <div
+                style={{
+                    position: "absolute",
+                    left: this.rect.left,
+                    top: this.rect.top,
+                    width: this.rect.width,
+                    height: this.rect.height,
+                    backgroundColor: style.backgroundColor
+                }}
             />
         );
     }
 
     render(): React.ReactNode {
         const canvas = this.widget.draw(this.rect);
-
         if (canvas) {
             return (
-                <image
-                    x={this.rect.left}
-                    y={this.rect.top}
-                    width={this.rect.width}
-                    height={this.rect.height}
-                    xlinkHref={canvas.toDataURL()}
+                <img
+                    style={{
+                        position: "absolute",
+                        left: this.rect.left,
+                        top: this.rect.top,
+                        width: this.rect.width,
+                        height: this.rect.height,
+                        imageRendering: "pixelated"
+                    }}
+                    src={canvas.toDataURL()}
                 />
             );
-        } else {
-            return this.renderBackgroundRect();
         }
+
+        const svg = this.widget.renderSvg();
+        if (svg) {
+            return (
+                <svg
+                    width={this.rect.width}
+                    height={this.rect.height}
+                    style={{
+                        position: "absolute",
+                        left: this.rect.left,
+                        top: this.rect.top
+                    }}
+                >
+                    {svg}
+                </svg>
+            );
+        }
+
+        const node = this.widget.render();
+        if (node) {
+            return (
+                <div
+                    style={{
+                        position: "absolute",
+                        left: this.rect.left,
+                        top: this.rect.top,
+                        width: this.rect.width,
+                        height: this.rect.height
+                    }}
+                >
+                    {node}
+                </div>
+            );
+        }
+
+        return this.renderBackgroundRect();
     }
 }
 
@@ -290,11 +346,7 @@ class ContainerWidgetObjectComponent extends BaseWidgetObjectComponent {
     }
 
     render() {
-        return (
-            <React.Fragment>
-                {this.renderChildren(this.containerWidget.widgets._array)}
-            </React.Fragment>
-        );
+        return this.renderChildren(this.containerWidget.widgets._array);
     }
 }
 
@@ -339,7 +391,13 @@ class ListWidgetObjectComponent extends BaseWidgetObjectComponent {
             }
 
             return (
-                <g key={i} transform={`translate(${xListItem} ${yListItem})`}>
+                <div
+                    key={i}
+                    style={{
+                        transform: `translate(${xListItem}px, ${yListItem}px)`,
+                        transformOrigin: "0 0"
+                    }}
+                >
                     {
                         <ItemWidgetComponent
                             ref={ref => {
@@ -350,7 +408,7 @@ class ListWidgetObjectComponent extends BaseWidgetObjectComponent {
                             object={itemWidget}
                         />
                     }
-                </g>
+                </div>
             );
         });
     }
@@ -411,7 +469,13 @@ class GridWidgetObjectComponent extends BaseWidgetObjectComponent {
                 let yListItem = this.rect.top + col * itemWidget.height;
 
                 return (
-                    <g key={i} transform={`translate(${xListItem} ${yListItem})`}>
+                    <div
+                        key={i}
+                        style={{
+                            transform: `translate(${xListItem}px, ${yListItem}px)`,
+                            transformOrigin: "0 0"
+                        }}
+                    >
                         {
                             <ItemWidgetComponent
                                 ref={ref => {
@@ -422,7 +486,7 @@ class GridWidgetObjectComponent extends BaseWidgetObjectComponent {
                                 object={itemWidget}
                             />
                         }
-                    </g>
+                    </div>
                 );
             })
             .filter(item => !!item);
@@ -477,12 +541,16 @@ class SelectWidgetObjectComponent extends BaseWidgetObjectComponent {
         drawTree(ctx, tree, 1, () => {});
 
         return (
-            <image
-                x={this.rect.left}
-                y={this.rect.top}
-                width={this.rect.width}
-                height={this.rect.height}
-                xlinkHref={canvas.toDataURL()}
+            <img
+                style={{
+                    position: "absolute",
+                    left: this.rect.left,
+                    top: this.rect.top,
+                    width: this.rect.width,
+                    height: this.rect.height,
+                    imageRendering: "pixelated"
+                }}
+                src={canvas.toDataURL()}
             />
         );
     }
@@ -492,6 +560,7 @@ class SelectWidgetObjectComponent extends BaseWidgetObjectComponent {
 
 const SELECT_WIDGET_LINES_COLOR = "rgba(255, 128, 128, 0.9)";
 
+@inject("designerContext")
 @observer
 class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
     get selectWidgetEditor() {
@@ -550,22 +619,50 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
 
             const ChildObjectComponent = getObjectComponentClass(child);
 
+            const transform = this.props.designerContext!.viewState.transform;
+            const modelRect = transform.clientToModelRect(transform.clientRect);
+
             return (
                 <React.Fragment key={child._id}>
-                    <text x={xLabel} y={yLabel} textAnchor={textAnchor} alignmentBaseline="middle">
-                        {label}
-                    </text>
-                    <g transform={`translate(${x} ${y})`}>
-                        <rect
-                            x={1}
-                            y={1}
-                            width={this.selectWidget.width - 2}
-                            height={this.selectWidget.height - 2}
-                            fill="transparent"
-                            stroke={SELECT_WIDGET_LINES_COLOR}
-                            strokeDasharray="4 2"
-                            strokeWidth="1"
-                        />
+                    <svg
+                        width={modelRect.width}
+                        height={modelRect.height}
+                        style={{
+                            position: "absolute",
+                            left: modelRect.left,
+                            top: modelRect.top
+                        }}
+                        viewBox={`${modelRect.left}, ${modelRect.top}, ${modelRect.width}, ${
+                            modelRect.height
+                        }`}
+                    >
+                        <text
+                            x={xLabel}
+                            y={yLabel}
+                            textAnchor={textAnchor}
+                            alignmentBaseline="middle"
+                        >
+                            {label}
+                        </text>
+                        <g transform={`translate(${x} ${y})`}>
+                            <rect
+                                x={1}
+                                y={1}
+                                width={this.selectWidget.width - 2}
+                                height={this.selectWidget.height - 2}
+                                fill="transparent"
+                                stroke={SELECT_WIDGET_LINES_COLOR}
+                                strokeDasharray="4 2"
+                                strokeWidth="1"
+                            />
+                        </g>
+                    </svg>
+                    <div
+                        style={{
+                            transform: `translate(${x}px, ${y}px)`,
+                            transformOrigin: "0 0"
+                        }}
+                    >
                         <ChildObjectComponent
                             ref={ref => {
                                 if (ref) {
@@ -574,7 +671,7 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
                             }}
                             object={child}
                         />
-                    </g>
+                    </div>
                 </React.Fragment>
             );
         });
@@ -636,51 +733,66 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
 
         const label = this.selectWidget.data;
 
+        const transform = this.props.designerContext!.viewState.transform;
+        const modelRect = transform.clientToModelRect(transform.clientRect);
+
         return (
             <React.Fragment>
-                <rect
-                    x={this.selectWidget.boundingRect.left + 0.5}
-                    y={this.selectWidget.boundingRect.top + 0.5}
-                    width={this.selectWidget.boundingRect.width}
-                    height={this.selectWidget.boundingRect.height}
-                    fill="transparent"
-                    stroke={SELECT_WIDGET_LINES_COLOR}
-                />
-
-                <circle cx={x1} cy={y1} r={2} fill={SELECT_WIDGET_LINES_COLOR} />
-
-                <path
-                    d={`M${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`}
-                    stroke={SELECT_WIDGET_LINES_COLOR}
-                    fill="transparent"
-                />
-
-                <circle cx={x2} cy={y2} r={3} fill={SELECT_WIDGET_LINES_COLOR} />
-
-                {label && (
-                    <SvgLabel
-                        text={label}
-                        x={Math.round((x1 + x2) / 2) + 0.5}
-                        y={Math.round((y1 + y2) / 2) + 0.5}
-                        horizontalAlignement="center"
-                        verticalAlignment="center"
-                        backgroundColor="white"
-                        textColor="#333"
-                        border={{
-                            color: SELECT_WIDGET_LINES_COLOR
-                        }}
+                <svg
+                    width={modelRect.width}
+                    height={modelRect.height}
+                    style={{
+                        position: "absolute",
+                        left: modelRect.left,
+                        top: modelRect.top
+                    }}
+                    viewBox={`${modelRect.left}, ${modelRect.top}, ${modelRect.width}, ${
+                        modelRect.height
+                    }`}
+                >
+                    <rect
+                        x={this.selectWidget.boundingRect.left + 0.5}
+                        y={this.selectWidget.boundingRect.top + 0.5}
+                        width={this.selectWidget.boundingRect.width}
+                        height={this.selectWidget.boundingRect.height}
+                        fill="transparent"
+                        stroke={SELECT_WIDGET_LINES_COLOR}
                     />
-                )}
 
-                <rect
-                    x={this.boundingRect.left + 0.5}
-                    y={this.boundingRect.top + 0.5}
-                    width={this.boundingRect.width}
-                    height={this.boundingRect.height}
-                    fill="transparent"
-                    stroke={SELECT_WIDGET_LINES_COLOR}
-                />
+                    <circle cx={x1} cy={y1} r={2} fill={SELECT_WIDGET_LINES_COLOR} />
 
+                    <path
+                        d={`M${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`}
+                        stroke={SELECT_WIDGET_LINES_COLOR}
+                        fill="transparent"
+                    />
+
+                    <circle cx={x2} cy={y2} r={3} fill={SELECT_WIDGET_LINES_COLOR} />
+
+                    {label && (
+                        <SvgLabel
+                            text={label}
+                            x={Math.round((x1 + x2) / 2) + 0.5}
+                            y={Math.round((y1 + y2) / 2) + 0.5}
+                            horizontalAlignement="center"
+                            verticalAlignment="center"
+                            backgroundColor="white"
+                            textColor="#333"
+                            border={{
+                                color: SELECT_WIDGET_LINES_COLOR
+                            }}
+                        />
+                    )}
+
+                    <rect
+                        x={this.boundingRect.left + 0.5}
+                        y={this.boundingRect.top + 0.5}
+                        width={this.boundingRect.width}
+                        height={this.boundingRect.height}
+                        fill="transparent"
+                        stroke={SELECT_WIDGET_LINES_COLOR}
+                    />
+                </svg>
                 {this.renderSelectChildren()}
             </React.Fragment>
         );
@@ -729,11 +841,18 @@ class RootObjectComponent extends BaseObjectComponent {
     @computed
     get rect() {
         return {
-            left: !(this.rootObject instanceof Widget) ? this.rootObject.x : 0,
-            top: !(this.rootObject instanceof Widget) ? this.rootObject.y : 0,
+            left: this.rootObject.x,
+            top: this.rootObject.y,
             width: this.rootObject.width,
             height: this.rootObject.height
         };
+    }
+
+    set rect(value: Rect) {
+        this.rootObject.x = value.left;
+        this.rootObject.y = value.top;
+        this.rootObject.width = value.width;
+        this.rootObject.height = value.height;
     }
 
     @computed
@@ -749,16 +868,23 @@ class RootObjectComponent extends BaseObjectComponent {
     render() {
         const style = PageEditorContext.findStyleOrGetDefault(this.rootObject.style);
         return (
-            <g style={{ pointerEvents: "none" }}>
-                <rect
-                    x={this.rect.left}
-                    y={this.rect.top}
-                    width={this.rect.width}
-                    height={this.rect.height}
-                    fill={style.backgroundColor}
+            <React.Fragment>
+                <div
+                    style={{
+                        position: "absolute",
+                        left: this.rect.left,
+                        top: this.rect.top,
+                        width: this.rect.width,
+                        height: this.rect.height,
+                        backgroundColor: style.backgroundColor,
+                        boxShadow: `5px 5px 20px 0px ${addAlphaToColor(
+                            style.backgroundColor!,
+                            0.5
+                        )}`
+                    }}
                 />
                 {this.renderChildren(this.childrenObjects)}
-            </g>
+            </React.Fragment>
         );
     }
 }
@@ -769,6 +895,7 @@ const PageEditorCanvasContainer = styled.div`
     flex-grow: 1;
     overflow: hidden;
     display: flex;
+    position: relative;
 
     .EezStudio_DesignerSelection_SelectedObject {
         border: 1px solid #333;
@@ -785,10 +912,6 @@ const PageEditorCanvasContainer = styled.div`
 
     .EezStudio_DesignerSelection_Handle.Corner {
         background-color: rgba(0, 0, 0, 0.6);
-    }
-
-    svg {
-        image-rendering: pixelated;
     }
 `;
 
@@ -857,6 +980,10 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
         };
     }
 
+    get boundingRect() {
+        return this.rootObjectComponent && this.rootObjectComponent.boundingRect;
+    }
+
     objectFromPoint(point: Point) {
         return this.rootObjectComponent.objectFromPoint(point);
     }
@@ -868,7 +995,7 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
             this.designerContextComponent.designerContext.viewState.selectedObjects.length === 1 &&
             this.designerContextComponent.designerContext.viewState.selectedObjects[0];
 
-        if (selectedObject && selectedObject instanceof WidgetObjectComponent) {
+        if (selectedObject && selectedObject instanceof BaseObjectComponent) {
             return selectedObject.props.object;
         }
 

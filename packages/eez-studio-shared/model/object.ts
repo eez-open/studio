@@ -283,7 +283,7 @@ export function isArray(object: EezObject | undefined) {
 }
 
 export function asArray(object: EezObject) {
-    return (object as EezArrayObject<EezObject>)._array;
+    return object && (object as EezArrayObject<EezObject>)._array;
 }
 
 export function getChildren(parent: EezObject): EezObject[] {

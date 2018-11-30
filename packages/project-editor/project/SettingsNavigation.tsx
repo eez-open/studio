@@ -5,12 +5,8 @@ import React from "react";
 import { Splitter } from "eez-studio-ui/splitter";
 import styled from "eez-studio-ui/styled-components";
 
-import {
-    NavigationComponent,
-    loadObject,
-    EezObject,
-    getProperty
-} from "eez-studio-shared/model/object";
+import { NavigationComponent, EezObject, getProperty } from "eez-studio-shared/model/object";
+import { loadObject } from "eez-studio-shared/model/serialization";
 import { DocumentStore, NavigationStore, UIStateStore } from "eez-studio-shared/model/store";
 
 import { ProjectStore } from "project-editor/core/store";

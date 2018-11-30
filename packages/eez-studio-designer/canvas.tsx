@@ -1,9 +1,10 @@
 import React from "react";
-import { observable, action, runInAction } from "mobx";
+import { computed, observable, action, runInAction } from "mobx";
 import { observer, inject } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { Point, pointDistance } from "eez-studio-shared/geometry";
+import { Point, pointDistance, BoundingRectBuilder } from "eez-studio-shared/geometry";
+import { getScrollbarWidth } from "eez-studio-shared/dom";
 
 import { Draggable } from "eez-studio-ui/draggable";
 
@@ -14,12 +15,13 @@ import {
     IDesignerContext
 } from "eez-studio-designer/designer-interfaces";
 import { PanMouseHandler } from "eez-studio-designer/mouse-handlers/pan";
-import { ScrollDiv } from "eez-studio-designer/scroll-div";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
+const CONF_IS_FRESH_RENDERING_TIMEOUT = 10; // ms
+const CONF_AFTER_SCROLL_ADJUSTMENT_TIMEOUT = 1000; // ms
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +46,7 @@ export class Canvas extends React.Component<
     }
 
     @observable
-    private _mouseHandler: IMouseHandler | undefined;
+    _mouseHandler: IMouseHandler | undefined;
     get mouseHandler() {
         return this._mouseHandler;
     }
@@ -55,16 +57,56 @@ export class Canvas extends React.Component<
         });
     }
 
-    private buttonsAtDown: number;
-    private lastMouseUpPosition: Point;
-    private lastMouseUpTime: number | undefined;
+    buttonsAtDown: number;
+    lastMouseUpPosition: Point;
+    lastMouseUpTime: number | undefined;
 
-    private draggable = new Draggable(this);
+    draggable = new Draggable(this);
 
-    scrollDiv: ScrollDiv;
+    isFreshRenderingTimeout: any;
+
+    scrollLeft: number;
+    scrollTop: number;
+    afterScrollAdjustmentTimeout: any;
+
+    get isScrolling() {
+        return !!this.afterScrollAdjustmentTimeout;
+    }
+
+    @computed
+    get boundingRect() {
+        const transform = this.designerContext.viewState.transform;
+        const builder = new BoundingRectBuilder();
+        builder.addRect(
+            transform.modelToOffsetRect(
+                this.props.designerContext!.document.boundingRect || {
+                    left: -50,
+                    top: -50,
+                    width: 100,
+                    height: 100
+                }
+            )
+        );
+        builder.addRect(transform.clientToOffsetRect(transform.clientRect));
+        return builder.getRect()!;
+    }
+
+    updateScroll() {
+        const boundingRect = this.boundingRect;
+
+        this.div.scrollLeft = -boundingRect.left;
+        this.scrollLeft = this.div.scrollLeft;
+
+        this.div.scrollTop = -boundingRect.top;
+        this.scrollTop = this.div.scrollTop;
+    }
+
+    userScrollTimeout: any;
 
     componentDidMount() {
         this.draggable.attach(this.div);
+
+        this.updateScroll();
 
         this.intervalTimerIDForClientRectUpdate = setInterval(() => {
             const transform = this.designerContext.viewState.transform;
@@ -80,7 +122,34 @@ export class Canvas extends React.Component<
                     transform.clientRect = clientRect;
                 });
             }
+
+            if (
+                !this.isFreshRenderingTimeout &&
+                (this.div.scrollLeft !== this.scrollLeft || this.div.scrollTop !== this.scrollTop)
+            ) {
+                this.scrollLeft = this.div.scrollLeft;
+                this.scrollTop = this.div.scrollTop;
+
+                if (this.afterScrollAdjustmentTimeout) {
+                    clearTimeout(this.afterScrollAdjustmentTimeout);
+                }
+
+                this.afterScrollAdjustmentTimeout = setTimeout(() => {
+                    this.afterScrollAdjustmentTimeout = undefined;
+
+                    const boundingRect = this.boundingRect;
+
+                    transform.translateBy({
+                        x: -(boundingRect.left + this.div.scrollLeft),
+                        y: -(boundingRect.top + this.div.scrollTop)
+                    });
+                }, CONF_AFTER_SCROLL_ADJUSTMENT_TIMEOUT);
+            }
         }, 0);
+    }
+
+    componentDidUpdate() {
+        this.updateScroll();
     }
 
     componentWillUnmount() {
@@ -94,7 +163,7 @@ export class Canvas extends React.Component<
 
     @bind
     onWheel(event: React.WheelEvent<HTMLDivElement>) {
-        if (this.scrollDiv.isScrolling) {
+        if (this.isScrolling) {
             return;
         }
 
@@ -146,7 +215,7 @@ export class Canvas extends React.Component<
 
     @action.bound
     onDragStart(event: PointerEvent) {
-        if (this.scrollDiv.isScrolling) {
+        if (this.isScrolling) {
             return;
         }
 
@@ -269,10 +338,22 @@ export class Canvas extends React.Component<
     }
 
     render() {
-        let style: React.CSSProperties = {
-            cursor: "default"
-        };
+        if (this.isFreshRenderingTimeout) {
+            clearTimeout(this.isFreshRenderingTimeout);
+        }
+        this.isFreshRenderingTimeout = setTimeout(() => {
+            this.isFreshRenderingTimeout = undefined;
+        }, CONF_IS_FRESH_RENDERING_TIMEOUT);
 
+        let style: React.CSSProperties = {
+            cursor: "default",
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: "100%",
+            height: "100%",
+            overflow: "auto"
+        };
         if (this.mouseHandler) {
             style.cursor = this.mouseHandler.cursor;
         } else {
@@ -280,7 +361,6 @@ export class Canvas extends React.Component<
                 style.cursor = this.props.toolHandler.cursor;
             }
         }
-
         if (this.props.style) {
             Object.assign(style, this.props.style);
         }
@@ -289,14 +369,16 @@ export class Canvas extends React.Component<
 
         const transform = this.designerContext.viewState.transform;
 
-        let xt = transform.clientRect.width / 2 + transform.translate.x + transform.scrollOffset.x;
-        let yt = transform.clientRect.height / 2 + transform.translate.y + transform.scrollOffset.y;
-
         const CENTER_LINES_COLOR = "rgba(0, 0, 0, 0.2)";
         const CENTER_LINES_WIDTH = 1 / transform.scale;
         const centerLineStyle = { stroke: CENTER_LINES_COLOR, strokeWidth: CENTER_LINES_WIDTH };
 
         const modelRect = transform.clientToModelRect(transform.clientRect);
+
+        const boundingRect = this.boundingRect;
+
+        const xt = transform.translate.x + transform.clientRect.width / 2;
+        const yt = transform.translate.y + transform.clientRect.height / 2;
 
         return (
             <div
@@ -306,45 +388,63 @@ export class Canvas extends React.Component<
                 onClick={this.onClick}
                 onWheel={this.onWheel}
             >
-                <ScrollDiv
-                    ref={ref => (this.scrollDiv = ref!)}
-                    transform={this.designerContext.viewState.transform}
+                <div
+                    style={{
+                        transform: `translate(${-boundingRect.left}px, ${-boundingRect.top}px)`
+                    }}
                 >
-                    <svg
-                        ref={ref => (this.svg = ref!)}
+                    <div
                         style={{
                             position: "absolute",
-                            left: 0,
-                            top: 0
+                            left: boundingRect.left,
+                            top: boundingRect.top,
+                            width: boundingRect.width - getScrollbarWidth(),
+                            height: boundingRect.height - getScrollbarWidth(),
+                            pointerEvents: "none",
+                            userSelect: "none"
                         }}
-                        width={transform.clientRect.width}
-                        height={transform.clientRect.height}
+                    />
+                    <div
+                        style={{
+                            transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`,
+                            transformOrigin: "0 0",
+                            pointerEvents: "none",
+                            userSelect: "none"
+                        }}
                     >
-                        <g transform={`translate(${xt}, ${yt}) scale(${transform.scale})`}>
-                            {this.designerContext.options && this.designerContext.options.center && (
-                                <React.Fragment>
-                                    <line
-                                        x1={modelRect.left}
-                                        y1={this.designerContext.options.center.y}
-                                        x2={modelRect.left + modelRect.width}
-                                        y2={this.designerContext.options.center.y}
-                                        style={centerLineStyle}
-                                    />
-                                    <line
-                                        x1={this.designerContext.options.center.x}
-                                        y1={modelRect.top}
-                                        x2={this.designerContext.options.center.x}
-                                        y2={modelRect.top + modelRect.height}
-                                        style={centerLineStyle}
-                                    />
-                                </React.Fragment>
-                            )}
-                            {this.props.children}
-                        </g>
-                    </svg>
-
+                        {this.designerContext.options && this.designerContext.options.center && (
+                            <svg
+                                width={modelRect.width}
+                                height={modelRect.height}
+                                style={{
+                                    position: "absolute",
+                                    left: modelRect.left,
+                                    top: modelRect.top
+                                }}
+                                viewBox={`${modelRect.left}, ${modelRect.top}, ${
+                                    modelRect.width
+                                }, ${modelRect.height}`}
+                            >
+                                <line
+                                    x1={modelRect.left}
+                                    y1={this.designerContext.options.center.y}
+                                    x2={modelRect.left + modelRect.width}
+                                    y2={this.designerContext.options.center.y}
+                                    style={centerLineStyle}
+                                />
+                                <line
+                                    x1={this.designerContext.options.center.x}
+                                    y1={modelRect.top}
+                                    x2={this.designerContext.options.center.x}
+                                    y2={modelRect.top + modelRect.height}
+                                    style={centerLineStyle}
+                                />
+                            </svg>
+                        )}
+                        {this.props.children}
+                    </div>
                     {this.props.toolHandler.render(this.designerContext, this.mouseHandler)}
-                </ScrollDiv>
+                </div>
             </div>
         );
     }

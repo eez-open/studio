@@ -8,7 +8,7 @@ import { PropertyEnclosure } from "eez-studio-ui/properties";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-import { addScript } from "eez-studio-shared/util";
+import { addScript } from "eez-studio-shared/dom";
 
 function createEditor(
     element: HTMLElement,

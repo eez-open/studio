@@ -90,13 +90,6 @@ const InstrumentContent = styled.div`
     }
 `;
 
-const NotFoundInstrumentContent = styled.div`
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background-color: red;
-`;
-
 const InstrumentConnectionState = styled.div`
     white-space: nowrap;
     display: flex;
@@ -581,7 +574,7 @@ export class InstrumentObject {
                 </InstrumentContent>
             );
         } else {
-            return <NotFoundInstrumentContent />;
+            return null;
         }
     }
 

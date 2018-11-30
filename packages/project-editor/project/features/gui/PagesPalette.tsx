@@ -4,7 +4,7 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { loadObject } from "eez-studio-shared/model/object";
+import { loadObject } from "eez-studio-shared/model/serialization";
 import { objectToClipboardData, setClipboardData } from "eez-studio-shared/model/clipboard";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
 

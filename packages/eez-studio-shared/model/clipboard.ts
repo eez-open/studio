@@ -2,14 +2,13 @@ import {
     ClassInfo,
     findClass,
     EezObject,
-    loadObject,
-    objectToJson,
     isArray,
     isObject,
     isSubclassOf,
     getChildOfObject,
     PropertyType
 } from "eez-studio-shared/model/object";
+import { loadObject, objectToJson } from "eez-studio-shared/model/serialization";
 import { DocumentStore } from "eez-studio-shared/model/store";
 
 export interface SerializedData {
