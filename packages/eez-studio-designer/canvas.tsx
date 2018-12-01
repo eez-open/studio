@@ -27,8 +27,7 @@ const CONF_AFTER_SCROLL_ADJUSTMENT_TIMEOUT = 1000; // ms
 ////////////////////////////////////////////////////////////////////////////////
 
 const CanvasDiv = styled.div`
-    background-color: red;
-    * {
+    & > * {
         user-select: none;
     }
 `;
@@ -220,6 +219,7 @@ export class Canvas extends React.Component<{
 
     @action.bound
     onDragStart(event: PointerEvent) {
+        console.log("aba");
         if (this.isScrolling) {
             return;
         }

@@ -49,15 +49,6 @@ export class Draggable {
             return;
         }
 
-        if (
-            e.target &&
-            e.target instanceof HTMLElement &&
-            (e.layerX > e.target.clientWidth || e.layerY > e.target.clientHeight)
-        ) {
-            // scrollbar
-            return;
-        }
-
         // put in focus first parent with tabindex attribute
         const parentWithTabindex = closestBySelector(this.element, "[tabindex]");
         if (parentWithTabindex) {

@@ -181,7 +181,6 @@ abstract class BaseWidgetObjectComponent extends BaseObjectComponent {
     }
 
     set rect(value: Rect) {
-        console.log(value);
         this.widget.applyGeometryChange(
             {
                 x: value.left,
