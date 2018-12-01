@@ -133,6 +133,12 @@ export function makeDerivedClassInfo(
     baseClassInfo: ClassInfo,
     derivedClassInfoProperties: Partial<ClassInfo>
 ): ClassInfo {
+    if (derivedClassInfoProperties.properties) {
+        derivedClassInfoProperties.properties = baseClassInfo.properties.concat(
+            derivedClassInfoProperties.properties
+        );
+    }
+
     const derivedClassInfo = Object.assign({}, baseClassInfo, derivedClassInfoProperties);
     derivedClassInfo.parentClassInfo = baseClassInfo;
     return derivedClassInfo;
@@ -673,4 +679,12 @@ export function checkObject(object: EezObject): IMessage[] {
         }
     }
     return [];
+}
+
+export function hidePropertiesInPropertyGrid(aClass: EezClass, properties: string[]) {
+    aClass.classInfo.properties.forEach(propertyInfo => {
+        if (properties.indexOf(propertyInfo.name) !== -1) {
+            propertyInfo.hideInPropertyGrid = true;
+        }
+    });
 }

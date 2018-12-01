@@ -5,11 +5,11 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { EezClass } from "eez-studio-shared/model/object";
+import { EezClass, getClassesDerivedFrom } from "eez-studio-shared/model/object";
 import { objectToClipboardData, setClipboardData } from "eez-studio-shared/model/clipboard";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
-import { getWidgetType, getWidgetClasses } from "eez-studio-page-editor/widget";
+import { Widget, getWidgetType } from "eez-studio-page-editor/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -33,14 +33,14 @@ const WidgetDiv = styled.div`
     }
 `;
 
-interface WidgetProps {
+interface PaletteItemProps {
     widgetClass: EezClass;
     selected: boolean;
     onSelect: (widget: EezClass | undefined) => void;
 }
 
 @observer
-class Widget extends React.Component<WidgetProps> {
+class PaletteItem extends React.Component<PaletteItemProps> {
     @action.bound
     onDragStart(event: any) {
         this.props.onSelect(undefined);
@@ -103,7 +103,9 @@ const WidgetPaletteDiv = styled.div`
 `;
 
 @observer
-export class WidgetPalette extends React.Component {
+export class WidgetPalette extends React.Component<{
+    baseWidgetClass?: EezClass;
+}> {
     @observable
     selectedWidgetClass: EezClass | undefined;
 
@@ -113,16 +115,18 @@ export class WidgetPalette extends React.Component {
     }
 
     render() {
-        let widgets = getWidgetClasses().map(widgetClass => {
-            return (
-                <Widget
-                    key={widgetClass.name}
-                    widgetClass={widgetClass}
-                    onSelect={this.onSelect}
-                    selected={widgetClass === this.selectedWidgetClass}
-                />
-            );
-        });
+        let widgets = getClassesDerivedFrom(this.props.baseWidgetClass || Widget).map(
+            widgetClass => {
+                return (
+                    <PaletteItem
+                        key={widgetClass.name}
+                        widgetClass={widgetClass}
+                        onSelect={this.onSelect}
+                        selected={widgetClass === this.selectedWidgetClass}
+                    />
+                );
+            }
+        );
 
         return (
             <WidgetPaletteDiv tabIndex={0}>

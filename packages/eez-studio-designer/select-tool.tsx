@@ -221,6 +221,7 @@ class ResizeMouseHandler extends MouseHandler {
     savedBoundingRect: Rect;
     boundingRect: Rect;
 
+    savedBoundingRects: Rect[];
     savedRects: Rect[];
     rects: Rect[];
 
@@ -262,10 +263,20 @@ class ResizeMouseHandler extends MouseHandler {
             height: this.savedBoundingRect.height
         };
 
+        this.savedBoundingRects = [];
         this.savedRects = [];
         this.rects = [];
         for (const object of context.viewState.selectedObjects) {
-            let rect = object.rect;
+            const boundingRect = object.boundingRect;
+
+            this.savedBoundingRects.push({
+                left: boundingRect.left,
+                top: boundingRect.top,
+                width: boundingRect.width,
+                height: boundingRect.height
+            });
+
+            const rect = object.rect;
 
             this.savedRects.push({
                 left: rect.left,
@@ -388,14 +399,19 @@ class ResizeMouseHandler extends MouseHandler {
         let objects = context.viewState.selectedObjects;
 
         for (let i = 0; i < this.rects.length; i++) {
+            let savedBoundingRect = this.savedBoundingRects[i];
             let savedRect = this.savedRects[i];
             let rect = this.rects[i];
 
             rect.left = Math.round(
-                this.boundingRect.left + (savedRect.left - this.savedBoundingRect.left) * scaleWidth
+                savedRect.left +
+                    (this.boundingRect.left - this.savedBoundingRect.left) +
+                    (savedBoundingRect.left - this.savedBoundingRect.left) * scaleWidth
             );
             rect.top = Math.round(
-                this.boundingRect.top + (savedRect.top - this.savedBoundingRect.top) * scaleHeight
+                savedRect.top +
+                    (this.boundingRect.top - this.savedBoundingRect.top) +
+                    (savedBoundingRect.top - this.savedBoundingRect.top) * scaleHeight
             );
             rect.width = Math.round(savedRect.width * scaleWidth);
             rect.height = Math.round(savedRect.height * scaleHeight);

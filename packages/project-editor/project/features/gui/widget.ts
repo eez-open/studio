@@ -23,7 +23,6 @@ import * as draw from "project-editor/project/features/gui/draw";
 export {
     Widget,
     getWidgetType,
-    getWidgetClasses,
     IWidgetContainerDisplayItem,
     WidgetContainerDisplayItem,
     ContainerWidget,
@@ -41,13 +40,13 @@ export class DisplayDataWidget extends Widget {
     focusStyle?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "focusStyle",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "styles"]
             }
-        ]),
+        ],
 
         defaultValue: {
             type: "DisplayData",
@@ -102,7 +101,7 @@ export class TextWidget extends Widget {
     }
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "text",
                 type: PropertyType.String
@@ -112,7 +111,7 @@ export class TextWidget extends Widget {
                 type: PropertyType.Boolean,
                 defaultValue: false
             }
-        ]),
+        ],
 
         defaultValue: {
             type: "Text",
@@ -153,12 +152,12 @@ export class MultilineTextWidget extends Widget {
     }
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "text",
                 type: PropertyType.String
             }
-        ]),
+        ],
 
         defaultValue: {
             type: "MultilineText",
@@ -197,7 +196,7 @@ export class RectangleWidget extends Widget {
     invertColors: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "invertColors",
                 type: PropertyType.Boolean,
@@ -208,7 +207,7 @@ export class RectangleWidget extends Widget {
                 type: PropertyType.Boolean,
                 defaultValue: false
             }
-        ]),
+        ],
 
         defaultValue: { type: "Rectangle", x: 0, y: 0, width: 64, height: 32, style: "default" }
     });
@@ -241,13 +240,13 @@ export class BitmapWidget extends Widget {
     }
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "bitmap",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "bitmaps"]
             }
-        ]),
+        ],
 
         defaultValue: { type: "Bitmap", x: 0, y: 0, width: 64, height: 32, style: "default" }
     });
@@ -299,7 +298,7 @@ export class ButtonWidget extends Widget {
     disabledStyle?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "text",
                 type: PropertyType.String
@@ -314,7 +313,7 @@ export class ButtonWidget extends Widget {
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "styles"]
             }
-        ]),
+        ],
 
         defaultValue: { type: "Button", x: 0, y: 0, width: 32, height: 32, style: "default" }
     });
@@ -378,7 +377,7 @@ export class ToggleButtonWidget extends Widget {
     text2?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "text1",
                 type: PropertyType.String
@@ -387,7 +386,7 @@ export class ToggleButtonWidget extends Widget {
                 name: "text2",
                 type: PropertyType.String
             }
-        ]),
+        ],
 
         defaultValue: { type: "ToggleButton", x: 0, y: 0, width: 32, height: 32, style: "default" }
     });
@@ -452,7 +451,7 @@ export class ScaleWidget extends Widget {
     needleHeight: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "needlePosition",
                 type: PropertyType.Enum,
@@ -479,7 +478,7 @@ export class ScaleWidget extends Widget {
                 name: "needleHeight",
                 type: PropertyType.Number
             }
-        ]),
+        ],
 
         defaultValue: {
             type: "Scale",
@@ -528,7 +527,7 @@ export class BarGraphWidget extends Widget {
     line2Style?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "orientation",
                 type: PropertyType.Enum,
@@ -572,7 +571,7 @@ export class BarGraphWidget extends Widget {
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "styles"]
             }
-        ]),
+        ],
 
         defaultValue: {
             type: "BarGraph",
@@ -693,7 +692,7 @@ export class YTGraphWidget extends Widget {
     y2Style?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "y1Style",
                 type: PropertyType.ObjectReference,
@@ -709,7 +708,7 @@ export class YTGraphWidget extends Widget {
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "styles"]
             }
-        ]),
+        ],
 
         defaultValue: {
             type: "YTGraph",
@@ -800,7 +799,7 @@ export class UpDownWidget extends Widget {
     upButtonText?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "buttonsStyle",
                 type: PropertyType.ObjectReference,
@@ -814,7 +813,7 @@ export class UpDownWidget extends Widget {
                 name: "upButtonText",
                 type: PropertyType.String
             }
-        ]),
+        ],
 
         defaultValue: {
             type: "UpDown",
@@ -889,7 +888,7 @@ export class ListGraphWidget extends Widget {
     cursorStyle?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "dwellData",
                 type: PropertyType.ObjectReference,
@@ -925,7 +924,7 @@ export class ListGraphWidget extends Widget {
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "styles"]
             }
-        ]),
+        ],
 
         defaultValue: {
             type: "ListGraph",

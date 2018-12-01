@@ -27,6 +27,7 @@ const CONF_AFTER_SCROLL_ADJUSTMENT_TIMEOUT = 1000; // ms
 ////////////////////////////////////////////////////////////////////////////////
 
 const CanvasDiv = styled.div`
+    background-color: white;
     & > * {
         user-select: none;
     }
@@ -41,7 +42,7 @@ export class Canvas extends React.Component<{
     style?: React.CSSProperties;
 }> {
     div: Element;
-    svg: SVGSVGElement;
+    innerDiv: Element;
     intervalTimerIDForClientRectUpdate: any;
     deltaY = 0;
 
@@ -108,7 +109,7 @@ export class Canvas extends React.Component<{
     userScrollTimeout: any;
 
     componentDidMount() {
-        this.draggable.attach(this.div);
+        this.draggable.attach(this.innerDiv);
 
         this.updateScroll();
 
@@ -219,7 +220,6 @@ export class Canvas extends React.Component<{
 
     @action.bound
     onDragStart(event: PointerEvent) {
-        console.log("aba");
         if (this.isScrolling) {
             return;
         }
@@ -394,8 +394,11 @@ export class Canvas extends React.Component<{
                 onWheel={this.onWheel}
             >
                 <div
+                    ref={ref => (this.innerDiv = ref!)}
                     style={{
-                        transform: `translate(${-boundingRect.left}px, ${-boundingRect.top}px)`
+                        transform: `translate(${-boundingRect.left}px, ${-boundingRect.top}px)`,
+                        width: "100%",
+                        height: "100%"
                     }}
                 >
                     <div

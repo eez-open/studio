@@ -5,7 +5,6 @@ import { bind } from "bind-decorator";
 
 import { _range } from "eez-studio-shared/algorithm";
 import { Point, Rect, ITransform, pointInRect, isRectInsideRect } from "eez-studio-shared/geometry";
-import { addAlphaToColor } from "eez-studio-shared/color";
 
 import { SvgLabel } from "eez-studio-ui/svg-label";
 import {
@@ -22,7 +21,7 @@ import { Canvas } from "eez-studio-designer/canvas";
 import { selectToolHandler } from "eez-studio-designer/select-tool";
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, isObjectInstanceOf, getProperty } from "eez-studio-shared/model/object";
+import { EezObject, isObjectInstanceOf } from "eez-studio-shared/model/object";
 import {
     DocumentStore,
     NavigationStore,
@@ -866,23 +865,9 @@ class RootObjectComponent extends BaseObjectComponent {
     }
 
     render() {
-        const style = PageEditorContext.findStyleOrGetDefault(this.rootObject.style);
         return (
             <React.Fragment>
-                <div
-                    style={{
-                        position: "absolute",
-                        left: this.rect.left,
-                        top: this.rect.top,
-                        width: this.rect.width,
-                        height: this.rect.height,
-                        backgroundColor: style.backgroundColor,
-                        boxShadow: `5px 5px 20px 0px ${addAlphaToColor(
-                            style.backgroundColor!,
-                            0.5
-                        )}`
-                    }}
-                />
+                {this.rootObject.render()}
                 {this.renderChildren(this.childrenObjects)}
             </React.Fragment>
         );
@@ -932,6 +917,10 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
     @observable
     dragEnterCounter = 0;
 
+    get page() {
+        return this.props.widgetContainer.object as Page;
+    }
+
     findObjectById(id: string) {
         return this.rootObjectComponent && this.rootObjectComponent.findObjectById(id);
     }
@@ -948,8 +937,8 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
     resetTransform(transform: ITransform) {
         transform.translate = {
-            x: -(this.props.widgetContainer.object as Page).width / 2,
-            y: -(this.props.widgetContainer.object as Page).height / 2
+            x: -this.page.width / 2,
+            y: -this.page.height / 2
         };
         transform.scale = 1;
     }
@@ -1070,15 +1059,15 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
             const widget = DragAndDropManager.dragObject as Widget;
 
-            const p = this.designerContextComponent!.designerContext.viewState.transform.offsetToModelPoint(
+            const p = this.designerContextComponent!.designerContext.viewState.transform.clientToModelPoint(
                 {
-                    x: event.nativeEvent.offsetX,
-                    y: event.nativeEvent.offsetY
+                    x: event.nativeEvent.clientX,
+                    y: event.nativeEvent.clientY
                 }
             );
 
-            widget.x = Math.round(p.x);
-            widget.y = Math.round(p.y);
+            widget.x = Math.round(p.x - this.page.x);
+            widget.y = Math.round(p.y - this.page.y);
         }
     }
 
@@ -1086,10 +1075,7 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
     onDrop(event: React.DragEvent) {
         const widget = this.getDragWidget(event);
         if (widget) {
-            DocumentStore.addObject(
-                getProperty(this.props.widgetContainer.object, "widgets"),
-                toJS(widget)
-            );
+            DocumentStore.addObject(this.page.widgets, toJS(widget));
         }
     }
 

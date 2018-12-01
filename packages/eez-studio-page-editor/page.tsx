@@ -1,6 +1,8 @@
+import React from "react";
 import { observable, computed, action } from "mobx";
 
 import { _find } from "eez-studio-shared/algorithm";
+import { addAlphaToColor } from "eez-studio-shared/color";
 
 import {
     EezObject,
@@ -14,6 +16,7 @@ import {
 } from "eez-studio-shared/model/object";
 
 import { Widget, WidgetContainerDisplayItem } from "eez-studio-page-editor/widget";
+import { PageEditorContext } from "eez-studio-page-editor/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -126,6 +129,23 @@ export class Page extends EezObject {
             width: this.width,
             height: this.height
         };
+    }
+
+    render() {
+        const style = PageEditorContext.findStyleOrGetDefault(this.style);
+        return (
+            <div
+                style={{
+                    position: "absolute",
+                    left: this.x,
+                    top: this.y,
+                    width: this.width,
+                    height: this.height,
+                    backgroundColor: style.backgroundColor,
+                    boxShadow: `5px 5px 20px 0px ${addAlphaToColor(style.backgroundColor!, 0.5)}`
+                }}
+            />
+        );
     }
 }
 

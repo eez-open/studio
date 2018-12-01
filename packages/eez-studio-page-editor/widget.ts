@@ -10,13 +10,11 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import {
     ClassInfo,
     EezObject,
-    EezClass,
     registerClass,
     EezArrayObject,
     PropertyType,
     makeDerivedClassInfo,
     findClass,
-    getClassesDerivedFrom,
     isArray,
     getChildOfObject,
     objectToJS,
@@ -107,7 +105,8 @@ export class Widget extends EezObject {
         properties: [
             {
                 name: "type",
-                type: PropertyType.Enum
+                type: PropertyType.Enum,
+                hideInPropertyGrid: true
             },
             {
                 name: "data",
@@ -610,14 +609,14 @@ export class ContainerWidget extends Widget {
     widgets: EezArrayObject<Widget>;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "widgets",
                 type: PropertyType.Array,
                 typeClass: Widget,
                 hideInPropertyGrid: true
             }
-        ]),
+        ],
 
         defaultValue: {
             type: "Container",
@@ -696,7 +695,7 @@ export class ListWidget extends Widget {
     listType?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "listType",
                 type: PropertyType.Enum,
@@ -716,7 +715,7 @@ export class ListWidget extends Widget {
                 hideInPropertyGrid: true,
                 isOptional: true
             }
-        ]),
+        ],
 
         defaultValue: {
             type: "List",
@@ -796,7 +795,7 @@ export class GridWidget extends Widget {
     itemWidget?: Widget;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "itemWidget",
                 type: PropertyType.Object,
@@ -804,7 +803,7 @@ export class GridWidget extends Widget {
                 hideInPropertyGrid: true,
                 isOptional: true
             }
-        ]),
+        ],
 
         defaultValue: {
             type: "Grid",
@@ -1066,7 +1065,7 @@ export class SelectWidget extends Widget {
     editor: SelectWidgetEditor;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "widgets",
                 type: PropertyType.Array,
@@ -1090,7 +1089,7 @@ export class SelectWidget extends Widget {
                 typeClass: SelectWidgetEditor,
                 enumerable: false
             }
-        ]),
+        ],
 
         defaultValue: {
             type: "Select",
@@ -1230,13 +1229,13 @@ export class LayoutViewWidget extends Widget {
     layout: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: Widget.classInfo.properties.concat([
+        properties: [
             {
                 name: "layout",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "pages"]
             }
-        ]),
+        ],
 
         defaultValue: { type: "LayoutView", x: 0, y: 0, width: 64, height: 32, style: "default" }
     });
@@ -1278,22 +1277,6 @@ export class LayoutViewWidget extends Widget {
 registerClass(LayoutViewWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-let widgetClasses: EezClass[] | undefined;
-
-export function getWidgetClasses() {
-    if (!widgetClasses) {
-        widgetClasses = getClassesDerivedFrom(Widget);
-
-        const typeProperty = Widget.classInfo.properties.find(
-            propertyInfo => propertyInfo.name == "type"
-        )!;
-        typeProperty.enumItems = widgetClasses.map(widgetClass => ({
-            id: getWidgetType(widgetClass)
-        }));
-    }
-    return widgetClasses;
-}
 
 export function getWidgetType(widgetClass: typeof EezObject) {
     if (widgetClass.name.endsWith("Widget")) {
