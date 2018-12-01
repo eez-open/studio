@@ -24,7 +24,7 @@ const AppHeader = styled(Header)`
 `;
 
 @observer
-class AppComponent extends React.Component<{}, {}> {
+class AppComponent extends React.Component {
     render() {
         return (
             <VerticalHeaderWithBody>

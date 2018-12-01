@@ -65,13 +65,16 @@ export class HistoryItems extends React.Component<{
                 }
             }
 
-            let className = classNames(`EezStudio_HistoryItemEnclosure EezStudio_HistoryItem_${historyItem.id}`, {
-                EezStudio_HistoryItemEnclosure_Session: historyItem.type.startsWith(
-                    "activity-log/session"
-                ),
-                selected:
-                    !this.props.appStore.selectHistoryItemsSpecification && historyItem.selected
-            });
+            let className = classNames(
+                `EezStudio_HistoryItemEnclosure EezStudio_HistoryItem_${historyItem.id}`,
+                {
+                    EezStudio_HistoryItemEnclosure_Session: historyItem.type.startsWith(
+                        "activity-log/session"
+                    ),
+                    selected:
+                        !this.props.appStore.selectHistoryItemsSpecification && historyItem.selected
+                }
+            );
 
             return (
                 <HistoryItemEnclosure
@@ -316,7 +319,7 @@ export class HistoryListComponent extends React.Component<{
     render() {
         return (
             <HistoryListComponentContainer
-                innerRef={(ref: any) => {
+                ref={(ref: any) => {
                     let div = findDOMNode(ref);
                     if (div && div.parentElement) {
                         this.div = div.parentElement;

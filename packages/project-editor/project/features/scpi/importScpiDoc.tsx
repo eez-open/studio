@@ -889,7 +889,7 @@ export class ImportScpiDocDialog extends React.Component<
 
         return (
             <ImportScpiDocDialogDiv
-                innerRef={ref => (this.dialog = ref!)}
+                ref={ref => (this.dialog = ref!)}
                 className={"modal fade"}
                 tabIndex={-1}
                 role="dialog"

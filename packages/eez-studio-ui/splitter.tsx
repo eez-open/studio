@@ -333,8 +333,8 @@ export class Splitter extends React.Component<SplitterProps, {}> {
 
 class SplitterThumb extends React.Component<
     {
-        className: string;
-        style: React.CSSProperties;
+        className?: string;
+        style?: React.CSSProperties;
         cursor: string;
         onDragStart(e: PointerEvent, x: number, y: number): any;
         onDragMove(e: PointerEvent, x: number, y: number, params: any): void;

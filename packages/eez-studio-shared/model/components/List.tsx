@@ -314,7 +314,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
 
         return (
             <ListItemDiv
-                innerRef={ref => (this.item = ref)}
+                ref={ref => (this.item = ref!)}
                 data-object-id={this.props.item._id}
                 className={className}
                 onMouseUp={this.onMouseUp}
@@ -606,7 +606,7 @@ export class List extends React.Component<ListProps, {}> {
 
         return (
             <ListOuterDiv
-                innerRef={ref => (this.list = ref)}
+                ref={ref => (this.list = ref!)}
                 className={className}
                 tabIndex={this.props.tabIndex}
                 onKeyDown={this.onKeyDown.bind(this)}

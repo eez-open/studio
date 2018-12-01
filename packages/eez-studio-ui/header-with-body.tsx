@@ -3,12 +3,9 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 
-export class Header extends React.Component<
-    {
-        className?: string;
-    },
-    {}
-> {
+export class Header extends React.Component<{
+    className?: string;
+}> {
     render() {
         let className = classNames("EezStudio_Header", this.props.className);
         return <div className={className}>{this.props.children}</div>;
@@ -22,12 +19,9 @@ export const PanelHeader = styled(Header)`
     background-color: ${props => props.theme.panelHeaderColor};
 `;
 
-export class ToolbarHeader extends React.Component<
-    {
-        className?: string;
-    },
-    {}
-> {
+export class ToolbarHeader extends React.Component<{
+    className?: string;
+}> {
     render() {
         let className = classNames(
             "EezStudio_Header",
@@ -39,15 +33,12 @@ export class ToolbarHeader extends React.Component<
     }
 }
 
-export class Body extends React.Component<
-    {
-        className?: string;
-        tabIndex?: number;
-        visible?: boolean;
-        onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
-    },
-    {}
-> {
+export class Body extends React.Component<{
+    className?: string;
+    tabIndex?: number;
+    visible?: boolean;
+    onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
+}> {
     render() {
         let className = classNames("EezStudio_Body", this.props.className);
 
@@ -69,13 +60,10 @@ export class Body extends React.Component<
     }
 }
 
-class HeaderWithBody extends React.Component<
-    {
-        className?: string;
-        onContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
-    },
-    {}
-> {
+class HeaderWithBody extends React.Component<{
+    className?: string;
+    onContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
+}> {
     render() {
         let className = classNames("EezStudio_HeaderWithBody", this.props.className);
         return (
@@ -86,13 +74,10 @@ class HeaderWithBody extends React.Component<
     }
 }
 
-export class VerticalHeaderWithBody extends React.Component<
-    {
-        className?: string;
-        onContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
-    },
-    {}
-> {
+export class VerticalHeaderWithBody extends React.Component<{
+    className?: string;
+    onContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
+}> {
     render() {
         let className = classNames("EezStudio_HeaderWithBody_Vertical", this.props.className);
         return (
@@ -103,12 +88,9 @@ export class VerticalHeaderWithBody extends React.Component<
     }
 }
 
-export class HorizontalHeaderWithBody extends React.Component<
-    {
-        className?: string;
-    },
-    {}
-> {
+export class HorizontalHeaderWithBody extends React.Component<{
+    className?: string;
+}> {
     render() {
         let className = classNames("EezStudio_HeaderWithBody_Horizontal", this.props.className);
         return <HeaderWithBody className={className}>{this.props.children}</HeaderWithBody>;

@@ -7,10 +7,10 @@ import { ThemeInterface } from "eez-studio-ui/theme";
 const {
     default: styled,
     css,
-    injectGlobal,
+    createGlobalStyle,
     keyframes,
     ThemeProvider
 } = styledComponents as ThemedStyledComponentsModule<ThemeInterface>;
 
-export { css, injectGlobal, styled, keyframes, ThemeProvider };
+export { css, createGlobalStyle, keyframes, ThemeProvider };
 export default styled;

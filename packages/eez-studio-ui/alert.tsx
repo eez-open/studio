@@ -6,7 +6,7 @@ import classNames from "classnames";
 export class Alert extends React.Component<
     {
         onDismiss?: () => void;
-        className: string;
+        className?: string;
     },
     {}
 > {

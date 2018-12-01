@@ -219,7 +219,7 @@ export class CodeEditor extends React.Component<CodeEditorProps, {}> {
     render() {
         return (
             <CodeEditorDiv
-                innerRef={ref => (this.element = ref!)}
+                ref={ref => (this.element = ref!)}
                 className={this.props.className}
                 style={this.props.style}
                 tabIndex={this.props.tabIndex}

@@ -19,7 +19,7 @@ export interface IRow {
     id: string;
     selected: boolean;
     [key: string]: any;
-    className: string;
+    className?: string;
     onClick: () => void;
     onDoubleClick: () => void;
 }

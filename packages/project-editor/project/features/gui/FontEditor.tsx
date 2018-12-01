@@ -182,7 +182,7 @@ export class GlyphSelectFieldType extends React.Component<
     render() {
         if (this.state.font) {
             return (
-                <GlyphSelectFieldContainerDiv innerRef={ref => (this.glyphsContainer = ref)}>
+                <GlyphSelectFieldContainerDiv ref={ref => (this.glyphsContainer = ref)}>
                     <Glyphs
                         ref={ref => (this.glyphs = ref!)}
                         glyphs={this.state.font.glyphs._array}

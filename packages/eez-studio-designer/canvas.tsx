@@ -7,6 +7,7 @@ import { Point, pointDistance, BoundingRectBuilder } from "eez-studio-shared/geo
 import { getScrollbarWidth } from "eez-studio-shared/dom";
 
 import { Draggable } from "eez-studio-ui/draggable";
+import styled from "eez-studio-ui/styled-components";
 
 import {
     IToolHandler,
@@ -25,17 +26,21 @@ const CONF_AFTER_SCROLL_ADJUSTMENT_TIMEOUT = 1000; // ms
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const CanvasDiv = styled.div`
+    background-color: red;
+    * {
+        user-select: none;
+    }
+`;
+
 @inject("designerContext")
 @observer
-export class Canvas extends React.Component<
-    {
-        designerContext?: IDesignerContext;
-        toolHandler: IToolHandler;
-        className?: string;
-        style?: React.CSSProperties;
-    },
-    {}
-> {
+export class Canvas extends React.Component<{
+    designerContext?: IDesignerContext;
+    toolHandler: IToolHandler;
+    className?: string;
+    style?: React.CSSProperties;
+}> {
     div: Element;
     svg: SVGSVGElement;
     intervalTimerIDForClientRectUpdate: any;
@@ -381,7 +386,7 @@ export class Canvas extends React.Component<
         const yt = transform.translate.y + transform.clientRect.height / 2;
 
         return (
-            <div
+            <CanvasDiv
                 ref={ref => (this.div = ref!)}
                 className={this.props.className}
                 style={style}
@@ -400,16 +405,14 @@ export class Canvas extends React.Component<
                             top: boundingRect.top,
                             width: boundingRect.width - getScrollbarWidth(),
                             height: boundingRect.height - getScrollbarWidth(),
-                            pointerEvents: "none",
-                            userSelect: "none"
+                            pointerEvents: "none"
                         }}
                     />
                     <div
                         style={{
                             transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`,
                             transformOrigin: "0 0",
-                            pointerEvents: "none",
-                            userSelect: "none"
+                            pointerEvents: "none"
                         }}
                     >
                         {this.designerContext.options && this.designerContext.options.center && (
@@ -445,7 +448,7 @@ export class Canvas extends React.Component<
                     </div>
                     {this.props.toolHandler.render(this.designerContext, this.mouseHandler)}
                 </div>
-            </div>
+            </CanvasDiv>
         );
     }
 }

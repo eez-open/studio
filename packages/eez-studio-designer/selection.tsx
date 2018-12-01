@@ -18,7 +18,7 @@ class SelectedObject extends React.Component<
     {
         object: IBaseObject;
         transform: Transform;
-        className: string;
+        className?: string;
     },
     {}
 > {

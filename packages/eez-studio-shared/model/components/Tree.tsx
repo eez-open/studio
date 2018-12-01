@@ -427,7 +427,7 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
 
             row = (
                 <TreeRowDiv
-                    innerRef={ref => (this.row = ref)}
+                    ref={ref => (this.row = ref!)}
                     data-object-id={this.props.item.object._id}
                     className={className}
                     style={{ paddingLeft: this.props.level * 20 }}
@@ -703,7 +703,7 @@ export class Tree extends React.Component<TreeProps, {}> {
 
         return (
             <TreeOuterDiv
-                innerRef={ref => (this.tree = ref)}
+                ref={ref => (this.tree = ref!)}
                 className={className}
                 tabIndex={this.props.tabIndex}
                 onKeyDown={this.onKeyDown}

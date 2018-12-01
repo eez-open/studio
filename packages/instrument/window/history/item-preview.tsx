@@ -49,7 +49,7 @@ const ZoomedPreviewBody = styled(VerticalHeaderWithBody)`
 @observer
 class ZoomedPreview extends React.Component<{
     toolbar?: JSX.Element;
-    className: string;
+    className?: string;
     toggleZoom: (event: React.MouseEvent<HTMLElement>) => void;
 }> {
     el: HTMLDivElement;
@@ -157,7 +157,7 @@ const UnzoomedPreviewBody = styled.div`
 
 @observer
 class UnzoomedPreview extends React.Component<{
-    className: string;
+    className?: string;
     toggleZoom: (event: React.MouseEvent<HTMLElement>) => void;
 }> {
     render() {
@@ -171,7 +171,7 @@ class UnzoomedPreview extends React.Component<{
 
 @observer
 export class HistoryItemPreview extends React.Component<{
-    className: string;
+    className?: string;
     toolbarWhenZoomed?: JSX.Element;
     zoom: boolean;
     toggleZoom: () => void;

@@ -241,7 +241,7 @@ export class TabsView extends React.Component<{ tabs: ITab[] }> {
         let tabs = this.props.tabs.map(tab => <TabView key={tab.id} tab={tab} />);
 
         return (
-            <TabsViewContainer innerRef={this.setRef} onWheel={this.onWheel.bind(this)}>
+            <TabsViewContainer ref={this.setRef} onWheel={this.onWheel.bind(this)}>
                 {tabs}
             </TabsViewContainer>
         );
