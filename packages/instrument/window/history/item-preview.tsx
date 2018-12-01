@@ -79,7 +79,7 @@ class ZoomedPreview extends React.Component<{
     render() {
         return ReactDOM.createPortal(
             <ZoomedPreviewBody className={this.props.className} onContextMenu={this.onContextMenu}>
-                <PanelHeader>
+                <PanelHeader className="">
                     {this.props.toolbar || <Toolbar />}
                     <Toolbar>
                         <IconAction

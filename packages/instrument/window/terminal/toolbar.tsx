@@ -92,7 +92,7 @@ export class ShortcutsToolbar extends React.Component<
         }
 
         return (
-            <ShortcutsToolbarContainer>
+            <ShortcutsToolbarContainer className="">
                 {this.shortcuts.map(shortcut => (
                     <ShortcutButton
                         key={shortcut.id}

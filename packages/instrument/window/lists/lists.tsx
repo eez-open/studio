@@ -241,7 +241,7 @@ export class DetailsView extends React.Component<{ list: BaseList | undefined },
         return (
             <VerticalHeaderWithBody>
                 {description && (
-                    <PanelHeader>
+                    <PanelHeader className="">
                         <Icon icon="material:comment" /> {description}
                     </PanelHeader>
                 )}

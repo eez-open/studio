@@ -12,5 +12,5 @@ const {
     ThemeProvider
 } = styledComponents as ThemedStyledComponentsModule<ThemeInterface>;
 
-export { css, createGlobalStyle, keyframes, ThemeProvider };
+export { css, styled, createGlobalStyle, keyframes, ThemeProvider };
 export default styled;

@@ -193,7 +193,7 @@ export class CommandsBrowser extends React.Component<
 
             selectedNodeDetails = (
                 <React.Fragment>
-                    <PanelHeader>
+                    <PanelHeader className="">
                         <table>
                             <tbody>
                                 {this.selectedNode.commandSyntax && (
@@ -224,7 +224,7 @@ export class CommandsBrowser extends React.Component<
                 sizes="240px|100%"
                 persistId="instrument/window/commands-browser/splitter"
             >
-                <CommandsBrowserLeft>
+                <CommandsBrowserLeft className="">
                     <Header>
                         <SearchInput
                             searchText={this.searchText}
@@ -234,7 +234,7 @@ export class CommandsBrowser extends React.Component<
                     </Header>
                     <Body tabIndex={0}>{leftSideBody}</Body>
                 </CommandsBrowserLeft>
-                <CommandsBrowserRight>{selectedNodeDetails}</CommandsBrowserRight>
+                <CommandsBrowserRight className="">{selectedNodeDetails}</CommandsBrowserRight>
             </Splitter>
         );
     }

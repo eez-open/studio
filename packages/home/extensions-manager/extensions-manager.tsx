@@ -922,7 +922,7 @@ export class DetailsView extends React.Component {
 
         return (
             <VerticalHeaderWithBody>
-                <ExtensionDetailsHeader>
+                <ExtensionDetailsHeader className="">
                     <ExtensionDetailsHeaderImageContainer>
                         <img src={extension.image} width={256} />
                         <a href="#" style={{ cursor: "pointer" }} onClick={this.handleChangeImage}>

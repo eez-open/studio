@@ -28,7 +28,7 @@ class AppComponent extends React.Component {
     render() {
         return (
             <VerticalHeaderWithBody>
-                <AppHeader>
+                <AppHeader className="">
                     <TabsView tabs={tabs.tabs} />
                     <SessionInfoContainer>
                         <SessionInfo appStore={getAppStore()} />

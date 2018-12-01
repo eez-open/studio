@@ -122,7 +122,7 @@ export class AppBar extends React.Component<
             this.props.selectedItem && this.props.selectedItem.renderToolbarButtons();
 
         return (
-            <ConnectionBar>
+            <ConnectionBar className="">
                 <div>
                     <img src={this.instrument.image} draggable={false} />
                 </div>

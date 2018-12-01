@@ -205,7 +205,7 @@ export class Settings extends React.Component<{}, {}> {
                 </HomeSettingsBody>
 
                 {this.restartRequired && (
-                    <HomeSettingsBar>
+                    <HomeSettingsBar className="">
                         <div className="btn-group mr-2">
                             <button
                                 className="btn btn-primary EezStudio_PulseTransition"

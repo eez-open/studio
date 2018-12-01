@@ -376,7 +376,7 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
 
     render() {
         return (
-            <ListChartViewHeader>
+            <ListChartViewHeader className="">
                 <Toolbar>
                     <ButtonAction
                         text="Edit Properties"
@@ -949,7 +949,7 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
                 </VerticalHeaderWithBody>
 
                 <VerticalHeaderWithBody>
-                    <TableListEditorToolbarHeader>
+                    <TableListEditorToolbarHeader className="">
                         <DropdownButtonAction
                             text="Insert"
                             title="Insert rows"
@@ -993,7 +993,7 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
                         )}
                         {<div className="text-danger">{this.error}</div>}
                     </TableListEditorToolbarHeader>
-                    <TableListEditorBody>
+                    <TableListEditorBody className="">
                         <TableListEditorTable
                             list={list}
                             onCellFocus={this.onCellFocus}
