@@ -4,10 +4,11 @@ import { observable, runInAction } from "mobx";
 import { closestByClass } from "eez-studio-shared/dom";
 import { Point, Rect, pointInRect, rectEqual } from "eez-studio-shared/geometry";
 
+import { IMenu } from "eez-studio-shared/model/store";
+
 import {
     IDesignerContext,
     IToolHandler,
-    IContextMenu,
     IMouseHandler
 } from "eez-studio-designer/designer-interfaces";
 import { MouseHandler } from "eez-studio-designer/mouse-handler";
@@ -26,11 +27,7 @@ export const selectToolHandler: IToolHandler = {
 
     onClick(context: IDesignerContext, point: Point) {},
 
-    onContextMenu(
-        context: IDesignerContext,
-        point: Point,
-        showContextMenu: (menu: IContextMenu) => void
-    ) {
+    onContextMenu(context: IDesignerContext, point: Point, showContextMenu: (menu: IMenu) => void) {
         if (
             context.viewState.selectedObjects.length === 0 ||
             !pointInRect(point, context.viewState.selectedObjectsBoundingRect as Rect)
@@ -38,7 +35,7 @@ export const selectToolHandler: IToolHandler = {
             context.viewState.deselectAllObjects();
 
             let object = context.document.objectFromPoint(point);
-            if (!object) {
+            if (!object || (object.isSelectable !== undefined && !object.isSelectable)) {
                 return;
             }
 
@@ -49,7 +46,7 @@ export const selectToolHandler: IToolHandler = {
             if (context.viewState.selectedObjects.length > 0) {
                 const menu = context.document.createContextMenu(context.viewState.selectedObjects);
 
-                menu.appendMenuItem({
+                menu.append({
                     label: "Delete",
                     click: () => {
                         context.document.deleteObjects(context.viewState.selectedObjects);
@@ -78,7 +75,7 @@ export const selectToolHandler: IToolHandler = {
 
         let point = context.viewState.transform.mouseEventToModelPoint(event);
         let object = context.document.objectFromPoint(point);
-        if (object) {
+        if (object && (object.isSelectable === undefined || object.isSelectable)) {
             if (!context.viewState.isObjectSelected(object)) {
                 if (!event.ctrlKey && !event.shiftKey) {
                     context.viewState.deselectAllObjects();

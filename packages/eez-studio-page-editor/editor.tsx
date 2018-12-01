@@ -10,9 +10,6 @@ import { SvgLabel } from "eez-studio-ui/svg-label";
 import {
     IBaseObject,
     IDocument,
-    IContextMenu,
-    IContextMenuItem,
-    IContextMenuPopupOptions,
     IViewStatePersistantState,
     IDesignerContext
 } from "eez-studio-designer/designer-interfaces";
@@ -825,6 +822,14 @@ function findSelectWidgetEditors(rootObject: Widget | Page) {
 
 @observer
 class RootObjectComponent extends BaseObjectComponent {
+    get isSelectable() {
+        return false;
+    }
+
+    get isResizable() {
+        return false;
+    }
+
     get rootObject() {
         return this.props.object as Page;
     }
@@ -915,7 +920,7 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
     designerContextComponent: DesignerContext | null;
 
     @observable
-    dragEnterCounter = 0;
+    dragWidget: Widget | undefined;
 
     get page() {
         return this.props.widgetContainer.object as Page;
@@ -957,16 +962,8 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
         UndoManager.setCombineCommands(false);
     }
 
-    createContextMenu(objects: IBaseObject[]): IContextMenu {
-        const menu = UIElementsFactory.createMenu();
-        return {
-            appendMenuItem: (menuItem: IContextMenuItem) => {
-                menu.append(UIElementsFactory.createMenuItem(menuItem));
-            },
-            popup: (options: IContextMenuPopupOptions) => {
-                menu.popup(options);
-            }
-        };
+    createContextMenu(objects: IBaseObject[]) {
+        return UIElementsFactory.createMenu();
     }
 
     get boundingRect() {
@@ -1046,7 +1043,7 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
     onDragEnter(event: React.DragEvent) {
         const widget = this.getDragWidget(event);
         if (widget) {
-            ++this.dragEnterCounter;
+            this.dragWidget = widget;
         }
     }
 
@@ -1061,30 +1058,30 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
             const p = this.designerContextComponent!.designerContext.viewState.transform.clientToModelPoint(
                 {
-                    x: event.nativeEvent.clientX,
-                    y: event.nativeEvent.clientY
+                    x: event.nativeEvent.clientX - widget.width / 2,
+                    y: event.nativeEvent.clientY - widget.height / 2
                 }
             );
 
             widget.x = Math.round(p.x - this.page.x);
             widget.y = Math.round(p.y - this.page.y);
+
+            this.dragWidget = widget;
         }
     }
 
-    @bind
+    @action.bound
     onDrop(event: React.DragEvent) {
         const widget = this.getDragWidget(event);
         if (widget) {
             DocumentStore.addObject(this.page.widgets, toJS(widget));
+            this.dragWidget = undefined;
         }
     }
 
     @action.bound
     onDragLeave(event: React.DragEvent) {
-        const widget = this.getDragWidget(event);
-        if (widget) {
-            --this.dragEnterCounter;
-        }
+        this.dragWidget = undefined;
     }
 
     render() {
@@ -1117,11 +1114,7 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
                                 }
                             }}
                             object={this.props.widgetContainer.object}
-                            dragWidget={
-                                this.dragEnterCounter > 0
-                                    ? (DragAndDropManager.dragObject as Widget)
-                                    : undefined
-                            }
+                            dragWidget={this.dragWidget}
                         />
                     </PageEditorCanvas>
                 </PageEditorCanvasContainer>

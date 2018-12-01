@@ -253,14 +253,22 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
     }
 
     @bind
-    onMouseUp(e: React.MouseEvent<HTMLDivElement>) {
-        if (e.button === 2) {
+    onMouseUp(event: React.MouseEvent<HTMLDivElement>) {
+        if (event.button === 2) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const position = {
+                left: event.clientX,
+                top: event.clientY
+            };
+
             if (this.props.item.selected) {
-                this.props.rootItem.showSelectionContextMenu();
+                this.props.rootItem.showSelectionContextMenu(position);
             } else {
                 this.props.rootItem.selectItems([this.props.item]);
                 setTimeout(() => {
-                    this.props.rootItem.showSelectionContextMenu();
+                    this.props.rootItem.showSelectionContextMenu(position);
                 });
             }
         }
@@ -708,6 +716,10 @@ export class Tree extends React.Component<TreeProps, {}> {
                 tabIndex={this.props.tabIndex}
                 onKeyDown={this.onKeyDown}
                 onFocus={() => this.props.onFocus && this.props.onFocus()}
+                onContextMenu={event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }}
             >
                 <TreeInnerDiv onDrop={this.onDrop}>
                     <TreeRow

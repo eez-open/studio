@@ -29,7 +29,8 @@ import {
     deleteItems,
     showContextMenu as showSingleItemContextMenu,
     IMenuItem,
-    UIElementsFactory
+    UIElementsFactory,
+    IMenuAnchorPosition
 } from "eez-studio-shared/model/store";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +61,7 @@ export interface DisplayItemSelection extends DisplayItem {
     canDelete(): boolean;
     deleteSelection(): void;
 
-    showSelectionContextMenu(): void;
+    showSelectionContextMenu(position: IMenuAnchorPosition): void;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -512,9 +513,9 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
         }
     }
 
-    showSelectionContextMenu() {
+    showSelectionContextMenu(position: IMenuAnchorPosition) {
         if (this.selectedItems.length == 1) {
-            showSingleItemContextMenu(this.selectedItems[0].object);
+            showSingleItemContextMenu(this.selectedItems[0].object, position);
             return;
         }
 
@@ -601,7 +602,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
         if (menuItems.length > 0) {
             const menu = UIElementsFactory.createMenu();
             menuItems.forEach(menuItem => menu.append(menuItem));
-            menu.popup({});
+            menu.popup({}, position);
         }
     }
 }

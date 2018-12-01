@@ -161,7 +161,10 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
 
         $(this.canvas).on("contextmenu", event => {
             this.scrollBars.stopDragging();
-            this.props.displaySelection.showSelectionContextMenu();
+            this.props.displaySelection.showSelectionContextMenu({
+                left: event.clientX!,
+                top: event.clientY!
+            });
             event.preventDefault();
         });
 

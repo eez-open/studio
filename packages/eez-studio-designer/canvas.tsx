@@ -6,13 +6,14 @@ import { bind } from "bind-decorator";
 import { Point, pointDistance, BoundingRectBuilder } from "eez-studio-shared/geometry";
 import { getScrollbarWidth } from "eez-studio-shared/dom";
 
+import { IMenu } from "eez-studio-shared/model/store";
+
 import { Draggable } from "eez-studio-ui/draggable";
 import styled from "eez-studio-ui/styled-components";
 
 import {
     IToolHandler,
     IMouseHandler,
-    IContextMenu,
     IDesignerContext
 } from "eez-studio-designer/designer-interfaces";
 import { PanMouseHandler } from "eez-studio-designer/mouse-handlers/pan";
@@ -218,6 +219,11 @@ export class Canvas extends React.Component<{
         event.stopPropagation();
     }
 
+    @bind
+    onContextMenu(event: React.MouseEvent) {
+        event.preventDefault();
+    }
+
     @action.bound
     onDragStart(event: PointerEvent) {
         if (this.isScrolling) {
@@ -312,17 +318,22 @@ export class Canvas extends React.Component<{
         } else {
             this.lastMouseUpTime = undefined;
 
+            const anchorPosition = {
+                left: event.clientX,
+                top: event.clientY
+            };
+
             if (!preventContextMenu && this.props.toolHandler && this.buttonsAtDown === 2) {
                 this.props.toolHandler.onContextMenu(
                     this.designerContext,
                     transform.mouseEventToModelPoint(event),
-                    (menu: IContextMenu) => {
+                    (menu: IMenu) => {
                         if (this.mouseHandler) {
                             this.mouseHandler.up(this.designerContext);
                             this.mouseHandler = undefined;
                         }
 
-                        menu.popup({});
+                        menu.popup({}, anchorPosition);
                     }
                 );
             }
@@ -392,6 +403,7 @@ export class Canvas extends React.Component<{
                 style={style}
                 onClick={this.onClick}
                 onWheel={this.onWheel}
+                onContextMenu={this.onContextMenu}
             >
                 <div
                     ref={ref => (this.innerDiv = ref!)}

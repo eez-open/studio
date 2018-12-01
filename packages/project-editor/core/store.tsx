@@ -8,7 +8,11 @@ import {
     UndoManager,
     UIStateStore,
     setUIElementsFactory,
-    IMenuItemConfig
+    IMenuItemConfig,
+    IMenu,
+    IMenuItem,
+    IMenuPopupOptions,
+    IMenuAnchorPosition
 } from "eez-studio-shared/model/store";
 import { showGenericDialog, TableField } from "eez-studio-ui/generic-dialog";
 
@@ -397,11 +401,22 @@ setUIElementsFactory({
         return new MenuItem(config);
     },
 
-    createMenu() {
-        return new Menu();
+    createMenu(): IMenu {
+        const menu = new Menu();
+        return {
+            append(menuItem: IMenuItem) {
+                menu.append(new MenuItem(menuItem));
+            },
+
+            popup(options: IMenuPopupOptions, position: IMenuAnchorPosition) {
+                menu.popup(options);
+            }
+        };
     },
 
-    confirm,
+    confirm(message: string, detail: string | undefined, callback: () => void): void {
+        return confirm(message, detail, callback);
+    },
 
     renderProperty(propertyInfo: PropertyInfo, value: any, onChange: (value: any) => void) {
         if (propertyInfo.type === PropertyType.ConfigurationReference) {

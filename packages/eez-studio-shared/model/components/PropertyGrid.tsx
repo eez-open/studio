@@ -117,7 +117,7 @@ class PropertyMenu extends React.Component<PropertyProps, {}> {
     }
 
     @bind
-    onClicked() {
+    onClicked(event: React.MouseEvent) {
         let menuItems: IMenuItem[] = [];
 
         if (this.sourceInfo.source === "modified") {
@@ -136,7 +136,13 @@ class PropertyMenu extends React.Component<PropertyProps, {}> {
         if (menuItems.length > 0) {
             const menu = UIElementsFactory.createMenu();
             menuItems.forEach(menuItem => menu.append(menuItem));
-            menu.popup({});
+            menu.popup(
+                {},
+                {
+                    left: event.clientX,
+                    top: event.clientY
+                }
+            );
         }
     }
 

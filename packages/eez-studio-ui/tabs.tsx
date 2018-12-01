@@ -60,7 +60,9 @@ class TabView extends React.Component<
     }
 
     @bind
-    onContextMenu() {
+    onContextMenu(event: React.MouseEvent) {
+        event.preventDefault();
+
         const menu = new Menu();
 
         if (this.props.tab.openInWindow) {

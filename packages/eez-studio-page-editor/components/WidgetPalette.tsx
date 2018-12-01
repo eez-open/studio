@@ -16,21 +16,6 @@ import { Widget, getWidgetType } from "eez-studio-page-editor/widget";
 const WidgetDiv = styled.div`
     cursor: -webkit-grab;
     border: 2px solid transparent;
-
-    &:hover {
-        background-color: ${props => props.theme.hoverBackgroundColor};
-        color: ${props => props.theme.hoverColor};
-    }
-
-    &.selected {
-        background-color: ${props => props.theme.selectionBackgroundColor};
-        color: ${props => props.theme.selectionColor};
-    }
-
-    &.dragging {
-        background-color: ${props => props.theme.dragSourceBackgroundColor};
-        color: ${props => props.theme.dragSourceColor};
-    }
 `;
 
 interface PaletteItemProps {
@@ -43,8 +28,6 @@ interface PaletteItemProps {
 class PaletteItem extends React.Component<PaletteItemProps> {
     @action.bound
     onDragStart(event: any) {
-        this.props.onSelect(undefined);
-
         let object = new this.props.widgetClass();
         Object.assign(object, object._classInfo.defaultValue!);
 
@@ -100,6 +83,33 @@ class PaletteItem extends React.Component<PaletteItemProps> {
 const WidgetPaletteDiv = styled.div`
     overflow: auto;
     padding: 10px;
+    flex-grow: 1;
+
+    & > div {
+        &.selected {
+            background-color: ${props => props.theme.nonFocusedSelectionBackgroundColor};
+            color: ${props => props.theme.nonFocusedSelectionColor};
+        }
+    }
+
+    &:focus {
+        & > div {
+            &:hover {
+                background-color: ${props => props.theme.hoverBackgroundColor};
+                color: ${props => props.theme.hoverColor};
+            }
+
+            &.selected {
+                background-color: ${props => props.theme.selectionBackgroundColor};
+                color: ${props => props.theme.selectionColor};
+            }
+
+            &.dragging {
+                background-color: ${props => props.theme.dragSourceBackgroundColor};
+                color: ${props => props.theme.dragSourceColor};
+            }
+        }
+    }
 `;
 
 @observer
@@ -128,10 +138,6 @@ export class WidgetPalette extends React.Component<{
             }
         );
 
-        return (
-            <WidgetPaletteDiv tabIndex={0}>
-                <div>{widgets}</div>
-            </WidgetPaletteDiv>
-        );
+        return <WidgetPaletteDiv tabIndex={0}>{widgets}</WidgetPaletteDiv>;
     }
 }

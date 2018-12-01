@@ -275,15 +275,20 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                 this.props.navigationObject
             );
 
+            const position = {
+                left: e.clientX,
+                top: e.clientY
+            };
+
             if (this.props.item == selectedItem) {
-                showContextMenu(this.props.item);
+                showContextMenu(this.props.item, position);
             } else {
                 NavigationStore.setNavigationSelectedItem(
                     this.props.navigationObject,
                     this.props.item
                 );
                 setTimeout(() => {
-                    showContextMenu(this.props.item);
+                    showContextMenu(this.props.item, position);
                 });
             }
         }

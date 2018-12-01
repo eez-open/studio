@@ -1,22 +1,12 @@
 import { Point, Rect, ITransform, Transform } from "eez-studio-shared/geometry";
-
-export interface IContextMenuItem {
-    label: string;
-    click: () => void;
-}
-
-export interface IContextMenuPopupOptions {}
-
-export interface IContextMenu {
-    appendMenuItem(menuItem: IContextMenuItem): void;
-    popup(config: IContextMenuPopupOptions): void;
-}
+import { IMenu } from "eez-studio-shared/model/store";
 
 export interface IBaseObject {
     id: string;
     rect: Rect;
     boundingRect: Rect;
     selectionRects: Rect[];
+    isSelectable?: boolean;
     isResizable?: boolean;
     open(): void;
 }
@@ -35,7 +25,7 @@ export interface IDocument {
     resetTransform?(transform: ITransform): void;
 
     // misc.
-    createContextMenu(objects: IBaseObject[]): IContextMenu;
+    createContextMenu(objects: IBaseObject[]): IMenu;
 
     // events
     onDragStart(op: "move" | "resize"): void;
@@ -102,7 +92,7 @@ export interface IToolHandler {
     onContextMenu(
         context: IDesignerContext,
         point: Point,
-        showContextMenu: (menu: IContextMenu) => void
+        showContextMenu: (menu: IMenu) => void
     ): void;
 
     cursor: string;

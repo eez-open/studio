@@ -14,13 +14,9 @@ import { humanize } from "eez-studio-shared/string";
 
 import { extensionsToolbarButtons } from "eez-studio-shared/extensions/extensions";
 
-import {
-    IBaseObject,
-    IDocument,
-    IContextMenu,
-    IContextMenuItem,
-    IContextMenuPopupOptions
-} from "eez-studio-designer/designer-interfaces";
+import { IMenuItem, IMenuPopupOptions, IMenuAnchorPosition } from "eez-studio-shared/model/store";
+
+import { IBaseObject, IDocument } from "eez-studio-designer/designer-interfaces";
 
 import { store, workbenchObjects, deleteWorkbenchObject, WorkbenchObject } from "home/store";
 
@@ -118,7 +114,7 @@ class WorkbenchDocument implements IDocument {
         }
     }
 
-    createContextMenu(objects: IWorkbenchObject[]): IContextMenu {
+    createContextMenu(objects: IWorkbenchObject[]) {
         const menu = new Menu();
 
         if (objects.length === 1) {
@@ -152,10 +148,11 @@ class WorkbenchDocument implements IDocument {
         }
 
         return {
-            appendMenuItem: (menuItem: IContextMenuItem) => {
+            append(menuItem: IMenuItem) {
                 menu.append(new MenuItem(menuItem));
             },
-            popup: (options: IContextMenuPopupOptions) => {
+
+            popup(options: IMenuPopupOptions, position: IMenuAnchorPosition) {
                 menu.popup(options);
             }
         };
