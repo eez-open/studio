@@ -595,7 +595,7 @@ export class Widget extends EezObject {
         return undefined;
     }
 
-    render(): React.ReactNode {
+    render(inEditor: boolean): React.ReactNode {
         return undefined;
     }
 }

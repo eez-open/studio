@@ -307,7 +307,7 @@ abstract class BaseWidgetObjectComponent extends BaseObjectComponent {
             );
         }
 
-        const node = this.widget.render();
+        const node = this.widget.render(true);
         if (node) {
             return (
                 <div
