@@ -1,4 +1,4 @@
-import { observable, computed, action, runInAction } from "mobx";
+import { observable, computed, runInAction } from "mobx";
 
 import { isRenderer } from "eez-studio-shared/util";
 import {
@@ -40,7 +40,7 @@ export class WorkbenchObject {
     oid: string;
     @observable private _rect: Rect;
 
-    @observable _boundingRect: Rect | undefined;
+    children: WorkbenchObject[] = [];
 
     @computed
     get implementation() {
@@ -52,7 +52,12 @@ export class WorkbenchObject {
     }
 
     get rect() {
-        return this._rect;
+        return {
+            left: this._rect.left,
+            top: this._rect.top,
+            width: 128,
+            height: 164
+        };
     }
 
     set rect(rect: Rect) {
@@ -61,12 +66,7 @@ export class WorkbenchObject {
 
     @computed
     get boundingRect() {
-        return this._boundingRect || this.rect;
-    }
-
-    @action
-    setBoundingRect(rect: Rect) {
-        this._boundingRect = rect;
+        return this.rect;
     }
 
     @computed

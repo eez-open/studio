@@ -125,6 +125,15 @@ export function pointSegmentDistance(p: Point, s: Segment) {
     return pointDistance(p, projection);
 }
 
+export function rectClone(rect: Rect): Rect {
+    return {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height
+    };
+}
+
 export function rectCenter(rect: Rect): Point {
     return {
         x: rect.left + rect.width / 2,

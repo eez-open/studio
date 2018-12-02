@@ -19,10 +19,8 @@ import {
     nodesFromPoint
 } from "eez-studio-page-editor/widget-tree";
 
-import {
-    findSnapLines,
-    drawSnapLines
-} from "project-editor/project/features/gui/page-editor/CanvasEditorSnapLines";
+import { findSnapLines, drawSnapLines } from "eez-studio-shared/snap-lines";
+
 import {
     CanvasEditorScrollBars,
     ScrollBarsHitRegion
@@ -49,6 +47,13 @@ const BOUNDING_RECT_MARGIN = 100;
 
 const CENTER_LINES_COLOR = "rgba(255, 0, 0, 0.2)";
 const CENTER_LINES_WIDTH = 1;
+
+const SNAP_LINES_DRAW_THEME = {
+    lineColor: "rgba(128, 128, 128, 1)",
+    lineWidth: 0.5,
+    closestLineColor: "rgba(0, 255, 0, 1)",
+    closestLineWidth: 1
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -385,7 +390,8 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
                 },
                 this.mouseDrag.snapLines,
                 this.selectionRect,
-                this.scale
+                this.scale,
+                SNAP_LINES_DRAW_THEME
             );
         }
 

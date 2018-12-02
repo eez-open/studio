@@ -1,4 +1,4 @@
-import { filterFloat } from "eez-studio-shared/filterFloat";
+import { filterFloat } from "eez-studio-shared/model/validation";
 
 export function parseScpiValue(data: string) {
     data = data.trim();

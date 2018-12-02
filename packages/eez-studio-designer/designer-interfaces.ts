@@ -4,6 +4,7 @@ import { IMenu } from "eez-studio-shared/model/store";
 export interface IBaseObject {
     id: string;
     rect: Rect;
+    children: IBaseObject[];
     boundingRect: Rect;
     selectionRects: Rect[];
     isSelectable?: boolean;
@@ -12,6 +13,8 @@ export interface IBaseObject {
 }
 
 export interface IDocument {
+    rootObjects: IBaseObject[];
+
     findObjectById(id: string): IBaseObject | undefined;
 
     // modify
@@ -81,7 +84,8 @@ export interface IMouseHandler {
     down(context: IDesignerContext, event: MouseEvent): void;
     move(context: IDesignerContext, event: MouseEvent): void;
     up(context: IDesignerContext, event?: MouseEvent): void;
-    renderInSelectionLayer?(): React.ReactNode;
+    selectionVisible: boolean;
+    renderInSelectionLayer?(context: IDesignerContext): React.ReactNode;
 }
 
 export interface IToolHandler {

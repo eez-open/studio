@@ -5,10 +5,11 @@ import { EezObject } from "eez-studio-shared/model/object";
 import { TreeNode } from "eez-studio-page-editor/widget-tree";
 
 import {
-    SnapLines,
+    ISnapLines,
     findClosestHorizontalSnapLinesToPosition,
     findClosestVerticalSnapLinesToPosition
-} from "project-editor/project/features/gui/page-editor/CanvasEditorSnapLines";
+} from "eez-studio-shared/snap-lines";
+
 import { HitRegion } from "project-editor/project/features/gui/page-editor/CanvasEditorHitTest";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +34,7 @@ export class MouseDrag {
         width: 0,
         height: 0
     };
-    snapLines: SnapLines;
+    snapLines: ISnapLines;
 
     constructor(public offset: Point, public snapToLines: boolean, public hitRegion: HitRegion) {}
 

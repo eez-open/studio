@@ -2,7 +2,15 @@ import React from "react";
 import { observable, runInAction } from "mobx";
 
 import { closestByClass } from "eez-studio-shared/dom";
-import { Point, Rect, pointInRect, rectEqual } from "eez-studio-shared/geometry";
+import { Point, Rect, pointInRect, rectEqual, rectClone } from "eez-studio-shared/geometry";
+import {
+    INode,
+    ISnapLines,
+    findSnapLines,
+    findClosestHorizontalSnapLinesToPosition,
+    findClosestVerticalSnapLinesToPosition,
+    drawSnapLinesGeneric
+} from "eez-studio-shared/snap-lines";
 
 import { IMenu } from "eez-studio-shared/model/store";
 
@@ -13,6 +21,14 @@ import {
 } from "eez-studio-designer/designer-interfaces";
 import { MouseHandler } from "eez-studio-designer/mouse-handler";
 import { Selection } from "eez-studio-designer/selection";
+
+const SNAP_LINES_DRAW_THEME = {
+    lineColor: "rgba(128, 128, 128, 1)",
+    lineWidth: 0.5,
+    closestLineColor: "rgba(0, 255, 0, 1)",
+    closestLineWidth: 1
+};
+const CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME = 300;
 
 // - select object with click
 // - selection context menu
@@ -148,7 +164,7 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
         });
     }
 
-    renderInSelectionLayer() {
+    renderInSelectionLayer(context: IDesignerContext) {
         return (
             this.rubberBendRect && (
                 <div
@@ -165,25 +181,170 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
     }
 }
 
-class DragMouseHandler extends MouseHandler {
-    changed: boolean;
+class MouseHandlerWithSnapLines extends MouseHandler {
+    snapLines: ISnapLines;
+    snapToLines: boolean;
 
     down(context: IDesignerContext, event: MouseEvent) {
         super.down(context, event);
-        context.document.onDragStart("move");
+
+        this.snapLines = findSnapLines(
+            {
+                children: context.document.rootObjects
+            },
+            context.viewState.selectedObjects,
+            (node: INode) => true
+        );
+        this.snapToLines = false;
     }
 
     move(context: IDesignerContext, event: MouseEvent) {
         super.move(context, event);
 
-        for (const object of context.viewState.selectedObjects) {
+        this.snapToLines =
+            !event.shiftKey && this.elapsedTime > CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME;
+    }
+
+    renderInSelectionLayer(context: IDesignerContext) {
+        if (!this.snapToLines) {
+            return null;
+        }
+
+        const transform = context.viewState.transform;
+        const offsetRect = transform.clientToOffsetRect(transform.clientRect);
+
+        const lines: JSX.Element[] = [];
+
+        const lineStyle = {
+            stroke: SNAP_LINES_DRAW_THEME.lineColor,
+            strokeWidth: SNAP_LINES_DRAW_THEME.lineWidth
+        };
+        const closestLineStyle = {
+            stroke: SNAP_LINES_DRAW_THEME.closestLineColor,
+            strokeWidth: SNAP_LINES_DRAW_THEME.closestLineWidth
+        };
+
+        drawSnapLinesGeneric(
+            this.snapLines,
+            context.viewState.selectedObjectsBoundingRect!,
+            (pos: number, horizontal: boolean, closest: boolean) => {
+                const point = transform.modelToOffsetPoint({
+                    x: pos,
+                    y: pos
+                });
+
+                const key = pos + horizontal.toString() + closest.toString();
+
+                if (horizontal) {
+                    lines.push(
+                        <line
+                            key={key}
+                            x1={offsetRect.left}
+                            y1={point.y}
+                            x2={offsetRect.left + offsetRect.width}
+                            y2={point.y}
+                            style={closest ? closestLineStyle : lineStyle}
+                        />
+                    );
+                } else {
+                    lines.push(
+                        <line
+                            key={key}
+                            x1={point.x}
+                            y1={offsetRect.top}
+                            x2={point.x}
+                            y2={offsetRect.top + offsetRect.height}
+                            style={closest ? closestLineStyle : lineStyle}
+                        />
+                    );
+                }
+            }
+        );
+
+        return (
+            <svg
+                width={offsetRect.width}
+                height={offsetRect.height}
+                style={{
+                    position: "absolute",
+                    left: offsetRect.left,
+                    top: offsetRect.top
+                }}
+            >
+                {lines}
+            </svg>
+        );
+    }
+}
+
+class DragMouseHandler extends MouseHandlerWithSnapLines {
+    changed: boolean;
+
+    selectionBoundingRectAtDown: Rect;
+    objectPositionsAtDown: Point[];
+
+    left: number;
+    top: number;
+
+    down(context: IDesignerContext, event: MouseEvent) {
+        super.down(context, event);
+
+        this.selectionBoundingRectAtDown = rectClone(
+            context.viewState.selectedObjectsBoundingRect!
+        );
+
+        this.objectPositionsAtDown = context.viewState.selectedObjects.map(object => ({
+            x: object.rect.left,
+            y: object.rect.top
+        }));
+
+        this.left = this.selectionBoundingRectAtDown.left;
+        this.top = this.selectionBoundingRectAtDown.top;
+    }
+
+    move(context: IDesignerContext, event: MouseEvent) {
+        super.move(context, event);
+
+        this.left = Math.floor(this.left + this.movement.x / context.viewState.transform.scale);
+        let left = this.left;
+        if (this.snapToLines) {
+            let lines1 = findClosestVerticalSnapLinesToPosition(this.snapLines, left);
+            let lines2 = findClosestVerticalSnapLinesToPosition(
+                this.snapLines,
+                left + this.selectionBoundingRectAtDown.width
+            );
+
+            if (lines1 && (!lines2 || lines1.diff <= lines2.diff)) {
+                left = lines1.lines[0].pos;
+            } else if (lines2) {
+                left = lines2.lines[0].pos - this.selectionBoundingRectAtDown.width;
+            }
+        }
+
+        this.top = Math.floor(this.top + this.movement.y / context.viewState.transform.scale);
+        let top = this.top;
+        if (this.snapToLines) {
+            let lines1 = findClosestHorizontalSnapLinesToPosition(this.snapLines, top);
+            let lines2 = findClosestHorizontalSnapLinesToPosition(
+                this.snapLines,
+                top + this.selectionBoundingRectAtDown.height
+            );
+
+            if (lines1 && (!lines2 || lines1.diff <= lines2.diff)) {
+                top = lines1.lines[0].pos;
+            } else if (lines2) {
+                top = lines2.lines[0].pos - this.selectionBoundingRectAtDown.height;
+            }
+        }
+
+        for (let i = 0; i < context.viewState.selectedObjects.length; ++i) {
+            const object = context.viewState.selectedObjects[i];
+
             let rect = {
-                left: Math.round(
-                    object.rect.left + this.movement.x / context.viewState.transform.scale
-                ),
-                top: Math.round(
-                    object.rect.top + this.movement.y / context.viewState.transform.scale
-                ),
+                left:
+                    this.objectPositionsAtDown[i].x +
+                    (left - this.selectionBoundingRectAtDown.left),
+                top: this.objectPositionsAtDown[i].y + (top - this.selectionBoundingRectAtDown.top),
                 width: object.rect.width,
                 height: object.rect.height
             };
@@ -212,7 +373,7 @@ enum HandleType {
     BottomRight
 }
 
-class ResizeMouseHandler extends MouseHandler {
+class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     handleType: HandleType;
 
     savedBoundingRect: Rect;
@@ -252,48 +413,45 @@ class ResizeMouseHandler extends MouseHandler {
             }
         }
 
-        this.savedBoundingRect = context.viewState.selectedObjectsBoundingRect!;
-        this.boundingRect = {
-            left: this.savedBoundingRect.left,
-            top: this.savedBoundingRect.top,
-            width: this.savedBoundingRect.width,
-            height: this.savedBoundingRect.height
-        };
+        this.savedBoundingRect = rectClone(context.viewState.selectedObjectsBoundingRect!);
+        this.boundingRect = rectClone(this.savedBoundingRect);
 
         this.savedBoundingRects = [];
         this.savedRects = [];
         this.rects = [];
         for (const object of context.viewState.selectedObjects) {
             const boundingRect = object.boundingRect;
-
-            this.savedBoundingRects.push({
-                left: boundingRect.left,
-                top: boundingRect.top,
-                width: boundingRect.width,
-                height: boundingRect.height
-            });
+            this.savedBoundingRects.push(rectClone(boundingRect));
 
             const rect = object.rect;
+            this.savedRects.push(rectClone(rect));
+            this.rects.push(rectClone(rect));
+        }
+    }
 
-            this.savedRects.push({
-                left: rect.left,
-                top: rect.top,
-                width: rect.width,
-                height: rect.height
-            });
+    snapX(x: number) {
+        if (this.snapToLines) {
+            let lines = findClosestVerticalSnapLinesToPosition(this.snapLines, x);
+            return lines ? lines.lines[0].pos : x;
+        } else {
+            return x;
+        }
+    }
 
-            this.rects.push({
-                left: rect.left,
-                top: rect.top,
-                width: rect.width,
-                height: rect.height
-            });
+    snapY(y: number) {
+        if (this.snapToLines) {
+            let lines = findClosestHorizontalSnapLinesToPosition(this.snapLines, y);
+            return lines ? lines.lines[0].pos : y;
+        } else {
+            return y;
         }
     }
 
     moveTop(context: IDesignerContext, savedRect: Rect, rect: Rect) {
         let bottom = rect.top + rect.height;
-        rect.top = savedRect.top + this.offsetDistance.y / context.viewState.transform.scale;
+        rect.top = this.snapY(
+            savedRect.top + this.offsetDistance.y / context.viewState.transform.scale
+        );
         if (rect.top >= bottom) {
             rect.top = bottom - 1;
         }
@@ -302,7 +460,9 @@ class ResizeMouseHandler extends MouseHandler {
 
     moveLeft(context: IDesignerContext, savedRect: Rect, rect: Rect) {
         let right = rect.left + rect.width;
-        rect.left = savedRect.left + this.offsetDistance.x / context.viewState.transform.scale;
+        rect.left = this.snapX(
+            savedRect.left + this.offsetDistance.x / context.viewState.transform.scale
+        );
         if (rect.left >= right) {
             rect.left = right - 1;
         }
@@ -310,10 +470,11 @@ class ResizeMouseHandler extends MouseHandler {
     }
 
     moveBottom(context: IDesignerContext, savedRect: Rect, rect: Rect) {
-        let bottom =
+        let bottom = this.snapY(
             savedRect.top +
-            savedRect.height +
-            this.offsetDistance.y / context.viewState.transform.scale;
+                savedRect.height +
+                this.offsetDistance.y / context.viewState.transform.scale
+        );
         if (bottom <= rect.top) {
             bottom = rect.top + 1;
         }
@@ -321,10 +482,11 @@ class ResizeMouseHandler extends MouseHandler {
     }
 
     moveRight(context: IDesignerContext, savedRect: Rect, rect: Rect) {
-        let right =
+        let right = this.snapX(
             savedRect.left +
-            savedRect.width +
-            this.offsetDistance.x / context.viewState.transform.scale;
+                savedRect.width +
+                this.offsetDistance.x / context.viewState.transform.scale
+        );
         if (right <= rect.left) {
             right = rect.left + 1;
         }
@@ -400,18 +562,18 @@ class ResizeMouseHandler extends MouseHandler {
             let savedRect = this.savedRects[i];
             let rect = this.rects[i];
 
-            rect.left = Math.round(
+            rect.left = Math.floor(
                 savedRect.left +
                     (this.boundingRect.left - this.savedBoundingRect.left) +
-                    (savedBoundingRect.left - this.savedBoundingRect.left) * scaleWidth
+                    (savedBoundingRect.left - this.savedBoundingRect.left) * (scaleWidth - 1)
             );
-            rect.top = Math.round(
+            rect.top = Math.floor(
                 savedRect.top +
                     (this.boundingRect.top - this.savedBoundingRect.top) +
-                    (savedBoundingRect.top - this.savedBoundingRect.top) * scaleHeight
+                    (savedBoundingRect.top - this.savedBoundingRect.top) * (scaleHeight - 1)
             );
-            rect.width = Math.round(savedRect.width * scaleWidth);
-            rect.height = Math.round(savedRect.height * scaleHeight);
+            rect.width = Math.floor(savedRect.width * scaleWidth);
+            rect.height = Math.floor(savedRect.height * scaleHeight);
 
             if (!rectEqual(rect, objects[i].rect)) {
                 this.changed = true;

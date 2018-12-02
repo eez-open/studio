@@ -4,6 +4,9 @@ import { IDesignerContext, IMouseHandler } from "eez-studio-designer/designer-in
 export class MouseHandler implements IMouseHandler {
     constructor() {}
 
+    timeAtDown: number;
+    elapsedTime: number;
+
     offsetPointAtDown: Point;
     lastOffsetPoint: Point;
     offsetDistance: Point;
@@ -17,6 +20,8 @@ export class MouseHandler implements IMouseHandler {
     down(context: IDesignerContext, event: MouseEvent) {
         event.preventDefault();
 
+        this.timeAtDown = new Date().getTime();
+
         this.lastOffsetPoint = this.offsetPointAtDown = context.viewState.transform.mouseEventToOffsetPoint(
             event
         );
@@ -28,6 +33,8 @@ export class MouseHandler implements IMouseHandler {
 
     move(context: IDesignerContext, event: MouseEvent) {
         event.preventDefault();
+
+        this.elapsedTime = new Date().getTime() - this.timeAtDown;
 
         let offsetPoint = context.viewState.transform.mouseEventToOffsetPoint(event);
 
@@ -50,5 +57,9 @@ export class MouseHandler implements IMouseHandler {
         if (event) {
             this.move(context, event);
         }
+    }
+
+    get selectionVisible() {
+        return true;
     }
 }

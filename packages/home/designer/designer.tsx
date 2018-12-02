@@ -3,16 +3,9 @@ import { observable, computed, action } from "mobx";
 import { observer, inject } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { getBoundingClientRectOfChildNodes } from "eez-studio-shared/util";
-import { rectScale } from "eez-studio-shared/geometry";
-
 import { VerticalHeaderWithBody, Header, Body } from "eez-studio-ui/header-with-body";
 import { Splitter } from "eez-studio-ui/splitter";
-import {
-    TransitionGroup,
-    BounceEntranceTransition,
-    BOUNCE_ENTRANCE_TRANSITION_DURATION
-} from "eez-studio-ui/transitions";
+import { TransitionGroup, BounceEntranceTransition } from "eez-studio-ui/transitions";
 import styled from "eez-studio-ui/styled-components";
 import { Box } from "eez-studio-ui/box";
 import { PanelTitle } from "eez-studio-ui/panel";
@@ -163,31 +156,6 @@ class ObjectComponent extends React.Component<
 > {
     element: Element;
     timeoutId: any;
-
-    setBoundingRect(timeout: number) {
-        if (!this.timeoutId) {
-            this.timeoutId = setTimeout(() => {
-                this.timeoutId = undefined;
-
-                const rect = getBoundingClientRectOfChildNodes(this.element);
-                if (rect) {
-                    this.props.object.setBoundingRect(
-                        this.props.designerContext!.viewState.transform.clientToModelRect(
-                            rectScale(rect, 1 / window.devicePixelRatio)
-                        )
-                    );
-                }
-            }, timeout);
-        }
-    }
-
-    componentDidMount() {
-        this.setBoundingRect(BOUNCE_ENTRANCE_TRANSITION_DURATION);
-    }
-
-    componentDidUpdate() {
-        this.setBoundingRect(10);
-    }
 
     componentWillUnmount() {
         if (this.timeoutId) {

@@ -28,7 +28,7 @@ export interface IWorkbenchObject extends IBaseObject {
     content: JSX.Element | null;
     details: JSX.Element | null;
 
-    setBoundingRect(rect: Rect): void;
+    children: IBaseObject[];
 
     isEditable: boolean;
     openEditor?(target: "tab" | "window" | "default"): void;
@@ -42,6 +42,10 @@ class WorkbenchDocument implements IDocument {
     @computed
     get objects() {
         return Array.from(workbenchObjects.values());
+    }
+
+    get rootObjects() {
+        return this.objects;
     }
 
     findObjectById(id: string): IBaseObject | undefined {

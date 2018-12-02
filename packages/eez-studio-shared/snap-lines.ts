@@ -1,47 +1,44 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
 
-import { TreeNode } from "eez-studio-page-editor/widget-tree";
-
 ////////////////////////////////////////////////////////////////////////////////
-
-const SNAP_LINES_COLOR = "rgba(128, 128, 128, 1)";
-const SNAP_LINES_LINE_WIDTH = 0.5;
-
-const CLOSEST_SNAP_LINES_COLOR = "rgba(0, 255, 0, 1)";
-const CLOSEST_SNAP_LINES_LINE_WIDTH = 1;
 
 const MAX_SNAP_LINE_DISTANCE = 8;
 const MAX_VISIBLE_SNAP_LINE_DISTANCE = 20;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface SnapLine {
+export interface INode {
+    rect?: Rect;
+    children: INode[];
+}
+
+export interface ISnapLine {
     pos: number;
-    node: TreeNode;
+    node: INode;
 }
 
-interface ClosestSnapLines {
+export interface IClosestSnapLines {
     diff: number;
-    lines: SnapLine[];
+    lines: ISnapLine[];
 }
 
-export interface SnapLines {
-    horizontalLines: SnapLine[];
-    verticalLines: SnapLine[];
+export interface ISnapLines {
+    horizontalLines: ISnapLine[];
+    verticalLines: ISnapLine[];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findSnapLines(
-    tree: TreeNode,
-    excludeNodes: TreeNode[],
-    filterCallback: (node: TreeNode) => boolean
-): SnapLines {
+    tree: INode,
+    excludeNodes: INode[],
+    filterCallback: (node: INode) => boolean
+): ISnapLines {
     function findSnapLinesInTree(offsetFieldName: string, sizeFieldName: string) {
-        let lines: SnapLine[] = [];
+        let lines: ISnapLine[] = [];
 
-        function findSnapLinesInNode(node: TreeNode) {
-            if (!excludeNodes.find(excludeNode => excludeNode == node)) {
+        function findSnapLinesInNode(node: INode) {
+            if (excludeNodes.indexOf(node) === -1) {
                 if (node.rect) {
                     let rect: any = node.rect;
                     if (!filterCallback || filterCallback(node)) {
@@ -71,15 +68,15 @@ export function findSnapLines(
     }
 
     return {
-        horizontalLines: findSnapLinesInTree("y", "height"),
-        verticalLines: findSnapLinesInTree("x", "width")
+        horizontalLines: findSnapLinesInTree("top", "height"),
+        verticalLines: findSnapLinesInTree("left", "width")
     };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function findClosestSnapLinesToPosition(lines: SnapLine[], pos: number) {
-    let result: ClosestSnapLines | undefined = undefined;
+function findClosestSnapLinesToPosition(lines: ISnapLine[], pos: number) {
+    let result: IClosestSnapLines | undefined = undefined;
 
     for (let i = 0; i < lines.length; i++) {
         let diff = Math.abs(pos - lines[i].pos);
@@ -98,19 +95,19 @@ function findClosestSnapLinesToPosition(lines: SnapLine[], pos: number) {
     return result;
 }
 
-export function findClosestHorizontalSnapLinesToPosition(snapLines: SnapLines, pos: number) {
+export function findClosestHorizontalSnapLinesToPosition(snapLines: ISnapLines, pos: number) {
     return findClosestSnapLinesToPosition(snapLines.horizontalLines, pos);
 }
 
-export function findClosestVerticalSnapLinesToPosition(snapLines: SnapLines, pos: number) {
+export function findClosestVerticalSnapLinesToPosition(snapLines: ISnapLines, pos: number) {
     return findClosestSnapLinesToPosition(snapLines.verticalLines, pos);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 function combineSnapLines(
-    lines1: ClosestSnapLines | undefined,
-    lines2: ClosestSnapLines | undefined
+    lines1: IClosestSnapLines | undefined,
+    lines2: IClosestSnapLines | undefined
 ) {
     if (lines1 && !lines2) {
         return lines1;
@@ -131,19 +128,19 @@ function combineSnapLines(
     return undefined;
 }
 
-function findVerticalSnapLinesClosestToRect(snapLines: SnapLines, rect: Rect) {
-    let x = rect.left;
+function findVerticalSnapLinesClosestToRect(snapLines: ISnapLines, rect: Rect) {
+    let left = rect.left;
     let width = rect.width;
-    let topLines = findClosestVerticalSnapLinesToPosition(snapLines, x);
-    let bottomLines = findClosestVerticalSnapLinesToPosition(snapLines, x + width);
+    let topLines = findClosestVerticalSnapLinesToPosition(snapLines, left);
+    let bottomLines = findClosestVerticalSnapLinesToPosition(snapLines, left + width);
     return combineSnapLines(topLines, bottomLines);
 }
 
-function findHorizontalSnapLinesClosestToRect(snapLines: SnapLines, rect: Rect) {
-    let y = rect.top;
+function findHorizontalSnapLinesClosestToRect(snapLines: ISnapLines, rect: Rect) {
+    let top = rect.top;
     let height = rect.height;
-    let leftLines = findClosestHorizontalSnapLinesToPosition(snapLines, y);
-    let rightLines = findClosestHorizontalSnapLinesToPosition(snapLines, y + height);
+    let leftLines = findClosestHorizontalSnapLinesToPosition(snapLines, top);
+    let rightLines = findClosestHorizontalSnapLinesToPosition(snapLines, top + height);
     return combineSnapLines(leftLines, rightLines);
 }
 
@@ -159,17 +156,11 @@ function distanceToRect(
     );
 }
 
-export function drawSnapLines(
-    ctx: CanvasRenderingContext2D,
-    topLeft: Point,
-    bottomRight: Point,
-    snapLines: SnapLines,
+export function drawSnapLinesGeneric(
+    snapLines: ISnapLines,
     selectionRect: Rect,
-    scale: number
+    drawLine: (pos: number, horizontal: boolean, closest: boolean) => void
 ) {
-    ctx.strokeStyle = SNAP_LINES_COLOR;
-    ctx.lineWidth = SNAP_LINES_LINE_WIDTH / scale;
-
     let drawnPositions: number[];
 
     // draw horizontal snap lines
@@ -179,12 +170,9 @@ export function drawSnapLines(
         if (drawnPositions.indexOf(pos) == -1) {
             // do not draw multiple lines over the same position
             if (
-                distanceToRect(pos, selectionRect, "y", "height") < MAX_VISIBLE_SNAP_LINE_DISTANCE
+                distanceToRect(pos, selectionRect, "top", "height") < MAX_VISIBLE_SNAP_LINE_DISTANCE
             ) {
-                ctx.beginPath();
-                ctx.moveTo(topLeft.x, pos);
-                ctx.lineTo(bottomRight.x, pos);
-                ctx.stroke();
+                drawLine(pos, true, false);
                 drawnPositions.push(pos);
             }
         }
@@ -196,19 +184,14 @@ export function drawSnapLines(
         let pos = snapLines.verticalLines[i].pos;
         if (drawnPositions.indexOf(pos) == -1) {
             // do not draw multiple lines over the same position
-            if (distanceToRect(pos, selectionRect, "x", "width") < MAX_VISIBLE_SNAP_LINE_DISTANCE) {
-                ctx.beginPath();
-                ctx.moveTo(pos, topLeft.y);
-                ctx.lineTo(pos, bottomRight.y);
-                ctx.stroke();
+            if (
+                distanceToRect(pos, selectionRect, "left", "width") < MAX_VISIBLE_SNAP_LINE_DISTANCE
+            ) {
+                drawLine(pos, false, false);
                 drawnPositions.push(pos);
             }
         }
     }
-
-    // draw snap lines closest to mouse operation target
-    ctx.strokeStyle = CLOSEST_SNAP_LINES_COLOR;
-    ctx.lineWidth = CLOSEST_SNAP_LINES_LINE_WIDTH / scale;
 
     // draw closest horizontal snap lines
     let horizontalSnapLines = findHorizontalSnapLinesClosestToRect(snapLines, selectionRect);
@@ -217,10 +200,7 @@ export function drawSnapLines(
         for (let i = 0; i < horizontalSnapLines.lines.length; i++) {
             let pos = horizontalSnapLines.lines[i].pos;
             if (drawnPositions.indexOf(pos) == -1) {
-                ctx.beginPath();
-                ctx.moveTo(topLeft.x, pos);
-                ctx.lineTo(bottomRight.x, pos);
-                ctx.stroke();
+                drawLine(pos, true, true);
                 drawnPositions.push(pos);
             }
         }
@@ -233,12 +213,49 @@ export function drawSnapLines(
         for (let i = 0; i < verticalSnapLines.lines.length; i++) {
             let pos = verticalSnapLines.lines[i].pos;
             if (drawnPositions.indexOf(pos) == -1) {
-                ctx.beginPath();
-                ctx.moveTo(pos, topLeft.y);
-                ctx.lineTo(pos, bottomRight.y);
-                ctx.stroke();
+                drawLine(pos, false, true);
                 drawnPositions.push(pos);
             }
         }
     }
+}
+
+export interface IDrawTheme {
+    lineColor: string;
+    lineWidth: number;
+    closestLineColor: string;
+    closestLineWidth: number;
+}
+
+export function drawSnapLines(
+    ctx: CanvasRenderingContext2D,
+    topLeft: Point,
+    bottomRight: Point,
+    snapLines: ISnapLines,
+    selectionRect: Rect,
+    scale: number,
+    theme: IDrawTheme
+) {
+    drawSnapLinesGeneric(
+        snapLines,
+        selectionRect,
+        (pos: number, horizontal: boolean, closest: boolean) => {
+            if (closest) {
+                ctx.strokeStyle = theme.closestLineColor;
+                ctx.lineWidth = theme.closestLineWidth / scale;
+            } else {
+                ctx.strokeStyle = theme.lineColor;
+                ctx.lineWidth = theme.lineWidth / scale;
+            }
+            ctx.beginPath();
+            if (horizontal) {
+                ctx.moveTo(topLeft.x, pos);
+                ctx.lineTo(bottomRight.x, pos);
+            } else {
+                ctx.moveTo(pos, topLeft.y);
+                ctx.lineTo(pos, bottomRight.y);
+            }
+            ctx.stroke();
+        }
+    );
 }

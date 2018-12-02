@@ -1,13 +1,13 @@
 import React from "react";
-import { observable, action } from "mobx";
-import { observer } from "mobx-react";
+import { computed, observable, action, runInAction, autorun } from "mobx";
+import { observer, disposeOnUnmount } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
 import styled from "eez-studio-ui/styled-components";
 
-import { validators } from "eez-studio-shared/model/validation";
+import { validators, filterNumber } from "eez-studio-shared/model/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { CodeEditor } from "eez-studio-ui/code-editor";
@@ -234,7 +234,7 @@ class CodeEditorProperty extends React.Component<PropertyProps, {}> {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class Property extends React.Component<PropertyProps, {}> {
+class Property extends React.Component<PropertyProps> {
     refs: {
         [key: string]: Element;
         textarea: HTMLDivElement;
@@ -242,8 +242,20 @@ class Property extends React.Component<PropertyProps, {}> {
         select: HTMLSelectElement;
     };
 
+    @observable
+    _value: any = undefined;
+
+    @disposeOnUnmount
+    changeDocumentDisposer = autorun(() => {
+        const value = (this.props.object as any)[this.props.propertyInfo.name];
+        runInAction(() => {
+            this._value = value;
+        });
+    });
+
+    @computed
     get value() {
-        let value = (this.props.object as any)[this.props.propertyInfo.name];
+        let value = this._value;
 
         if (value === undefined && this.props.propertyInfo.inheritable) {
             let inheritedValue = getInheritedValue(this.props.object, this.props.propertyInfo.name);
@@ -270,6 +282,11 @@ class Property extends React.Component<PropertyProps, {}> {
         }
     }
 
+    @action
+    componentWillReceiveProps(props: PropertyProps) {
+        this._value = (props.object as any)[props.propertyInfo.name];
+    }
+
     componentDidMount() {
         let el = this.refs.input || this.refs.textarea || this.refs.select;
         if (el) {
@@ -289,8 +306,6 @@ class Property extends React.Component<PropertyProps, {}> {
         setTimeout(this.resizeTextArea);
     }
 
-    static getValue(props: PropertyProps) {}
-
     @bind
     onSelect() {
         if (this.props.propertyInfo.onSelect) {
@@ -303,14 +318,20 @@ class Property extends React.Component<PropertyProps, {}> {
         }
     }
 
+    @action
     changeValue(newValue: any) {
         if (this.props.propertyInfo.readOnlyInPropertyGrid) {
             return;
         }
 
-        this.setState({
-            value: newValue != undefined ? newValue : ""
-        });
+        this._value = newValue;
+
+        if (this.props.propertyInfo.type === PropertyType.Number) {
+            newValue = filterNumber(newValue);
+            if (isNaN(newValue)) {
+                return;
+            }
+        }
 
         this.props.updateObject({
             [this.props.propertyInfo.name]: newValue
@@ -555,7 +576,7 @@ class Property extends React.Component<PropertyProps, {}> {
             return (
                 <input
                     ref="input"
-                    type="number"
+                    type="text"
                     className="form-control"
                     value={this.value}
                     onChange={this.onChange}

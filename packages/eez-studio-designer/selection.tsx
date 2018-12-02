@@ -151,10 +151,10 @@ export class Selection extends React.Component<
             if (this.props.context.viewState.selectedObjects.length > 1) {
                 let style: React.CSSProperties = {
                     position: "absolute",
-                    left: boundingRect.left + "px",
-                    top: boundingRect.top + "px",
-                    width: boundingRect.width + "px",
-                    height: boundingRect.height + "px"
+                    left: Math.floor(boundingRect.left) + "px",
+                    top: Math.floor(boundingRect.top) + "px",
+                    width: Math.floor(boundingRect.width) + "px",
+                    height: Math.floor(boundingRect.height) + "px"
                 };
 
                 selectedObjectsBoundingRect = (
@@ -197,57 +197,57 @@ export class Selection extends React.Component<
                 let bottom = top + height;
 
                 let styleTopLeft: React.CSSProperties = {
-                    left: left - A + "px",
-                    top: top - A + "px",
+                    left: Math.floor(left - A) + "px",
+                    top: Math.floor(top - A) + "px",
                     width: B + "px",
                     height: B + "px"
                 };
 
                 let styleTop: React.CSSProperties = {
-                    left: hcenter - A + "px",
-                    top: top - A + "px",
+                    left: Math.floor(hcenter - A) + "px",
+                    top: Math.floor(top - A) + "px",
                     width: B + "px",
                     height: B + "px"
                 };
 
                 let styleTopRight: React.CSSProperties = {
-                    left: right - A + "px",
-                    top: top - A + "px",
+                    left: Math.floor(right - A) + "px",
+                    top: Math.floor(top - A) + "px",
                     width: B + "px",
                     height: B + "px"
                 };
 
                 let styleLeft: React.CSSProperties = {
-                    left: left - A + "px",
-                    top: vcenter - A + "px",
+                    left: Math.floor(left - A) + "px",
+                    top: Math.floor(vcenter - A) + "px",
                     width: B + "px",
                     height: B + "px"
                 };
 
                 let styleRight: React.CSSProperties = {
-                    left: right - A + "px",
-                    top: vcenter - A + "px",
+                    left: Math.floor(right - A) + "px",
+                    top: Math.floor(vcenter - A) + "px",
                     width: B + "px",
                     height: B + "px"
                 };
 
                 let styleBottomLeft: React.CSSProperties = {
-                    left: left - A + "px",
-                    top: bottom - A + "px",
+                    left: Math.floor(left - A) + "px",
+                    top: Math.floor(bottom - A) + "px",
                     width: B + "px",
                     height: B + "px"
                 };
 
                 let styleBottom: React.CSSProperties = {
-                    left: hcenter - A + "px",
-                    top: bottom - A + "px",
+                    left: Math.floor(hcenter - A) + "px",
+                    top: Math.floor(bottom - A) + "px",
                     width: B + "px",
                     height: B + "px"
                 };
 
                 let styleBottomRight: React.CSSProperties = {
-                    left: right - A + "px",
-                    top: bottom - A + "px",
+                    left: Math.floor(right - A) + "px",
+                    top: Math.floor(bottom - A) + "px",
                     width: B + "px",
                     height: B + "px"
                 };
@@ -305,12 +305,16 @@ export class Selection extends React.Component<
                     top: 0
                 }}
             >
-                {selectedObjectRects}
-                {selectedObjectsBoundingRect}
-                {resizeHandlers}
+                {(!this.props.mouseHandler || this.props.mouseHandler.selectionVisible) && (
+                    <React.Fragment>
+                        {selectedObjectRects}
+                        {selectedObjectsBoundingRect}
+                        {resizeHandlers}
+                    </React.Fragment>
+                )}
                 {this.props.mouseHandler &&
                     this.props.mouseHandler.renderInSelectionLayer &&
-                    this.props.mouseHandler.renderInSelectionLayer()}
+                    this.props.mouseHandler.renderInSelectionLayer(this.props.context)}
             </SelectionDiv>
         );
     }

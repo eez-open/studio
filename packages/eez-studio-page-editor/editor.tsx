@@ -922,6 +922,10 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
     @observable
     dragWidget: Widget | undefined;
 
+    get rootObjects() {
+        return [this.rootObjectComponent];
+    }
+
     get page() {
         return this.props.widgetContainer.object as Page;
     }
@@ -1056,12 +1060,12 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
             const widget = DragAndDropManager.dragObject as Widget;
 
-            const p = this.designerContextComponent!.designerContext.viewState.transform.clientToModelPoint(
-                {
-                    x: event.nativeEvent.clientX - widget.width / 2,
-                    y: event.nativeEvent.clientY - widget.height / 2
-                }
-            );
+            const transform = this.designerContextComponent!.designerContext.viewState.transform;
+
+            const p = transform.clientToModelPoint({
+                x: event.nativeEvent.clientX - (widget.width * transform.scale) / 2,
+                y: event.nativeEvent.clientY - (widget.height * transform.scale) / 2
+            });
 
             widget.x = Math.round(p.x - this.page.x);
             widget.y = Math.round(p.y - this.page.y);
@@ -1082,6 +1086,14 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
     @action.bound
     onDragLeave(event: React.DragEvent) {
         this.dragWidget = undefined;
+    }
+
+    @bind
+    onKeyDown(event: React.KeyboardEvent) {
+        if (event.keyCode == 46) {
+            // delete
+            this.props.widgetContainer.deleteSelection();
+        }
     }
 
     render() {
@@ -1105,6 +1117,7 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
                     onDragOver={this.onDragOver}
                     onDrop={this.onDrop}
                     onDragLeave={this.onDragLeave}
+                    onKeyDown={this.onKeyDown}
                 >
                     <PageEditorCanvas toolHandler={selectToolHandler}>
                         <RootObjectComponent
