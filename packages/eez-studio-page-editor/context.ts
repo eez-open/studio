@@ -11,6 +11,7 @@ export interface IDataItem {
 }
 
 export interface IDataContext {
+    get(dataItemId: string): any;
     count(dataItemId: string): number;
     getEnumValue(dataItemId: string): number;
     findDataItemIndex(dataItemId: string): number;
@@ -27,7 +28,9 @@ export interface IStyle {
     backgroundColor?: string;
 }
 
-export interface IPageEditorContext {
+export interface IPageContext {
+    inEditor: boolean;
+
     data: IDataContext;
     draw: IDrawContext;
 
@@ -38,8 +41,8 @@ export interface IPageEditorContext {
     findStyleOrGetDefault(styleName: any): IStyle;
 }
 
-export let PageEditorContext: IPageEditorContext;
+export let PageContext: IPageContext;
 
-export function setPageEditorContext(context: IPageEditorContext) {
-    PageEditorContext = context;
+export function setPageContext(context: IPageContext) {
+    PageContext = context;
 }

@@ -1,12 +1,133 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { observable, action } from "mobx";
-import classNames from "classnames";
 import { observer } from "mobx-react";
 import bind from "bind-decorator";
+import classNames from "classnames";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
+import { UIElementsFactory } from "eez-studio-shared/model/store";
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface IDialogButton {
+    id: string;
+    type: "primary" | "secondary" | "danger";
+    position: "left" | "right";
+    onClick: (event: any) => void;
+    disabled: boolean;
+    style: React.CSSProperties;
+    text: string;
+}
+
+export interface IDialogComponentProps {
+    open: boolean;
+    large: boolean;
+    title: string | undefined;
+    onSubmit: (event: React.FormEvent) => void;
+    onCancel: () => void;
+    disableButtons: boolean;
+    buttons: IDialogButton[];
+    children: React.ReactNode;
+}
+
+@observer
+export class BootstrapDialog extends React.Component<IDialogComponentProps> {
+    div: HTMLDivElement;
+    form: HTMLFormElement;
+
+    componentDidMount() {
+        $(this.div).modal({
+            backdrop: "static"
+        });
+
+        $(this.div).on("shown.bs.modal", () => {
+            let element = $(this.div).find(".ql-editor")[0];
+            if (element) {
+                element.focus();
+            } else {
+                $(this.div)
+                    .find(".modal-body")
+                    .find("input, textarea, .EezStudio_ListContainer")
+                    .first()
+                    .focus();
+            }
+        });
+
+        $(this.div).on("hidden.bs.modal", () => {
+            (this.div.parentElement as HTMLElement).remove();
+        });
+    }
+
+    componentDidUpdate() {
+        if (!this.props.open) {
+            $(this.div).modal("hide");
+        }
+    }
+
+    render() {
+        const props = this.props;
+
+        let formClassName = classNames("modal-dialog", {
+            "modal-lg": props.large === true
+        });
+
+        return (
+            <div ref={ref => (this.div = ref!)} className="modal fade" tabIndex={-1} role="dialog">
+                <form
+                    ref={ref => (this.form = ref!)}
+                    className={formClassName}
+                    role="document"
+                    onSubmit={event => props.onSubmit}
+                >
+                    <div className="modal-content">
+                        {props.title && (
+                            <div className="modal-header">
+                                <h5 className="modal-title" id="myModalLabel">
+                                    {props.title}
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="close float-right"
+                                    onClick={props.onCancel}
+                                    disabled={props.disableButtons}
+                                    aria-label="Close"
+                                >
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="modal-body">{props.children}</div>
+
+                        <div className="modal-footer" style={{ justifyContent: "flex-start" }}>
+                            {props.buttons.map(button => (
+                                <button
+                                    key={button.id}
+                                    type="button"
+                                    className={classNames("btn", {
+                                        "btn-primary": button.type === "primary",
+                                        "btn-secondary": button.type === "secondary",
+                                        "btn-danger": button.type === "danger",
+                                        "float-left": button.position === "left"
+                                    })}
+                                    onClick={button.onClick}
+                                    disabled={button.disabled}
+                                    style={button.style}
+                                >
+                                    {button.text}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class Dialog extends React.Component<
@@ -16,39 +137,19 @@ export class Dialog extends React.Component<
         okButtonText?: string;
         onOk?: () => Promise<boolean> | boolean;
         onCancel?: () => void;
-        additionalButton?: JSX.Element;
+        additionalButton?: IDialogButton;
     },
     {}
 > {
-    refs: {
-        div: HTMLDivElement;
-        form: HTMLFormElement;
-    };
-
     @observable
     disableButtons = false;
 
-    componentDidMount() {
-        $(this.refs.div).modal({
-            backdrop: "static"
-        });
+    @observable
+    open = true;
 
-        $(this.refs.div).on("shown.bs.modal", () => {
-            let element = $(this.refs.div).find(".ql-editor")[0];
-            if (element) {
-                element.focus();
-            } else {
-                $(this.refs.div)
-                    .find(".modal-body")
-                    .find("input, textarea, .EezStudio_ListContainer")
-                    .first()
-                    .focus();
-            }
-        });
-
-        $(this.refs.div).on("hidden.bs.modal", () => {
-            (this.refs.div.parentElement as HTMLElement).remove();
-        });
+    @action
+    closeDialog() {
+        this.open = false;
     }
 
     @bind
@@ -63,11 +164,11 @@ export class Dialog extends React.Component<
                 result.then(isValid => {
                     action(() => (this.disableButtons = false))();
                     if (isValid) {
-                        $(this.refs.div).modal("hide");
+                        this.closeDialog();
                     }
                 });
             } else {
-                $(this.refs.div).modal("hide");
+                this.closeDialog();
             }
         }
     }
@@ -77,69 +178,53 @@ export class Dialog extends React.Component<
         if (this.props.onCancel) {
             this.props.onCancel();
         }
-        $(this.refs.div).modal("hide");
+
+        this.closeDialog();
     }
 
     render() {
-        let formClassName = classNames("modal-dialog", {
-            "modal-lg": this.props.large === true
+        const buttons: IDialogButton[] = [];
+
+        if (this.props.additionalButton) {
+            buttons.push(this.props.additionalButton);
+        }
+
+        buttons.push({
+            id: "cancel",
+            type: "secondary",
+            position: "right",
+            onClick: this.onCancel,
+            disabled: this.disableButtons,
+            style: { marginLeft: "auto" },
+            text: "Cancel"
         });
 
+        if (this.props.onOk) {
+            buttons.push({
+                id: "ok",
+                type: "primary",
+                position: "right",
+                onClick: this.handleSumbit,
+                disabled: this.disableButtons,
+                style: {},
+                text: "OK"
+            });
+        }
+
+        const DialogImplementation = UIElementsFactory.Dialog || BootstrapDialog;
+
         return (
-            <div ref="div" className="modal fade" tabIndex={-1} role="dialog">
-                <form
-                    ref="form"
-                    className={formClassName}
-                    role="document"
-                    onSubmit={this.handleSumbit}
-                >
-                    <div className="modal-content">
-                        {this.props.title && (
-                            <div className="modal-header">
-                                <h5 className="modal-title" id="myModalLabel">
-                                    {this.props.title}
-                                </h5>
-                                <button
-                                    type="button"
-                                    className="close float-right"
-                                    onClick={this.onCancel}
-                                    disabled={this.disableButtons}
-                                    aria-label="Close"
-                                >
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                        )}
-
-                        <div className="modal-body">{this.props.children}</div>
-
-                        <div className="modal-footer" style={{ justifyContent: "flex-start" }}>
-                            {this.props.additionalButton}
-
-                            <button
-                                type="button"
-                                className="btn btn-secondary"
-                                onClick={this.onCancel}
-                                disabled={this.disableButtons}
-                                style={{ marginLeft: "auto" }}
-                            >
-                                Cancel
-                            </button>
-
-                            {this.props.onOk && (
-                                <button
-                                    type="button"
-                                    className="btn btn-primary"
-                                    disabled={this.disableButtons}
-                                    onClick={this.handleSumbit}
-                                >
-                                    {this.props.okButtonText || "OK"}
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </form>
-            </div>
+            <DialogImplementation
+                open={this.open}
+                large={this.props.large || false}
+                title={this.props.title}
+                onSubmit={this.handleSumbit}
+                onCancel={this.onCancel}
+                disableButtons={this.disableButtons}
+                buttons={buttons}
+            >
+                {this.props.children}
+            </DialogImplementation>
         );
     }
 }

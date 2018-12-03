@@ -16,7 +16,7 @@ import {
 } from "eez-studio-shared/model/object";
 
 import { Widget, WidgetContainerDisplayItem } from "eez-studio-page-editor/widget";
-import { PageEditorContext } from "eez-studio-page-editor/context";
+import { PageContext } from "eez-studio-page-editor/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,7 +132,7 @@ export class Page extends EezObject {
     }
 
     render() {
-        const style = PageEditorContext.findStyleOrGetDefault(this.style);
+        const style = PageContext.findStyleOrGetDefault(this.style);
         return (
             <div
                 style={{

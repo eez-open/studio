@@ -11,7 +11,7 @@ import {
 } from "eez-studio-shared/model/object";
 import * as output from "eez-studio-shared/model/output";
 
-import { setPageEditorContext } from "eez-studio-page-editor/context";
+import { setPageContext } from "eez-studio-page-editor/context";
 
 import * as data from "project-editor/project/features/data/data";
 import { findActionIndex } from "project-editor/project/features/action/action";
@@ -31,7 +31,8 @@ import { GuiNavigation } from "project-editor/project/features/gui/GuiNavigation
 
 ////////////////////////////////////////////////////////////////////////////////
 
-setPageEditorContext({
+setPageContext({
+    inEditor: true,
     data,
     draw,
     findActionIndex,

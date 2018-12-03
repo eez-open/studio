@@ -98,23 +98,20 @@ class DeletedInstrumentsDialog extends React.Component<{}, {}> {
     }
 
     render() {
-        let deleteAllPermanentlyButton = (
-            <button
-                type="button"
-                className="btn btn-danger float-left"
-                onClick={() => this.deleteAllPermanently()}
-                style={{ marginRight: "auto" }}
-            >
-                Delete All Permanently
-            </button>
-        );
-
         return (
             <Dialog
                 ref={(ref: any) => {
                     this.element = findDOMNode(ref) as Element;
                 }}
-                additionalButton={deleteAllPermanentlyButton}
+                additionalButton={{
+                    id: "deleteAllPermanently",
+                    type: "danger",
+                    position: "left",
+                    onClick: () => this.deleteAllPermanently(),
+                    disabled: false,
+                    style: { marginRight: "auto" },
+                    text: "Delete All Permanently"
+                }}
             >
                 <ListContainer tabIndex={0} minHeight={240} maxHeight={400}>
                     <List nodes={this.deletedInstruments} renderNode={this.renderNode} />

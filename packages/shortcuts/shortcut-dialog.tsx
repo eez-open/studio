@@ -3,8 +3,12 @@ import { observable, computed, action, values } from "mobx";
 import { observer } from "mobx-react";
 
 import { objectClone, isReserverdKeybinding } from "eez-studio-shared/util";
-import { makeValidator, validators, VALIDATION_MESSAGE_REQUIRED } from "eez-studio-shared/model/validation";
-import { Dialog, showDialog } from "eez-studio-ui/dialog";
+import {
+    makeValidator,
+    validators,
+    VALIDATION_MESSAGE_REQUIRED
+} from "eez-studio-shared/model/validation";
+import { Dialog, showDialog, IDialogButton } from "eez-studio-ui/dialog";
 import {
     PropertyList,
     TextInputProperty,
@@ -258,18 +262,17 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
     }
 
     render() {
-        let resetToDefaultButton;
+        let resetToDefaultButton: IDialogButton | undefined;
         if (this.isExtensionShortcut && this.hasChanges) {
-            resetToDefaultButton = (
-                <button
-                    type="button"
-                    className="btn btn-secondary float-left"
-                    onClick={this.resetToDefault}
-                    style={{ marginRight: "auto" }}
-                >
-                    Reset to default values
-                </button>
-            );
+            resetToDefaultButton = {
+                id: "resetToDefault",
+                type: "secondary",
+                position: "left",
+                onClick: this.resetToDefault,
+                disabled: false,
+                style: { marginRight: "auto" },
+                text: "Reset to default values"
+            };
         }
 
         return (
@@ -288,30 +291,28 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
                     {this.props.shortcutsStore.renderUsedInProperty &&
                         this.props.shortcutsStore.renderUsedInProperty(this.shortcut)}
 
-                    {this.props.groupsStore &&
-                        !this.isExtensionShortcut && (
-                            <SelectProperty
-                                name="Group"
-                                value={this.shortcut.groupName!}
-                                onChange={action((value: string) => {
-                                    this.shortcut.groupName = value;
-                                    this.revalidate();
-                                })}
-                                errors={this.validator.errors.groupName}
-                            >
-                                <option key="" value="" />
-                                {values(this.props.groupsStore.groups).map(group => (
-                                    <option key={group.id} value={group.name}>
-                                        {group.name}
-                                    </option>
-                                ))}
-                            </SelectProperty>
-                        )}
+                    {this.props.groupsStore && !this.isExtensionShortcut && (
+                        <SelectProperty
+                            name="Group"
+                            value={this.shortcut.groupName!}
+                            onChange={action((value: string) => {
+                                this.shortcut.groupName = value;
+                                this.revalidate();
+                            })}
+                            errors={this.validator.errors.groupName}
+                        >
+                            <option key="" value="" />
+                            {values(this.props.groupsStore.groups).map(group => (
+                                <option key={group.id} value={group.name}>
+                                    {group.name}
+                                </option>
+                            ))}
+                        </SelectProperty>
+                    )}
 
-                    {this.props.groupsStore &&
-                        this.isExtensionShortcut && (
-                            <StaticProperty name="Group" value={this.groupName} />
-                        )}
+                    {this.props.groupsStore && this.isExtensionShortcut && (
+                        <StaticProperty name="Group" value={this.groupName} />
+                    )}
 
                     <KeybindingProperty
                         name="Keybinding"

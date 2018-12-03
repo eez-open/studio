@@ -32,6 +32,11 @@ export enum PropertyType {
     Any
 }
 
+export enum TargetDataType {
+    String,
+    Number
+}
+
 export enum MessageType {
     INFO,
     ERROR,
@@ -49,13 +54,14 @@ export interface PropertyInfo {
     type: PropertyType;
 
     // optional properties
+    targetDataType?: TargetDataType;
     displayName?: string;
     enumItems?: EnumItem[];
     typeClass?: EezClass;
     referencedObjectCollectionPath?: string[];
     matchObjectReference?: (object: EezObject, path: (string | number)[], value: string) => boolean;
     replaceObjectReference?: (value: string) => string;
-    onSelect?: (object: EezObject) => Promise<any>;
+    onSelect?: (object: EezObject, propertyInfo: PropertyInfo) => Promise<any>;
     hideInPropertyGrid?: boolean;
     readOnlyInPropertyGrid?: boolean;
     enumerable?: boolean;

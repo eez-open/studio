@@ -29,7 +29,7 @@ import {
 } from "eez-studio-shared/model/store";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
-import { PageEditorContext } from "eez-studio-page-editor/context";
+import { PageContext } from "eez-studio-page-editor/context";
 import { Page } from "eez-studio-page-editor/page";
 import {
     Widget,
@@ -211,7 +211,7 @@ abstract class BaseWidgetObjectComponent extends BaseObjectComponent {
 
         const itemWidget = listWidget.itemWidget;
         if (itemWidget) {
-            let count = listWidget.data ? PageEditorContext.data.count(listWidget.data) : 0;
+            let count = listWidget.data ? PageContext.data.count(listWidget.data) : 0;
 
             if (listWidget instanceof ListWidget) {
                 for (let i = 1; i < count; i++) {
@@ -256,7 +256,7 @@ abstract class BaseWidgetObjectComponent extends BaseObjectComponent {
     }
 
     renderBackgroundRect() {
-        const style = PageEditorContext.findStyleOrGetDefault(this.widget.style);
+        const style = PageContext.findStyleOrGetDefault(this.widget.style);
 
         return (
             <div
@@ -307,7 +307,7 @@ abstract class BaseWidgetObjectComponent extends BaseObjectComponent {
             );
         }
 
-        const node = this.widget.render(true);
+        const node = this.widget.render();
         if (node) {
             return (
                 <div
@@ -360,7 +360,7 @@ class ListWidgetObjectComponent extends BaseWidgetObjectComponent {
 
     get count() {
         if (this.itemWidget && this.listWidget.data) {
-            return PageEditorContext.data.count(this.listWidget.data);
+            return PageContext.data.count(this.listWidget.data);
         } else {
             return 0;
         }
@@ -433,7 +433,7 @@ class GridWidgetObjectComponent extends BaseWidgetObjectComponent {
 
     get count() {
         if (this.itemWidget && this.gridWidget.data) {
-            return PageEditorContext.data.count(this.gridWidget.data);
+            return PageContext.data.count(this.gridWidget.data);
         } else {
             return 0;
         }
@@ -512,7 +512,7 @@ class SelectWidgetObjectComponent extends BaseWidgetObjectComponent {
 
     get index() {
         if (this.selectWidget.data) {
-            let index: number = PageEditorContext.data.getEnumValue(this.selectWidget.data);
+            let index: number = PageContext.data.getEnumValue(this.selectWidget.data);
             if (index >= 0 && index < this.count) {
                 return index;
             }

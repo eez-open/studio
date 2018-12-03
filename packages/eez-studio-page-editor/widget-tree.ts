@@ -14,7 +14,7 @@ import {
     DisplayItemChildren
 } from "eez-studio-shared/model/objectAdapter";
 
-import { PageEditorContext } from "eez-studio-page-editor/context";
+import { PageContext } from "eez-studio-page-editor/context";
 import { Page } from "eez-studio-page-editor/page";
 import {
     Widget,
@@ -139,7 +139,7 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
     getSelectedWidgetForSelectWidget(item: DisplayItem): DisplayItem | undefined {
         let widget = item.object as SelectWidget;
         if (widget.data && widget.widgets) {
-            let index: number = PageEditorContext.data.getEnumValue(widget.data);
+            let index: number = PageContext.data.getEnumValue(widget.data);
             if (index >= 0 && index < widget.widgets._array.length) {
                 let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
@@ -159,7 +159,7 @@ function drawPageFrameForTreeNode(
     callback: () => void
 ) {
     let page = node.item.object as Page;
-    PageEditorContext.draw.drawPageFrame(
+    PageContext.draw.drawPageFrame(
         ctx,
         {
             left: page.x,
@@ -227,11 +227,7 @@ export function createWidgetTree(
                             "itemWidget"
                         ];
 
-                        for (
-                            let i = 0;
-                            i < PageEditorContext.data.count(<string>widget.data);
-                            i++
-                        ) {
+                        for (let i = 0; i < PageContext.data.count(<string>widget.data); i++) {
                             enumWidget(treeNode, itemWidgetItem, x, y);
 
                             if (widget.listType == "vertical") {
@@ -249,11 +245,7 @@ export function createWidgetTree(
                             "itemWidget"
                         ];
 
-                        for (
-                            let i = 0;
-                            i < PageEditorContext.data.count(<string>widget.data);
-                            i++
-                        ) {
+                        for (let i = 0; i < PageContext.data.count(<string>widget.data); i++) {
                             enumWidget(treeNode, itemWidgetItem, x, y);
 
                             if (x + itemWidget.width < widget.width) {

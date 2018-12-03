@@ -1,3 +1,4 @@
+import React from "react";
 import { observable, extendObservable, computed, action, toJS, reaction, autorun } from "mobx";
 
 import { _each, _isArray, _map, _uniqWith } from "eez-studio-shared/algorithm";
@@ -40,6 +41,8 @@ import {
 import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 import { findAllReferences, isReferenced } from "eez-studio-shared/model/search";
 import { OutputSections, OutputSection } from "eez-studio-shared/model/output";
+
+import { BootstrapDialog } from "eez-studio-ui/dialog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1267,6 +1270,7 @@ export interface IMenu {
 }
 
 export interface IUIElementsFactory {
+    Dialog: typeof BootstrapDialog;
     createMenuItem(menuItemConfig: IMenuItemConfig): IMenuItem;
     createMenu(): IMenu;
     confirm(message: string, detail: string | undefined, callback: () => void): void;
@@ -1282,6 +1286,8 @@ export function setUIElementsFactory(factory: IUIElementsFactory) {
 }
 
 export let UIElementsFactory: IUIElementsFactory = {
+    Dialog: BootstrapDialog,
+
     createMenuItem(config: IMenuItemConfig) {
         // todo
         return {};

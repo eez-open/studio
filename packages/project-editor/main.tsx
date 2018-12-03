@@ -21,7 +21,7 @@ window.requestAnimationFrame(async () => {
             <ThemeProvider theme={theme}>
                 <ProjectEditor />
             </ThemeProvider>,
-            document.getElementById("content")
+            document.getElementById("EezStudio_Content")
         );
     } catch (err) {
         console.error(err);

@@ -310,7 +310,7 @@ class Property extends React.Component<PropertyProps> {
     onSelect() {
         if (this.props.propertyInfo.onSelect) {
             this.props.propertyInfo
-                .onSelect(this.props.object)
+                .onSelect(this.props.object, this.props.propertyInfo)
                 .then(propertyValues => {
                     this.props.updateObject(propertyValues);
                 })
@@ -369,7 +369,10 @@ class Property extends React.Component<PropertyProps> {
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique(this.props.object, this.props.object._parent)
+                            validators.unique(
+                                this.props.object,
+                                asArray(this.props.object._parent!)
+                            )
                         ]
                     }
                 ]
@@ -489,45 +492,71 @@ class Property extends React.Component<PropertyProps> {
                 </select>
             );
         } else if (propertyInfo.type === PropertyType.ObjectReference) {
-            let objects: EezObject[] = [];
-
-            if (propertyInfo.referencedObjectCollectionPath) {
-                objects = asArray(
-                    DocumentStore.getObjectFromPath(propertyInfo.referencedObjectCollectionPath)
-                );
-                if (!objects) {
-                    objects = [];
-                }
-            }
-
-            let options = objects.map(object => {
+            if (propertyInfo.onSelect) {
                 return (
-                    <option key={object._id} value={getProperty(object, "name")}>
-                        {objectToString(object)}
-                    </option>
+                    <div className="input-group" title={this.value}>
+                        <input
+                            ref="input"
+                            type="text"
+                            className="form-control"
+                            value={this.value}
+                            readOnly
+                        />
+                        <div className="input-group-append">
+                            <button
+                                className="btn btn-secondary"
+                                type="button"
+                                onClick={this.onSelect}
+                            >
+                                &hellip;
+                            </button>
+                        </div>
+                    </div>
                 );
-            });
+            } else {
+                let objects: EezObject[] = [];
 
-            options.unshift(<option key="__empty" value="" />);
+                if (propertyInfo.referencedObjectCollectionPath) {
+                    objects = asArray(
+                        DocumentStore.getObjectFromPath(propertyInfo.referencedObjectCollectionPath)
+                    );
+                    if (!objects) {
+                        objects = [];
+                    }
+                }
 
-            if (this.value && !objects.find(object => getProperty(object, "name") == this.value)) {
-                options.unshift(
-                    <option key="__not_found" value={this.value}>
-                        {this.value}
-                    </option>
+                let options = objects.map(object => {
+                    return (
+                        <option key={object._id} value={getProperty(object, "name")}>
+                            {objectToString(object)}
+                        </option>
+                    );
+                });
+
+                options.unshift(<option key="__empty" value="" />);
+
+                if (
+                    this.value &&
+                    !objects.find(object => getProperty(object, "name") == this.value)
+                ) {
+                    options.unshift(
+                        <option key="__not_found" value={this.value}>
+                            {this.value}
+                        </option>
+                    );
+                }
+
+                return (
+                    <select
+                        ref="select"
+                        className="form-control"
+                        value={this.value}
+                        onChange={this.onChange}
+                    >
+                        {options}
+                    </select>
                 );
             }
-
-            return (
-                <select
-                    ref="select"
-                    className="form-control"
-                    value={this.value}
-                    onChange={this.onChange}
-                >
-                    {options}
-                </select>
-            );
         } else if (propertyInfo.type === PropertyType.Boolean) {
             return (
                 <label>

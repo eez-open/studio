@@ -28,6 +28,7 @@ import { confirm } from "project-editor/core/util";
 
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 import { Icon } from "eez-studio-ui/icon";
+import { BootstrapDialog } from "eez-studio-ui/dialog";
 
 const ipcRenderer = EEZStudio.electron.ipcRenderer;
 const { Menu, MenuItem } = EEZStudio.electron.remote;
@@ -397,6 +398,8 @@ export function init() {
 ////////////////////////////////////////////////////////////////////////////////
 
 setUIElementsFactory({
+    Dialog: BootstrapDialog,
+
     createMenuItem(config: IMenuItemConfig) {
         return new MenuItem(config);
     },

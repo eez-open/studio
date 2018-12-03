@@ -30,7 +30,7 @@ import {
 import { DocumentStore, IMenuItem, UIElementsFactory } from "eez-studio-shared/model/store";
 import * as output from "eez-studio-shared/model/output";
 
-import { PageEditorContext } from "eez-studio-page-editor/context";
+import { PageContext } from "eez-studio-page-editor/context";
 import { Page } from "eez-studio-page-editor/page";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,7 +150,7 @@ export class Widget extends EezObject {
     @computed
     get styleObject() {
         if (this.style) {
-            return PageEditorContext.findStyle(this.style);
+            return PageContext.findStyle(this.style);
         }
         return undefined;
     }
@@ -158,7 +158,7 @@ export class Widget extends EezObject {
     @computed
     get activeStyleObject() {
         if (this.activeStyle) {
-            return PageEditorContext.findStyle(this.activeStyle);
+            return PageContext.findStyle(this.activeStyle);
         }
         return undefined;
     }
@@ -294,7 +294,7 @@ export class Widget extends EezObject {
         }
 
         if (this.data) {
-            let dataIndex = PageEditorContext.data.findDataItemIndex(this.data);
+            let dataIndex = PageContext.data.findDataItemIndex(this.data);
             if (dataIndex == -1) {
                 messages.push(output.propertyNotFoundMessage(this, "data"));
             } else if (dataIndex >= 65535) {
@@ -309,7 +309,7 @@ export class Widget extends EezObject {
         }
 
         if (this.action) {
-            let actionIndex = PageEditorContext.findActionIndex(this.action);
+            let actionIndex = PageContext.findActionIndex(this.action);
             if (actionIndex == -1) {
                 messages.push(output.propertyNotFoundMessage(this, "action"));
             } else if (actionIndex >= 65535) {
@@ -447,7 +447,7 @@ export class Widget extends EezObject {
     }
 
     async createLayout() {
-        const layouts = PageEditorContext.getPages();
+        const layouts = PageContext.getPages();
 
         try {
             const result = await showGenericDialog({
@@ -512,7 +512,7 @@ export class Widget extends EezObject {
     }
 
     async replaceWithLayout() {
-        const layouts = PageEditorContext.getPages();
+        const layouts = PageContext.getPages();
 
         try {
             const result = await showGenericDialog({
@@ -595,7 +595,7 @@ export class Widget extends EezObject {
         return undefined;
     }
 
-    render(inEditor: boolean): React.ReactNode {
+    render(): React.ReactNode {
         return undefined;
     }
 }
@@ -680,7 +680,7 @@ export class ContainerWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageEditorContext.draw.drawDefaultWidget(this, rect);
+        return PageContext.draw.drawDefaultWidget(this, rect);
     }
 }
 
@@ -782,7 +782,7 @@ export class ListWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageEditorContext.draw.drawDefaultWidget(this, rect);
+        return PageContext.draw.drawDefaultWidget(this, rect);
     }
 }
 
@@ -840,7 +840,7 @@ export class GridWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageEditorContext.draw.drawDefaultWidget(this, rect);
+        return PageContext.draw.drawDefaultWidget(this, rect);
     }
 }
 
@@ -1112,7 +1112,7 @@ export class SelectWidget extends Widget {
         if (!this.data) {
             messages.push(output.propertyNotSetMessage(this, "data"));
         } else {
-            let dataItem = PageEditorContext.data.findDataItem(this.data);
+            let dataItem = PageContext.data.findDataItem(this.data);
             if (dataItem) {
                 let enumItems: string[] = [];
 
@@ -1185,7 +1185,7 @@ export class SelectWidget extends Widget {
             let index = this.widgets._array.indexOf(childObject);
             if (index != -1) {
                 if (this.data) {
-                    let dataItem = PageEditorContext.data.findDataItem(this.data);
+                    let dataItem = PageContext.data.findDataItem(this.data);
                     if (dataItem) {
                         if (dataItem.type == "enum") {
                             let enumItems: string[];
@@ -1216,7 +1216,7 @@ export class SelectWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageEditorContext.draw.drawDefaultWidget(this, rect);
+        return PageContext.draw.drawDefaultWidget(this, rect);
     }
 }
 
@@ -1259,7 +1259,7 @@ export class LayoutViewWidget extends Widget {
             }
 
             if (this.layout) {
-                let layout = PageEditorContext.findPage(this.layout);
+                let layout = PageContext.findPage(this.layout);
                 if (!layout) {
                     messages.push(output.propertyNotFoundMessage(this, "layout"));
                 }
@@ -1270,7 +1270,7 @@ export class LayoutViewWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageEditorContext.draw.drawLayoutViewWidget(this, rect);
+        return PageContext.draw.drawLayoutViewWidget(this, rect);
     }
 }
 
@@ -1380,7 +1380,7 @@ export class WidgetContainerDisplayItem extends TreeObjectAdapter
         if (!selectedWidgetItem) {
             // if not found then select default for enum data
             if (widget.data && widget.widgets) {
-                let index: number = PageEditorContext.data.getEnumValue(widget.data);
+                let index: number = PageContext.data.getEnumValue(widget.data);
                 if (index >= 0 && index < widget.widgets._array.length) {
                     selectedWidgetItem = widgetsItemChildren[index];
                 }
