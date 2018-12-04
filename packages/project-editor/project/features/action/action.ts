@@ -77,7 +77,10 @@ export class Action extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique({}, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique({}, asArray(parent))
+                            ]
                         }
                     ]
                 },

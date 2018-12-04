@@ -3,7 +3,7 @@ import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
-import styled from "eez-studio-ui/styled-components";
+import { humanize } from "eez-studio-shared/string";
 
 import { EezClass, getClassesDerivedFrom } from "eez-studio-shared/model/object";
 import { objectToClipboardData, setClipboardData } from "eez-studio-shared/model/clipboard";
@@ -11,11 +11,22 @@ import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
 import { Widget, getWidgetType } from "eez-studio-page-editor/widget";
 
+import styled from "eez-studio-ui/styled-components";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const WidgetDiv = styled.div`
+    margin: 5px;
+    padding: 5px;
     cursor: -webkit-grab;
-    border: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    & > img {
+        width: 100px;
+        height: 100px;
+        object-fit: contain;
+    }
 `;
 
 interface PaletteItemProps {
@@ -62,7 +73,8 @@ class PaletteItem extends React.Component<PaletteItemProps> {
                 DragAndDropManager.dragObject._class === this.props.widgetClass
         });
 
-        let label = getWidgetType(this.props.widgetClass);
+        let icon = this.props.widgetClass.classInfo.icon;
+        let label = humanize(getWidgetType(this.props.widgetClass));
 
         return (
             <WidgetDiv
@@ -72,6 +84,7 @@ class PaletteItem extends React.Component<PaletteItemProps> {
                 onDragStart={this.onDragStart}
                 onDragEnd={this.onDragEnd}
             >
+                {icon && <img src={icon} />}
                 {label}
             </WidgetDiv>
         );
@@ -82,8 +95,13 @@ class PaletteItem extends React.Component<PaletteItemProps> {
 
 const WidgetPaletteDiv = styled.div`
     overflow: auto;
-    padding: 10px;
+    padding: 5px;
     flex-grow: 1;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: flex-start;
 
     & > div {
         &.selected {

@@ -362,7 +362,6 @@ class Property extends React.Component<PropertyProps> {
     onEditUnique() {
         showGenericDialog({
             dialogDefinition: {
-                title: "Edit Property",
                 fields: [
                     {
                         name: this.props.propertyInfo.name,
@@ -389,7 +388,11 @@ class Property extends React.Component<PropertyProps> {
                     UndoManager.setCombineCommands(false);
                 }
             })
-            .catch(error => console.error(error));
+            .catch(error => {
+                if (error !== undefined) {
+                    console.error(error);
+                }
+            });
     }
 
     @bind

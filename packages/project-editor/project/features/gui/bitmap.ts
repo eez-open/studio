@@ -5,7 +5,13 @@ import { validators } from "eez-studio-shared/model/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { ProjectStore } from "project-editor/core/store";
-import { ClassInfo, EezObject, registerClass, PropertyType } from "eez-studio-shared/model/object";
+import {
+    ClassInfo,
+    EezObject,
+    registerClass,
+    PropertyType,
+    asArray
+} from "eez-studio-shared/model/object";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
@@ -71,7 +77,10 @@ export class Bitmap extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique({}, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique({}, asArray(parent))
+                            ]
                         },
                         {
                             name: "imageFilePath",

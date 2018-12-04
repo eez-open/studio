@@ -6,8 +6,8 @@ import { Page } from "eez-studio-page-editor/page";
 import { Widget } from "eez-studio-page-editor/widget";
 
 export interface IDataItem {
-    type: "integer" | "float" | "boolean" | "string" | "enum" | "list";
-    enumItems: string;
+    type: string;
+    enumItems?: string;
 }
 
 export interface IDataContext {

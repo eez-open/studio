@@ -9,7 +9,8 @@ import {
     registerClass,
     EezObject,
     EezArrayObject,
-    PropertyType
+    PropertyType,
+    asArray
 } from "eez-studio-shared/model/object";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
@@ -53,7 +54,10 @@ export class ScpiCommand extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique({}, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique({}, asArray(parent))
+                            ]
                         }
                     ]
                 },
@@ -119,7 +123,10 @@ export class ScpiSubsystem extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique({}, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique({}, asArray(parent))
+                            ]
                         }
                     ]
                 },

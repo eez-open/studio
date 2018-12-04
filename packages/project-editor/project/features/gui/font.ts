@@ -14,7 +14,8 @@ import {
     registerClass,
     EezArrayObject,
     PropertyType,
-    getProperty
+    getProperty,
+    asArray
 } from "eez-studio-shared/model/object";
 import { ProjectStore } from "project-editor/core/store";
 
@@ -156,7 +157,10 @@ export class Font extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique(undefined, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique(undefined, asArray(parent))
+                            ]
                         },
                         {
                             name: "filePath",

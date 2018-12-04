@@ -1018,23 +1018,33 @@ export function canPaste(object: EezObject) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function addItem(object: EezObject) {
+export async function addItem(object: EezObject) {
     const parent = isArray(object) ? object : object._parent;
-    if (parent) {
-        const parentClassInfo = parent._classInfo;
-        if (parentClassInfo.newItem) {
-            parentClassInfo
-                .newItem(parent)
-                .then(object => {
-                    if (object) {
-                        DocumentStore.addObject(parent, object);
-                    } else {
-                        console.log(`Canceled adding ${parent._class.name}`);
-                    }
-                })
-                .catch(err => notification.error(`Adding ${parent._class.name} failed: ${err}!`));
-        }
+    if (!parent) {
+        return null;
     }
+
+    const parentClassInfo = parent._classInfo;
+    if (!parentClassInfo.newItem) {
+        return null;
+    }
+
+    let newObjectProperties;
+    try {
+        newObjectProperties = await parentClassInfo.newItem(parent);
+    } catch (err) {
+        if (err !== undefined) {
+            notification.error(`Adding ${parent._class.name} failed: ${err}!`);
+        }
+        return null;
+    }
+
+    if (!newObjectProperties) {
+        console.log(`Canceled adding ${parent._class.name}`);
+        return null;
+    }
+
+    return DocumentStore.addObject(parent, newObjectProperties);
 }
 
 export function pasteItem(object: EezObject) {

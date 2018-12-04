@@ -10,7 +10,8 @@ import {
     EezObject,
     EezArrayObject,
     PropertyType,
-    getProperty
+    getProperty,
+    asArray
 } from "eez-studio-shared/model/object";
 import * as output from "eez-studio-shared/model/output";
 
@@ -162,7 +163,7 @@ export class ExtensionDefinition extends EezObject {
                 defaultValue: undefined
             }
         ],
-        newItem: (object: EezObject) => {
+        newItem: (parent: EezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
                     title: "New Instrument Definition File",
@@ -170,7 +171,10 @@ export class ExtensionDefinition extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique({}, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique({}, asArray(parent))
+                            ]
                         }
                     ]
                 },

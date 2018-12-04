@@ -1,6 +1,7 @@
 import { observable, computed, action, autorun } from "mobx";
 
 import { _find } from "eez-studio-shared/algorithm";
+import { humanize } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
 
 import { validators } from "eez-studio-shared/model/validation";
@@ -91,7 +92,7 @@ export class Widget extends EezObject {
 
         label: (widget: Widget) => {
             if (widget.data) {
-                return `${widget.type}: ${widget.data}`;
+                return `${humanize(widget.type)}: ${widget.data}`;
             }
 
             if (widget instanceof LayoutViewWidget) {
@@ -100,7 +101,7 @@ export class Widget extends EezObject {
                 }
             }
 
-            return widget.label;
+            return humanize(widget.type);
         },
         properties: [
             {
@@ -1118,7 +1119,7 @@ export class SelectWidget extends Widget {
 
                 if (dataItem.type == "enum") {
                     try {
-                        enumItems = JSON.parse(dataItem.enumItems);
+                        enumItems = JSON.parse(dataItem.enumItems || "[]");
                     } catch (err) {
                         enumItems = [];
                     }
@@ -1190,7 +1191,7 @@ export class SelectWidget extends Widget {
                         if (dataItem.type == "enum") {
                             let enumItems: string[];
                             try {
-                                enumItems = JSON.parse(dataItem.enumItems);
+                                enumItems = JSON.parse(dataItem.enumItems || "[]");
                             } catch (err) {
                                 enumItems = [];
                                 console.error("Invalid enum items", dataItem, err);
