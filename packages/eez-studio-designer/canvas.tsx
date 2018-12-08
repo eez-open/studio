@@ -39,6 +39,7 @@ const CanvasDiv = styled.div`
 export class Canvas extends React.Component<{
     designerContext?: IDesignerContext;
     toolHandler: IToolHandler;
+    customOverlay?: React.ReactNode;
     className?: string;
     style?: React.CSSProperties;
 }> {
@@ -462,6 +463,7 @@ export class Canvas extends React.Component<{
                         {this.props.children}
                     </div>
                     {this.props.toolHandler.render(this.designerContext, this.mouseHandler)}
+                    {this.props.customOverlay}
                 </div>
             </CanvasDiv>
         );

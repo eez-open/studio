@@ -119,6 +119,8 @@ export class WidgetContainerEditor extends CanvasEditor {
                     };
 
                     let dropItem: TreeNode = {
+                        id: object._id,
+
                         parent: this.tree,
                         children: [],
 

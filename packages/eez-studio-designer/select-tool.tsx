@@ -2,7 +2,14 @@ import React from "react";
 import { observable, runInAction } from "mobx";
 
 import { closestByClass } from "eez-studio-shared/dom";
-import { Point, Rect, pointInRect, rectEqual, rectClone } from "eez-studio-shared/geometry";
+import {
+    Point,
+    Rect,
+    pointInRect,
+    rectEqual,
+    rectClone,
+    Transform
+} from "eez-studio-shared/geometry";
 import {
     INode,
     ISnapLines,
@@ -181,36 +188,53 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
     }
 }
 
-class MouseHandlerWithSnapLines extends MouseHandler {
-    snapLines: ISnapLines;
-    snapToLines: boolean;
+export class SnapLines {
+    lines: ISnapLines;
+    enabled: boolean = false;
 
-    down(context: IDesignerContext, event: MouseEvent) {
-        super.down(context, event);
-
-        this.snapLines = findSnapLines(
+    find(context: IDesignerContext, filterCallback?: (node: INode) => boolean) {
+        this.lines = findSnapLines(
             {
+                id: "",
                 children: context.document.rootObjects
             },
             context.viewState.selectedObjects,
-            (node: INode) => true
+            filterCallback
         );
-        this.snapToLines = false;
     }
 
-    move(context: IDesignerContext, event: MouseEvent) {
-        super.move(context, event);
+    dragSnap(left: number, top: number, width: number, height: number) {
+        if (this.enabled) {
+            let lines1 = findClosestVerticalSnapLinesToPosition(this.lines, left);
+            let lines2 = findClosestVerticalSnapLinesToPosition(this.lines, left + width);
 
-        this.snapToLines =
-            !event.shiftKey && this.elapsedTime > CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME;
+            if (lines1 && (!lines2 || lines1.diff <= lines2.diff)) {
+                left = lines1.lines[0].pos;
+            } else if (lines2) {
+                left = lines2.lines[0].pos - width;
+            }
+
+            lines1 = findClosestHorizontalSnapLinesToPosition(this.lines, top);
+            lines2 = findClosestHorizontalSnapLinesToPosition(this.lines, top + height);
+
+            if (lines1 && (!lines2 || lines1.diff <= lines2.diff)) {
+                top = lines1.lines[0].pos;
+            } else if (lines2) {
+                top = lines2.lines[0].pos - height;
+            }
+        }
+
+        return {
+            left,
+            top
+        };
     }
 
-    renderInSelectionLayer(context: IDesignerContext) {
-        if (!this.snapToLines) {
+    render(transform: Transform, selectionRect: Rect) {
+        if (!this.enabled) {
             return null;
         }
 
-        const transform = context.viewState.transform;
         const offsetRect = transform.clientToOffsetRect(transform.clientRect);
 
         const lines: JSX.Element[] = [];
@@ -225,8 +249,8 @@ class MouseHandlerWithSnapLines extends MouseHandler {
         };
 
         drawSnapLinesGeneric(
-            this.snapLines,
-            context.viewState.selectedObjectsBoundingRect!,
+            this.lines,
+            selectionRect,
             (pos: number, horizontal: boolean, closest: boolean) => {
                 const point = transform.modelToOffsetPoint({
                     x: pos,
@@ -277,7 +301,31 @@ class MouseHandlerWithSnapLines extends MouseHandler {
     }
 }
 
-class DragMouseHandler extends MouseHandlerWithSnapLines {
+class MouseHandlerWithSnapLines extends MouseHandler {
+    snapLines = new SnapLines();
+
+    down(context: IDesignerContext, event: MouseEvent) {
+        super.down(context, event);
+
+        this.snapLines.find(context);
+    }
+
+    move(context: IDesignerContext, event: MouseEvent) {
+        super.move(context, event);
+
+        this.snapLines.enabled =
+            !event.shiftKey && this.elapsedTime > CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME;
+    }
+
+    renderInSelectionLayer(context: IDesignerContext) {
+        return this.snapLines.render(
+            context.viewState.transform,
+            context.viewState.selectedObjectsBoundingRect!
+        );
+    }
+}
+
+export class DragMouseHandler extends MouseHandlerWithSnapLines {
     changed: boolean;
 
     selectionBoundingRectAtDown: Rect;
@@ -306,36 +354,14 @@ class DragMouseHandler extends MouseHandlerWithSnapLines {
         super.move(context, event);
 
         this.left = Math.floor(this.left + this.movement.x / context.viewState.transform.scale);
-        let left = this.left;
-        if (this.snapToLines) {
-            let lines1 = findClosestVerticalSnapLinesToPosition(this.snapLines, left);
-            let lines2 = findClosestVerticalSnapLinesToPosition(
-                this.snapLines,
-                left + this.selectionBoundingRectAtDown.width
-            );
-
-            if (lines1 && (!lines2 || lines1.diff <= lines2.diff)) {
-                left = lines1.lines[0].pos;
-            } else if (lines2) {
-                left = lines2.lines[0].pos - this.selectionBoundingRectAtDown.width;
-            }
-        }
-
         this.top = Math.floor(this.top + this.movement.y / context.viewState.transform.scale);
-        let top = this.top;
-        if (this.snapToLines) {
-            let lines1 = findClosestHorizontalSnapLinesToPosition(this.snapLines, top);
-            let lines2 = findClosestHorizontalSnapLinesToPosition(
-                this.snapLines,
-                top + this.selectionBoundingRectAtDown.height
-            );
 
-            if (lines1 && (!lines2 || lines1.diff <= lines2.diff)) {
-                top = lines1.lines[0].pos;
-            } else if (lines2) {
-                top = lines2.lines[0].pos - this.selectionBoundingRectAtDown.height;
-            }
-        }
+        const { left, top } = this.snapLines.dragSnap(
+            this.left,
+            this.top,
+            this.selectionBoundingRectAtDown.width,
+            this.selectionBoundingRectAtDown.height
+        );
 
         for (let i = 0; i < context.viewState.selectedObjects.length; ++i) {
             const object = context.viewState.selectedObjects[i];
@@ -430,8 +456,8 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     }
 
     snapX(x: number) {
-        if (this.snapToLines) {
-            let lines = findClosestVerticalSnapLinesToPosition(this.snapLines, x);
+        if (this.snapLines.enabled) {
+            let lines = findClosestVerticalSnapLinesToPosition(this.snapLines.lines, x);
             return lines ? lines.lines[0].pos : x;
         } else {
             return x;
@@ -439,8 +465,8 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     }
 
     snapY(y: number) {
-        if (this.snapToLines) {
-            let lines = findClosestHorizontalSnapLinesToPosition(this.snapLines, y);
+        if (this.snapLines.enabled) {
+            let lines = findClosestHorizontalSnapLinesToPosition(this.snapLines.lines, y);
             return lines ? lines.lines[0].pos : y;
         } else {
             return y;

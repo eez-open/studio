@@ -477,6 +477,8 @@ class StoryboardCanvasEditor extends CanvasEditor {
                 let page = findPage(storyboardPage.page);
 
                 pageNodes.push({
+                    id: storyboardPage._id,
+
                     parent: tree,
                     children: [],
 
@@ -521,6 +523,7 @@ class StoryboardCanvasEditor extends CanvasEditor {
 
                 if (source && target && source != target) {
                     lineNodes.push({
+                        id: storyboardLine._id,
                         parent: tree,
                         children: [],
 
@@ -609,6 +612,8 @@ class StoryboardCanvasEditor extends CanvasEditor {
 
                 setTimeout(() => {
                     this.dropItem = {
+                        id: object._id,
+
                         parent: this.tree,
                         children: [],
 

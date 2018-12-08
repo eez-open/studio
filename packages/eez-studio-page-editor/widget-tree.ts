@@ -33,6 +33,8 @@ export interface LineConnecting {
 }
 
 export interface TreeNode {
+    id: string;
+
     parent: TreeNode;
     children: TreeNode[];
 
@@ -196,6 +198,7 @@ export function createWidgetTree(
             };
 
             let treeNode: TreeNode = {
+                id: object._id,
                 parent: <TreeNode>parentNode,
                 children: [],
                 rect,

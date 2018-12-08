@@ -1,6 +1,6 @@
 import React from "react";
-import { observable, computed, action, toJS, autorun } from "mobx";
-import { observer, inject, IWrappedComponent, disposeOnUnmount } from "mobx-react";
+import { observable, computed, action, toJS } from "mobx";
+import { observer, inject, IWrappedComponent } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _range } from "eez-studio-shared/algorithm";
@@ -28,6 +28,9 @@ import {
     UIElementsFactory
 } from "eez-studio-shared/model/store";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
+
+import { INode } from "eez-studio-shared/snap-lines";
+import { SnapLines } from "eez-studio-designer/select-tool";
 
 import { PageContext } from "eez-studio-page-editor/context";
 import { Page } from "eez-studio-page-editor/page";
@@ -881,6 +884,60 @@ class RootObjectComponent extends BaseObjectComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class DragSnapLines {
+    @observable
+    snapLines: SnapLines | undefined;
+    context: IDesignerContext | undefined;
+    dragWidget: Widget | undefined;
+
+    start(context: IDesignerContext, dragWidget: Widget) {
+        this.snapLines = new SnapLines();
+        this.context = context;
+        this.dragWidget = dragWidget;
+
+        this.snapLines.find(context, (node: INode) => node.id !== dragWidget._id);
+    }
+
+    clear() {
+        this.snapLines = undefined;
+        this.context = undefined;
+        this.dragWidget = undefined;
+    }
+}
+
+const dragSnapLines = new DragSnapLines();
+
+@observer
+class DragSnapLinesOverlay extends React.Component {
+    get dragWidgetRect() {
+        return {
+            left: dragSnapLines.dragWidget!.x,
+            top: dragSnapLines.dragWidget!.y,
+            width: dragSnapLines.dragWidget!.width,
+            height: dragSnapLines.dragWidget!.height
+        };
+    }
+
+    render() {
+        if (!dragSnapLines.snapLines) {
+            return null;
+        }
+
+        return (
+            dragSnapLines.snapLines && (
+                <div style={{ left: 0, top: 0, pointerEvents: "none" }}>
+                    {dragSnapLines.snapLines.render(
+                        dragSnapLines.context!.viewState.transform,
+                        this.dragWidgetRect
+                    )}
+                </div>
+            )
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 const PageEditorCanvasContainer = styled.div`
     flex-grow: 1;
     overflow: hidden;
@@ -921,25 +978,6 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
     @observable
     dragWidget: Widget | undefined;
-
-    @disposeOnUnmount
-    autorunDisposer = autorun(() => {
-        const dragWidget = this.dragWidget;
-        if (dragWidget) {
-            setTimeout(() => {
-                const object = this.findObjectById(dragWidget._id);
-                if (object) {
-                    const viewState = this.designerContextComponent!.designerContext.viewState;
-                    if (
-                        viewState.selectedObjects.length !== 1 ||
-                        viewState.selectedObjects[0] !== object
-                    ) {
-                        viewState.selectObjects([object]);
-                    }
-                }
-            }, 0);
-        }
-    });
 
     get rootObjects() {
         return [this.rootObjectComponent];
@@ -1081,15 +1119,30 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
             const transform = this.designerContextComponent!.designerContext.viewState.transform;
 
+            this.dragWidget = widget;
+
+            if (!dragSnapLines.snapLines) {
+                dragSnapLines.start(
+                    this.designerContextComponent!.designerContext,
+                    this.dragWidget
+                );
+            }
+            dragSnapLines.snapLines!.enabled = !event.shiftKey;
+
             const p = transform.clientToModelPoint({
                 x: event.nativeEvent.clientX - (widget.width * transform.scale) / 2,
                 y: event.nativeEvent.clientY - (widget.height * transform.scale) / 2
             });
 
-            widget.x = Math.round(p.x - this.page.x);
-            widget.y = Math.round(p.y - this.page.y);
+            const { left, top } = dragSnapLines.snapLines!.dragSnap(
+                p.x,
+                p.y,
+                widget.width,
+                widget.height
+            );
 
-            this.dragWidget = widget;
+            widget.x = Math.round(left - this.page.x);
+            widget.y = Math.round(top - this.page.y);
         }
     }
 
@@ -1097,14 +1150,24 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
     onDrop(event: React.DragEvent) {
         const widget = this.getDragWidget(event);
         if (widget) {
-            DocumentStore.addObject(this.page.widgets, toJS(widget));
+            const object = DocumentStore.addObject(this.page.widgets, toJS(widget));
             this.dragWidget = undefined;
+            dragSnapLines.clear();
+
+            setTimeout(() => {
+                const objectAdapter = this.findObjectById(object._id);
+                if (objectAdapter) {
+                    const viewState = this.designerContextComponent!.designerContext.viewState;
+                    viewState.selectObjects([objectAdapter]);
+                }
+            }, 0);
         }
     }
 
     @action.bound
     onDragLeave(event: React.DragEvent) {
         this.dragWidget = undefined;
+        dragSnapLines.clear();
     }
 
     @bind
@@ -1138,7 +1201,10 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
                     onDragLeave={this.onDragLeave}
                     onKeyDown={this.onKeyDown}
                 >
-                    <PageEditorCanvas toolHandler={selectToolHandler}>
+                    <PageEditorCanvas
+                        toolHandler={selectToolHandler}
+                        customOverlay={<DragSnapLinesOverlay />}
+                    >
                         <RootObjectComponent
                             ref={ref => {
                                 if (ref) {

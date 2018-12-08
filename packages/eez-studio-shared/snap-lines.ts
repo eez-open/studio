@@ -8,6 +8,7 @@ const MAX_VISIBLE_SNAP_LINE_DISTANCE = 20;
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface INode {
+    id: string;
     rect?: Rect;
     children: INode[];
 }
@@ -32,7 +33,7 @@ export interface ISnapLines {
 export function findSnapLines(
     tree: INode,
     excludeNodes: INode[],
-    filterCallback: (node: INode) => boolean
+    filterCallback?: (node: INode) => boolean
 ): ISnapLines {
     function findSnapLinesInTree(offsetFieldName: string, sizeFieldName: string) {
         let lines: ISnapLine[] = [];
