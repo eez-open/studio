@@ -1,6 +1,6 @@
 import React from "react";
-import { observable, computed, action, toJS } from "mobx";
-import { observer, inject, IWrappedComponent } from "mobx-react";
+import { observable, computed, action, toJS, autorun } from "mobx";
+import { observer, inject, IWrappedComponent, disposeOnUnmount } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _range } from "eez-studio-shared/algorithm";
@@ -921,6 +921,25 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
     @observable
     dragWidget: Widget | undefined;
+
+    @disposeOnUnmount
+    autorunDisposer = autorun(() => {
+        const dragWidget = this.dragWidget;
+        if (dragWidget) {
+            setTimeout(() => {
+                const object = this.findObjectById(dragWidget._id);
+                if (object) {
+                    const viewState = this.designerContextComponent!.designerContext.viewState;
+                    if (
+                        viewState.selectedObjects.length !== 1 ||
+                        viewState.selectedObjects[0] !== object
+                    ) {
+                        viewState.selectObjects([object]);
+                    }
+                }
+            }, 0);
+        }
+    });
 
     get rootObjects() {
         return [this.rootObjectComponent];

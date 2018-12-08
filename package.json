@@ -3,7 +3,7 @@
   "author": "Envox",
   "description": "EEZ Studio",
   "version": "0.9.0",
-  "license": "GPL-3.0",
+  "license": "GPL-3.0-only",
   "repository": "https://github.com/eez-open/psu-firmware",
   "main": "packages/main/main.js",
   "scripts": {

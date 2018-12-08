@@ -34,7 +34,9 @@ export enum PropertyType {
 
 export enum TargetDataType {
     String,
-    Number
+    Number,
+    Array,
+    Object
 }
 
 export enum MessageType {

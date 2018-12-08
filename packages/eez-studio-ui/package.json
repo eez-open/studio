@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "keywords": [],
   "author": "Envox",
-  "license": "GPLv3",
+  "license": "GPL-3.0-only",
   "repository": {
     "type": "git",
     "url": "git://github.com/eez-open/studio.git"
