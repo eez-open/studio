@@ -53,7 +53,7 @@ export const selectToolHandler: IToolHandler = {
     onContextMenu(context: IDesignerContext, point: Point, showContextMenu: (menu: IMenu) => void) {
         if (
             context.viewState.selectedObjects.length === 0 ||
-            !pointInRect(point, context.viewState.selectedObjectsBoundingRect as Rect)
+            !pointInRect(point, context.viewState.selectedObjectsBoundingRect)
         ) {
             context.viewState.deselectAllObjects();
 
@@ -320,7 +320,7 @@ class MouseHandlerWithSnapLines extends MouseHandler {
     renderInSelectionLayer(context: IDesignerContext) {
         return this.snapLines.render(
             context.viewState.transform,
-            context.viewState.selectedObjectsBoundingRect!
+            context.viewState.selectedObjectsBoundingRect
         );
     }
 }
@@ -337,9 +337,9 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     down(context: IDesignerContext, event: MouseEvent) {
         super.down(context, event);
 
-        this.selectionBoundingRectAtDown = rectClone(
-            context.viewState.selectedObjectsBoundingRect!
-        );
+        context.document.onDragStart("move");
+
+        this.selectionBoundingRectAtDown = rectClone(context.viewState.selectedObjectsBoundingRect);
 
         this.objectPositionsAtDown = context.viewState.selectedObjects.map(object => ({
             x: object.rect.left,
@@ -439,7 +439,7 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
             }
         }
 
-        this.savedBoundingRect = rectClone(context.viewState.selectedObjectsBoundingRect!);
+        this.savedBoundingRect = rectClone(context.viewState.selectedObjectsBoundingRect);
         this.boundingRect = rectClone(this.savedBoundingRect);
 
         this.savedBoundingRects = [];

@@ -46,7 +46,7 @@ class PaletteItem extends React.Component<PaletteItemProps> {
             (object as any).style = "default";
         }
 
-        object._id = "undefined";
+        object._id = "WidgetPaletteItem";
 
         setClipboardData(event, objectToClipboardData(object));
 

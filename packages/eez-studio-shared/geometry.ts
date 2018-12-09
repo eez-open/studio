@@ -45,7 +45,12 @@ export class BoundingRectBuilder {
 
     getRect() {
         if (this.minX === undefined) {
-            return undefined;
+            return {
+                left: 0,
+                top: 0,
+                width: 1,
+                height: 1
+            };
         }
         return {
             left: this.minX,

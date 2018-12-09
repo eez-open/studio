@@ -2,7 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { addAlphaToColor } from "eez-studio-shared/color";
-import { Rect, Transform } from "eez-studio-shared/geometry";
+import { Transform } from "eez-studio-shared/geometry";
 
 import styled from "eez-studio-ui/styled-components";
 
@@ -128,14 +128,16 @@ export class Selection extends React.Component<
 
         const transform = this.props.context.viewState.transform.clone();
 
-        if (this.props.context.viewState.selectedObjects.length > 0) {
+        let selectedObjects = this.props.context.viewState.selectedObjects;
+
+        if (selectedObjects.length > 0) {
             const selectedObjectClassName =
-                this.props.context.viewState.selectedObjects.length > 1
+                selectedObjects.length > 1
                     ? "EezStudio_DesignerSelection_SelectedObject"
                     : "EezStudio_DesignerSelection_BoundingRect";
 
             //
-            selectedObjectRects = this.props.context.viewState.selectedObjects.map(object => (
+            selectedObjectRects = selectedObjects.map(object => (
                 <SelectedObject
                     className={selectedObjectClassName}
                     key={object.id}
@@ -145,10 +147,11 @@ export class Selection extends React.Component<
             ));
 
             //
-            let boundingRect = transform.modelToOffsetRect(this.props.context.viewState
-                .selectedObjectsBoundingRect as Rect);
+            let boundingRect = transform.modelToOffsetRect(
+                this.props.context.viewState.selectedObjectsBoundingRect
+            );
 
-            if (this.props.context.viewState.selectedObjects.length > 1) {
+            if (selectedObjects.length > 1) {
                 let style: React.CSSProperties = {
                     position: "absolute",
                     left: Math.floor(boundingRect.left) + "px",
@@ -302,7 +305,12 @@ export class Selection extends React.Component<
                 className="EezStudio_DesignerSelection"
                 style={{
                     left: 0,
-                    top: 0
+                    top: 0,
+                    pointerEvents:
+                        selectedObjects.length === 1 &&
+                        selectedObjects[0].id === "WidgetPaletteItem"
+                            ? "none"
+                            : undefined
                 }}
             >
                 {(!this.props.mouseHandler || this.props.mouseHandler.selectionVisible) && (

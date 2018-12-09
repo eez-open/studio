@@ -45,7 +45,7 @@ export interface IViewState {
     // selection
     selectedObjects: IBaseObject[];
     isSelectionResizable: boolean;
-    selectedObjectsBoundingRect: Rect | undefined;
+    selectedObjectsBoundingRect: Rect;
 
     isObjectSelected(object: IBaseObject): boolean;
 

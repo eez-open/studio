@@ -26,7 +26,7 @@ class ViewState implements IViewState {
     isIdle: boolean = true;
 
     @observable
-    selectedObjects: IBaseObject[] = [];
+    _selectedObjects: IBaseObject[] = [];
 
     constructor(
         private document: IDocument,
@@ -48,7 +48,7 @@ class ViewState implements IViewState {
                         selectedObjects.push(object);
                     }
                 }
-                this.selectedObjects = selectedObjects;
+                this._selectedObjects = selectedObjects;
             }
         }
 
@@ -59,9 +59,22 @@ class ViewState implements IViewState {
         reaction(() => this.persistentState, viewState => onSavePersistantState(viewState));
     }
 
+    get widgetPaletteItem() {
+        return this.document.findObjectById("WidgetPaletteItem");
+    }
+
+    get selectedObjects() {
+        const widgetPaletteItem = this.widgetPaletteItem;
+        if (widgetPaletteItem) {
+            return [widgetPaletteItem];
+        } else {
+            return this._selectedObjects;
+        }
+    }
+
     @computed
     get persistentState(): IViewStatePersistantState {
-        const selectedObjects = this.selectedObjects.map(object => object.id);
+        const selectedObjects = this._selectedObjects.map(object => object.id);
         selectedObjects.sort();
 
         return {
@@ -95,7 +108,7 @@ class ViewState implements IViewState {
         return true;
     }
 
-    get selectedObjectsBoundingRect(): Rect | undefined {
+    get selectedObjectsBoundingRect(): Rect {
         let boundingRectBuilder = new BoundingRectBuilder();
 
         for (const object of this.selectedObjects) {
@@ -111,20 +124,20 @@ class ViewState implements IViewState {
 
     selectObject(object: IBaseObject) {
         runInAction(() => {
-            this.selectedObjects.push(object);
+            this._selectedObjects.push(object);
         });
     }
 
     selectObjects(objects: IBaseObject[]) {
         this.deselectAllObjects();
         runInAction(() => {
-            this.selectedObjects = objects;
+            this._selectedObjects = objects;
         });
     }
 
     deselectAllObjects(): void {
         runInAction(() => {
-            this.selectedObjects = [];
+            this._selectedObjects = [];
         });
     }
 }

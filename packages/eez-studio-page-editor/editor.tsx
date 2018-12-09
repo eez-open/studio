@@ -72,6 +72,7 @@ abstract class BaseObjectComponent
         dragWidget?: Widget;
     }>
     implements IBaseObject {
+    @observable
     children: BaseObjectComponent[] = [];
 
     abstract get rect(): Rect;
@@ -92,7 +93,7 @@ abstract class BaseObjectComponent
         }
 
         for (const child of this.children) {
-            const object = child.findObjectById(id);
+            const object = child && child.findObjectById(id);
             if (object) {
                 return object;
             }
@@ -127,7 +128,6 @@ abstract class BaseObjectComponent
     open() {}
 
     renderChildren(childrenObjects: EezObject[]) {
-        this.children = new Array(childrenObjects.length);
         return (
             <div
                 style={{
@@ -139,19 +139,23 @@ abstract class BaseObjectComponent
                     const ChildObjectComponent = getObjectComponentClass(child);
                     return (
                         <ChildObjectComponent
-                            ref={ref => {
+                            ref={action((ref: BaseObjectComponent | null) => {
                                 if (ref) {
+                                    if (i === 0) {
+                                        this.children = [];
+                                    }
+
                                     // careful, ref could be ...
                                     if (ref instanceof BaseObjectComponent) {
-                                        this.children[i] = ref;
+                                        this.children.push(ref);
                                     } else {
                                         // ... injector
-                                        this.children[i] = (ref as IWrappedComponent<
+                                        this.children.push((ref as IWrappedComponent<
                                             BaseObjectComponent
-                                        >).wrappedInstance as BaseObjectComponent;
+                                        >).wrappedInstance as BaseObjectComponent);
                                     }
                                 }
-                            }}
+                            })}
                             key={child._id}
                             object={child}
                         />
@@ -1080,13 +1084,15 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
     @bind
     onSavePersistantState(viewState: IViewStatePersistantState) {
-        UIStateStore.updateObjectUIState(this.props.widgetContainer.object, {
-            pageEditorCanvasViewState: {
-                transform: viewState.transform
-            }
-        });
+        if (!this.dragWidget) {
+            UIStateStore.updateObjectUIState(this.props.widgetContainer.object, {
+                pageEditorCanvasViewState: {
+                    transform: viewState.transform
+                }
+            });
 
-        this.props.widgetContainer.selectObjectIds(viewState.selectedObjects);
+            this.props.widgetContainer.selectObjectIds(viewState.selectedObjects);
+        }
     }
 
     getDragWidget(event: React.DragEvent) {
@@ -1101,14 +1107,6 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
     }
 
     @action.bound
-    onDragEnter(event: React.DragEvent) {
-        const widget = this.getDragWidget(event);
-        if (widget) {
-            this.dragWidget = widget;
-        }
-    }
-
-    @action.bound
     onDragOver(event: React.DragEvent) {
         const widget = this.getDragWidget(event);
         if (widget) {
@@ -1117,17 +1115,19 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
             const widget = DragAndDropManager.dragObject as Widget;
 
-            const transform = this.designerContextComponent!.designerContext.viewState.transform;
+            const designerContext = this.designerContextComponent!.designerContext;
 
-            this.dragWidget = widget;
+            if (!this.dragWidget) {
+                this.dragWidget = widget;
+                this.dragWidget._parent = this.page.widgets;
+                designerContext.viewState.deselectAllObjects();
 
-            if (!dragSnapLines.snapLines) {
-                dragSnapLines.start(
-                    this.designerContextComponent!.designerContext,
-                    this.dragWidget
-                );
+                dragSnapLines.start(designerContext, this.dragWidget);
             }
+
             dragSnapLines.snapLines!.enabled = !event.shiftKey;
+
+            const transform = designerContext.viewState.transform;
 
             const p = transform.clientToModelPoint({
                 x: event.nativeEvent.clientX - (widget.width * transform.scale) / 2,
@@ -1148,9 +1148,9 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
     @action.bound
     onDrop(event: React.DragEvent) {
-        const widget = this.getDragWidget(event);
-        if (widget) {
-            const object = DocumentStore.addObject(this.page.widgets, toJS(widget));
+        if (this.dragWidget) {
+            const object = DocumentStore.addObject(this.page.widgets, toJS(this.dragWidget));
+
             this.dragWidget = undefined;
             dragSnapLines.clear();
 
@@ -1166,8 +1166,10 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
     @action.bound
     onDragLeave(event: React.DragEvent) {
-        this.dragWidget = undefined;
-        dragSnapLines.clear();
+        if (this.dragWidget) {
+            this.dragWidget = undefined;
+            dragSnapLines.clear();
+        }
     }
 
     @bind
@@ -1195,7 +1197,6 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
                 <PageEditorCanvasContainer
                     tabIndex={0}
                     onFocus={this.focusHander}
-                    onDragEnter={this.onDragEnter}
                     onDragOver={this.onDragOver}
                     onDrop={this.onDrop}
                     onDragLeave={this.onDragLeave}
