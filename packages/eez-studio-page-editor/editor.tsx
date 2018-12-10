@@ -297,23 +297,6 @@ abstract class BaseWidgetObjectComponent extends BaseObjectComponent {
             );
         }
 
-        const svg = this.widget.renderSvg();
-        if (svg) {
-            return (
-                <svg
-                    width={this.rect.width}
-                    height={this.rect.height}
-                    style={{
-                        position: "absolute",
-                        left: this.rect.left,
-                        top: this.rect.top
-                    }}
-                >
-                    {svg}
-                </svg>
-            );
-        }
-
         const node = this.widget.render();
         if (node) {
             return (

@@ -64,7 +64,7 @@ export interface PropertyInfo {
     matchObjectReference?: (object: EezObject, path: (string | number)[], value: string) => boolean;
     replaceObjectReference?: (value: string) => string;
     onSelect?: (object: EezObject, propertyInfo: PropertyInfo) => Promise<any>;
-    hideInPropertyGrid?: boolean;
+    hideInPropertyGrid?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
     readOnlyInPropertyGrid?: boolean;
     enumerable?: boolean;
     isOptional?: boolean;
@@ -382,6 +382,18 @@ export function getInheritedValue(object: EezObject, propertyName: string) {
         return getInheritedValue(object, propertyName);
     }
     return undefined;
+}
+
+export function isPropertyHidden(object: EezObject, propertyInfo: PropertyInfo) {
+    if (propertyInfo.hideInPropertyGrid === undefined) {
+        return false;
+    }
+
+    if (typeof propertyInfo.hideInPropertyGrid === "boolean") {
+        return propertyInfo.hideInPropertyGrid;
+    }
+
+    return propertyInfo.hideInPropertyGrid(object, propertyInfo);
 }
 
 export function getProperty(object: EezObject, name: string) {

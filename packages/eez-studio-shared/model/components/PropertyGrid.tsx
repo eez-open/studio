@@ -16,6 +16,7 @@ import {
     EezObject,
     PropertyInfo,
     PropertyType,
+    isPropertyHidden,
     getProperty,
     isArray,
     asArray,
@@ -706,7 +707,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
         let properties: JSX.Element[] = [];
 
         for (let propertyInfo of object._classInfo.properties) {
-            if (!isArray(object) && !propertyInfo.hideInPropertyGrid) {
+            if (!isArray(object) && !isPropertyHidden(object, propertyInfo)) {
                 const colSpan = propertyInfo.type === PropertyType.Boolean;
 
                 let property;

@@ -592,10 +592,6 @@ export class Widget extends EezObject {
         return undefined;
     }
 
-    renderSvg(): React.ReactNode {
-        return undefined;
-    }
-
     render(): React.ReactNode {
         return undefined;
     }
