@@ -3,6 +3,7 @@ import { observable, computed, action, runInAction, autorun } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
+var sha256 = require("sha256");
 
 import { compareVersions, studioVersion } from "eez-studio-shared/util";
 import { humanize } from "eez-studio-shared/string";
@@ -664,8 +665,21 @@ function downloadAndInstallExtension(extensionToInstall: IExtension, progressToa
             });
         });
 
-        req.addEventListener("load", () =>
-            finishInstall(new Buffer(req.response))
+        req.addEventListener("load", () => {
+            const extensionZipFileData = new Buffer(req.response);
+
+            if (extensionToInstall.sha256) {
+                if (sha256(extensionZipFileData) !== extensionToInstall.sha256) {
+                    notification.update(progressToastId, {
+                        render: `Failed to install "${extensionToInstall.displayName ||
+                            extensionToInstall.name}" extension because package file hash doesn't match.`,
+                        type: notification.ERROR
+                    });
+                    reject();
+                }
+            }
+
+            finishInstall(extensionZipFileData)
                 .then(extension => {
                     if (extension) {
                         notification.update(progressToastId, {
@@ -690,8 +704,8 @@ function downloadAndInstallExtension(extensionToInstall: IExtension, progressToa
                         type: notification.ERROR
                     });
                     reject();
-                })
-        );
+                });
+        });
 
         req.addEventListener("error", error => {
             console.error("Extension download error", error);

@@ -22,6 +22,7 @@ extensions/catalog-enum.js.map
 installation/build-installation.js
 installation/build-installation.js.map
 
+installation/extra-resources/**
 installation/extra-resource.js
 installation/extra-resource.js.map
 installation/extra-resource.json

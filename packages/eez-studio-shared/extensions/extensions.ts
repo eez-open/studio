@@ -56,6 +56,7 @@ async function loadExtension(extensionFolderPath: string): Promise<IExtension | 
                     extension.description = packageJson.description;
 
                     extension.download = packageJson.download;
+                    extension.sha256 = packageJson.sha256;
                     extension.installationFolderPath = extensionFolderPath;
 
                     extension.image = packageJson.image;

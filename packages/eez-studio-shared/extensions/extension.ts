@@ -133,6 +133,7 @@ export interface IExtensionDescription {
     description?: string;
     image?: string;
     download?: string;
+    sha256?: string;
     installationFolderPath?: string;
 }
 
