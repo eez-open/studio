@@ -14,10 +14,10 @@ import * as notification from "eez-studio-ui/notification";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 
 const DEFAULT_EXTENSIONS_CATALOG_VERSION_DOWNLOAD_URL =
-    "https://github.com/eez-open/studio/raw/master/extensions/catalog-version.json";
+    "https://github.com/eez-open/studio-extensions/raw/master/build/catalog-version.json";
 
 const DEFAULT_EXTENSIONS_CATALOG_DOWNLOAD_URL =
-    "https://github.com/eez-open/studio/raw/master/extensions/catalog.zip";
+    "https://github.com/eez-open/studio-extensions/raw/master/build/catalog.zip";
 
 interface ICatalogVersion {
     lastModified: Date;
