@@ -304,9 +304,9 @@ export class Waveform extends FileHistoryItem {
         when(
             () => this.transferSucceeded && this.isVisible,
             () => {
-                scheduleTask(`Load waveform ${this.id}`, Priority.Lowest, () => {
-                    this.initWaveformDefinition();
-                });
+                scheduleTask(`Load waveform ${this.id}`, Priority.Lowest, async () =>
+                    this.initWaveformDefinition()
+                );
             }
         );
 

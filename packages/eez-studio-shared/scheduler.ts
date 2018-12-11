@@ -17,7 +17,7 @@ const middlePriorityTasks: ITask[] = [];
 const lowPriorityTasks: ITask[] = [];
 const lowestPriorityTasks: ITask[] = [];
 
-export function scheduleTask(name: string, priority: Priority, callback: () => void) {
+export function scheduleTask(name: string, priority: Priority, callback: () => Promise<any>) {
     const task = { name, callback };
 
     if (priority === Priority.Highest) {
@@ -39,7 +39,7 @@ export function scheduleTask(name: string, priority: Priority, callback: () => v
 
 let timeout: any = undefined;
 
-function run() {
+async function run() {
     let task = highestPriorityTasks.shift();
     if (!task) {
         task = highPriorityTasks.shift();
@@ -56,7 +56,7 @@ function run() {
 
     if (task) {
         console.time(task.name);
-        task.callback();
+        await task.callback();
         console.timeEnd(task.name);
 
         timeout = setTimeout(run);

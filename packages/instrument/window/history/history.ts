@@ -2,7 +2,7 @@ import { observable, computed, runInAction, action, reaction } from "mobx";
 import { bind } from "bind-decorator";
 
 import { formatDate } from "eez-studio-shared/util";
-import { db } from "eez-studio-shared/db";
+import { db, dbQuery } from "eez-studio-shared/db";
 import {
     IActivityLogEntry,
     activityLogStore,
@@ -104,15 +104,14 @@ class HistoryCalendar {
     constructor(public history: History) {}
 
     @action
-    load() {
+    async load() {
         this.minDate = new Date();
         this.maxDate = new Date();
         this.counters = new Map<string, number>();
 
         try {
-            const rows = db
-                .prepare(
-                    `SELECT
+            const rows = await dbQuery(
+                `SELECT
                         date,
                         count(*) AS count
                     FROM (
@@ -127,16 +126,17 @@ class HistoryCalendar {
                         date
                     ORDER BY
                         date`
-                )
-                .all();
+            ).all();
 
-            if (rows.length > 0) {
-                rows.forEach(row => this.counters.set(row.date, row.count.toNumber()));
-                this.minDate = new Date(rows[0].date + " 00:00:00");
-                this.maxDate = new Date();
-            } else {
-                this.minDate = this.maxDate = new Date();
-            }
+            runInAction(() => {
+                if (rows.length > 0) {
+                    rows.forEach(row => this.counters.set(row.date, row.count.toNumber()));
+                    this.minDate = new Date(rows[0].date + " 00:00:00");
+                    this.maxDate = new Date();
+                } else {
+                    this.minDate = this.maxDate = new Date();
+                }
+            });
         } catch (err) {
             notification.error(err);
         }
@@ -147,13 +147,12 @@ class HistoryCalendar {
     }
 
     @action
-    update(selectedDay?: Date) {
+    async update(selectedDay?: Date) {
         if (selectedDay) {
             this.showFirstHistoryItemAsSelectedDay = true;
 
-            const rows = db
-                .prepare(
-                    `SELECT
+            const rows = await dbQuery(
+                `SELECT
                         id,
                         ${this.history.options.store.nonTransientAndNonLazyProperties}
                     FROM
@@ -170,8 +169,7 @@ class HistoryCalendar {
                                 date
                         )
                     LIMIT ?`
-                )
-                .all(selectedDay.getTime(), CONF_BLOCK_SIZE);
+            ).all(selectedDay.getTime(), CONF_BLOCK_SIZE);
 
             this.history.displayRows(rows);
 
@@ -180,9 +178,8 @@ class HistoryCalendar {
             this.showFirstHistoryItemAsSelectedDay = false;
 
             // display most recent log items
-            const rows = db
-                .prepare(
-                    `SELECT
+            const rows = await dbQuery(
+                `SELECT
                         id,
                         ${this.history.options.store.nonTransientAndNonLazyProperties}
                     FROM
@@ -192,8 +189,7 @@ class HistoryCalendar {
                     ORDER BY
                         date DESC
                     LIMIT ?`
-                )
-                .all(CONF_BLOCK_SIZE);
+            ).all(CONF_BLOCK_SIZE);
 
             rows.reverse();
 
@@ -335,7 +331,7 @@ class HistorySearch {
     }
 
     @bind
-    searchLoop() {
+    async searchLoop() {
         this.searchLoopTimeout = undefined;
 
         // (
@@ -353,9 +349,8 @@ class HistorySearch {
         //     ((type = "instrument/file-download" || type = "instrument/file-upload" || type = "instrument/file-attachment") AND json_extract(message, '$.note') LIKE ?)
         // )
 
-        const rows = db
-            .prepare(
-                `SELECT
+        const rows = await dbQuery(
+            `SELECT
                     id,
                     ${this.history.options.store.nonTransientAndNonLazyProperties}
                 FROM
@@ -368,22 +363,21 @@ class HistorySearch {
                     date
                 LIMIT
                     ?`
-            )
-            .all(
-                this.searchLastLogDate.getTime(),
-                "%" + this.searchText + "%",
-                CONF_SINGLE_SEARCH_LIMIT
-            );
+        ).all(
+            this.searchLastLogDate.getTime(),
+            "%" + this.searchText + "%",
+            CONF_SINGLE_SEARCH_LIMIT
+        );
 
-        runInAction(() => {
-            rows.forEach(row => {
+        rows.forEach(
+            action(row => {
                 const activityLogEntry = this.history.options.store.dbRowToObject(row);
                 this.searchResults.push(new SearchResult(activityLogEntry));
                 if (activityLogEntry.date > this.searchLastLogDate) {
                     this.searchLastLogDate = activityLogEntry.date;
                 }
-            });
-        });
+            })
+        );
 
         if (rows.length >= CONF_SINGLE_SEARCH_LIMIT) {
             this.searchLoopTimeout = setTimeout(this.searchLoop, 0);
@@ -418,7 +412,7 @@ class HistorySearch {
     }
 
     @action
-    selectSearchResult(searchResult: SearchResult | undefined) {
+    async selectSearchResult(searchResult: SearchResult | undefined) {
         if (this.selectedSearchResult) {
             this.selectedSearchResult.selected = false;
 
@@ -433,9 +427,8 @@ class HistorySearch {
         if (searchResult) {
             searchResult.selected = true;
 
-            const rows = db
-                .prepare(
-                    `SELECT * FROM (
+            const rows = await dbQuery(
+                `SELECT * FROM (
                         SELECT * FROM (
                             SELECT
                                 id,
@@ -466,19 +459,20 @@ class HistorySearch {
                             LIMIT ?
                         )
                     ) ORDER BY date`
-                )
-                .all(
-                    searchResult.logEntry.date.getTime(),
-                    CONF_BLOCK_SIZE / 2,
-                    searchResult.logEntry.date.getTime(),
-                    CONF_BLOCK_SIZE / 2
-                );
+            ).all(
+                searchResult.logEntry.date.getTime(),
+                CONF_BLOCK_SIZE / 2,
+                searchResult.logEntry.date.getTime(),
+                CONF_BLOCK_SIZE / 2
+            );
 
             this.history.displayRows(rows);
 
             const historyItem = this.history.map.get(searchResult.logEntry.id);
             if (historyItem) {
-                historyItem.selected = true;
+                runInAction(() => {
+                    historyItem.selected = true;
+                });
                 showHistoryItem(this.history.appStore.navigationStore.mainHistoryView, historyItem);
             } else {
                 console.warn("History item not found", searchResult);
@@ -515,7 +509,9 @@ class HistoryNavigator {
                 )
                 .get(this.firstHistoryItemTime);
 
-            this.hasOlder = result && result.count.toNumber() > 0;
+            runInAction(() => {
+                this.hasOlder = result && result.count.toNumber() > 0;
+            });
         } else {
             this.hasOlder = false;
         }
@@ -534,7 +530,9 @@ class HistoryNavigator {
                 )
                 .get(this.lastHistoryItemTime);
 
-            this.hasNewer = result && result.count.toNumber() > 0;
+            runInAction(() => {
+                this.hasNewer = result && result.count.toNumber() > 0;
+            });
         } else {
             this.hasNewer = false;
         }
@@ -565,11 +563,10 @@ class HistoryNavigator {
     }
 
     @action.bound
-    loadOlder() {
+    async loadOlder() {
         if (this.hasOlder) {
-            const rows = db
-                .prepare(
-                    `SELECT
+            const rows = await dbQuery(
+                `SELECT
                         id,
                         ${this.history.options.store.nonTransientAndNonLazyProperties}
                     FROM
@@ -586,25 +583,25 @@ class HistoryNavigator {
                                 date DESC
                         )
                     LIMIT ?`
-                )
-                .all(this.firstHistoryItemTime, CONF_BLOCK_SIZE);
+            ).all(this.firstHistoryItemTime, CONF_BLOCK_SIZE);
 
             rows.reverse();
 
             if (rows.length > 0) {
-                this.history.calendar.showFirstHistoryItemAsSelectedDay = true;
-                this.history.blocks.splice(0, 0, this.history.rowsToHistoryItems(rows));
+                runInAction(() => {
+                    this.history.calendar.showFirstHistoryItemAsSelectedDay = true;
+                    this.history.blocks.splice(0, 0, this.history.rowsToHistoryItems(rows));
+                });
                 this.update();
             }
         }
     }
 
     @action.bound
-    loadNewer() {
+    async loadNewer() {
         if (this.hasNewer) {
-            const rows = db
-                .prepare(
-                    `SELECT
+            const rows = await dbQuery(
+                `SELECT
                         id,
                         ${this.history.options.store.nonTransientAndNonLazyProperties}
                     FROM
@@ -621,12 +618,13 @@ class HistoryNavigator {
                                 date
                         )
                     LIMIT ?`
-                )
-                .all(this.lastHistoryItemTime, CONF_BLOCK_SIZE);
+            ).all(this.lastHistoryItemTime, CONF_BLOCK_SIZE);
 
             if (rows.length > 0) {
-                this.history.calendar.showFirstHistoryItemAsSelectedDay = false;
-                this.history.blocks.push(this.history.rowsToHistoryItems(rows));
+                runInAction(() => {
+                    this.history.calendar.showFirstHistoryItemAsSelectedDay = false;
+                    this.history.blocks.push(this.history.rowsToHistoryItems(rows));
+                });
                 this.update();
             }
         }
@@ -715,7 +713,7 @@ export class History {
         scheduleTask(
             "Watch activity log",
             this.isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
-            () => {
+            async () => {
                 let activityLogFilterSpecification: IActivityLogFilterSpecification;
 
                 if (this.appStore.oids) {
@@ -786,27 +784,17 @@ export class History {
         scheduleTask(
             "Show most recent log items",
             this.isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
-            action(() => {
-                this.calendar.update();
-            })
+            action(() => this.calendar.update())
         );
 
         scheduleTask(
             "Load calendar",
             this.isDeletedItemsHistory ? Priority.Lowest : Priority.Low,
-            action(() => {
-                this.calendar.load();
-            })
+            action(() => this.calendar.load())
         );
 
         if (this.isSessionsSupported) {
-            scheduleTask(
-                "Load sessions",
-                Priority.Low,
-                action(() => {
-                    this.sessions.load();
-                })
-            );
+            scheduleTask("Load sessions", Priority.Low, action(() => this.sessions.load()));
         }
 
         this.reactionDisposer = reaction(
@@ -1249,7 +1237,7 @@ export class DeletedItemsHistory extends History {
     }
 
     @action.bound
-    refreshDeletedCount() {
+    async refreshDeletedCount() {
         const result = db
             .prepare(
                 `SELECT
@@ -1261,7 +1249,9 @@ export class DeletedItemsHistory extends History {
             )
             .get();
 
-        this.deletedCount = result ? result.count.toNumber() : 0;
+        runInAction(() => {
+            this.deletedCount = result ? result.count.toNumber() : 0;
+        });
     }
 
     filterActivityLogEntry(activityLogEntry: IActivityLogEntry) {

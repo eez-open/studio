@@ -81,7 +81,7 @@ export class InstrumentAppStore implements IEditor {
         scheduleTask(
             "Load instrument",
             Priority.High,
-            action(() => {
+            action(async () => {
                 this.instrument = instruments.get(this.instrumentId);
 
                 this.helpVisible =
@@ -90,9 +90,9 @@ export class InstrumentAppStore implements IEditor {
 
                 this.filters = this.getFiltersFromLocalStorage();
 
-                scheduleTask("Load commands tree", Priority.Low, () => {
-                    this.commandsTree.load(this.instrument!.instrumentExtensionId);
-                });
+                scheduleTask("Load commands tree", Priority.Low, () =>
+                    this.commandsTree.load(this.instrument!.instrumentExtensionId)
+                );
 
                 bindShortcuts(this.shortcutsStore.instrumentShortcuts, (shortcut: IShortcut) => {
                     const {

@@ -129,6 +129,14 @@ class ViewState implements IViewState {
     }
 
     selectObjects(objects: IBaseObject[]) {
+        if (
+            JSON.stringify(objects.map(object => object.id).sort()) ===
+            JSON.stringify(this._selectedObjects.map(object => object.id).sort())
+        ) {
+            // there is no change
+            return;
+        }
+
         this.deselectAllObjects();
         runInAction(() => {
             this._selectedObjects = objects;

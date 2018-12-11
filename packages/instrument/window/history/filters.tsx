@@ -3,7 +3,7 @@ import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 
 import { IActivityLogEntry } from "eez-studio-shared/activity-log";
-import { db } from "eez-studio-shared/db";
+import { dbQuery } from "eez-studio-shared/db";
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 
 import styled from "eez-studio-ui/styled-components";
@@ -186,13 +186,9 @@ export class FilterStats {
     launchedScripts = 0;
 
     constructor(public history: History) {
-        scheduleTask(
-            "Get filter stats",
-            Priority.Lowest,
-            action(() => {
-                const rows = db
-                    .prepare(
-                        `SELECT
+        scheduleTask("Get filter stats", Priority.Lowest, async () => {
+            const rows = await dbQuery(
+                `SELECT
                             type, count(*) AS count
                         FROM
                             ${history.table} AS T1
@@ -200,16 +196,15 @@ export class FilterStats {
                             ${this.history.oidWhereClause} AND NOT deleted
                         GROUP BY
                             type`
-                    )
-                    .all();
+            ).all();
 
-                rows.forEach(row => {
-                    this.add(row.type, row.count.toNumber());
-                });
-            })
-        );
+            rows.forEach(row => {
+                this.add(row.type, row.count.toNumber());
+            });
+        });
     }
 
+    @action
     add(type: string, amount: number) {
         if (["activity-log/session-start", "activity-log/session-close"].indexOf(type) !== -1) {
             this.session += amount;

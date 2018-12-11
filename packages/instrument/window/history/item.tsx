@@ -57,14 +57,18 @@ export class HistoryItem implements IHistoryItem {
     }
 
     deleteLog() {
-        logDelete(this.appStore.history.options.store, {
-            id: this.id,
-            sid: this.sid,
-            oid: this.oid,
-            type: this.type
-        }, {
-            undoable: false
-        });
+        logDelete(
+            this.appStore.history.options.store,
+            {
+                id: this.id,
+                sid: this.sid,
+                oid: this.oid,
+                type: this.type
+            },
+            {
+                undoable: false
+            }
+        );
     }
 
     get data() {

@@ -1,7 +1,7 @@
 import { observable, action, runInAction, autorun } from "mobx";
 import { bind } from "bind-decorator";
 
-import { db } from "eez-studio-shared/db";
+import { dbQuery } from "eez-studio-shared/db";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import {
     IActivityLogEntry,
@@ -63,10 +63,9 @@ export class HistorySessions {
     activeSession: SessionHistoryItem | undefined;
 
     @action
-    load() {
-        const rows = db
-            .prepare(
-                `SELECT
+    async load() {
+        const rows = await dbQuery(
+            `SELECT
                     id,
                     ${activityLogStore.nonTransientAndNonLazyProperties}
                 FROM
@@ -82,18 +81,19 @@ export class HistorySessions {
                     )
                 ORDER BY
                     date`
-            )
-            .all();
+        ).all();
 
-        this.sessions = this.history.rowsToHistoryItems(rows).map(activityLogEntry => ({
-            selected: false,
-            id: activityLogEntry.id,
-            activityLogEntry
-        }));
+        runInAction(() => {
+            this.sessions = this.history.rowsToHistoryItems(rows).map(activityLogEntry => ({
+                selected: false,
+                id: activityLogEntry.id,
+                activityLogEntry
+            }));
+        });
     }
 
     @action.bound
-    selectSession(selectedSession: ISession | undefined) {
+    async selectSession(selectedSession: ISession | undefined) {
         if (this.selectedSession) {
             this.selectedSession.selected = false;
         }
@@ -103,9 +103,8 @@ export class HistorySessions {
         }
 
         if (selectedSession) {
-            const rows = db
-                .prepare(
-                    `SELECT
+            const rows = await dbQuery(
+                `SELECT
                         id,
                         ${activityLogStore.nonTransientAndNonLazyProperties}
                     FROM
@@ -122,8 +121,7 @@ export class HistorySessions {
                                 date
                         )
                     LIMIT ?`
-                )
-                .all(new Date(selectedSession.activityLogEntry.date).getTime(), CONF_BLOCK_SIZE);
+            ).all(new Date(selectedSession.activityLogEntry.date).getTime(), CONF_BLOCK_SIZE);
 
             this.history.displayRows(rows);
 
