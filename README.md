@@ -78,6 +78,7 @@ Download and start `EEZ_Studio_setup.exe`.
 -   Install `node-gyp`, more information at https://github.com/nodejs/node-gyp#installation
 
 ```
+sudo apt-get install build-essential libudev-dev
 clone git clone https://github.com/eez-open/studio
 cd studio
 npm run build
