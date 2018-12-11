@@ -259,7 +259,7 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             this.state.errorMessages &&
                             this.state.errorMessages[fieldProperties.name];
 
-                        let FieldComponent;
+                        let Field;
                         let children: JSX.Element | JSX.Element[] | null = null;
 
                         if (
@@ -269,9 +269,9 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             !fieldProperties.type ||
                             fieldProperties.unit
                         ) {
-                            FieldComponent = TextInputProperty;
+                            Field = TextInputProperty;
                         } else if (fieldProperties.type === "enum") {
-                            FieldComponent = SelectProperty;
+                            Field = SelectProperty;
                             children = fieldProperties.enumItems!.map(enumItem => {
                                 const id =
                                     typeof enumItem === "string" || typeof enumItem === "number"
@@ -287,7 +287,7 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                                 );
                             });
                         } else if (fieldProperties.type === "boolean") {
-                            FieldComponent = BooleanProperty;
+                            Field = BooleanProperty;
                         } else {
                             return (
                                 <PropertyEnclosure
@@ -314,7 +314,7 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                         }
 
                         return (
-                            <FieldComponent
+                            <Field
                                 key={fieldProperties.name}
                                 name={name}
                                 value={value}
@@ -322,7 +322,7 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                                 errors={errors}
                             >
                                 {children}
-                            </FieldComponent>
+                            </Field>
                         );
                     })}
             </PropertyList>

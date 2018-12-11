@@ -20,7 +20,6 @@ function getSize(value: Size | Size[] | undefined, multiplyBy: number = 10): str
 export class Box extends React.Component<
     {
         direction?: "row" | "column";
-        tag?: string;
         className?: string;
         style?: React.CSSProperties;
         background?: "panel-header" | "white";
@@ -68,8 +67,6 @@ export class Box extends React.Component<
     }
 
     render() {
-        const Element = this.props.tag || "div";
-
         let style: React.CSSProperties = {
             display: "flex",
             flexDirection: this.props.direction || "row",
@@ -106,9 +103,9 @@ export class Box extends React.Component<
         Object.assign(style, this.props.style);
 
         return (
-            <Element style={style} className={this.props.className}>
+            <div style={style} className={this.props.className}>
                 {this.props.children}
-            </Element>
+            </div>
         );
     }
 }
