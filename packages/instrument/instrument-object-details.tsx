@@ -154,6 +154,7 @@ class Connection extends React.Component<{
     }
 }
 
+@observer
 export class InstrumentDetails extends React.Component<{ instrument: InstrumentObject }, {}> {
     @bind
     onOpenInTab() {
@@ -185,6 +186,14 @@ export class InstrumentDetails extends React.Component<{ instrument: InstrumentO
             <Panels>
                 <Panel title="Actions" justify="flex-start" scrollable={true} grow={1}>
                     <Toolbar>
+                        {this.props.instrument.isUnknownExtension && (
+                            <ButtonAction
+                                text="Install Extension"
+                                title="Install extension for this instrument"
+                                className="btn btn-default btn-primary"
+                                onClick={() => this.props.instrument.installExtension()}
+                            />
+                        )}
                         <ButtonAction
                             text="Open in Tab"
                             title="Open instrument in new tab"

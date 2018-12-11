@@ -276,7 +276,20 @@ export class ExtensionInMasterView extends React.Component<
     },
     {}
 > {
+    @computed
+    get extensionInstalled() {
+        const extensionVersions = extensionsManagerStore.getExtensionVersionsById(
+            this.props.extension.id
+        );
+        return extensionVersions && extensionVersions.installedVersion;
+    }
+
     render() {
+        const badgeClassName = classNames("badge", {
+            "badge-success": this.extensionInstalled,
+            "badge-secondary": !this.extensionInstalled
+        });
+
         return (
             <ListItem
                 leftIcon={this.props.extension.image}
@@ -292,6 +305,11 @@ export class ExtensionInMasterView extends React.Component<
                         >
                             <h5 className="EezStudio_NoWrap" style={{ marginBottom: 0 }}>
                                 {this.props.extension.displayName || this.props.extension.name}
+                                <span className={badgeClassName} style={{ marginLeft: 10 }}>
+                                    <div>
+                                        {this.extensionInstalled ? "Installed" : "Not installed"}
+                                    </div>
+                                </span>
                             </h5>
                             <small>{this.props.extension.version}</small>
                         </div>
@@ -645,7 +663,10 @@ async function finishInstall(extensionZipPackageData: any) {
     return extension;
 }
 
-function downloadAndInstallExtension(extensionToInstall: IExtension, progressToastId: number) {
+export function downloadAndInstallExtension(
+    extensionToInstall: IExtension,
+    progressToastId: number
+) {
     return new Promise<IExtension | undefined>((resolve, reject) => {
         var req = new XMLHttpRequest();
         req.responseType = "arraybuffer";

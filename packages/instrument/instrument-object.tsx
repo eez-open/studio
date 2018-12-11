@@ -1,5 +1,7 @@
 import React from "react";
-import { observable, computed, action, toJS } from "mobx";
+import { observable, computed, action, runInAction, toJS, autorun } from "mobx";
+
+const { MenuItem } = EEZStudio.electron.remote;
 
 import {
     createStore,
@@ -9,7 +11,7 @@ import {
     commitTransaction
 } from "eez-studio-shared/store";
 import { IExtension } from "eez-studio-shared/extensions/extension";
-import { loadExtensionById } from "eez-studio-shared/extensions/extensions";
+import { loadExtensionById, extensions } from "eez-studio-shared/extensions/extensions";
 import { activityLogStore, log, IActivityLogEntry } from "eez-studio-shared/activity-log";
 import { objectEqual, isRenderer } from "eez-studio-shared/util";
 import { IUnit } from "eez-studio-shared/units";
@@ -17,10 +19,13 @@ import { db } from "eez-studio-shared/db";
 import { _defer } from "eez-studio-shared/algorithm";
 
 import styled from "eez-studio-ui/styled-components";
+import * as notification from "eez-studio-ui/notification";
 
 import * as MainWindowModule from "main/window";
 
 import { store as workbenchObjectsStore } from "home/store";
+import * as ExtensionMangerModule from "home/extensions-manager/extensions-manager";
+import * as CatalogModule from "home/extensions-manager/catalog";
 
 import { IInstrumentExtensionProperties } from "instrument/instrument-extension";
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/import";
@@ -127,6 +132,26 @@ export class InstrumentObject {
         }
 
         this.connection = createConnection(this);
+
+        autorun(() => {
+            if (this._extension) {
+                if (this.isUnknownExtension) {
+                    // check if extension is installed in the meantime
+                    if (extensions.get(this.instrumentExtensionId)) {
+                        runInAction(() => {
+                            this._extension = undefined;
+                        });
+                    }
+                } else {
+                    // check if extension is uninstalled in the meantime
+                    if (!extensions.get(this.instrumentExtensionId)) {
+                        runInAction(() => {
+                            this._extension = undefined;
+                        });
+                    }
+                }
+            }
+        });
     }
 
     id: string;
@@ -150,6 +175,15 @@ export class InstrumentObject {
 
     _creationDate: Date | null | undefined;
 
+    get isUnknownExtension() {
+        return (
+            this.extension &&
+            this.extension.name === UNKNOWN_INSTRUMENT_EXTENSION.name &&
+            this.extension.version === UNKNOWN_INSTRUMENT_EXTENSION.version &&
+            this.extension.author === UNKNOWN_INSTRUMENT_EXTENSION.author
+        );
+    }
+
     // This complication with extension loading
     // is because we want to load extension only
     // when and if needed.
@@ -167,18 +201,20 @@ export class InstrumentObject {
                 this._loadingExtension = true;
                 _defer(() => {
                     loadExtensionById(this.instrumentExtensionId)
-                        .then(extension => {
-                            action(() => {
+                        .then(
+                            action((extension: IExtension) => {
+                                this._loadingExtension = false;
                                 this._extension = extension;
-                            })();
-                        })
-                        .catch(() => {
+                            })
+                        )
+                        .catch(
                             action(() => {
+                                this._loadingExtension = false;
                                 this._extension = Object.assign({}, UNKNOWN_INSTRUMENT_EXTENSION, {
                                     id: this.instrumentExtensionId
                                 });
-                            })();
-                        });
+                            })
+                        );
                 });
             }
 
@@ -557,7 +593,7 @@ export class InstrumentObject {
 
         return (
             <InstrumentContent>
-                {this.extension && <img src={this.extension.image} draggable={false} />}
+                {this.image && <img src={this.image} draggable={false} />}
                 <InstrumentLabel>{this.name}</InstrumentLabel>
                 <InstrumentConnectionState>
                     <span
@@ -789,6 +825,58 @@ export class InstrumentObject {
         workbenchObjectsStore.deleteObject({ oid: this.id }, { deletePermanently: true });
         activityLogStore.deleteObject({ oid: this.id }, { deletePermanently: true });
         store.deleteObject(this, { deletePermanently: true });
+    }
+
+    async installExtension() {
+        const {
+            extensionsCatalog
+        } = require("home/extensions-manager/catalog") as typeof CatalogModule;
+
+        const progressToastId = notification.info("Installing...", {
+            autoClose: false
+        });
+
+        const extension = extensionsCatalog.catalog.find(
+            extension => extension.id === this.extension!.id
+        );
+        if (extension) {
+            const {
+                downloadAndInstallExtension
+            } = require("home/extensions-manager/extensions-manager") as typeof ExtensionMangerModule;
+
+            await downloadAndInstallExtension(extension, progressToastId);
+
+            notification.update(progressToastId, {
+                render: "Extensions successfully installed!",
+                type: notification.SUCCESS,
+                autoClose: 500
+            });
+        } else {
+            notification.update(progressToastId, {
+                render: "Instrument extension not found!",
+                type: notification.ERROR,
+                autoClose: 5000
+            });
+        }
+    }
+
+    addToContextMenu(menu: Electron.Menu) {
+        if (this.isUnknownExtension) {
+            menu.append(
+                new MenuItem({
+                    label: "Install Extension",
+                    click: () => {
+                        this.installExtension();
+                    }
+                })
+            );
+
+            menu.append(
+                new MenuItem({
+                    type: "separator"
+                })
+            );
+        }
     }
 }
 

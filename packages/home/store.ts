@@ -151,6 +151,12 @@ export class WorkbenchObject {
             this.implementation.afterDelete();
         }
     }
+
+    addToContextMenu(menu: Electron.Menu) {
+        if (this.implementation.addToContextMenu) {
+            this.implementation.addToContextMenu(menu);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

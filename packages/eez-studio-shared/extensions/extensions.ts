@@ -116,24 +116,30 @@ async function loadAndRegisterExtension(folder: string) {
             return loadExtensionTask.extension;
         }
 
-        return await new Promise<IExtension>(resolve => {
+        return await new Promise<IExtension>((resolve, reject) => {
             loadExtensionTask.on("finished", resolve);
+            loadExtensionTask.on("error", reject);
         });
     }
 
     const newLoadExtensionTask = new LoadExtensionTask();
     loadExtensionTasks.set(folder, newLoadExtensionTask);
 
-    let extension = await loadExtension(folder);
-    if (extension) {
-        extension = registerExtension(extension);
+    try {
+        let extension = await loadExtension(folder);
+        if (extension) {
+            extension = registerExtension(extension);
+        }
+
+        newLoadExtensionTask.isFinished = true;
+        newLoadExtensionTask.extension = extension;
+        newLoadExtensionTask.emit("finished", extension);
+
+        return extension;
+    } catch (err) {
+        newLoadExtensionTask.emit("error", err);
+        throw err;
     }
-
-    newLoadExtensionTask.isFinished = true;
-    newLoadExtensionTask.extension = extension;
-    newLoadExtensionTask.emit("finished", extension);
-
-    return extension;
 }
 
 export async function loadExtensions() {
@@ -225,6 +231,8 @@ async function finishImportExtensionFromTempFolder({
             await removeFolder(extensionFolderPath);
             throw "Import failed";
         }
+
+        loadExtensionTasks.delete(extensionFolderPath);
 
         return registerExtension(reloadedExtension);
     } catch (err) {

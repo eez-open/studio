@@ -14,7 +14,12 @@ import { humanize } from "eez-studio-shared/string";
 
 import { extensionsToolbarButtons } from "eez-studio-shared/extensions/extensions";
 
-import { IMenuItem, IMenuPopupOptions, IMenuAnchorPosition } from "eez-studio-shared/model/store";
+import {
+    IMenu,
+    IMenuItem,
+    IMenuPopupOptions,
+    IMenuAnchorPosition
+} from "eez-studio-shared/model/store";
 
 import { IBaseObject, IDocument } from "eez-studio-designer/designer-interfaces";
 
@@ -27,6 +32,8 @@ export interface IWorkbenchObject extends IBaseObject {
 
     content: JSX.Element | null;
     details: JSX.Element | null;
+
+    addToContextMenu?(menu: Electron.Menu): void;
 
     children: IBaseObject[];
 
@@ -118,11 +125,15 @@ class WorkbenchDocument implements IDocument {
         }
     }
 
-    createContextMenu(objects: IWorkbenchObject[]) {
+    createContextMenu(objects: IWorkbenchObject[]): IMenu {
         const menu = new Menu();
 
         if (objects.length === 1) {
             const object = objects[0];
+
+            if (object.addToContextMenu) {
+                object.addToContextMenu(menu);
+            }
 
             if (object.isEditable) {
                 menu.append(
