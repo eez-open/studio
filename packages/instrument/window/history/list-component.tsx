@@ -204,7 +204,7 @@ export class HistoryListComponent extends React.Component<{
     animationFrameRequestId: any;
     div: Element;
     fromBottom: number | undefined;
-    fromTop: number | undefined;
+    fromTop: number | undefined = 0;
 
     componentDidMount() {
         this.autoScroll();
