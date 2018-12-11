@@ -555,27 +555,23 @@ export class InstrumentObject {
     get content() {
         const { Icon } = require("eez-studio-ui/icon");
 
-        if (this.extension) {
-            return (
-                <InstrumentContent>
-                    <img src={this.extension.image} draggable={false} />
-                    <InstrumentLabel>{this.name}</InstrumentLabel>
-                    <InstrumentConnectionState>
-                        <span
-                            style={{
-                                backgroundColor: this.connectionState.color
-                            }}
-                        />
-                        <span>{this.connectionState.label}</span>
-                        {this.connectionState.error && (
-                            <Icon className="text-danger" icon="material:error" />
-                        )}
-                    </InstrumentConnectionState>
-                </InstrumentContent>
-            );
-        } else {
-            return null;
-        }
+        return (
+            <InstrumentContent>
+                {this.extension && <img src={this.extension.image} draggable={false} />}
+                <InstrumentLabel>{this.name}</InstrumentLabel>
+                <InstrumentConnectionState>
+                    <span
+                        style={{
+                            backgroundColor: this.connectionState.color
+                        }}
+                    />
+                    <span>{this.connectionState.label}</span>
+                    {this.connectionState.error && (
+                        <Icon className="text-danger" icon="material:error" />
+                    )}
+                </InstrumentConnectionState>
+            </InstrumentContent>
+        );
     }
 
     get creationDate() {

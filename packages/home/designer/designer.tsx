@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
+import { computed } from "mobx";
 import { observer, inject } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -13,7 +13,6 @@ import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
 
 import {
-    IBaseObject,
     IToolbarButton,
     IDesignerContext,
     IViewStatePersistantState
@@ -56,8 +55,6 @@ export class DesignerToolbar extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const CONF_SHOW_HISTORY_DELAY = 500;
-
 @inject("designerContext")
 @observer
 export class Properties extends React.Component<{
@@ -67,38 +64,6 @@ export class Properties extends React.Component<{
     get viewStateSelectedObject() {
         return this.props.designerContext!.viewState.selectedObjects;
     }
-
-    ///////////////////////////////////////////////////////////////////
-    // Show history if selectedObjects doesn't change after some period
-    // of time (CONF_SHOW_HISTORY_DELAY).
-    // TODO let's hope that React hooks will make this much simpler.
-    @observable.shallow
-    selectedObjects: IBaseObject[];
-
-    @computed
-    get showHistory() {
-        return (
-            JSON.stringify(this.selectedObjects) === JSON.stringify(this.viewStateSelectedObject)
-        );
-    }
-
-    showHistoryAfterDelay() {
-        setTimeout(
-            action(() => {
-                this.selectedObjects = this.viewStateSelectedObject;
-            }),
-            CONF_SHOW_HISTORY_DELAY
-        );
-    }
-
-    componentDidMount() {
-        this.showHistoryAfterDelay();
-    }
-
-    componentDidUpdate() {
-        this.showHistoryAfterDelay();
-    }
-    ///////////////////////////////////////////////////////////////////
 
     render() {
         let className = this.props.className;
@@ -111,16 +76,14 @@ export class Properties extends React.Component<{
             <Box direction="column" background="panel-header" style={{ height: "100%" }}>
                 <PanelTitle title="History" />
                 <Box scrollable={true} background="white">
-                    {this.props.designerContext!.viewState.isIdle && this.showHistory && (
-                        <div>
-                            <HistorySection
-                                oids={this.viewStateSelectedObject.map(
-                                    selectedObject => (selectedObject as IWorkbenchObject).oid
-                                )}
-                                simple={true}
-                            />
-                        </div>
-                    )}
+                    <div>
+                        <HistorySection
+                            oids={this.viewStateSelectedObject.map(
+                                selectedObject => (selectedObject as IWorkbenchObject).oid
+                            )}
+                            simple={true}
+                        />
+                    </div>
                 </Box>
             </Box>
         );

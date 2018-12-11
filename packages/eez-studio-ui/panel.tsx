@@ -17,7 +17,15 @@ export class PanelTitle extends React.Component<{ title?: string }, {}> {
     }
 }
 
-export class Panel extends React.Component<{ title?: string }, {}> {
+export class Panel extends React.Component<
+    {
+        title?: string;
+        justify?: "flex-start" | "flex-end" | "center" | "space-between" | "space-around";
+        scrollable?: boolean;
+        grow?: number;
+    },
+    {}
+> {
     render() {
         return (
             <Box
@@ -28,7 +36,12 @@ export class Panel extends React.Component<{ title?: string }, {}> {
                 borderColor="lighter"
             >
                 {this.props.title && <PanelTitle title={this.props.title} />}
-                <Box padding={1} justify="center">
+                <Box
+                    padding={1}
+                    justify={this.props.justify || "center"}
+                    scrollable={this.props.scrollable}
+                    grow={this.props.grow}
+                >
                     {this.props.children}
                 </Box>
             </Box>

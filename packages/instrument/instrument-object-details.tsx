@@ -183,7 +183,7 @@ export class InstrumentDetails extends React.Component<{ instrument: InstrumentO
         let { instrument } = this.props;
         return (
             <Panels>
-                <Panel title="Actions">
+                <Panel title="Actions" justify="flex-start" scrollable={true} grow={1}>
                     <Toolbar>
                         <ButtonAction
                             text="Open in Tab"
@@ -206,11 +206,11 @@ export class InstrumentDetails extends React.Component<{ instrument: InstrumentO
                     </Toolbar>
                 </Panel>
 
-                <Panel title="Properties">
+                <Panel title="Properties" justify="flex-start" scrollable={true} grow={1}>
                     <Properties instrument={instrument} />
                 </Panel>
 
-                <Panel title="Connection">
+                <Panel title="Connection" justify="flex-start" scrollable={true} grow={1}>
                     <Connection instrument={instrument} />
                 </Panel>
             </Panels>
