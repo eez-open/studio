@@ -1,8 +1,6 @@
 import React from "react";
 import { observable, computed, action, runInAction, toJS, autorun } from "mobx";
 
-const { MenuItem } = EEZStudio.electron.remote;
-
 import {
     createStore,
     types,
@@ -862,6 +860,8 @@ export class InstrumentObject {
 
     addToContextMenu(menu: Electron.Menu) {
         if (this.isUnknownExtension) {
+            const { MenuItem } = EEZStudio.electron.remote;
+
             menu.append(
                 new MenuItem({
                     label: "Install Extension",
