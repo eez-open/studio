@@ -830,14 +830,14 @@ export class InstrumentObject {
             extensionsCatalog
         } = require("home/extensions-manager/catalog") as typeof CatalogModule;
 
-        const progressToastId = notification.info("Installing...", {
-            autoClose: false
-        });
-
         const extension = extensionsCatalog.catalog.find(
             extension => extension.id === this.extension!.id
         );
         if (extension) {
+            const progressToastId = notification.info("Installing...", {
+                autoClose: false
+            });
+
             const {
                 downloadAndInstallExtension
             } = require("home/extensions-manager/extensions-manager") as typeof ExtensionMangerModule;
@@ -850,11 +850,7 @@ export class InstrumentObject {
                 autoClose: 500
             });
         } else {
-            notification.update(progressToastId, {
-                render: "Instrument extension not found!",
-                type: notification.ERROR,
-                autoClose: 5000
-            });
+            notification.error("Instrument extension not found!");
         }
     }
 
