@@ -32,7 +32,7 @@ export function showEditSessionNameDialog(name: string, callback: (name: string)
         },
 
         values: {
-            name
+            sessionName: name
         }
     })
         .then(result => callback(result.values.sessionName))

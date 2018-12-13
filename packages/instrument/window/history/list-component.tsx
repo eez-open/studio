@@ -302,6 +302,11 @@ export class HistoryListComponent extends React.Component<{
 
     @bind
     onKeyDown(event: KeyboardEvent) {
+        if (event.target && $(event.target).parents(".modal").length > 0) {
+            // ignore if target is modal dialog
+            return;
+        }
+
         if (event.ctrlKey && event.keyCode == 65) {
             // Ctrl+A
             if (event.target instanceof HTMLInputElement) {
