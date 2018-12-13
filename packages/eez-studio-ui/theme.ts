@@ -16,6 +16,7 @@ export interface ThemeInterface {
     dragSourceBackgroundColor: string;
     dragSourceColor: string;
     dropPlaceColor: string;
+    errorColor: string;
 }
 
 export const theme: ThemeInterface = {
@@ -35,5 +36,6 @@ export const theme: ThemeInterface = {
     focusColor: "#444",
     dragSourceBackgroundColor: "#e040fb",
     dragSourceColor: "#ffffff",
-    dropPlaceColor: "#7c4dff"
+    dropPlaceColor: "#7c4dff",
+    errorColor: "#dc3545"
 };

@@ -38,6 +38,7 @@ import {
     insertObjectBefore,
     insertObjectAfter
 } from "eez-studio-shared/model/commands";
+import { loadObject } from "eez-studio-shared/model/serialization";
 import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 import { findAllReferences, isReferenced } from "eez-studio-shared/model/search";
 import { OutputSections, OutputSection } from "eez-studio-shared/model/output";
@@ -146,17 +147,16 @@ class NavigationStoreClass {
         let iterObject = object;
         let parent = iterObject._parent;
         while (iterObject && parent) {
-            if (parent._classInfo.navigationComponent) {
-                let grandparent = parent._parent;
-                if (!isArray(grandparent)) {
-                    let navigationItem = this.getNavigationSelectedItem(parent);
-                    if (navigationItem && navigationItem instanceof TreeObjectAdapter) {
-                        navigationItem.selectObject(object);
-                    } else {
-                        this.setNavigationSelectedItem(parent, iterObject);
-                    }
+            let grandparent = parent._parent;
+            if (!isArray(grandparent)) {
+                let navigationItem = this.getNavigationSelectedItem(parent);
+                if (navigationItem && navigationItem instanceof TreeObjectAdapter) {
+                    navigationItem.selectObject(object);
+                } else {
+                    this.setNavigationSelectedItem(parent, iterObject);
                 }
             }
+
             iterObject = parent;
             parent = iterObject._parent;
         }
@@ -226,8 +226,8 @@ class NavigationStoreClass {
     }
 
     @action
-    setNavigationSelectedItem(navigationObject: EezObject, navigationItem: NavigationItem) {
-        this.navigationMap.set(navigationObject._id, navigationItem);
+    setNavigationSelectedItem(navigationObject: EezObject, navigationSelectedItem: NavigationItem) {
+        this.navigationMap.set(navigationObject._id, navigationSelectedItem);
         let parent = navigationObject._parent;
         if (parent) {
             if (!this.getNavigationSelectedItem(parent)) {
@@ -880,13 +880,42 @@ class DocumentStoreClass {
     }
 
     updateObject(object: EezObject, values: any) {
+        // make sure that plain JavaScript objects to EezObject's
+        const convertedValues: any = {};
+        for (var propertyName in values) {
+            if (values.hasOwnProperty(propertyName)) {
+                const value = values[propertyName];
+
+                const propertyInfo = findPropertyByName(object, propertyName);
+                if (propertyInfo) {
+                    if (
+                        (propertyInfo.type === PropertyType.Object ||
+                            propertyInfo.type === PropertyType.Array) &&
+                        !(value instanceof EezObject)
+                    ) {
+                        // convert to EezObject
+                        convertedValues[propertyName] = loadObject(
+                            object,
+                            values[propertyName],
+                            propertyInfo.typeClass!
+                        );
+                    } else {
+                        // use as is
+                        convertedValues[propertyName] = value;
+                    }
+                } else {
+                    console.error("ignored unknown property", propertyName);
+                }
+            }
+        }
+
         return updateObject(
             {
                 undoManager: UndoManager,
                 selectionManager: NavigationStore
             },
             object,
-            values
+            convertedValues
         );
     }
 

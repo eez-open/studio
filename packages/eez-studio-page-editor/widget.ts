@@ -1084,6 +1084,7 @@ export class SelectWidget extends Widget {
                 name: "editor",
                 type: PropertyType.Object,
                 typeClass: SelectWidgetEditor,
+                hideInPropertyGrid: true,
                 enumerable: false
             }
         ],

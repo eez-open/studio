@@ -2,18 +2,23 @@ import React from "react";
 import { computed, observable, action, runInAction, autorun } from "mobx";
 import { observer, disposeOnUnmount } from "mobx-react";
 import { bind } from "bind-decorator";
+import classNames from "classnames";
 
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
-import styled from "eez-studio-ui/styled-components";
 
 import { validators, filterNumber } from "eez-studio-shared/model/validation";
+import { NavigationStore } from "eez-studio-shared/model/store";
 
+import styled from "eez-studio-ui/styled-components";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { CodeEditor } from "eez-studio-ui/code-editor";
+import { Toolbar } from "eez-studio-ui/toolbar";
+import { IconAction } from "eez-studio-ui/action";
 
 import {
     EezObject,
+    EezArrayObject,
     PropertyInfo,
     PropertyType,
     isPropertyHidden,
@@ -32,8 +37,6 @@ import {
     IMenuItem
 } from "eez-studio-shared/model/store";
 import { replaceObjectReference } from "eez-studio-shared/model/search";
-
-//import { ProjectStore } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -79,7 +82,7 @@ interface PropertyValueSourceInfo {
 }
 
 @observer
-class PropertyMenu extends React.Component<PropertyProps, {}> {
+class PropertyMenu extends React.Component<PropertyProps> {
     get sourceInfo(): PropertyValueSourceInfo {
         let value = (this.props.object as any)[this.props.propertyInfo.name];
 
@@ -168,7 +171,7 @@ class PropertyMenu extends React.Component<PropertyProps, {}> {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class CodeEditorProperty extends React.Component<PropertyProps, {}> {
+class CodeEditorProperty extends React.Component<PropertyProps> {
     @observable
     value: string = this.getValue();
     editor: CodeEditor;
@@ -234,6 +237,231 @@ class CodeEditorProperty extends React.Component<PropertyProps, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function isArrayElementPropertyVisible(propertyInfo: PropertyInfo, object?: EezObject) {
+    if (object) {
+        return !isPropertyHidden(object, propertyInfo);
+    }
+
+    if (
+        propertyInfo.hideInPropertyGrid === undefined ||
+        (typeof propertyInfo.hideInPropertyGrid !== "boolean" || !propertyInfo.hideInPropertyGrid)
+    ) {
+        return true;
+    }
+
+    return false;
+}
+
+function isHighlightedProperty(propertyInfo: PropertyInfo, object: EezObject) {
+    const selectedObject =
+        NavigationStore.selectedPanel && NavigationStore.selectedPanel.selectedObject;
+    return !!(
+        selectedObject &&
+        selectedObject._parent === object &&
+        selectedObject._key === propertyInfo.name
+    );
+}
+
+@observer
+class ArrayElementProperty extends React.Component<{
+    propertyInfo: PropertyInfo;
+    object: EezObject;
+}> {
+    @bind
+    updateObject(propertyValues: Object) {
+        let object = this.props.object;
+        if (object) {
+            if (isValue(object)) {
+                object = object._parent as EezObject;
+            }
+            DocumentStore.updateObject(object, propertyValues);
+        }
+    }
+
+    render() {
+        const { propertyInfo } = this.props;
+
+        const className = classNames(propertyInfo.name, {
+            highlighted: isHighlightedProperty(this.props.propertyInfo, this.props.object)
+        });
+
+        if (isArrayElementPropertyVisible(propertyInfo, this.props.object)) {
+            return (
+                <td key={propertyInfo.name} className={className}>
+                    <Property
+                        propertyInfo={propertyInfo}
+                        object={this.props.object}
+                        updateObject={this.updateObject}
+                    />
+                </td>
+            );
+        } else {
+            return <td key={propertyInfo.name} />;
+        }
+    }
+}
+
+@observer
+class ArrayElementProperties extends React.Component<PropertyGridProps> {
+    @bind
+    onRemove(event: any) {
+        event.preventDefault();
+        DocumentStore.deleteObject(this.props.object!);
+    }
+
+    render() {
+        if (!this.props.object) {
+            return null;
+        }
+
+        return (
+            <tr>
+                {this.props.object._classInfo.properties.map(propertyInfo => (
+                    <ArrayElementProperty
+                        key={propertyInfo.name}
+                        propertyInfo={propertyInfo}
+                        object={this.props.object!}
+                    />
+                ))}
+                <td>
+                    <Toolbar>
+                        <IconAction
+                            icon="material:delete"
+                            title="Remove parameter"
+                            onClick={this.onRemove}
+                        />
+                    </Toolbar>
+                </td>
+            </tr>
+        );
+    }
+}
+
+const ArrayPropertyDiv = styled.div`
+    border: 1px solid ${props => props.theme.borderColor};
+    padding: 5px;
+
+    & > table {
+        width: 100%;
+        margin-bottom: 10px;
+
+        & > thead > tr > th {
+            padding-right: 10px;
+            font-weight: 500;
+            white-space: nowrap;
+            padding-bottom: 5px;
+        }
+
+        & > tbody {
+            & > tr {
+                & > td.highlighted {
+                    background-color: #ffccd4;
+                }
+                & > td {
+                    padding: 2px;
+                }
+            }
+        }
+    }
+`;
+
+@observer
+class ArrayProperty extends React.Component<PropertyProps> {
+    @computed
+    get value() {
+        return (this.props.object as any)[this.props.propertyInfo.name] as
+            | EezArrayObject<EezObject>
+            | undefined;
+    }
+
+    @bind
+    onAdd(event: any) {
+        event.preventDefault();
+
+        UndoManager.setCombineCommands(true);
+
+        let value = this.value;
+        if (value === undefined) {
+            DocumentStore.updateObject(this.props.object, {
+                [this.props.propertyInfo.name]: []
+            });
+
+            value = (this.props.object as any)[this.props.propertyInfo.name] as EezArrayObject<
+                EezObject
+            >;
+        }
+
+        const typeClass = this.props.propertyInfo.typeClass!;
+
+        if (!typeClass.classInfo.defaultValue) {
+            console.error(`Class "${typeClass.name}" is missing defaultValue`);
+        } else {
+            DocumentStore.addObject(value, typeClass.classInfo.defaultValue);
+            UndoManager.setCombineCommands(false);
+        }
+    }
+
+    render() {
+        const { propertyInfo } = this.props;
+
+        const addButton = (
+            <button className="btn btn-primary" onClick={this.onAdd}>
+                Add
+            </button>
+        );
+
+        if (!this.value || this.value._array.length === 0) {
+            return addButton;
+        }
+
+        const typeClass = propertyInfo.typeClass!;
+
+        const tableContent = (
+            <React.Fragment>
+                <thead>
+                    <tr>
+                        {typeClass.classInfo.properties
+                            .filter(propertyInfo => isArrayElementPropertyVisible(propertyInfo))
+                            .map(propertyInfo => (
+                                <th key={propertyInfo.name} className={propertyInfo.name}>
+                                    {propertyInfo.displayName || humanize(propertyInfo.name)}
+                                </th>
+                            ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {this.value &&
+                        this.value._array.map(object => (
+                            <ArrayElementProperties key={object._id} object={object} />
+                        ))}
+                </tbody>
+            </React.Fragment>
+        );
+
+        return (
+            <ArrayPropertyDiv>
+                {typeClass.classInfo.propertyGridTableComponent ? (
+                    <typeClass.classInfo.propertyGridTableComponent>
+                        {tableContent}
+                    </typeClass.classInfo.propertyGridTableComponent>
+                ) : (
+                    <table>{tableContent}</table>
+                )}
+                {addButton}
+            </ArrayPropertyDiv>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const EmbeddedPropertyGridDiv = styled.div`
+    border: 1px solid ${props => props.theme.borderColor};
+    padding: 5px;
+`;
+
+////////////////////////////////////////////////////////////////////////////////
+
 @observer
 class Property extends React.Component<PropertyProps> {
     refs: {
@@ -274,13 +502,13 @@ class Property extends React.Component<PropertyProps> {
 
     @bind
     resizeTextArea() {
-        if (this.refs.textarea) {
-            this.refs.textarea.style.overflow = "hidden";
-            this.refs.textarea.style.height = "0";
-            setTimeout(() => {
+        setTimeout(() => {
+            if (this.refs.textarea) {
+                this.refs.textarea.style.overflow = "hidden";
+                this.refs.textarea.style.height = "0";
                 this.refs.textarea.style.height = this.refs.textarea.scrollHeight + "px";
-            });
-        }
+            }
+        }, 0);
     }
 
     @action
@@ -300,11 +528,11 @@ class Property extends React.Component<PropertyProps> {
             });
         }
 
-        setTimeout(this.resizeTextArea);
+        this.resizeTextArea();
     }
 
     componentDidUpdate() {
-        setTimeout(this.resizeTextArea);
+        this.resizeTextArea();
     }
 
     @bind
@@ -405,7 +633,8 @@ class Property extends React.Component<PropertyProps> {
         const propertyInfo = this.props.propertyInfo;
 
         if (propertyInfo.readOnlyInPropertyGrid) {
-            return <input type="text" className="form-control" value={this.value} readOnly />;
+            let value = getPropertyAsString(this.props.object, propertyInfo);
+            return <input type="text" className="form-control" value={value} readOnly />;
         }
 
         if (propertyInfo.type === PropertyType.String && propertyInfo.unique) {
@@ -441,7 +670,10 @@ class Property extends React.Component<PropertyProps> {
             );
         } else if (propertyInfo.type === PropertyType.JSON) {
             return <CodeEditorProperty {...this.props} />;
-        } else if (propertyInfo.type === PropertyType.Object) {
+        } else if (
+            propertyInfo.type === PropertyType.Object ||
+            (propertyInfo.type === PropertyType.Array && propertyInfo.onSelect)
+        ) {
             let value = getPropertyAsString(this.props.object, propertyInfo);
             if (propertyInfo.onSelect) {
                 return (
@@ -465,7 +697,11 @@ class Property extends React.Component<PropertyProps> {
                     </div>
                 );
             } else {
-                return <input type="text" className="form-control" value={value} readOnly />;
+                return (
+                    <EmbeddedPropertyGridDiv>
+                        <PropertyGrid object={this.value} />
+                    </EmbeddedPropertyGridDiv>
+                );
             }
         } else if (propertyInfo.type === PropertyType.Enum) {
             let options: JSX.Element[];
@@ -570,7 +806,7 @@ class Property extends React.Component<PropertyProps> {
                         checked={this.value}
                         onChange={this.onChange}
                     />
-                    {" " + (propertyInfo.displayName || humanize(propertyInfo.name))}
+                    <span>{" " + (propertyInfo.displayName || humanize(propertyInfo.name))}</span>
                 </label>
             );
         } else if (propertyInfo.type === PropertyType.GUID) {
@@ -625,6 +861,8 @@ class Property extends React.Component<PropertyProps> {
                     onChange={this.onChange}
                 />
             );
+        } else if (propertyInfo.type === PropertyType.Array) {
+            return <ArrayProperty {...this.props} />;
         } else {
             return UIElementsFactory.renderProperty(propertyInfo, this.value, value =>
                 this.changeValue(value)
@@ -637,47 +875,50 @@ class Property extends React.Component<PropertyProps> {
 ////////////////////////////////////////////////////////////////////////////////
 
 const PropertyGridDiv = styled.div`
+    flex-grow: 1;
     padding: 5px;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: auto;
 
     & > table {
         width: 100%;
 
-        tr.marked {
-            background-color: #ffccd4;
-        }
+        & > tbody {
+            & > tr.highlighted {
+                background-color: #ffccd4;
+            }
 
-        td {
-            padding: 5px;
-            vertical-align: middle;
-        }
+            & > tr {
+                & > td {
+                    padding: 5px;
+                    vertical-align: middle;
+                }
 
-        td:first-child {
-            width: 25%;
-            max-width: 150px;
-            vertical-align: baseline;
-            transform: translateY(8px);
-        }
+                & > td:first-child {
+                    min-width: 100px;
+                    vertical-align: baseline;
+                    transform: translateY(8px);
+                }
 
-        td:nth-child(2) {
-            width: 75%;
-        }
+                & > td:nth-child(2) {
+                    width: 100%;
+                }
 
-        td > input[type="checkbox"] {
-            height: 20px;
-            margin-top: 7px;
+                & > td > input[type="checkbox"] {
+                    height: 20px;
+                    margin-top: 7px;
+                }
+            }
         }
     }
 `;
 
 interface PropertyGridProps {
-    object: EezObject;
+    object?: EezObject;
     className?: string;
 }
 
 @observer
-export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
+export class PropertyGrid extends React.Component<PropertyGridProps> {
     @bind
     updateObject(propertyValues: Object) {
         let object = this.props.object;
@@ -694,11 +935,11 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
             return null;
         }
 
-        let markedPropertyName: string | undefined;
-
+        let highlightedPropertyName: string | undefined;
         let object;
         if (isValue(this.props.object)) {
-            markedPropertyName = this.props.object._key;
+            // if given object is actually a value, we show the parent properties with the value higlighted
+            highlightedPropertyName = this.props.object._key;
             object = this.props.object._parent as EezObject;
         } else {
             object = this.props.object;
@@ -736,11 +977,14 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
                     );
                 }
 
+                const className = classNames({
+                    highlighted:
+                        propertyInfo.name == highlightedPropertyName ||
+                        isHighlightedProperty(propertyInfo, object)
+                });
+
                 properties.push(
-                    <tr
-                        className={propertyInfo.name == markedPropertyName ? "marked" : ""}
-                        key={propertyInfo.name}
-                    >
+                    <tr className={className} key={propertyInfo.name}>
                         {property}
                         <td>
                             {!propertyInfo.readOnlyInPropertyGrid && (
@@ -759,12 +1003,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps, {}> {
         return (
             <PropertyGridDiv className={this.props.className}>
                 <table>
-                    <tbody>
-                        <tr>
-                            <td colSpan={2} />
-                        </tr>
-                        {properties}
-                    </tbody>
+                    <tbody>{properties}</tbody>
                 </table>
             </PropertyGridDiv>
         );

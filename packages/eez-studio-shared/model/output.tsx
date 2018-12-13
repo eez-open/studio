@@ -106,7 +106,9 @@ export class OutputSection {
 
     @computed
     get selectedObject(): EezObject | undefined {
-        return this.selectedMessage && this.selectedMessage.object;
+        return this.selectedMessage && this.messages.indexOf(this.selectedMessage) !== -1
+            ? this.selectedMessage.object
+            : undefined;
     }
 
     @action

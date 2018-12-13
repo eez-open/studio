@@ -586,7 +586,7 @@ class MultiWaveformConfigurationDialog extends React.Component<
 
     render() {
         return (
-            <Dialog large={false} onOk={this.handleSubmit}>
+            <Dialog size="medium" onOk={this.handleSubmit}>
                 <MultiWaveformConfigurationDialogBody>
                     <PropertyList>
                         <SelectFromListProperty

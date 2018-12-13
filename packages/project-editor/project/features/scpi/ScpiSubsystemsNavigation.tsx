@@ -5,7 +5,11 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { NavigationComponent, getProperty } from "eez-studio-shared/model/object";
+import {
+    NavigationComponent,
+    getProperty,
+    getAncestorOfType
+} from "eez-studio-shared/model/object";
 import { NavigationStore } from "eez-studio-shared/model/store";
 
 import { ProjectStore } from "project-editor/core/store";
@@ -26,11 +30,30 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
     }
 
     @computed
-    get object() {
-        if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
+    get object(): ScpiSubsystem | ScpiCommand | undefined {
+        // return selectedObject from selectedPanel if it is descendant of ScpiCommand or ScpiSubsystem
+        let object = NavigationStore.selectedPanel
+            ? NavigationStore.selectedPanel.selectedObject
+            : NavigationStore.selectedObject;
+        if (object) {
+            const command = getAncestorOfType(object, ScpiCommand.classInfo);
+            if (command) {
+                return command as ScpiCommand;
+            }
+
+            const subsystem = getAncestorOfType(object, ScpiSubsystem.classInfo);
+            if (subsystem) {
+                return subsystem as ScpiSubsystem;
+            }
         }
-        return NavigationStore.selectedObject;
+
+        // return lastly selected ScpiCommand or ScpiSubsystem
+        let subsystems = (getProperty(ProjectStore.project, "scpi") as Scpi).subsystems;
+
+        let subsystem = NavigationStore.getNavigationSelectedItem(subsystems) as ScpiSubsystem;
+        let command =
+            subsystem && (NavigationStore.getNavigationSelectedItem(subsystem) as ScpiCommand);
+        return command || subsystem;
     }
 
     render() {
@@ -53,9 +76,7 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
             ];
         }
 
-        let content = (
-            <ScpiSubsystemOrCommandEditor object={this.object as ScpiSubsystem | ScpiCommand} />
-        );
+        let content = <ScpiSubsystemOrCommandEditor object={this.object!} />;
 
         if (selectedScpiSubsystem) {
             return (

@@ -3,25 +3,13 @@ eezstudio-win32-x64
 eezstudio-darwin-x64
 node_modules
 npm-debug.log
-typings
 
 packages/**/*.js
 packages/**/*.js.map
-
 packages/eez-studio-ui/_stylesheets/main.css
-
-extensions/advanced-measurements/**/*.js
-extensions/advanced-measurements/**/*.js.map
-
-extensions/build-catalog.js
-extensions/build-catalog.js.map
-
-extensions/catalog-enum.js
-extensions/catalog-enum.js.map
 
 installation/build-installation.js
 installation/build-installation.js.map
-
 installation/extra-resources/**
 installation/extra-resource.js
 installation/extra-resource.js.map

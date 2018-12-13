@@ -135,6 +135,8 @@ export interface ClassInfo {
         isSingleObject: boolean
     ) => EezObject | PropertyInfo | undefined;
     icon?: string;
+
+    propertyGridTableComponent?: any;
 }
 
 export function makeDerivedClassInfo(
@@ -296,8 +298,8 @@ export function isArray(object: EezObject | undefined) {
     return !!object && !isValue(object) && object instanceof EezArrayObject;
 }
 
-export function asArray(object: EezObject) {
-    return object && (object as EezArrayObject<EezObject>)._array;
+export function asArray<T = EezObject>(object: EezObject) {
+    return object && ((object as EezArrayObject<T>)._array as T[]);
 }
 
 export function getChildren(parent: EezObject): EezObject[] {
@@ -403,6 +405,11 @@ export function getProperty(object: EezObject, name: string) {
 export function getPropertyAsString(object: EezObject, propertyInfo: PropertyInfo) {
     let value = getProperty(object, propertyInfo.name);
     if (value) {
+        if (value instanceof EezArrayObject) {
+            return (value as EezArrayObject<EezObject>)._array
+                .map(object => object._label)
+                .join(", ");
+        }
         if (value instanceof EezObject) {
             return objectToString(value);
         }

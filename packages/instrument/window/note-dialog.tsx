@@ -32,7 +32,7 @@ class NoteDialog extends React.Component<
 
     render() {
         return (
-            <Dialog onOk={this.handleSubmit} large={true}>
+            <Dialog onOk={this.handleSubmit} size="large">
                 <PropertyList>
                     <RichTextProperty
                         name="text"

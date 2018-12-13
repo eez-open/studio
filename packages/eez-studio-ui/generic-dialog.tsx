@@ -78,7 +78,7 @@ export class TableField extends FieldComponent {
 interface DialogDefinition {
     id?: string;
     title?: string;
-    large?: boolean;
+    size?: "small" | "medium" | "large";
     fields: IFieldProperties[];
 }
 
@@ -332,7 +332,7 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
             return (
                 <Dialog
                     title={this.props.dialogDefinition.title}
-                    large={this.props.dialogDefinition.large}
+                    size={this.props.dialogDefinition.size}
                     onOk={this.props.onOk && this.onOk}
                     onCancel={this.props.onCancel}
                 >

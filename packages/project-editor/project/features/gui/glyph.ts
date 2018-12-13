@@ -49,7 +49,7 @@ export function selectGlyph(glyph: Glyph) {
     return showGenericDialog({
         dialogDefinition: {
             title: "Select Glyph",
-            large: true,
+            size: "large",
             fields: [
                 {
                     name: "filePath",

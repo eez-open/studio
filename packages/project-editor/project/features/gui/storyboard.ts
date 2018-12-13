@@ -97,12 +97,14 @@ export class StoryboardLine extends EezObject {
             {
                 name: "source",
                 type: PropertyType.Object,
-                typeClass: StoryboardLineSource
+                typeClass: StoryboardLineSource,
+                readOnlyInPropertyGrid: true
             },
             {
                 name: "target",
                 type: PropertyType.Object,
-                typeClass: StoryboardLineTarget
+                typeClass: StoryboardLineTarget,
+                readOnlyInPropertyGrid: true
             }
         ]
     };

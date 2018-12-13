@@ -111,7 +111,7 @@ class FileUploadDialog extends React.Component<
 
     render() {
         return (
-            <Dialog onOk={this.handleSubmit} large={true}>
+            <Dialog onOk={this.handleSubmit} size="large">
                 <PropertyList withAdvancedProperties={true}>
                     <FileInputProperty
                         name="Source file path"

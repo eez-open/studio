@@ -1,6 +1,8 @@
 import React from "react";
 
-export const CONF_BORDER_COLOR = "#d5d5d5";
+import { theme } from "eez-studio-ui/theme";
+
+export const CONF_BORDER_COLOR = theme.borderColor;
 const CONF_PANEL_BORDER_COLOR = "#e7eaec";
 
 type Size = 0 | 0.5 | 1 | 2;

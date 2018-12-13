@@ -23,7 +23,7 @@ export interface IDialogButton {
 
 export interface IDialogComponentProps {
     open: boolean;
-    large: boolean;
+    size?: "small" | "medium" | "large";
     title: string | undefined;
     onSubmit: (event: React.FormEvent) => void;
     onCancel: () => void;
@@ -70,7 +70,8 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
         const props = this.props;
 
         let formClassName = classNames("modal-dialog", {
-            "modal-lg": props.large === true
+            "modal-lg": props.size === "large",
+            "modal-sm": props.size === "small"
         });
 
         return (
@@ -132,9 +133,11 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
 @observer
 export class Dialog extends React.Component<
     {
+        open?: boolean;
         title?: string;
-        large?: boolean;
+        size?: "small" | "medium" | "large";
         okButtonText?: string;
+        cancelButtonText?: string;
         onOk?: () => Promise<boolean> | boolean;
         onCancel?: () => void;
         additionalButton?: IDialogButton;
@@ -196,7 +199,7 @@ export class Dialog extends React.Component<
             onClick: this.onCancel,
             disabled: this.disableButtons,
             style: { marginLeft: "auto" },
-            text: "Cancel"
+            text: this.props.cancelButtonText || "Cancel"
         });
 
         if (this.props.onOk) {
@@ -207,7 +210,7 @@ export class Dialog extends React.Component<
                 onClick: this.handleSumbit,
                 disabled: this.disableButtons,
                 style: {},
-                text: "OK"
+                text: this.props.okButtonText || "OK"
             });
         }
 
@@ -215,8 +218,8 @@ export class Dialog extends React.Component<
 
         return (
             <DialogImplementation
-                open={this.open}
-                large={this.props.large || false}
+                open={this.open && (this.props.open === undefined || this.props.open)}
+                size={this.props.size}
                 title={this.props.title}
                 onSubmit={this.handleSumbit}
                 onCancel={this.onCancel}

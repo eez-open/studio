@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, toJS } from "mobx";
+import { observable, computed, action, toJS, runInAction } from "mobx";
 import { observer, inject, IWrappedComponent } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -652,7 +652,7 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
                         <ChildObjectComponent
                             ref={ref => {
                                 if (ref) {
-                                    this.children[i] = ref;
+                                    runInAction(() => (this.children[i] = ref));
                                 }
                             }}
                             object={child}

@@ -8,8 +8,7 @@
         "libs": true,
         "packages/**/*.js": true,
         "packages/**/*.js.map": true,
-        "packages/eez-studio-ui/_stylesheets/main.css": true,
-        "instruments": true
+        "packages/eez-studio-ui/_stylesheets/main.css": true
     },
     "editor.formatOnSave": true,
     "typescript.reportStyleChecksAsWarnings": false,

@@ -101,7 +101,8 @@ export class Font extends EezObject {
             {
                 name: "source",
                 type: PropertyType.Object,
-                typeClass: FontSource
+                typeClass: FontSource,
+                readOnlyInPropertyGrid: true
             },
             {
                 name: "bpp",

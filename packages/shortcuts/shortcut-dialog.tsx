@@ -276,7 +276,7 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
         }
 
         return (
-            <Dialog onOk={this.handleSubmit} large={true} additionalButton={resetToDefaultButton}>
+            <Dialog onOk={this.handleSubmit} size="large" additionalButton={resetToDefaultButton}>
                 <PropertyList>
                     <TextInputProperty
                         name="Name"

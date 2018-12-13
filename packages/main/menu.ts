@@ -330,8 +330,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         },
         {
             label: "Select All",
-            accelerator: "CmdOrCtrl+A",
-            role: "selectall"
+            accelerator: "CmdOrCtrl+A"
         }
     ]
 };

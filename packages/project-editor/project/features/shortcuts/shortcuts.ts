@@ -77,7 +77,8 @@ export class Shortcut extends EezObject {
             {
                 name: "action",
                 type: PropertyType.Object,
-                typeClass: ShortcutAction
+                typeClass: ShortcutAction,
+                readOnlyInPropertyGrid: true
             },
             {
                 name: "keybinding",
