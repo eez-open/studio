@@ -28,7 +28,8 @@ import {
     isValue,
     objectToString,
     getInheritedValue,
-    getPropertyAsString
+    getPropertyAsString,
+    isProperAncestor
 } from "eez-studio-shared/model/object";
 import {
     UndoManager,
@@ -257,8 +258,8 @@ function isHighlightedProperty(propertyInfo: PropertyInfo, object: EezObject) {
         NavigationStore.selectedPanel && NavigationStore.selectedPanel.selectedObject;
     return !!(
         selectedObject &&
-        selectedObject._parent === object &&
-        selectedObject._key === propertyInfo.name
+        ((selectedObject._parent === object && selectedObject._key === propertyInfo.name) ||
+            isProperAncestor(selectedObject._parent!, getProperty(object, propertyInfo.name)))
     );
 }
 
@@ -354,11 +355,11 @@ const ArrayPropertyDiv = styled.div`
 
         & > tbody {
             & > tr {
-                & > td.highlighted {
-                    background-color: #ffccd4;
-                }
                 & > td {
                     padding: 2px;
+                }
+                & > td.highlighted {
+                    border: 2px solid #ffccd4;
                 }
             }
         }
@@ -883,11 +884,11 @@ const PropertyGridDiv = styled.div`
         width: 100%;
 
         & > tbody {
-            & > tr.highlighted {
-                background-color: #ffccd4;
-            }
-
             & > tr {
+                &.highlighted {
+                    border: 2px solid #ffccd4;
+                }
+
                 & > td {
                     padding: 5px;
                     vertical-align: middle;

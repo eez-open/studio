@@ -8,7 +8,8 @@ import { Splitter } from "eez-studio-ui/splitter";
 import {
     NavigationComponent,
     getProperty,
-    getAncestorOfType
+    getAncestorOfType,
+    EezArrayObject
 } from "eez-studio-shared/model/object";
 import { NavigationStore } from "eez-studio-shared/model/store";
 
@@ -51,9 +52,12 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
         let subsystems = (getProperty(ProjectStore.project, "scpi") as Scpi).subsystems;
 
         let subsystem = NavigationStore.getNavigationSelectedItem(subsystems) as ScpiSubsystem;
+        let commands =
+            subsystem &&
+            (NavigationStore.getNavigationSelectedItem(subsystem) as EezArrayObject<ScpiCommand>);
         let command =
-            subsystem && (NavigationStore.getNavigationSelectedItem(subsystem) as ScpiCommand);
-        return command || subsystem;
+            commands && (NavigationStore.getNavigationSelectedItem(commands) as ScpiCommand);
+        return command || commands || subsystem;
     }
 
     render() {

@@ -66,17 +66,49 @@ export interface IdfProperties {
     //properties: IInstrumentProperties;
 }
 
+interface IEnumMember {
+    name: string;
+    value: string;
+}
+
+interface IEnum {
+    name: string;
+    member: IEnumMember[];
+}
+
+interface IParemeterType {
+    type: "numeric" | "boolean" | "string" | "discrete";
+    enumeration?: string;
+}
+
+interface IParameter {
+    name: string;
+    type: IParemeterType[];
+    isOptional: boolean;
+    description: string;
+    defaultValue: string;
+}
+
+interface IResponse {
+    type: "numeric" | "boolean" | "string" | "arbitrary-block" | "discrete";
+    enumeration?: string;
+    description: string;
+}
+
 interface ICommand {
     name: string;
     description?: string;
     helpLink?: string;
     usedIn?: string[] | undefined;
+    parameters: IParameter[];
+    response: IResponse;
 }
 
 interface ISubsystem {
     commands: ICommand[];
 }
 
+// TODO find better name
 interface Command {
     name: string;
 
@@ -345,6 +377,7 @@ function buildSdl(idf: IdfProperties, subsystems: ISubsystem[]) {
 export function buildInstrumentExtension(
     idf: IdfProperties,
     subsystems: ISubsystem[],
+    enums: IEnum[],
     moduleFilePath: string | undefined,
     imageFilePath: string | undefined,
     scpiHelpFolderPath: string | undefined,

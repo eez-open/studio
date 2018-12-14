@@ -13,7 +13,8 @@ import { ProjectStore } from "project-editor/core/store";
 import { ListNavigation } from "project-editor/project/ui/ListNavigation";
 
 import { showImportScpiDocDialog } from "project-editor/project/features/scpi/importScpiDoc";
-import { ScpiEnum, Scpi } from "project-editor/project/features/scpi/scpi";
+import { Scpi } from "project-editor/project/features/scpi/scpi";
+import { ScpiEnum } from "project-editor/project/features/scpi/enum";
 
 @observer
 export class ScpiEnumsNavigation extends NavigationComponent {

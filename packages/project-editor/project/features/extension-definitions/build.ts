@@ -7,6 +7,7 @@ import {
     IdfProperties as InstrumentIdfProperties
 } from "instrument/export";
 import { EezArrayObject, getProperty } from "eez-studio-shared/model/object";
+import { objectToJS } from "eez-studio-shared/model/serialization";
 import { OutputSectionsStore } from "eez-studio-shared/model/store";
 import { Section, Type } from "eez-studio-shared/model/output";
 
@@ -105,17 +106,16 @@ export async function extensionDefinitionBuild() {
                             idfFilePath = ProjectStore.getAbsoluteFilePath(idfFileName);
                         }
 
-                        const subsystems = (getProperty(
-                            ProjectStore.project,
-                            "scpi"
-                        ) as Scpi).subsystems._array.map(subsystem => ({
-                            commands: subsystem.commands._array
-                        }));
+                        const scpi = getProperty(ProjectStore.project, "scpi") as Scpi;
+                        const subsystems = objectToJS(scpi.subsystems);
+                        const enums = objectToJS(scpi.enums);
 
                         await buildInstrumentExtension(
                             instrumentIdf,
 
                             subsystems,
+
+                            enums,
 
                             idfFilePath,
 

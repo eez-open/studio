@@ -24,12 +24,14 @@ interface IEnumItem {
     label: string;
 }
 
+export type EnumItems = (number | string | IEnumItem)[];
+
 export interface IFieldProperties {
     name: string;
     displayName?: string;
     type?: "integer" | "number" | "string" | "boolean" | "enum" | typeof FieldComponent;
     unit?: keyof typeof UNITS;
-    enumItems?: (number | string | IEnumItem)[];
+    enumItems?: EnumItems | (() => EnumItems);
     defaultValue?: number | string | boolean;
     visible?: (values: any) => boolean;
     options?: any;
@@ -135,15 +137,27 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
             } else if (fieldProperties.type === "number") {
                 values[fieldProperties.name] = parseFloat(this.state.values[fieldProperties.name]);
             } else if (fieldProperties.type === "enum") {
-                const id = this.state.values[fieldProperties.name].toString();
+                let enumItems;
+                if (typeof fieldProperties.enumItems === "function") {
+                    enumItems = fieldProperties.enumItems();
+                } else {
+                    enumItems = fieldProperties.enumItems!;
+                }
 
-                const enumItem = fieldProperties.enumItems!.find(enumItem => {
-                    const enumItemId =
-                        typeof enumItem === "string" || typeof enumItem === "number"
-                            ? enumItem
-                            : enumItem.id;
-                    return enumItemId.toString() === id;
-                })!;
+                let enumItem;
+                const value = this.state.values[fieldProperties.name];
+                if (value) {
+                    const id = value.toString();
+                    enumItem = enumItems.find(enumItem => {
+                        const enumItemId =
+                            typeof enumItem === "string" || typeof enumItem === "number"
+                                ? enumItem
+                                : enumItem.id;
+                        return enumItemId.toString() === id;
+                    })!;
+                } else {
+                    enumItem = enumItems[0];
+                }
 
                 values[fieldProperties.name] =
                     typeof enumItem === "string" || typeof enumItem === "number"
@@ -259,7 +273,7 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             this.state.errorMessages &&
                             this.state.errorMessages[fieldProperties.name];
 
-                        let Field;
+                        let Field: any;
                         let children: JSX.Element | JSX.Element[] | null = null;
 
                         if (
@@ -272,7 +286,15 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             Field = TextInputProperty;
                         } else if (fieldProperties.type === "enum") {
                             Field = SelectProperty;
-                            children = fieldProperties.enumItems!.map(enumItem => {
+
+                            let enumItems;
+                            if (typeof fieldProperties.enumItems === "function") {
+                                enumItems = fieldProperties.enumItems();
+                            } else {
+                                enumItems = fieldProperties.enumItems!;
+                            }
+
+                            children = enumItems.map(enumItem => {
                                 const id =
                                     typeof enumItem === "string" || typeof enumItem === "number"
                                         ? enumItem.toString()

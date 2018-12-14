@@ -66,6 +66,14 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
         }
     }
 
+    @bind
+    onKeyPress(event: React.KeyboardEvent) {
+        if (event.which == 13) {
+            event.preventDefault();
+            this.props.onSubmit(event);
+        }
+    }
+
     render() {
         const props = this.props;
 
@@ -81,6 +89,7 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
                     className={formClassName}
                     role="document"
                     onSubmit={event => props.onSubmit}
+                    onKeyPress={this.onKeyPress}
                 >
                     <div className="modal-content">
                         {props.title && (
