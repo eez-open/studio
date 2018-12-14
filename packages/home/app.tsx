@@ -23,6 +23,17 @@ const AppHeader = styled(Header)`
     flex-direction: row;
 `;
 
+const TabContainer = styled.div`
+    flex-grow: 1;
+    & > div {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+    }
+`;
+
 @observer
 class AppComponent extends React.Component {
     render() {
@@ -34,7 +45,16 @@ class AppComponent extends React.Component {
                         <SessionInfo appStore={getAppStore()} />
                     </SessionInfoContainer>
                 </AppHeader>
-                <Body>{tabs.activeTab.render()}</Body>
+                <Body>
+                    {tabs.tabs.map(tab => (
+                        <TabContainer
+                            key={tab.id}
+                            style={{ visibility: tab === tabs.activeTab ? "visible" : "hidden" }}
+                        >
+                            {tab.render()}
+                        </TabContainer>
+                    ))}
+                </Body>
             </VerticalHeaderWithBody>
         );
     }

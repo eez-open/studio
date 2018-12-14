@@ -93,14 +93,18 @@ export class NavigationStore {
         this._mainNavigationSelectedItemId = this.workbenchNavigationItem.id;
 
         autorun(() => {
-            if (tabs.activeTab === tabs.homeTab) {
-                if (this.mainNavigationSelectedItem) {
-                    document.title = `${this.mainNavigationSelectedItem.title} - Home - EEZ Studio`;
+            if (tabs && tabs.activeTab) {
+                if (tabs.activeTab === tabs.homeTab) {
+                    if (this.mainNavigationSelectedItem) {
+                        document.title = `${
+                            this.mainNavigationSelectedItem.title
+                        } - Home - EEZ Studio`;
+                    } else {
+                        document.title = `Home - EEZ Studio`;
+                    }
                 } else {
-                    document.title = `Home - EEZ Studio`;
+                    document.title = `${tabs.activeTab.title} - Home - EEZ Studio`;
                 }
-            } else {
-                document.title = `${tabs.activeTab.title} - Home - EEZ Studio`;
             }
 
             if (

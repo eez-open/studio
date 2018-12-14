@@ -7,7 +7,7 @@ import styled from "eez-studio-ui/styled-components";
 import { IListNode, List } from "eez-studio-ui/list";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { Splitter } from "eez-studio-ui/splitter";
-import { VerticalHeaderWithBody, Header, PanelHeader, Body } from "eez-studio-ui/header-with-body";
+import { VerticalHeaderWithBody, Header, Body } from "eez-studio-ui/header-with-body";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { PropertyList, TextInputProperty } from "eez-studio-ui/properties";
 
@@ -24,26 +24,16 @@ export interface ICommandNode extends ITreeNode {
 const CommandSyntaxContainerDiv = styled.div`
     display: flex;
     flex-direction: column;
-    padding: 5px;
-
-    & > div:first-child {
-        display: flex;
-        justify-content: space-between;
-        & > div:first-child {
-            font-weight: 600;
-        }
-    }
+    padding: 20px 10px;
 `;
 
 const ParametersDiv = styled.div`
     font-size: 80%;
+    padding-top: 5px;
     padding-left: 20px;
+    padding-bottom: 10px;
     & > table > tbody > tr > td {
         padding: 2px;
-
-        &:nth-child(2) > input {
-            max-width: 200px;
-        }
     }
 `;
 
@@ -75,21 +65,7 @@ export class CommandSyntax extends React.Component<
     render() {
         return (
             <CommandSyntaxContainerDiv>
-                <div>
-                    <div>{this.props.commandSyntax.name}</div>
-                    <div>
-                        <button className="btn btn-sm" onClick={this.copy}>
-                            Copy
-                        </button>
-                        {this.props.appStore.navigationStore.mainNavigationSelectedItem ===
-                            this.props.appStore.navigationStore.scriptsNavigationItem &&
-                            this.props.appStore.scriptsModel.selectedScript && (
-                                <button className="btn btn-sm ml-2" onClick={this.copyToScript}>
-                                    Copy to script
-                                </button>
-                            )}
-                    </div>
-                </div>
+                <h5>{this.props.commandSyntax.name}</h5>
                 <ParametersDiv>
                     <PropertyList>
                         {this.props.commandSyntax.parameters.map(parameter => (
@@ -107,20 +83,30 @@ export class CommandSyntax extends React.Component<
                         ))}
                     </PropertyList>
                 </ParametersDiv>
+                <div>
+                    <button className="btn btn-sm" onClick={this.copy}>
+                        Copy
+                    </button>
+                    {this.props.appStore.navigationStore.mainNavigationSelectedItem ===
+                        this.props.appStore.navigationStore.scriptsNavigationItem &&
+                        this.props.appStore.scriptsModel.selectedScript && (
+                            <button className="btn btn-sm ml-2" onClick={this.copyToScript}>
+                                Copy to script
+                            </button>
+                        )}
+                </div>
             </CommandSyntaxContainerDiv>
         );
     }
 }
 
-const CommandSyntaxes = styled(PanelHeader)`
-    padding: 0;
-
+const CommandSyntaxes = styled.div`
     & > div:not(first-child) {
         border-top: 1px solid ${props => props.theme.borderColor};
     }
 `;
 
-const CommandsBrowserLeft = styled(VerticalHeaderWithBody)`
+const CommandsBrowserTree = styled(VerticalHeaderWithBody)`
     > div:nth-child(1) {
         padding: 1px;
         padding-top: 2px;
@@ -128,23 +114,14 @@ const CommandsBrowserLeft = styled(VerticalHeaderWithBody)`
     }
 `;
 
-const CommandsBrowserRight = styled(VerticalHeaderWithBody)`
-    > div:nth-child(1) {
-        td {
-            padding: 5px;
+const CommandsBrowserSyntax = styled.div``;
 
-            p {
-                margin-bottom: 0;
-            }
-        }
-    }
-
-    > div:nth-child(2) {
-        display: flex;
-        iframe {
-            border: 0;
-            flex-grow: 1;
-        }
+const CommandsBrowserHelp = styled.div`
+    flex-grow: 1;
+    display: flex;
+    iframe {
+        border: 0;
+        flex-grow: 1;
     }
 `;
 
@@ -160,6 +137,7 @@ export class CommandsBrowser extends React.Component<
 > {
     @observable
     selectedNode: ICommandNode;
+
     @observable
     searchText: string = "";
 
@@ -241,42 +219,41 @@ export class CommandsBrowser extends React.Component<
             );
         }
 
-        let selectedNodeDetails;
+        let syntax;
+        let help;
         if (this.selectedNode) {
+            syntax = (
+                <CommandSyntaxes className="">
+                    {this.selectedNode.commandSyntax && (
+                        <CommandSyntax
+                            appStore={this.props.appStore}
+                            commandSyntax={this.selectedNode.commandSyntax}
+                            copyCommand={this.copyCommand}
+                        />
+                    )}
+                    {this.selectedNode.querySyntax && (
+                        <CommandSyntax
+                            appStore={this.props.appStore}
+                            commandSyntax={this.selectedNode.querySyntax}
+                            copyCommand={this.copyCommand}
+                        />
+                    )}
+                </CommandSyntaxes>
+            );
+
             let helpLink =
                 (this.selectedNode.commandSyntax && this.selectedNode.commandSyntax.url) ||
                 (this.selectedNode.querySyntax && this.selectedNode.querySyntax.url);
-
-            selectedNodeDetails = (
-                <React.Fragment>
-                    <CommandSyntaxes className="">
-                        {this.selectedNode.commandSyntax && (
-                            <CommandSyntax
-                                appStore={this.props.appStore}
-                                commandSyntax={this.selectedNode.commandSyntax}
-                                copyCommand={this.copyCommand}
-                            />
-                        )}
-                        {this.selectedNode.querySyntax && (
-                            <CommandSyntax
-                                appStore={this.props.appStore}
-                                commandSyntax={this.selectedNode.querySyntax}
-                                copyCommand={this.copyCommand}
-                            />
-                        )}
-                    </CommandSyntaxes>
-                    <Body>{helpLink && <iframe src={helpLink} />}</Body>
-                </React.Fragment>
-            );
+            help = helpLink && <iframe src={helpLink} />;
         }
 
         return (
             <Splitter
                 type="horizontal"
                 sizes="240px|100%"
-                persistId="instrument/window/commands-browser/splitter"
+                persistId="instrument/window/commands-browser/splitter1"
             >
-                <CommandsBrowserLeft className="">
+                <CommandsBrowserTree className="">
                     <Header>
                         <SearchInput
                             searchText={this.searchText}
@@ -285,8 +262,15 @@ export class CommandsBrowser extends React.Component<
                         />
                     </Header>
                     <Body tabIndex={0}>{leftSideBody}</Body>
-                </CommandsBrowserLeft>
-                <CommandsBrowserRight className="">{selectedNodeDetails}</CommandsBrowserRight>
+                </CommandsBrowserTree>
+                <Splitter
+                    type="horizontal"
+                    sizes="400px|100%"
+                    persistId="instrument/window/commands-browser/splitter2"
+                >
+                    <CommandsBrowserSyntax className="">{syntax}</CommandsBrowserSyntax>
+                    <CommandsBrowserHelp className="">{help}</CommandsBrowserHelp>
+                </Splitter>
             </Splitter>
         );
     }
