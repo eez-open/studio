@@ -65,6 +65,10 @@ export class HistoryItems extends React.Component<{
                 }
             }
 
+            if (showCheckbox || this.props.history.selection.items.length > 1) {
+                element = <div style={{ pointerEvents: "none" }}>{element}</div>;
+            }
+
             let className = classNames(
                 `EezStudio_HistoryItemEnclosure EezStudio_HistoryItem_${historyItem.id}`,
                 {
@@ -340,13 +344,13 @@ export class HistoryListComponent extends React.Component<{
                     <button
                         className="btn btn-secondary"
                         style={{ marginBottom: 20 }}
-                        onClick={() => {
+                        onClick={async () => {
                             this.fromBottom = undefined;
                             this.fromTop = undefined;
 
                             const scrollHeight = this.div.scrollHeight;
 
-                            this.props.history.navigator.loadOlder();
+                            await this.props.history.navigator.loadOlder();
 
                             window.requestAnimationFrame(() => {
                                 this.div.scrollTop = this.div.scrollHeight - scrollHeight;

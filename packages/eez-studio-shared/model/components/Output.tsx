@@ -12,7 +12,7 @@ import { Message as OutputMessage, Type as MessageType } from "eez-studio-shared
 
 import { ObjectPath } from "eez-studio-shared/model/components/ObjectPath";
 
-const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 100;
+const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 1000;
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -48,7 +48,11 @@ export class CommandsTree {
     }
 
     async load(extensionId: string) {
-        let commands = await loadCommands(extensionId);
+        let { enums, commands } = await loadCommands(extensionId);
+
+        console.log(enums);
+        console.log(commands);
+
         runInAction(() => {
             this.children = this.transform(commandsToTree(commands).nodes);
         });

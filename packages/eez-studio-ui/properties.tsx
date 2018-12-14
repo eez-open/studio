@@ -17,6 +17,7 @@ export class PropertyEnclosure extends React.Component<
         errors?: string[];
         style?: React.CSSProperties;
         className?: string;
+        title?: string;
     },
     {}
 > {
@@ -97,6 +98,7 @@ export class InputProperty extends React.Component<
         id?: string;
         name?: string;
         value: any;
+        title?: string;
         onChange: (value: any) => void;
         advanced?: boolean;
         type: string;
@@ -115,6 +117,7 @@ export class InputProperty extends React.Component<
                 className="form-control"
                 type={this.props.type}
                 value={this.props.value}
+                title={this.props.title}
                 onChange={event => this.props.onChange(event.target.value)}
                 min={this.props.min}
                 max={this.props.max}
@@ -125,7 +128,11 @@ export class InputProperty extends React.Component<
         if (this.props.name) {
             content = [
                 <td key="name">
-                    <label className="PropertyName col-form-label" htmlFor={id}>
+                    <label
+                        className="PropertyName col-form-label"
+                        htmlFor={id}
+                        title={this.props.title}
+                    >
                         {this.props.name}
                     </label>
                 </td>,
@@ -137,7 +144,11 @@ export class InputProperty extends React.Component<
         }
 
         return (
-            <PropertyEnclosure advanced={this.props.advanced || false} errors={this.props.errors}>
+            <PropertyEnclosure
+                advanced={this.props.advanced || false}
+                errors={this.props.errors}
+                title={this.props.title}
+            >
                 {content}
             </PropertyEnclosure>
         );
@@ -150,6 +161,7 @@ export class TextInputProperty extends React.Component<
         id?: string;
         name?: string;
         value: string;
+        title?: string;
         onChange: (value: string) => void;
         advanced?: boolean;
         errors?: string[];

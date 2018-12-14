@@ -1,5 +1,7 @@
 import { observable } from "mobx";
 
+import { _map } from "eez-studio-shared/algorithm";
+
 import {
     localPathToFileUrl,
     fileExists,
@@ -16,7 +18,15 @@ import { IExtension } from "eez-studio-shared/extensions/extension";
 
 import { IInstrumentExtensionProperties } from "instrument/instrument-extension";
 import * as PropertiesComponentModule from "instrument/properties-component";
-import { ICommand } from "instrument/scpi";
+import {
+    IEnum,
+    IEnumMember,
+    ICommand,
+    IParameter,
+    IParameterType,
+    IResponse,
+    ResponseType
+} from "instrument/scpi";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -95,27 +105,130 @@ function compareName(name1: string, name2: string) {
     return false;
 }
 
+function buildEnums(sdl: JQuery<any>): IEnum[] {
+    return _map(sdl.find("GlobalDefinitions>Enum"), (element: HTMLElement, index: number) => {
+        const name = $(element).attr("name") || "";
+
+        const members: IEnumMember[] = _map(
+            $(element).find("Member"),
+            (element: HTMLElement, index: number) => {
+                const name = $(element).attr("mnemonic") || "";
+                const value = $(element).attr("value") || "";
+                return {
+                    name,
+                    value
+                };
+            }
+        );
+
+        return {
+            name,
+            members
+        };
+    });
+}
+
+function buildParameters(dom: JQuery): IParameter[] {
+    return _map(dom.find("Parameters>Parameter"), (element: HTMLElement, index: number) => {
+        const name = element.getAttribute("name") || index.toString();
+
+        let isOptional;
+        try {
+            isOptional = !!JSON.parse(element.getAttribute("optional") || "false");
+        } catch (err) {
+            console.error(err);
+            isOptional = false;
+        }
+
+        let type: IParameterType[] = [];
+
+        if ($(element).find("DecimalNumeric").length) {
+            type.push({
+                type: "numeric"
+            });
+        }
+
+        if ($(element).find("String").length) {
+            type.push({
+                type: "string"
+            });
+        }
+
+        if ($(element).find("NonDecimalNumeric").length) {
+            type.push({
+                type: "boolean"
+            });
+        }
+
+        if ($(element).find("Character>EnumRef").length) {
+            type.push({
+                type: "discrete",
+                enumeration: $(element)
+                    .find("Character>EnumRef")
+                    .attr("name")
+            });
+        }
+
+        const description = element.getAttribute("description") || "";
+
+        return {
+            name,
+            type,
+            isOptional,
+            description
+        };
+    });
+}
+
+function buildResponse(dom: JQuery): IResponse {
+    let type: ResponseType;
+
+    let enumeration;
+
+    if (dom.find("Responses>Response>ResponseType>NR1Numeric").length) {
+        type = "nr1";
+    } else if (dom.find("Responses>Response>ResponseType>NR2Numeric").length) {
+        type = "nr2";
+    } else if (dom.find("Responses>Response>ResponseType>NR3Numeric").length) {
+        type = "nr3";
+    } else if (dom.find("Responses>Response>ResponseType>ArbitraryAscii").length) {
+        type = "string";
+    } else if (dom.find("Responses>Response>ResponseType>DefiniteLengthArbitraryBlock").length) {
+        type = "arbitrary-block";
+    } else if (dom.find("Responses>Response>ResponseType>Character>EnumRef").length) {
+        type = "discrete";
+        enumeration = dom.find("Responses>Response>ResponseType>Character>EnumRef").attr("name");
+    } else {
+        type = undefined as any;
+    }
+
+    const description = dom.find("Responses>Response").attr("description");
+
+    return {
+        type,
+        enumeration,
+        description
+    };
+}
+
 function buildCommand(name: string, sdlCommand: JQuery, docPath: string, commands: ICommand[]) {
     let command: ICommand | undefined;
-
-    if (sdlCommand.find(">CommandSyntaxes").length) {
+    const commandSyntax = sdlCommand.find(">CommandSyntaxes>CommandSyntax:first-child");
+    if (commandSyntax.length) {
         command = {
             name: name,
-            parameters: [],
-            response: {
-                type: "nr1"
-            }
+            parameters: buildParameters(commandSyntax),
+            response: undefined as any
         };
     }
 
     let query: ICommand | undefined;
-    if (sdlCommand.find(">QuerySyntaxes").length) {
+    const querySyntax = sdlCommand.find(">QuerySyntaxes>QuerySyntax:first-child");
+    if (querySyntax.length) {
         query = {
             name: name + "?",
-            parameters: [],
-            response: {
-                type: "nr1"
-            }
+            parameters: buildParameters(querySyntax),
+            response: buildResponse(querySyntax)
         };
     }
 
@@ -378,8 +491,12 @@ export async function loadCommands(instrumentExtensionId: string) {
             let sdlFilePath = extensionFolderPath + "/" + SdlFile.attr("name");
             let sdlXmlAsString = await readTextFile(sdlFilePath);
             let sdl = parseXmlString(sdlXmlAsString);
+            let enums = buildEnums($(sdl));
             let commands = buildCommands($(sdl), docPath);
-            return commands;
+            return {
+                commands,
+                enums
+            };
         }
 
         throw "SDL file not found";

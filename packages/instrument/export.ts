@@ -163,7 +163,8 @@ function buildParameters(parameters: IParameter[]) {
                             name="${parameter.name}"
                             optional="${parameter.isOptional ? "true" : "false"}"
                             semanticType="${getSdlSemanticTypeForParameter(parameter)}"
-                            description="${parameter.description}">
+                            description="${parameter.description || ""}"
+                        >
                             <ParameterType>
                                 ${parameter.type
                                     .map(parameterType => getSdlParameterType(parameterType))
@@ -180,7 +181,8 @@ function buildResponse(response: IResponse) {
     return `<Response
                 name="result"
                 semanticType="${getSdlSemanticType(response.type)}"
-                description="${response.description}">
+                description="${response.description || ""}"
+            >
             <ResponseType>
                 ${getSdlResponseType(response)}
             </ResponseType>

@@ -22,7 +22,6 @@ export interface IParameter {
     type: IParameterType[];
     isOptional: boolean;
     description?: string;
-    defaultValue?: string;
 }
 
 export type ResponseType =
@@ -139,7 +138,7 @@ export function getSdlResponseType(response: IResponse) {
     }
 
     if (response.type === "arbitrary-block") {
-        return "DefiniteLengthArbitraryBlock";
+        return "<DefiniteLengthArbitraryBlock />";
     }
 
     if (response.type === "discrete") {

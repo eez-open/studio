@@ -111,10 +111,6 @@ function getDiscreteTypeEnumeration(object: ScpiParameter) {
 
 const ScpiParameterTable = styled.table`
     & > tbody > tr {
-        & > td.name {
-            transform: none;
-        }
-
         & > td.type {
             white-space: nowrap;
         }
@@ -125,12 +121,6 @@ const ScpiParameterTable = styled.table`
             & > label > span {
                 display: none;
             }
-        }
-
-        & > td.description {
-        }
-
-        & > td.defaultValue {
         }
     }
 `;
@@ -147,9 +137,6 @@ export class ScpiParameter extends EezObject {
 
     @observable
     description: string;
-
-    @observable
-    defaultValue: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -245,10 +232,6 @@ export class ScpiParameter extends EezObject {
             {
                 name: "description",
                 type: PropertyType.MultilineText
-            },
-            {
-                name: "defaultValue",
-                type: PropertyType.String
             }
         ],
 
