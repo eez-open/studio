@@ -16,6 +16,7 @@ import { IExtension } from "eez-studio-shared/extensions/extension";
 
 import { IInstrumentExtensionProperties } from "instrument/instrument-extension";
 import * as PropertiesComponentModule from "instrument/properties-component";
+import { ICommand } from "instrument/scpi";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,12 +53,6 @@ export const EMPTY_INSTRUMENT_PROPERTIES: IInstrumentExtensionProperties = {
 ////////////////////////////////////////////////////////////////////////////////
 
 export type NumericSuffix = "optional" | "mandatory" | "none";
-
-export interface ICommand {
-    name: string;
-    description?: string;
-    helpLink?: string;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -105,14 +100,22 @@ function buildCommand(name: string, sdlCommand: JQuery, docPath: string, command
 
     if (sdlCommand.find(">CommandSyntaxes").length) {
         command = {
-            name: name
+            name: name,
+            parameters: [],
+            response: {
+                type: "nr1"
+            }
         };
     }
 
     let query: ICommand | undefined;
     if (sdlCommand.find(">QuerySyntaxes").length) {
         query = {
-            name: name + "?"
+            name: name + "?",
+            parameters: [],
+            response: {
+                type: "nr1"
+            }
         };
     }
 

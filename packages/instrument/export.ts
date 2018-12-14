@@ -2,7 +2,17 @@ const fs = EEZStudio.electron.remote.require("fs");
 const archiver = EEZStudio.electron.remote.require("archiver");
 const xmlFormatter = require("xml-formatter");
 
-import { ScpiCommandTreeNode, addCommandToTree } from "instrument/commands-tree";
+import { ScpiCommand, ScpiCommandTreeNode, addCommandToTree } from "instrument/commands-tree";
+import {
+    IEnum,
+    ISubsystem,
+    IParameter,
+    IResponse,
+    getSdlSemanticTypeForParameter,
+    getSdlParameterType,
+    getSdlSemanticType,
+    getSdlResponseType
+} from "instrument/scpi";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,65 +74,6 @@ export interface IdfProperties {
     idfAuthor: string;
     sdlFriendlyName: string;
     //properties: IInstrumentProperties;
-}
-
-interface IEnumMember {
-    name: string;
-    value: string;
-}
-
-interface IEnum {
-    name: string;
-    member: IEnumMember[];
-}
-
-interface IParemeterType {
-    type: "numeric" | "boolean" | "string" | "discrete";
-    enumeration?: string;
-}
-
-interface IParameter {
-    name: string;
-    type: IParemeterType[];
-    isOptional: boolean;
-    description: string;
-    defaultValue: string;
-}
-
-interface IResponse {
-    type: "numeric" | "boolean" | "string" | "arbitrary-block" | "discrete";
-    enumeration?: string;
-    description: string;
-}
-
-interface ICommand {
-    name: string;
-    description?: string;
-    helpLink?: string;
-    usedIn?: string[] | undefined;
-    parameters: IParameter[];
-    response: IResponse;
-}
-
-interface ISubsystem {
-    commands: ICommand[];
-}
-
-// TODO find better name
-interface Command {
-    name: string;
-
-    description?: string;
-
-    commandSyntax?: {
-        name: string;
-        url?: string;
-    };
-
-    querySyntax?: {
-        name: string;
-        url?: string;
-    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -188,7 +139,55 @@ function buildIdf(idf: IdfProperties) {
         </ScpiConfigurations>`;
 }
 
-function buildCommand(command: Command) {
+function buildEnumDefinitions(enums: IEnum[]) {
+    return enums
+        .map(
+            enumeration =>
+                `<Enum name="${enumeration.name}">
+                    ${enumeration.members
+                        .map(
+                            member => `<Member mnemonic="${member.name}" value="${member.value}" />`
+                        )
+                        .join("")}
+                </Enum>`
+        )
+        .join("");
+}
+
+function buildParameters(parameters: IParameter[]) {
+    return `<Parameters>
+            ${parameters
+                .map(
+                    parameter => `
+                        <Parameter
+                            name="${parameter.name}"
+                            optional="${parameter.isOptional ? "true" : "false"}"
+                            semanticType="${getSdlSemanticTypeForParameter(parameter)}"
+                            description="${parameter.description}">
+                            <ParameterType>
+                                ${parameter.type
+                                    .map(parameterType => getSdlParameterType(parameterType))
+                                    .join("")}
+                            </ParameterType>
+                        </Parameter>
+                    `
+                )
+                .join("")}
+        </Parameters>`;
+}
+
+function buildResponse(response: IResponse) {
+    return `<Response
+                name="result"
+                semanticType="${getSdlSemanticType(response.type)}"
+                description="${response.description}">
+            <ResponseType>
+                ${getSdlResponseType(response)}
+            </ResponseType>
+        </Response>`;
+}
+
+function buildCommand(command: ScpiCommand) {
     const description = quoteAttr(command.description || "");
 
     let helpLinks = "";
@@ -202,7 +201,9 @@ function buildCommand(command: Command) {
             )}" url="${quoteAttr(command.commandSyntax.url)}" />`;
         }
 
-        commandSyntaxes = `<CommandSyntaxes><CommandSyntax></CommandSyntax></CommandSyntaxes>`;
+        commandSyntaxes = `<CommandSyntaxes><CommandSyntax>${buildParameters(
+            command.commandSyntax.parameters
+        )}</CommandSyntax></CommandSyntaxes>`;
     }
 
     if (command.querySyntax) {
@@ -218,13 +219,8 @@ function buildCommand(command: Command) {
         querySyntaxes = `
             <QuerySyntaxes>
                 <QuerySyntax>
-                    <Responses>
-                        <Response name="result" semanticType="Integer" description="Result ...">
-                            <ResponseType>
-                                <NR1Numeric />
-                            </ResponseType>
-                        </Response>
-                    </Responses>
+                    ${buildParameters(command.querySyntax.parameters)}
+                    <Responses>${buildResponse(command.querySyntax.response)}</Responses>
                 </QuerySyntax>
             </QuerySyntaxes>
             `;
@@ -233,7 +229,7 @@ function buildCommand(command: Command) {
     return `<Synopsis>${description}</Synopsis><HelpLinks>${helpLinks}</HelpLinks>${commandSyntaxes}${querySyntaxes}`;
 }
 
-function buildCommonCommand(command: Command) {
+function buildCommonCommand(command: ScpiCommand) {
     const name = quoteAttr(command.name);
     const commmand = buildCommand(command);
     return `<CommonCommand mnemonic="${name}">${commmand}</CommonCommand>`;
@@ -246,7 +242,7 @@ function filterSubsystemCommands(idf: IdfProperties, subsystem: ISubsystem) {
 }
 
 function buildCommonCommands(idf: IdfProperties, subsystems: ISubsystem[]) {
-    let commands = new Map<string, Command>();
+    let commands = new Map<string, ScpiCommand>();
     subsystems.forEach(subsystem => {
         filterSubsystemCommands(idf, subsystem).forEach(subsystemCommand => {
             if (subsystemCommand.name.startsWith("*")) {
@@ -272,12 +268,15 @@ function buildCommonCommands(idf: IdfProperties, subsystems: ISubsystem[]) {
                 if (query) {
                     command.querySyntax = {
                         name: "*" + name + "?",
-                        url: url
+                        url: url,
+                        parameters: subsystemCommand.parameters,
+                        response: subsystemCommand.response
                     };
                 } else {
                     command.commandSyntax = {
                         name: "*" + name,
-                        url: url
+                        url: url,
+                        parameters: subsystemCommand.parameters
                     };
                 }
             }
@@ -347,8 +346,9 @@ function buildSubsystemCommands(idf: IdfProperties, subsystems: ISubsystem[]) {
     return buildNode(tree);
 }
 
-function buildSdl(idf: IdfProperties, subsystems: ISubsystem[]) {
+function buildSdl(idf: IdfProperties, enums: IEnum[], subsystems: ISubsystem[]) {
     const friendlyName = quoteAttr(idf.sdlFriendlyName);
+    const enumDefinitions = buildEnumDefinitions(enums);
     const commonCommands = buildCommonCommands(idf, subsystems);
     const subsystemCommands = buildSubsystemCommands(idf, subsystems);
 
@@ -362,12 +362,11 @@ function buildSdl(idf: IdfProperties, subsystems: ISubsystem[]) {
             xsi:schemaLocation="http://www.agilent.com/schemas/SCPIDL/2008 ScpiDefinitionLanguage.xsd"
         >
             <GlobalDefinitions>
+                ${enumDefinitions}
             </GlobalDefinitions>
-
             <CommonCommands>
                 ${commonCommands}
             </CommonCommands>
-
             <SubsystemCommands>
                 ${subsystemCommands}
             </SubsystemCommands>
@@ -413,7 +412,7 @@ export function buildInstrumentExtension(
         const idfStr = buildIdf(idf);
         archive.append(xmlFormatter(idfStr), { name: extensionName + ".idf" });
 
-        const sdl = buildSdl(idf, subsystems);
+        const sdl = buildSdl(idf, enums, subsystems);
         archive.append(xmlFormatter(sdl), { name: extensionName + ".sdl" });
 
         if (imageFilePath) {

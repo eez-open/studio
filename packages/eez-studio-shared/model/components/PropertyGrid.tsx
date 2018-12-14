@@ -582,7 +582,7 @@ class Property extends React.Component<PropertyProps> {
             const enumItem = this.props.propertyInfo.enumItems!.find(
                 enumItem => enumItem.id.toString() === id
             );
-            this.changeValue(enumItem!.id);
+            this.changeValue(enumItem && enumItem!.id);
         } else {
             this.changeValue(target.type === "checkbox" ? target.checked : target.value);
         }

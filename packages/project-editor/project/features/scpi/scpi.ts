@@ -19,6 +19,8 @@ import {
     getChildOfObject
 } from "eez-studio-shared/model/object";
 
+import { IParameterType, ParameterTypeType, ResponseType } from "instrument/scpi";
+
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { ScpiNavigation } from "project-editor/project/features/scpi/ScpiNavigation";
@@ -33,16 +35,9 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type ScpiParameterTypeType = "numeric" | "boolean" | "string" | "discrete";
-
-interface IScpiParameterType {
-    type: ScpiParameterTypeType;
-    enumeration?: string;
-}
-
-export class ScpiParameterType extends EezObject implements IScpiParameterType {
+export class ScpiParameterType extends EezObject implements IParameterType {
     @observable
-    type: ScpiParameterTypeType;
+    type: ParameterTypeType;
 
     @observable
     enumeration?: string;
@@ -96,11 +91,11 @@ export class ScpiParameterType extends EezObject implements IScpiParameterType {
     }
 }
 
-function getScpiType(object: ScpiParameter, type: ScpiParameterTypeType) {
+function getScpiType(object: ScpiParameter, type: ParameterTypeType) {
     return object.type._array.find(scpiType => scpiType.type === type);
 }
 
-function isScpiType(object: ScpiParameter, type: ScpiParameterTypeType) {
+function isScpiType(object: ScpiParameter, type: ParameterTypeType) {
     return !!getScpiType(object, type);
 }
 
@@ -210,7 +205,7 @@ export class ScpiParameter extends EezObject {
                         }
                     });
 
-                    const type: IScpiParameterType[] = [];
+                    const type: IParameterType[] = [];
 
                     if (result.values.numeric) {
                         type.push({
@@ -317,11 +312,9 @@ export class ScpiParameter extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type ScpiResponseType = "numeric" | "boolean" | "string" | "arbitrary-block" | "discrete";
-
 export class ScpiResponse extends EezObject {
     @observable
-    type: ScpiResponseType;
+    type: ResponseType;
 
     @observable
     enumeration?: string;
@@ -335,7 +328,9 @@ export class ScpiResponse extends EezObject {
                 name: "type",
                 type: PropertyType.Enum,
                 enumItems: [
-                    { id: "numeric" },
+                    { id: "nr1" },
+                    { id: "nr2" },
+                    { id: "nr3" },
                     { id: "boolean" },
                     { id: "string" },
                     { id: "arbitrary-block" },
@@ -357,7 +352,7 @@ export class ScpiResponse extends EezObject {
             }
         ],
         defaultValue: {
-            type: "numeric"
+            type: "nr1"
         }
     };
 

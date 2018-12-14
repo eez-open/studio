@@ -1,6 +1,27 @@
-import { ICommand, NumericSuffix } from "instrument/import";
+import { NumericSuffix } from "instrument/import";
+import { ICommand, IParameter, IResponse } from "instrument/scpi";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+export interface ICommandSyntax {
+    name: string;
+    url?: string;
+    parameters: IParameter[];
+}
+
+export interface IQuerySyntax {
+    name: string;
+    url?: string;
+    parameters: IParameter[];
+    response: IResponse;
+}
+
+export interface ScpiCommand {
+    name: string;
+    description?: string;
+    commandSyntax?: ICommandSyntax;
+    querySyntax?: IQuerySyntax;
+}
 
 export interface ScpiCommandTreeNode {
     mnemonic: string;
@@ -8,18 +29,6 @@ export interface ScpiCommandTreeNode {
     numericSuffix?: NumericSuffix;
     nodes?: ScpiCommandTreeNode[];
     command?: ScpiCommand;
-}
-
-export interface ICommandSyntax {
-    name: string;
-    url?: string;
-}
-
-interface ScpiCommand {
-    name: string;
-    description?: string;
-    commandSyntax?: ICommandSyntax;
-    querySyntax?: ICommandSyntax;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,12 +138,15 @@ export function addCommandToTree(command: ICommand, tree: ScpiCommandTreeNode) {
     if (query) {
         currentNode.command.querySyntax = {
             name: command.name,
-            url: command.helpLink
+            url: command.helpLink,
+            parameters: command.parameters,
+            response: command.response
         };
     } else {
         currentNode.command.commandSyntax = {
             name: command.name,
-            url: command.helpLink
+            url: command.helpLink,
+            parameters: command.parameters
         };
     }
 }
