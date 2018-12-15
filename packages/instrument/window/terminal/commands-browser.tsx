@@ -14,14 +14,14 @@ import { SearchInput } from "eez-studio-ui/search-input";
 import { PropertyList, TextInputProperty } from "eez-studio-ui/properties";
 
 import { IParameter, compareMnemonic } from "instrument/scpi";
-import { ICommandSyntax, makeItShort, matchCommand } from "instrument/commands-tree";
+import { ICommandSyntax, IQuerySyntax, makeItShort, matchCommand } from "instrument/commands-tree";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { insertScpiCommandIntoCode, insertScpiQueryIntoCode } from "instrument/window/scripts";
 
 export interface ICommandNode extends ITreeNode {
     commandSyntax?: ICommandSyntax;
-    querySyntax?: ICommandSyntax;
+    querySyntax?: IQuerySyntax;
 }
 
 const CommandSyntaxContainerDiv = styled.div`

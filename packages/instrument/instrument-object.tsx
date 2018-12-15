@@ -28,6 +28,7 @@ import * as CatalogModule from "home/extensions-manager/catalog";
 import { IInstrumentExtensionProperties } from "instrument/instrument-extension";
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/import";
 import { IInstrumentProperties } from "instrument/export";
+import { IQuerySyntax } from "instrument/commands-tree";
 
 import { createHistoryItem } from "instrument/window/history/item-factory";
 import { IConnection } from "instrument/connection/connection";
@@ -700,11 +701,17 @@ export class InstrumentObject {
 
     isEditable = true;
 
+    _instrumentAppStore: AppStoreModule.InstrumentAppStore;
+
     getEditor() {
-        const {
-            InstrumentAppStore
-        } = require("instrument/window/app-store") as typeof AppStoreModule;
-        return new InstrumentAppStore(this.id);
+        if (!this._instrumentAppStore) {
+            const {
+                InstrumentAppStore
+            } = require("instrument/window/app-store") as typeof AppStoreModule;
+            this._instrumentAppStore = new InstrumentAppStore(this.id);
+        }
+
+        return this._instrumentAppStore;
     }
 
     getEditorWindowArgs() {
@@ -873,6 +880,15 @@ export class InstrumentObject {
                 })
             );
         }
+    }
+
+    getQueryResponseType(query: string) {
+        const command = this._instrumentAppStore.commandsTree.findCommand(query);
+        const response = command && (command as IQuerySyntax).response;
+        if (response) {
+            return response.type;
+        }
+        return undefined;
     }
 }
 

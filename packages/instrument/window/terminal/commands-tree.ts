@@ -2,7 +2,13 @@ import { observable, runInAction } from "mobx";
 
 import { loadCommands } from "instrument/import";
 import { IEnum } from "instrument/scpi";
-import { commandsToTree, ScpiCommandTreeNode, ICommandSyntax } from "instrument/commands-tree";
+import {
+    commandsToTree,
+    ScpiCommandTreeNode,
+    ICommandSyntax,
+    IQuerySyntax,
+    matchCommand
+} from "instrument/commands-tree";
 
 import { ICommandNode } from "instrument/window/terminal/commands-browser";
 
@@ -15,7 +21,7 @@ class CommandNode implements ICommandNode {
     @observable expanded: boolean = true;
     @observable children: CommandsTree[] = [];
     @observable commandSyntax: ICommandSyntax | undefined = undefined;
-    @observable querySyntax: ICommandSyntax | undefined = undefined;
+    @observable querySyntax: IQuerySyntax | undefined = undefined;
 
     constructor(props: any) {
         Object.assign(this, props);
@@ -57,5 +63,38 @@ export class CommandsTree {
         runInAction(() => {
             this.children = this.transform(commandsToTree(commands).nodes);
         });
+    }
+
+    findCommandInNode(
+        commandName: string,
+        commandNode: ICommandNode
+    ): ICommandSyntax | IQuerySyntax | undefined {
+        if (commandNode.querySyntax) {
+            if (matchCommand(commandNode.querySyntax, commandName)) {
+                return commandNode.querySyntax;
+            }
+        }
+
+        if (commandNode.commandSyntax) {
+            if (matchCommand(commandNode.commandSyntax, commandName)) {
+                return commandNode.commandSyntax;
+            }
+        }
+
+        return this.findCommandInChildren(commandName, commandNode.children);
+    }
+
+    findCommandInChildren(commandName: string, children: ICommandNode[]) {
+        for (let i = 0; i < children.length; ++i) {
+            const command = this.findCommandInNode(commandName, children[i]);
+            if (command) {
+                return command;
+            }
+        }
+        return undefined;
+    }
+
+    findCommand(commandName: string) {
+        return this.findCommandInChildren(commandName, this.children);
     }
 }

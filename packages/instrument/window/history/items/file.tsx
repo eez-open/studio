@@ -335,15 +335,19 @@ export class FileHistoryItemComponent extends React.Component<
                           this.props.historyItem.expectedDataLength
                   )
                 : 0;
-            let transferSpeed = formatTransferSpeed(this.props.historyItem.transferSpeed);
+            let progress;
+            if (this.props.historyItem.expectedDataLength) {
+                let transferSpeed = formatTransferSpeed(this.props.historyItem.transferSpeed);
+                progress = `${percent}% (${this.props.historyItem.dataLength} of ${
+                    this.props.historyItem.expectedDataLength
+                }) ${transferSpeed}`;
+            } else {
+                progress = `${this.props.historyItem.dataLength} bytes`;
+            }
             body = (
                 <div>
                     <div>{this.getDirectionInfo()}</div>
-                    <div>
-                        {`${percent}% (${this.props.historyItem.dataLength} of ${
-                            this.props.historyItem.expectedDataLength
-                        }) ${transferSpeed}`}
-                    </div>
+                    <div>{progress}</div>
                     {this.props.historyItem.direction === "upload" && (
                         <Toolbar>
                             <TextAction

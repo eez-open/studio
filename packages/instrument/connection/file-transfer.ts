@@ -57,12 +57,25 @@ export abstract class FileTransfer {
         }
     }
 
+    get timeoutMs() {
+        return CONF_FILE_TRANSFER_TIMEOUT_MS;
+    }
+
+    handleTimeout() {
+        return false;
+    }
+
     setTimeout() {
         if (!this.isDone()) {
             this.clearTimeout();
 
             this.dataTimeoutId = setTimeout(() => {
                 this.dataTimeoutId = undefined;
+
+                if (this.handleTimeout()) {
+                    return;
+                }
+
                 if (this.state === "upload-error") {
                     this.state = "error";
                 } else {
@@ -70,7 +83,7 @@ export abstract class FileTransfer {
                     this.onError();
                 }
                 this.updateLog();
-            }, CONF_FILE_TRANSFER_TIMEOUT_MS);
+            }, this.timeoutMs);
         }
     }
 
@@ -79,7 +92,8 @@ export abstract class FileTransfer {
         if (this.lastTransferSpeed !== undefined) {
             let timeSpan = time - this.lastTime;
             if (timeSpan >= 1000) {
-                this.lastTransferSpeed = 1000 * (state.dataLength - this.lastDataLength) / timeSpan;
+                this.lastTransferSpeed =
+                    (1000 * (state.dataLength - this.lastDataLength)) / timeSpan;
                 this.lastDataLength = state.dataLength;
                 this.lastTime = time;
             }

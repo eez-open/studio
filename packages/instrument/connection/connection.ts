@@ -17,7 +17,7 @@ import {
 } from "instrument/connection/interface";
 import { FileDownload } from "instrument/connection/file-download";
 import { IFileUploadInstructions, FileUpload } from "instrument/connection/file-upload";
-import { parseScpiValue } from "instrument/scpi";
+import { parseScpiValue, ResponseType } from "instrument/scpi";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,6 +38,12 @@ export interface ConnectionStatus {
     state: ConnectionState;
     errorCode: ConnectionErrorCode;
     error: string | undefined;
+}
+
+interface ISendOptions {
+    log?: boolean;
+    longOperation?: boolean;
+    queryResponseType?: ResponseType;
 }
 
 abstract class ConnectionBase {
@@ -70,7 +76,7 @@ abstract class ConnectionBase {
     abstract connect(connectionParameters?: ConnectionParameters): void;
     abstract disconnect(): void;
     abstract destroy(): void;
-    abstract send(command: string): void;
+    abstract send(command: string, options?: ISendOptions): void;
     abstract upload(instructions: IFileUploadInstructions): void;
     abstract abortLongOperation(): void;
 
@@ -146,6 +152,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     housekeepingIntervalId: any;
     callbackWindowId: number | undefined;
     traceEnabled: boolean = true;
+    expectedResponseType: ResponseType | undefined;
 
     constructor(public instrument: InstrumentObject) {
         super(instrument);
@@ -328,9 +335,18 @@ export class Connection extends ConnectionBase implements CommunicationInterface
 
         if (this.longOperation) {
             this.longOperation.onData(data);
-        } else if (this.data === undefined && data.startsWith("#")) {
-            this.longOperation = new FileDownload(this, data);
+        } else if (
+            this.data === undefined &&
+            (data.startsWith("#") || this.expectedResponseType === "arbitrary-block")
+        ) {
+            this.longOperation = new FileDownload(
+                this,
+                data,
+                this.expectedResponseType === "arbitrary-block"
+            );
         }
+
+        this.expectedResponseType = undefined;
 
         if (this.longOperation) {
             if (!this.longOperation.isDone()) {
@@ -370,14 +386,8 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         }
     }
 
-    send(
-        command: string,
-        options?: {
-            log?: boolean;
-            longOperation?: boolean;
-        }
-    ): void {
-        if (!options || options.log) {
+    send(command: string, options?: ISendOptions): void {
+        if (!options || (options.log === undefined || options.log)) {
             this.logRequest(command);
         }
 
@@ -399,6 +409,8 @@ export class Connection extends ConnectionBase implements CommunicationInterface
                 return;
             }
         }
+
+        this.expectedResponseType = options && options.queryResponseType;
 
         this.errorCode = ConnectionErrorCode.NONE;
         this.error = undefined;
@@ -579,9 +591,28 @@ export class IpcConnection extends ConnectionBase {
     }
 
     send(command: string) {
+        let options: ISendOptions | undefined;
+
+        // find out command name, i.e. up to parameters section which start with space
+        let commandName;
+        let i = command.indexOf(" ");
+        if (i !== -1) {
+            commandName = command.substr(0, i);
+        } else {
+            // no parameters
+            commandName = command;
+        }
+        if (commandName.endsWith("?")) {
+            // get expected query response
+            options = {
+                queryResponseType: this.instrument.getQueryResponseType(commandName)
+            };
+        }
+
         EEZStudio.electron.ipcRenderer.send("instrument/connection/send", {
             instrumentId: this.instrument.id,
-            command
+            command,
+            options
         });
     }
 
@@ -661,11 +692,12 @@ export function setupIpcServer() {
         arg: {
             instrumentId: string;
             command: string;
+            options?: ISendOptions;
         }
     ) {
         let connection = connections.get(arg.instrumentId);
         if (connection) {
-            connection.send(arg.command);
+            connection.send(arg.command, arg.options);
         }
     });
 

@@ -1,9 +1,16 @@
-import { activityLogStore, log, logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
+import {
+    activityLogStore,
+    log,
+    logUpdate,
+    IActivityLogEntry
+} from "eez-studio-shared/activity-log";
 
 import { FileState } from "instrument/connection/file-state";
 import { FileTransfer } from "instrument/connection/file-transfer";
 import { Connection } from "instrument/connection/connection";
 import { detectFileType, convertBmpToPng } from "instrument/connection/file-type";
+
+const CONF_FILE_TRANSFER_TIMEOUT_FOR_ARBITRARY_BLOCK_MS = 500;
 
 export class FileDownload extends FileTransfer {
     fileType: string;
@@ -11,7 +18,7 @@ export class FileDownload extends FileTransfer {
     expectedDataLength: number;
     dataSurplus: string | undefined;
 
-    constructor(connection: Connection, data: string) {
+    constructor(connection: Connection, data: string, private arbitraryBlock?: boolean) {
         super(connection);
 
         this.data = data;
@@ -31,6 +38,25 @@ export class FileDownload extends FileTransfer {
         this.logId = log(activityLogStore, this.logEntry, {
             undoable: false
         });
+
+        this.setTimeout();
+    }
+
+    get timeoutMs() {
+        return this.arbitraryBlock
+            ? CONF_FILE_TRANSFER_TIMEOUT_FOR_ARBITRARY_BLOCK_MS
+            : super.timeoutMs;
+    }
+
+    handleTimeout() {
+        if (!this.arbitraryBlock) {
+            return false;
+        }
+
+        this.expectedDataLength = this.data.length;
+        this.updateState();
+        this.updateLog();
+        return true;
     }
 
     onData(data: string) {
@@ -81,7 +107,9 @@ export class FileDownload extends FileTransfer {
         }
 
         if (this.state === "init") {
-            if (this.data.length >= 2) {
+            if (this.arbitraryBlock) {
+                this.state = "progress";
+            } else {
                 let n = parseInt(this.data[1]);
                 if (isNaN(n)) {
                     this.state = "error";
