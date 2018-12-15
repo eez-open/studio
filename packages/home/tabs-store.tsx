@@ -10,7 +10,7 @@ import { Icon } from "eez-studio-ui/icon";
 import { ITab } from "eez-studio-ui/tabs";
 
 import { WorkbenchObject, workbenchObjects } from "home/store";
-import { HomeComponent } from "home/home-component";
+import * as HomeComponentModule from "home/home-component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,6 +35,7 @@ class HomeTab implements IHomeTab {
     _editor: JSX.Element;
 
     render() {
+        const { HomeComponent } = require("home/home-component") as typeof HomeComponentModule;
         return <HomeComponent />;
     }
 

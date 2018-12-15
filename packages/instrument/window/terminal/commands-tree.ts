@@ -1,6 +1,7 @@
 import { observable, runInAction } from "mobx";
 
 import { loadCommands } from "instrument/import";
+import { IEnum } from "instrument/scpi";
 import { commandsToTree, ScpiCommandTreeNode, ICommandSyntax } from "instrument/commands-tree";
 
 import { ICommandNode } from "instrument/window/terminal/commands-browser";
@@ -27,6 +28,7 @@ export class CommandsTree {
     @observable selected: boolean = false;
     @observable expanded: boolean = true;
     @observable children: ICommandNode[] = [];
+    enums: IEnum[];
 
     transform(nodes: ScpiCommandTreeNode[] | undefined): ICommandNode[] {
         if (nodes) {
@@ -50,8 +52,7 @@ export class CommandsTree {
     async load(extensionId: string) {
         let { enums, commands } = await loadCommands(extensionId);
 
-        console.log(enums);
-        console.log(commands);
+        this.enums = enums;
 
         runInAction(() => {
             this.children = this.transform(commandsToTree(commands).nodes);

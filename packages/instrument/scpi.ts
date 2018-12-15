@@ -164,3 +164,24 @@ export function parseScpiValue(data: string) {
 
     return data;
 }
+
+export function compareMnemonic(pattern: string, mnemonic: string) {
+    let i;
+    for (i = 0; i < mnemonic.length && i < pattern.length; ++i) {
+        if (pattern[i].toLowerCase() !== mnemonic[i].toLowerCase()) {
+            return false;
+        }
+    }
+
+    if (i < mnemonic.length) {
+        return false;
+    }
+
+    if (i < pattern.length) {
+        if (pattern[i].toUpperCase() === pattern[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}

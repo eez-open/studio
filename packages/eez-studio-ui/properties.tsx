@@ -98,6 +98,7 @@ export class InputProperty extends React.Component<
         id?: string;
         name?: string;
         value: any;
+        suggestions?: string[];
         title?: string;
         onChange: (value: any) => void;
         advanced?: boolean;
@@ -123,6 +124,35 @@ export class InputProperty extends React.Component<
                 max={this.props.max}
             />
         );
+
+        if (this.props.suggestions && this.props.suggestions.length > 0) {
+            input = (
+                <div className="input-group">
+                    {input}
+                    <div className="input-group-append">
+                        <div className="dropdown">
+                            <button
+                                className="btn btn-secondary dropdown-toggle"
+                                type="button"
+                                data-toggle="dropdown"
+                            />
+                            <div className="dropdown-menu">
+                                {this.props.suggestions.map(suggestion => (
+                                    <button
+                                        key={suggestion}
+                                        className="dropdown-item"
+                                        type="button"
+                                        onClick={() => this.props.onChange(suggestion)}
+                                    >
+                                        {suggestion}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
 
         let content;
         if (this.props.name) {
@@ -161,6 +191,7 @@ export class TextInputProperty extends React.Component<
         id?: string;
         name?: string;
         value: string;
+        suggestions?: string[];
         title?: string;
         onChange: (value: string) => void;
         advanced?: boolean;
