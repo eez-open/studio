@@ -891,6 +891,7 @@ class DocumentStoreClass {
                     if (
                         (propertyInfo.type === PropertyType.Object ||
                             propertyInfo.type === PropertyType.Array) &&
+                        value !== undefined &&
                         !(value instanceof EezObject)
                     ) {
                         // convert to EezObject

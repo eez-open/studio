@@ -155,6 +155,10 @@ function buildEnumDefinitions(enums: IEnum[]) {
 }
 
 function buildParameters(parameters: IParameter[]) {
+    if (parameters.length === 0) {
+        return "";
+    }
+
     return `<Parameters>
             ${parameters
                 .map(
