@@ -6,7 +6,7 @@ export function capitalize(string: string | undefined): string {
     string = string.trim();
 
     if (string[0]) {
-        string = string[0].toUpperCase() + string.substr(1).toLowerCase();
+        string = string[0].toUpperCase() + string.substr(1);
     }
 
     return string;

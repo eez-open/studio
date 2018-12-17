@@ -3,28 +3,36 @@ import ReactDOM from "react-dom";
 import { observable, computed, action, autorun, Lambda, toJS } from "mobx";
 import { observer } from "mobx-react";
 
+import { humanize, camelize, capitalize } from "eez-studio-shared/string";
+
 import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 
-import { EezArrayObject, getProperty } from "eez-studio-shared/model/object";
-import { loadObject } from "eez-studio-shared/model/serialization";
+import { EezObject, EezArrayObject, getProperty } from "eez-studio-shared/model/object";
+import { loadObject, objectToJS } from "eez-studio-shared/model/serialization";
 import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
+
+import { IParameter, IParameterType, IEnum } from "instrument/scpi";
 
 import { ProjectStore } from "project-editor/core/store";
 
 import { Scpi, ScpiCommand, ScpiSubsystem } from "project-editor/project/features/scpi/scpi";
+import { ScpiEnum } from "project-editor/project/features/scpi/enum";
 
 const fs = EEZStudio.electron.remote.require("fs");
+
+////////////////////////////////////////////////////////////////////////////////
 
 interface Command {
     name: string;
     helpLink?: string;
+    parameters: IParameter[];
 }
 
 interface Subsystem {
     name: string;
-    commands: EezArrayObject<Command>;
+    commands: Command[];
     helpLink?: string;
 }
 
@@ -42,253 +50,673 @@ interface Changes {
     added: CommandDefinition[];
     deleted: CommandDefinition[];
     moved: MovedCommandDefinition[];
+    updated: CommandDefinition[];
+    newEnums: IEnum[];
 }
 
-function cleanUpScpiCommand(command: string) {
-    command = command.trim();
+class FindChanges {
+    constructor(private existingEnums: ScpiEnum[]) {}
 
-    let i = command.lastIndexOf(" ");
-    if (i !== -1) {
-        command = command.slice(i + 1);
+    cleanUpScpiCommand(command: string) {
+        command = command.trim();
+
+        let i = command.lastIndexOf(" ");
+        if (i !== -1) {
+            command = command.slice(i + 1);
+        }
+
+        if (command.indexOf("(") != -1 || command.indexOf(")") != -1) {
+            return undefined;
+        }
+
+        let m = command.match(/[A-Z]{3,}/);
+        if (!m) {
+            // no 3 or more upper case letters
+            return false;
+        }
+
+        if (command.length < 4) {
+            return undefined;
+        }
+
+        return command;
     }
 
-    if (command.indexOf("(") != -1 || command.indexOf(")") != -1) {
-        return undefined;
+    getCommandFromSyntax(command: string) {
+        command = command.trim();
+
+        let i = command.indexOf(" ");
+        if (i !== -1) {
+            return command.slice(0, i);
+        }
+
+        return command;
     }
 
-    let m = command.match(/[A-Z]{3,}/);
-    if (!m) {
-        // no 3 or more upper case letters
-        //console.log(command);
+    getParameterTypeAndRange(name: string, table: Element) {
+        const elements = table.querySelectorAll("tr>td>p");
+        for (let i = 0; i < elements.length; ++i) {
+            if (elements[i].textContent && elements[i].textContent!.trim() === name) {
+                let type;
+                let range;
+
+                let sibling = elements[i].parentElement!.nextElementSibling;
+                if (sibling) {
+                    const p = sibling.querySelector("p");
+                    if (p) {
+                        type = p.textContent;
+                    }
+
+                    sibling = sibling.nextElementSibling;
+                    if (sibling) {
+                        const p = sibling.querySelector("p");
+                        if (p) {
+                            range = p.textContent;
+                        }
+                    }
+                }
+
+                return {
+                    type,
+                    range
+                };
+            }
+        }
+
+        return {
+            type: undefined,
+            range: undefined
+        };
+    }
+
+    newEnums: IEnum[] = [];
+
+    enumExists(name: string) {
+        for (let i = 0; i < this.existingEnums.length; ++i) {
+            if (this.existingEnums[i].name === name) {
+                return true;
+            }
+        }
+
+        for (let i = 0; i < this.newEnums.length; ++i) {
+            if (this.newEnums[i].name === name) {
+                return true;
+            }
+        }
+
         return false;
     }
 
-    if (command.length < 4) {
-        return undefined;
+    getUniqueEnumName(suggestedEnumName: string) {
+        let name = suggestedEnumName;
+
+        let suffix = 1;
+        while (this.enumExists(name)) {
+            name = suggestedEnumName + suffix;
+            ++suffix;
+        }
+
+        return name;
     }
 
-    return command;
-}
+    findEnum(suggestedEnumName: string, members: string): string {
+        // find in existing enums
+        for (let i = 0; i < this.existingEnums.length; ++i) {
+            if (
+                this.existingEnums[i].members._array.map(member => member.name).join("|") ===
+                members
+            ) {
+                return this.existingEnums[i].name;
+            }
+        }
 
-function getCommandFromSyntax(command: string) {
-    command = command.trim();
+        // find in new enums
+        for (let i = 0; i < this.newEnums.length; ++i) {
+            if (this.newEnums[i].members.map(member => member.name).join("|") === members) {
+                return this.newEnums[i].name;
+            }
+        }
 
-    let i = command.indexOf(" ");
-    if (i !== -1) {
-        return command.slice(0, i);
+        // create a new enum
+        const newEnum = {
+            name: this.getUniqueEnumName(suggestedEnumName),
+            members: members.split("|").map((member, i) => ({
+                name: member,
+                value: (i + 1).toString()
+            }))
+        };
+
+        this.newEnums.push(newEnum);
+
+        return newEnum.name;
     }
 
-    return command;
-}
+    extractEnumFromRange(suggestedEnumName: string, range: string) {
+        // We are handling all kind of funny cases like:
+        // "0 – 9999999|INFinite" => ["INFinite"]
+        // "0 to MAXimum, MIN|DEF|MAX|UP|DOWN" => ["MIN", "DEF", "MAX", "UP", "DOWN"]
+        // "MIN|MID|MAX (see also Section 8.1)" => ["MIN", "MID", "MAX"]
+        // "0.5, 5, MIN|MAX|DEFault" => ["MIN", "MAX", "DEFault"]
+        // etc
 
-function detectVersionOfScpiFileDoc(aElements: NodeListOf<Element>) {
-    for (let i = 0; i < aElements.length; i++) {
-        let bookmark = aElements[i].getAttribute("name");
-        if (bookmark && (bookmark.startsWith("_scpi_subsys_") || bookmark.startsWith("_scpi_"))) {
-            return 2;
+        const matches = range.match(/(([A-Z][A-Z][A-Za-z0-9]*)\|?)+/g);
+        if (!matches) {
+            return undefined;
+        }
+
+        // find longest match
+        let result = matches[0];
+        for (let i = 1; i < matches.length; ++i) {
+            if (matches[i].length > result.length) {
+                result = matches[i];
+            }
+        }
+
+        // trim and remove empty members
+        return this.findEnum(
+            suggestedEnumName,
+            result
+                .split("|")
+                .map(x => x.trim())
+                .filter(x => !!x)
+                .join("|")
+        );
+    }
+
+    getCommandParameters(commandNameAndParams: string, table: Element) {
+        // Find parameters in p.textContent.
+        // Look in surounding table to get parameters type and range.
+
+        // We are handling all these cases:
+        // {<param>} (this is mandatory param)
+        // [<param>] (this is optional param)
+        // {<param1>}, {<param2>}, {<param3>}
+        // {<param1>} [, <param2>]
+        // {<param1>} [, <param2> [, <param3>]]
+        // {<param1>} [, ...] ("..." means repetition of parameter before is possible )
+
+        commandNameAndParams = commandNameAndParams.trim();
+
+        let i = commandNameAndParams.trim().indexOf(" ");
+        if (i === -1) {
+            // no params
+            return [];
+        }
+
+        let params: IParameter[] = commandNameAndParams
+            .substr(i)
+            .trim()
+            .split(",")
+            .map(name => {
+                name = name.trim();
+
+                // remove [ and ] at the beginning
+                while (name.startsWith("[") || name.startsWith("]")) {
+                    name = name.substr(1, name.length - 1).trim();
+                }
+
+                // remove [ and ] at the end
+                while (name.endsWith("[") || name.endsWith("]")) {
+                    name = name.substr(0, name.length - 1).trim();
+                }
+
+                let isOptional;
+
+                if (name.startsWith("{")) {
+                    isOptional = false;
+                    if (!name.endsWith("}")) {
+                        console.error("Invalid params spec", commandNameAndParams);
+                        return undefined;
+                    }
+                    name = name.substr(1, name.length - 2);
+                } else {
+                    isOptional = true;
+                }
+
+                let types: IParameterType[] = [];
+
+                if (name === "...") {
+                    return undefined;
+                }
+
+                if (!name.startsWith("<") || !name.endsWith(">")) {
+                    console.error("Invalid params spec", commandNameAndParams);
+                    return undefined;
+                }
+
+                let { type, range } = this.getParameterTypeAndRange(name, table);
+
+                name = name.substr(1, name.length - 2);
+
+                if (type != undefined && range != undefined) {
+                    type.trim()
+                        .toLowerCase()
+                        .split("|")
+                        .forEach(type => {
+                            if (
+                                type === "nr1" ||
+                                type === "nr2" ||
+                                type === "nr3" ||
+                                type === "boolean"
+                            ) {
+                                types.push({
+                                    type
+                                });
+                            } else if (type === "quoted string") {
+                                types.push({
+                                    type: "quoted-string"
+                                });
+                            } else if (type === "data block") {
+                                types.push({
+                                    type: "data-block"
+                                });
+                            } else if (type === "discrete") {
+                                types.push({
+                                    type: "discrete",
+                                    enumeration: this.extractEnumFromRange(
+                                        capitalize(camelize(name)),
+                                        range!
+                                    )
+                                });
+                            } else {
+                                console.error("unknown type", commandNameAndParams);
+                            }
+                        });
+                } else {
+                    console.error("type or range undefined", commandNameAndParams);
+                }
+
+                return { name, type: types, isOptional };
+            })
+            .filter(param => !!param) as IParameter[];
+
+        // some checks, only purpose for now is to emit some errors in console
+        let firstOptional = false;
+        for (let i = 0; i < params.length; ++i) {
+            if (i < params.length - 1 && params[i].name === "...") {
+                console.error('Type "..." should be at the end', commandNameAndParams);
+            }
+            if (firstOptional) {
+                if (!params[i].isOptional) {
+                    console.error("All optional should be at the end", commandNameAndParams);
+                }
+            } else {
+                if (params[i].isOptional) {
+                    firstOptional = true;
+                }
+            }
+        }
+
+        return params;
+    }
+
+    detectVersionOfScpiFileDoc(aElements: NodeListOf<Element>) {
+        for (let i = 0; i < aElements.length; i++) {
+            let bookmark = aElements[i].getAttribute("name");
+            if (
+                bookmark &&
+                (bookmark.startsWith("_scpi_subsys_") || bookmark.startsWith("_scpi_"))
+            ) {
+                return 2;
+            }
+        }
+
+        return 1;
+    }
+
+    addCommand(
+        commands: {
+            bookmark: string;
+            name: string;
+            parameters: IParameter[];
+        }[],
+        bookmark: string,
+        p: Element,
+        table: Element
+    ) {
+        const name = this.getCommandFromSyntax(p.textContent!);
+
+        const parameters = this.getCommandParameters(p.textContent!, table);
+
+        const existingCommand = commands.find(existingCommand => existingCommand.name === name);
+        if (!existingCommand) {
+            commands.push({
+                bookmark,
+                name,
+                parameters
+            });
+        } else {
+            if (parameters.length > existingCommand.parameters.length) {
+                existingCommand.parameters = parameters;
+            }
         }
     }
 
-    return 1;
-}
+    getSubsystemFromScpiFileVersion1Doc(file: string, aElements: NodeListOf<Element>) {
+        let topicElement = aElements[0] && aElements[0].parentElement;
+        if (topicElement != null) {
+            let topic = topicElement.textContent;
+            if (topic) {
+                let subsystem: Subsystem = {
+                    name: topic,
+                    commands: [],
+                    helpLink: file
+                };
 
-function getSubsystemFromScpiFileVersion1Doc(file: string, aElements: NodeListOf<Element>) {
-    let topicElement = aElements[0] && aElements[0].parentElement;
-    if (topicElement != null) {
-        let topic = topicElement.textContent;
-        if (topic) {
-            let subsystem: Subsystem = {
-                name: topic,
-                commands: new EezArrayObject<Command>(),
-                helpLink: file
-            };
+                let commands: {
+                    bookmark: string;
+                    name: string;
+                    parameters: IParameter[];
+                }[] = [];
 
-            let commands = new Map<string, string>();
-
-            for (let i = 1; i < aElements.length; i++) {
-                let bookmark = aElements[i].getAttribute("name");
-                if (bookmark) {
-                    let commandElement = aElements[i].parentElement as HTMLElement;
-                    if (commandElement) {
-                        let command = commandElement.textContent;
-                        if (command) {
-                            let cleanedUpCommand = cleanUpScpiCommand(command);
-                            if (cleanedUpCommand) {
-                                let table = commandElement.nextElementSibling;
-                                while (table) {
-                                    if (table.tagName == "TABLE") {
-                                        let tr = table.querySelector("tr:first-child");
-                                        if (tr) {
-                                            let td = tr.querySelector("td:first-child");
-                                            if (
-                                                td &&
-                                                td.textContent &&
-                                                td.textContent.indexOf("Syntax") != -1
-                                            ) {
-                                                let pList = tr.querySelectorAll(
-                                                    "td:nth-child(2)>p"
-                                                );
-                                                let p = pList[0];
-                                                if (p && p.textContent) {
-                                                    commands.set(
-                                                        getCommandFromSyntax(p.textContent),
-                                                        bookmark
+                for (let i = 1; i < aElements.length; i++) {
+                    let bookmark = aElements[i].getAttribute("name");
+                    if (bookmark) {
+                        let commandElement = aElements[i].parentElement as HTMLElement;
+                        if (commandElement) {
+                            let command = commandElement.textContent;
+                            if (command) {
+                                let cleanedUpCommand = this.cleanUpScpiCommand(command);
+                                if (cleanedUpCommand) {
+                                    let table = commandElement.nextElementSibling;
+                                    while (table) {
+                                        if (table.tagName == "TABLE") {
+                                            let tr = table.querySelector("tr:first-child");
+                                            if (tr) {
+                                                let td = tr.querySelector("td:first-child");
+                                                if (
+                                                    td &&
+                                                    td.textContent &&
+                                                    td.textContent.indexOf("Syntax") != -1
+                                                ) {
+                                                    let pList = tr.querySelectorAll(
+                                                        "td:nth-child(2)>p"
                                                     );
-
-                                                    p = pList[1];
+                                                    let p = pList[0];
                                                     if (p && p.textContent) {
-                                                        commands.set(
-                                                            getCommandFromSyntax(p.textContent),
-                                                            bookmark
+                                                        this.addCommand(
+                                                            commands,
+                                                            bookmark,
+                                                            p,
+                                                            table
                                                         );
+
+                                                        p = pList[1];
+                                                        if (p && p.textContent) {
+                                                            this.addCommand(
+                                                                commands,
+                                                                bookmark,
+                                                                p,
+                                                                table
+                                                            );
+                                                        }
                                                     }
                                                 }
                                             }
+                                            break;
                                         }
-                                        break;
+                                        table = table.nextElementSibling;
                                     }
-                                    table = table.nextElementSibling;
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            commands.forEach((bookmark, command) => {
-                subsystem.commands._array.push({
-                    name: command,
-                    helpLink: file + "#" + bookmark
+                commands.forEach(({ bookmark, name, parameters }) => {
+                    subsystem.commands.push({
+                        name,
+                        helpLink: file + "#" + bookmark,
+                        parameters
+                    });
                 });
-            });
 
-            return [subsystem];
+                return [subsystem];
+            }
         }
+
+        return [];
     }
 
-    return [];
-}
+    getSubsystemFromScpiFileVersion2Doc(file: string, aElements: NodeListOf<Element>) {
+        let subsystems: Subsystem[] = [];
 
-function getSubsystemFromScpiFileVersion2Doc(file: string, aElements: NodeListOf<Element>) {
-    let subsystems: Subsystem[] = [];
+        let subsystem: Subsystem | undefined;
+        let commandBookmark: string | undefined;
 
-    let subsystem: Subsystem | undefined;
-    let commandBookmark: string | undefined;
-
-    for (let i = 0; i < aElements.length; i++) {
-        let bookmark = aElements[i].getAttribute("name");
-        if (bookmark) {
-            let parentElement = aElements[i].parentElement;
-            if (parentElement != null) {
-                let text = parentElement.textContent;
-                if (text) {
-                    if (bookmark.startsWith("_scpi_subsys_")) {
-                        subsystem = {
-                            name: text,
-                            commands: new EezArrayObject<Command>(),
-                            helpLink: file
-                        };
-                        subsystems.push(subsystem);
-                    } else if (subsystem && bookmark.startsWith("_scpi_")) {
-                        subsystem.commands._array.push({
-                            name: getCommandFromSyntax(text),
-                            helpLink: file + "#" + (commandBookmark || bookmark)
-                        });
-                    } else {
-                        commandBookmark = bookmark;
+        for (let i = 0; i < aElements.length; i++) {
+            let bookmark = aElements[i].getAttribute("name");
+            if (bookmark) {
+                let parentElement = aElements[i].parentElement;
+                if (parentElement != null) {
+                    let text = parentElement.textContent;
+                    if (text) {
+                        if (bookmark.startsWith("_scpi_subsys_")) {
+                            subsystem = {
+                                name: text,
+                                commands: [],
+                                helpLink: file
+                            };
+                            subsystems.push(subsystem);
+                        } else if (subsystem && bookmark.startsWith("_scpi_")) {
+                            subsystem.commands.push({
+                                name: this.getCommandFromSyntax(text),
+                                helpLink: file + "#" + (commandBookmark || bookmark),
+                                parameters: []
+                            });
+                        } else {
+                            commandBookmark = bookmark;
+                        }
                     }
                 }
             }
         }
+
+        return subsystems;
     }
 
-    return subsystems;
-}
-
-function getSubsystemFromScpiFileDoc(file: string, aElements: NodeListOf<Element>) {
-    let version = detectVersionOfScpiFileDoc(aElements);
-    if (version === 1) {
-        return getSubsystemFromScpiFileVersion1Doc(file, aElements);
-    } else if (version === 2) {
-        return getSubsystemFromScpiFileVersion2Doc(file, aElements);
-    } else {
-        return [];
-    }
-}
-
-function getCommandsFromScpiDoc() {
-    return new Promise<Subsystem[]>((resolve, reject) => {
-        if (ProjectStore.project.settings.general.scpiDocFolder === undefined) {
-            reject("SCPI help folder is not defined");
-            return;
+    getSubsystemFromScpiFileDoc(file: string, aElements: NodeListOf<Element>) {
+        let version = this.detectVersionOfScpiFileDoc(aElements);
+        if (version === 1) {
+            return this.getSubsystemFromScpiFileVersion1Doc(file, aElements);
+        } else if (version === 2) {
+            return this.getSubsystemFromScpiFileVersion2Doc(file, aElements);
+        } else {
+            return [];
         }
+    }
 
-        let scpiHelpFolderPath = ProjectStore.getAbsoluteFilePath(
-            ProjectStore.project.settings.general.scpiDocFolder
-        );
+    getCommandsFromScpiDoc() {
+        return new Promise<Subsystem[]>((resolve, reject) => {
+            if (ProjectStore.project.settings.general.scpiDocFolder === undefined) {
+                reject("SCPI help folder is not defined");
+                return;
+            }
 
-        fs.exists(scpiHelpFolderPath, (exists: boolean) => {
-            if (!exists) {
-                reject(`SCPI help folder "${scpiHelpFolderPath}" doesn't exists.`);
-            } else {
-                fs.readdir(scpiHelpFolderPath, (err: any, files: string[]) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
+            let scpiHelpFolderPath = ProjectStore.getAbsoluteFilePath(
+                ProjectStore.project.settings.general.scpiDocFolder
+            );
 
-                    files = files.filter(file => file.endsWith("html"));
+            fs.exists(scpiHelpFolderPath, (exists: boolean) => {
+                if (!exists) {
+                    reject(`SCPI help folder "${scpiHelpFolderPath}" doesn't exists.`);
+                } else {
+                    fs.readdir(scpiHelpFolderPath, (err: any, files: string[]) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
 
-                    let promises: Promise<Subsystem[]>[] = files.map(file => {
-                        return new Promise<Subsystem[]>((resolve, reject) => {
-                            fs.readFile(
-                                scpiHelpFolderPath + "/" + file,
-                                "utf-8",
-                                (err: any, data: string) => {
-                                    if (!err) {
-                                        let element = document.createElement("div");
-                                        element.innerHTML = data;
-                                        let aElements = element.querySelectorAll("A[name]");
-                                        let subsystems = getSubsystemFromScpiFileDoc(
-                                            file,
-                                            aElements
-                                        );
-                                        resolve(subsystems);
-                                    } else {
-                                        resolve([]);
+                        files = files.filter(file => file.endsWith("html"));
+
+                        let promises: Promise<Subsystem[]>[] = files.map(file => {
+                            return new Promise<Subsystem[]>((resolve, reject) => {
+                                fs.readFile(
+                                    scpiHelpFolderPath + "/" + file,
+                                    "utf-8",
+                                    (err: any, data: string) => {
+                                        if (!err) {
+                                            let element = document.createElement("div");
+                                            element.innerHTML = data;
+                                            let aElements = element.querySelectorAll("A[name]");
+                                            let subsystems = this.getSubsystemFromScpiFileDoc(
+                                                file,
+                                                aElements
+                                            );
+                                            resolve(subsystems);
+                                        } else {
+                                            resolve([]);
+                                        }
                                     }
-                                }
+                                );
+                            });
+                        });
+
+                        Promise.all(promises)
+                            .then(results => {
+                                let allSubsystems: Subsystem[] = [];
+
+                                results.forEach(subsystems => {
+                                    if (subsystems) {
+                                        allSubsystems = allSubsystems.concat(subsystems);
+                                    }
+                                });
+
+                                resolve(allSubsystems);
+                            })
+                            .catch(err => reject(err));
+                    });
+                }
+            });
+        });
+    }
+
+    static compareCommandDefinitions(a: CommandDefinition, b: CommandDefinition) {
+        let c1 = a.command.name.toUpperCase();
+        let c2 = b.command.name.toUpperCase();
+        return c1 < c2 ? -1 : c1 > c2 ? 1 : 0;
+    }
+
+    findCommandInSubsystems(subsystems: Subsystem[], commandName: string) {
+        for (const subsystem of subsystems) {
+            for (const command of subsystem.commands) {
+                if (command.name === commandName) {
+                    return {
+                        subsystem: subsystem,
+                        command: command
+                    };
+                }
+            }
+        }
+        return undefined;
+    }
+
+    findMissingCommands(subsystems1: Subsystem[], subsystems2: Subsystem[]) {
+        let missingCommands: CommandDefinition[] = [];
+
+        subsystems1.forEach(subsystem => {
+            subsystem.commands.forEach(command => {
+                if (!this.findCommandInSubsystems(subsystems2, command.name)) {
+                    missingCommands.push({
+                        command: command,
+                        subsystem: subsystem
+                    });
+                }
+            });
+        });
+
+        return missingCommands.sort(FindChanges.compareCommandDefinitions);
+    }
+
+    compareParameters(parameters1: IParameter[], parameters2: IParameter[]) {
+        return (
+            JSON.stringify(
+                toJS(parameters1 instanceof EezObject ? objectToJS(parameters1) : parameters1)
+            ) ===
+            JSON.stringify(
+                toJS(parameters2 instanceof EezObject ? objectToJS(parameters2) : parameters2)
+            )
+        );
+    }
+
+    getChanges() {
+        return new Promise<Changes>((resolve, reject) => {
+            this.getCommandsFromScpiDoc()
+                .then(subsystems => {
+                    let existingSubsystems = objectToJS(
+                        (getProperty(ProjectStore.project, "scpi") as Scpi).subsystems
+                    );
+
+                    // added
+                    let added = this.findMissingCommands(subsystems, existingSubsystems);
+
+                    // deleted
+                    let deleted = this.findMissingCommands(existingSubsystems, subsystems);
+
+                    // moved
+                    let moved: MovedCommandDefinition[] = [];
+                    subsystems.forEach(subsystem => {
+                        subsystem.commands.forEach(command => {
+                            let result = this.findCommandInSubsystems(
+                                existingSubsystems,
+                                command.name
                             );
+                            if (result && result.subsystem.name !== subsystem.name) {
+                                moved.push({
+                                    command: command,
+                                    subsystem: result.subsystem,
+                                    toSubsystem: subsystem
+                                });
+                            }
+                        });
+                    });
+                    moved = moved.sort(FindChanges.compareCommandDefinitions);
+
+                    //
+                    let updated: CommandDefinition[] = [];
+                    subsystems.forEach(subsystem => {
+                        subsystem.commands.forEach(command => {
+                            let result = this.findCommandInSubsystems(
+                                existingSubsystems,
+                                command.name
+                            );
+                            if (
+                                result &&
+                                result.subsystem.name === subsystem.name &&
+                                !this.compareParameters(
+                                    command.parameters,
+                                    result.command.parameters
+                                )
+                            ) {
+                                updated.push({
+                                    command: command,
+                                    subsystem
+                                });
+                            }
                         });
                     });
 
-                    Promise.all(promises)
-                        .then(results => {
-                            let allSubsystems: Subsystem[] = [];
-
-                            results.forEach(subsystems => {
-                                if (subsystems) {
-                                    allSubsystems = allSubsystems.concat(subsystems);
-                                }
-                            });
-
-                            resolve(allSubsystems);
-                        })
-                        .catch(err => reject(err));
-                });
-            }
+                    resolve({
+                        subsystems,
+                        added,
+                        deleted,
+                        moved,
+                        updated,
+                        newEnums: this.newEnums
+                    });
+                })
+                .catch(reject);
         });
-    });
+    }
 }
 
-function compareCommandDefinitions(a: CommandDefinition, b: CommandDefinition) {
-    let c1 = a.command.name.toUpperCase();
-    let c2 = b.command.name.toUpperCase();
-    return c1 < c2 ? -1 : c1 > c2 ? 1 : 0;
-}
+////////////////////////////////////////////////////////////////////////////////
 
-function findCommandInSubsystems(subsystems: Subsystem[], commandName: string) {
-    for (const subsystem of subsystems) {
+function findCommandInScpiSubsystems(
+    subsystems: EezArrayObject<ScpiSubsystem>,
+    commandName: string
+) {
+    for (const subsystem of subsystems._array) {
         for (const command of subsystem.commands._array) {
             if (command.name === commandName) {
                 return {
@@ -301,67 +729,7 @@ function findCommandInSubsystems(subsystems: Subsystem[], commandName: string) {
     return undefined;
 }
 
-function findMissingCommands(subsystems1: Subsystem[], subsystems2: Subsystem[]) {
-    let missingCommands: CommandDefinition[] = [];
-
-    subsystems1.forEach(subsystem => {
-        subsystem.commands._array.forEach(command => {
-            if (!findCommandInSubsystems(subsystems2, command.name)) {
-                missingCommands.push({
-                    command: command,
-                    subsystem: subsystem
-                });
-            }
-        });
-    });
-
-    return missingCommands.sort(compareCommandDefinitions);
-}
-
-function getChanges() {
-    return new Promise<Changes>((resolve, reject) => {
-        getCommandsFromScpiDoc()
-            .then(subsystems => {
-                console.log(subsystems);
-
-                let existingSubsystems = (getProperty(ProjectStore.project, "scpi") as Scpi)
-                    .subsystems;
-
-                // added
-                let added = findMissingCommands(subsystems, existingSubsystems._array);
-
-                // deleted
-                let deleted = findMissingCommands(existingSubsystems._array, subsystems);
-
-                // moved
-                let moved: MovedCommandDefinition[] = [];
-                subsystems.forEach(subsystem => {
-                    subsystem.commands._array.forEach(command => {
-                        let result = findCommandInSubsystems(
-                            existingSubsystems._array,
-                            command.name
-                        );
-                        if (result && result.subsystem.name !== subsystem.name) {
-                            moved.push({
-                                command: command,
-                                subsystem: result.subsystem,
-                                toSubsystem: subsystem
-                            });
-                        }
-                    });
-                });
-                moved = moved.sort(compareCommandDefinitions);
-
-                resolve({
-                    subsystems: subsystems,
-                    added: added,
-                    deleted: deleted,
-                    moved: moved
-                });
-            })
-            .catch(reject);
-    });
-}
+////////////////////////////////////////////////////////////////////////////////
 
 const ImportScpiDocDialogDiv = styled.div`
     * {
@@ -397,7 +765,7 @@ const ImportScpiDocDialogDiv = styled.div`
     tbody {
         display: block;
         width: 100%;
-        max-height: 200px;
+        max-height: 400px;
         overflow-y: auto;
         overflow-x: hidden;
     }
@@ -427,9 +795,9 @@ const TablesDiv = styled.div`
     padding-top: 15px;
 `;
 
-type Section = "added" | "deleted" | "moved";
+type Section = "added" | "deleted" | "moved" | "updated" | "newEnums";
 
-const SECTIONS: Section[] = ["added", "deleted", "moved"];
+const SECTIONS: Section[] = ["added", "deleted", "moved", "updated", "newEnums"];
 
 @observer
 export class ImportScpiDocDialog extends React.Component<
@@ -446,6 +814,8 @@ export class ImportScpiDocDialog extends React.Component<
     addedSelectAllCheckbox: HTMLInputElement;
     deletedSelectAllCheckbox: HTMLInputElement;
     movedSelectAllCheckbox: HTMLInputElement;
+    updatedSelectAllCheckbox: HTMLInputElement;
+    newEnumsSelectAllCheckbox: HTMLInputElement;
 
     @observable
     changes: Changes;
@@ -454,7 +824,9 @@ export class ImportScpiDocDialog extends React.Component<
         subsystems: [],
         added: [],
         deleted: [],
-        moved: []
+        moved: [],
+        updated: [],
+        newEnums: []
     };
     @observable
     error: any;
@@ -464,6 +836,8 @@ export class ImportScpiDocDialog extends React.Component<
         added?: Lambda;
         deleted?: Lambda;
         moved?: Lambda;
+        updated?: Lambda;
+        newEnums?: Lambda;
     } = {};
 
     @computed
@@ -480,7 +854,9 @@ export class ImportScpiDocDialog extends React.Component<
         return (
             this.selectedChanges.added.length > 0 ||
             this.selectedChanges.deleted.length > 0 ||
-            this.selectedChanges.moved.length > 0
+            this.selectedChanges.moved.length > 0 ||
+            this.selectedChanges.updated.length > 0 ||
+            this.selectedChanges.newEnums.length > 0
         );
     }
 
@@ -499,7 +875,12 @@ export class ImportScpiDocDialog extends React.Component<
             backdrop: "static"
         });
 
-        getChanges()
+        const scpi = getProperty(ProjectStore.project, "scpi") as Scpi;
+
+        const findChanges = new FindChanges(scpi.enums._array);
+
+        findChanges
+            .getChanges()
             .then(
                 action((changes: Changes) => {
                     this.changes = changes;
@@ -510,6 +891,10 @@ export class ImportScpiDocDialog extends React.Component<
                         this.activeTab = "deleted";
                     } else if (changes.moved.length > 0) {
                         this.activeTab = "moved";
+                    } else if (changes.updated.length > 0) {
+                        this.activeTab = "updated";
+                    } else if (changes.newEnums.length > 0) {
+                        this.activeTab = "newEnums";
                     }
                 })
             )
@@ -541,7 +926,9 @@ export class ImportScpiDocDialog extends React.Component<
 
         UndoManager.setCombineCommands(true);
 
-        let existingSubsystems = (getProperty(ProjectStore.project, "scpi") as Scpi).subsystems;
+        const scpi = getProperty(ProjectStore.project, "scpi") as Scpi;
+
+        let existingSubsystems = scpi.subsystems;
 
         let getOrAddSubsystem = (subsystem: Subsystem) => {
             let existingSubsystem = existingSubsystems._array.find(
@@ -584,8 +971,8 @@ export class ImportScpiDocDialog extends React.Component<
         });
 
         this.selectedChanges.deleted.forEach(commandDefinition => {
-            let result = findCommandInSubsystems(
-                existingSubsystems._array,
+            let result = findCommandInScpiSubsystems(
+                existingSubsystems,
                 commandDefinition.command.name
             );
             if (result) {
@@ -594,8 +981,8 @@ export class ImportScpiDocDialog extends React.Component<
         });
 
         this.selectedChanges.moved.forEach(commandDefinition => {
-            let result = findCommandInSubsystems(
-                existingSubsystems._array,
+            let result = findCommandInScpiSubsystems(
+                existingSubsystems,
                 commandDefinition.command.name
             );
             if (result) {
@@ -610,9 +997,23 @@ export class ImportScpiDocDialog extends React.Component<
             }
         });
 
-        UndoManager.setCombineCommands(false);
+        this.selectedChanges.newEnums.forEach(newEnum => {
+            DocumentStore.addObject(scpi.enums, newEnum as any);
+        });
 
-        console.log(toJS(this.selectedChanges));
+        this.selectedChanges.updated.forEach(commandDefinition => {
+            let result = findCommandInScpiSubsystems(
+                existingSubsystems,
+                commandDefinition.command.name
+            );
+            if (result) {
+                DocumentStore.updateObject(result.command, {
+                    parameters: toJS(commandDefinition.command.parameters)
+                });
+            }
+        });
+
+        UndoManager.setCombineCommands(false);
     }
 
     onCancel() {
@@ -637,8 +1038,12 @@ export class ImportScpiDocDialog extends React.Component<
                 checkbox = this.addedSelectAllCheckbox;
             } else if (section === "deleted") {
                 checkbox = this.deletedSelectAllCheckbox;
-            } else {
+            } else if (section === "moved") {
                 checkbox = this.movedSelectAllCheckbox;
+            } else if (section === "updated") {
+                checkbox = this.updatedSelectAllCheckbox;
+            } else {
+                checkbox = this.newEnumsSelectAllCheckbox;
             }
 
             if (!checkbox) {
@@ -671,9 +1076,9 @@ export class ImportScpiDocDialog extends React.Component<
         });
     }
 
-    isCommandSelected(section: Section, commandDefinition: CommandDefinition) {
+    isChangeSelected(section: Section, changeDefinition: CommandDefinition | IEnum) {
         let commandDefinitions: any = this.selectedChanges[section];
-        return commandDefinitions.indexOf(commandDefinition) !== -1;
+        return commandDefinitions.indexOf(changeDefinition) !== -1;
     }
 
     @action
@@ -717,10 +1122,10 @@ export class ImportScpiDocDialog extends React.Component<
                                     "nav-link" + (this.activeTab === section ? " active" : "")
                                 }
                             >
-                                {section.toUpperCase()} {this.activeTab === section && "COMMANDS"}{" "}
+                                {humanize(section).toUpperCase()}
                                 <span
                                     className={
-                                        "badge badge-pills" +
+                                        "ml-2 badge badge-pills" +
                                         (this.activeTab === section
                                             ? " badge-light"
                                             : " badge-dark")
@@ -765,7 +1170,7 @@ export class ImportScpiDocDialog extends React.Component<
                                 <th className="col-4">From</th>
                             </tr>
                         );
-                    } else {
+                    } else if (section === "moved") {
                         thead = (
                             <tr>
                                 <th className="col-6">
@@ -779,50 +1184,101 @@ export class ImportScpiDocDialog extends React.Component<
                                 <th className="col-3">To</th>
                             </tr>
                         );
+                    } else if (section === "updated") {
+                        thead = (
+                            <tr>
+                                <th className="col-8">
+                                    <input
+                                        ref={ref => (this.updatedSelectAllCheckbox = ref!)}
+                                        type="checkbox"
+                                    />{" "}
+                                    Command
+                                </th>
+                                <th className="col-4">In</th>
+                            </tr>
+                        );
+                    } else if (section === "newEnums") {
+                        thead = (
+                            <tr>
+                                <th className="col-8">
+                                    <input
+                                        ref={ref => (this.newEnumsSelectAllCheckbox = ref!)}
+                                        type="checkbox"
+                                    />{" "}
+                                    Enum
+                                </th>
+                                <th className="col-4">Members</th>
+                            </tr>
+                        );
                     }
 
                     let tbody = (this.changes[section] as any).map(
-                        (commandDefinition: CommandDefinition) => {
+                        (commandOrNewEnumDefinition: CommandDefinition | IEnum) => {
                             let checkbox = (
                                 <input
                                     type="checkbox"
-                                    checked={this.isCommandSelected(section, commandDefinition)}
+                                    checked={this.isChangeSelected(
+                                        section,
+                                        commandOrNewEnumDefinition
+                                    )}
                                     onChange={this.handleSelectCommand.bind(
                                         this,
                                         section,
-                                        commandDefinition
+                                        commandOrNewEnumDefinition
                                     )}
                                 />
                             );
 
-                            if (section === "added" || section === "deleted") {
+                            if (section === "newEnums") {
+                                const newEnum = commandOrNewEnumDefinition as IEnum;
+
                                 return (
-                                    <tr key={commandDefinition.command.name}>
+                                    <tr key={newEnum.name}>
                                         <td className="col-8">
-                                            {checkbox} {commandDefinition.command.name}
+                                            {checkbox} {newEnum.name}
                                         </td>
                                         <td className="col-4">
-                                            {commandDefinition.subsystem.name}
+                                            {newEnum.members.map(member => member.name).join("|")}
                                         </td>
                                     </tr>
                                 );
                             } else {
-                                return (
-                                    <tr key={commandDefinition.command.name}>
-                                        <td className="col-6">
-                                            {checkbox} {commandDefinition.command.name}
-                                        </td>
-                                        <td className="col-3">
-                                            {commandDefinition.subsystem.name}
-                                        </td>
-                                        <td className="col-3">
-                                            {
-                                                (commandDefinition as MovedCommandDefinition)
-                                                    .toSubsystem.name
-                                            }
-                                        </td>
-                                    </tr>
-                                );
+                                const commandDefinition = commandOrNewEnumDefinition as CommandDefinition;
+
+                                if (
+                                    section === "added" ||
+                                    section === "deleted" ||
+                                    section === "updated"
+                                ) {
+                                    return (
+                                        <tr key={commandDefinition.command.name}>
+                                            <td className="col-8">
+                                                {checkbox} {commandDefinition.command.name}
+                                            </td>
+                                            <td className="col-4">
+                                                {commandDefinition.subsystem.name}
+                                            </td>
+                                        </tr>
+                                    );
+                                } else {
+                                    // section === "moved"
+                                    return (
+                                        <tr key={commandDefinition.command.name}>
+                                            <td className="col-6">
+                                                {checkbox} {commandDefinition.command.name}
+                                            </td>
+                                            <td className="col-3">
+                                                {commandDefinition.subsystem.name}
+                                            </td>
+                                            <td className="col-3">
+                                                {
+                                                    (commandDefinition as MovedCommandDefinition)
+                                                        .toSubsystem.name
+                                                }
+                                            </td>
+                                        </tr>
+                                    );
+                                }
                             }
                         }
                     );
@@ -917,6 +1373,8 @@ export class ImportScpiDocDialog extends React.Component<
         );
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 export function showImportScpiDocDialog() {
     let el = document.createElement("div");

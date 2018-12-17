@@ -10,7 +10,14 @@ export interface IEnum {
     members: IEnumMember[];
 }
 
-export type ParameterTypeType = "numeric" | "boolean" | "string" | "discrete";
+export type ParameterTypeType =
+    | "nr1"
+    | "nr2"
+    | "nr3"
+    | "boolean"
+    | "quoted-string"
+    | "data-block"
+    | "discrete";
 
 export interface IParameterType {
     type: ParameterTypeType;
@@ -29,8 +36,11 @@ export type ResponseType =
     | "nr2"
     | "nr3"
     | "boolean"
-    | "string"
-    | "arbitrary-block"
+    | "quoted-string"
+    | "arbitrary-ascii"
+    | "list-of-quoted-string"
+    | "data-block"
+    | "non-standard-data-block"
     | "discrete";
 
 export interface IResponse {
@@ -61,16 +71,24 @@ export function getSdlSemanticTypeForParameter(parameter: IParameter) {
 }
 
 export function getSdlParameterType(parameterType: IParameterType) {
-    if (parameterType.type === "numeric") {
+    if (parameterType.type === "nr1") {
+        return "<NonDecimalNumeric />";
+    }
+
+    if (parameterType.type === "nr2" || parameterType.type === "nr3") {
         return "<DecimalNumeric />";
     }
 
-    if (parameterType.type === "string") {
+    if (parameterType.type === "quoted-string") {
         return "<String />";
     }
 
     if (parameterType.type === "boolean") {
         return `<NonDecimalNumeric />`;
+    }
+
+    if (parameterType.type === "data-block") {
+        return `<DataBlock />`;
     }
 
     if (parameterType.type === "discrete") {
@@ -81,10 +99,6 @@ export function getSdlParameterType(parameterType: IParameterType) {
 }
 
 export function getSdlSemanticType(responseType: ResponseType | ParameterTypeType) {
-    if (responseType === "numeric") {
-        return "Real";
-    }
-
     if (responseType === "nr1") {
         return "Integer";
     }
@@ -101,12 +115,20 @@ export function getSdlSemanticType(responseType: ResponseType | ParameterTypeTyp
         return "Boolean";
     }
 
-    if (responseType === "string") {
+    if (responseType === "quoted-string" || responseType === "arbitrary-ascii") {
         return "String";
     }
 
-    if (responseType === "arbitrary-block") {
+    if (responseType === "list-of-quoted-string") {
+        return "ArrayOfString";
+    }
+
+    if (responseType === "data-block") {
         return "Block";
+    }
+
+    if (responseType === "non-standard-data-block") {
+        return "NonStandardBlock";
     }
 
     if (responseType === "discrete") {
@@ -133,12 +155,24 @@ export function getSdlResponseType(response: IResponse) {
         return `<NR1Numeric />`;
     }
 
-    if (response.type === "string") {
+    if (response.type === "quoted-string") {
+        return "<String />";
+    }
+
+    if (response.type === "arbitrary-ascii") {
         return "<ArbitraryAscii />";
     }
 
-    if (response.type === "arbitrary-block") {
-        return "<DefiniteLengthArbitraryBlock />";
+    if (response.type === "list-of-quoted-string") {
+        return "<ListOfQuotedString />";
+    }
+
+    if (response.type === "data-block") {
+        return "<DataBlock />";
+    }
+
+    if (response.type === "non-standard-data-block") {
+        return "<NonStandardDataBlock />";
     }
 
     if (response.type === "discrete") {

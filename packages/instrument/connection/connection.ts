@@ -337,12 +337,12 @@ export class Connection extends ConnectionBase implements CommunicationInterface
             this.longOperation.onData(data);
         } else if (
             this.data === undefined &&
-            (data.startsWith("#") || this.expectedResponseType === "arbitrary-block")
+            (data.startsWith("#") || this.expectedResponseType === "non-standard-data-block")
         ) {
             this.longOperation = new FileDownload(
                 this,
                 data,
-                this.expectedResponseType === "arbitrary-block"
+                this.expectedResponseType === "non-standard-data-block"
             );
         }
 

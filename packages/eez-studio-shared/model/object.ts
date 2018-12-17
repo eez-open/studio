@@ -191,6 +191,13 @@ export class EezObject {
 export class EezArrayObject<T> extends EezObject {
     @observable _array: T[] = [];
 
+    constructor(array?: T[]) {
+        super();
+        if (array) {
+            this._array = array;
+        }
+    }
+
     get _class() {
         return this._propertyInfo!.typeClass!;
     }

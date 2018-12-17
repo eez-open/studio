@@ -111,6 +111,11 @@ export class ScpiEnum extends EezObject {
     members: EezArrayObject<ScpiEnumMember>;
 
     static classInfo: ClassInfo = {
+        label: (scpiEnum: ScpiEnum) => {
+            return `${scpiEnum.name} (${scpiEnum.members._array
+                .map(member => member.name)
+                .join("|")})`;
+        },
         properties: [
             {
                 name: "name",

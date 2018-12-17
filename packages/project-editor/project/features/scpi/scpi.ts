@@ -99,6 +99,17 @@ function isScpiType(object: ScpiParameter, type: ParameterTypeType) {
     return !!getScpiType(object, type);
 }
 
+function getNumericType(object: ScpiParameter) {
+    if (isScpiType(object, "nr2")) {
+        return "nr2";
+    }
+    if (isScpiType(object, "nr3")) {
+        return "nr3";
+    }
+
+    return "nr1";
+}
+
 function getDiscreteTypeEnumeration(object: ScpiParameter) {
     const discreteType = getScpiType(object, "discrete");
     if (discreteType) {
@@ -160,11 +171,28 @@ export class ScpiParameter extends EezObject {
                                     type: "boolean"
                                 },
                                 {
+                                    name: "numericType",
+                                    displayName: "",
+                                    type: "enum",
+                                    enumItems: [
+                                        { id: "nr1", label: "NR1" },
+                                        { id: "nr2", label: "NR2" },
+                                        { id: "nr3", label: "NR3" }
+                                    ],
+                                    visible: (values: any) => {
+                                        return values.numeric;
+                                    }
+                                },
+                                {
                                     name: "boolean",
                                     type: "boolean"
                                 },
                                 {
                                     name: "string",
+                                    type: "boolean"
+                                },
+                                {
+                                    name: "dataBlock",
                                     type: "boolean"
                                 },
                                 {
@@ -184,9 +212,14 @@ export class ScpiParameter extends EezObject {
                             ]
                         },
                         values: {
-                            numeric: isScpiType(object, "numeric"),
+                            numeric:
+                                isScpiType(object, "nr1") ||
+                                isScpiType(object, "nr2") ||
+                                isScpiType(object, "nr3"),
+                            numericType: getNumericType(object),
                             boolean: isScpiType(object, "boolean"),
-                            string: isScpiType(object, "string"),
+                            string: isScpiType(object, "quoted-string"),
+                            dataBlock: isScpiType(object, "data-block"),
                             discrete: isScpiType(object, "discrete"),
                             enumeration: getDiscreteTypeEnumeration(object)
                         }
@@ -196,7 +229,7 @@ export class ScpiParameter extends EezObject {
 
                     if (result.values.numeric) {
                         type.push({
-                            type: "numeric"
+                            type: result.values.numericType
                         });
                     }
 
@@ -208,7 +241,13 @@ export class ScpiParameter extends EezObject {
 
                     if (result.values.string) {
                         type.push({
-                            type: "string"
+                            type: "quoted-string"
+                        });
+                    }
+
+                    if (result.values.dataBlock) {
+                        type.push({
+                            type: "data-block"
                         });
                     }
 
@@ -315,8 +354,11 @@ export class ScpiResponse extends EezObject {
                     { id: "nr2" },
                     { id: "nr3" },
                     { id: "boolean" },
-                    { id: "string" },
-                    { id: "arbitrary-block" },
+                    { id: "quoted-string" },
+                    { id: "arbitrary-ascii" },
+                    { id: "list-of-quoted-string" },
+                    { id: "data-block" },
+                    { id: "non-standard-data-block" },
                     { id: "discrete" }
                 ]
             },
@@ -334,9 +376,7 @@ export class ScpiResponse extends EezObject {
                 isOptional: true
             }
         ],
-        defaultValue: {
-            type: "nr1"
-        }
+        defaultValue: {}
     };
 
     check(object: EezObject) {

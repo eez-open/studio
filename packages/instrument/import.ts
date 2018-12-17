@@ -142,21 +142,25 @@ function buildParameters(dom: JQuery): IParameter[] {
 
         let type: IParameterType[] = [];
 
-        if ($(element).find("DecimalNumeric").length) {
+        if ($(element).find("NonDecimalNumeric").length) {
             type.push({
-                type: "numeric"
+                type: "nr1"
+            });
+        } else if ($(element).find("DecimalNumeric").length) {
+            type.push({
+                type: "nr2"
             });
         }
 
         if ($(element).find("String").length) {
             type.push({
-                type: "string"
+                type: "quoted-string"
             });
         }
 
-        if ($(element).find("NonDecimalNumeric").length) {
+        if ($(element).find("DataBlock").length) {
             type.push({
-                type: "boolean"
+                type: "data-block"
             });
         }
 
@@ -191,10 +195,16 @@ function buildResponse(dom: JQuery): IResponse {
         type = "nr2";
     } else if (dom.find("Responses>Response>ResponseType>NR3Numeric").length) {
         type = "nr3";
+    } else if (dom.find("Responses>Response>ResponseType>String").length) {
+        type = "quoted-string";
     } else if (dom.find("Responses>Response>ResponseType>ArbitraryAscii").length) {
-        type = "string";
-    } else if (dom.find("Responses>Response>ResponseType>DefiniteLengthArbitraryBlock").length) {
-        type = "arbitrary-block";
+        type = "arbitrary-ascii";
+    } else if (dom.find("Responses>Response>ResponseType>ListOfQuotedString").length) {
+        type = "list-of-quoted-string";
+    } else if (dom.find("Responses>Response>ResponseType>DataBlock").length) {
+        type = "data-block";
+    } else if (dom.find("Responses>Response>ResponseType>NonStandardDataBlock").length) {
+        type = "non-standard-data-block";
     } else if (dom.find("Responses>Response>ResponseType>Character>EnumRef").length) {
         type = "discrete";
         enumeration = dom.find("Responses>Response>ResponseType>Character>EnumRef").attr("name");

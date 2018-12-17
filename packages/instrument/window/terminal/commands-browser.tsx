@@ -3,7 +3,11 @@ import { observable, action, computed } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { VALIDATION_MESSAGE_REQUIRED, filterNumber } from "eez-studio-shared/model/validation";
+import {
+    VALIDATION_MESSAGE_REQUIRED,
+    filterInteger,
+    filterNumber
+} from "eez-studio-shared/model/validation";
 
 import styled from "eez-studio-ui/styled-components";
 import { IListNode, List } from "eez-studio-ui/list";
@@ -69,12 +73,18 @@ export class CommandSyntax extends React.Component<
 
         for (let i = 0; i < parameter.type.length; ++i) {
             const type = parameter.type[i];
-            if (type.type === "numeric") {
+            if (type.type === "nr1") {
+                const num = filterInteger(parameterValue);
+                if (!isNaN(num)) {
+                    return [null, parameterValue];
+                }
+                types.push("nr1");
+            } else if (type.type === "nr2" || type.type === "nr3") {
                 const num = filterNumber(parameterValue);
                 if (!isNaN(num)) {
                     return [null, parameterValue];
                 }
-                types.push("Numeric");
+                types.push("nr2");
             } else if (type.type === "boolean") {
                 const num = filterNumber(parameterValue);
                 if (!isNaN(num) && (num === 0 || num === 1)) {
@@ -98,7 +108,7 @@ export class CommandSyntax extends React.Component<
 
         for (let i = 0; i < parameter.type.length; ++i) {
             const type = parameter.type[i];
-            if (type.type === "string") {
+            if (type.type === "quoted-string") {
                 return [null, `"${parameterValue}"`];
             }
         }

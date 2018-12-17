@@ -311,12 +311,14 @@ function getAliases(mnemonic: string) {
 }
 
 function buildNode(node: ScpiCommandTreeNode) {
-    if (node.command) {
-        return `<SubsystemCommand>${buildCommand(node.command)}</SubsystemCommand>`;
-    } else if (node.nodes) {
-        let nodes = node.nodes as ScpiCommandTreeNode[];
+    let result = "";
 
-        let result = "";
+    if (node.command) {
+        result += `<SubsystemCommand>${buildCommand(node.command)}</SubsystemCommand>`;
+    }
+
+    if (node.nodes) {
+        let nodes = node.nodes as ScpiCommandTreeNode[];
 
         let tagName = !node.mnemonic ? "RootNode" : "Node";
 
@@ -329,11 +331,9 @@ function buildNode(node: ScpiCommandTreeNode) {
                 node.numericSuffix ? ` numericSuffix="${node.numericSuffix}"` : ""
             } mnemonic="${mnemonic}">${content}</${tagName}>`;
         });
-
-        return result;
-    } else {
-        return "";
     }
+
+    return result;
 }
 
 function buildSubsystemCommands(idf: IdfProperties, subsystems: ISubsystem[]) {
