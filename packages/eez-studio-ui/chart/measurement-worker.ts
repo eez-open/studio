@@ -24,7 +24,10 @@ namespace MeasurementWorker {
             e.data.result = error.toString();
         }
 
-        (postMessage as any)(e.data.result);
+        (postMessage as any)({
+            result: e.data.result,
+            resultUnit: e.data.resultUnit
+        });
     };
 
     (postMessage as any)("ready");

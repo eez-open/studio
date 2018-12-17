@@ -123,6 +123,8 @@ export interface IMeasureTask extends IInput {
 
     // store measurement result to this property
     result: number | string | IChart | null;
+
+    resultUnit?: keyof typeof UNITS;
 }
 
 export interface IExtensionDescription {

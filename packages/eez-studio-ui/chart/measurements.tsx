@@ -8,6 +8,7 @@ import { _map, _difference, _range } from "eez-studio-shared/algorithm";
 import { clamp } from "eez-studio-shared/util";
 import { guid } from "eez-studio-shared/guid";
 import { stringCompare } from "eez-studio-shared/string";
+import { UNITS } from "eez-studio-shared/units";
 
 import { IMeasurementFunction, IChart } from "eez-studio-shared/extensions/extension";
 import { extensions } from "eez-studio-shared/extensions/extensions";
@@ -285,6 +286,9 @@ class Measurement {
     @observable
     _value: number | string | IChart | null = null;
 
+    @observable
+    valueUnit: keyof typeof UNITS | undefined;
+
     lastTask: any;
 
     worker: Worker | null = null;
@@ -336,7 +340,8 @@ class Measurement {
                             } else {
                                 // worker done
                                 runInAction(() => {
-                                    this._value = e.data;
+                                    this._value = e.data.result;
+                                    this.valueUnit = e.data.resultUnit;
                                 });
 
                                 // is there a newer task?
@@ -617,9 +622,17 @@ export class MeasurementValue extends React.Component<{
         }
 
         if (typeof value === "number") {
-            const strValue = this.props.measurement.measurementsController.chartsController.chartControllers[
-                this.props.measurement.chartIndex
-            ].yAxisController.unit.formatValue(value, 4);
+            let unit;
+            if (this.props.measurement.valueUnit) {
+                unit = UNITS[this.props.measurement.valueUnit];
+            }
+
+            if (!unit) {
+                unit = this.props.measurement.measurementsController.chartsController
+                    .chartControllers[this.props.measurement.chartIndex].yAxisController.unit;
+            }
+
+            const strValue = unit.formatValue(value, 4);
 
             return <input type="text" className="form-control" value={strValue} readOnly={true} />;
         }
