@@ -65,7 +65,7 @@ export class HistoryItems extends React.Component<{
                 }
             }
 
-            if (showCheckbox || this.props.history.selection.items.length > 1) {
+            if (showCheckbox || this.props.history.selection.items.length > 0) {
                 element = <div style={{ pointerEvents: "none" }}>{element}</div>;
             }
 
