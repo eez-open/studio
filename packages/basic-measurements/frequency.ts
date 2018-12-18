@@ -1,58 +1,38 @@
-const fftJs = require("fourier-transform");
-const fftAsm = require("fourier-transform/asm");
-const decibels = require("decibels");
-const windowing = require("fft-windowing");
-
 import { IMeasureTask } from "eez-studio-shared/extensions/extension";
 
+import { transformBluestein } from "./fft-algo";
+
 export default function(task: IMeasureTask) {
-    let windowSize = Math.pow(2, Math.floor(Math.log(task.xNumSamples) / Math.log(2)));
-    if (windowSize < 128) {
-        task.result = "Not enough data selected.";
-        return;
-    }
-    if (windowSize > 65536) {
-        windowSize = 65536;
-    }
+    const numSamples = Math.min(65536, task.xNumSamples);
 
-    const fft = windowSize > 8192 ? fftJs : fftAsm;
+    var real = new Array(numSamples);
+    var imaginary = new Array(numSamples);
 
-    const halfWindowSize = windowSize / 2;
-
-    const input = new Array(windowSize);
-
-    const output = new Array(halfWindowSize);
-    for (let i = 0; i < halfWindowSize; ++i) {
-        output[i] = 0;
+    for (let i = 0; i < numSamples; ++i) {
+        real[i] = task.getSampleValueAtIndex(
+            task.xStartIndex + Math.floor((i * task.xNumSamples) / numSamples)
+        );
+        imaginary[i] = 0;
     }
 
-    let numWindows = Math.floor(task.xNumSamples / windowSize);
-    for (let iWindow = 0; iWindow < numWindows; ++iWindow) {
-        for (let i = 0; i < windowSize; ++i) {
-            input[i] = task.getSampleValueAtIndex(task.xStartIndex + iWindow * windowSize + i);
-        }
+    transformBluestein(real, imaginary);
 
-        let spectrum = fft(windowing.gaussian(input, 3.5));
-
-        for (let i = 0; i < halfWindowSize; ++i) {
-            output[i] += spectrum[i];
+    //Ignore 0 frequency part when trying to get frequency. Offset can be bigger than wave amplitude and cause issues.
+    var startingIndex = 1;
+    var maxMag = Math.sqrt(
+        Math.pow(real[startingIndex], 2) + Math.pow(imaginary[startingIndex], 2)
+    );
+    var indexMax = startingIndex;
+    for (var i = startingIndex + 1; i < real.length / 2; i++) {
+        var magnitude = Math.sqrt(Math.pow(real[i], 2) + Math.pow(imaginary[i], 2));
+        if (magnitude > maxMag) {
+            maxMag = magnitude;
+            indexMax = i;
         }
     }
+    var step = task.samplingRate / task.xNumSamples;
+    var frequency = indexMax * step;
 
-    let maxValue;
-    let frequency = 1;
-
-    for (let i = 1; i < halfWindowSize; ++i) {
-        const value = decibels.fromGain(output[i] / numWindows);
-
-        if (value !== -Infinity && value !== Infinity) {
-            if (maxValue === undefined || value > maxValue) {
-                maxValue = value;
-                frequency = (i * task.samplingRate) / windowSize;
-            }
-        }
-    }
-
-    task.result = frequency;
-    task.resultUnit = "frequency";
+    task.result = 1 / frequency;
+    task.resultUnit = "time";
 }

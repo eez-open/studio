@@ -623,16 +623,19 @@ export class MeasurementValue extends React.Component<{
 
         if (typeof value === "number") {
             let unit;
+            let precision;
             if (this.props.measurement.valueUnit) {
                 unit = UNITS[this.props.measurement.valueUnit];
+                precision = 12;
             }
 
             if (!unit) {
                 unit = this.props.measurement.measurementsController.chartsController
                     .chartControllers[this.props.measurement.chartIndex].yAxisController.unit;
+                precision = 4;
             }
 
-            const strValue = unit.formatValue(value, 4);
+            const strValue = unit.formatValue(value, precision);
 
             return <input type="text" className="form-control" value={strValue} readOnly={true} />;
         }
