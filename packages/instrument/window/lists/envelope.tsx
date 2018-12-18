@@ -971,6 +971,11 @@ export class EnvelopeLineController extends LineController {
         return this.yAxisController.axisModel.maxValue;
     }
 
+    getNearestValuePoint(point: Point): Point {
+        // TODO
+        return { x: 0, y: 0 };
+    }
+
     updateCursor(cursor: ICursor, point: Point, event: PointerEvent) {
         const time = getSnapToValue(
             event,

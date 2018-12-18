@@ -5,6 +5,7 @@ import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
 import { IUnit, TIME_UNIT, VOLTAGE_UNIT, CURRENT_UNIT, POWER_UNIT } from "eez-studio-shared/units";
+import { Point } from "eez-studio-shared/geometry";
 
 import {
     AxisController,
@@ -161,6 +162,20 @@ class DlogWaveformLineController extends LineController {
     @computed
     get yMax(): number {
         return this.yAxisController.axisModel.maxValue;
+    }
+
+    getNearestValuePoint(point: Point): Point {
+        let i = Math.min(
+            Math.max(
+                Math.round(this.xAxisController.pxToValue(point.x) * this.waveform.samplingRate),
+                0
+            ),
+            this.waveform.length - 1
+        );
+        return {
+            x: i / this.waveform.samplingRate,
+            y: this.waveform.value(i)
+        };
     }
 
     render(): JSX.Element {

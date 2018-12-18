@@ -1043,6 +1043,8 @@ export interface ILineController {
     yMin: number;
     yMax: number;
 
+    getNearestValuePoint(point: Point): Point;
+
     updateCursor(cursor: ICursor, point: Point, event: PointerEvent): void;
     addPoint(chartView: ChartView, cursor: ICursor): MouseHandler | undefined;
     onDragStart(chartView: ChartView, event: PointerEvent): MouseHandler | undefined;
@@ -1071,7 +1073,19 @@ export abstract class LineController implements ILineController {
     abstract get yMin(): number;
     abstract get yMax(): number;
 
-    updateCursor(cursor: ICursor | undefined, point: Point, event: PointerEvent): void {}
+    abstract getNearestValuePoint(point: Point): Point;
+
+    updateCursor(cursor: ICursor | undefined, point: Point, event: PointerEvent): void {
+        if (cursor) {
+            cursor.visible = true;
+            cursor.lineController = this;
+            const { x, y } = this.getNearestValuePoint(point);
+            cursor.time = x;
+            cursor.value = y;
+            cursor.fillColor = "rgba(192, 192, 192, 0.5)";
+            cursor.strokeColor = "rgb(192, 192, 192)";
+        }
+    }
 
     addPoint(chartView: ChartView, cursor: ICursor): MouseHandler | undefined {
         return undefined;
@@ -1084,7 +1098,7 @@ export abstract class LineController implements ILineController {
     abstract render(clipId: string): JSX.Element;
 
     closestPoint(point: Point): Point | undefined {
-        return undefined;
+        return point;
     }
 }
 
@@ -1798,41 +1812,43 @@ class AxisLabels extends React.Component<{ axisController: AxisController }, {}>
 
         const chartsController = axisController.chartsController;
 
-        const labels = axisController.ticks.filter(tick => !!tick.label).map((tick, i) => {
-            let xText;
-            let yText;
-            let textAnchor: any;
-            let alignmentBaseline: any;
+        const labels = axisController.ticks
+            .filter(tick => !!tick.label)
+            .map((tick, i) => {
+                let xText;
+                let yText;
+                let textAnchor: any;
+                let alignmentBaseline: any;
 
-            if (axisController.position === "x") {
-                xText = chartsController.chartLeft + tick.px;
-                yText = 0;
-                textAnchor = "middle";
-                alignmentBaseline = "hanging";
-            } else if (axisController.position === "y") {
-                xText = chartsController.chartLeft - CONF_LABEL_TICK_GAP_HORZ;
-                yText = chartsController.chartBottom - tick.px;
-                textAnchor = "end";
-                alignmentBaseline = "middle";
-            } else {
-                xText = chartsController.chartRight + CONF_LABEL_TICK_GAP_HORZ;
-                yText = chartsController.chartBottom - tick.px;
-                textAnchor = "start";
-                alignmentBaseline = "middle";
-            }
+                if (axisController.position === "x") {
+                    xText = chartsController.chartLeft + tick.px;
+                    yText = 0;
+                    textAnchor = "middle";
+                    alignmentBaseline = "hanging";
+                } else if (axisController.position === "y") {
+                    xText = chartsController.chartLeft - CONF_LABEL_TICK_GAP_HORZ;
+                    yText = chartsController.chartBottom - tick.px;
+                    textAnchor = "end";
+                    alignmentBaseline = "middle";
+                } else {
+                    xText = chartsController.chartRight + CONF_LABEL_TICK_GAP_HORZ;
+                    yText = chartsController.chartBottom - tick.px;
+                    textAnchor = "start";
+                    alignmentBaseline = "middle";
+                }
 
-            return (
-                <text
-                    key={i}
-                    x={Math.round(xText) + 0.5}
-                    y={Math.round(yText) + 0.5}
-                    textAnchor={textAnchor}
-                    alignmentBaseline={alignmentBaseline}
-                >
-                    {tick.label}
-                </text>
-            );
-        });
+                return (
+                    <text
+                        key={i}
+                        x={Math.round(xText) + 0.5}
+                        y={Math.round(yText) + 0.5}
+                        textAnchor={textAnchor}
+                        alignmentBaseline={alignmentBaseline}
+                    >
+                        {tick.label}
+                    </text>
+                );
+            });
 
         return (
             <g
@@ -2057,31 +2073,29 @@ class AxisView extends React.Component<
                         <AxisLabels axisController={axisController} />
                     )}
 
-                {chartsController.areZoomButtonsVisible &&
-                    axisController.zoomOutEnabled && (
-                        <SvgButton
-                            icon={SVG_ICON_ZOOM_OUT}
-                            x={Math.round(x1) + 0.5}
-                            y={Math.round(y1) + 0.5}
-                            width={ZOOM_ICON_SIZE}
-                            height={ZOOM_ICON_SIZE}
-                            padding={ZOOM_ICON_PADDING}
-                            onClick={this.props.axisController.zoomOut}
-                        />
-                    )}
+                {chartsController.areZoomButtonsVisible && axisController.zoomOutEnabled && (
+                    <SvgButton
+                        icon={SVG_ICON_ZOOM_OUT}
+                        x={Math.round(x1) + 0.5}
+                        y={Math.round(y1) + 0.5}
+                        width={ZOOM_ICON_SIZE}
+                        height={ZOOM_ICON_SIZE}
+                        padding={ZOOM_ICON_PADDING}
+                        onClick={this.props.axisController.zoomOut}
+                    />
+                )}
 
-                {chartsController.areZoomButtonsVisible &&
-                    axisController.zoomInEnabled && (
-                        <SvgButton
-                            icon={SVG_ICON_ZOOM_IN}
-                            x={Math.round(x2) + 0.5}
-                            y={Math.round(y2) + 0.5}
-                            width={ZOOM_ICON_SIZE}
-                            height={ZOOM_ICON_SIZE}
-                            padding={ZOOM_ICON_PADDING}
-                            onClick={this.props.axisController.zoomIn}
-                        />
-                    )}
+                {chartsController.areZoomButtonsVisible && axisController.zoomInEnabled && (
+                    <SvgButton
+                        icon={SVG_ICON_ZOOM_IN}
+                        x={Math.round(x2) + 0.5}
+                        y={Math.round(y2) + 0.5}
+                        width={ZOOM_ICON_SIZE}
+                        height={ZOOM_ICON_SIZE}
+                        padding={ZOOM_ICON_PADDING}
+                        onClick={this.props.axisController.zoomIn}
+                    />
+                )}
 
                 <AxisScrollBar axisController={axisController} />
             </g>
@@ -2281,6 +2295,8 @@ export interface ICursor {
     valueIndex: number;
     addPoint: boolean;
     error?: string;
+    fillColor?: string;
+    strokeColor?: string;
 }
 
 @observer
@@ -2319,6 +2335,11 @@ class Cursor implements ICursor {
     error: string | undefined;
     cursorElement: EventTarget | null;
     cursorPopover: any;
+
+    @observable
+    fillColor: string | undefined;
+    @observable
+    strokeColor: string | undefined;
 
     constructor(private chartView: ChartView) {}
 
@@ -2379,6 +2400,8 @@ class Cursor implements ICursor {
             this.valueIndex = cursors[minDistanceIndex].valueIndex;
             this.addPoint = cursors[minDistanceIndex].addPoint;
             this.error = cursors[minDistanceIndex].error;
+            this.fillColor = cursors[minDistanceIndex].fillColor;
+            this.strokeColor = cursors[minDistanceIndex].strokeColor;
         }
 
         if (!this.visible) {
@@ -2489,8 +2512,8 @@ class Cursor implements ICursor {
                     cx={point.x}
                     cy={point.y}
                     r={CONF_CURSOR_RADIUS}
-                    fill={this.yAxisController.axisModel.color}
-                    stroke={this.yAxisController.axisModel.color}
+                    fill={this.fillColor || this.yAxisController.axisModel.color}
+                    stroke={this.strokeColor || this.yAxisController.axisModel.color}
                 />
                 {this.addPoint && (
                     <React.Fragment>
@@ -2499,14 +2522,14 @@ class Cursor implements ICursor {
                             y={point.y - (CONF_CURSOR_RADIUS * 2) / 3}
                             width={CONF_CURSOR_RADIUS / 4}
                             height={(CONF_CURSOR_RADIUS * 4) / 3}
-                            fill={this.yAxisController.axisModel.color}
+                            fill={this.fillColor || this.yAxisController.axisModel.color}
                         />
                         <rect
                             x={point.x - (CONF_CURSOR_RADIUS * 2) / 3}
                             y={point.y - CONF_CURSOR_RADIUS / 8}
                             width={(CONF_CURSOR_RADIUS * 4) / 3}
                             height={CONF_CURSOR_RADIUS / 4}
-                            fill={this.yAxisController.axisModel.color}
+                            fill={this.fillColor || this.yAxisController.axisModel.color}
                         />
                     </React.Fragment>
                 )}

@@ -14,6 +14,7 @@ import {
     VOLTAGE_UNIT,
     CURRENT_UNIT
 } from "eez-studio-shared/units";
+import { Point } from "eez-studio-shared/geometry";
 
 import { validators } from "eez-studio-shared/model/validation";
 
@@ -220,6 +221,11 @@ export class TableLineController extends LineController {
     get yMax(): number {
         //return Math.max(...this.values);
         return this.yAxisController.axisModel.maxValue;
+    }
+
+    getNearestValuePoint(point: Point): Point {
+        // TODO
+        return { x: 0, y: 0 };
     }
 
     render(clipId: string) {

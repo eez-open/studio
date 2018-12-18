@@ -3,6 +3,7 @@ import { observable, computed } from "mobx";
 
 import { _map, _difference } from "eez-studio-shared/algorithm";
 import { UNITS, IUnit } from "eez-studio-shared/units";
+import { Point } from "eez-studio-shared/geometry";
 
 import { IChart } from "eez-studio-shared/extensions/extension";
 
@@ -347,6 +348,20 @@ class GenericChartLineController extends LineController {
     @computed
     get yMax(): number {
         return this.yAxisController.axisModel.maxValue;
+    }
+
+    getNearestValuePoint(point: Point): Point {
+        let i = Math.min(
+            Math.max(
+                Math.round(this.xAxisController.pxToValue(point.x) * this.waveform.samplingRate),
+                0
+            ),
+            this.waveform.length - 1
+        );
+        return {
+            x: i / this.waveform.samplingRate,
+            y: this.waveform.value(i)
+        };
     }
 
     render(): JSX.Element {

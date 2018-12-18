@@ -10,6 +10,7 @@ import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
 import { IUnit, SAMPLING_RATE_UNIT, UNITS } from "eez-studio-shared/units";
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
+import { Point } from "eez-studio-shared/geometry";
 
 import { makeValidator, validators } from "eez-studio-shared/model/validation";
 
@@ -724,6 +725,20 @@ class WaveformLineController extends LineController {
     @computed
     get yMax(): number {
         return this.yAxisController.axisModel.maxValue;
+    }
+
+    getNearestValuePoint(point: Point): Point {
+        let i = Math.min(
+            Math.max(
+                Math.round(this.xAxisController.pxToValue(point.x) * this.waveform.samplingRate),
+                0
+            ),
+            this.waveform.length - 1
+        );
+        return {
+            x: i / this.waveform.samplingRate,
+            y: this.waveform.value(i)
+        };
     }
 
     render(): JSX.Element {
