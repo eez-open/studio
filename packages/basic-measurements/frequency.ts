@@ -1,12 +1,23 @@
 import { IMeasureTask } from "eez-studio-shared/extensions/extension";
 
-import { transformBluestein } from "./fft-algo";
+import { transformBluestein, transformRadix2 } from "./fft-algo";
 
 export default function(task: IMeasureTask) {
-    const numSamples = Math.min(65536, task.xNumSamples);
+    let numSamples;
+    let transformAlgorithm;
+    if (task.xNumSamples < 100000) {
+        numSamples = task.xNumSamples;
+        transformAlgorithm = transformBluestein;
+    } else {
+        numSamples = Math.min(
+            1024 * 1024,
+            Math.pow(2, Math.floor(Math.log(task.xNumSamples) / Math.log(2)))
+        );
+        transformAlgorithm = transformRadix2;
+    }
 
-    var real = new Array(numSamples);
-    var imaginary = new Array(numSamples);
+    var real = new Float64Array(numSamples);
+    var imaginary = new Float64Array(numSamples);
 
     for (let i = 0; i < numSamples; ++i) {
         real[i] = task.getSampleValueAtIndex(
@@ -15,7 +26,7 @@ export default function(task: IMeasureTask) {
         imaginary[i] = 0;
     }
 
-    transformBluestein(real, imaginary);
+    transformAlgorithm(real, imaginary);
 
     //Ignore 0 frequency part when trying to get frequency. Offset can be bigger than wave amplitude and cause issues.
     var startingIndex = 1;
@@ -33,6 +44,6 @@ export default function(task: IMeasureTask) {
     var step = task.samplingRate / task.xNumSamples;
     var frequency = indexMax * step;
 
-    task.result = 1 / frequency;
-    task.resultUnit = "time";
+    task.result = frequency;
+    task.resultUnit = "frequency";
 }

@@ -635,3 +635,5 @@ export const UNITS = {
 };
 
 export const format = _mapValues(UNITS, unit => unit.formatValue);
+
+(window as any).UNITS = UNITS;

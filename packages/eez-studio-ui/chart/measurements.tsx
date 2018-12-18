@@ -297,7 +297,9 @@ class Measurement {
     workerIdleTimeout: any;
     workerTask: any;
 
+    @action
     sendTaskToWorker() {
+        this._value = null;
         this.workerTask = this.lastTask;
         this.worker!.postMessage(this.workerTask);
         this.workerIdle = false;
@@ -614,7 +616,7 @@ export class MeasurementValue extends React.Component<{
         const value = this.props.measurement.value;
 
         if (value === null) {
-            return null;
+            return <input type="text" className="form-control" value={""} readOnly={true} />;
         }
 
         if (typeof value === "string") {
@@ -623,19 +625,16 @@ export class MeasurementValue extends React.Component<{
 
         if (typeof value === "number") {
             let unit;
-            let precision;
             if (this.props.measurement.valueUnit) {
                 unit = UNITS[this.props.measurement.valueUnit];
-                precision = 12;
             }
 
             if (!unit) {
                 unit = this.props.measurement.measurementsController.chartsController
                     .chartControllers[this.props.measurement.chartIndex].yAxisController.unit;
-                precision = 4;
             }
 
-            const strValue = unit.formatValue(value, precision);
+            const strValue = unit.formatValue(value, 4);
 
             return <input type="text" className="form-control" value={strValue} readOnly={true} />;
         }
