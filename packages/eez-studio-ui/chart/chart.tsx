@@ -53,7 +53,7 @@ const CONF_MIN_Y_SCALE_LABELS_WIDTH = 70;
 
 const CONF_MIN_X_AXIS_BAND_HEIGHT = 20;
 
-const CONF_ZOOM_TO_RECT_ORIENTATION_DETECTION_THRESHOLD = 5;
+const CONF_ZOOM_TO_RECT_ORIENTATION_DETECTION_THRESHOLD = 10;
 
 const CONF_DYNAMIC_AXIS_LINE_MIN_COLOR_OPACITY = 0.1;
 const CONF_DYNAMIC_AXIS_LINE_MAX_COLOR_OPACITY = 0.9;
@@ -148,6 +148,8 @@ export interface IAxisModel {
     label: string;
     color: string;
     colorInverse: string;
+
+    logarithmic?: boolean;
 }
 
 interface ITick {
@@ -157,6 +159,7 @@ interface ITick {
     color: string;
     isMajorLine?: boolean;
     allowSnapTo: boolean;
+    step?: number;
 }
 
 export abstract class AxisController {
@@ -177,6 +180,10 @@ export abstract class AxisController {
     @observable
     isAnimationActive: boolean;
     animationController = new AnimationController();
+
+    get logarithmic() {
+        return this.axisModel.logarithmic;
+    }
 
     abstract get from(): number;
     abstract get to(): number;
@@ -236,12 +243,48 @@ export abstract class AxisController {
             : this.distancePx / this.unit.units[0];
     }
 
-    pxToValue(px: number) {
+    toLogScale(value: number) {
+        value = Math.pow(10, (value * Math.log10(this.maxValue)) / this.maxValue);
+        if (value < this.minValue) {
+            value = this.minValue;
+        } else if (value > this.maxValue) {
+            value = this.maxValue;
+        }
+        return value;
+    }
+
+    fromLogScale(value: number) {
+        value = (Math.log10(value) * this.maxValue) / Math.log10(this.maxValue);
+        if (value < this.minValue) {
+            value = this.minValue;
+        } else if (value > this.maxValue) {
+            value = this.maxValue;
+        }
+        return value;
+    }
+
+    pxToLinearValue(px: number) {
         return this.from + px / this.scale;
     }
 
-    valueToPx(value: number) {
+    pxToValue(px: number) {
+        if (this.axisModel.logarithmic) {
+            return this.toLogScale(this.pxToLinearValue(px));
+        } else {
+            return this.pxToLinearValue(px);
+        }
+    }
+
+    linearValueToPx(value: number) {
         return (value - this.from) * this.scale;
+    }
+
+    valueToPx(value: number) {
+        if (this.axisModel.logarithmic) {
+            return this.linearValueToPx(this.fromLogScale(value));
+        } else {
+            return this.linearValueToPx(value);
+        }
     }
 
     abstract get ticks(): ITick[];
@@ -426,57 +469,82 @@ class DynamicAxisController extends AxisController {
 
     @computed
     get ticks() {
-        const minLabelPx =
-            this.position === "x"
-                ? CONF_X_AXIS_MIN_TICK_LABEL_WIDTH
-                : CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH;
-
-        const { from, to, scale } = this;
+        const { from, to, scale, steps } = this;
 
         const minDistanceInPx = CONF_AXIS_MIN_TICK_DISTANCE;
         const maxDistanceInPx = CONF_AXIS_MAX_TICK_DISTANCE;
         const minColorOpacity = CONF_DYNAMIC_AXIS_LINE_MIN_COLOR_OPACITY;
         const maxColorOpacity = CONF_DYNAMIC_AXIS_LINE_MAX_COLOR_OPACITY;
 
+        const minLabelPx =
+            this.position === "x"
+                ? CONF_X_AXIS_MIN_TICK_LABEL_WIDTH
+                : CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH;
+
         let linesMap = new Map<number, ITick>();
 
-        let steps = this.steps;
-        for (let i = steps.length - 1; i >= 0; i--) {
-            let unit = steps[i];
-            let unitPx = unit * scale;
+        let self = this;
 
-            if (unitPx >= minDistanceInPx) {
-                let p = Math.floor(from / unit);
-                let q = Math.ceil(to / unit);
+        function addLines(fromPx: number, toPx: number, iStep: number) {
+            const step = steps[iStep];
 
-                for (let j = p; j <= q; j++) {
-                    let value = j * unit;
-                    let px = Math.round((value - from) * scale);
-                    if (px < 0 || px > Math.round(this.distancePx)) {
-                        continue;
-                    }
-                    if (!linesMap.has(px)) {
-                        let opacity = clamp(
-                            minColorOpacity +
-                                ((maxColorOpacity - minColorOpacity) * (unitPx - minDistanceInPx)) /
-                                    (maxDistanceInPx - minDistanceInPx),
-                            minColorOpacity,
-                            maxColorOpacity
-                        );
+            let unitPx = step * scale;
+            if (unitPx < minDistanceInPx) {
+                return;
+            }
 
-                        linesMap.set(px, {
-                            px,
-                            value,
-                            label: unitPx >= minLabelPx ? this.unit.formatValue(value) : "",
-                            color: globalViewOptions.blackBackground
-                                ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${opacity})`
-                                : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${opacity})`,
-                            allowSnapTo: true
-                        });
-                    }
+            let fromValue = self.pxToValue(fromPx);
+            let toValue = self.pxToValue(toPx);
+
+            fromValue = Math.ceil(fromValue / step) * step;
+            toValue = Math.floor(toValue / step) * step;
+
+            if (fromValue > toValue) {
+                if (iStep > 0) {
+                    addLines(fromPx, toPx, iStep - 1);
                 }
+                return;
+            }
+
+            let lastPx = fromPx;
+
+            for (let value = fromValue; value <= toValue; value += step) {
+                let px = self.valueToPx(value);
+
+                unitPx = self.valueToPx(value) - self.valueToPx(value - step);
+
+                let opacity = clamp(
+                    minColorOpacity +
+                        ((maxColorOpacity - minColorOpacity) * (unitPx - minDistanceInPx)) /
+                            (maxDistanceInPx - minDistanceInPx),
+                    minColorOpacity,
+                    maxColorOpacity
+                );
+
+                linesMap.set(px, {
+                    px,
+                    value,
+                    label: "",
+                    color: globalViewOptions.blackBackground
+                        ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${opacity})`
+                        : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${opacity})`,
+                    allowSnapTo: true,
+                    step
+                });
+
+                if (iStep > 0) {
+                    addLines(lastPx, px, iStep - 1);
+                }
+
+                lastPx = px;
+            }
+
+            if (iStep > 0) {
+                addLines(lastPx, toPx, iStep - 1);
             }
         }
+
+        addLines(this.linearValueToPx(from), this.linearValueToPx(to), steps.length - 1);
 
         let ticks = Array.from(linesMap.keys())
             .sort((a, b) => a - b)
@@ -492,7 +560,8 @@ class DynamicAxisController extends AxisController {
                 color: globalViewOptions.blackBackground
                     ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${maxColorOpacity})`
                     : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${maxColorOpacity})`,
-                allowSnapTo: false
+                allowSnapTo: false,
+                step: undefined
             });
 
             let to = Math.floor(this.to / this.steps[0]) * this.steps[0];
@@ -503,17 +572,38 @@ class DynamicAxisController extends AxisController {
                 color: globalViewOptions.blackBackground
                     ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${maxColorOpacity})`
                     : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${maxColorOpacity})`,
-                allowSnapTo: false
+                allowSnapTo: false,
+                step: undefined
             });
         } else {
-            const noLabels = ticks.every(tick => !tick.label);
-            if (noLabels) {
-                // no tick labels, at least add for first and last line
-                ticks[0].label = this.unit.formatValue(ticks[0].value);
-                if (ticks.length > 1) {
-                    ticks[ticks.length - 1].label = this.unit.formatValue(
-                        ticks[ticks.length - 1].value
-                    );
+            // set labels
+            for (let iStep = steps.length - 1; iStep >= 0; iStep--) {
+                let step = steps[iStep];
+                for (let i = 0; i < ticks.length; ++i) {
+                    if (ticks[i].step === step) {
+                        let pxLeft: number | undefined;
+                        for (let j = i - 1; j >= 0; j--) {
+                            if (ticks[j].label) {
+                                pxLeft = ticks[j].px;
+                                break;
+                            }
+                        }
+
+                        let pxRight: number | undefined;
+                        for (let j = i + 1; j < ticks.length; j++) {
+                            if (ticks[j].label) {
+                                pxRight = ticks[j].px;
+                                break;
+                            }
+                        }
+
+                        if (
+                            (pxLeft === undefined || ticks[i].px - pxLeft >= minLabelPx) &&
+                            (pxRight === undefined || pxRight - ticks[i].px >= minLabelPx)
+                        ) {
+                            ticks[i].label = this.unit.formatValue(ticks[i].value);
+                        }
+                    }
                 }
             }
         }
@@ -878,7 +968,8 @@ class FixedAxisController extends AxisController {
                 label: isLabelVisible ? this.unit.formatValue(value) : "",
                 color: isMajorLine ? majorLineColor : minorLineColor,
                 isMajorLine: isMajorLine,
-                allowSnapTo: true
+                allowSnapTo: true,
+                step: undefined
             });
         }
 
@@ -2207,17 +2298,15 @@ class ZoomToRectMouseHandler implements MouseHandler {
 
         const THRESHOLD = CONF_ZOOM_TO_RECT_ORIENTATION_DETECTION_THRESHOLD;
 
-        if (!this.orientation) {
-            if (
-                this.chartController.yAxisControllerOnRightSide ||
-                (width > 4 * THRESHOLD && height < THRESHOLD)
-            ) {
-                this.orientation = "x";
-            } else if (height > 4 * THRESHOLD && width < THRESHOLD) {
-                this.orientation = "y";
-            } else if (height > THRESHOLD && width > THRESHOLD) {
-                this.orientation = "both";
-            }
+        if (
+            this.chartController.yAxisControllerOnRightSide ||
+            (width > 4 * THRESHOLD && height < THRESHOLD)
+        ) {
+            this.orientation = "x";
+        } else if (height > 4 * THRESHOLD && width < THRESHOLD) {
+            this.orientation = "y";
+        } else if (height > THRESHOLD && width > THRESHOLD) {
+            this.orientation = "both";
         }
     }
 
@@ -2233,8 +2322,8 @@ class ZoomToRectMouseHandler implements MouseHandler {
             let fromPx = Math.min(this.startPoint.x, this.endPoint.x);
             let toPx = Math.max(this.startPoint.x, this.endPoint.x);
             xAxisController.zoom(
-                xAxisController.pxToValue(fromPx),
-                xAxisController.pxToValue(toPx)
+                xAxisController.pxToLinearValue(fromPx),
+                xAxisController.pxToLinearValue(toPx)
             );
         }
 
@@ -2243,8 +2332,8 @@ class ZoomToRectMouseHandler implements MouseHandler {
             let fromPx = Math.min(this.startPoint.y, this.endPoint.y);
             let toPx = Math.max(this.startPoint.y, this.endPoint.y);
             yAxisController.zoom(
-                yAxisController.pxToValue(fromPx),
-                yAxisController.pxToValue(toPx)
+                yAxisController.pxToLinearValue(fromPx),
+                yAxisController.pxToLinearValue(toPx)
             );
         }
     }

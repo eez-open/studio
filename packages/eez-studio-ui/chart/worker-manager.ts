@@ -58,7 +58,9 @@ export function drawWithWorker(
                 range: job.xAxisController.range,
                 scale: job.xAxisController.scale,
                 pxToValue: undefined as any,
-                valueToPx: undefined as any
+                valueToPx: undefined as any,
+                linearValueToPx: undefined as any,
+                logarithmic: false
             },
             yAxisController: {
                 from: job.yAxisController.from,
@@ -66,7 +68,9 @@ export function drawWithWorker(
                 range: job.yAxisController.range,
                 scale: job.yAxisController.scale,
                 pxToValue: undefined as any,
-                valueToPx: undefined as any
+                valueToPx: undefined as any,
+                linearValueToPx: undefined as any,
+                logarithmic: false
             },
             xFromValue: job.xFromValue,
             xToValue: job.xToValue,

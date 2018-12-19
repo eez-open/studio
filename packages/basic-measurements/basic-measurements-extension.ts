@@ -23,6 +23,13 @@ const fftParametersDescription: IFieldProperties[] = [
             { id: "gaussian-3.5", label: "Gaussian (a=3.5) window" },
             { id: "gaussian-4.5", label: "Gaussian (a=4.5) window" }
         ]
+    },
+    {
+        name: "axis",
+        displayName: "Axis",
+        type: "enum",
+        defaultValue: "log",
+        enumItems: [{ id: "logarithmic", label: "Logarithmic" }, { id: "linear", label: "Linear" }]
     }
 ];
 

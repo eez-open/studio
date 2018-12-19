@@ -27,10 +27,44 @@ import { WaveformLineView } from "instrument/window/waveform/line-view";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export function getNearestValuePoint(
+    point: Point,
+    xAxisController: AxisController,
+    waveform: IWaveform
+): Point {
+    let i1 = Math.floor(xAxisController.pxToValue(point.x - 0.5) * waveform.samplingRate);
+    let i2 = Math.ceil(xAxisController.pxToValue(point.x + 0.5) * waveform.samplingRate);
+    if (i2 - i1 > 1) {
+        console.log(i1, i2);
+        let min = Number.MAX_VALUE;
+        let max = -Number.MAX_VALUE;
+        for (let i = i1; i <= i2; ++i) {
+            const value = waveform.value(i);
+            min = Math.min(min, value);
+            max = Math.max(max, value);
+        }
+
+        return {
+            x: xAxisController.pxToValue(point.x),
+            y: (min + max) / 2
+        };
+    } else {
+        let i = Math.round(xAxisController.pxToValue(point.x) * waveform.samplingRate);
+        console.log(i);
+        return {
+            x: i / waveform.samplingRate,
+            y: waveform.value(i)
+        };
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 class GenericChartWaveform implements IWaveform {
     constructor(private chartData: IChart) {
         this.xAxes = {
-            unit: UNITS[this.chartData.xAxes.unit]
+            unit: UNITS[this.chartData.xAxes.unit],
+            logarithmic: chartData.xAxes.logarithmic
         };
 
         let min = chartData.yAxes.minValue;
@@ -98,6 +132,7 @@ class GenericChartWaveform implements IWaveform {
 
     xAxes: {
         unit: IUnit;
+        logarithmic?: boolean;
     };
 
     yAxes: {
@@ -181,6 +216,10 @@ class GenericChartXAxisModel implements IAxisModel {
     label: "";
     color: "";
     colorInverse: "";
+
+    get logarithmic() {
+        return this.data.xAxes.logarithmic;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -351,17 +390,7 @@ class GenericChartLineController extends LineController {
     }
 
     getNearestValuePoint(point: Point): Point {
-        let i = Math.min(
-            Math.max(
-                Math.round(this.xAxisController.pxToValue(point.x) * this.waveform.samplingRate),
-                0
-            ),
-            this.waveform.length - 1
-        );
-        return {
-            x: i / this.waveform.samplingRate,
-            y: this.waveform.value(i)
-        };
+        return getNearestValuePoint(point, this.xAxisController, this.waveform);
     }
 
     render(): JSX.Element {

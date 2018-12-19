@@ -85,7 +85,9 @@ export default function(task: IMeasureTask) {
         data: output,
         samplingRate: windowSize / task.samplingRate,
         xAxes: {
-            unit: "frequency"
+            unit: "frequency",
+            logarithmic:
+                !task.parameters || !task.parameters.axis || task.parameters.axis !== "linear"
         },
         yAxes: {
             unit: "decibel",

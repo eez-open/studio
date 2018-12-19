@@ -56,6 +56,8 @@ interface IAxisController {
     scale: number;
     valueToPx(value: number): number;
     pxToValue(value: number): number;
+    linearValueToPx(value: number): number;
+    logarithmic?: boolean;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -375,7 +377,77 @@ export function renderWaveformPath(
         return undefined;
     }
 
+    function renderLogarithmic() {
+        let xFromPx = xAxisController.linearValueToPx(xAxisController.from);
+        let xToPx = xAxisController.linearValueToPx(xAxisController.to);
+
+        ctx.fillStyle = strokeColor;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 0.8;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let r = 1.5;
+
+        const points: {
+            x: number;
+            yMin: number;
+            yMax: number;
+        }[] = [];
+
+        for (let i = 0; i < waveform.length; ++i) {
+            let x = Math.round(xAxisController.valueToPx(i / waveform.samplingRate));
+            let y = Math.round(canvas.height - yAxisController.valueToPx(waveform.value(i)));
+
+            if (points.length === 0 || points[points.length - 1].x !== x) {
+                points.push({
+                    x,
+                    yMin: y,
+                    yMax: y
+                });
+            } else {
+                points[points.length - 1].yMin = Math.min(points[points.length - 1].yMin, y);
+                points[points.length - 1].yMax = Math.max(points[points.length - 1].yMax, y);
+            }
+        }
+
+        let xPrev: number | undefined;
+        let yPrev: number | undefined;
+
+        for (let i = 0; i < points.length; ++i) {
+            let x = points[i].x;
+            let yMin = points[i].yMin;
+            let yMax = points[i].yMax;
+            let y = (yMin + yMax) / 2;
+
+            if ((x >= xFromPx && x <= xToPx) || (xPrev && xPrev >= xFromPx && xPrev <= xToPx)) {
+                if (xPrev !== undefined) {
+                    ctx.beginPath();
+                    ctx.moveTo(xPrev, yPrev!);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                }
+
+                if (yMin === yMax) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, r, 0, 2 * Math.PI);
+                    ctx.fill();
+                } else {
+                    ctx.beginPath();
+                    ctx.moveTo(x, yMin);
+                    ctx.lineTo(x, yMax);
+                    ctx.stroke();
+                }
+            }
+
+            xPrev = x;
+            yPrev = y;
+        }
+    }
+
     var ctx = canvas.getContext("2d")!;
+
+    if (job.xAxisController.logarithmic) {
+        return renderLogarithmic();
+    }
 
     if (xAxisPxToIndex(1) - xAxisPxToIndex(0) < 1) {
         return renderSparse();

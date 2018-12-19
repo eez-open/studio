@@ -31,6 +31,7 @@ import {
 import { RulersModel } from "eez-studio-ui/chart/rulers";
 import { MeasurementsModel } from "eez-studio-ui/chart/measurements";
 import { initValuesAccesor, WaveformFormat } from "eez-studio-ui/chart/buffer";
+import { getNearestValuePoint } from "eez-studio-ui/chart/generic-chart";
 
 import { checkMime } from "instrument/connection/file-type";
 
@@ -728,17 +729,7 @@ class WaveformLineController extends LineController {
     }
 
     getNearestValuePoint(point: Point): Point {
-        let i = Math.min(
-            Math.max(
-                Math.round(this.xAxisController.pxToValue(point.x) * this.waveform.samplingRate),
-                0
-            ),
-            this.waveform.length - 1
-        );
-        return {
-            x: i / this.waveform.samplingRate,
-            y: this.waveform.value(i)
-        };
+        return getNearestValuePoint(point, this.xAxisController, this.waveform);
     }
 
     render(): JSX.Element {

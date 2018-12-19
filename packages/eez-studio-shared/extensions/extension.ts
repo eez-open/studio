@@ -94,6 +94,7 @@ export interface IChart {
     samplingRate: number;
     xAxes: {
         unit: keyof typeof UNITS;
+        logarithmic?: boolean;
     };
     yAxes: {
         minValue?: number;

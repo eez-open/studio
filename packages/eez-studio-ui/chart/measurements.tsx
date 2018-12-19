@@ -604,6 +604,28 @@ export class MeasurementsController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ChartContainerDiv = styled.div`
+    flex-grow: 1;
+    flex-direction: columng;
+
+    background-color: #f0f0f0;
+    display: flex;
+    padding-top: 10px;
+
+    > div {
+        flex-grow: 1;
+        border-top: 1px solid #ddd;
+    }
+
+    height: 100%;
+
+    & > .EezStudio_ChartView {
+        position: static;
+        width: auto;
+        height: auto;
+    }
+`;
+
 @observer
 export class MeasurementValue extends React.Component<{
     measurement: Measurement;
@@ -644,11 +666,9 @@ export class MeasurementValue extends React.Component<{
         } = require("eez-studio-ui/chart/generic-chart") as typeof GenericChartModule;
 
         return (
-            <div className="EezStudio_MeasurementChartContainer">
-                <div>
-                    <GenericChart chart={value} />
-                </div>
-            </div>
+            <ChartContainerDiv>
+                <GenericChart chart={value} />
+            </ChartContainerDiv>
         );
     }
 }

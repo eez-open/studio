@@ -32,6 +32,12 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
     continuation: any;
     requestAnimationFrameId: any;
 
+    get useWorker() {
+        return (
+            this.props.useWorker && !this.props.waveformLineController.xAxisController.logarithmic
+        );
+    }
+
     @computed
     get waveformRenderJobSpecification(): IWaveformRenderJobSpecification | undefined {
         const yAxisController = this.waveformLineController.yAxisController;
@@ -65,7 +71,7 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
 
     componentDidMount() {
         if (this.canvas) {
-            if (this.props.useWorker) {
+            if (this.useWorker) {
                 drawWithWorker(this.canvas, this.nextJob);
             } else {
                 this.draw();
@@ -75,7 +81,7 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
 
     componentDidUpdate() {
         if (this.canvas) {
-            if (this.props.useWorker) {
+            if (this.useWorker) {
                 drawWithWorker(this.canvas, this.nextJob);
             } else {
                 this.draw();
@@ -105,7 +111,7 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
     }
 
     componentWillUnmount() {
-        if (this.props.useWorker) {
+        if (this.useWorker) {
             if (this.canvas) {
                 releaseCanvas(this.canvas);
             }
@@ -125,7 +131,7 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
         const chartsController = this.props.waveformLineController.yAxisController.chartsController;
 
         let canvasKey;
-        if (this.props.useWorker) {
+        if (this.useWorker) {
             // Canvas has "key" because we want canvas to be recreated every time width or height change
             // (apparently React recreates element if key is different).
             // This is required because we are using transferControlToOffscreen to pass offscreen canvas to worker.
