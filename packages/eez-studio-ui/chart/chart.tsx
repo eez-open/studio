@@ -44,10 +44,10 @@ const ZOOM_ICON_PADDING = 4;
 
 const CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION = 250;
 
-const CONF_AXIS_MIN_TICK_DISTANCE = 4;
+const CONF_AXIS_MIN_TICK_DISTANCE = 5;
 const CONF_AXIS_MAX_TICK_DISTANCE = 400;
 const CONF_X_AXIS_MIN_TICK_LABEL_WIDTH = 100;
-const CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH = 20;
+const CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH = 25;
 
 const CONF_MIN_Y_SCALE_LABELS_WIDTH = 70;
 
@@ -60,10 +60,20 @@ const CONF_DYNAMIC_AXIS_LINE_MAX_COLOR_OPACITY = 0.9;
 const CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND = "192, 192, 192";
 const CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND = "164, 164, 164";
 
+const CONF_DYNAMIC_AXIS_LINE_MIN_TEXT_COLOR_OPACITY = 0.8;
+const CONF_DYNAMIC_AXIS_LINE_MAX_TEXT_COLOR_OPACITY = 1.0;
+const CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "255, 255, 255";
+const CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "0, 0, 0";
+
 const CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_WHITE_BACKGROUND = "#ccc";
 const CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_WHITE_BACKGROUND = "#f0f0f0";
 const CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_BLACK_BACKGROUND = "#444";
 const CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_BLACK_BACKGROUND = "#222";
+
+const CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "#666";
+const CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "#999";
+const CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "#eee";
+const CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "#ddd";
 
 export const CONF_CURSOR_RADIUS = 8;
 
@@ -157,6 +167,7 @@ interface ITick {
     value: number;
     label: string;
     color: string;
+    textColor: string;
     isMajorLine?: boolean;
     allowSnapTo: boolean;
     step?: number;
@@ -475,43 +486,34 @@ class DynamicAxisController extends AxisController {
         const maxDistanceInPx = CONF_AXIS_MAX_TICK_DISTANCE;
         const minColorOpacity = CONF_DYNAMIC_AXIS_LINE_MIN_COLOR_OPACITY;
         const maxColorOpacity = CONF_DYNAMIC_AXIS_LINE_MAX_COLOR_OPACITY;
+        const minTextColorOpacity = CONF_DYNAMIC_AXIS_LINE_MIN_TEXT_COLOR_OPACITY;
+        const maxTextColorOpacity = CONF_DYNAMIC_AXIS_LINE_MAX_TEXT_COLOR_OPACITY;
 
         const minLabelPx =
             this.position === "x"
                 ? CONF_X_AXIS_MIN_TICK_LABEL_WIDTH
                 : CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH;
 
-        let linesMap = new Map<number, ITick>();
+        let ticks: ITick[] = new Array();
 
         let self = this;
 
-        function addLines(fromPx: number, toPx: number, iStep: number) {
+        function addLogarithmicLines(from: number, to: number, iStep: number) {
             const step = steps[iStep];
 
-            let unitPx = step * scale;
+            let fromValue = Math.ceil(from / step) * step;
+            let toValue = Math.floor(to / step) * step;
+
+            let unitPx = self.valueToPx(toValue) - self.valueToPx(toValue - step);
             if (unitPx < minDistanceInPx) {
                 return;
             }
+            unitPx = self.valueToPx(fromValue) - self.valueToPx(fromValue - step);
 
-            let fromValue = self.pxToValue(fromPx);
-            let toValue = self.pxToValue(toPx);
-
-            fromValue = Math.ceil(fromValue / step) * step;
-            toValue = Math.floor(toValue / step) * step;
-
-            if (fromValue > toValue) {
-                if (iStep > 0) {
-                    addLines(fromPx, toPx, iStep - 1);
-                }
-                return;
-            }
-
-            let lastPx = fromPx;
+            let lastValue = from;
 
             for (let value = fromValue; value <= toValue; value += step) {
                 let px = self.valueToPx(value);
-
-                unitPx = self.valueToPx(value) - self.valueToPx(value - step);
 
                 let opacity = clamp(
                     minColorOpacity +
@@ -521,34 +523,113 @@ class DynamicAxisController extends AxisController {
                     maxColorOpacity
                 );
 
-                linesMap.set(px, {
+                let textOpacity = clamp(
+                    minTextColorOpacity +
+                        ((maxTextColorOpacity - minTextColorOpacity) * (unitPx - minDistanceInPx)) /
+                            (maxDistanceInPx - minDistanceInPx),
+                    minTextColorOpacity,
+                    maxTextColorOpacity
+                );
+
+                ticks.push({
                     px,
                     value,
                     label: "",
                     color: globalViewOptions.blackBackground
                         ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${opacity})`
                         : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${opacity})`,
+                    textColor: globalViewOptions.blackBackground
+                        ? `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND}, ${textOpacity})`
+                        : `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND}, ${textOpacity})`,
                     allowSnapTo: true,
                     step
                 });
 
                 if (iStep > 0) {
-                    addLines(lastPx, px, iStep - 1);
+                    addLogarithmicLines(lastValue, value, iStep - 1);
                 }
 
-                lastPx = px;
+                lastValue = value;
             }
 
             if (iStep > 0) {
-                addLines(lastPx, toPx, iStep - 1);
+                addLogarithmicLines(lastValue, to, iStep - 1);
             }
         }
 
-        addLines(this.linearValueToPx(from), this.linearValueToPx(to), steps.length - 1);
+        function addLinearLines(from: number, to: number, iStep: number) {
+            if (from >= to) {
+                return;
+            }
 
-        let ticks = Array.from(linesMap.keys())
-            .sort((a, b) => a - b)
-            .map(x => linesMap.get(x)!);
+            const step = steps[iStep];
+
+            let unitPx = step * scale;
+            if (unitPx < minDistanceInPx) {
+                return;
+            }
+
+            let fromValue = Math.ceil(from / step) * step;
+            let toValue = Math.floor(to / step) * step;
+
+            let lastValue = from;
+
+            for (let value = fromValue; value <= toValue; value += step) {
+                let px = self.valueToPx(value);
+
+                let opacity = clamp(
+                    minColorOpacity +
+                        ((maxColorOpacity - minColorOpacity) * (unitPx - minDistanceInPx)) /
+                            (maxDistanceInPx - minDistanceInPx),
+                    minColorOpacity,
+                    maxColorOpacity
+                );
+
+                let textOpacity = clamp(
+                    minTextColorOpacity +
+                        ((maxTextColorOpacity - minTextColorOpacity) * (unitPx - minDistanceInPx)) /
+                            (maxDistanceInPx - minDistanceInPx),
+                    minTextColorOpacity,
+                    maxTextColorOpacity
+                );
+
+                ticks.push({
+                    px,
+                    value,
+                    label: unitPx >= minLabelPx ? self.unit.formatValue(value) : "",
+                    color: globalViewOptions.blackBackground
+                        ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${opacity})`
+                        : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${opacity})`,
+                    textColor: globalViewOptions.blackBackground
+                        ? `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND}, ${textOpacity})`
+                        : `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND}, ${textOpacity})`,
+                    allowSnapTo: true,
+                    step
+                });
+
+                if (iStep > 0) {
+                    addLinearLines(lastValue, value, iStep - 1);
+                }
+
+                lastValue = value;
+            }
+
+            if (iStep > 0) {
+                addLinearLines(lastValue, to, iStep - 1);
+            }
+        }
+
+        if (this.logarithmic) {
+            addLogarithmicLines(
+                this.pxToValue(this.linearValueToPx(from)),
+                this.pxToValue(this.linearValueToPx(to)),
+                steps.length - 1
+            );
+        } else {
+            addLinearLines(from, to, steps.length - 1);
+        }
+
+        ticks = ticks.sort((a, b) => a.px - b.px);
 
         if (ticks.length === 0) {
             // no tick lines, at least add lines for "from" and "to"
@@ -560,6 +641,9 @@ class DynamicAxisController extends AxisController {
                 color: globalViewOptions.blackBackground
                     ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${maxColorOpacity})`
                     : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${maxColorOpacity})`,
+                textColor: globalViewOptions.blackBackground
+                    ? `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND}, ${maxTextColorOpacity})`
+                    : `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND}, ${maxTextColorOpacity})`,
                 allowSnapTo: false,
                 step: undefined
             });
@@ -572,37 +656,48 @@ class DynamicAxisController extends AxisController {
                 color: globalViewOptions.blackBackground
                     ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${maxColorOpacity})`
                     : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${maxColorOpacity})`,
+                textColor: globalViewOptions.blackBackground
+                    ? `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND}, ${maxTextColorOpacity})`
+                    : `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND}, ${maxTextColorOpacity})`,
                 allowSnapTo: false,
                 step: undefined
             });
-        } else {
-            // set labels
+        } else if (this.logarithmic) {
+            // set labels from the largest magnitude to the smallest
             for (let iStep = steps.length - 1; iStep >= 0; iStep--) {
                 let step = steps[iStep];
-                for (let i = 0; i < ticks.length; ++i) {
-                    if (ticks[i].step === step) {
-                        let pxLeft: number | undefined;
-                        for (let j = i - 1; j >= 0; j--) {
-                            if (ticks[j].label) {
-                                pxLeft = ticks[j].px;
+                for (let iTick = 0; iTick < ticks.length; ++iTick) {
+                    const tick = ticks[iTick];
+                    if (tick.step === step) {
+                        let foundTooCloseLabel = false;
+
+                        // test if there is a label on the left that is too close to this tick
+                        for (let i = iTick - 1; i >= 0 && tick.px - ticks[i].px < minLabelPx; i--) {
+                            if (ticks[i].label) {
+                                foundTooCloseLabel = true;
                                 break;
                             }
                         }
-
-                        let pxRight: number | undefined;
-                        for (let j = i + 1; j < ticks.length; j++) {
-                            if (ticks[j].label) {
-                                pxRight = ticks[j].px;
-                                break;
-                            }
+                        if (foundTooCloseLabel) {
+                            continue;
                         }
 
-                        if (
-                            (pxLeft === undefined || ticks[i].px - pxLeft >= minLabelPx) &&
-                            (pxRight === undefined || pxRight - ticks[i].px >= minLabelPx)
+                        // test if there is a label on the right that is too close to this tick
+                        for (
+                            let i = iTick + 1;
+                            i < ticks.length && ticks[i].px - tick.px < minLabelPx;
+                            i++
                         ) {
-                            ticks[i].label = this.unit.formatValue(ticks[i].value);
+                            if (ticks[i].label) {
+                                foundTooCloseLabel = true;
+                                break;
+                            }
                         }
+                        if (foundTooCloseLabel) {
+                            continue;
+                        }
+
+                        tick.label = this.unit.formatValue(tick.value);
                     }
                 }
             }
@@ -933,6 +1028,13 @@ class FixedAxisController extends AxisController {
             ? CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_BLACK_BACKGROUND
             : CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_WHITE_BACKGROUND;
 
+        let majorLineTextColor = globalViewOptions.blackBackground
+            ? CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND
+            : CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND;
+        let minorLineTextColor = globalViewOptions.blackBackground
+            ? CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND
+            : CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND;
+
         for (let i = 0; i <= n * m; i++) {
             const value = this.from + i * minorSubdivision;
 
@@ -967,6 +1069,7 @@ class FixedAxisController extends AxisController {
                 value: value,
                 label: isLabelVisible ? this.unit.formatValue(value) : "",
                 color: isMajorLine ? majorLineColor : minorLineColor,
+                textColor: isMajorLine ? majorLineTextColor : minorLineTextColor,
                 isMajorLine: isMajorLine,
                 allowSnapTo: true,
                 step: undefined
@@ -1935,6 +2038,7 @@ class AxisLabels extends React.Component<{ axisController: AxisController }, {}>
                         y={Math.round(yText) + 0.5}
                         textAnchor={textAnchor}
                         alignmentBaseline={alignmentBaseline}
+                        fill={tick.textColor}
                     >
                         {tick.label}
                     </text>
