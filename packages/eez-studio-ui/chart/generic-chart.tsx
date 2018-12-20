@@ -35,7 +35,6 @@ export function getNearestValuePoint(
     let i1 = Math.floor(xAxisController.pxToValue(point.x - 0.5) * waveform.samplingRate);
     let i2 = Math.ceil(xAxisController.pxToValue(point.x + 0.5) * waveform.samplingRate);
     if (i2 - i1 > 1) {
-        console.log(i1, i2);
         let min = Number.MAX_VALUE;
         let max = -Number.MAX_VALUE;
         for (let i = i1; i <= i2; ++i) {
@@ -50,7 +49,6 @@ export function getNearestValuePoint(
         };
     } else {
         let i = Math.round(xAxisController.pxToValue(point.x) * waveform.samplingRate);
-        console.log(i);
         return {
             x: i / waveform.samplingRate,
             y: waveform.value(i)

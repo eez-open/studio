@@ -1,85 +1,37 @@
-const fftJs = require("fourier-transform");
-const fftAsm = require("fourier-transform/asm");
-const decibels = require("decibels");
-const windowing = require("fft-windowing");
+const fft = require("fourier-transform");
 
 import { IMeasureTask } from "eez-studio-shared/extensions/extension";
 
 export default function(task: IMeasureTask) {
-    let windowSize = (task.parameters && task.parameters.windowSize) || 1024;
-    if (task.xNumSamples < windowSize) {
-        task.result = "Not enough data selected.";
-        return;
+    let windowSize = Math.pow(2, Math.ceil(Math.log2(task.xNumSamples)));
+
+    const input = new Float64Array(windowSize);
+    for (let i = 0; i < windowSize; ++i) {
+        input[i] = task.getSampleValueAtIndex(task.xStartIndex + (i % task.xNumSamples));
     }
 
-    const fft = windowSize > 8192 ? fftJs : fftAsm;
+    let spectrum = fft(input);
 
-    const halfWindowSize = windowSize / 2;
-
-    let windowFunctionName = (task.parameters && task.parameters.windowFunction) || "rectangular";
-    let windowFunction;
-    let windowFunctionParam;
-    if (windowFunctionName !== "rectangular") {
-        if (windowFunctionName.startsWith("gaussian-")) {
-            windowFunction = windowing.gaussian;
-            windowFunctionParam = parseFloat(windowFunctionName.slice("gaussian-".length));
-        } else {
-            windowFunction = windowing[windowFunctionName];
-        }
-    }
-
-    const input = new Array(windowSize);
-
-    const output = new Array(halfWindowSize);
-    for (let i = 0; i < halfWindowSize; ++i) {
-        output[i] = 0;
-    }
-
-    let numWindows = Math.floor(task.xNumSamples / windowSize);
-    for (let iWindow = 0; iWindow < numWindows; ++iWindow) {
-        for (let i = 0; i < windowSize; ++i) {
-            input[i] = task.getSampleValueAtIndex(task.xStartIndex + iWindow * windowSize + i);
-        }
-
-        let spectrum;
-        if (windowFunction) {
-            spectrum = fft(windowFunction(input, windowFunctionParam));
-        } else {
-            spectrum = fft(input);
-        }
-
-        for (let i = 0; i < halfWindowSize; ++i) {
-            output[i] += spectrum[i];
-        }
-    }
+    let N = spectrum.length;
+    const output = new Array(N);
 
     let minValue;
     let maxValue;
 
-    for (let i = 0; i < halfWindowSize; ++i) {
-        output[i] = decibels.fromGain(output[i] / numWindows);
-
-        if (output[i] !== -Infinity) {
-            if (minValue === undefined) {
-                minValue = maxValue = output[i];
-            } else {
-                if (output[i] < minValue) {
-                    minValue = output[i];
-                } else if (output[i] > maxValue) {
-                    maxValue = output[i];
-                }
-            }
+    output[0] = 20 * Math.log10(spectrum[0]);
+    minValue = maxValue = output[0];
+    for (let i = 1; i < N; ++i) {
+        output[i] = 20 * Math.log10(spectrum[i]);
+        if (output[i] < minValue) {
+            minValue = output[i];
+        } else if (output[i] > maxValue) {
+            maxValue = output[i];
         }
     }
 
-    if (minValue !== undefined) {
-        const d = 0.1 * (maxValue - minValue);
-        minValue -= d;
-        maxValue += d;
-    } else {
-        minValue = -1;
-        maxValue = 1;
-    }
+    const d = 0.05 * (maxValue - minValue);
+    minValue -= d;
+    maxValue += d;
 
     task.result = {
         data: output,

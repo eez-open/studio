@@ -377,48 +377,89 @@ export function renderWaveformPath(
         return undefined;
     }
 
-    function renderLogarithmic() {
-        let xFromPx = xAxisController.linearValueToPx(xAxisController.from);
-        let xToPx = xAxisController.linearValueToPx(xAxisController.to);
+    interface ILogarithmicContinuation {
+        i: number;
+        b: number;
+        K: number;
 
-        ctx.fillStyle = strokeColor;
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 0.8;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        let r = 1.5;
-
-        const points: {
+        points: {
             x: number;
             yMin: number;
             yMax: number;
-        }[] = [];
+        }[];
 
-        for (let i = 0; i < waveform.length; ++i) {
-            let x = Math.round(xAxisController.valueToPx(i / waveform.samplingRate));
-            let y = Math.round(canvas.height - yAxisController.valueToPx(waveform.value(i)));
+        isDone: boolean;
+    }
 
-            if (points.length === 0 || points[points.length - 1].x !== x) {
-                points.push({
-                    x,
-                    yMin: y,
-                    yMax: y
-                });
-            } else {
-                points[points.length - 1].yMin = Math.min(points[points.length - 1].yMin, y);
-                points[points.length - 1].yMax = Math.max(points[points.length - 1].yMax, y);
+    function renderLogarithmic(
+        continuation: ILogarithmicContinuation
+    ): ILogarithmicContinuation | undefined {
+        let xFromPx = Math.floor(xAxisController.linearValueToPx(xAxisController.from));
+        let xToPx = Math.ceil(xAxisController.linearValueToPx(xAxisController.to));
+
+        function init(): boolean {
+            let a = Math.floor(xAxisPxToIndex(xFromPx)) - 1;
+            let b = Math.ceil(xAxisPxToIndex(xToPx)) + 1;
+
+            a = clamp(a, 0, waveform.length);
+            b = clamp(b, 0, waveform.length);
+
+            if (a >= b) {
+                return false;
             }
+
+            let K = 50000;
+
+            continuation = {
+                i: a,
+                b,
+                K,
+                points: [],
+                isDone: false
+            };
+            return true;
         }
 
-        let xPrev: number | undefined;
-        let yPrev: number | undefined;
+        function renderStep(continuation: ILogarithmicContinuation) {
+            const { points, b, K } = continuation;
 
-        for (let i = 0; i < points.length; ++i) {
-            let x = points[i].x;
-            let yMin = points[i].yMin;
-            let yMax = points[i].yMax;
-            let y = (yMin + yMax) / 2;
+            let i = continuation.i;
+            const iEnd = Math.min(i + K, b);
+            for (; i < iEnd; ++i) {
+                let x = Math.round(xAxisController.valueToPx(i / waveform.samplingRate));
+                let y = Math.round(canvas.height - yAxisController.valueToPx(waveform.value(i)));
 
-            if ((x >= xFromPx && x <= xToPx) || (xPrev && xPrev >= xFromPx && xPrev <= xToPx)) {
+                if (points.length === 0 || points[points.length - 1].x !== x) {
+                    points.push({
+                        x,
+                        yMin: y,
+                        yMax: y
+                    });
+                } else {
+                    points[points.length - 1].yMin = Math.min(points[points.length - 1].yMin, y);
+                    points[points.length - 1].yMax = Math.max(points[points.length - 1].yMax, y);
+                }
+            }
+            continuation.i = i;
+            if (i === b) {
+                continuation.isDone = true;
+            }
+
+            ctx.fillStyle = strokeColor;
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 0.8;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let r = 1.5;
+
+            let xPrev: number | undefined;
+            let yPrev: number | undefined;
+
+            for (let i = 0; i < points.length; ++i) {
+                let x = points[i].x;
+                let yMin = points[i].yMin;
+                let yMax = points[i].yMax;
+                let y = (yMin + yMax) / 2;
+
                 if (xPrev !== undefined) {
                     ctx.beginPath();
                     ctx.moveTo(xPrev, yPrev!);
@@ -436,17 +477,29 @@ export function renderWaveformPath(
                     ctx.lineTo(x, yMax);
                     ctx.stroke();
                 }
-            }
 
-            xPrev = x;
-            yPrev = y;
+                xPrev = x;
+                yPrev = y;
+            }
         }
+
+        if (!continuation && !init()) {
+            return undefined;
+        }
+
+        renderStep(continuation);
+
+        if (!continuation.isDone) {
+            return continuation;
+        }
+
+        return undefined;
     }
 
     var ctx = canvas.getContext("2d")!;
 
     if (job.xAxisController.logarithmic) {
-        return renderLogarithmic();
+        return renderLogarithmic(continuation);
     }
 
     if (xAxisPxToIndex(1) - xAxisPxToIndex(0) < 1) {

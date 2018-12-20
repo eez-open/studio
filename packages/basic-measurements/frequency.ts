@@ -17,13 +17,12 @@ export default function(task: IMeasureTask) {
     }
 
     var real = new Float64Array(numSamples);
-    var imaginary = new Float64Array(numSamples);
+    var imaginary = new Float64Array(numSamples).fill(0);
 
     for (let i = 0; i < numSamples; ++i) {
         real[i] = task.getSampleValueAtIndex(
             task.xStartIndex + Math.floor((i * task.xNumSamples) / numSamples)
         );
-        imaginary[i] = 0;
     }
 
     transformAlgorithm(real, imaginary);

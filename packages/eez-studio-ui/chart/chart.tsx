@@ -10,6 +10,7 @@ import { guid } from "eez-studio-shared/guid";
 import { capitalize } from "eez-studio-shared/string";
 import { Point, pointDistance } from "eez-studio-shared/geometry";
 import { IUnit } from "eez-studio-shared/units";
+import { _uniqWith } from "eez-studio-shared/algorithm";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
@@ -44,16 +45,14 @@ const ZOOM_ICON_PADDING = 4;
 
 const CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION = 250;
 
-const CONF_AXIS_MIN_TICK_DISTANCE = 5;
+const CONF_AXIS_MIN_TICK_DISTANCE = 4;
 const CONF_AXIS_MAX_TICK_DISTANCE = 400;
 const CONF_X_AXIS_MIN_TICK_LABEL_WIDTH = 100;
-const CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH = 25;
+const CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH = 20;
 
 const CONF_MIN_Y_SCALE_LABELS_WIDTH = 70;
 
 const CONF_MIN_X_AXIS_BAND_HEIGHT = 20;
-
-const CONF_ZOOM_TO_RECT_ORIENTATION_DETECTION_THRESHOLD = 10;
 
 const CONF_DYNAMIC_AXIS_LINE_MIN_COLOR_OPACITY = 0.1;
 const CONF_DYNAMIC_AXIS_LINE_MAX_COLOR_OPACITY = 0.9;
@@ -504,11 +503,10 @@ class DynamicAxisController extends AxisController {
             let fromValue = Math.ceil(from / step) * step;
             let toValue = Math.floor(to / step) * step;
 
-            let unitPx = self.valueToPx(toValue) - self.valueToPx(toValue - step);
+            let unitPx = self.valueToPx(fromValue) - self.valueToPx(fromValue - step);
             if (unitPx < minDistanceInPx) {
                 return;
             }
-            unitPx = self.valueToPx(fromValue) - self.valueToPx(fromValue - step);
 
             let lastValue = from;
 
@@ -593,10 +591,12 @@ class DynamicAxisController extends AxisController {
                     maxTextColorOpacity
                 );
 
+                let label = unitPx >= minLabelPx ? self.unit.formatValue(value) : "";
+
                 ticks.push({
                     px,
                     value,
-                    label: unitPx >= minLabelPx ? self.unit.formatValue(value) : "",
+                    label,
                     color: globalViewOptions.blackBackground
                         ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${opacity})`
                         : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${opacity})`,
@@ -628,8 +628,6 @@ class DynamicAxisController extends AxisController {
         } else {
             addLinearLines(from, to, steps.length - 1);
         }
-
-        ticks = ticks.sort((a, b) => a.px - b.px);
 
         if (ticks.length === 0) {
             // no tick lines, at least add lines for "from" and "to"
@@ -663,6 +661,8 @@ class DynamicAxisController extends AxisController {
                 step: undefined
             });
         } else if (this.logarithmic) {
+            ticks = ticks.sort((a, b) => a.px - b.px);
+
             // set labels from the largest magnitude to the smallest
             for (let iStep = steps.length - 1; iStep >= 0; iStep--) {
                 let step = steps[iStep];
@@ -702,6 +702,9 @@ class DynamicAxisController extends AxisController {
                 }
             }
         }
+
+        // remove duplicates, i.e. ticks with the same label
+        ticks = _uniqWith(ticks, (a, b) => (a.label ? a.label === b.label : false));
 
         return ticks;
     }
@@ -1271,13 +1274,15 @@ export abstract class LineController implements ILineController {
 
     updateCursor(cursor: ICursor | undefined, point: Point, event: PointerEvent): void {
         if (cursor) {
-            cursor.visible = true;
-            cursor.lineController = this;
             const { x, y } = this.getNearestValuePoint(point);
-            cursor.time = x;
-            cursor.value = y;
-            cursor.fillColor = "rgba(192, 192, 192, 0.5)";
-            cursor.strokeColor = "rgb(192, 192, 192)";
+            if (!isNaN(x) && !isNaN(y)) {
+                cursor.visible = true;
+                cursor.lineController = this;
+                cursor.time = x;
+                cursor.value = y;
+                cursor.fillColor = "rgba(192, 192, 192, 0.5)";
+                cursor.strokeColor = "rgb(192, 192, 192)";
+            }
         }
     }
 
@@ -2400,16 +2405,11 @@ class ZoomToRectMouseHandler implements MouseHandler {
         const width = Math.abs(this.startPoint.x - this.endPoint.x);
         const height = Math.abs(this.startPoint.y - this.endPoint.y);
 
-        const THRESHOLD = CONF_ZOOM_TO_RECT_ORIENTATION_DETECTION_THRESHOLD;
-
-        if (
-            this.chartController.yAxisControllerOnRightSide ||
-            (width > 4 * THRESHOLD && height < THRESHOLD)
-        ) {
+        if (width / height > 4) {
             this.orientation = "x";
-        } else if (height > 4 * THRESHOLD && width < THRESHOLD) {
+        } else if (height / width > 4) {
             this.orientation = "y";
-        } else if (height > THRESHOLD && width > THRESHOLD) {
+        } else {
             this.orientation = "both";
         }
     }

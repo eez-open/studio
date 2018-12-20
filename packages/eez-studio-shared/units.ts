@@ -50,59 +50,36 @@ class Unit implements IUnit {
     }
 
     formatValue(value: number, precision?: number, space?: string) {
-        let roundedValue = roundNumber(value, precision !== undefined ? precision : this.precision);
-        if (roundedValue === 0) {
-            return "0";
+        value = roundNumber(value, precision !== undefined ? precision : this.precision);
+
+        const unitSymbol = this.unitSymbol;
+
+        function result(roundedValue: number, dim: string) {
+            if (roundedValue === 0) {
+                return "0";
+            }
+            if (space === undefined) {
+                space = "";
+            }
+            return roundedValue + space + dim + unitSymbol;
         }
 
-        if (space === undefined) {
-            space = "";
-        }
-
-        if (Math.abs(roundedValue) >= 1000000000) {
-            return (
-                roundNumber(roundedValue / 1000000000, this.precision - 9) +
-                space +
-                "G" +
-                this.unitSymbol
-            );
-        } else if (Math.abs(roundedValue) >= 1000000) {
-            return (
-                roundNumber(roundedValue / 1000000, this.precision - 6) +
-                space +
-                "M" +
-                this.unitSymbol
-            );
-        } else if (Math.abs(roundedValue) >= 1000) {
-            return (
-                roundNumber(roundedValue / 1000, this.precision - 3) + space + "K" + this.unitSymbol
-            );
-        } else if (this.precision >= 12 && Math.abs(roundedValue) < 0.000000001) {
-            return (
-                roundNumber(roundedValue * 1000000000000, this.precision - 12) +
-                "p" +
-                this.unitSymbol
-            );
-        } else if (this.precision >= 9 && Math.abs(roundedValue) < 0.000001) {
-            return (
-                roundNumber(roundedValue * 1000000000, this.precision - 9) +
-                space +
-                "n" +
-                this.unitSymbol
-            );
-        } else if (this.precision >= 6 && Math.abs(roundedValue) < 0.001) {
-            return (
-                roundNumber(roundedValue * 1000000, this.precision - 6) +
-                space +
-                "u" +
-                this.unitSymbol
-            );
-        } else if (this.precision >= 3 && Math.abs(roundedValue) < 1) {
-            return (
-                roundNumber(roundedValue * 1000, this.precision - 3) + space + "m" + this.unitSymbol
-            );
+        if (Math.abs(value) >= 1000000000) {
+            return result(roundNumber(value / 1000000000, this.precision - 9), "G");
+        } else if (Math.abs(value) >= 1000000) {
+            return result(roundNumber(value / 1000000, this.precision - 6), "M");
+        } else if (Math.abs(value) >= 1000) {
+            return result(roundNumber(value / 1000, this.precision - 3), "K");
+        } else if (this.precision >= 12 && Math.abs(value) < 0.000000001) {
+            return result(roundNumber(value * 1000000000000, this.precision - 12), "p");
+        } else if (this.precision >= 9 && Math.abs(value) < 0.000001) {
+            return result(roundNumber(value * 1000000000, this.precision - 9), "n");
+        } else if (this.precision >= 6 && Math.abs(value) < 0.001) {
+            return result(roundNumber(value * 1000000, this.precision - 6), "u");
+        } else if (this.precision >= 3 && Math.abs(value) < 1) {
+            return result(roundNumber(value * 1000, this.precision - 3), "m");
         } else {
-            return roundedValue + space + this.unitSymbol;
+            return result(value, "");
         }
     }
 
