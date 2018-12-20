@@ -3,11 +3,14 @@ const fft = require("fourier-transform");
 import { IMeasureTask } from "eez-studio-shared/extensions/extension";
 
 export default function(task: IMeasureTask) {
-    let windowSize = Math.pow(2, Math.ceil(Math.log2(task.xNumSamples)));
+    let windowSize = Math.min(Math.pow(2, Math.round(Math.log2(task.xNumSamples))), 65536 * 2);
 
+    // resampling
     const input = new Float64Array(windowSize);
     for (let i = 0; i < windowSize; ++i) {
-        input[i] = task.getSampleValueAtIndex(task.xStartIndex + (i % task.xNumSamples));
+        input[i] = task.getSampleValueAtIndex(
+            task.xStartIndex + Math.round(i * (task.xNumSamples / windowSize))
+        );
     }
 
     let spectrum = fft(input);
@@ -35,7 +38,7 @@ export default function(task: IMeasureTask) {
 
     task.result = {
         data: output,
-        samplingRate: windowSize / task.samplingRate,
+        samplingRate: task.xNumSamples / task.samplingRate,
         xAxes: {
             unit: "frequency",
             logarithmic:
