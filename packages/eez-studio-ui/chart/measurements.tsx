@@ -20,6 +20,7 @@ import { IconAction } from "eez-studio-ui/action";
 import { DockablePanels } from "eez-studio-ui/side-dock";
 import { GenericDialog, IFieldProperties, FieldComponent } from "eez-studio-ui/generic-dialog";
 import { SideDockViewContainer } from "eez-studio-ui/side-dock";
+import { Loader } from "eez-studio-ui/loader";
 
 import { ChartsController, ChartController } from "eez-studio-ui/chart/chart";
 import * as GenericChartModule from "eez-studio-ui/chart/generic-chart";
@@ -606,7 +607,7 @@ export class MeasurementsController {
 
 const ChartContainerDiv = styled.div`
     flex-grow: 1;
-    flex-direction: columng;
+    flex-direction: column;
 
     background-color: #f0f0f0;
     display: flex;
@@ -626,9 +627,17 @@ const ChartContainerDiv = styled.div`
     }
 `;
 
+const LoaderContainerDiv = styled.div`
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+`;
+
 @observer
 export class MeasurementValue extends React.Component<{
     measurement: Measurement;
+    inDockablePanel?: boolean;
 }> {
     render() {
         if (!this.props.measurement.script) {
@@ -638,6 +647,13 @@ export class MeasurementValue extends React.Component<{
         const value = this.props.measurement.value;
 
         if (value === null) {
+            if (this.props.inDockablePanel) {
+                return (
+                    <LoaderContainerDiv>
+                        <Loader />
+                    </LoaderContainerDiv>
+                );
+            }
             return <input type="text" className="form-control" value={""} readOnly={true} />;
         }
 
@@ -1023,7 +1039,7 @@ export class ChartMeasurements extends React.Component<{
             if (measurement) {
                 ReactDOM.render(
                     <ThemeProvider theme={theme}>
-                        <MeasurementValue measurement={measurement} />
+                        <MeasurementValue measurement={measurement} inDockablePanel={true} />
                     </ThemeProvider>,
                     container.getElement()[0]
                 );
