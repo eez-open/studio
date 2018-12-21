@@ -23,3 +23,5 @@ TODO.txt
 .cache-require-paths.json
 
 .DS_Store
+
+package-lock.json
