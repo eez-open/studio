@@ -281,7 +281,7 @@ export class Instrument {
         data_or_length: any
     ) {
         return new Promise<{
-            err: string | undefined;
+            err: any;
             buffer: Buffer | undefined;
         }>(resolve => {
             this.device.timeout = this._timeout;
