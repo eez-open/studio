@@ -54,21 +54,13 @@
 
 import { IMeasureTask } from "eez-studio-shared/extensions/extension";
 
-import { transformBluestein, transformRadix2 } from "./fft-algo";
+import { transform } from "./fft-algo";
 
 export default function(task: IMeasureTask) {
-    let numSamples;
-    let transformAlgorithm;
-    if (task.xNumSamples < 100000) {
-        numSamples = task.xNumSamples;
-        transformAlgorithm = transformBluestein;
-    } else {
-        numSamples = Math.min(
-            1024 * 1024,
-            Math.pow(2, Math.floor(Math.log(task.xNumSamples) / Math.log(2)))
-        );
-        transformAlgorithm = transformRadix2;
-    }
+    let numSamples = Math.min(
+        Math.pow(2, Math.ceil(Math.log(task.xNumSamples) / Math.log(2))),
+        1024 * 1024
+    );
 
     var real = new Float64Array(numSamples);
     var imaginary = new Float64Array(numSamples).fill(0);
@@ -79,27 +71,38 @@ export default function(task: IMeasureTask) {
         );
     }
 
-    transformAlgorithm(real, imaginary);
+    transform(real, imaginary);
 
     const N = real.length / 2;
 
     const output = new Array(N);
 
-    output[0] = 20 * Math.log10(Math.sqrt(Math.pow(real[0], 2) + Math.pow(imaginary[0], 2)));
-    let minValue, maxValue;
-    minValue = maxValue = output[0];
+    function amplitudeAt(i: number) {
+        const re = real[i];
+        const im = imaginary[i];
+        return Math.sqrt(re * re + im * im);
+    }
+
+    let maxAmplitude: number;
+    maxAmplitude = output[0] = amplitudeAt(0);
     for (let i = 1; i < N; ++i) {
-        output[i] = 20 * Math.log10(Math.sqrt(Math.pow(real[i], 2) + Math.pow(imaginary[i], 2)));
-        if (output[i] < minValue) {
-            minValue = output[i];
-        } else if (output[i] > maxValue) {
-            maxValue = output[i];
+        output[i] = amplitudeAt(i);
+        if (output[i] > maxAmplitude) {
+            maxAmplitude = output[i];
         }
     }
 
-    const d = 0.05 * (maxValue - minValue);
-    minValue -= d;
-    maxValue += d;
+    function decibelsAt(i: number) {
+        return 20 * Math.log10(output[i] / maxAmplitude);
+    }
+
+    output[0] = decibelsAt(0);
+    for (let i = 1; i < N; ++i) {
+        output[i] = decibelsAt(i);
+        if (output[i] < -90) {
+            output[i] = -90;
+        }
+    }
 
     task.result = {
         data: output,
@@ -111,8 +114,8 @@ export default function(task: IMeasureTask) {
         },
         yAxes: {
             unit: "decibel",
-            minValue,
-            maxValue
+            minValue: -90,
+            maxValue: 0
         }
     };
 }
