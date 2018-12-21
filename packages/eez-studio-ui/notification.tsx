@@ -51,7 +51,7 @@ export function update(toastId: number, options: ToastModule.UpdateOptions) {
 
 export const container = observable.box<JSX.Element | undefined>(undefined, { deep: false });
 
-export const INFO = ToastModule.toast.TYPE.INFO;
-export const SUCCESS = ToastModule.toast.TYPE.SUCCESS;
-export const WARNING = ToastModule.toast.TYPE.WARNING;
-export const ERROR = ToastModule.toast.TYPE.ERROR;
+export const INFO = ToastModule.ToastType.INFO;
+export const SUCCESS = ToastModule.ToastType.SUCCESS;
+export const WARNING = ToastModule.ToastType.WARNING;
+export const ERROR = ToastModule.ToastType.ERROR;
