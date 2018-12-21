@@ -103,7 +103,7 @@ class UsbtmcException {
         0: "No error"
     };
 
-    err: string | number | undefined;
+    err: any;
     note: string | undefined;
     msg: string | undefined;
 
@@ -755,7 +755,7 @@ export class Instrument {
     bulk_in_ep_read(length: number) {
         return new Promise<Buffer>((resolve, reject) => {
             this.bulk_in_ep.timeout = this._timeout;
-            this.bulk_in_ep.transfer(length, (err: String, data: Buffer) => {
+            this.bulk_in_ep.transfer(length, (err: any, data: Buffer) => {
                 if (err) {
                     reject(err);
                 } else {
