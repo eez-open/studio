@@ -702,6 +702,7 @@ export class Waveform extends FileHistoryItem {
         return this.yAxisDefaultSubdivisionOffsetAndScale.scale;
     }
 
+    @computed
     get previewElement() {
         return <ChartPreview data={this} />;
     }

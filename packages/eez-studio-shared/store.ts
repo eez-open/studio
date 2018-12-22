@@ -194,7 +194,7 @@ export function createStore({
             )
             .run(values);
 
-        object.id = info.lastInsertROWID.toString();
+        object.id = info.lastInsertRowid.toString();
 
         const notifyArg = {
             op: "create",

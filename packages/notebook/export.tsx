@@ -283,7 +283,7 @@ async function addItemsToNotebook(store: IStore, items: IActivityLogEntry[], not
                     0
                 ]);
 
-            oldToNewId.set(item.id, info.lastInsertROWID.toString());
+            oldToNewId.set(item.id, info.lastInsertRowid.toString());
         }
 
         db.exec(`COMMIT TRANSACTION`);

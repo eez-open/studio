@@ -529,6 +529,7 @@ export class DlogWaveform extends FileHistoryItem {
         return undefined;
     }
 
+    @computed
     get previewElement() {
         return <ChartPreview data={this} />;
     }

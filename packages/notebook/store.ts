@@ -114,7 +114,7 @@ export function insertSource(instrumentName: string, instrumentExtensionId: stri
             )
             .run([instrumentName, instrumentExtensionId]);
 
-        return info.lastInsertROWID.toString();
+        return info.lastInsertRowid.toString();
     } catch (err) {
         console.error(err);
     }

@@ -582,6 +582,7 @@ class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
         return SelectWidgetEditor.EDITOR_PADDING;
     }
 
+    @action
     renderSelectChildren() {
         this.children = new Array(this.selectWidget.widgets._array.length);
 

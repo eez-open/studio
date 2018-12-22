@@ -42,7 +42,7 @@ export function createWindow(params: IWindowParams) {
 
     var windowContructorParams: Electron.BrowserWindowConstructorOptions = {
         webPreferences: {
-            experimentalCanvasFeatures: true,
+            // experimentalCanvasFeatures: true,
             // webSecurity: false,
             // allowRunningInsecureContent: true,
             webviewTag: true,
