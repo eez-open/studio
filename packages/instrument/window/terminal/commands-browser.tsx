@@ -243,13 +243,16 @@ export class CommandSyntax extends React.Component<
                     </PropertyList>
                 </ParametersDiv>
                 <div>
-                    <button className="btn btn-sm" onClick={this.copy}>
+                    <button className="btn btn-secondary btn-sm" onClick={this.copy}>
                         Copy
                     </button>
                     {this.props.appStore.navigationStore.mainNavigationSelectedItem ===
                         this.props.appStore.navigationStore.scriptsNavigationItem &&
                         this.props.appStore.scriptsModel.selectedScript && (
-                            <button className="btn btn-sm ml-2" onClick={this.copyToScript}>
+                            <button
+                                className="btn btn-secondary btn-sm ml-2"
+                                onClick={this.copyToScript}
+                            >
                                 Copy to script
                             </button>
                         )}

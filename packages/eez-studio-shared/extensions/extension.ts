@@ -139,6 +139,10 @@ export interface IExtensionDescription {
     download?: string;
     sha256?: string;
     installationFolderPath?: string;
+    shortName?: string;
+    revisionNumber?: string;
+    supportedModels?: string;
+    revisionComments?: string;
 }
 
 export interface IExtensionDefinition {

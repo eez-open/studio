@@ -222,11 +222,14 @@ function buildResponse(dom: JQuery): IResponse {
 }
 
 function buildCommand(name: string, sdlCommand: JQuery, docPath: string, commands: ICommand[]) {
+    const description = sdlCommand.find(">Synopsis").text() || "";
+
     let command: ICommand | undefined;
     const commandSyntax = sdlCommand.find(">CommandSyntaxes>CommandSyntax:first-child");
     if (commandSyntax.length) {
         command = {
             name: name,
+            description,
             parameters: buildParameters(commandSyntax),
             response: undefined as any
         };
@@ -237,6 +240,7 @@ function buildCommand(name: string, sdlCommand: JQuery, docPath: string, command
     if (querySyntax.length) {
         query = {
             name: name + "?",
+            description,
             parameters: buildParameters(querySyntax),
             response: buildResponse(querySyntax)
         };
@@ -439,7 +443,12 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                         },
                         properties,
                         isEditable,
-                        isDirty
+                        isDirty,
+
+                        shortName: ScpiConfiguration.attr("shortName") || "",
+                        revisionNumber: ScpiConfiguration.attr("revisionNumber") || "",
+                        supportedModels: ScpiConfiguration.attr("supportedModels") || "",
+                        revisionComments: ScpiConfiguration.attr("revisionComments") || ""
                     },
                     {
                         properties: observable.shallow
@@ -483,9 +492,7 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
     throw "Unknown extension type!";
 }
 
-export async function loadCommands(instrumentExtensionId: string) {
-    let extensionFolderPath = getExtensionFolderPath(instrumentExtensionId);
-
+export async function loadCommandsFromExtensionFolder(extensionFolderPath: string) {
     try {
         let idfFilePath = await findIdfFile(extensionFolderPath);
         if (!idfFilePath) {
@@ -513,4 +520,9 @@ export async function loadCommands(instrumentExtensionId: string) {
     } catch (err) {
         throw err;
     }
+}
+
+export function loadCommands(instrumentExtensionId: string) {
+    let extensionFolderPath = getExtensionFolderPath(instrumentExtensionId);
+    return loadCommandsFromExtensionFolder(extensionFolderPath);
 }

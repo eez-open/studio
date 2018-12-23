@@ -359,6 +359,10 @@ export function getFileNameWithoutExtension(filePath: string) {
     return fileName.substring(0, i);
 }
 
+export function getFolderName(filePath: string) {
+    return path.dirname(filePath) as string;
+}
+
 export function getFileNameExtension(filePath: string) {
     let fileName = path.basename(filePath) as string;
     let i = fileName.lastIndexOf(".");

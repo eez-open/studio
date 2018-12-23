@@ -174,29 +174,31 @@ export async function loadExtensionById(id: string) {
     return extension;
 }
 
-async function importExtensionToTempFolder(extensionFilePath: string) {
-    let tmpExtensionFolderPath = extensionsFolderPath + "/" + guid() + "_tmp";
-
+export async function importExtensionToFolder(
+    extensionFilePath: string,
+    extensionFolderPath: string
+) {
     // extract extension zip file to the temp folder
-    try {
-        await zipExtract(extensionFilePath, tmpExtensionFolderPath);
-    } catch (err) {
-        await removeFolder(tmpExtensionFolderPath);
-        throw err;
-    }
+    await zipExtract(extensionFilePath, extensionFolderPath);
 
+    // load extension from the temp folder
+    return await loadExtension(extensionFolderPath);
+}
+
+export async function importExtensionToTempFolder(extensionFilePath: string) {
+    const tmpExtensionFolderPath = extensionsFolderPath + "/" + guid() + "_tmp";
     try {
-        // load extension from the temp folder
-        let extension = await loadExtension(tmpExtensionFolderPath);
-        if (extension) {
-            return {
-                tmpExtensionFolderPath,
-                extension
-            };
-        } else {
+        const extension = await importExtensionToFolder(extensionFilePath, tmpExtensionFolderPath);
+
+        if (!extension) {
             await removeFolder(tmpExtensionFolderPath);
             return undefined;
         }
+
+        return {
+            tmpExtensionFolderPath,
+            extension
+        };
     } catch (err) {
         await removeFolder(tmpExtensionFolderPath);
         throw err;

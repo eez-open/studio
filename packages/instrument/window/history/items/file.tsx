@@ -5,8 +5,6 @@ import { clipboard, nativeImage, SaveDialogOptions } from "electron";
 import VisibilitySensor from "react-visibility-sensor";
 import { bind } from "bind-decorator";
 
-const WebView = require("react-electron-web-view");
-
 import {
     writeBinaryData,
     formatTransferSpeed,
@@ -189,6 +187,7 @@ class PdfPreview extends React.Component<{
         let content;
 
         if (this.zoom) {
+            const WebView = require("react-electron-web-view");
             content = this.url && (
                 <WebView
                     ref={(ref: any) => (this.webView = ref)}

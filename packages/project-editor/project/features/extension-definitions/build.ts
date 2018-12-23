@@ -90,7 +90,7 @@ export async function extensionDefinitionBuild() {
                         getInstrumentExtensionProperties(idfFromProject)
                     );
 
-                    if (instrumentIdf.extensionName && instrumentIdf.idn && instrumentIdf.idfGuid) {
+                    if (instrumentIdf.extensionName && instrumentIdf.idfGuid) {
                         let idfFileName = `${instrumentIdf.extensionName}-${
                             instrumentIdf.idfRevisionNumber
                         }.zip`;

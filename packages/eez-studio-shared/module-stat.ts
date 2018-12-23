@@ -1,6 +1,5 @@
 import { _each } from "eez-studio-shared/algorithm";
 import { formatBytes } from "eez-studio-shared/formatBytes";
-import { stringCompare } from "eez-studio-shared/string";
 
 const TP_MODULE_PREFIX = "\\node_modules\\";
 const LOCAL_MODULE_PREFIX = "\\src\\";
@@ -37,7 +36,6 @@ function dumpModules(moduleType: string, modulePrefix: string, modules: ModuleIn
     let totalBytes = 0;
 
     modules.sort((a: ModuleInfo, b: ModuleInfo) => {
-        return stringCompare(a.fileName, b.fileName);
         return b.bytes - a.bytes;
     });
 

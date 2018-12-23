@@ -8,6 +8,8 @@ import { ThemeProvider } from "eez-studio-ui/styled-components";
 
 import { handleDragAndDrop } from "home/drag-and-drop";
 
+import * as ImportInstrumentDefinitionModule from "instrument/import-instrument-definition";
+
 configure({ enforceActions: "observed" });
 
 EEZStudio.electron.ipcRenderer.on("beforeClose", () => {
@@ -25,7 +27,9 @@ EEZStudio.electron.ipcRenderer.on("reload", () => {
 EEZStudio.electron.ipcRenderer.on(
     "importInstrumentDefinitionFile",
     (sender: any, filePath: string) => {
-        const { importInstrumentDefinition } = require("instrument/import-instrument-definition");
+        const {
+            importInstrumentDefinition
+        } = require("instrument/import-instrument-definition") as typeof ImportInstrumentDefinitionModule;
         importInstrumentDefinition(filePath);
     }
 );

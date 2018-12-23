@@ -3,7 +3,7 @@ import { action, observable, runInAction } from "mobx";
 
 import { getIcon } from "main/util";
 import { settingsRegisterWindow, settingsSetWindowBoundsIntoParams } from "main/settings";
-import { PROJECT_WINDOW_URL, PROJECT_FILE_PATH_PARAM } from "main/project-editor-window";
+import { PROJECT_WINDOW_URL, PROJECT_FILE_PATH_PARAM } from "main/project-editor-window-params";
 
 export interface IWindowSate {
     modified: boolean;

@@ -33,7 +33,7 @@ export interface ScpiCommandTreeNode {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function splitCommandToMnemonics(command: string) {
+export function splitCommandToMnemonics(command: string) {
     let mnemonics: string[] = [];
 
     let start = 0;
@@ -103,11 +103,7 @@ export function addCommandToTree(command: ICommand, tree: ScpiCommandTreeNode) {
             currentNode.nodes = [];
         }
 
-        if (node) {
-            if (node.optional !== optional) {
-                throw "optional subsystems mismatch";
-            }
-        } else {
+        if (!node || node.optional !== optional) {
             node = {
                 mnemonic,
                 optional,
