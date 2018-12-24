@@ -79,7 +79,7 @@ Download and start `EEZ_Studio_setup.exe`.
 
 ```
 sudo apt-get install build-essential libudev-dev
-clone git clone https://github.com/eez-open/studio
+git clone https://github.com/eez-open/studio
 cd studio
 npm run build
 npm start
