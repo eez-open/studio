@@ -1,9 +1,11 @@
 import React from "react";
-import { computed } from "mobx";
+import { computed, observable, action } from "mobx";
 import { observer } from "mobx-react";
+import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
+import { styled } from "eez-studio-ui/styled-components";
 
 import {
     EezObject,
@@ -19,19 +21,74 @@ import {
     canAdd,
     canDelete
 } from "eez-studio-shared/model/store";
-import { List } from "eez-studio-shared/model/components/List";
+import { List, SortDirectionType } from "eez-studio-shared/model/components/List";
 
 import { Panel } from "eez-studio-shared/model/components/Panel";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const SortableTitleDiv = styled.div`
+    flex-grow: 1;
+    margin-top: 5px;
+    margin-left: 5px;
+    font-weight: 600;
+    color: ${props => props.theme.darkTextColor};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    background-repeat: no-repeat;
+    background-position: center left;
+    padding-left: 20px;
+    cursor: pointer;
+
+    &.sort-asc {
+        background-image: url("../eez-studio-ui/_images/col_sort_asc.png");
+    }
+
+    &.sort-desc {
+        background-image: url("../eez-studio-ui/_images/col_sort_desc.png");
+    }
+
+    &.sort-none {
+        background-image: url("../eez-studio-ui/_images/col_sort_enabled.png");
+    }
+`;
+
 @observer
-export class AddButton extends React.Component<
-    {
-        navigationObject: EezObject | undefined;
-    },
-    {}
-> {
+export class SortableTitle extends React.Component<{
+    title: string;
+    direction: SortDirectionType;
+    onDirectionChanged: (direction: SortDirectionType) => void;
+}> {
+    @bind
+    onClicked() {
+        if (this.props.direction === "asc") {
+            this.props.onDirectionChanged("desc");
+        } else if (this.props.direction === "desc") {
+            this.props.onDirectionChanged("none");
+        } else {
+            this.props.onDirectionChanged("asc");
+        }
+    }
+
+    render() {
+        const { title, direction } = this.props;
+
+        return (
+            <SortableTitleDiv className={"sort-" + direction} onClick={this.onClicked}>
+                {title}
+            </SortableTitleDiv>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class AddButton extends React.Component<{
+    navigationObject: EezObject | undefined;
+}> {
     onAdd() {
         if (this.props.navigationObject) {
             addItem(this.props.navigationObject);
@@ -54,12 +111,9 @@ export class AddButton extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class DeleteButton extends React.Component<
-    {
-        navigationObject: EezObject | undefined;
-    },
-    {}
-> {
+export class DeleteButton extends React.Component<{
+    navigationObject: EezObject | undefined;
+}> {
     onDelete() {
         let selectedItem =
             this.props.navigationObject &&
@@ -97,6 +151,8 @@ interface ListNavigationProps {
 
 @observer
 export class ListNavigation extends React.Component<ListNavigationProps, {}> {
+    @observable sortDirection: SortDirectionType = "none";
+
     onDoubleClickItem(object: EezObject) {
         if (this.props.onDoubleClickItem) {
             this.props.onDoubleClickItem(object);
@@ -118,20 +174,37 @@ export class ListNavigation extends React.Component<ListNavigationProps, {}> {
     }
 
     render() {
+        const title = (
+            <SortableTitle
+                title={this.props.title || objectToString(this.props.navigationObject)}
+                direction={this.sortDirection}
+                onDirectionChanged={action(
+                    (direction: SortDirectionType) => (this.sortDirection = direction)
+                )}
+            />
+        );
+
+        const buttons: JSX.Element[] = [];
+
+        if (this.props.additionalButtons) {
+            buttons.push(...this.props.additionalButtons);
+        }
+
+        buttons.push(<AddButton key="add" navigationObject={this.props.navigationObject} />);
+        buttons.push(<DeleteButton key="delete" navigationObject={this.props.navigationObject} />);
+
         return (
             <Panel
                 id="navigation"
-                title={this.props.title || objectToString(this.props.navigationObject)}
-                buttons={(this.props.additionalButtons || []).concat([
-                    <AddButton key="add" navigationObject={this.props.navigationObject} />,
-                    <DeleteButton key="delete" navigationObject={this.props.navigationObject} />
-                ])}
+                title={title}
+                buttons={buttons}
                 body={
                     <List
                         navigationObject={this.props.navigationObject}
                         onDoubleClick={this.onDoubleClickItem.bind(this)}
                         tabIndex={0}
                         onFocus={this.onFocus.bind(this)}
+                        sortDirection={this.sortDirection}
                     />
                 }
             />

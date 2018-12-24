@@ -5,6 +5,8 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 
+import { stringCompare } from "eez-studio-shared/string";
+
 import {
     EezObject,
     PropertyInfo,
@@ -140,6 +142,7 @@ interface ListItemProps {
     item: EezObject;
     onDoubleClick?: (object: EezObject) => void;
     filter?: (object: EezObject) => boolean;
+    draggable: boolean;
 }
 
 @observer
@@ -325,7 +328,7 @@ export class ListItem extends React.Component<ListItemProps, {}> {
                 onMouseUp={this.onMouseUp}
                 onClick={this.onClick}
                 onDoubleClick={this.onDoubleClick}
-                draggable={true}
+                draggable={this.props.draggable}
                 onDragStart={this.onDragStart}
                 onDrag={this.onDrag}
                 onDragEnd={this.onDragEnd}
@@ -381,11 +384,14 @@ const ListInnerDiv = styled.div`
     position: relative;
 `;
 
+export type SortDirectionType = "asc" | "desc" | "none";
+
 interface ListProps {
     navigationObject: EezObject;
     onDoubleClick?: (object: EezObject) => void;
     tabIndex?: number;
     onFocus?: () => void;
+    sortDirection?: SortDirectionType;
 }
 
 @observer
@@ -558,6 +564,11 @@ export class List extends React.Component<ListProps, {}> {
         });
 
         let children = getChildren(this.props.navigationObject);
+        if (this.props.sortDirection === "asc") {
+            children = children.sort((a, b) => stringCompare(a._label, b._label));
+        } else if (this.props.sortDirection === "desc") {
+            children = children.sort((a, b) => stringCompare(b._label, a._label));
+        }
 
         let childrenElements: JSX.Element[] = [];
 
@@ -575,6 +586,7 @@ export class List extends React.Component<ListProps, {}> {
                     key={child._id}
                     item={child}
                     onDoubleClick={this.props.onDoubleClick}
+                    draggable={this.props.sortDirection === "none"}
                 />
             );
         });
