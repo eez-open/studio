@@ -95,10 +95,10 @@ if (isRenderer()) {
                             TASK_DONE_CHANNEL + taskId,
                             (event: Electron.Event, taskResult: ITaskResult) => {
                                 // result received from service process
-                                if (taskResult.result) {
-                                    resolve(taskResult.result);
-                                } else {
+                                if (taskResult.error) {
                                     reject(taskResult.error);
+                                } else {
+                                    resolve(taskResult.result);
                                 }
                             }
                         );

@@ -36,13 +36,13 @@ export let db = new Database(getDbPath());
 
 db.defaultSafeIntegers();
 
-let dbTaskId = 1;
+let dbQueryTaskId = 1;
 
 export function dbQuery(query: string) {
     return {
         all: async (...args: any[]): Promise<any[]> => {
             return new Promise<any>((resolve, reject) => {
-                const taskId = dbTaskId++;
+                const taskId = dbQueryTaskId++;
 
                 EEZStudio.electron.ipcRenderer.once(
                     "dbQueryTask" + taskId,

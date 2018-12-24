@@ -27,6 +27,7 @@ export interface IDialogComponentProps {
     title: string | undefined;
     onSubmit: (event: React.FormEvent) => void;
     onCancel: () => void;
+    cancelDisabled?: boolean;
     disableButtons: boolean;
     buttons: IDialogButton[];
     children: React.ReactNode;
@@ -97,15 +98,17 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
                                 <h5 className="modal-title" id="myModalLabel">
                                     {props.title}
                                 </h5>
-                                <button
-                                    type="button"
-                                    className="close float-right"
-                                    onClick={props.onCancel}
-                                    disabled={props.disableButtons}
-                                    aria-label="Close"
-                                >
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
+                                {!this.props.cancelDisabled && (
+                                    <button
+                                        type="button"
+                                        className="close float-right"
+                                        onClick={props.onCancel}
+                                        disabled={props.disableButtons}
+                                        aria-label="Close"
+                                    >
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                )}
                             </div>
                         )}
 
@@ -148,7 +151,8 @@ export class Dialog extends React.Component<
         okButtonText?: string;
         cancelButtonText?: string;
         onOk?: () => Promise<boolean> | boolean;
-        onCancel?: () => void;
+        onCancel?: (() => void) | null;
+        cancelDisabled?: boolean;
         additionalButton?: IDialogButton;
     },
     {}
@@ -201,15 +205,17 @@ export class Dialog extends React.Component<
             buttons.push(this.props.additionalButton);
         }
 
-        buttons.push({
-            id: "cancel",
-            type: "secondary",
-            position: "right",
-            onClick: this.onCancel,
-            disabled: this.disableButtons,
-            style: { marginLeft: "auto" },
-            text: this.props.cancelButtonText || "Cancel"
-        });
+        if (!this.props.cancelDisabled) {
+            buttons.push({
+                id: "cancel",
+                type: "secondary",
+                position: "right",
+                onClick: this.onCancel,
+                disabled: this.disableButtons,
+                style: { marginLeft: "auto" },
+                text: this.props.cancelButtonText || "Cancel"
+            });
+        }
 
         if (this.props.onOk) {
             buttons.push({
@@ -232,6 +238,7 @@ export class Dialog extends React.Component<
                 title={this.props.title}
                 onSubmit={this.handleSumbit}
                 onCancel={this.onCancel}
+                cancelDisabled={this.props.cancelDisabled}
                 disableButtons={this.disableButtons}
                 buttons={buttons}
             >

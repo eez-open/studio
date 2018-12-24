@@ -17,7 +17,7 @@ import {
 import * as DesignerModule from "home/designer/designer";
 import * as HistoryModule from "home/history";
 import * as ShortcutsModule from "home/shortcuts";
-import * as SettingsModule from "home/settings";
+import { Settings, settingsController, COMPACT_DATABASE_MESSAGE } from "home/settings";
 
 import { tabs } from "home/tabs-store";
 
@@ -28,7 +28,6 @@ export class NavigationStore {
     historyNavigationItem: IRootNavigationItem;
     deletedHistoryItemsNavigationItem: IRootNavigationItem;
     shortcutsAndGroupsNavigationItem: IRootNavigationItem;
-    settingsNavigationItem: IRootNavigationItem;
 
     @observable
     private _mainNavigationSelectedItemId: string;
@@ -76,17 +75,6 @@ export class NavigationStore {
             renderContent: () => {
                 const { ShortcutsAndGroups } = require("home/shortcuts") as typeof ShortcutsModule;
                 return <ShortcutsAndGroups />;
-            }
-        };
-
-        this.settingsNavigationItem = {
-            id: "settings",
-            icon: "material:settings",
-            title: "Settings",
-            position: "bottom",
-            renderContent: () => {
-                const { Settings } = require("home/settings") as typeof SettingsModule;
-                return <Settings />;
             }
         };
 
@@ -163,6 +151,30 @@ export class NavigationStore {
         });
 
         return navigationItems;
+    }
+
+    @computed
+    get settingsNavigationItem(): IRootNavigationItem {
+        let title;
+        let attention;
+        if (settingsController.isCompactDatabaseAdvisable) {
+            title = COMPACT_DATABASE_MESSAGE;
+            attention = true;
+        } else {
+            title = "Settings";
+            attention = false;
+        }
+
+        return {
+            id: "settings",
+            icon: "material:settings",
+            title,
+            attention,
+            position: "bottom",
+            renderContent: () => {
+                return <Settings />;
+            }
+        };
     }
 
     @computed

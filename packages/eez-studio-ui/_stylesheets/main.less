@@ -66,64 +66,6 @@ input[type="color"] {
     flex-direction: column;
 }
 
-.EezStudio_Navigation {
-    height: 100%;
-    margin: 0;
-    background-color: @panel-header-color;
-    border-right: 1px solid @border-color;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.EezStudio_Navigation ul {
-    padding: 7px;
-    margin-bottom: 0;
-}
-
-.EezStudio_Navigation ul:nth-child(1) {
-    .EezStudio_NavigationItem {
-        width: 24px;
-        margin-bottom: 7px;
-        position: relative;
-    }
-}
-
-.EezStudio_Navigation ul:nth-child(2) {
-    .EezStudio_NavigationItem {
-        margin-top: 7px;
-    }
-}
-
-.EezStudio_NavigationItem {
-    &.EezStudio_Selected {
-        a {
-            color: @selection-background-color;
-        }
-    }
-
-    &:not(.EezStudio_Selected) {
-        a {
-            color: #999;
-        }
-
-        a:hover {
-            color: #333;
-        }
-    }
-}
-
-.EezStudio_NavigationItemNeedsAttention {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    bottom: -3px;
-    right: -3px;
-    background-color: red;
-    border-radius: 3px;
-    box-shadow: 0px 0px 6px 2px rgba(255, 0, 0, 0.3);
-}
-
 .EezStudio_ListContainer {
     max-height: 240px;
     overflow: auto;
