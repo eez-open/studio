@@ -1,7 +1,5 @@
 import { observable } from "mobx";
 
-import { humanize } from "eez-studio-shared/string";
-
 import { validators } from "eez-studio-shared/model/validation";
 import * as output from "eez-studio-shared/model/output";
 
@@ -175,6 +173,6 @@ export function getScpiEnumsAsDialogEnumItems(): EnumItems {
 
     return scpi.enums._array.map(scpiEnum => ({
         id: scpiEnum.name,
-        label: humanize(scpiEnum.name)
+        label: scpiEnum._label
     }));
 }

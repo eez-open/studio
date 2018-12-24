@@ -164,7 +164,7 @@ export class ScpiParameter extends EezObject {
                     const result = await showGenericDialog({
                         dialogDefinition: {
                             title: "Select one or more type",
-                            size: "small",
+                            size: "medium",
                             fields: [
                                 {
                                     name: "numeric",
