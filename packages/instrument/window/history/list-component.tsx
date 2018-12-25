@@ -214,6 +214,8 @@ export class HistoryListComponent extends React.Component<{
         this.autoScroll();
         this.div.addEventListener("scroll", this.onScroll);
         document.addEventListener("keydown", this.onKeyDown);
+
+        this.lastItemInTheCenterId = undefined;
     }
 
     componentDidUpdate() {
@@ -222,6 +224,8 @@ export class HistoryListComponent extends React.Component<{
         setTimeout(() => {
             $(this.div).css("overflow", "auto");
         }, 1);
+
+        this.lastItemInTheCenterId = undefined;
     }
 
     componentWillUnmount() {
@@ -278,6 +282,9 @@ export class HistoryListComponent extends React.Component<{
     lastScrollHeight: number;
     lastClientHeight: number;
 
+    findCenterItemTimeut: any;
+    lastItemInTheCenterId: string | undefined;
+
     @bind
     onScroll(event: any) {
         if (
@@ -293,6 +300,40 @@ export class HistoryListComponent extends React.Component<{
 
         this.lastScrollHeight = this.div.scrollHeight;
         this.lastClientHeight = this.div.clientHeight;
+
+        // find item in the center of the view
+        if (this.findCenterItemTimeut) {
+            clearTimeout(this.findCenterItemTimeut);
+        }
+        this.findCenterItemTimeut = setTimeout(() => {
+            this.findCenterItemTimeut = undefined;
+            const itemElements = $(this.div).find(".EezStudio_HistoryItemEnclosure");
+            if (itemElements.length > 0) {
+                let foundItemElement = itemElements[0];
+                const rect = foundItemElement.getBoundingClientRect();
+                let minDistance = Math.abs(this.div.clientHeight - (rect.top + rect.height / 2));
+
+                for (let i = 1; i < itemElements.length; ++i) {
+                    const rect = itemElements[i].getBoundingClientRect();
+                    const distance = Math.abs(
+                        this.div.clientHeight / 2 - (rect.top + rect.height / 2)
+                    );
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        foundItemElement = itemElements[i];
+                    }
+                }
+
+                const matches = foundItemElement.className.match(/EezStudio_HistoryItem_(\d*)/);
+                if (matches && matches.length >= 1) {
+                    const itemId = matches[1];
+                    if (itemId !== this.lastItemInTheCenterId) {
+                        // found it
+                        this.props.history.setItemInTheCenterOfTheView(itemId);
+                    }
+                }
+            }
+        }, 10);
     }
 
     selectAll() {

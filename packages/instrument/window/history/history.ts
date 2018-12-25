@@ -201,6 +201,14 @@ class HistoryCalendar {
 
     @computed
     get selectedDay() {
+        if (this.history.selection.items.length > 0) {
+            return this.history.selection.items[0].date;
+        }
+
+        if (this.history.itemInTheCenterOfTheView) {
+            return this.history.itemInTheCenterOfTheView.date;
+        }
+
         if (this.showFirstHistoryItemAsSelectedDay) {
             return (
                 this.history.navigator.firstHistoryItem &&
@@ -1039,6 +1047,7 @@ export class History {
     @action
     displayRows(rows: any[]) {
         this.blocks = [this.rowsToHistoryItems(rows)];
+        this.itemInTheCenterOfTheView = undefined;
         this.navigator.update();
     }
 
@@ -1216,6 +1225,19 @@ export class History {
         }
 
         return [];
+    }
+
+    @observable
+    itemInTheCenterOfTheView: IHistoryItem | undefined;
+
+    @action
+    setItemInTheCenterOfTheView(id: string) {
+        const foundItem = this.findHistoryItemById(id);
+        if (foundItem) {
+            this.itemInTheCenterOfTheView = foundItem.block[foundItem.index];
+        } else {
+            this.itemInTheCenterOfTheView = undefined;
+        }
     }
 }
 
