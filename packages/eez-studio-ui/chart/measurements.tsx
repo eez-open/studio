@@ -958,9 +958,9 @@ export class MeasurementsDockView extends React.Component<{
                 continue;
             }
 
-            availableMeasurements.push(measurementFunctionId);
+            availableMeasurements.push(measurementFunction);
         }
-        return availableMeasurements.sort(stringCompare);
+        return availableMeasurements.sort((a, b) => stringCompare(a.name, b.name)).map(a => a.id);
     }
 
     render() {

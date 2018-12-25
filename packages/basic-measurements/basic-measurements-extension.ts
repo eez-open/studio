@@ -98,6 +98,13 @@ const basicMeasurementsExtension: IExtensionDefinition = {
             script: "add.js",
             arity: 2,
             resultType: "chart"
+        },
+        {
+            id: "sub",
+            name: "A - B",
+            script: "sub.js",
+            arity: 2,
+            resultType: "chart"
         }
     ]
 };
