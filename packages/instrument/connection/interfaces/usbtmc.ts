@@ -1199,3 +1199,36 @@ export class UsbTmcInterface implements CommunicationInterface {
         this.destroy();
     }
 }
+
+export async function getUsbDevices() {
+    let devices = [];
+
+    const deviceList = usb.getDeviceList();
+    for (const device of deviceList) {
+        let productName: string | undefined;
+
+        try {
+            device.open();
+
+            productName = await new Promise<string | undefined>((resolve, reject) => {
+                device.getStringDescriptor(device.deviceDescriptor.iProduct, (err, product) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(product !== undefined ? product.toString() : product);
+                    }
+                });
+            });
+
+            device.close();
+        } catch (err) {}
+
+        devices.push({
+            idVendor: device.deviceDescriptor.idVendor,
+            idProduct: device.deviceDescriptor.idProduct,
+            name: productName
+        });
+    }
+
+    return devices;
+}

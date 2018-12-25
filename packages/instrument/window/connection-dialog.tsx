@@ -15,6 +15,7 @@ import {
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 
 import { ConnectionParameters } from "instrument/connection/interface";
+import * as UsbTmcModule from "instrument/connection/interfaces/usbtmc";
 
 interface ConnectionPropertiesProps {
     connectionParameters: ConnectionParameters;
@@ -47,6 +48,13 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
     @observable ethernetPort: number;
     @observable serialPortPath: string;
     @observable serialPortBaudRate: number;
+
+    @observable usbDevices: {
+        name?: string;
+        idVendor: number;
+        idProduct: number;
+    }[] = [];
+    @observable selectedUsbDeviceIndex: string;
     @observable idVendor: number;
     @observable idProduct: number;
 
@@ -69,6 +77,7 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
 
     componentDidMount() {
         this.refreshSerialPortPaths();
+        this.refreshUsbDevices();
 
         $(this.refs.div).modal();
 
@@ -134,22 +143,6 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
         this.serialPortBaudRate = parseInt(value);
     }
 
-    @action.bound
-    onIDVendorChange(value: string) {
-        this.idVendor = parseInt(value);
-    }
-
-    @action.bound
-    onIDProductChange(value: string) {
-        this.idProduct = parseInt(value);
-    }
-
-    @bind
-    onRefreshSerialPortPaths(event: React.MouseEvent<HTMLButtonElement>) {
-        event.preventDefault();
-        this.refreshSerialPortPaths();
-    }
-
     refreshSerialPortPaths() {
         const SerialPort = require("serialport") as typeof SerialPortModule;
         SerialPort.list((err: any, ports: any[]) => {
@@ -185,6 +178,53 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                 });
             }
         });
+    }
+
+    @bind
+    onRefreshSerialPortPaths(event: React.MouseEvent) {
+        event.preventDefault();
+        this.refreshSerialPortPaths();
+    }
+
+    @action.bound
+    onUsbDeviceChange(value: string) {
+        this.selectedUsbDeviceIndex = value;
+
+        const usbDeviceIndex = parseInt(value);
+        if (usbDeviceIndex >= 0 && usbDeviceIndex < this.usbDevices.length) {
+            this.idVendor = this.usbDevices[usbDeviceIndex].idVendor;
+            this.idProduct = this.usbDevices[usbDeviceIndex].idProduct;
+        }
+    }
+
+    async refreshUsbDevices() {
+        const {
+            getUsbDevices
+        } = require("instrument/connection/interfaces/usbtmc") as typeof UsbTmcModule;
+
+        const usbDevices = await getUsbDevices();
+
+        runInAction(() => {
+            this.usbDevices = usbDevices;
+
+            let selectedUsbDeviceIndex = "0";
+            for (let i = 0; i < this.usbDevices.length; ++i) {
+                if (
+                    this.usbDevices[i].idVendor === this.idVendor ||
+                    this.usbDevices[i].idProduct === this.idProduct
+                ) {
+                    selectedUsbDeviceIndex = i.toString();
+                    break;
+                }
+            }
+            this.selectedUsbDeviceIndex = selectedUsbDeviceIndex;
+        });
+    }
+
+    @bind
+    onRefreshUsbDevices(event: React.MouseEvent) {
+        event.preventDefault();
+        this.refreshUsbDevices();
     }
 
     render() {
@@ -245,18 +285,32 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
             ];
         } else {
             options = [
-                <TextInputProperty
-                    key="idVendor"
-                    name="Vendor ID"
-                    value={"0x" + this.idVendor.toString(16)}
-                    onChange={this.onIDVendorChange}
-                />,
-                <TextInputProperty
-                    key="idProduct"
-                    name="Product ID"
-                    value={"0x" + this.idProduct.toString(16)}
-                    onChange={this.onIDProductChange}
-                />
+                <SelectProperty
+                    key="usbDevice"
+                    name="Device"
+                    value={this.selectedUsbDeviceIndex}
+                    onChange={this.onUsbDeviceChange}
+                    inputGroupButton={
+                        <div className="input-group-append">
+                            <button
+                                className="btn btn-secondary"
+                                title="Refresh list of available USB devices"
+                                onClick={this.onRefreshUsbDevices}
+                            >
+                                Refresh
+                            </button>
+                        </div>
+                    }
+                >
+                    {this.usbDevices.map((usbDevice, i) => (
+                        <option key={i} value={i}>
+                            {usbDevice.name ||
+                                `VID=0x${usbDevice.idVendor.toString(
+                                    16
+                                )}, PID=0x${usbDevice.idProduct.toString(16)}`}
+                        </option>
+                    ))}
+                </SelectProperty>
             ];
         }
 
