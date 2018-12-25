@@ -17,6 +17,7 @@ export type ParameterTypeType =
     | "boolean"
     | "quoted-string"
     | "data-block"
+    | "channel-list"
     | "discrete";
 
 export interface IParameterType {
@@ -95,6 +96,10 @@ export function getSdlParameterType(parameterType: IParameterType) {
         return `<Character><EnumRef name="${parameterType.enumeration}" /></Character>`;
     }
 
+    if (parameterType.type === "channel-list") {
+        return "<Expression><ChannelList/></Expression>";
+    }
+
     return "<UnknownType />";
 }
 
@@ -132,6 +137,10 @@ export function getSdlSemanticType(responseType: ResponseType | ParameterTypeTyp
     }
 
     if (responseType === "discrete") {
+        return "String";
+    }
+
+    if (responseType === "channel-list") {
         return "String";
     }
 

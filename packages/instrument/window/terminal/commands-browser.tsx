@@ -103,6 +103,8 @@ export class CommandSyntax extends React.Component<
                     }
                 }
                 types.push(`Discrete<${parameter.type[i].enumeration}>`);
+            } else if (type.type === "channel-list") {
+                return [null, parameterValue];
             }
         }
 

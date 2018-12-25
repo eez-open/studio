@@ -173,6 +173,18 @@ function buildParameters(dom: JQuery): IParameter[] {
             });
         }
 
+        if ($(element).find("Expression>ChannelList").length) {
+            type.push({
+                type: "channel-list"
+            });
+        }
+
+        if ($(element).find("ArbitraryBlock").length) {
+            type.push({
+                type: "data-block"
+            });
+        }
+
         const description = element.getAttribute("description") || "";
 
         return {
@@ -202,6 +214,8 @@ function buildResponse(dom: JQuery): IResponse {
     } else if (dom.find("Responses>Response>ResponseType>ListOfQuotedString").length) {
         type = "list-of-quoted-string";
     } else if (dom.find("Responses>Response>ResponseType>DataBlock").length) {
+        type = "data-block";
+    } else if (dom.find("Responses>Response>ResponseType>DefiniteLengthArbitraryBlock").length) {
         type = "data-block";
     } else if (dom.find("Responses>Response>ResponseType>NonStandardDataBlock").length) {
         type = "non-standard-data-block";

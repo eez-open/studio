@@ -196,6 +196,10 @@ export class ScpiParameter extends EezObject {
                                     type: "boolean"
                                 },
                                 {
+                                    name: "channelList",
+                                    type: "boolean"
+                                },
+                                {
                                     name: "discrete",
                                     type: "boolean"
                                 },
@@ -220,6 +224,7 @@ export class ScpiParameter extends EezObject {
                             boolean: isScpiType(object, "boolean"),
                             string: isScpiType(object, "quoted-string"),
                             dataBlock: isScpiType(object, "data-block"),
+                            channelList: isScpiType(object, "channel-list"),
                             discrete: isScpiType(object, "discrete"),
                             enumeration: getDiscreteTypeEnumeration(object)
                         }
@@ -248,6 +253,12 @@ export class ScpiParameter extends EezObject {
                     if (result.values.dataBlock) {
                         type.push({
                             type: "data-block"
+                        });
+                    }
+
+                    if (result.values.channelList) {
+                        type.push({
+                            type: "channel-list"
                         });
                     }
 
