@@ -22,7 +22,6 @@ import { PanMouseHandler } from "eez-studio-designer/mouse-handlers/pan";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
-const CONF_IS_FRESH_RENDERING_TIMEOUT = 10; // ms
 const CONF_AFTER_SCROLL_ADJUSTMENT_TIMEOUT = 1000; // ms
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,8 +69,6 @@ export class Canvas extends React.Component<{
 
     draggable = new Draggable(this);
 
-    isFreshRenderingTimeout: any;
-
     scrollLeft: number;
     scrollTop: number;
     afterScrollAdjustmentTimeout: any;
@@ -116,24 +113,25 @@ export class Canvas extends React.Component<{
         this.updateScroll();
 
         this.intervalTimerIDForClientRectUpdate = setInterval(() => {
+            if (!$(this.div).is(":visible")) {
+                return;
+            }
+
             const transform = this.designerContext.viewState.transform;
 
             let clientRect = this.div.getBoundingClientRect();
             if (
                 clientRect.left !== transform.clientRect.left ||
                 clientRect.top !== transform.clientRect.top ||
-                clientRect.width !== transform.clientRect.width ||
-                clientRect.height !== transform.clientRect.height
+                (clientRect.width && clientRect.width !== transform.clientRect.width) ||
+                (clientRect.height && clientRect.height !== transform.clientRect.height)
             ) {
                 runInAction(() => {
                     transform.clientRect = clientRect;
                 });
             }
 
-            if (
-                !this.isFreshRenderingTimeout &&
-                (this.div.scrollLeft !== this.scrollLeft || this.div.scrollTop !== this.scrollTop)
-            ) {
+            if (this.div.scrollLeft !== this.scrollLeft || this.div.scrollTop !== this.scrollTop) {
                 this.scrollLeft = this.div.scrollLeft;
                 this.scrollTop = this.div.scrollTop;
 
@@ -355,13 +353,6 @@ export class Canvas extends React.Component<{
     }
 
     render() {
-        if (this.isFreshRenderingTimeout) {
-            clearTimeout(this.isFreshRenderingTimeout);
-        }
-        this.isFreshRenderingTimeout = setTimeout(() => {
-            this.isFreshRenderingTimeout = undefined;
-        }, CONF_IS_FRESH_RENDERING_TIMEOUT);
-
         let style: React.CSSProperties = {
             cursor: "default",
             position: "absolute",
