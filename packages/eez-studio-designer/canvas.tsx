@@ -417,6 +417,7 @@ export class Canvas extends React.Component<{
                     />
                     <div
                         style={{
+                            position: "absolute",
                             transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`,
                             transformOrigin: "0 0",
                             pointerEvents: "none"
