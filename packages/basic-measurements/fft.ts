@@ -55,10 +55,10 @@ export default function(task: IMeasureTask) {
     }
 
     //
-    const scale = 1 / (2 * (maxValue - minValue) * numWindows);
+    const f = 2 * (maxValue - minValue) * numWindows;
 
     function toDecibels(i: number) {
-        return 20 * Math.log10(output[i] * scale);
+        return 20 * Math.log10(output[i] / f);
     }
 
     const data = new Array(halfWindowSize);

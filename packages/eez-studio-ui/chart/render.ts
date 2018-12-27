@@ -385,8 +385,7 @@ export function renderWaveformPath(
         points: {
             x: number;
             y: number;
-            yMin: number;
-            yMax: number;
+            count: number;
         }[];
 
         isDone: boolean;
@@ -431,20 +430,14 @@ export function renderWaveformPath(
                 let y = Math.round(canvas.height - yAxisController.valueToPx(waveform.value(i)));
 
                 if (points.length === 0 || points[points.length - 1].x !== x) {
-                    if (points.length > 0) {
-                        points[points.length - 1].y =
-                            (points[points.length - 1].yMin + points[points.length - 1].yMax) / 2;
-                    }
-
                     points.push({
                         x,
                         y,
-                        yMin: y,
-                        yMax: y
+                        count: 1
                     });
                 } else {
-                    points[points.length - 1].yMin = Math.min(points[points.length - 1].yMin, y);
-                    points[points.length - 1].yMax = Math.max(points[points.length - 1].yMax, y);
+                    points[points.length - 1].y += y;
+                    ++points[points.length - 1].count;
                 }
             }
             continuation.i = i;
@@ -452,8 +445,10 @@ export function renderWaveformPath(
                 continuation.isDone = true;
             }
 
-            points[points.length - 1].y =
-                (points[points.length - 1].yMin + points[points.length - 1].yMax) / 2;
+            for (let i = 0; i < points.length; ++i) {
+                points[i].y /= points[i].count;
+                points[i].count = 1;
+            }
 
             ctx.fillStyle = strokeColor;
             ctx.strokeStyle = strokeColor;
