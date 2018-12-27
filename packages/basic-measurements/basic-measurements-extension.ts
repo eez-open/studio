@@ -1,47 +1,29 @@
 import { IExtensionDefinition, IFieldProperties } from "eez-studio-shared/extensions/extension";
 
 const fftParametersDescription: IFieldProperties[] = [
-    // {
-    //     name: "windowSize",
-    //     displayName: "Size",
-    //     type: "enum",
-    //     defaultValue: 1024,
-    //     enumItems: [
-    //         128,
-    //         256,
-    //         512,
-    //         1024,
-    //         2048,
-    //         4096,
-    //         8192,
-    //         16384,
-    //         32768,
-    //         65536,
-    //         131072,
-    //         262144,
-    //         524288,
-    //         1048576,
-    //         2097152,
-    //         4194304,
-    //         8388608
-    //     ]
-    // },
-    // {
-    //     name: "windowFunction",
-    //     displayName: "Function",
-    //     type: "enum",
-    //     defaultValue: "hann",
-    //     enumItems: [
-    //         { id: "rectangular", label: "Rectangular window" },
-    //         { id: "hamming", label: "Hamming window" },
-    //         { id: "hann", label: "Hanning window" },
-    //         { id: "blackman", label: "Blackman window" },
-    //         { id: "blackman_harris", label: "Blackman-Harris window" },
-    //         { id: "gaussian-2.5", label: "Gaussian (a=2.5) window" },
-    //         { id: "gaussian-3.5", label: "Gaussian (a=3.5) window" },
-    //         { id: "gaussian-4.5", label: "Gaussian (a=4.5) window" }
-    //     ]
-    // },
+    {
+        name: "windowSize",
+        displayName: "Size",
+        type: "enum",
+        defaultValue: 65536,
+        enumItems: [...Array(17).keys()].map(x => Math.pow(2, 7 + x))
+    },
+    {
+        name: "windowFunction",
+        displayName: "Function",
+        type: "enum",
+        defaultValue: "rectangular",
+        enumItems: [
+            { id: "rectangular", label: "Rectangular window" },
+            { id: "hamming", label: "Hamming window" },
+            { id: "hann", label: "Hanning window" },
+            { id: "blackman", label: "Blackman window" },
+            { id: "blackman_harris", label: "Blackman-Harris window" },
+            { id: "gaussian-2.5", label: "Gaussian (a=2.5) window" },
+            { id: "gaussian-3.5", label: "Gaussian (a=3.5) window" },
+            { id: "gaussian-4.5", label: "Gaussian (a=4.5) window" }
+        ]
+    },
     {
         name: "axis",
         displayName: "Axis",

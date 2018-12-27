@@ -859,7 +859,8 @@ export class WaveformDefinitionProperties {
                 onChange={action((value: string) => (this.props.format = parseInt(value)))}
             >
                 <option value={WaveformFormat.UNKNOWN.toString()}>Unknown</option>
-                <option value={WaveformFormat.UINT8_ARRAY_OF_FLOATS.toString()}>Float</option>
+                <option value={WaveformFormat.FLOATS_32BIT.toString()}>32-bit float</option>
+                <option value={WaveformFormat.FLOATS_64BIT.toString()}>64-bit float</option>
                 <option value={WaveformFormat.RIGOL_BYTE.toString()}>Byte (Rigol)</option>
                 <option value={WaveformFormat.RIGOL_WORD.toString()}>Word (Rigol)</option>
                 <option value={WaveformFormat.CSV_STRING.toString()}>CSV</option>

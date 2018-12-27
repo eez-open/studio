@@ -384,6 +384,7 @@ export function renderWaveformPath(
 
         points: {
             x: number;
+            y: number;
             yMin: number;
             yMax: number;
         }[];
@@ -430,8 +431,14 @@ export function renderWaveformPath(
                 let y = Math.round(canvas.height - yAxisController.valueToPx(waveform.value(i)));
 
                 if (points.length === 0 || points[points.length - 1].x !== x) {
+                    if (points.length > 0) {
+                        points[points.length - 1].y =
+                            (points[points.length - 1].yMin + points[points.length - 1].yMax) / 2;
+                    }
+
                     points.push({
                         x,
+                        y,
                         yMin: y,
                         yMax: y
                     });
@@ -445,41 +452,31 @@ export function renderWaveformPath(
                 continuation.isDone = true;
             }
 
+            points[points.length - 1].y =
+                (points[points.length - 1].yMin + points[points.length - 1].yMax) / 2;
+
             ctx.fillStyle = strokeColor;
             ctx.strokeStyle = strokeColor;
-            ctx.lineWidth = 0.8;
+            ctx.lineWidth = 1;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            let r = 1.5;
 
-            let xPrev: number | undefined;
-            let yPrev: number | undefined;
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (i = 1; i < points.length; ++i) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.stroke();
 
-            for (let i = 0; i < points.length; ++i) {
-                let x = points[i].x;
-                let yMin = points[i].yMin;
-                let yMax = points[i].yMax;
-                let y = (yMin + yMax) / 2;
-
-                if (xPrev !== undefined) {
+            let R = 1.5;
+            for (i = 0; i < points.length; ++i) {
+                if (
+                    (i === 0 || points[i].x - points[i - 1].x > 2 * R) &&
+                    (i === points.length - 1 || points[i + 1].x - points[i].x > 2 * R)
+                ) {
                     ctx.beginPath();
-                    ctx.moveTo(xPrev, yPrev!);
-                    ctx.lineTo(x, y);
-                    ctx.stroke();
-                }
-
-                if (yMin === yMax) {
-                    ctx.beginPath();
-                    ctx.arc(x, y, r, 0, 2 * Math.PI);
+                    ctx.arc(points[i].x, points[i].y, R, 0, 2 * Math.PI);
                     ctx.fill();
-                } else {
-                    ctx.beginPath();
-                    ctx.moveTo(x, yMin);
-                    ctx.lineTo(x, yMax);
-                    ctx.stroke();
                 }
-
-                xPrev = x;
-                yPrev = y;
             }
         }
 

@@ -1,11 +1,12 @@
 export enum WaveformFormat {
     UNKNOWN,
-    UINT8_ARRAY_OF_FLOATS,
+    FLOATS_32BIT,
     RIGOL_BYTE,
     RIGOL_WORD,
     CSV_STRING,
     EEZ_DLOG,
-    FLOATS
+    JS_NUMBERS,
+    FLOATS_64BIT
 }
 
 function getCsvValues(valuesArray: any) {
@@ -21,7 +22,7 @@ function getCsvValues(valuesArray: any) {
     return lines.map(line => line[0]);
 }
 
-const buffer = Buffer.allocUnsafe(4);
+const buffer = Buffer.allocUnsafe(8);
 
 function readFloat(data: any, i: number) {
     buffer[0] = data[i];
@@ -29,6 +30,18 @@ function readFloat(data: any, i: number) {
     buffer[2] = data[i + 2];
     buffer[3] = data[i + 3];
     return buffer.readFloatLE(0);
+}
+
+function readDouble(data: any, i: number) {
+    buffer[0] = data[i];
+    buffer[1] = data[i + 1];
+    buffer[2] = data[i + 2];
+    buffer[3] = data[i + 3];
+    buffer[4] = data[i + 4];
+    buffer[5] = data[i + 5];
+    buffer[6] = data[i + 6];
+    buffer[7] = data[i + 7];
+    return buffer.readDoubleLE(0);
 }
 
 export function initValuesAccesor(
@@ -54,10 +67,16 @@ export function initValuesAccesor(
     let value: (value: number) => number;
     let waveformData: (value: number) => number;
 
-    if (format === WaveformFormat.UINT8_ARRAY_OF_FLOATS) {
+    if (format === WaveformFormat.FLOATS_32BIT) {
         length = Math.floor(values.length / 4);
         value = (index: number) => {
             return readFloat(values, 4 * index);
+        };
+        waveformData = value;
+    } else if (format === WaveformFormat.FLOATS_64BIT) {
+        length = Math.floor(values.length / 8);
+        value = (index: number) => {
+            return readDouble(values, 8 * index);
         };
         waveformData = value;
     } else if (format === WaveformFormat.RIGOL_BYTE) {
@@ -92,7 +111,7 @@ export function initValuesAccesor(
             return readFloat(values, offset + index * scale);
         };
         waveformData = value;
-    } else if (format === WaveformFormat.FLOATS) {
+    } else if (format === WaveformFormat.JS_NUMBERS) {
         length = object.length;
         value = (index: number) => {
             return values[offset + index * scale];

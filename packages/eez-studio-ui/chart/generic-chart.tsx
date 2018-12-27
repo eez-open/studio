@@ -103,7 +103,7 @@ class GenericChartWaveform implements IWaveform {
 
     isVisible = true;
 
-    format = WaveformFormat.FLOATS;
+    format = WaveformFormat.JS_NUMBERS;
 
     get values() {
         return this.chartData.data;
