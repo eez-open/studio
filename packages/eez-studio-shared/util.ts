@@ -534,6 +534,7 @@ export function clamp(value: number, min: number, max: number) {
 }
 
 var moment: typeof MomentModule | undefined;
+var userLocale: string;
 var localeData: MomentModule.Locale;
 var localeWeekdays: string[];
 var defaultDateFormat: string;
@@ -549,10 +550,10 @@ export function getMoment() {
             getDateFormat,
             getTimeFormat
         } = require("eez-studio-shared/i10n") as typeof I10nModule;
-        const locale = getLocale();
-        localeData = getMoment().localeData(locale);
+        userLocale = getLocale();
+        localeData = getMoment().localeData(userLocale);
         localeWeekdays = localeData.weekdays();
-        moment.locale(locale);
+        moment.locale(userLocale);
         defaultDateFormat = getDateFormat();
         defaultTimeFormat = getTimeFormat();
         defaultDateTimeFormat = defaultDateFormat + " " + defaultTimeFormat;
@@ -571,7 +572,9 @@ export function formatDate(date: Date, format?: string) {
 export function formatDuration(duration: number) {
     return getMoment()
         .duration(duration)
-        .format("d _, h _, m _, s _");
+        .format("d __, h __, m __, s __", {
+            userLocale
+        });
 }
 
 export function getFirstDayOfWeek() {
