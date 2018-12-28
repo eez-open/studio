@@ -1,37 +1,37 @@
 import { IExtensionDefinition, IFieldProperties } from "eez-studio-shared/extensions/extension";
 
 const fftParametersDescription: IFieldProperties[] = [
-    {
-        name: "windowSize",
-        displayName: "Size",
-        type: "enum",
-        defaultValue: 65536,
-        enumItems: [...Array(17).keys()].map(x => Math.pow(2, 7 + x))
-    },
-    {
-        name: "windowFunction",
-        displayName: "Function",
-        type: "enum",
-        defaultValue: "rectangular",
-        enumItems: [
-            { id: "rectangular", label: "Rectangular window" },
-            { id: "hamming", label: "Hamming window" },
-            { id: "hann", label: "Hanning window" },
-            { id: "blackman", label: "Blackman window" },
-            { id: "blackman_harris", label: "Blackman-Harris window" },
-            { id: "gaussian-2.5", label: "Gaussian (a=2.5) window" },
-            { id: "gaussian-3.5", label: "Gaussian (a=3.5) window" },
-            { id: "gaussian-4.5", label: "Gaussian (a=4.5) window" }
-        ]
-    },
-    {
-        name: "resample",
-        displayName: "Resample",
-        type: "range",
-        defaultValue: 1,
-        minValue: 1,
-        maxValue: 100
-    },
+    // {
+    //     name: "windowSize",
+    //     displayName: "Size",
+    //     type: "enum",
+    //     defaultValue: 65536,
+    //     enumItems: [...Array(17).keys()].map(x => Math.pow(2, 7 + x))
+    // },
+    // {
+    //     name: "windowFunction",
+    //     displayName: "Function",
+    //     type: "enum",
+    //     defaultValue: "rectangular",
+    //     enumItems: [
+    //         { id: "rectangular", label: "Rectangular window" },
+    //         { id: "hamming", label: "Hamming window" },
+    //         { id: "hann", label: "Hanning window" },
+    //         { id: "blackman", label: "Blackman window" },
+    //         { id: "blackman_harris", label: "Blackman-Harris window" },
+    //         { id: "gaussian-2.5", label: "Gaussian (a=2.5) window" },
+    //         { id: "gaussian-3.5", label: "Gaussian (a=3.5) window" },
+    //         { id: "gaussian-4.5", label: "Gaussian (a=4.5) window" }
+    //     ]
+    // },
+    // {
+    //     name: "resample",
+    //     displayName: "Resample",
+    //     type: "range",
+    //     defaultValue: 1,
+    //     minValue: 1,
+    //     maxValue: 100
+    // },
     {
         name: "xAxis",
         displayName: "X axis",
