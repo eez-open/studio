@@ -35,17 +35,14 @@ export function getNearestValuePoint(
     let i1 = Math.floor(xAxisController.pxToValue(point.x - 0.5) * waveform.samplingRate);
     let i2 = Math.ceil(xAxisController.pxToValue(point.x + 0.5) * waveform.samplingRate);
     if (i2 - i1 > 1) {
-        let min = Number.MAX_VALUE;
-        let max = -Number.MAX_VALUE;
+        let sum = 0;
         for (let i = i1; i <= i2; ++i) {
-            const value = waveform.value(i);
-            min = Math.min(min, value);
-            max = Math.max(max, value);
+            sum += waveform.value(i);
         }
 
         return {
             x: xAxisController.pxToValue(point.x),
-            y: (min + max) / 2
+            y: sum / (i2 - i1 + 1)
         };
     } else {
         let i = Math.round(xAxisController.pxToValue(point.x) * waveform.samplingRate);

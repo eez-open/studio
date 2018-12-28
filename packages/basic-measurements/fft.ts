@@ -147,7 +147,7 @@ export default function(task: IMeasureTask) {
     function toDecibels(i: number) {
         const re = real[i];
         const im = imag[i];
-        return 20 * Math.log10(Math.sqrt(re * re + im * im));
+        return Math.max(20 * Math.log10(Math.sqrt(re * re + im * im) / numSamples), -110);
     }
 
     function getLinearYValue(i: number) {
