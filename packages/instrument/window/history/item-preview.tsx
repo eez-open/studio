@@ -59,6 +59,7 @@ class ZoomedPreview extends React.Component<{
 
         this.el = document.createElement("div");
         this.el.tabIndex = 0;
+        this.el.onkeydown = this.onKeyDown;
     }
 
     componentDidMount() {
@@ -74,6 +75,13 @@ class ZoomedPreview extends React.Component<{
     onContextMenu(event: React.MouseEvent<HTMLDivElement>) {
         event.preventDefault();
         event.stopPropagation();
+    }
+
+    @bind
+    onKeyDown(event: KeyboardEvent) {
+        if (event.keyCode == 27) {
+            this.props.toggleZoom(event as any);
+        }
     }
 
     render() {
