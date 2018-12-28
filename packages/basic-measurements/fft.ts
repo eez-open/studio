@@ -119,7 +119,7 @@ import { IMeasureTask } from "eez-studio-shared/extensions/extension";
 
 export default function(task: IMeasureTask) {
     //
-    let numSamples = task.xNumSamples;
+    let numSamples = Math.pow(2, Math.floor(Math.log2(task.xNumSamples)));
 
     let F = task.xNumSamples / numSamples;
 
