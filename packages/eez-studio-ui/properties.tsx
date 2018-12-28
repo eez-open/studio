@@ -840,3 +840,28 @@ export class Radio extends React.Component<
         );
     }
 }
+
+@observer
+export class RangeProperty extends React.Component<
+    {
+        id?: string;
+        name?: string;
+        value: number;
+        onChange: (value: number) => void;
+        advanced?: boolean;
+        errors?: string[];
+        min?: number;
+        max?: number;
+    },
+    {}
+> {
+    render() {
+        return (
+            <InputProperty
+                {...this.props}
+                type="range"
+                onChange={value => this.props.onChange(parseInt(value))}
+            />
+        );
+    }
+}

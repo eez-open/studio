@@ -25,6 +25,14 @@ const fftParametersDescription: IFieldProperties[] = [
         ]
     },
     {
+        name: "resample",
+        displayName: "Resample",
+        type: "range",
+        defaultValue: 1,
+        minValue: 1,
+        maxValue: 100
+    },
+    {
         name: "xAxis",
         displayName: "X axis",
         type: "enum",

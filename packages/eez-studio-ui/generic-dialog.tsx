@@ -14,7 +14,8 @@ import {
     PropertyEnclosure,
     BooleanProperty,
     TextInputProperty,
-    SelectProperty
+    SelectProperty,
+    RangeProperty
 } from "eez-studio-ui/properties";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,7 +30,7 @@ export type EnumItems = (number | string | IEnumItem)[];
 export interface IFieldProperties {
     name: string;
     displayName?: string;
-    type?: "integer" | "number" | "string" | "boolean" | "enum" | typeof FieldComponent;
+    type?: "integer" | "number" | "string" | "boolean" | "enum" | "range" | typeof FieldComponent;
     unit?: keyof typeof UNITS;
     enumItems?: EnumItems | (() => EnumItems);
     defaultValue?: number | string | boolean;
@@ -38,6 +39,8 @@ export interface IFieldProperties {
     validators?: Rule[];
     fullLine?: boolean;
     enclosureClassName?: string;
+    minValue?: number;
+    maxValue?: number;
 }
 
 export interface IFieldComponentProps {
@@ -276,6 +279,9 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                         let Field: any;
                         let children: JSX.Element | JSX.Element[] | null = null;
 
+                        let min;
+                        let max;
+
                         if (
                             fieldProperties.type === "integer" ||
                             fieldProperties.type === "number" ||
@@ -310,6 +316,10 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             });
                         } else if (fieldProperties.type === "boolean") {
                             Field = BooleanProperty;
+                        } else if (fieldProperties.type === "range") {
+                            min = fieldProperties.minValue || 0;
+                            max = fieldProperties.maxValue || 100;
+                            Field = RangeProperty;
                         } else {
                             return (
                                 <PropertyEnclosure
@@ -342,6 +352,8 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                                 value={value}
                                 onChange={onChange}
                                 errors={errors}
+                                min={min}
+                                max={max}
                             >
                                 {children}
                             </Field>
