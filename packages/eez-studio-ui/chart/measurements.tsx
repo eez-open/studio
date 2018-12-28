@@ -78,6 +78,8 @@ interface ISingleInputMeasurementTaskSpecification {
     scale: number;
     samplingRate: number;
 
+    valueUnit: keyof typeof UNITS;
+
     parameters: any;
 
     measureFunctionScript: string;
@@ -223,6 +225,8 @@ class Measurement {
             scale: waveformModel.scale,
             samplingRate: waveformModel.samplingRate,
 
+            valueUnit: waveformModel.valueUnit,
+
             parameters: toJS(this.parameters),
 
             measureFunctionScript: this.script
@@ -275,7 +279,8 @@ class Measurement {
                 values: task.values,
                 offset: task.offset,
                 scale: task.scale,
-                samplingRate: task.samplingRate
+                samplingRate: task.samplingRate,
+                valueUnit: task.valueUnit
             })),
 
             parameters: toJS(this.parameters),

@@ -4,7 +4,14 @@ import { observable, computed, reaction, toJS } from "mobx";
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
-import { IUnit, TIME_UNIT, VOLTAGE_UNIT, CURRENT_UNIT, POWER_UNIT } from "eez-studio-shared/units";
+import {
+    IUnit,
+    TIME_UNIT,
+    VOLTAGE_UNIT,
+    CURRENT_UNIT,
+    POWER_UNIT,
+    UNITS
+} from "eez-studio-shared/units";
 import { Point } from "eez-studio-shared/geometry";
 
 import {
@@ -21,6 +28,7 @@ import { MeasurementsModel } from "eez-studio-ui/chart/measurements";
 import { IWaveform } from "eez-studio-ui/chart/render";
 import { WaveformFormat, initValuesAccesor } from "eez-studio-ui/chart/buffer";
 import { getNearestValuePoint } from "eez-studio-ui/chart/generic-chart";
+import { WaveformModel } from "eez-studio-ui/chart/waveform";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
@@ -147,13 +155,16 @@ class DlogWaveformLineController extends LineController {
             offset: rowOffset,
             scale: rowBytes,
             samplingRate: this.dlogWaveform.samplingRate,
-            waveformData: undefined as any
+            waveformData: undefined as any,
+            valueUnit: yAxisController.unit.name as keyof typeof UNITS
         };
 
         initValuesAccesor(this.waveform);
     }
 
-    waveform: IWaveform;
+    waveform: IWaveform & {
+        valueUnit: keyof typeof UNITS;
+    };
 
     @computed
     get yMin(): number {
@@ -192,7 +203,8 @@ class DlogWaveformChartsController extends ChartsController {
         return true;
     }
 
-    getWaveformModel(chartIndex: number) {
+    getWaveformModel(chartIndex: number): WaveformModel {
+        // TODO remove "as any"
         return (this.chartControllers[0].lineControllers[0] as DlogWaveformLineController)
             .waveform as any;
     }

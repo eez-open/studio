@@ -5,9 +5,12 @@ const windowing = require("fft-windowing");
 import { IMeasureTask } from "eez-studio-shared/extensions/extension";
 
 export default function(task: IMeasureTask) {
+    let numSamples = task.xNumSamples;
+
     //
-    let windowSize = parseInt(task.parameters && task.parameters.windowSize) || 65536;
-    if (task.xNumSamples < windowSize) {
+    let windowSize = parseInt((task.parameters && task.parameters.windowSize) || 65535);
+
+    if (numSamples < windowSize) {
         task.result = "Not enough data selected.";
         return;
     }
@@ -31,7 +34,7 @@ export default function(task: IMeasureTask) {
     //
     let minValue, maxValue;
     minValue = maxValue = task.getSampleValueAtIndex(task.xStartIndex + 0);
-    for (let i = 1; i < task.xNumSamples; ++i) {
+    for (let i = 1; i < numSamples; ++i) {
         const value = task.getSampleValueAtIndex(task.xStartIndex + i);
         if (value < minValue) {
             minValue = value;
@@ -44,7 +47,7 @@ export default function(task: IMeasureTask) {
     const input = new Float64Array(windowSize);
     const output = new Float64Array(halfWindowSize).fill(0);
     let numWindows = 0;
-    for (let i = 0; i + windowSize < task.xNumSamples; i += halfWindowSize, ++numWindows) {
+    for (let i = 0; i + windowSize <= numSamples; i += windowSize, ++numWindows) {
         for (let j = 0; j < windowSize; ++j) {
             input[j] = task.getSampleValueAtIndex(task.xStartIndex + i + j);
         }
@@ -57,14 +60,23 @@ export default function(task: IMeasureTask) {
     //
     const f = 2 * (maxValue - minValue) * numWindows;
 
-    function toDecibels(i: number) {
+    function getLogarithmicYValue(i: number) {
         return 20 * Math.log10(output[i] / f);
     }
 
+    function getLinearYValue(i: number) {
+        return output[i] / numWindows;
+    }
+
+    const yAxisInDecibels =
+        !task.parameters || !task.parameters.yAxis || task.parameters.yAxis !== "linear";
+
+    const getYValue = yAxisInDecibels ? getLogarithmicYValue : getLinearYValue;
+
     const data = new Array(halfWindowSize);
-    minValue = maxValue = data[0] = toDecibels(0);
+    minValue = maxValue = data[0] = getYValue(0);
     for (let i = 1; i < halfWindowSize; ++i) {
-        data[i] = toDecibels(i);
+        data[i] = getYValue(i);
         if (data[i] < minValue) {
             minValue = data[i];
         } else if (data[i] > maxValue) {
@@ -79,10 +91,10 @@ export default function(task: IMeasureTask) {
         xAxes: {
             unit: "frequency",
             logarithmic:
-                !task.parameters || !task.parameters.axis || task.parameters.axis !== "linear"
+                !task.parameters || !task.parameters.xAxis || task.parameters.xAxis !== "linear"
         },
         yAxes: {
-            unit: "decibel",
+            unit: yAxisInDecibels ? "decibel" : task.valueUnit,
             minValue,
             maxValue
         }

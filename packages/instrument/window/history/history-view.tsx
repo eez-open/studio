@@ -123,6 +123,52 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
         });
     }
 
+    @bind
+    generateChart() {
+        const numSamples = 128;
+        const data = new Buffer(numSamples * 8);
+        for (let i = 0; i < numSamples; ++i) {
+            let value;
+            if (i <= 10) {
+                value = 1;
+            } else if (i >= 118) {
+                value = 1;
+            } else {
+                value = 0;
+            }
+            data.writeDoubleLE(value, i * 8);
+        }
+
+        beginTransaction("Generate chart");
+        log(
+            this.props.appStore.history.options.store,
+            {
+                oid: this.props.appStore.history.oid,
+                type: "instrument/file-attachment",
+                message: JSON.stringify({
+                    state: "success",
+                    fileType: { mime: "application/eez-raw" },
+                    waveformDefinition: {
+                        samplingRate: 1,
+                        format: 7, // FLOATS_64BIT
+                        unitName: "volt",
+                        color: "blue",
+                        colorInverse: "blue",
+                        label: "Voltage",
+                        offset: 0,
+                        scale: 1
+                    },
+                    dataLength: data.length
+                }),
+                data
+            },
+            {
+                undoable: true
+            }
+        );
+        commitTransaction();
+    }
+
     render() {
         const { appStore } = this.props;
 
@@ -147,7 +193,13 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
                     icon="material:insert_chart"
                     title="Add chart"
                     onClick={this.addChart}
-                />
+                /> /*,
+                <IconAction
+                    key="generateChart"
+                    icon="material:wb_auto"
+                    title="Generate chart"
+                    onClick={this.generateChart}
+                />*/
             );
 
             // add tools from extensions

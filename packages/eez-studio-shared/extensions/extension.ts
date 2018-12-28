@@ -107,6 +107,7 @@ interface IInput {
     // no. of samples per second
     samplingRate: number;
     getSampleValueAtIndex(index: number): number;
+    valueUnit: keyof typeof UNITS;
 }
 
 export interface IMeasureTask extends IInput {

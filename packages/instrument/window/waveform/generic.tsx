@@ -706,6 +706,10 @@ export class Waveform extends FileHistoryItem {
     get previewElement() {
         return <ChartPreview data={this} />;
     }
+
+    get valueUnit() {
+        return this.waveformDefinition.unitName;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

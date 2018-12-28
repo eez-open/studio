@@ -9,7 +9,7 @@ export default function(task: IMeasureTask) {
     );
 
     var real = new Float64Array(numSamples);
-    var imaginary = new Float64Array(numSamples).fill(0);
+    var imag = new Float64Array(numSamples).fill(0);
 
     for (let i = 0; i < numSamples; ++i) {
         real[i] = task.getSampleValueAtIndex(
@@ -17,16 +17,13 @@ export default function(task: IMeasureTask) {
         );
     }
 
-    transform(real, imaginary);
+    transform(real, imag);
 
-    //Ignore 0 frequency part when trying to get frequency. Offset can be bigger than wave amplitude and cause issues.
-    var startingIndex = 1;
-    var maxMag = Math.sqrt(
-        Math.pow(real[startingIndex], 2) + Math.pow(imaginary[startingIndex], 2)
-    );
-    var indexMax = startingIndex;
-    for (var i = startingIndex + 1; i < real.length / 2; i++) {
-        var magnitude = Math.sqrt(Math.pow(real[i], 2) + Math.pow(imaginary[i], 2));
+    // Ignore 0 frequency part when trying to get frequency. Offset can be bigger than wave amplitude and cause issues.
+    var maxMag = real[1] * real[1] + imag[1] * imag[1];
+    var indexMax = 1;
+    for (var i = 2; i < real.length / 2; i++) {
+        var magnitude = real[i] * real[i] + imag[i] * imag[i];
         if (magnitude > maxMag) {
             maxMag = magnitude;
             indexMax = i;

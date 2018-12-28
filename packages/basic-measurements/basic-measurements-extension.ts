@@ -25,11 +25,18 @@ const fftParametersDescription: IFieldProperties[] = [
         ]
     },
     {
-        name: "axis",
-        displayName: "Axis",
+        name: "xAxis",
+        displayName: "X axis",
         type: "enum",
         defaultValue: "log",
         enumItems: [{ id: "logarithmic", label: "Logarithmic" }, { id: "linear", label: "Linear" }]
+    },
+    {
+        name: "yAxis",
+        displayName: "Y axis",
+        type: "enum",
+        defaultValue: "decibel",
+        enumItems: [{ id: "decibel", label: "Decibel" }, { id: "linear", label: "Linear" }]
     }
 ];
 
