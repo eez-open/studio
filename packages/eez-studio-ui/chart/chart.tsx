@@ -1499,6 +1499,7 @@ export interface IViewOptionsAxesLines {
         vertical: number;
     };
     snapToGrid: boolean;
+    defaultZoomMode: "default" | "all";
 }
 
 export interface IViewOptions {

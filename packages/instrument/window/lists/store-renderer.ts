@@ -119,7 +119,8 @@ class ListViewOptions implements IViewOptions {
             horizontal: 5,
             vertical: 5
         },
-        snapToGrid: true
+        snapToGrid: true,
+        defaultZoomMode: "default"
     };
 
     @observable showAxisLabels: boolean = true;

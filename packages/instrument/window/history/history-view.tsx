@@ -28,7 +28,7 @@ import { SessionList } from "instrument/window/history/session/list-view";
 
 import { showAddNoteDialog } from "instrument/window/note-dialog";
 
-import { detectFileType } from "instrument/connection/file-type";
+import { detectFileType, extractColumnFromCSVHeuristically } from "instrument/connection/file-type";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +63,60 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
             filePaths => {
                 if (filePaths) {
                     filePaths.forEach(async filePath => {
-                        const data = await readBinaryFile(filePath);
+                        let data = await readBinaryFile(filePath);
+
+                        let message;
+
+                        if (filePath.toLowerCase().endsWith(".csv")) {
+                            const result = extractColumnFromCSVHeuristically(data);
+                            if (result) {
+                                data = result.data;
+
+                                message = {
+                                    state: "success",
+                                    fileType: { mime: "application/eez-raw" },
+                                    waveformDefinition: {
+                                        samplingRate: result.samplingRate,
+                                        format: 7, // FLOATS_64BIT
+                                        unitName: result.unitName,
+                                        color: result.color,
+                                        colorInverse: result.colorInverse,
+                                        label: result.label,
+                                        offset: 0,
+                                        scale: 1
+                                    },
+                                    viewOptions: {
+                                        axesLines: {
+                                            type: "dynamic",
+                                            steps: {
+                                                x: [],
+                                                y: []
+                                            },
+                                            majorSubdivision: {
+                                                horizontal: 24,
+                                                vertical: 8
+                                            },
+                                            minorSubdivision: {
+                                                horizontal: 5,
+                                                vertical: 5
+                                            },
+                                            snapToGrid: true,
+                                            defaultZoomMode: "all"
+                                        }
+                                    },
+                                    dataLength: data.length
+                                };
+                            }
+                        }
+
+                        if (!message) {
+                            message = {
+                                sourceFilePath: filePath,
+                                state: "success",
+                                fileType: detectFileType(data, filePath),
+                                dataLength: data.length
+                            };
+                        }
 
                         beginTransaction("Attach file");
                         log(
@@ -71,13 +124,8 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
                             {
                                 oid: this.props.appStore.history.oid,
                                 type: "instrument/file-attachment",
-                                message: JSON.stringify({
-                                    sourceFilePath: filePath,
-                                    state: "success",
-                                    fileType: detectFileType(data, filePath),
-                                    dataLength: data.length
-                                }),
-                                data: data as any
+                                message: JSON.stringify(message),
+                                data: data
                             },
                             {
                                 undoable: true

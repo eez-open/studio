@@ -106,7 +106,8 @@ export class ViewOptions implements IViewOptions {
             horizontal: 5,
             vertical: 5
         },
-        snapToGrid: true
+        snapToGrid: true,
+        defaultZoomMode: "default"
     };
 
     @observable
@@ -297,6 +298,9 @@ export class Waveform extends FileHistoryItem {
         const message = JSON.parse(this.message);
 
         this.viewOptions = new ViewOptions(message.viewOptions);
+
+        this.xAxisModel.dynamic.zoomMode = this.xAxisModel.fixed.zoomMode =
+            this.viewOptions.axesLines.defaultZoomMode || "default";
 
         this.rulers = new RulersModel(message.rulers);
         this.rulers.initYRulers(1);

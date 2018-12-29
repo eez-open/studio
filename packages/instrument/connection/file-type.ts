@@ -3,6 +3,8 @@ import { BrowserWindow, ipcMain } from "electron";
 const fileType = require("file-type");
 
 import { getFileNameExtension } from "eez-studio-shared/util";
+import { UNITS } from "eez-studio-shared/units";
+
 import { FileState } from "instrument/connection/file-state";
 
 export const SAMPLE_LENGTH = 4096;
@@ -64,7 +66,7 @@ export function detectFileType(data: string | Buffer, fileName?: string) {
         return type;
     }
 
-    if (isCSV(data)) {
+    if (isSimpleCSV(data)) {
         return {
             ext: "csv",
             mime: "text/csv"
@@ -118,7 +120,7 @@ export function convertBmpToPng(data: string) {
     });
 }
 
-export function isCSV(data: string | Buffer) {
+function isSimpleCSV(data: string | Buffer) {
     if (data instanceof Buffer) {
         data = data.toString("binary");
     }
@@ -150,4 +152,78 @@ export function checkMime(message: string, list: string[]) {
             : fileState.fileType && fileState.fileType.mime);
 
     return list.indexOf(mime) !== -1;
+}
+
+export function extractColumnFromCSVHeuristically(data: string | Buffer) {
+    // Basically, recognizes CSV file that looks like this (exported from PicoScope):
+    // Time,Channel C
+    // (ms),(V)
+    //
+    // 0.00000000,143.46540000
+    // 0.00006000,143.74010000
+    // 0.00012000,143.19070000
+    // 0.00018000,143.46540000
+    // 0.00024000,143.19070000
+
+    let lines;
+    if (data instanceof Buffer) {
+        lines = data.toString("utf8").split("\n");
+    } else {
+        lines = data.split("\n");
+    }
+
+    if (lines.length < 4) {
+        return undefined;
+    }
+
+    // 1st line, i.e.: Time,Channel C
+    let columns = lines[0].split(",").map(column => column.trim());
+    if (columns[0] !== "Time") {
+        return undefined;
+    }
+    let label = columns[1];
+
+    // 2nd line, i.e.: (ms),(V)
+    columns = lines[1].split(",").map(column => column.trim());
+    const timeUnit = columns[0];
+    const yAxisUnit = columns[1];
+
+    let timeUnitInMs = timeUnit === "(ms)";
+
+    let unitName: keyof typeof UNITS;
+    if (yAxisUnit === "(V)") {
+        unitName = "voltage";
+    } else if (yAxisUnit === "(A)") {
+        unitName = "current";
+    } else if (yAxisUnit === "(W)") {
+        unitName = "power";
+    } else {
+        unitName = "unknown";
+    }
+
+    // calc sampling rate
+    let dt = parseFloat(lines[4].split(",")[0]) - parseFloat(lines[3].split(",")[0]);
+    if (isNaN(dt)) {
+        return undefined;
+    }
+    if (timeUnitInMs) {
+        dt /= 1000;
+    }
+    let samplingRate = 1 / dt;
+
+    // get y values
+    let numbers = new Buffer((lines.length - 3) * 8);
+    for (let i = 3; i < lines.length; ++i) {
+        const number = parseFloat(lines[i].split(",")[1]);
+        numbers.writeDoubleLE(number, (i - 3) * 8);
+    }
+
+    return {
+        data: numbers,
+        samplingRate,
+        unitName,
+        color: UNITS[unitName].color,
+        colorInverse: UNITS[unitName].colorInverse,
+        label: label
+    };
 }
