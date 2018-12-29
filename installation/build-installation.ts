@@ -1,9 +1,10 @@
-const packager = require("electron-packager");
+import * as packager from "electron-packager";
 const os = require("os");
 const fs = require("fs");
+const packageJson = require("../package.json");
 
 async function getExtraResource() {
-    return new Promise((resolve, reject) => {
+    return new Promise<string[]>((resolve, reject) => {
         fs.readFile(__dirname + "/extra-resource.json", "utf8", (err: any, data: string) => {
             if (err) {
                 reject(err);
@@ -15,7 +16,7 @@ async function getExtraResource() {
 }
 
 function getIgnore() {
-    const ignore = [
+    const ignoreList = [
         "\\.gitignore",
         ".*.pdb",
 
@@ -54,21 +55,27 @@ function getIgnore() {
         "^/tools"
     ];
 
-    return ignore;
+    return ignoreList.map(ignorePattern => new RegExp(ignorePattern));
 }
 
 (async () => {
     try {
-        const options = {
+        const options: packager.Options = {
             arch: "x64",
             asar: true,
             dir: ".",
             extraResource: await getExtraResource(),
-            icon: "icon.ico",
+            icon:
+                os.platform() === "win32"
+                    ? "icon.ico"
+                    : "packages/eez-studio-ui/_images/eez_logo.png",
             ignore: getIgnore(),
             overwrite: true,
             platform: os.platform(),
-            prune: true
+            prune: true,
+
+            appCopyright: "Copyright © 2018-present Envox d.o.o.",
+            appVersion: packageJson.version
         };
 
         const appPaths = await packager(options);

@@ -1,8 +1,12 @@
 {
   "name": "eezstudio",
-  "author": "Envox",
-  "description": "EEZ Studio",
-  "version": "0.9.0",
+  "author": {
+    "name": "Envox"
+  },
+  "description": "Cross-platform visual development tool and SCPI instrument controller",
+  "homepage": "https://github.com/eez-open/studio",
+  "version": "0.9.1",
+  "revision": "1",
   "license": "GPL-3.0-only",
   "repository": "https://github.com/eez-open/psu-firmware",
   "main": "packages/main/main.js",
@@ -22,6 +26,7 @@
     "build-catalog": "cd extensions && tsc && node build-catalog.js",
     "build-extra-resource-json": "cd installation && tsc && electron extra-resource.js && cd ..",
     "build-installation": "npm run build-extra-resource-json && node installation/build-installation.js",
+    "build-deb": "electron-installer-debian --src eezstudio-linux-x64/ --arch amd64  --config installation/linux_deb_options.json",
     "tslint": "tslint --project ./packages/tsconfig.json 'packages/**/*.{ts,tsx}'",
     "tsc-version": "tsc --version",
     "link": "npm link eez-studio-shared && npm link eez-studio-ui && npm link eez-studio-designer && npm link eez-page-editor",
@@ -37,6 +42,7 @@
     "@types/bootstrap": "^4.1.4",
     "@types/classnames": "^2.2.6",
     "@types/decompress": "^4.2.3",
+    "@types/electron-packager": "^13.0.0",
     "@types/globby": "^8.0.0",
     "@types/jquery": "^3.3.28",
     "@types/lodash": "^4.14.119",
