@@ -612,3 +612,15 @@ export const UNITS = {
 };
 
 export const format = _mapValues(UNITS, unit => unit.formatValue);
+
+export const PREFIXES = {
+    f: 0.000000000000001,
+    p: 0.000000000001,
+    n: 0.000000001,
+    u: 0.000001,
+    m: 0.001,
+    "": 1,
+    K: 1000,
+    M: 1000000,
+    G: 1000000000
+};

@@ -3,7 +3,7 @@ import { BrowserWindow, ipcMain } from "electron";
 const fileType = require("file-type");
 
 import { getFileNameExtension } from "eez-studio-shared/util";
-import { UNITS } from "eez-studio-shared/units";
+import { UNITS, PREFIXES } from "eez-studio-shared/units";
 
 import { FileState } from "instrument/connection/file-state";
 
@@ -154,6 +154,54 @@ export function checkMime(message: string, list: string[]) {
     return list.indexOf(mime) !== -1;
 }
 
+function recognizeXAxisUnit(
+    xAxisUnit: string
+): {
+    unitName: keyof typeof UNITS;
+    timeScale: number;
+} {
+    let unitName: keyof typeof UNITS = "time";
+    let prefix: keyof typeof PREFIXES;
+    for (prefix in PREFIXES) {
+        if (xAxisUnit === `(${prefix}${UNITS[unitName].unitSymbol})`) {
+            return {
+                unitName: unitName as keyof typeof UNITS,
+                timeScale: PREFIXES[prefix]
+            };
+        }
+    }
+
+    return {
+        unitName,
+        timeScale: 1
+    };
+}
+
+function recognizeYAxisUnit(
+    yAxisUnit: string
+): {
+    unitName: keyof typeof UNITS;
+    valueScale: number;
+} {
+    let unitName: keyof typeof UNITS;
+    for (unitName in UNITS) {
+        let prefix: keyof typeof PREFIXES;
+        for (prefix in PREFIXES) {
+            if (yAxisUnit === `(${prefix}${UNITS[unitName].unitSymbol})`) {
+                return {
+                    unitName: unitName as keyof typeof UNITS,
+                    valueScale: PREFIXES[prefix]
+                };
+            }
+        }
+    }
+
+    return {
+        unitName: "unknown",
+        valueScale: 1
+    };
+}
+
 export function extractColumnFromCSVHeuristically(data: string | Buffer) {
     // Basically, recognizes CSV file that looks like this (exported from PicoScope):
     // Time,Channel C
@@ -188,37 +236,16 @@ export function extractColumnFromCSVHeuristically(data: string | Buffer) {
     const timeUnit = columns[0];
     const yAxisUnit = columns[1];
 
-    let timeUnitInMs = timeUnit === "(ms)";
+    const { timeScale } = recognizeXAxisUnit(timeUnit);
 
-    let unitName: keyof typeof UNITS;
-    let valueScale = 1;
-    if (yAxisUnit === "(V)") {
-        unitName = "voltage";
-    } else if (yAxisUnit === "(mV)") {
-        unitName = "voltage";
-        valueScale = 0.001;
-    } else if (yAxisUnit === "(A)") {
-        unitName = "current";
-    } else if (yAxisUnit === "(mA)") {
-        unitName = "current";
-        valueScale = 0.001;
-    } else if (yAxisUnit === "(W)") {
-        unitName = "power";
-    } else if (yAxisUnit === "(mW)") {
-        unitName = "power";
-        valueScale = 0.001;
-    } else {
-        unitName = "unknown";
-    }
+    const { unitName, valueScale } = recognizeYAxisUnit(yAxisUnit);
 
     // calc sampling rate
     let dt = parseFloat(lines[4].split(",")[0]) - parseFloat(lines[3].split(",")[0]);
     if (isNaN(dt)) {
         return undefined;
     }
-    if (timeUnitInMs) {
-        dt /= 1000;
-    }
+    dt *= timeScale;
     let samplingRate = 1 / dt;
 
     // get y values
