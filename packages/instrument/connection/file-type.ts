@@ -191,12 +191,22 @@ export function extractColumnFromCSVHeuristically(data: string | Buffer) {
     let timeUnitInMs = timeUnit === "(ms)";
 
     let unitName: keyof typeof UNITS;
+    let valueScale = 1;
     if (yAxisUnit === "(V)") {
         unitName = "voltage";
+    } else if (yAxisUnit === "(mV)") {
+        unitName = "voltage";
+        valueScale = 0.001;
     } else if (yAxisUnit === "(A)") {
         unitName = "current";
+    } else if (yAxisUnit === "(mA)") {
+        unitName = "current";
+        valueScale = 0.001;
     } else if (yAxisUnit === "(W)") {
         unitName = "power";
+    } else if (yAxisUnit === "(mW)") {
+        unitName = "power";
+        valueScale = 0.001;
     } else {
         unitName = "unknown";
     }
@@ -214,7 +224,7 @@ export function extractColumnFromCSVHeuristically(data: string | Buffer) {
     // get y values
     let numbers = new Buffer((lines.length - 3) * 8);
     for (let i = 3; i < lines.length; ++i) {
-        const number = parseFloat(lines[i].split(",")[1]);
+        const number = parseFloat(lines[i].split(",")[1]) * valueScale;
         numbers.writeDoubleLE(number, (i - 3) * 8);
     }
 
