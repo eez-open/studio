@@ -599,7 +599,19 @@ export class HistoryView extends React.Component<{
                         </Toolbar>
                     </HistoryHeader>
                 )}
-                <HistoryBody tabIndex={0}>{historyComponent}</HistoryBody>
+                <HistoryBody
+                    onClick={event => {
+                        if (
+                            $(event.target).closest(".EezStudio_HistoryItemEnclosure").length === 0
+                        ) {
+                            // deselect all items
+                            this.props.appStore.history.selection.selectItems([]);
+                        }
+                    }}
+                    tabIndex={0}
+                >
+                    {historyComponent}
+                </HistoryBody>
             </HistoryContainer>
         );
     }

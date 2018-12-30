@@ -215,7 +215,19 @@ export class DeletedHistoryItemsView extends React.Component<{
 
         const historyComponentWithTools = (
             <HistoryContainer className="EezStudio_DeletedHistory_Container">
-                <HistoryBody tabIndex={0}>{historyComponent}</HistoryBody>
+                <HistoryBody
+                    onClick={event => {
+                        if (
+                            $(event.target).closest(".EezStudio_HistoryItemEnclosure").length === 0
+                        ) {
+                            // deselect all items
+                            this.props.appStore.deletedItemsHistory.selection.selectItems([]);
+                        }
+                    }}
+                    tabIndex={0}
+                >
+                    {historyComponent}
+                </HistoryBody>
             </HistoryContainer>
         );
 
