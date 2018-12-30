@@ -201,9 +201,7 @@ export class Designer extends React.Component<{}, {}> {
                     }
                 }
 
-                if (!viewState.selectedObjects) {
-                    viewState.selectedObjects = [];
-                }
+                viewState.selectedObjects = [];
 
                 return viewState;
             } catch (err) {

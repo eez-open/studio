@@ -745,7 +745,12 @@ class WaveformLineController extends LineController {
     }
 
     getNearestValuePoint(point: Point): Point {
-        return getNearestValuePoint(point, this.xAxisController, this.waveform);
+        return getNearestValuePoint(
+            point,
+            this.xAxisController,
+            this.yAxisController,
+            this.waveform
+        );
     }
 
     render(): JSX.Element {

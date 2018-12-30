@@ -385,7 +385,6 @@ export function renderWaveformPath(
         points: {
             x: number;
             y: number;
-            count: number;
         }[];
 
         isDone: boolean;
@@ -432,22 +431,17 @@ export function renderWaveformPath(
                 if (points.length === 0 || points[points.length - 1].x !== x) {
                     points.push({
                         x,
-                        y,
-                        count: 1
+                        y
                     });
                 } else {
-                    points[points.length - 1].y += y;
-                    ++points[points.length - 1].count;
+                    if (y < points[points.length - 1].y) {
+                        points[points.length - 1].y = y;
+                    }
                 }
             }
             continuation.i = i;
             if (i === b) {
                 continuation.isDone = true;
-            }
-
-            for (let i = 0; i < points.length; ++i) {
-                points[i].y /= points[i].count;
-                points[i].count = 1;
             }
 
             ctx.fillStyle = strokeColor;

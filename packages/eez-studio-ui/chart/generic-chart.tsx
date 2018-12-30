@@ -30,20 +30,37 @@ import { WaveformLineView } from "instrument/window/waveform/line-view";
 export function getNearestValuePoint(
     point: Point,
     xAxisController: AxisController,
+    yAxisController: AxisController,
     waveform: IWaveform
 ): Point {
     let i1 = Math.floor(xAxisController.pxToValue(point.x - 0.5) * waveform.samplingRate);
     let i2 = Math.ceil(xAxisController.pxToValue(point.x + 0.5) * waveform.samplingRate);
     if (i2 - i1 > 1) {
-        let sum = 0;
-        for (let i = i1; i <= i2; ++i) {
-            sum += waveform.value(i);
+        if (yAxisController.unit.unitSymbol === "dB") {
+            // find max value for logarithmic unit
+            let max = waveform.value(i1);
+            for (let i = i1 + 1; i <= i2; ++i) {
+                const value = waveform.value(i);
+                if (value > max) {
+                    max = value;
+                }
+            }
+            return {
+                x: xAxisController.pxToValue(point.x),
+                y: max
+            };
+        } else {
+            // find average value
+            let sum = 0;
+            for (let i = i1; i <= i2; ++i) {
+                sum += waveform.value(i);
+            }
+            let avg = sum / (i2 - i1 + 1);
+            return {
+                x: xAxisController.pxToValue(point.x),
+                y: avg
+            };
         }
-
-        return {
-            x: xAxisController.pxToValue(point.x),
-            y: sum / (i2 - i1 + 1)
-        };
     } else {
         let i = Math.round(xAxisController.pxToValue(point.x) * waveform.samplingRate);
         return {
@@ -386,7 +403,12 @@ class GenericChartLineController extends LineController {
     }
 
     getNearestValuePoint(point: Point): Point {
-        return getNearestValuePoint(point, this.xAxisController, this.waveform);
+        return getNearestValuePoint(
+            point,
+            this.xAxisController,
+            this.yAxisController,
+            this.waveform
+        );
     }
 
     render(): JSX.Element {
