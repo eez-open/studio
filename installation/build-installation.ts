@@ -47,12 +47,15 @@ function getIgnore() {
         "^/packages/.*\\.js\\.map",
         "^/packages/.*\\.less",
 
-        "^/node_modules/better-sqlite3/build/Release/obj.*",
+        "^/node_modules/better-sqlite3/build/Release/.*",
+        "^/node_modules/usb/build/Release/.*",
+        "^/node_modules/@serial-port/bindings/build/Release/.*",
+
         "^/node_modules/lzz-gyp/lzz-compiled/linux",
         "^/node_modules/lzz-gyp/lzz-compiled/osx",
         "^/node_modules/lzz-gyp/lzz-compiled/bsd",
 
-        "^/tools"
+        ".*\\.js\\.map"
     ];
 
     return ignoreList.map(ignorePattern => new RegExp(ignorePattern));
