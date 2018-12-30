@@ -100,13 +100,26 @@ Built DEB package is located in `installation/linux`.
 
 ```
 sudo npm install -g electron-installer-redhat
-sudo apt-get install rpm
+sudo apt install rpm
 npm run build
 npm run build-installation
 npm run build-rpm
 ```
 
 Built RPM package is located in `installation/linux`.
+
+
+### Build Snap package on Ubuntu
+
+```
+sudo npm install -g electron-installer-snap
+sudo apt install snapcraft
+npm run build
+npm run build-installation
+npm run build-snap
+```
+
+Built Snap package is located in `installation/linux`.
 
 ## USB TMC
 
