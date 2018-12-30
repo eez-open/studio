@@ -28,7 +28,7 @@
     "build-installation": "npm run build-extra-resource-json && node installation/build-installation.js",
     "build-deb": "electron-installer-debian --src eezstudio-linux-x64/ --arch amd64 --config installation/linux_deb_options.json",
     "build-rpm": "electron-installer-redhat --src eezstudio-linux-x64/ --arch x86_64 --config installation/linux_rpm_options.json",
-    "build-snap": "electron-installer-snap --src eezstudio-linux-x64/ --dest installation/linux",
+    "build-snap": "electron-installer-snap --src eezstudio-linux-x64/ --dest installation/linux --grade stable",
     "tslint": "tslint --project ./packages/tsconfig.json 'packages/**/*.{ts,tsx}'",
     "tsc-version": "tsc --version",
     "link": "npm link eez-studio-shared && npm link eez-studio-ui && npm link eez-studio-designer && npm link eez-page-editor",
