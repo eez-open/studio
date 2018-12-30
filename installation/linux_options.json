@@ -1,4 +1,5 @@
 {
+    "productName": "EEZ Studio",
     "dest": "installation/linux/",
     "icon": "packages/eez-studio-ui/_images/eez_logo.png"
 }
