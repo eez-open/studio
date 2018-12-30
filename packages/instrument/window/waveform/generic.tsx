@@ -515,10 +515,17 @@ export class Waveform extends FileHistoryItem {
 
         if (this.waveformHistoryItemMessage.waveformDefinition) {
             const oldFormat = this.waveformDefinition && this.waveformDefinition.format;
+            const oldOffset = this.waveformDefinition && this.waveformDefinition.offset;
+            const oldScale = this.waveformDefinition && this.waveformDefinition.scale;
+
             this.waveformDefinition = this.waveformHistoryItemMessage.waveformDefinition;
             migrated = this.migrateWaveformDefinition();
             if (!migrated) {
-                if (oldFormat !== this.waveformDefinition.format) {
+                if (
+                    oldFormat !== this.waveformDefinition.format ||
+                    oldOffset !== this.waveformDefinition.offset ||
+                    oldScale !== this.waveformDefinition.scale
+                ) {
                     // recalculate range
                     migrated = true;
                 }
@@ -756,8 +763,8 @@ export class WaveformDefinitionProperties {
             samplingRate: SAMPLING_RATE_UNIT.formatValue(this.waveformDefinition.samplingRate),
             format: this.waveformDefinition.format,
             unit,
-            offset: unit.formatValue(this.waveformDefinition.offset),
-            scale: unit.formatValue(this.waveformDefinition.scale)
+            offset: this.waveformDefinition.offset.toString(),
+            scale: this.waveformDefinition.scale.toString()
         };
 
         this.propsValidated = objectClone(this.waveformDefinition);
@@ -796,7 +803,7 @@ export class WaveformDefinitionProperties {
         offset: [
             validators.required,
             () => {
-                let offset = this.props.unit.parseValue(this.props.offset);
+                let offset = parseFloat(this.props.offset);
                 if (typeof offset !== "number") {
                     return "Invalid value.";
                 }
@@ -808,7 +815,7 @@ export class WaveformDefinitionProperties {
         scale: [
             validators.required,
             () => {
-                let scale = this.props.unit.parseValue(this.props.scale);
+                let scale = parseFloat(this.props.scale);
                 if (typeof scale !== "number") {
                     return "Invalid value.";
                 }

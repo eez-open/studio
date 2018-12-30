@@ -70,13 +70,13 @@ export function initValuesAccesor(
     if (format === WaveformFormat.FLOATS_32BIT) {
         length = Math.floor(values.length / 4);
         value = (index: number) => {
-            return readFloat(values, 4 * index);
+            return offset + readFloat(values, 4 * index) * scale;
         };
         waveformData = value;
     } else if (format === WaveformFormat.FLOATS_64BIT) {
         length = Math.floor(values.length / 8);
         value = (index: number) => {
-            return readDouble(values, 8 * index);
+            return offset + readDouble(values, 8 * index) * scale;
         };
         waveformData = value;
     } else if (format === WaveformFormat.RIGOL_BYTE) {
@@ -99,7 +99,7 @@ export function initValuesAccesor(
         const csvValues = getCsvValues(values);
         length = csvValues.length;
         value = (index: number) => {
-            return csvValues[index];
+            return offset + csvValues[index] * scale;
         };
         waveformData = value;
     } else if (format === WaveformFormat.EEZ_DLOG) {
