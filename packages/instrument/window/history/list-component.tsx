@@ -6,6 +6,8 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
 
+import { addAlphaToColor } from "eez-studio-shared/color";
+
 import styled from "eez-studio-ui/styled-components";
 import { Icon } from "eez-studio-ui/icon";
 
@@ -38,6 +40,44 @@ const HistoryItemEnclosure = styled.div`
         width: 100%;
     }
 `;
+
+const HistoryItemRenderError = styled.div`
+    background-color: ${props => addAlphaToColor(props.theme.errorColor, 0.3)};
+    border-radius: 8px;
+    padding: 10px;
+`;
+
+class ErrorBoundary extends React.Component<
+    {},
+    {
+        hasError: boolean;
+    }
+> {
+    constructor(props: any) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(error: any) {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error: any, info: any) {
+        console.error(error, info);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <HistoryItemRenderError>Error while rendering history item!</HistoryItemRenderError>
+            );
+        }
+
+        return this.props.children;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class HistoryItems extends React.Component<{
@@ -186,7 +226,7 @@ export class HistoryItems extends React.Component<{
                             }}
                         />
                     )}
-                    {element}
+                    <ErrorBoundary>{element}</ErrorBoundary>
                 </HistoryItemEnclosure>
             );
         });
