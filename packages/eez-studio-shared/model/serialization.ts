@@ -33,7 +33,7 @@ function loadArrayObject(arrayObject: any, parent: any, propertyInfo: PropertyIn
     eezArray._key = propertyInfo.name;
     eezArray._propertyInfo = propertyInfo;
 
-    eezArray._array = arrayObject.map((object: any) =>
+    eezArray._array = (arrayObject._array || arrayObject).map((object: any) =>
         loadObject(eezArray, object, propertyInfo.typeClass!)
     );
 
