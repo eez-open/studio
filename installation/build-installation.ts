@@ -61,6 +61,15 @@ function getIgnore() {
     return ignoreList.map(ignorePattern => new RegExp(ignorePattern));
 }
 
+let icon;
+if (os.platform() === "win32") {
+    icon = "icon.ico";
+} else if (os.platform() === "darwin") {
+    icon = "icon.icns";
+} else {
+    icon = "packages/eez-studio-ui/_images/eez_logo.png";
+}
+
 (async () => {
     try {
         const options: packager.Options = {
@@ -68,10 +77,7 @@ function getIgnore() {
             asar: true,
             dir: ".",
             extraResource: await getExtraResource(),
-            icon:
-                os.platform() === "win32"
-                    ? "icon.ico"
-                    : "packages/eez-studio-ui/_images/eez_logo.png",
+            icon,
             ignore: getIgnore(),
             overwrite: true,
             platform: os.platform(),
