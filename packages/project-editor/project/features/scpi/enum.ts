@@ -71,29 +71,29 @@ export class ScpiEnumMember extends EezObject {
             messages.push(output.propertyNotSetMessage(this, "name"));
         }
 
-        if (this.value) {
-            const arr = asArray<ScpiEnumMember>(this._parent!);
-            let thisIndex = -1;
-            let otherIndex = -1;
-            for (let i = 0; i < arr.length; ++i) {
-                if (arr[i] === this) {
-                    thisIndex = i;
-                } else if (arr[i] !== this && arr[i].value === this.value) {
-                    otherIndex = i;
-                }
-            }
-            if (otherIndex !== -1 && thisIndex > otherIndex) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        `Value '${this.value}' is not unique`,
-                        getChildOfObject(this, "value")
-                    )
-                );
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "value"));
-        }
+        // if (this.value) {
+        //     const arr = asArray<ScpiEnumMember>(this._parent!);
+        //     let thisIndex = -1;
+        //     let otherIndex = -1;
+        //     for (let i = 0; i < arr.length; ++i) {
+        //         if (arr[i] === this) {
+        //             thisIndex = i;
+        //         } else if (arr[i] !== this && arr[i].value === this.value) {
+        //             otherIndex = i;
+        //         }
+        //     }
+        //     if (otherIndex !== -1 && thisIndex > otherIndex) {
+        //         messages.push(
+        //             new output.Message(
+        //                 output.Type.ERROR,
+        //                 `Value '${this.value}' is not unique`,
+        //                 getChildOfObject(this, "value")
+        //             )
+        //         );
+        //     }
+        // } else {
+        //     messages.push(output.propertyNotSetMessage(this, "value"));
+        // }
 
         return messages;
     }
