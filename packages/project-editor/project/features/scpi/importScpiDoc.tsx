@@ -957,17 +957,7 @@ export class ImportScpiDocDialog extends React.Component<
         this.selectedChanges.added.forEach(commandDefinition => {
             let subsystem = getOrAddSubsystem(commandDefinition.subsystem);
 
-            DocumentStore.addObject(
-                getProperty(subsystem, "commands"),
-                loadObject(
-                    getProperty(subsystem, "commands"),
-                    {
-                        name: commandDefinition.command.name,
-                        helpLink: commandDefinition.command.helpLink
-                    },
-                    ScpiCommand
-                )
-            );
+            DocumentStore.addObject(getProperty(subsystem, "commands"), commandDefinition.command);
         });
 
         this.selectedChanges.deleted.forEach(commandDefinition => {

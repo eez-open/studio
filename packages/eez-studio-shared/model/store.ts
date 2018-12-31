@@ -845,7 +845,7 @@ class DocumentStoreClass {
         return this.modified;
     }
 
-    addObject(parentObject: EezObject, object: EezObject) {
+    addObject(parentObject: EezObject, object: any) {
         return addObject(
             {
                 undoManager: UndoManager,
@@ -856,7 +856,7 @@ class DocumentStoreClass {
         );
     }
 
-    addObjects(parentObject: EezObject, objects: EezObject[]) {
+    addObjects(parentObject: EezObject, objects: any[]) {
         return addObjects(
             {
                 undoManager: UndoManager,
@@ -867,7 +867,7 @@ class DocumentStoreClass {
         );
     }
 
-    insertObject(parentObject: EezObject, index: number, object: EezObject) {
+    insertObject(parentObject: EezObject, index: number, object: any) {
         return insertObject(
             {
                 undoManager: UndoManager,
