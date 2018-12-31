@@ -3,7 +3,7 @@
   "author": "Envox",
   "description": "Cross-platform visual development tool and SCPI instrument controller",
   "homepage": "https://github.com/eez-open/studio",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "revision": "1",
   "license": "GPL-3.0-only",
   "repository": "https://github.com/eez-open/psu-firmware",

@@ -10,7 +10,7 @@ import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 
 import { EezObject, EezArrayObject, getProperty } from "eez-studio-shared/model/object";
-import { loadObject, objectToJS } from "eez-studio-shared/model/serialization";
+import { objectToJS } from "eez-studio-shared/model/serialization";
 import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
 
 import { IParameter, IParameterType, IEnum } from "instrument/scpi";
@@ -938,18 +938,11 @@ export class ImportScpiDocDialog extends React.Component<
                 return existingSubsystem;
             }
 
-            return DocumentStore.addObject(
-                existingSubsystems,
-                loadObject(
-                    existingSubsystems,
-                    {
-                        name: subsystem.name,
-                        helpLink: subsystem.helpLink,
-                        commands: []
-                    },
-                    ScpiSubsystem
-                )
-            );
+            return DocumentStore.addObject(existingSubsystems, {
+                name: subsystem.name,
+                helpLink: subsystem.helpLink,
+                commands: []
+            });
         };
 
         this.changes.subsystems.forEach(subsystem => getOrAddSubsystem(subsystem));
