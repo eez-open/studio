@@ -1022,7 +1022,27 @@ export class ImportScpiDocDialog extends React.Component<
             );
             if (result) {
                 DocumentStore.updateObject(result.command, {
-                    parameters: toJS(commandDefinition.command.parameters)
+                    parameters: toJS(commandDefinition.command.parameters).map(parameter => {
+                        return {
+                            name: parameter.name,
+                            type: parameter.type.map(type => {
+                                if (type.type === "discrete") {
+                                    if (
+                                        !scpi.enums._array.find(
+                                            scpiEnum => scpiEnum.name === type.enumeration
+                                        )
+                                    ) {
+                                        return {
+                                            type: "discrete"
+                                        };
+                                    }
+                                }
+                                return type;
+                            }),
+                            isOptional: parameter.isOptional,
+                            description: parameter.description
+                        };
+                    })
                 });
             }
         });
