@@ -235,6 +235,10 @@ class FindChanges {
         // {<param1>} [, <param2> [, <param3>]]
         // {<param1>} [, ...] ("..." means repetition of parameter before is possible )
 
+        if (!table) {
+            return [];
+        }
+
         commandNameAndParams = commandNameAndParams.trim();
 
         let i = commandNameAndParams.trim().indexOf(" ");
@@ -870,7 +874,9 @@ export class ImportScpiDocDialog extends React.Component<
         return (
             this.changes.added.length > 0 ||
             this.changes.deleted.length > 0 ||
-            this.changes.moved.length > 0
+            this.changes.moved.length > 0 ||
+            this.changes.updated.length > 0 ||
+            this.changes.newEnums.length > 0
         );
     }
 
