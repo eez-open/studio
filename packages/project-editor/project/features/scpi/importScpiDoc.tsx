@@ -243,6 +243,8 @@ class FindChanges {
             return [];
         }
 
+        let nextIsOptional = false;
+
         let params: IParameter[] = commandNameAndParams
             .substr(i)
             .trim()
@@ -250,17 +252,19 @@ class FindChanges {
             .map(name => {
                 name = name.trim();
 
+                let isOptional = nextIsOptional === true;
+
                 // remove [ and ] at the beginning
                 while (name.startsWith("[") || name.startsWith("]")) {
                     name = name.substr(1, name.length - 1).trim();
+                    isOptional = true;
                 }
 
                 // remove [ and ] at the end
                 while (name.endsWith("[") || name.endsWith("]")) {
                     name = name.substr(0, name.length - 1).trim();
+                    nextIsOptional = true;
                 }
-
-                let isOptional;
 
                 if (name.startsWith("{")) {
                     isOptional = false;
@@ -269,8 +273,6 @@ class FindChanges {
                         return undefined;
                     }
                     name = name.substr(1, name.length - 2);
-                } else {
-                    isOptional = true;
                 }
 
                 let types: IParameterType[] = [];
@@ -302,7 +304,19 @@ class FindChanges {
                                 types.push({
                                     type
                                 });
-                            } else if (type === "quoted string") {
+                            } else if (type === "integer") {
+                                types.push({
+                                    type: "nr1"
+                                });
+                            } else if (type === "real") {
+                                types.push({
+                                    type: "nr3"
+                                });
+                            } else if (type === "bool") {
+                                types.push({
+                                    type: "boolean"
+                                });
+                            } else if (type === "quoted string" || type === "ascii string") {
                                 types.push({
                                     type: "quoted-string"
                                 });
@@ -319,11 +333,15 @@ class FindChanges {
                                     )
                                 });
                             } else {
-                                console.error("unknown type", commandNameAndParams);
+                                console.error(
+                                    `unknown type "${type}" for parameter "${name}" in "${commandNameAndParams}"`
+                                );
                             }
                         });
                 } else {
-                    console.error("type or range undefined", commandNameAndParams);
+                    console.error(
+                        `type or range undefined for parameter "${name}" in "${commandNameAndParams}"`
+                    );
                 }
 
                 return { name, type: types, isOptional };
@@ -350,9 +368,9 @@ class FindChanges {
         return params;
     }
 
-    detectVersionOfScpiFileDoc(aElements: NodeListOf<Element>) {
-        for (let i = 0; i < aElements.length; i++) {
-            let bookmark = aElements[i].getAttribute("name");
+    detectVersionOfScpiFileDoc(anchorElements: NodeListOf<Element>) {
+        for (let i = 0; i < anchorElements.length; i++) {
+            let bookmark = anchorElements[i].getAttribute("name");
             if (
                 bookmark &&
                 (bookmark.startsWith("_scpi_subsys_") || bookmark.startsWith("_scpi_"))
@@ -371,12 +389,12 @@ class FindChanges {
             parameters: IParameter[];
         }[],
         bookmark: string,
-        p: Element,
+        textContent: string,
         table: Element
     ) {
-        const name = this.getCommandFromSyntax(p.textContent!);
+        const name = this.getCommandFromSyntax(textContent);
 
-        const parameters = this.getCommandParameters(p.textContent!, table);
+        const parameters = this.getCommandParameters(textContent, table);
 
         const existingCommand = commands.find(existingCommand => existingCommand.name === name);
         if (!existingCommand) {
@@ -392,8 +410,8 @@ class FindChanges {
         }
     }
 
-    getSubsystemFromScpiFileVersion1Doc(file: string, aElements: NodeListOf<Element>) {
-        let topicElement = aElements[0] && aElements[0].parentElement;
+    getSubsystemFromScpiFileVersion1Doc(file: string, anchorElements: NodeListOf<Element>) {
+        let topicElement = anchorElements[0] && anchorElements[0].parentElement;
         if (topicElement != null) {
             let topic = topicElement.textContent;
             if (topic) {
@@ -409,10 +427,10 @@ class FindChanges {
                     parameters: IParameter[];
                 }[] = [];
 
-                for (let i = 1; i < aElements.length; i++) {
-                    let bookmark = aElements[i].getAttribute("name");
+                for (let i = 1; i < anchorElements.length; i++) {
+                    let bookmark = anchorElements[i].getAttribute("name");
                     if (bookmark) {
-                        let commandElement = aElements[i].parentElement as HTMLElement;
+                        let commandElement = anchorElements[i].parentElement as HTMLElement;
                         if (commandElement) {
                             let command = commandElement.textContent;
                             if (command) {
@@ -437,7 +455,7 @@ class FindChanges {
                                                         this.addCommand(
                                                             commands,
                                                             bookmark,
-                                                            p,
+                                                            p.textContent,
                                                             table
                                                         );
 
@@ -446,7 +464,7 @@ class FindChanges {
                                                             this.addCommand(
                                                                 commands,
                                                                 bookmark,
-                                                                p,
+                                                                p.textContent,
                                                                 table
                                                             );
                                                         }
@@ -478,16 +496,16 @@ class FindChanges {
         return [];
     }
 
-    getSubsystemFromScpiFileVersion2Doc(file: string, aElements: NodeListOf<Element>) {
+    getSubsystemFromScpiFileVersion2Doc(file: string, anchorElements: NodeListOf<Element>) {
         let subsystems: Subsystem[] = [];
 
         let subsystem: Subsystem | undefined;
         let commandBookmark: string | undefined;
 
-        for (let i = 0; i < aElements.length; i++) {
-            let bookmark = aElements[i].getAttribute("name");
+        for (let i = 0; i < anchorElements.length; i++) {
+            let bookmark = anchorElements[i].getAttribute("name");
             if (bookmark) {
-                let parentElement = aElements[i].parentElement;
+                let parentElement = anchorElements[i].parentElement;
                 if (parentElement != null) {
                     let text = parentElement.textContent;
                     if (text) {
@@ -499,10 +517,15 @@ class FindChanges {
                             };
                             subsystems.push(subsystem);
                         } else if (subsystem && bookmark.startsWith("_scpi_")) {
+                            const parameters = this.getCommandParameters(
+                                text,
+                                $(parentElement).parents("table")[0]
+                            );
+
                             subsystem.commands.push({
                                 name: this.getCommandFromSyntax(text),
                                 helpLink: file + "#" + (commandBookmark || bookmark),
-                                parameters: []
+                                parameters
                             });
                         } else {
                             commandBookmark = bookmark;
@@ -515,12 +538,12 @@ class FindChanges {
         return subsystems;
     }
 
-    getSubsystemFromScpiFileDoc(file: string, aElements: NodeListOf<Element>) {
-        let version = this.detectVersionOfScpiFileDoc(aElements);
+    getSubsystemFromScpiFileDoc(file: string, anchorElements: NodeListOf<Element>) {
+        let version = this.detectVersionOfScpiFileDoc(anchorElements);
         if (version === 1) {
-            return this.getSubsystemFromScpiFileVersion1Doc(file, aElements);
+            return this.getSubsystemFromScpiFileVersion1Doc(file, anchorElements);
         } else if (version === 2) {
-            return this.getSubsystemFromScpiFileVersion2Doc(file, aElements);
+            return this.getSubsystemFromScpiFileVersion2Doc(file, anchorElements);
         } else {
             return [];
         }
@@ -558,10 +581,12 @@ class FindChanges {
                                         if (!err) {
                                             let element = document.createElement("div");
                                             element.innerHTML = data;
-                                            let aElements = element.querySelectorAll("A[name]");
+                                            let anchorElements = element.querySelectorAll(
+                                                "A[name]"
+                                            );
                                             let subsystems = this.getSubsystemFromScpiFileDoc(
                                                 file,
-                                                aElements
+                                                anchorElements
                                             );
                                             resolve(subsystems);
                                         } else {
@@ -672,7 +697,7 @@ class FindChanges {
                     });
                     moved = moved.sort(FindChanges.compareCommandDefinitions);
 
-                    //
+                    // updated
                     let updated: CommandDefinition[] = [];
                     subsystems.forEach(subsystem => {
                         subsystem.commands.forEach(command => {
