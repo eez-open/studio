@@ -5,7 +5,7 @@ import { bind } from "bind-decorator";
 import classNames from "classnames";
 
 import { guid } from "eez-studio-shared/guid";
-import { humanize } from "eez-studio-shared/string";
+import { humanize, stringCompare } from "eez-studio-shared/string";
 
 import { validators, filterNumber } from "eez-studio-shared/model/validation";
 import { NavigationStore } from "eez-studio-shared/model/store";
@@ -712,7 +712,7 @@ class Property extends React.Component<PropertyProps> {
                     const id = enumItem.id.toString();
                     return (
                         <option key={id} value={id}>
-                            {humanize(id)}
+                            {enumItem.label || humanize(id)}
                         </option>
                     );
                 });
@@ -766,13 +766,15 @@ class Property extends React.Component<PropertyProps> {
                     }
                 }
 
-                let options = objects.map(object => {
-                    return (
-                        <option key={object._id} value={getProperty(object, "name")}>
-                            {objectToString(object)}
-                        </option>
-                    );
-                });
+                let options = objects
+                    .sort((o1, o2) => stringCompare(o1._label, o2._label))
+                    .map(object => {
+                        return (
+                            <option key={object._id} value={getProperty(object, "name")}>
+                                {objectToString(object)}
+                            </option>
+                        );
+                    });
 
                 options.unshift(<option key="__empty" value="" />);
 

@@ -175,9 +175,9 @@ export class ScpiParameter extends EezObject {
                                     displayName: "",
                                     type: "enum",
                                     enumItems: [
-                                        { id: "nr1", label: "NR1" },
-                                        { id: "nr2", label: "NR2" },
-                                        { id: "nr3", label: "NR3" }
+                                        { id: "nr1", label: "Integer (NR1)" },
+                                        { id: "nr2", label: "Decimal (NR2)" },
+                                        { id: "nr3", label: "Real (NR3)" }
                                     ],
                                     visible: (values: any) => {
                                         return values.numeric;
@@ -361,9 +361,9 @@ export class ScpiResponse extends EezObject {
                 name: "type",
                 type: PropertyType.Enum,
                 enumItems: [
-                    { id: "nr1" },
-                    { id: "nr2" },
-                    { id: "nr3" },
+                    { id: "nr1", label: "Integer (NR1)" },
+                    { id: "nr2", label: "Decimal (NR2)" },
+                    { id: "nr3", label: "Real (NR3)" },
                     { id: "boolean" },
                     { id: "quoted-string" },
                     { id: "arbitrary-ascii" },

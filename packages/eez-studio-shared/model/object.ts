@@ -11,6 +11,7 @@ export { loadObject, objectToJson, objectToJS };
 
 export interface EnumItem {
     id: string | number;
+    label?: string;
 }
 
 export enum PropertyType {

@@ -951,8 +951,17 @@ export class ImportScpiDocDialog extends React.Component<
         });
     }
 
+    onOkCalled = false;
+
     onOk(event: any) {
         event.preventDefault();
+
+        if (this.onOkCalled) {
+            return;
+        }
+
+        this.onOkCalled = true;
+
         $(this.dialog).modal("hide");
 
         UndoManager.setCombineCommands(true);
