@@ -142,47 +142,53 @@ function buildParameters(dom: JQuery): IParameter[] {
 
         let type: IParameterType[] = [];
 
-        if ($(element).find("NonDecimalNumeric").length) {
+        if ($(element).find("Any").length) {
             type.push({
-                type: "nr1"
+                type: "any"
             });
-        } else if ($(element).find("DecimalNumeric").length) {
-            type.push({
-                type: "nr2"
-            });
-        }
+        } else {
+            if ($(element).find("NonDecimalNumeric").length) {
+                type.push({
+                    type: "nr1"
+                });
+            } else if ($(element).find("DecimalNumeric").length) {
+                type.push({
+                    type: "nr2"
+                });
+            }
 
-        if ($(element).find("String").length) {
-            type.push({
-                type: "quoted-string"
-            });
-        }
+            if ($(element).find("String").length) {
+                type.push({
+                    type: "quoted-string"
+                });
+            }
 
-        if ($(element).find("DataBlock").length) {
-            type.push({
-                type: "data-block"
-            });
-        }
+            if ($(element).find("DataBlock").length) {
+                type.push({
+                    type: "data-block"
+                });
+            }
 
-        if ($(element).find("Character>EnumRef").length) {
-            type.push({
-                type: "discrete",
-                enumeration: $(element)
-                    .find("Character>EnumRef")
-                    .attr("name")
-            });
-        }
+            if ($(element).find("Character>EnumRef").length) {
+                type.push({
+                    type: "discrete",
+                    enumeration: $(element)
+                        .find("Character>EnumRef")
+                        .attr("name")
+                });
+            }
 
-        if ($(element).find("Expression>ChannelList").length) {
-            type.push({
-                type: "channel-list"
-            });
-        }
+            if ($(element).find("Expression>ChannelList").length) {
+                type.push({
+                    type: "channel-list"
+                });
+            }
 
-        if ($(element).find("ArbitraryBlock").length) {
-            type.push({
-                type: "data-block"
-            });
+            if ($(element).find("ArbitraryBlock").length) {
+                type.push({
+                    type: "data-block"
+                });
+            }
         }
 
         const description = element.getAttribute("description") || "";
@@ -201,7 +207,9 @@ function buildResponse(dom: JQuery): IResponse {
 
     let enumeration;
 
-    if (dom.find("Responses>Response>ResponseType>NR1Numeric").length) {
+    if (dom.find("Responses>Response>ResponseType>Any").length) {
+        type = "any";
+    } else if (dom.find("Responses>Response>ResponseType>NR1Numeric").length) {
         type = "nr1";
     } else if (dom.find("Responses>Response>ResponseType>NR2Numeric").length) {
         type = "nr2";

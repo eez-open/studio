@@ -11,6 +11,7 @@ export interface IEnum {
 }
 
 export type ParameterTypeType =
+    | "any"
     | "nr1"
     | "nr2"
     | "nr3"
@@ -33,6 +34,7 @@ export interface IParameter {
 }
 
 export type ResponseType =
+    | "any"
     | "nr1"
     | "nr2"
     | "nr3"
@@ -72,6 +74,10 @@ export function getSdlSemanticTypeForParameter(parameter: IParameter) {
 }
 
 export function getSdlParameterType(parameterType: IParameterType) {
+    if (parameterType.type === "any") {
+        return "<Any />";
+    }
+
     if (parameterType.type === "nr1") {
         return "<NonDecimalNumeric />";
     }
@@ -148,6 +154,10 @@ export function getSdlSemanticType(responseType: ResponseType | ParameterTypeTyp
 }
 
 export function getSdlResponseType(response: IResponse) {
+    if (response.type === "any") {
+        return "<Any />";
+    }
+
     if (response.type === "nr1") {
         return "<NR1Numeric />";
     }

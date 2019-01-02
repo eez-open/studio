@@ -168,7 +168,10 @@ export class ScpiParameter extends EezObject {
                             fields: [
                                 {
                                     name: "numeric",
-                                    type: "boolean"
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
                                 },
                                 {
                                     name: "numericType",
@@ -180,28 +183,43 @@ export class ScpiParameter extends EezObject {
                                         { id: "nr3", label: "Real (NR3)" }
                                     ],
                                     visible: (values: any) => {
-                                        return values.numeric;
+                                        return !values.any && values.numeric;
                                     }
                                 },
                                 {
                                     name: "boolean",
-                                    type: "boolean"
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
                                 },
                                 {
                                     name: "string",
-                                    type: "boolean"
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
                                 },
                                 {
                                     name: "dataBlock",
-                                    type: "boolean"
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
                                 },
                                 {
                                     name: "channelList",
-                                    type: "boolean"
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
                                 },
                                 {
                                     name: "discrete",
-                                    type: "boolean"
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
                                 },
                                 {
                                     name: "enumeration",
@@ -210,12 +228,17 @@ export class ScpiParameter extends EezObject {
                                         return getScpiEnumsAsDialogEnumItems();
                                     },
                                     visible: (values: any) => {
-                                        return values.discrete;
+                                        return !values.any && values.discrete;
                                     }
+                                },
+                                {
+                                    name: "any",
+                                    type: "boolean"
                                 }
                             ]
                         },
                         values: {
+                            any: isScpiType(object, "any"),
                             numeric:
                                 isScpiType(object, "nr1") ||
                                 isScpiType(object, "nr2") ||
@@ -232,41 +255,44 @@ export class ScpiParameter extends EezObject {
 
                     const type: IParameterType[] = [];
 
-                    if (result.values.numeric) {
-                        type.push({
-                            type: result.values.numericType
-                        });
-                    }
+                    if (result.values.any) {
+                    } else {
+                        if (result.values.numeric) {
+                            type.push({
+                                type: result.values.numericType
+                            });
+                        }
 
-                    if (result.values.boolean) {
-                        type.push({
-                            type: "boolean"
-                        });
-                    }
+                        if (result.values.boolean) {
+                            type.push({
+                                type: "boolean"
+                            });
+                        }
 
-                    if (result.values.string) {
-                        type.push({
-                            type: "quoted-string"
-                        });
-                    }
+                        if (result.values.string) {
+                            type.push({
+                                type: "quoted-string"
+                            });
+                        }
 
-                    if (result.values.dataBlock) {
-                        type.push({
-                            type: "data-block"
-                        });
-                    }
+                        if (result.values.dataBlock) {
+                            type.push({
+                                type: "data-block"
+                            });
+                        }
 
-                    if (result.values.channelList) {
-                        type.push({
-                            type: "channel-list"
-                        });
-                    }
+                        if (result.values.channelList) {
+                            type.push({
+                                type: "channel-list"
+                            });
+                        }
 
-                    if (result.values.discrete) {
-                        type.push({
-                            type: "discrete",
-                            enumeration: result.values.enumeration
-                        });
+                        if (result.values.discrete) {
+                            type.push({
+                                type: "discrete",
+                                enumeration: result.values.enumeration
+                            });
+                        }
                     }
 
                     return {
@@ -370,7 +396,8 @@ export class ScpiResponse extends EezObject {
                     { id: "list-of-quoted-string" },
                     { id: "data-block" },
                     { id: "non-standard-data-block" },
-                    { id: "discrete" }
+                    { id: "discrete" },
+                    { id: "any" }
                 ]
             },
             {
