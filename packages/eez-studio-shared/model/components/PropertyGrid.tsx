@@ -767,7 +767,8 @@ class Property extends React.Component<PropertyProps> {
                 }
 
                 let options = objects
-                    .sort((o1, o2) => stringCompare(o1._label, o2._label))
+                    .slice()
+                    .sort((a, b) => stringCompare(a._label, b._label))
                     .map(object => {
                         return (
                             <option key={object._id} value={getProperty(object, "name")}>

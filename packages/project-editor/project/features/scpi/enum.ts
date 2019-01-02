@@ -1,5 +1,7 @@
 import { observable } from "mobx";
 
+import { stringCompare } from "eez-studio-shared/string";
+
 import { validators } from "eez-studio-shared/model/validation";
 import * as output from "eez-studio-shared/model/output";
 
@@ -184,8 +186,11 @@ export function findScpiEnum(enumeration: string) {
 export function getScpiEnumsAsDialogEnumItems(): EnumItems {
     const scpi = (ProjectStore.project as any).scpi as Scpi;
 
-    return scpi.enums._array.map(scpiEnum => ({
-        id: scpiEnum.name,
-        label: scpiEnum._label
-    }));
+    return scpi.enums._array
+        .slice()
+        .sort((a, b) => stringCompare(a._label, b._label))
+        .map(scpiEnum => ({
+            id: scpiEnum.name,
+            label: scpiEnum._label
+        }));
 }
