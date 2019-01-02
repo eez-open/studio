@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, observable, action } from "mobx";
+import { computed, observable, action, reaction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -143,6 +143,7 @@ export class DeleteButton extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 interface ListNavigationProps {
+    id: string;
     title?: string;
     navigationObject: EezObject;
     onDoubleClickItem?: (item: EezObject) => void;
@@ -152,6 +153,23 @@ interface ListNavigationProps {
 @observer
 export class ListNavigation extends React.Component<ListNavigationProps, {}> {
     @observable sortDirection: SortDirectionType = "none";
+
+    constructor(props: any) {
+        super(props);
+
+        const sortDirectionStr = localStorage.getItem(
+            "ListNavigationSortDirection" + this.props.id
+        );
+        if (sortDirectionStr) {
+            this.sortDirection = sortDirectionStr as SortDirectionType;
+        }
+
+        reaction(
+            () => this.sortDirection,
+            sortDirection =>
+                localStorage.setItem("ListNavigationSortDirection" + this.props.id, sortDirection)
+        );
+    }
 
     onDoubleClickItem(object: EezObject) {
         if (this.props.onDoubleClickItem) {
@@ -232,6 +250,7 @@ export class ListNavigationWithContent extends React.Component<ListNavigationWit
                     childrenOverflow="hidden"
                 >
                     <ListNavigation
+                        id={this.props.id}
                         title={this.props.title}
                         navigationObject={this.props.navigationObject}
                         onDoubleClickItem={this.props.onDoubleClickItem}

@@ -11,7 +11,7 @@ import { Loader } from "eez-studio-ui/loader";
 
 import { EezObject, EezArrayObject, getProperty } from "eez-studio-shared/model/object";
 import { objectToJS } from "eez-studio-shared/model/serialization";
-import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
+import { DocumentStore, UndoManager, NavigationStore } from "eez-studio-shared/model/store";
 
 import { IParameter, IParameterType, IEnum } from "instrument/scpi";
 
@@ -1048,6 +1048,9 @@ export class ImportScpiDocDialog extends React.Component<
         });
 
         UndoManager.setCombineCommands(false);
+
+        // always stay in scpi subsystems list view
+        NavigationStore.setNavigationSelectedItem(scpi, scpi.subsystems);
     }
 
     onCancel() {

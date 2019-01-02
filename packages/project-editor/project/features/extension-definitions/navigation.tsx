@@ -34,7 +34,10 @@ export class ExtensionDefinitionsNavigation extends NavigationComponent {
                     sizes={`240px|100%`}
                     childrenOverflow="hidden"
                 >
-                    <ListNavigation navigationObject={this.props.navigationObject} />
+                    <ListNavigation
+                        id={this.props.id}
+                        navigationObject={this.props.navigationObject}
+                    />
                     {content}
                 </Splitter>
             );

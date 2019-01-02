@@ -91,6 +91,7 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
                     childrenOverflow="hidden"
                 >
                     <ListNavigation
+                        id={this.props.id}
                         navigationObject={subsystems}
                         additionalButtons={additionalButtons}
                     />
