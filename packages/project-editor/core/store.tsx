@@ -47,6 +47,9 @@ class ProjectStoreClass {
     @observable
     filePath: string | undefined;
 
+    @observable
+    backgroundCheckEnabled = true;
+
     constructor() {
         autorun(() => {
             this.updateProjectWindowState();
@@ -56,7 +59,7 @@ class ProjectStoreClass {
             }
 
             // check the project in the background
-            if (this.project) {
+            if (this.project && this.backgroundCheckEnabled) {
                 backgroundCheck();
             }
         });

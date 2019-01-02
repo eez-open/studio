@@ -955,6 +955,7 @@ export class ImportScpiDocDialog extends React.Component<
 
     onOkCalled = false;
 
+    @action
     onOk(event: any) {
         event.preventDefault();
 
@@ -963,6 +964,8 @@ export class ImportScpiDocDialog extends React.Component<
         }
 
         this.onOkCalled = true;
+
+        ProjectStore.backgroundCheckEnabled = false;
 
         $(this.dialog).modal("hide");
 
@@ -1062,6 +1065,8 @@ export class ImportScpiDocDialog extends React.Component<
 
         // always stay in scpi subsystems list view
         NavigationStore.setNavigationSelectedItem(scpi, scpi.subsystems);
+
+        ProjectStore.backgroundCheckEnabled = true;
     }
 
     onCancel() {
