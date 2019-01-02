@@ -256,6 +256,9 @@ export class ScpiParameter extends EezObject {
                     const type: IParameterType[] = [];
 
                     if (result.values.any) {
+                        type.push({
+                            type: "any"
+                        });
                     } else {
                         if (result.values.numeric) {
                             type.push({

@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { observable, computed, action, autorun, Lambda, toJS } from "mobx";
 import { observer } from "mobx-react";
 
-import { humanize, camelize, capitalize } from "eez-studio-shared/string";
+import { humanize, camelize, capitalize, stringCompare } from "eez-studio-shared/string";
 
 import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
@@ -659,15 +659,87 @@ class FindChanges {
         return missingCommands.sort(FindChanges.compareCommandDefinitions);
     }
 
+    compareParameterTypes(types1: IParameterType[], types2: IParameterType[]) {
+        const sortedTypes1: IParameterType[] = types1
+            .slice()
+            .sort((a, b) => stringCompare(a.type, b.type));
+
+        const sortedTypes2: IParameterType[] = types2
+            .slice()
+            .sort((a, b) => stringCompare(a.type, b.type));
+
+        for (let i = 0; i < sortedTypes2.length; ++i) {
+            if (sortedTypes2[i].type === "any") {
+                return true;
+            }
+        }
+
+        if (sortedTypes1.length !== sortedTypes2.length) {
+            return false;
+        }
+
+        for (let i = 0; i < sortedTypes1.length; ++i) {
+            const type1 = sortedTypes1[i];
+            const type2 = sortedTypes2[i];
+
+            if (type1.type !== type2.type) {
+                return false;
+            }
+
+            if (type1.type === "discrete") {
+                if (!!type1.enumeration && type1.enumeration !== type2.enumeration) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     compareParameters(parameters1: IParameter[], parameters2: IParameter[]) {
-        return (
-            JSON.stringify(
-                toJS(parameters1 instanceof EezObject ? objectToJS(parameters1) : parameters1)
-            ) ===
-            JSON.stringify(
-                toJS(parameters2 instanceof EezObject ? objectToJS(parameters2) : parameters2)
-            )
-        );
+        // return (
+        //     JSON.stringify(
+        //         toJS(parameters1 instanceof EezObject ? objectToJS(parameters1) : parameters1)
+        //     ) ===
+        //     JSON.stringify(
+        //         toJS(parameters2 instanceof EezObject ? objectToJS(parameters2) : parameters2)
+        //     )
+        // );
+
+        const sortedParameters1: IParameter[] = toJS(
+            parameters1 instanceof EezObject ? objectToJS(parameters1) : parameters1
+        ).sort((a: IParameter, b: IParameter) => stringCompare(a.name, b.name));
+
+        const sortedParameters2: IParameter[] = toJS(
+            parameters2 instanceof EezObject ? objectToJS(parameters2) : parameters2
+        ).sort((a: IParameter, b: IParameter) => stringCompare(a.name, b.name));
+
+        if (sortedParameters1.length !== sortedParameters2.length) {
+            return false;
+        }
+
+        for (let i = 0; i < sortedParameters1.length; ++i) {
+            const param1 = sortedParameters1[i];
+            const param2 = sortedParameters2[i];
+
+            if (param1.name !== param2.name) {
+                return false;
+            }
+
+            if (param1.description !== param2.description) {
+                return false;
+            }
+
+            if (param1.isOptional !== param2.isOptional) {
+                return false;
+            }
+
+            if (!this.compareParameterTypes(param1.type, param2.type)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     getChanges() {
@@ -707,16 +779,16 @@ class FindChanges {
                     let updated: CommandDefinition[] = [];
                     subsystems.forEach(subsystem => {
                         subsystem.commands.forEach(command => {
-                            let result = this.findCommandInSubsystems(
+                            let existingCommand = this.findCommandInSubsystems(
                                 existingSubsystems,
                                 command.name
                             );
                             if (
-                                result &&
-                                result.subsystem.name === subsystem.name &&
+                                existingCommand &&
+                                existingCommand.subsystem.name === subsystem.name &&
                                 !this.compareParameters(
                                     command.parameters,
-                                    result.command.parameters
+                                    existingCommand.command.parameters
                                 )
                             ) {
                                 updated.push({
