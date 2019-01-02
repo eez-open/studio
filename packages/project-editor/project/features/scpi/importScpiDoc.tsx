@@ -102,17 +102,11 @@ class FindChanges {
 
                 let sibling = elements[i].parentElement!.nextElementSibling;
                 if (sibling) {
-                    const p = sibling.querySelector("p");
-                    if (p) {
-                        type = p.textContent;
-                    }
+                    type = sibling.textContent;
 
                     sibling = sibling.nextElementSibling;
                     if (sibling) {
-                        const p = sibling.querySelector("p");
-                        if (p) {
-                            range = p.textContent;
-                        }
+                        range = sibling.textContent;
                     }
                 }
 
@@ -192,14 +186,22 @@ class FindChanges {
     }
 
     extractEnumFromRange(suggestedEnumName: string, range: string) {
+        // join lines and remove whitespaces
+        range = range.split("\n").join("");
+
+        // remove whitespaces between |
+        range = range
+            .split("|")
+            .map(x => x.trim())
+            .join("|");
+
         // We are handling all kind of funny cases like:
         // "0 – 9999999|INFinite" => ["INFinite"]
         // "0 to MAXimum, MIN|DEF|MAX|UP|DOWN" => ["MIN", "DEF", "MAX", "UP", "DOWN"]
         // "MIN|MID|MAX (see also Section 8.1)" => ["MIN", "MID", "MAX"]
         // "0.5, 5, MIN|MAX|DEFault" => ["MIN", "MAX", "DEFault"]
         // etc
-
-        const matches = range.match(/(([A-Z][A-Z][A-Za-z0-9]*)\|?)+/g);
+        const matches = range.match(/(([A-Z][A-Za-z0-9]*)\|?)+/g);
         if (!matches) {
             return undefined;
         }
@@ -1246,14 +1248,14 @@ export class ImportScpiDocDialog extends React.Component<
                     } else if (section === "newEnums") {
                         thead = (
                             <tr>
-                                <th className="col-8">
+                                <th className="col-4">
                                     <input
                                         ref={ref => (this.newEnumsSelectAllCheckbox = ref!)}
                                         type="checkbox"
                                     />{" "}
                                     Enum
                                 </th>
-                                <th className="col-4">Members</th>
+                                <th className="col-8">Members</th>
                             </tr>
                         );
                     }
@@ -1280,10 +1282,10 @@ export class ImportScpiDocDialog extends React.Component<
 
                                 return (
                                     <tr key={newEnum.name}>
-                                        <td className="col-8">
+                                        <td className="col-4">
                                             {checkbox} {newEnum.name}
                                         </td>
-                                        <td className="col-4">
+                                        <td className="col-8">
                                             {newEnum.members.map(member => member.name).join("|")}
                                         </td>
                                     </tr>
