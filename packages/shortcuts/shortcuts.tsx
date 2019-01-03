@@ -4,6 +4,8 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
 
+import { objectEqual } from "eez-studio-shared/util";
+
 import styled from "eez-studio-ui/styled-components";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
@@ -307,6 +309,18 @@ class ShortcutRow implements IRow {
     }
 
     @computed
+    get isExtensionShortcut() {
+        if (Array.isArray(this.props.shortcut)) {
+            return true;
+        } else {
+            return (
+                !!this.shortcut.groupName &&
+                this.shortcut.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX)
+            );
+        }
+    }
+
+    @computed
     get actions() {
         return (
             this.props.shortcutsStore.addShortcut && (
@@ -329,9 +343,15 @@ class ShortcutRow implements IRow {
                         icon="material:delete"
                         title="Delete shortcut"
                         onClick={() => {
-                            confirm("Are you sure?", undefined, () => {
-                                this.props.shortcutsStore.deleteShortcut!(this.shortcut);
-                            });
+                            confirm(
+                                "Are you sure?",
+                                this.isExtensionShortcut
+                                    ? "This type of shortcut once deleted cannot be restored without reinstalling instrument extension."
+                                    : undefined,
+                                () => {
+                                    this.props.shortcutsStore.deleteShortcut!(this.shortcut);
+                                }
+                            );
                         }}
                     />
                 </Toolbar>
@@ -391,7 +411,7 @@ export function isSameShortcutFromDifferentExtension(s1: IShortcut, s2: IShortcu
     delete s2js.groupName;
     delete s2js.selected;
 
-    return JSON.stringify(s1js) === JSON.stringify(s2js);
+    return objectEqual(s1js, s2js);
 }
 
 const ShortcutsTable = styled(Table)`
@@ -447,7 +467,7 @@ export class Shortcuts extends React.Component<
         if (this.props.groupsStore) {
             result.push({
                 name: "group",
-                title: "Group",
+                title: "Group / Extension",
                 sortEnabled: true
             });
         }

@@ -1,6 +1,6 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
-import { observer } from "mobx-react";
+import { observable, computed, action, reaction, IReactionDisposer } from "mobx";
+import { observer, disposeOnUnmount } from "mobx-react";
 import classNames from "classnames";
 
 import { capitalize } from "eez-studio-shared/string";
@@ -109,10 +109,23 @@ interface ISortOrderItem {
 
 @observer
 export class Table extends React.Component<ITableProps> {
+    @observable
+    sortOrder: ISortOrderItem[];
+
+    @disposeOnUnmount
+    saveSortOrderDisposer: IReactionDisposer;
+
     constructor(props: ITableProps) {
         super(props);
 
         this.updateSortOrder(props);
+
+        this.saveSortOrderDisposer = reaction(
+            () => JSON.stringify(this.sortOrder),
+            sortOrderJSON => {
+                localStorage.setItem(this.props.persistId + "/sort-order", sortOrderJSON);
+            }
+        );
     }
 
     componentWillReceiveProps(props: ITableProps) {
@@ -141,9 +154,6 @@ export class Table extends React.Component<ITableProps> {
 
         this.sortOrder = sortOrder;
     }
-
-    @observable
-    sortOrder: ISortOrderItem[];
 
     @computed
     get firstColumnUsedForSorting() {

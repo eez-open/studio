@@ -201,7 +201,7 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
                 return FROM_EXTENSION_GROUP_NAME;
             }
             if (this.extension) {
-                return "Extension: " + (this.extension.displayName + this.extension.name);
+                return "Extension: " + (this.extension.displayName || this.extension.name);
             }
         }
 
