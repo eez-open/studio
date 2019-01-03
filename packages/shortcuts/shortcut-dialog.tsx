@@ -324,19 +324,31 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
                         errors={this.validator.errors.keybinding}
                     />
 
-                    <SelectProperty
-                        name="Action type"
-                        value={this.shortcut.action!.type}
-                        onChange={action(
-                            (value: IActionType) => (this.shortcut.action!.type = value)
-                        )}
-                    >
-                        <option value="scpi-commands">SCPI</option>
-                        <option value="javascript">JavaScript</option>
-                    </SelectProperty>
+                    {!this.isExtensionShortcut && (
+                        <SelectProperty
+                            name={"Action type"}
+                            value={this.shortcut.action!.type}
+                            onChange={action(
+                                (value: IActionType) => (this.shortcut.action!.type = value)
+                            )}
+                        >
+                            <option value="scpi-commands">SCPI</option>
+                            <option value="javascript">JavaScript</option>
+                        </SelectProperty>
+                    )}
+                    {this.isExtensionShortcut && (
+                        <StaticProperty
+                            name="Action type"
+                            value={
+                                this.shortcut.action!.type === "scpi-commands"
+                                    ? "SCPI"
+                                    : "JavaScript"
+                            }
+                        />
+                    )}
 
                     <CodeEditorProperty
-                        name="Action code"
+                        name={"Action code" + (this.isExtensionShortcut ? " (read only)" : "")}
                         value={this.shortcut.action!.data}
                         onChange={action((value: string) => {
                             this.codeError = undefined;
