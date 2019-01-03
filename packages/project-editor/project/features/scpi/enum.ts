@@ -15,7 +15,6 @@ import {
     asArray,
     getChildOfObject
 } from "eez-studio-shared/model/object";
-import { isReferenced } from "eez-studio-shared/model/search";
 
 import { ProjectStore } from "project-editor/core/store";
 
@@ -47,7 +46,7 @@ export class ScpiEnumMember extends EezObject {
         defaultValue: {}
     };
 
-    check(object: EezObject) {
+    check() {
         const messages: output.Message[] = [];
 
         if (this.name) {
@@ -155,18 +154,6 @@ export class ScpiEnum extends EezObject {
         navigationComponentId: "scpi-enums",
         icon: "format_list_numbered"
     };
-
-    check(object: EezObject) {
-        const messages: output.Message[] = [];
-
-        if (!isReferenced(this)) {
-            messages.push(
-                new output.Message(output.Type.WARNING, `enum not used in the project`, this)
-            );
-        }
-
-        return messages;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

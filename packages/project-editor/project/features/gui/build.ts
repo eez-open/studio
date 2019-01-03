@@ -1,6 +1,6 @@
 import { getProperty } from "eez-studio-shared/model/object";
-import { OutputSectionsStore } from "eez-studio-shared/model//store";
-import * as output from "eez-studio-shared/model//output";
+import { OutputSectionsStore } from "eez-studio-shared/model/store";
+import * as output from "eez-studio-shared/model/output";
 
 import { ProjectStore } from "project-editor/core/store";
 import { BuildResult } from "project-editor/core/extensions";
