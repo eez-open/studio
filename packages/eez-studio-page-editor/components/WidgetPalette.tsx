@@ -23,8 +23,8 @@ const WidgetDiv = styled.div`
     flex-direction: column;
     align-items: center;
     & > img {
-        width: 100px;
-        height: 100px;
+        width: 48px;
+        height: 48px;
         object-fit: contain;
     }
 `;

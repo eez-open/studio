@@ -52,6 +52,32 @@ export interface IMessage {
     object?: EezObject;
 }
 
+export interface IPropertyGridGroupDefinition {
+    id: string;
+    title?: string;
+}
+
+export const generalGroup: IPropertyGridGroupDefinition = {
+    id: "general"
+};
+
+export const geometryGroup: IPropertyGridGroupDefinition = {
+    id: "geometry"
+};
+
+export const styleGroup: IPropertyGridGroupDefinition = {
+    id: "style",
+    title: "Style"
+};
+
+export const dataGroup: IPropertyGridGroupDefinition = {
+    id: "data"
+};
+
+export const actionsGroup: IPropertyGridGroupDefinition = {
+    id: "actions"
+};
+
 export interface PropertyInfo {
     name: string;
     type: PropertyType;
@@ -67,6 +93,7 @@ export interface PropertyInfo {
     onSelect?: (object: EezObject, propertyInfo: PropertyInfo) => Promise<any>;
     hideInPropertyGrid?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
     readOnlyInPropertyGrid?: boolean;
+    propertyGridGroup?: IPropertyGridGroupDefinition;
     enumerable?: boolean;
     isOptional?: boolean;
     defaultValue?: any;

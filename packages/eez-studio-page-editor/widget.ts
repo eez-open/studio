@@ -19,7 +19,11 @@ import {
     isArray,
     getChildOfObject,
     objectToJS,
-    cloneObject
+    cloneObject,
+    geometryGroup,
+    styleGroup,
+    dataGroup,
+    actionsGroup
 } from "eez-studio-shared/model/object";
 import { loadObject } from "eez-studio-shared/model/serialization";
 import {
@@ -112,38 +116,46 @@ export class Widget extends EezObject {
             {
                 name: "data",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
+                referencedObjectCollectionPath: ["data"],
+                propertyGridGroup: dataGroup
             },
             {
                 name: "action",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["actions"]
+                referencedObjectCollectionPath: ["actions"],
+                propertyGridGroup: actionsGroup
             },
             {
                 name: "x",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "y",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "width",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "height",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             },
             {
                 name: "activeStyle",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             }
         ]
     };

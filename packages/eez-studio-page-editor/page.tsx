@@ -12,7 +12,10 @@ import {
     EezArrayObject,
     PropertyType,
     isSubclassOf,
-    IEditorState
+    IEditorState,
+    generalGroup,
+    geometryGroup,
+    styleGroup
 } from "eez-studio-shared/model/object";
 
 import { Widget, WidgetContainerDisplayItem } from "eez-studio-page-editor/widget";
@@ -53,32 +56,39 @@ export class Page extends EezObject {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                unique: true,
+                propertyGridGroup: generalGroup
             },
             {
                 name: "description",
-                type: PropertyType.MultilineText
+                type: PropertyType.MultilineText,
+                propertyGridGroup: generalGroup
             },
             {
                 name: "x",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "y",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "width",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "height",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             },
             {
                 name: "widgets",
@@ -88,11 +98,13 @@ export class Page extends EezObject {
             },
             {
                 name: "closePageIfTouchedOutside",
-                type: PropertyType.Boolean
+                type: PropertyType.Boolean,
+                propertyGridGroup: generalGroup
             },
             {
                 name: "usedIn",
-                type: PropertyType.ConfigurationReference
+                type: PropertyType.ConfigurationReference,
+                propertyGridGroup: generalGroup
             }
         ],
         newItem: (parent: EezObject) => {

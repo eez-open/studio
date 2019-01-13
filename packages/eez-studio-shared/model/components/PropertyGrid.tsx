@@ -8,6 +8,7 @@ import { guid } from "eez-studio-shared/guid";
 import { humanize, stringCompare } from "eez-studio-shared/string";
 
 import { validators, filterNumber } from "eez-studio-shared/model/validation";
+import { IPropertyGridGroupDefinition } from "eez-studio-shared/model/object";
 import { NavigationStore } from "eez-studio-shared/model/store";
 
 import styled from "eez-studio-ui/styled-components";
@@ -878,6 +879,34 @@ class Property extends React.Component<PropertyProps> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class GroupTitle extends React.Component<{
+    group: IPropertyGridGroupDefinition;
+}> {
+    render() {
+        return (
+            <tr>
+                <td className="group-title" colSpan={3}>
+                    {this.props.group.title}
+                </td>
+            </tr>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class GroupBorder extends React.Component {
+    render() {
+        return (
+            <tr>
+                <td className="group-border" colSpan={3} />
+            </tr>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 const PropertyGridDiv = styled.div`
     flex-grow: 1;
     padding: 5px;
@@ -910,6 +939,18 @@ const PropertyGridDiv = styled.div`
                 & > td > input[type="checkbox"] {
                     height: 20px;
                     margin-top: 7px;
+                }
+
+                & > td.group-border {
+                    padding: 0;
+                    border-bottom: 1px solid ${props => props.theme.darkBorderColor};
+                }
+
+                & > td.group-title {
+                    font-size: 90%;
+                    text-transform: uppercase;
+                    font-weight: bold;
+                    padding-top: 0;
                 }
             }
         }
@@ -949,7 +990,22 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             object = this.props.object;
         }
 
-        let properties: JSX.Element[] = [];
+        //let properties: JSX.Element[] = [];
+
+        interface IGroupProperties {
+            group: IPropertyGridGroupDefinition;
+            properties: React.ReactNode[];
+        }
+
+        const groupPropertiesArray: IGroupProperties[] = [];
+
+        const groupForPropertiesWithoutGroupSpecified: IGroupProperties = {
+            group: {
+                id: "",
+                title: "Other properties"
+            },
+            properties: []
+        };
 
         for (let propertyInfo of object._classInfo.properties) {
             if (!isArray(object) && !isPropertyHidden(object, propertyInfo)) {
@@ -987,7 +1043,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                         isHighlightedProperty(propertyInfo, object)
                 });
 
-                properties.push(
+                const propertyComponent = (
                     <tr className={className} key={propertyInfo.name}>
                         {property}
                         <td>
@@ -1001,13 +1057,57 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                         </td>
                     </tr>
                 );
+
+                const propertyGroup = propertyInfo.propertyGridGroup;
+                if (propertyGroup) {
+                    let groupProperties = groupPropertiesArray.find(
+                        groupProperties => groupProperties.group.id === propertyGroup.id
+                    );
+
+                    if (!groupProperties) {
+                        groupProperties = {
+                            group: propertyGroup,
+                            properties: []
+                        };
+                        groupPropertiesArray.push(groupProperties);
+                    }
+
+                    groupProperties.properties.push(propertyComponent);
+                } else {
+                    groupForPropertiesWithoutGroupSpecified.properties.push(propertyComponent);
+                }
             }
+        }
+
+        if (groupForPropertiesWithoutGroupSpecified.properties.length > 0) {
+            groupPropertiesArray.push(groupForPropertiesWithoutGroupSpecified);
+        }
+
+        const rows = groupPropertiesArray.map(groupProperties => {
+            if (groupProperties.group.title) {
+                return (
+                    <React.Fragment key={groupProperties.group.id}>
+                        <GroupTitle group={groupProperties.group} />
+                        {groupProperties.properties}
+                    </React.Fragment>
+                );
+            } else {
+                return (
+                    <React.Fragment key={groupProperties.group.id}>
+                        {groupProperties.properties}
+                    </React.Fragment>
+                );
+            }
+        });
+
+        for (let i = 1; i < rows.length; i += 2) {
+            rows.splice(i, 0, <GroupBorder key={`border${i}`} />);
         }
 
         return (
             <PropertyGridDiv className={this.props.className}>
                 <table>
-                    <tbody>{properties}</tbody>
+                    <tbody>{rows}</tbody>
                 </table>
             </PropertyGridDiv>
         );
