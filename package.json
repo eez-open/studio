@@ -3,7 +3,7 @@
   "author": "Envox",
   "description": "Cross-platform visual development tool and SCPI instrument controller",
   "homepage": "https://github.com/eez-open/studio",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "revision": "1",
   "license": "GPL-3.0-only",
   "repository": "https://github.com/eez-open/psu-firmware",
@@ -27,6 +27,7 @@
     "build-deb": "electron-installer-debian --src eezstudio-linux-x64/ --arch amd64 --config installation/linux_options_deb.json",
     "build-rpm": "electron-installer-redhat --src eezstudio-linux-x64/ --arch x86_64 --config installation/linux_options_rpm.json",
     "build-snap": "electron-installer-snap --src eezstudio-linux-x64/ --dest installation/linux --grade stable",
+    "build-deb-all": "npm run build && npm run build-installation && npm run build-deb",
     "tslint": "tslint --project ./packages/tsconfig.json 'packages/**/*.{ts,tsx}'",
     "tsc-version": "tsc --version",
     "electron-version": "electron --version"
