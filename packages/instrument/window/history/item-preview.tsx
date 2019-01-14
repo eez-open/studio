@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import styled from "eez-studio-ui/styled-components";
@@ -193,10 +194,12 @@ export class HistoryItemPreview extends React.Component<{
     }
 
     render() {
+        const className = classNames("EezStudio_ItemPreview", this.props.className);
+
         if (this.props.zoom) {
             return (
                 <ZoomedPreview
-                    className={this.props.className}
+                    className={className}
                     toggleZoom={this.toggleZoom}
                     toolbar={this.props.toolbarWhenZoomed}
                 >
@@ -205,7 +208,7 @@ export class HistoryItemPreview extends React.Component<{
             );
         } else {
             return (
-                <UnzoomedPreview className={this.props.className} toggleZoom={this.toggleZoom}>
+                <UnzoomedPreview className={className} toggleZoom={this.toggleZoom}>
                     {this.props.children}
                 </UnzoomedPreview>
             );

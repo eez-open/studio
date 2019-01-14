@@ -39,6 +39,10 @@ const HistoryItemEnclosure = styled.div`
     &.EezStudio_HistoryItemEnclosure_Session {
         width: 100%;
     }
+
+    &.disablePreview .EezStudio_ItemPreview {
+        pointer-events: none;
+    }
 `;
 
 const HistoryItemRenderError = styled.div`
@@ -105,10 +109,6 @@ export class HistoryItems extends React.Component<{
                 }
             }
 
-            if (showCheckbox || this.props.history.selection.items.length > 0) {
-                element = <div style={{ pointerEvents: "none" }}>{element}</div>;
-            }
-
             let className = classNames(
                 `EezStudio_HistoryItemEnclosure EezStudio_HistoryItem_${historyItem.id}`,
                 {
@@ -116,7 +116,9 @@ export class HistoryItems extends React.Component<{
                         "activity-log/session"
                     ),
                     selected:
-                        !this.props.appStore.selectHistoryItemsSpecification && historyItem.selected
+                        !this.props.appStore.selectHistoryItemsSpecification &&
+                        historyItem.selected,
+                    disablePreview: showCheckbox || this.props.history.selection.items.length > 1
                 }
             );
 
