@@ -69,7 +69,7 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
 
     @bind
     onKeyPress(event: React.KeyboardEvent) {
-        if (event.which == 13) {
+        if (event.which == 13 && !(event.target instanceof HTMLTextAreaElement)) {
             event.preventDefault();
             this.props.onSubmit(event);
         }

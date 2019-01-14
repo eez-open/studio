@@ -2,7 +2,9 @@ import fs from "fs";
 import path from "path";
 import MobXModule from "mobx";
 import MomentModule from "moment";
+
 import * as GeometryModule from "eez-studio-shared/geometry";
+import * as ModelObjectModule from "eez-studio-shared/model/object";
 
 import * as I10nModule from "eez-studio-shared/i10n";
 import { roundNumber } from "./roundNumber";
@@ -465,11 +467,21 @@ export async function getTempDirPath(options?: any) {
 
 export function objectClone<T>(a: T) {
     const { toJS } = require("mobx") as typeof MobXModule;
-    return JSON.parse(
-        JSON.stringify(toJS(a), (key: string, value: any) =>
-            key.startsWith("$") ? undefined : value
-        )
-    );
+    const { EezObject } = require("eez-studio-shared/model/object") as typeof ModelObjectModule;
+
+    if (a instanceof EezObject) {
+        return JSON.parse(
+            JSON.stringify(toJS(a), (key: string, value: any) => {
+                return key.startsWith("$") || key.startsWith("_") ? undefined : value;
+            })
+        );
+    } else {
+        return JSON.parse(
+            JSON.stringify(toJS(a), (key: string, value: any) => {
+                return key.startsWith("$") ? undefined : value;
+            })
+        );
+    }
 }
 
 export function objectEqual<T>(a: T, b: T) {
