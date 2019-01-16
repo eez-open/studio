@@ -1,6 +1,7 @@
 import React from "react";
-import { observable, computed, action, toJS, runInAction } from "mobx";
-import { observer, inject, IWrappedComponent } from "mobx-react";
+import { observable, computed, action, toJS } from "mobx";
+import { observer, inject, Provider } from "mobx-react";
+import { createTransformer, ITransformer } from "mobx-utils";
 import { bind } from "bind-decorator";
 
 import { _range } from "eez-studio-shared/algorithm";
@@ -18,7 +19,7 @@ import { Canvas } from "eez-studio-designer/canvas";
 import { selectToolHandler } from "eez-studio-designer/select-tool";
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, isObjectInstanceOf } from "eez-studio-shared/model/object";
+import { EezObject, isObjectInstanceOf, isAncestor } from "eez-studio-shared/model/object";
 import {
     DocumentStore,
     NavigationStore,
@@ -47,744 +48,9 @@ import { createWidgetTree, drawTree } from "eez-studio-page-editor/widget-tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getObjectComponentClass(object: EezObject): typeof BaseObjectComponent {
-    if (object instanceof SelectWidgetEditor) {
-        return SelectWidgetEditorObjectComponent;
-    } else if (object instanceof ContainerWidget) {
-        return ContainerWidgetObjectComponent;
-    } else if (object instanceof ListWidget) {
-        return ListWidgetObjectComponent;
-    } else if (object instanceof GridWidget) {
-        return GridWidgetObjectComponent;
-    } else if (object instanceof SelectWidget) {
-        return SelectWidgetObjectComponent;
-    } else {
-        return WidgetObjectComponent;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-abstract class BaseObjectComponent
-    extends React.Component<{
-        designerContext?: IDesignerContext;
-        object: EezObject;
-        dragWidget?: Widget;
-    }>
-    implements IBaseObject {
-    @observable
-    children: BaseObjectComponent[] = [];
-
-    abstract get rect(): Rect;
-    abstract get boundingRect(): Rect;
-    abstract get selectionRects(): Rect[];
-
-    get isResizable() {
-        return true;
-    }
-
-    get id() {
-        return this.props.object._id;
-    }
-
-    findObjectById(id: string): IBaseObject | undefined {
-        if (this.id === id) {
-            return this;
-        }
-
-        for (const child of this.children) {
-            const object = child && child.findObjectById(id);
-            if (object) {
-                return object;
-            }
-        }
-
-        return undefined;
-    }
-
-    objectFromPoint(point: Point): BaseObjectComponent | undefined {
-        let foundObject: BaseObjectComponent | undefined = undefined;
-
-        for (const child of this.children) {
-            let result = child.objectFromPoint(point);
-            if (result) {
-                foundObject = result;
-            }
-        }
-
-        if (foundObject) {
-            return foundObject;
-        }
-
-        for (let i = 0; i < this.selectionRects.length; i++) {
-            if (pointInRect(point, this.selectionRects[i])) {
-                return this;
-            }
-        }
-
-        return undefined;
-    }
-
-    open() {}
-
-    renderChildren(childrenObjects: EezObject[]) {
-        return (
-            <div
-                style={{
-                    transform: `translate(${this.rect.left}px, ${this.rect.top}px)`,
-                    transformOrigin: "0 0"
-                }}
-            >
-                {childrenObjects.map((child, i) => {
-                    const ChildObjectComponent = getObjectComponentClass(child);
-                    return (
-                        <ChildObjectComponent
-                            ref={action((ref: BaseObjectComponent | null) => {
-                                if (ref) {
-                                    if (i === 0) {
-                                        this.children = [];
-                                    }
-
-                                    // careful, ref could be ...
-                                    if (ref instanceof BaseObjectComponent) {
-                                        this.children.push(ref);
-                                    } else {
-                                        // ... injector
-                                        this.children.push((ref as IWrappedComponent<
-                                            BaseObjectComponent
-                                        >).wrappedInstance as BaseObjectComponent);
-                                    }
-                                }
-                            })}
-                            key={child._id}
-                            object={child}
-                        />
-                    );
-                })}
-            </div>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-abstract class BaseWidgetObjectComponent extends BaseObjectComponent {
-    get widget() {
-        return this.props.object as Widget;
-    }
-
-    @computed
-    get rect() {
-        return {
-            left: this.widget.x,
-            top: this.widget.y,
-            width: this.widget.width,
-            height: this.widget.height
-        };
-    }
-
-    set rect(value: Rect) {
-        this.widget.applyGeometryChange(
-            {
-                x: value.left,
-                y: value.top,
-                width: value.width,
-                height: value.height
-            },
-            []
-        );
-    }
-
-    @computed
-    get boundingRect(): Rect {
-        return this.widget.boundingRect;
-    }
-
-    @computed
-    get selectionRects() {
-        let rects = [this.boundingRect];
-
-        let listWidget = this.widget._parent;
-        while (
-            !(listWidget instanceof ListWidget || listWidget instanceof GridWidget) &&
-            listWidget instanceof Widget
-        ) {
-            listWidget = listWidget._parent;
-        }
-
-        if (!(listWidget instanceof ListWidget || listWidget instanceof GridWidget)) {
-            return rects;
-        }
-
-        const itemWidget = listWidget.itemWidget;
-        if (itemWidget) {
-            let count = listWidget.data ? PageContext.data.count(listWidget.data) : 0;
-
-            if (listWidget instanceof ListWidget) {
-                for (let i = 1; i < count; i++) {
-                    if (listWidget.listType === "horizontal") {
-                        rects.push({
-                            left: this.boundingRect.left + i * itemWidget.width,
-                            top: this.boundingRect.top,
-                            width: this.boundingRect.width,
-                            height: this.boundingRect.height
-                        });
-                    } else {
-                        rects.push({
-                            left: this.boundingRect.left,
-                            top: this.boundingRect.top + i * itemWidget.height,
-                            width: this.boundingRect.width,
-                            height: this.boundingRect.height
-                        });
-                    }
-                }
-            } else {
-                const rows = Math.floor(listWidget.width / itemWidget.width);
-                const cols = Math.floor(listWidget.height / itemWidget.height);
-                for (let i = 1; i < count; i++) {
-                    const row = i % rows;
-                    const col = Math.floor(i / rows);
-
-                    if (col >= cols) {
-                        break;
-                    }
-
-                    rects.push({
-                        left: this.boundingRect.left + row * itemWidget.width,
-                        top: this.boundingRect.top + col * itemWidget.height,
-                        width: this.boundingRect.width,
-                        height: this.boundingRect.height
-                    });
-                }
-            }
-        }
-
-        return rects;
-    }
-
-    renderBackgroundRect() {
-        const style = PageContext.findStyleOrGetDefault(this.widget.style);
-
-        return (
-            <div
-                style={{
-                    position: "absolute",
-                    left: this.rect.left,
-                    top: this.rect.top,
-                    width: this.rect.width,
-                    height: this.rect.height,
-                    backgroundColor: style.backgroundColor
-                }}
-            />
-        );
-    }
-
-    render(): React.ReactNode {
-        const canvas = this.widget.draw(this.rect);
-        if (canvas) {
-            return (
-                <img
-                    style={{
-                        position: "absolute",
-                        left: this.rect.left,
-                        top: this.rect.top,
-                        width: this.rect.width,
-                        height: this.rect.height,
-                        imageRendering: "pixelated"
-                    }}
-                    src={canvas.toDataURL()}
-                />
-            );
-        }
-
-        const node = this.widget.render();
-        if (node) {
-            return (
-                <div
-                    style={{
-                        position: "absolute",
-                        left: this.rect.left,
-                        top: this.rect.top,
-                        width: this.rect.width,
-                        height: this.rect.height
-                    }}
-                >
-                    {node}
-                </div>
-            );
-        }
-
-        return this.renderBackgroundRect();
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-class WidgetObjectComponent extends BaseWidgetObjectComponent {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-class ContainerWidgetObjectComponent extends BaseWidgetObjectComponent {
-    get containerWidget() {
-        return this.widget as ContainerWidget;
-    }
-
-    render() {
-        return this.renderChildren(this.containerWidget.widgets._array);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-class ListWidgetObjectComponent extends BaseWidgetObjectComponent {
-    get listWidget() {
-        return this.widget as ListWidget;
-    }
-
-    get itemWidget() {
-        return this.listWidget.itemWidget;
-    }
-
-    get count() {
-        if (this.itemWidget && this.listWidget.data) {
-            return PageContext.data.count(this.listWidget.data);
-        } else {
-            return 0;
-        }
-    }
-
-    renderItems() {
-        this.children = [];
-
-        if (!this.itemWidget) {
-            return null;
-        }
-
-        const itemWidget = this.itemWidget;
-        const ItemWidgetComponent = getObjectComponentClass(this.itemWidget);
-
-        return _range(this.count).map(i => {
-            let xListItem = this.rect.left;
-            let yListItem = this.rect.top;
-
-            if (this.listWidget.listType === "horizontal") {
-                xListItem += i * itemWidget.width;
-            } else {
-                yListItem += i * itemWidget.height;
-            }
-
-            return (
-                <div
-                    key={i}
-                    style={{
-                        transform: `translate(${xListItem}px, ${yListItem}px)`,
-                        transformOrigin: "0 0"
-                    }}
-                >
-                    {
-                        <ItemWidgetComponent
-                            ref={ref => {
-                                if (i === 0 && ref) {
-                                    this.children.push(ref);
-                                }
-                            }}
-                            object={itemWidget}
-                        />
-                    }
-                </div>
-            );
-        });
-    }
-
-    render() {
-        return (
-            <React.Fragment>
-                {this.renderBackgroundRect()}
-                {this.renderItems()}
-            </React.Fragment>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-class GridWidgetObjectComponent extends BaseWidgetObjectComponent {
-    get gridWidget() {
-        return this.widget as GridWidget;
-    }
-
-    get itemWidget() {
-        return this.gridWidget.itemWidget;
-    }
-
-    get count() {
-        if (this.itemWidget && this.gridWidget.data) {
-            return PageContext.data.count(this.gridWidget.data);
-        } else {
-            return 0;
-        }
-    }
-
-    renderItems() {
-        this.children = [];
-
-        if (!this.itemWidget) {
-            return null;
-        }
-
-        const itemWidget = this.itemWidget;
-        const ItemWidgetComponent = getObjectComponentClass(this.itemWidget);
-
-        return _range(this.count)
-            .map(i => {
-                const rows = Math.floor(this.rect.width / itemWidget.width);
-                const cols = Math.floor(this.rect.height / itemWidget.height);
-
-                const row = i % rows;
-                const col = Math.floor(i / rows);
-
-                if (col >= cols) {
-                    return undefined;
-                }
-
-                let xListItem = this.rect.left + row * itemWidget.width;
-                let yListItem = this.rect.top + col * itemWidget.height;
-
-                return (
-                    <div
-                        key={i}
-                        style={{
-                            transform: `translate(${xListItem}px, ${yListItem}px)`,
-                            transformOrigin: "0 0"
-                        }}
-                    >
-                        {
-                            <ItemWidgetComponent
-                                ref={ref => {
-                                    if (i === 0 && ref) {
-                                        this.children.push(ref);
-                                    }
-                                }}
-                                object={itemWidget}
-                            />
-                        }
-                    </div>
-                );
-            })
-            .filter(item => !!item);
-    }
-
-    render() {
-        return (
-            <React.Fragment>
-                {this.renderBackgroundRect()}
-                {this.renderItems()}
-            </React.Fragment>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-class SelectWidgetObjectComponent extends BaseWidgetObjectComponent {
-    get selectWidget() {
-        return this.widget as SelectWidget;
-    }
-
-    get count() {
-        return this.selectWidget.widgets._array.length;
-    }
-
-    get index() {
-        if (this.selectWidget.data) {
-            let index: number = PageContext.data.getEnumValue(this.selectWidget.data);
-            if (index >= 0 && index < this.count) {
-                return index;
-            }
-        }
-        return -1;
-    }
-
-    render() {
-        const index = this.index;
-        if (index === -1) {
-            return null;
-        }
-
-        let canvas = document.createElement("canvas");
-
-        canvas.width = this.rect.width;
-        canvas.height = this.rect.height;
-
-        let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-
-        let tree = createWidgetTree(this.selectWidget.widgets._array[index], true);
-        drawTree(ctx, tree, 1, () => {});
-
-        return (
-            <img
-                style={{
-                    position: "absolute",
-                    left: this.rect.left,
-                    top: this.rect.top,
-                    width: this.rect.width,
-                    height: this.rect.height,
-                    imageRendering: "pixelated"
-                }}
-                src={canvas.toDataURL()}
-            />
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 const SELECT_WIDGET_LINES_COLOR = "rgba(255, 128, 128, 0.9)";
 
-@inject("designerContext")
-@observer
-class SelectWidgetEditorObjectComponent extends BaseObjectComponent {
-    get selectWidgetEditor() {
-        return this.props.object as SelectWidgetEditor;
-    }
-
-    get selectWidget() {
-        return this.props.object._parent! as SelectWidget;
-    }
-
-    get rect() {
-        return this.selectWidgetEditor.rect;
-    }
-
-    set rect(value: Rect) {
-        DocumentStore.updateObject(this.selectWidgetEditor, {
-            x: value.left + Math.round(this.rect.width / 2),
-            y: value.top + Math.round(this.rect.height / 2)
-        });
-    }
-
-    @computed
-    get boundingRect(): Rect {
-        return this.rect;
-    }
-
-    @computed
-    get selectionRects() {
-        return [this.rect];
-    }
-
-    getChildOffsetX(child: EezObject) {
-        return SelectWidgetEditor.EDITOR_PADDING;
-    }
-
-    @action
-    renderSelectChildren() {
-        this.children = new Array(this.selectWidget.widgets._array.length);
-
-        return this.selectWidget.widgets._array.map((child, i) => {
-            let x = this.rect.left + SelectWidgetEditor.EDITOR_PADDING;
-            let y =
-                this.rect.top +
-                SelectWidgetEditor.EDITOR_PADDING +
-                i * (this.selectWidget.height + SelectWidgetEditor.EDITOR_PADDING);
-
-            let xLabel =
-                this.selectWidgetEditor.relativePosition === "left"
-                    ? this.boundingRect.left +
-                      this.boundingRect.width +
-                      SelectWidgetEditor.EDITOR_PADDING
-                    : this.boundingRect.left - SelectWidgetEditor.EDITOR_PADDING;
-            let yLabel = y + this.selectWidget.height / 2;
-            let textAnchor = this.selectWidgetEditor.relativePosition === "left" ? "begin" : "end";
-
-            let label = this.selectWidget.getChildLabel(child);
-
-            const ChildObjectComponent = getObjectComponentClass(child);
-
-            const transform = this.props.designerContext!.viewState.transform;
-            const modelRect = transform.clientToModelRect(transform.clientRect);
-
-            return (
-                <React.Fragment key={child._id}>
-                    <svg
-                        width={modelRect.width}
-                        height={modelRect.height}
-                        style={{
-                            position: "absolute",
-                            left: modelRect.left,
-                            top: modelRect.top
-                        }}
-                        viewBox={`${modelRect.left}, ${modelRect.top}, ${modelRect.width}, ${
-                            modelRect.height
-                        }`}
-                    >
-                        <text
-                            x={xLabel}
-                            y={yLabel}
-                            textAnchor={textAnchor}
-                            alignmentBaseline="middle"
-                        >
-                            {label}
-                        </text>
-                        <g transform={`translate(${x} ${y})`}>
-                            <rect
-                                x={1}
-                                y={1}
-                                width={this.selectWidget.width - 2}
-                                height={this.selectWidget.height - 2}
-                                fill="transparent"
-                                stroke={SELECT_WIDGET_LINES_COLOR}
-                                strokeDasharray="4 2"
-                                strokeWidth="1"
-                            />
-                        </g>
-                    </svg>
-                    <div
-                        style={{
-                            transform: `translate(${x}px, ${y}px)`,
-                            transformOrigin: "0 0"
-                        }}
-                    >
-                        <ChildObjectComponent
-                            ref={ref => {
-                                if (ref) {
-                                    runInAction(() => (this.children[i] = ref));
-                                }
-                            }}
-                            object={child}
-                        />
-                    </div>
-                </React.Fragment>
-            );
-        });
-    }
-
-    render() {
-        let x1: number;
-        let y1: number;
-        let x2: number;
-        let y2: number;
-
-        if (this.selectWidgetEditor.relativePosition === "left") {
-            x1 = this.selectWidget.boundingRect.left;
-            y1 = this.selectWidget.boundingRect.top + this.selectWidget.boundingRect.height / 2;
-
-            x2 = this.boundingRect.left + this.boundingRect.width;
-            y2 = this.boundingRect.top + this.boundingRect.height / 2;
-        } else if (this.selectWidgetEditor.relativePosition === "right") {
-            x1 = this.selectWidget.boundingRect.left + this.selectWidget.boundingRect.width;
-            y1 = this.selectWidget.boundingRect.top + this.selectWidget.boundingRect.height / 2;
-
-            x2 = this.boundingRect.left;
-            y2 = this.boundingRect.top + this.boundingRect.height / 2;
-        } else if (this.selectWidgetEditor.relativePosition === "top") {
-            x1 = this.selectWidget.boundingRect.left + this.selectWidget.boundingRect.width / 2;
-            y1 = this.selectWidget.boundingRect.top;
-
-            x2 = this.boundingRect.left + this.boundingRect.width / 2;
-            y2 = this.boundingRect.top + this.boundingRect.height;
-        } else {
-            x1 = this.selectWidget.boundingRect.left + this.selectWidget.boundingRect.width / 2;
-            y1 = this.selectWidget.boundingRect.top + this.selectWidget.boundingRect.height;
-
-            x2 = this.boundingRect.left + this.boundingRect.width / 2;
-            y2 = this.boundingRect.top;
-        }
-
-        let c1x;
-        let c1y;
-        let c2x;
-        let c2y;
-
-        const K = 0.8;
-
-        if (
-            this.selectWidgetEditor.relativePosition === "left" ||
-            this.selectWidgetEditor.relativePosition === "right"
-        ) {
-            c1x = x1 + (x2 - x1) * K;
-            c1y = y1;
-            c2x = x2 - (x2 - x1) * K;
-            c2y = y2;
-        } else {
-            c1x = x1;
-            c1y = y1 + (y2 - y1) * K;
-            c2x = x2;
-            c2y = y2 - (y2 - y1) * K;
-        }
-
-        const label = this.selectWidget.data;
-
-        const transform = this.props.designerContext!.viewState.transform;
-        const modelRect = transform.clientToModelRect(transform.clientRect);
-
-        return (
-            <React.Fragment>
-                <svg
-                    width={modelRect.width}
-                    height={modelRect.height}
-                    style={{
-                        position: "absolute",
-                        left: modelRect.left,
-                        top: modelRect.top
-                    }}
-                    viewBox={`${modelRect.left}, ${modelRect.top}, ${modelRect.width}, ${
-                        modelRect.height
-                    }`}
-                >
-                    <rect
-                        x={this.selectWidget.boundingRect.left + 0.5}
-                        y={this.selectWidget.boundingRect.top + 0.5}
-                        width={this.selectWidget.boundingRect.width}
-                        height={this.selectWidget.boundingRect.height}
-                        fill="transparent"
-                        stroke={SELECT_WIDGET_LINES_COLOR}
-                    />
-
-                    <circle cx={x1} cy={y1} r={2} fill={SELECT_WIDGET_LINES_COLOR} />
-
-                    <path
-                        d={`M${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`}
-                        stroke={SELECT_WIDGET_LINES_COLOR}
-                        fill="transparent"
-                    />
-
-                    <circle cx={x2} cy={y2} r={3} fill={SELECT_WIDGET_LINES_COLOR} />
-
-                    {label && (
-                        <SvgLabel
-                            text={label}
-                            x={Math.round((x1 + x2) / 2) + 0.5}
-                            y={Math.round((y1 + y2) / 2) + 0.5}
-                            horizontalAlignement="center"
-                            verticalAlignment="center"
-                            backgroundColor="white"
-                            textColor="#333"
-                            border={{
-                                color: SELECT_WIDGET_LINES_COLOR
-                            }}
-                        />
-                    )}
-
-                    <rect
-                        x={this.boundingRect.left + 0.5}
-                        y={this.boundingRect.top + 0.5}
-                        width={this.boundingRect.width}
-                        height={this.boundingRect.height}
-                        fill="transparent"
-                        stroke={SELECT_WIDGET_LINES_COLOR}
-                    />
-                </svg>
-                {this.renderSelectChildren()}
-            </React.Fragment>
-        );
-    }
-}
+type Position = "left" | "right" | "top" | "bottom";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -811,62 +77,962 @@ function findSelectWidgetEditors(rootObject: Widget | Page) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class RootObjectComponent extends BaseObjectComponent {
-    get isSelectable() {
-        return false;
-    }
+class EditorObject implements IBaseObject {
+    parent: EditorObject;
 
-    get isResizable() {
-        return false;
-    }
+    constructor(
+        public object: EezObject,
+        private pageEditorContext: PageEditorContext,
+        private transformer: ITransformer<EezObject, EditorObject>
+    ) {}
 
-    get rootObject() {
-        return this.props.object as Page;
-    }
-
-    get childrenObjects() {
-        let childrenObjects = this.rootObject.widgets._array as EezObject[];
-        if (this.props.dragWidget) {
-            childrenObjects = [...childrenObjects, this.props.dragWidget];
-        }
-        return childrenObjects.concat(findSelectWidgetEditors(this.rootObject));
+    get id() {
+        return this.object._id;
     }
 
     @computed
     get rect() {
-        return {
-            left: this.rootObject.x,
-            top: this.rootObject.y,
-            width: this.rootObject.width,
-            height: this.rootObject.height
-        };
+        if (this.object instanceof Widget || this.object instanceof Page) {
+            return {
+                left: this.object.x,
+                top: this.object.y,
+                width: this.object.width,
+                height: this.object.height
+            };
+        } else if (this.object instanceof SelectWidgetEditor) {
+            return this.object.rect;
+        } else {
+            console.error("Unknown object type");
+            return {
+                left: 0,
+                top: 0,
+                width: 0,
+                height: 0
+            };
+        }
     }
 
     set rect(value: Rect) {
-        this.rootObject.x = value.left;
-        this.rootObject.y = value.top;
-        this.rootObject.width = value.width;
-        this.rootObject.height = value.height;
+        if (this.object instanceof Widget) {
+            this.object.applyGeometryChange(
+                {
+                    x: value.left,
+                    y: value.top,
+                    width: value.width,
+                    height: value.height
+                },
+                []
+            );
+        } else if (this.object instanceof Page) {
+            DocumentStore.updateObject(this.object, {
+                x: value.left,
+                y: value.top,
+                width: value.width,
+                height: value.height
+            });
+        } else if (this.object instanceof SelectWidgetEditor) {
+            DocumentStore.updateObject(this.object, {
+                x: value.left + Math.round(this.rect.width / 2),
+                y: value.top + Math.round(this.rect.height / 2)
+            });
+        } else {
+            console.error("Unknown object type");
+        }
     }
 
     @computed
-    get boundingRect(): Rect {
-        return this.rect;
+    get children(): EditorObject[] {
+        let childrenObjects: EezObject[] | undefined;
+
+        if (this.object instanceof ContainerWidget) {
+            childrenObjects = (this.object as ContainerWidget).widgets._array;
+        } else if (this.object instanceof ListWidget || this.object instanceof GridWidget) {
+            if (this.object.itemWidget) {
+                childrenObjects = [this.object.itemWidget];
+            }
+        } else if (this.object instanceof SelectWidget) {
+            childrenObjects = this.object.widgets._array;
+        } else if (this.object instanceof SelectWidgetEditor) {
+            childrenObjects = (this.object.parent! as SelectWidget).widgets._array;
+        } else if (this.object instanceof Page) {
+            childrenObjects = this.object.widgets._array;
+
+            if (this.pageEditorContext.dragWidget) {
+                childrenObjects = [...childrenObjects, this.pageEditorContext.dragWidget];
+            }
+
+            if (this.pageEditorContext.options.showStructure) {
+                childrenObjects = childrenObjects.concat(findSelectWidgetEditors(this.object));
+            }
+        }
+
+        return childrenObjects
+            ? childrenObjects.map(object => {
+                  const child = this.transformer(object);
+                  child.parent = this;
+                  return child;
+              })
+            : [];
+    }
+
+    @computed
+    get boundingRect() {
+        if (this.object instanceof Widget) {
+            const rect = {
+                left: this.object.x,
+                top: this.object.y,
+                width: this.object.width,
+                height: this.object.height
+            };
+
+            let object: Widget = this.object;
+
+            while (true) {
+                let parent = object.parent;
+
+                if (this.pageEditorContext.options.showStructure) {
+                    if (parent instanceof SelectWidget) {
+                        let i = parent.widgets._array.indexOf(object);
+
+                        rect.left += parent.editor.rect.left + SelectWidgetEditor.EDITOR_PADDING;
+                        rect.top +=
+                            parent.editor.rect.top +
+                            SelectWidgetEditor.EDITOR_PADDING +
+                            i * (parent.height + SelectWidgetEditor.EDITOR_PADDING);
+
+                        break;
+                    }
+                }
+
+                rect.left += parent.x;
+                rect.top += parent.y;
+
+                if (!(parent instanceof Widget)) {
+                    break;
+                }
+
+                object = parent;
+            }
+
+            return rect;
+        } else if (this.object instanceof Page) {
+            return this.rect;
+        } else if (this.object instanceof SelectWidgetEditor) {
+            return this.object.rect;
+        } else {
+            console.error("Unknown object type");
+            return {
+                left: 0,
+                top: 0,
+                width: 0,
+                height: 0
+            };
+        }
     }
 
     @computed
     get selectionRects() {
-        return [this.rect];
+        if (this.object instanceof Widget) {
+            let rects = [this.boundingRect];
+
+            let listWidget = this.object._parent;
+            while (
+                !(listWidget instanceof ListWidget || listWidget instanceof GridWidget) &&
+                listWidget instanceof Widget
+            ) {
+                listWidget = listWidget._parent;
+            }
+
+            if (!(listWidget instanceof ListWidget || listWidget instanceof GridWidget)) {
+                return rects;
+            }
+
+            const itemWidget = listWidget.itemWidget;
+            if (itemWidget) {
+                let count = listWidget.data ? PageContext.data.count(listWidget.data) : 0;
+
+                if (listWidget instanceof ListWidget) {
+                    for (let i = 1; i < count; i++) {
+                        if (listWidget.listType === "horizontal") {
+                            rects.push({
+                                left: this.boundingRect.left + i * itemWidget.width,
+                                top: this.boundingRect.top,
+                                width: this.boundingRect.width,
+                                height: this.boundingRect.height
+                            });
+                        } else {
+                            rects.push({
+                                left: this.boundingRect.left,
+                                top: this.boundingRect.top + i * itemWidget.height,
+                                width: this.boundingRect.width,
+                                height: this.boundingRect.height
+                            });
+                        }
+                    }
+                } else {
+                    const rows = Math.floor(listWidget.width / itemWidget.width);
+                    const cols = Math.floor(listWidget.height / itemWidget.height);
+                    for (let i = 1; i < count; i++) {
+                        const row = i % rows;
+                        const col = Math.floor(i / rows);
+
+                        if (col >= cols) {
+                            break;
+                        }
+
+                        rects.push({
+                            left: this.boundingRect.left + row * itemWidget.width,
+                            top: this.boundingRect.top + col * itemWidget.height,
+                            width: this.boundingRect.width,
+                            height: this.boundingRect.height
+                        });
+                    }
+                }
+            }
+
+            return rects;
+        } else if (this.object instanceof Page) {
+            return [this.rect];
+        } else if (this.object instanceof SelectWidgetEditor) {
+            return [this.rect];
+        } else {
+            console.error("Unknown object type");
+            return [];
+        }
+    }
+
+    get isSelectable() {
+        if (this.object instanceof Page) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    get isResizable() {
+        if (this.object instanceof Page) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    open() {}
+
+    findObjectById(id: string): EditorObject | undefined {
+        if (this.id === id) {
+            return this;
+        }
+
+        for (const child of this.children) {
+            const object = child && child.findObjectById(id);
+            if (object) {
+                return object;
+            }
+        }
+
+        return undefined;
+    }
+
+    objectFromPoint(point: Point): EditorObject | undefined {
+        let foundObject: EditorObject | undefined = undefined;
+
+        if (this.children.length > 0) {
+            if (
+                !this.pageEditorContext.options.showStructure &&
+                this.object instanceof SelectWidget
+            ) {
+                const child = this.children[this.selectedIndexInSelectWidget];
+                let result = child.objectFromPoint(point);
+                if (result) {
+                    foundObject = result;
+                }
+            } else {
+                for (const child of this.children) {
+                    let result = child.objectFromPoint(point);
+                    if (result) {
+                        foundObject = result;
+                    }
+                }
+            }
+        }
+
+        if (foundObject) {
+            return foundObject;
+        }
+
+        for (let i = 0; i < this.selectionRects.length; i++) {
+            if (pointInRect(point, this.selectionRects[i])) {
+                return this;
+            }
+        }
+
+        return undefined;
+    }
+
+    @computed
+    get selectedIndexInSelectWidget() {
+        const selectWidget = this.object as SelectWidget;
+
+        const selectedObjects = this.pageEditorContext.viewState.selectedObjects;
+        for (let i = 0; i < selectWidget.widgets._array.length; ++i) {
+            if (
+                selectedObjects.find((selectedObject: EditorObject) =>
+                    isAncestor(selectedObject.object, selectWidget.widgets._array[i])
+                )
+            ) {
+                return i;
+            }
+        }
+
+        if (selectWidget.data) {
+            let index: number = PageContext.data.getEnumValue(selectWidget.data);
+            if (index >= 0 && index < selectWidget.widgets._array.length) {
+                return index;
+            }
+        }
+
+        if (selectWidget.widgets._array.length > 0) {
+            return 0;
+        }
+
+        return -1;
+    }
+
+    // Return first ancestor which object type is:
+    //   - Page
+    //   - Widget, if that ancestor parent is SelectWidget
+    get anchorParent() {
+        let anchor: EditorObject = this;
+
+        while (true) {
+            let parent = anchor.parent;
+
+            if (!parent) {
+                return anchor;
+            }
+
+            if (!(parent.object instanceof Widget)) {
+                return parent;
+            }
+
+            if (parent.object instanceof SelectWidget) {
+                return anchor;
+            }
+
+            anchor = parent;
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function createObjectToEditorObjectTransformer(designerContext: PageEditorContext) {
+    const transformer = createTransformer(
+        (object: EezObject): EditorObject => {
+            return new EditorObject(object, designerContext, transformer);
+        }
+    );
+    return transformer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@inject("designerContext")
+@observer
+class ObjectComponent extends React.Component<{
+    designerContext?: IDesignerContext;
+    object: EditorObject;
+}> {
+    renderChildren(children: EditorObject[]) {
+        return (
+            <div
+                style={{
+                    transform: `translate(${this.props.object.rect.left}px, ${
+                        this.props.object.rect.top
+                    }px)`,
+                    transformOrigin: "0 0"
+                }}
+            >
+                {children.map((child, i) => {
+                    return <ObjectComponent key={child.id} object={child} />;
+                })}
+            </div>
+        );
+    }
+
+    renderBackgroundRect() {
+        const rect = this.props.object.rect;
+        const widget = this.props.object.object as Widget;
+        const style = PageContext.findStyleOrGetDefault(widget.style);
+
+        return (
+            <div
+                style={{
+                    position: "absolute",
+                    left: rect.left,
+                    top: rect.top,
+                    width: rect.width,
+                    height: rect.height,
+                    backgroundColor: style.backgroundColor
+                }}
+            />
+        );
+    }
+
+    get listWidget() {
+        return this.props.object.object as ListWidget;
+    }
+
+    get listItemWidget() {
+        return this.listWidget.itemWidget;
+    }
+
+    get listItemsCount() {
+        if (this.listItemWidget && this.listWidget.data) {
+            return PageContext.data.count(this.listWidget.data);
+        } else {
+            return 0;
+        }
+    }
+
+    @action
+    renderListItems() {
+        const itemWidgetEditorObject = this.props.object.children[0];
+        if (!itemWidgetEditorObject) {
+            return null;
+        }
+
+        const itemRect = itemWidgetEditorObject.rect;
+
+        return _range(this.listItemsCount).map(i => {
+            let xListItem = this.props.object.rect.left;
+            let yListItem = this.props.object.rect.top;
+
+            if (this.listWidget.listType === "horizontal") {
+                xListItem += i * itemRect.width;
+            } else {
+                yListItem += i * itemRect.height;
+            }
+
+            return (
+                <div
+                    key={i}
+                    style={{
+                        transform: `translate(${xListItem}px, ${yListItem}px)`,
+                        transformOrigin: "0 0"
+                    }}
+                >
+                    {<ObjectComponent object={itemWidgetEditorObject} />}
+                </div>
+            );
+        });
+    }
+
+    get gridWidget() {
+        return this.props.object.object as GridWidget;
+    }
+
+    get gridItemWidget() {
+        return this.gridWidget.itemWidget;
+    }
+
+    get gridItemsCount() {
+        if (this.gridItemWidget && this.gridWidget.data) {
+            return PageContext.data.count(this.gridWidget.data);
+        } else {
+            return 0;
+        }
+    }
+
+    @action
+    renderGridItems() {
+        const itemWidgetEditorObject = this.props.object.children[0];
+        if (!itemWidgetEditorObject) {
+            return null;
+        }
+
+        const gridRect = this.props.object.rect;
+        const itemRect = itemWidgetEditorObject.rect;
+
+        return _range(this.gridItemsCount)
+            .map(i => {
+                const rows = Math.floor(gridRect.width / itemRect.width);
+                const cols = Math.floor(gridRect.height / itemRect.height);
+
+                const row = i % rows;
+                const col = Math.floor(i / rows);
+
+                if (col >= cols) {
+                    return undefined;
+                }
+
+                let xListItem = gridRect.left + row * itemRect.width;
+                let yListItem = gridRect.top + col * itemRect.height;
+
+                return (
+                    <div
+                        key={i}
+                        style={{
+                            transform: `translate(${xListItem}px, ${yListItem}px)`,
+                            transformOrigin: "0 0"
+                        }}
+                    >
+                        {<ObjectComponent object={itemWidgetEditorObject} />}
+                    </div>
+                );
+            })
+            .filter(item => !!item);
+    }
+
+    getChildOffsetX(child: EezObject) {
+        return SelectWidgetEditor.EDITOR_PADDING;
+    }
+
+    // Returns array of edges (as Position[]) that Select Widget touches.
+    // It can return 0, 1, 2, 3 or 4 positions.
+    //
+    // For example, in this case it will return ["left", "top"].
+    //
+    //                top
+    //                 ^
+    //                 |
+    //             +-------------------------+
+    //    left <---+      |                  |
+    //             |      |                  |
+    //             +------+                  |
+    //             |  |                      |
+    //             |  |                      |
+    //             |  +-->  Select widget    |
+    //             |                         |
+    //             |                         |
+    //             +-------------------------+
+    //                          |
+    //                          |
+    //                          +-->  Anchor
+    @computed
+    get selectWidgetPosition(): Position[] {
+        const result: Position[] = [];
+
+        const selectWidget = this.props.object.parent;
+
+        const anchorBoundingRect = selectWidget.anchorParent.boundingRect;
+        const selectWidgetBoundingRect = selectWidget.boundingRect;
+
+        if (anchorBoundingRect.left === selectWidgetBoundingRect.left) {
+            result.push("left");
+        }
+
+        if (anchorBoundingRect.top === selectWidgetBoundingRect.top) {
+            result.push("top");
+        }
+
+        if (
+            anchorBoundingRect.left + anchorBoundingRect.width ===
+            selectWidgetBoundingRect.left + selectWidgetBoundingRect.width
+        ) {
+            result.push("right");
+        }
+
+        if (
+            anchorBoundingRect.top + anchorBoundingRect.height ===
+            selectWidgetBoundingRect.top + selectWidgetBoundingRect.height
+        ) {
+            result.push("bottom");
+        }
+
+        return result;
+    }
+
+    // Returns position of Select Widget Editor relative to Select Widget.
+    //
+    // For example, in this case it will return "right" since Select Widget Editor is on the right side of Select Widget.
+    //
+    //                                       Select Widget Editor
+    //
+    //                                       +-----------------+
+    //                                       |                 |
+    //                                       | +-------------+ |
+    //                                       | |             | |
+    // +---------------+---------+           | |             | |
+    // |               |         |           | +-------------+ |
+    // |               +---------------+     |                 |
+    // +---------------+         |     |     | +-------------+ |
+    // |                         |     |     | |             | |
+    // |  Select Widget          |     +-----> |             | |
+    // |                         |           | +-------------+ |
+    // |                         |           |                 |
+    // |                         |           | +-------------+ |
+    // +-------------------------+           | |             | |
+    //                                       | |             | |
+    //          Anchor                       | +-------------+ |
+    //                                       |                 |
+    //                                       +-----------------+
+    @computed
+    get relativePosition(): Position {
+        const positions: Position[] = [];
+
+        const selectWidgetEditor = this.props.object.object as SelectWidgetEditor;
+        const selectWidget = this.props.object.parent;
+
+        if (selectWidgetEditor.x < selectWidget.boundingRect.left) {
+            positions.push("left");
+        }
+        if (selectWidgetEditor.y < selectWidget.boundingRect.top) {
+            positions.push("top");
+        }
+        if (
+            selectWidgetEditor.x >
+            selectWidget.boundingRect.left + selectWidget.boundingRect.width
+        ) {
+            positions.push("right");
+        }
+        if (
+            selectWidgetEditor.y >
+            selectWidget.boundingRect.top + selectWidget.boundingRect.height
+        ) {
+            positions.push("bottom");
+        }
+
+        const selectWidgetPosition = this.selectWidgetPosition;
+
+        if (selectWidgetPosition.length === 1) {
+            if (positions.indexOf(selectWidgetPosition[0]) !== -1) {
+                return selectWidgetPosition[0];
+            }
+        } else if (selectWidgetPosition.length === 2) {
+            if (
+                positions.indexOf(selectWidgetPosition[0]) !== -1 &&
+                positions.indexOf(selectWidgetPosition[1]) === -1
+            ) {
+                return selectWidgetPosition[0];
+            }
+            if (
+                positions.indexOf(selectWidgetPosition[0]) === -1 &&
+                positions.indexOf(selectWidgetPosition[1]) !== -1
+            ) {
+                return selectWidgetPosition[1];
+            }
+        }
+
+        const dx =
+            selectWidgetEditor.x -
+            (selectWidget.boundingRect.left + selectWidget.boundingRect.width / 2);
+        const dy =
+            selectWidgetEditor.y -
+            (selectWidget.boundingRect.top + selectWidget.boundingRect.height / 2);
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+        if (angle > -135 && angle <= -45) {
+            return "top";
+        }
+
+        if (angle > -45 && angle <= 45) {
+            return "right";
+        }
+
+        if (angle > 45 && angle <= 135) {
+            return "bottom";
+        }
+
+        return "left";
+    }
+
+    @action
+    renderSelectChildren() {
+        const selectWidget = this.props.object.object._parent! as SelectWidget;
+
+        return this.props.object.children.map((child, i) => {
+            let x = this.props.object.rect.left + SelectWidgetEditor.EDITOR_PADDING;
+            let y =
+                this.props.object.rect.top +
+                SelectWidgetEditor.EDITOR_PADDING +
+                i * (selectWidget.height + SelectWidgetEditor.EDITOR_PADDING);
+
+            let xLabel =
+                this.relativePosition === "left"
+                    ? this.props.object.boundingRect.left +
+                      this.props.object.boundingRect.width +
+                      SelectWidgetEditor.EDITOR_PADDING
+                    : this.props.object.boundingRect.left - SelectWidgetEditor.EDITOR_PADDING;
+            let yLabel = y + selectWidget.height / 2;
+            let textAnchor = this.relativePosition === "left" ? "begin" : "end";
+
+            let label = selectWidget.getChildLabel(child.object as Widget);
+
+            const transform = this.props.designerContext!.viewState.transform;
+            const modelRect = transform.clientToModelRect(transform.clientRect);
+
+            return (
+                <React.Fragment key={child.id}>
+                    <svg
+                        width={modelRect.width}
+                        height={modelRect.height}
+                        style={{
+                            position: "absolute",
+                            left: modelRect.left,
+                            top: modelRect.top
+                        }}
+                        viewBox={`${modelRect.left}, ${modelRect.top}, ${modelRect.width}, ${
+                            modelRect.height
+                        }`}
+                    >
+                        <text
+                            x={xLabel}
+                            y={yLabel}
+                            textAnchor={textAnchor}
+                            alignmentBaseline="middle"
+                        >
+                            {label}
+                        </text>
+                        <g transform={`translate(${x} ${y})`}>
+                            <rect
+                                x={1}
+                                y={1}
+                                width={selectWidget.width - 2}
+                                height={selectWidget.height - 2}
+                                fill="transparent"
+                                stroke={SELECT_WIDGET_LINES_COLOR}
+                                strokeDasharray="4 2"
+                                strokeWidth="1"
+                            />
+                        </g>
+                    </svg>
+                    <div
+                        style={{
+                            transform: `translate(${x}px, ${y}px)`,
+                            transformOrigin: "0 0"
+                        }}
+                    >
+                        <ObjectComponent object={this.props.object.children[i]} />
+                    </div>
+                </React.Fragment>
+            );
+        });
     }
 
     render() {
-        return (
-            <React.Fragment>
-                {this.rootObject.render()}
-                {this.renderChildren(this.childrenObjects)}
-            </React.Fragment>
-        );
+        if (this.props.object.object instanceof ContainerWidget) {
+            return this.renderChildren(this.props.object.children);
+        } else if (this.props.object.object instanceof ListWidget) {
+            return (
+                <React.Fragment>
+                    {this.renderBackgroundRect()}
+                    {this.renderListItems()}
+                </React.Fragment>
+            );
+        } else if (this.props.object.object instanceof GridWidget) {
+            return (
+                <React.Fragment>
+                    {this.renderBackgroundRect()}
+                    {this.renderGridItems()}
+                </React.Fragment>
+            );
+        } else if (this.props.object.object instanceof SelectWidget) {
+            const selectedChild = this.props.object.children[
+                this.props.object.selectedIndexInSelectWidget
+            ];
+
+            if (this.props.designerContext!.options.showStructure) {
+                let canvas = document.createElement("canvas");
+
+                const rect = this.props.object.rect;
+
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+
+                let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+
+                let tree = createWidgetTree(selectedChild.object, true);
+                drawTree(ctx, tree, 1, () => {});
+
+                return (
+                    <img
+                        style={{
+                            position: "absolute",
+                            left: rect.left,
+                            top: rect.top,
+                            width: rect.width,
+                            height: rect.height,
+                            imageRendering: "pixelated"
+                        }}
+                        src={canvas.toDataURL()}
+                    />
+                );
+            } else if (selectedChild) {
+                return this.renderChildren([selectedChild]);
+            } else {
+                return null;
+            }
+        } else if (this.props.object.object instanceof Widget) {
+            const rect = this.props.object.rect;
+
+            const canvas = this.props.object.object.draw(rect);
+            if (canvas) {
+                return (
+                    <img
+                        style={{
+                            position: "absolute",
+                            left: rect.left,
+                            top: rect.top,
+                            width: rect.width,
+                            height: rect.height,
+                            imageRendering: "pixelated"
+                        }}
+                        src={canvas.toDataURL()}
+                    />
+                );
+            }
+
+            const node = this.props.object.object.render();
+            if (node) {
+                return (
+                    <div
+                        style={{
+                            position: "absolute",
+                            left: rect.left,
+                            top: rect.top,
+                            width: rect.width,
+                            height: rect.height
+                        }}
+                    >
+                        {node}
+                    </div>
+                );
+            }
+
+            return this.renderBackgroundRect();
+        } else if (this.props.object.object instanceof Page) {
+            return (
+                <React.Fragment>
+                    {this.props.object.object.render()}
+                    {this.renderChildren(this.props.object.children)}
+                </React.Fragment>
+            );
+        } else if (this.props.object.object instanceof SelectWidgetEditor) {
+            const selectWidget = this.props.object.parent;
+
+            const boundingRect = this.props.object.boundingRect;
+
+            let x1: number;
+            let y1: number;
+            let x2: number;
+            let y2: number;
+
+            if (this.relativePosition === "left") {
+                x1 = selectWidget.boundingRect.left;
+                y1 = selectWidget.boundingRect.top + selectWidget.boundingRect.height / 2;
+
+                x2 = boundingRect.left + boundingRect.width;
+                y2 = boundingRect.top + boundingRect.height / 2;
+            } else if (this.relativePosition === "right") {
+                x1 = selectWidget.boundingRect.left + selectWidget.boundingRect.width;
+                y1 = selectWidget.boundingRect.top + selectWidget.boundingRect.height / 2;
+
+                x2 = boundingRect.left;
+                y2 = boundingRect.top + boundingRect.height / 2;
+            } else if (this.relativePosition === "top") {
+                x1 = selectWidget.boundingRect.left + selectWidget.boundingRect.width / 2;
+                y1 = selectWidget.boundingRect.top;
+
+                x2 = boundingRect.left + boundingRect.width / 2;
+                y2 = boundingRect.top + boundingRect.height;
+            } else {
+                x1 = selectWidget.boundingRect.left + selectWidget.boundingRect.width / 2;
+                y1 = selectWidget.boundingRect.top + selectWidget.boundingRect.height;
+
+                x2 = boundingRect.left + boundingRect.width / 2;
+                y2 = boundingRect.top;
+            }
+
+            let c1x;
+            let c1y;
+            let c2x;
+            let c2y;
+
+            const K = 0.8;
+
+            if (this.relativePosition === "left" || this.relativePosition === "right") {
+                c1x = x1 + (x2 - x1) * K;
+                c1y = y1;
+                c2x = x2 - (x2 - x1) * K;
+                c2y = y2;
+            } else {
+                c1x = x1;
+                c1y = y1 + (y2 - y1) * K;
+                c2x = x2;
+                c2y = y2 - (y2 - y1) * K;
+            }
+
+            const label = (selectWidget.object as Widget).data;
+
+            const transform = this.props.designerContext!.viewState.transform;
+            const modelRect = transform.clientToModelRect(transform.clientRect);
+
+            return (
+                <React.Fragment>
+                    <svg
+                        width={modelRect.width}
+                        height={modelRect.height}
+                        style={{
+                            position: "absolute",
+                            left: modelRect.left,
+                            top: modelRect.top
+                        }}
+                        viewBox={`${modelRect.left}, ${modelRect.top}, ${modelRect.width}, ${
+                            modelRect.height
+                        }`}
+                    >
+                        <rect
+                            x={selectWidget.boundingRect.left + 0.5}
+                            y={selectWidget.boundingRect.top + 0.5}
+                            width={selectWidget.boundingRect.width}
+                            height={selectWidget.boundingRect.height}
+                            fill="transparent"
+                            stroke={SELECT_WIDGET_LINES_COLOR}
+                        />
+
+                        <circle cx={x1} cy={y1} r={2} fill={SELECT_WIDGET_LINES_COLOR} />
+
+                        <path
+                            d={`M${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`}
+                            stroke={SELECT_WIDGET_LINES_COLOR}
+                            fill="transparent"
+                        />
+
+                        <circle cx={x2} cy={y2} r={3} fill={SELECT_WIDGET_LINES_COLOR} />
+
+                        {label && (
+                            <SvgLabel
+                                text={label}
+                                x={Math.round((x1 + x2) / 2) + 0.5}
+                                y={Math.round((y1 + y2) / 2) + 0.5}
+                                horizontalAlignement="center"
+                                verticalAlignment="center"
+                                backgroundColor="white"
+                                textColor="#333"
+                                border={{
+                                    color: SELECT_WIDGET_LINES_COLOR
+                                }}
+                            />
+                        )}
+
+                        <rect
+                            x={boundingRect.left + 0.5}
+                            y={boundingRect.top + 0.5}
+                            width={boundingRect.width}
+                            height={boundingRect.height}
+                            fill="transparent"
+                            stroke={SELECT_WIDGET_LINES_COLOR}
+                        />
+                    </svg>
+                    {this.renderSelectChildren()}
+                </React.Fragment>
+            );
+        } else {
+            console.error("Unknown object type");
+            return null;
+        }
     }
 }
 
@@ -875,20 +1041,24 @@ class RootObjectComponent extends BaseObjectComponent {
 class DragSnapLines {
     @observable
     snapLines: SnapLines | undefined;
-    context: IDesignerContext | undefined;
+
+    pageEditorContext: PageEditorContext | undefined;
     dragWidget: Widget | undefined;
 
-    start(context: IDesignerContext, dragWidget: Widget) {
+    start(pageEditorContext: PageEditorContext) {
         this.snapLines = new SnapLines();
-        this.context = context;
-        this.dragWidget = dragWidget;
+        this.pageEditorContext = pageEditorContext;
+        this.dragWidget = pageEditorContext.dragWidget;
 
-        this.snapLines.find(context, (node: INode) => node.id !== dragWidget._id);
+        this.snapLines.find(
+            pageEditorContext,
+            (node: INode) => node.id !== pageEditorContext.dragWidget!._id
+        );
     }
 
     clear() {
         this.snapLines = undefined;
-        this.context = undefined;
+        this.pageEditorContext = undefined;
         this.dragWidget = undefined;
     }
 }
@@ -915,12 +1085,81 @@ class DragSnapLinesOverlay extends React.Component {
             dragSnapLines.snapLines && (
                 <div style={{ left: 0, top: 0, pointerEvents: "none" }}>
                     {dragSnapLines.snapLines.render(
-                        dragSnapLines.context!.viewState.transform,
+                        dragSnapLines.pageEditorContext!.viewState.transform,
                         this.dragWidgetRect
                     )}
                 </div>
             )
         );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class PageEditorContext extends DesignerContext {
+    @observable
+    dragWidget: Widget | undefined;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class PageDocument implements IDocument {
+    rootObject: EditorObject;
+
+    constructor(page: Page, pageEditorContext: PageEditorContext) {
+        const transformer = createObjectToEditorObjectTransformer(pageEditorContext);
+        this.rootObject = transformer(page);
+    }
+
+    get rootObjects() {
+        return [this.rootObject];
+    }
+
+    findObjectById(id: string) {
+        return this.rootObject.findObjectById(id);
+    }
+
+    createObject(params: any) {
+        // TODO ???
+    }
+
+    deleteObjects(objects: EditorObject[]) {
+        deleteItems(objects.map(editorObject => editorObject.object));
+    }
+
+    get boundingRect() {
+        return this.rootObject.boundingRect;
+    }
+
+    objectFromPoint(point: Point) {
+        return this.rootObject.objectFromPoint(point);
+    }
+
+    resetTransform(transform: ITransform) {
+        const page = this.rootObject.object as Page;
+        transform.translate = {
+            x: -page.width / 2,
+            y: -page.height / 2
+        };
+        transform.scale = 1;
+    }
+
+    getObjectsInsideRect(rect: Rect) {
+        return this.rootObject.children.filter(object =>
+            isRectInsideRect(object.boundingRect, rect)
+        );
+    }
+
+    createContextMenu(objects: IBaseObject[]) {
+        return UIElementsFactory.createMenu();
+    }
+
+    onDragStart(op: "move" | "resize"): void {
+        UndoManager.setCombineCommands(true);
+    }
+
+    onDragEnd(op: "move" | "resize", changed: boolean, objects: IBaseObject[]): void {
+        UndoManager.setCombineCommands(false);
     }
 }
 
@@ -955,83 +1194,36 @@ const PageEditorCanvas = styled(Canvas)`
     position: relative;
 `;
 
-interface PageEditorPrope {
+interface PageEditorProps {
     widgetContainer: WidgetContainerDisplayItem;
+    showStructure?: boolean;
 }
 
 @observer
-export class PageEditor extends React.Component<PageEditorPrope> implements IDocument {
-    rootObjectComponent: RootObjectComponent;
-    designerContextComponent: DesignerContext | null;
-
-    @observable
-    dragWidget: Widget | undefined;
-
-    get rootObjects() {
-        return [this.rootObjectComponent];
+export class PageEditor extends React.Component<
+    PageEditorProps,
+    {
+        hasError: boolean;
     }
+> {
+    pageEditorContext: PageEditorContext;
 
-    get page() {
-        return this.props.widgetContainer.object as Page;
-    }
+    constructor(props: PageEditorProps) {
+        super(props);
 
-    findObjectById(id: string) {
-        return this.rootObjectComponent && this.rootObjectComponent.findObjectById(id);
-    }
+        this.state = { hasError: false };
 
-    createObject(params: any) {
-        // TODO ???
-    }
-
-    getObjectsInsideRect(rect: Rect) {
-        return this.rootObjectComponent.children.filter(object =>
-            isRectInsideRect(object.boundingRect, rect)
-        );
-    }
-
-    resetTransform(transform: ITransform) {
-        transform.translate = {
-            x: -this.page.width / 2,
-            y: -this.page.height / 2
-        };
-        transform.scale = 1;
-    }
-
-    deleteObjects(objects: BaseObjectComponent[]) {
-        deleteItems(
-            objects.map(objectComponent => (objectComponent as BaseObjectComponent).props.object)
-        );
-    }
-
-    onDragStart(op: "move" | "resize"): void {
-        UndoManager.setCombineCommands(true);
-    }
-
-    onDragEnd(op: "move" | "resize", changed: boolean, objects: IBaseObject[]): void {
-        UndoManager.setCombineCommands(false);
-    }
-
-    createContextMenu(objects: IBaseObject[]) {
-        return UIElementsFactory.createMenu();
-    }
-
-    get boundingRect() {
-        return this.rootObjectComponent && this.rootObjectComponent.boundingRect;
-    }
-
-    objectFromPoint(point: Point) {
-        return this.rootObjectComponent.objectFromPoint(point);
+        this.pageEditorContext = new PageEditorContext();
     }
 
     @computed
     get selectedObject() {
         const selectedObject =
-            this.designerContextComponent &&
-            this.designerContextComponent.designerContext.viewState.selectedObjects.length === 1 &&
-            this.designerContextComponent.designerContext.viewState.selectedObjects[0];
+            this.pageEditorContext.viewState.selectedObjects.length === 1 &&
+            this.pageEditorContext.viewState.selectedObjects[0];
 
-        if (selectedObject && selectedObject instanceof BaseObjectComponent) {
-            return selectedObject.props.object;
+        if (selectedObject) {
+            return (selectedObject as EditorObject).object;
         }
 
         return undefined;
@@ -1057,7 +1249,6 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
                 },
                 scale: 1
             };
-            this.resetTransform(transform);
         }
 
         return {
@@ -1068,7 +1259,7 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
     @bind
     onSavePersistantState(viewState: IViewStatePersistantState) {
-        if (!this.dragWidget) {
+        if (!this.pageEditorContext.dragWidget) {
             UIStateStore.updateObjectUIState(this.props.widgetContainer.object, {
                 pageEditorCanvasViewState: {
                     transform: viewState.transform
@@ -1097,21 +1288,27 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
             event.preventDefault();
             event.stopPropagation();
 
+            const page = this.props.widgetContainer.object as Page;
+
             const widget = DragAndDropManager.dragObject as Widget;
 
-            const designerContext = this.designerContextComponent!.designerContext;
+            if (!this.pageEditorContext.dragWidget) {
+                this.pageEditorContext.dragWidget = widget;
+                this.pageEditorContext.dragWidget._parent = page.widgets;
 
-            if (!this.dragWidget) {
-                this.dragWidget = widget;
-                this.dragWidget._parent = this.page.widgets;
-                designerContext.viewState.deselectAllObjects();
+                // select only dragWidget
+                setTimeout(() => {
+                    this.pageEditorContext.viewState.selectObjects([
+                        this.pageEditorContext.document.findObjectById("WidgetPaletteItem")!
+                    ]);
+                });
 
-                dragSnapLines.start(designerContext, this.dragWidget);
+                dragSnapLines.start(this.pageEditorContext);
             }
 
             dragSnapLines.snapLines!.enabled = !event.shiftKey;
 
-            const transform = designerContext.viewState.transform;
+            const transform = this.pageEditorContext.viewState.transform;
 
             const p = transform.clientToModelPoint({
                 x: event.nativeEvent.clientX - (widget.width * transform.scale) / 2,
@@ -1125,23 +1322,28 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
                 widget.height
             );
 
-            widget.x = Math.round(left - this.page.x);
-            widget.y = Math.round(top - this.page.y);
+            widget.x = Math.round(left - page.x);
+            widget.y = Math.round(top - page.y);
         }
     }
 
     @action.bound
     onDrop(event: React.DragEvent) {
-        if (this.dragWidget) {
-            const object = DocumentStore.addObject(this.page.widgets, toJS(this.dragWidget));
+        if (this.pageEditorContext.dragWidget) {
+            const page = this.props.widgetContainer.object as Page;
 
-            this.dragWidget = undefined;
+            const object = DocumentStore.addObject(
+                page.widgets,
+                toJS(this.pageEditorContext.dragWidget)
+            );
+
+            this.pageEditorContext.dragWidget = undefined;
             dragSnapLines.clear();
 
             setTimeout(() => {
-                const objectAdapter = this.findObjectById(object._id);
+                const objectAdapter = this.pageEditorContext.document.findObjectById(object._id);
                 if (objectAdapter) {
-                    const viewState = this.designerContextComponent!.designerContext.viewState;
+                    const viewState = this.pageEditorContext.viewState;
                     viewState.selectObjects([objectAdapter]);
                 }
             }, 0);
@@ -1150,8 +1352,12 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
 
     @action.bound
     onDragLeave(event: React.DragEvent) {
-        if (this.dragWidget) {
-            this.dragWidget = undefined;
+        if (this.pageEditorContext.dragWidget) {
+            this.pageEditorContext.dragWidget = undefined;
+
+            // deselect dragWidget
+            this.pageEditorContext.viewState.deselectAllObjects();
+
             dragSnapLines.clear();
         }
     }
@@ -1164,20 +1370,39 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
         }
     }
 
+    static getDerivedStateFromError(error: any) {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error: any, info: any) {
+        console.error(error, info);
+    }
+
+    componentWillUnmount() {
+        this.pageEditorContext.destroy();
+    }
+
     render() {
+        if (this.state.hasError) {
+            // TODO better error presentatin
+            return <div>Error!</div>;
+        }
+
+        this.pageEditorContext.set(
+            new PageDocument(this.props.widgetContainer.object as Page, this.pageEditorContext),
+            this.viewStatePersistantState,
+            this.onSavePersistantState,
+            {
+                center: {
+                    x: 0,
+                    y: 0
+                },
+                showStructure: this.props.showStructure || false
+            }
+        );
+
         return (
-            <DesignerContext
-                document={this}
-                viewStatePersistantState={this.viewStatePersistantState}
-                onSavePersistantState={this.onSavePersistantState}
-                options={{
-                    center: {
-                        x: 0,
-                        y: 0
-                    }
-                }}
-                ref={ref => (this.designerContextComponent = ref)}
-            >
+            <Provider designerContext={this.pageEditorContext}>
                 <PageEditorCanvasContainer
                     tabIndex={0}
                     onFocus={this.focusHander}
@@ -1190,18 +1415,14 @@ export class PageEditor extends React.Component<PageEditorPrope> implements IDoc
                         toolHandler={selectToolHandler}
                         customOverlay={<DragSnapLinesOverlay />}
                     >
-                        <RootObjectComponent
-                            ref={ref => {
-                                if (ref) {
-                                    this.rootObjectComponent = ref;
-                                }
-                            }}
-                            object={this.props.widgetContainer.object}
-                            dragWidget={this.dragWidget}
-                        />
+                        {this.pageEditorContext.document.rootObjects.map(
+                            (rootObject: EditorObject) => (
+                                <ObjectComponent key={rootObject.id} object={rootObject} />
+                            )
+                        )}
                     </PageEditorCanvas>
                 </PageEditorCanvasContainer>
-            </DesignerContext>
+            </Provider>
         );
     }
 }

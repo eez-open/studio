@@ -1,6 +1,6 @@
 import React from "react";
 import { computed } from "mobx";
-import { observer, inject } from "mobx-react";
+import { observer, inject, Provider } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { VerticalHeaderWithBody, Header, Body } from "eez-studio-ui/header-with-body";
@@ -178,6 +178,20 @@ export class WorkbenchDocument extends React.Component {
 
 @observer
 export class Designer extends React.Component<{}, {}> {
+    designerContext: DesignerContext;
+
+    constructor(props: any) {
+        super(props);
+
+        this.designerContext = new DesignerContext();
+
+        this.designerContext.set(
+            workbenchDocument,
+            this.viewStatePersistantState,
+            this.onSavePersistantState
+        );
+    }
+
     @computed
     get viewStatePersistantState(): IViewStatePersistantState {
         let viewStateJSON = window.localStorage.getItem("home/designer/transform");
@@ -228,11 +242,7 @@ export class Designer extends React.Component<{}, {}> {
 
     render() {
         return (
-            <DesignerContext
-                document={workbenchDocument}
-                viewStatePersistantState={this.viewStatePersistantState}
-                onSavePersistantState={this.onSavePersistantState}
-            >
+            <Provider designerContext={this.designerContext}>
                 <VerticalHeaderWithBody>
                     <Header>
                         <DesignerToolbar buttons={workbenchDocument.toolbarButtons} />
@@ -249,7 +259,7 @@ export class Designer extends React.Component<{}, {}> {
                         </Splitter>
                     </Body>
                 </VerticalHeaderWithBody>
-            </DesignerContext>
+            </Provider>
         );
     }
 }

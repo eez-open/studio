@@ -13,10 +13,9 @@ import { Tree } from "eez-studio-shared/model/components/Tree";
 import { Panel } from "eez-studio-shared/model/components/Panel";
 
 import { WidgetPalette } from "eez-studio-page-editor/components/WidgetPalette";
-import { PageEditor as ExperimentalWidgetContainerEditor } from "eez-studio-page-editor/editor";
+import { PageEditor as StudioPageEditor } from "eez-studio-page-editor/editor";
 
 import { Page, PageTabState } from "project-editor/project/features/gui/page";
-import { WidgetContainerEditor } from "project-editor/project/features/gui/WidgetContainerEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,13 +26,13 @@ export class PageEditor extends EditorComponent {
     }
 
     @observable
-    isExperimentalEditor: boolean =
-        window.localStorage.getItem("isExperimentalEditor") === "1" ? true : false;
+    showStructure: boolean =
+        window.localStorage.getItem("showStructureInPageEditor") === "1" ? true : false;
 
     @action.bound
-    toggleExperimentalEditor() {
-        this.isExperimentalEditor = !this.isExperimentalEditor;
-        window.localStorage.setItem("isExperimentalEditor", this.isExperimentalEditor ? "1" : "0");
+    toggleShowStructure() {
+        this.showStructure = !this.showStructure;
+        window.localStorage.setItem("showStructureInPageEditor", this.showStructure ? "1" : "0");
     }
 
     @bind
@@ -50,22 +49,12 @@ export class PageEditor extends EditorComponent {
     render() {
         let pageTabState = this.props.editor.state as PageTabState;
 
-        let editor;
-        if (this.isExperimentalEditor) {
-            editor = (
-                <ExperimentalWidgetContainerEditor
-                    widgetContainer={pageTabState.widgetContainerDisplayItem}
-                />
-            );
-        } else {
-            editor = (
-                <WidgetContainerEditor
-                    displaySelection={pageTabState.widgetContainerDisplayItem}
-                    pageWidth={pageTabState.page.width}
-                    pageHeight={pageTabState.page.height}
-                />
-            );
-        }
+        let editor = (
+            <StudioPageEditor
+                widgetContainer={pageTabState.widgetContainerDisplayItem}
+                showStructure={this.showStructure}
+            />
+        );
 
         const panel = (
             <Panel
@@ -73,12 +62,12 @@ export class PageEditor extends EditorComponent {
                 title=""
                 buttons={[
                     <IconAction
-                        key="experiment"
-                        title="Experiment"
-                        icon="material:star"
-                        iconSize={16}
-                        onClick={this.toggleExperimentalEditor}
-                        selected={this.isExperimentalEditor}
+                        key="showDeepStructure"
+                        title="Show structure"
+                        icon="_images/diagram.png"
+                        iconSize={24}
+                        onClick={this.toggleShowStructure}
+                        selected={this.showStructure}
                     />
                 ]}
                 body={editor}

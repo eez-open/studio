@@ -1,6 +1,12 @@
-import React from "react";
-import { observable, computed, action, reaction, runInAction } from "mobx";
-import { Provider } from "mobx-react";
+import {
+    observable,
+    computed,
+    action,
+    reaction,
+    runInAction,
+    IReactionDisposer,
+    autorun
+} from "mobx";
 
 import { Rect, Transform, BoundingRectBuilder } from "eez-studio-shared/geometry";
 
@@ -16,6 +22,8 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ViewState implements IViewState {
+    document: IDocument;
+
     @observable
     transform = new Transform({
         scale: 1,
@@ -28,12 +36,37 @@ class ViewState implements IViewState {
     @observable
     _selectedObjects: IBaseObject[] = [];
 
-    constructor(
-        private document: IDocument,
+    persistentStateReactionDisposer: IReactionDisposer;
+    selectedObjectsReactionDisposer: IReactionDisposer;
+
+    constructor() {
+        // make sure selected object is still part of the document
+        this.selectedObjectsReactionDisposer = autorun(() => {
+            const selectedObjects = this._selectedObjects.filter(
+                selectedObject => !!this.document.findObjectById(selectedObject.id)
+            );
+
+            if (selectedObjects.length !== this._selectedObjects.length) {
+                runInAction(() => {
+                    this._selectedObjects = selectedObjects;
+                });
+            }
+        });
+    }
+
+    @action
+    set(
+        document: IDocument,
         viewStatePersistantState: IViewStatePersistantState,
         onSavePersistantState: (viewStatePersistantState: IViewStatePersistantState) => void,
         lastViewState?: ViewState
     ) {
+        if (this.persistentStateReactionDisposer) {
+            this.persistentStateReactionDisposer();
+        }
+
+        this.document = document;
+
         if (viewStatePersistantState) {
             if (viewStatePersistantState.transform) {
                 this.transform.scale = viewStatePersistantState.transform.scale;
@@ -56,20 +89,14 @@ class ViewState implements IViewState {
             this.transform.clientRect = lastViewState.transform.clientRect;
         }
 
-        reaction(() => this.persistentState, viewState => onSavePersistantState(viewState));
-    }
-
-    get widgetPaletteItem() {
-        return this.document.findObjectById("WidgetPaletteItem");
+        this.persistentStateReactionDisposer = reaction(
+            () => this.persistentState,
+            viewState => onSavePersistantState(viewState)
+        );
     }
 
     get selectedObjects() {
-        const widgetPaletteItem = this.widgetPaletteItem;
-        if (widgetPaletteItem) {
-            return [widgetPaletteItem];
-        } else {
-            return this._selectedObjects;
-        }
+        return this._selectedObjects;
     }
 
     @computed
@@ -148,39 +175,41 @@ class ViewState implements IViewState {
             this._selectedObjects = [];
         });
     }
+
+    destroy() {
+        this.selectedObjectsReactionDisposer();
+        this.persistentStateReactionDisposer();
+    }
 }
 
-export class DesignerContext extends React.Component<{
-    document: IDocument;
-    viewStatePersistantState: IViewStatePersistantState;
-    onSavePersistantState: (viewStatePersistantState: IViewStatePersistantState) => void;
-    options?: IDesignerOptions;
-}> {
-    viewStateCache: ViewState;
-    designerContextCache: IDesignerContext;
+////////////////////////////////////////////////////////////////////////////////
 
-    get designerContext() {
-        if (
-            !this.designerContextCache ||
-            this.designerContextCache.document !== this.props.document ||
-            JSON.stringify(this.props.viewStatePersistantState) !==
-                JSON.stringify(this.designerContextCache.viewState.persistentState)
-        ) {
-            this.designerContextCache = {
-                document: this.props.document,
-                viewState: new ViewState(
-                    this.props.document,
-                    this.props.viewStatePersistantState,
-                    this.props.onSavePersistantState,
-                    this.designerContextCache && (this.designerContextCache.viewState as ViewState)
-                ),
-                options: this.props.options || {}
-            };
-        }
-        return this.designerContextCache;
+export class DesignerContext implements IDesignerContext {
+    document: IDocument;
+    viewState: ViewState = new ViewState();
+
+    @observable
+    options: IDesignerOptions = {
+        showStructure: false
+    };
+
+    @action
+    set(
+        document: IDocument,
+        viewStatePersistantState: IViewStatePersistantState,
+        onSavePersistantState: (viewStatePersistantState: IViewStatePersistantState) => void,
+        options?: IDesignerOptions
+    ) {
+        this.document = document;
+
+        this.viewState.set(document, viewStatePersistantState, onSavePersistantState);
+
+        this.options = options || {
+            showStructure: false
+        };
     }
 
-    render() {
-        return <Provider designerContext={this.designerContext}>{this.props.children}</Provider>;
+    destroy() {
+        this.viewState.destroy();
     }
 }

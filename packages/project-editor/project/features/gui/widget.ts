@@ -26,7 +26,6 @@ export {
     IWidgetContainerDisplayItem,
     WidgetContainerDisplayItem,
     ContainerWidget,
-    SelectWidgetEditor,
     SelectWidget,
     ListWidget,
     GridWidget,
