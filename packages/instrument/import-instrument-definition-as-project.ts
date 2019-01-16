@@ -32,6 +32,7 @@ function createExtensionDefinitions(extension: IExtension, extensionName: string
     const extensionDefinition = new ExtensionDefinition();
 
     extensionDefinition.name = extensionName;
+    extensionDefinition.description = extension.description || "";
     extensionDefinition.buildConfiguration = "Default";
     extensionDefinition.buildFolder = ".";
     extensionDefinition.extensionName = extensionDefinition.name;
@@ -42,7 +43,6 @@ function createExtensionDefinitions(extension: IExtension, extensionName: string
     extensionDefinition.idfFirmwareVersion = "1.0";
     extensionDefinition.idfGuid = generateExtensionGuid(extensionName);
     extensionDefinition.idfRevisionNumber = extension.revisionNumber || "";
-    extensionDefinition.idfDescription = extension.description || "";
     extensionDefinition.idfSupportedModels = extension.supportedModels || "";
     extensionDefinition.idfRevisionComments = extension.revisionComments || "";
     extensionDefinition.idfAuthor = extension.author || "";

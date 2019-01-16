@@ -1002,7 +1002,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
         const groupForPropertiesWithoutGroupSpecified: IGroupProperties = {
             group: {
                 id: "",
-                title: "Other properties"
+                title: ""
             },
             properties: []
         };

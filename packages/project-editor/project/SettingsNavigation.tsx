@@ -77,7 +77,7 @@ class ProjectFeature extends React.Component<
             if (this.props.extension.eezStudioExtension.implementation.projectFeature.mandatory) {
                 button = (
                     <button
-                        className="btn float-right"
+                        className="btn btn-secondary float-right"
                         disabled={true}
                         title="This feature can't be removed"
                     >
@@ -87,7 +87,7 @@ class ProjectFeature extends React.Component<
             } else {
                 button = (
                     <button
-                        className="btn float-right"
+                        className="btn btn-secondary float-right"
                         onClick={this.onRemove.bind(this)}
                         title="Remove feature from the project"
                     >
