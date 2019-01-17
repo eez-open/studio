@@ -279,7 +279,7 @@ export function findClass(className: string) {
 export function getClassesDerivedFrom(parentClass: EezClass) {
     const derivedClasses = [];
     for (const aClass of classes.values()) {
-        if (aClass.classInfo.parentClassInfo === parentClass.classInfo) {
+        if (isSubclassOf(aClass.classInfo, parentClass.classInfo)) {
             derivedClasses.push(aClass);
         }
     }

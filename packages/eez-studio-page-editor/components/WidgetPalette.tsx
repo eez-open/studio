@@ -131,9 +131,7 @@ const WidgetPaletteDiv = styled.div`
 `;
 
 @observer
-export class WidgetPalette extends React.Component<{
-    baseWidgetClass?: EezClass;
-}> {
+export class WidgetPalette extends React.Component {
     @observable
     selectedWidgetClass: EezClass | undefined;
 
@@ -143,18 +141,16 @@ export class WidgetPalette extends React.Component<{
     }
 
     render() {
-        let widgets = getClassesDerivedFrom(this.props.baseWidgetClass || Widget).map(
-            widgetClass => {
-                return (
-                    <PaletteItem
-                        key={widgetClass.name}
-                        widgetClass={widgetClass}
-                        onSelect={this.onSelect}
-                        selected={widgetClass === this.selectedWidgetClass}
-                    />
-                );
-            }
-        );
+        let widgets = getClassesDerivedFrom(Widget).map(widgetClass => {
+            return (
+                <PaletteItem
+                    key={widgetClass.name}
+                    widgetClass={widgetClass}
+                    onSelect={this.onSelect}
+                    selected={widgetClass === this.selectedWidgetClass}
+                />
+            );
+        });
 
         return <WidgetPaletteDiv tabIndex={0}>{widgets}</WidgetPaletteDiv>;
     }
