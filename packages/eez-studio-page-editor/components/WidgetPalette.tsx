@@ -18,6 +18,8 @@ import styled from "eez-studio-ui/styled-components";
 const WidgetDiv = styled.div`
     margin: 5px;
     padding: 5px;
+    width: 85px;
+    height: 75px;
     cursor: -webkit-grab;
     display: flex;
     flex-direction: column;
@@ -27,6 +29,7 @@ const WidgetDiv = styled.div`
         height: 48px;
         object-fit: contain;
     }
+    white-space: nowrap;
 `;
 
 interface PaletteItemProps {

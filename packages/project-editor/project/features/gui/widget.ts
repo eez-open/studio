@@ -55,7 +55,9 @@ export class DisplayDataWidget extends Widget {
             width: 64,
             height: 32,
             style: "default"
-        }
+        },
+
+        icon: "_images/widgets/Data.png"
     });
 
     @computed
@@ -120,7 +122,9 @@ export class TextWidget extends Widget {
             width: 64,
             height: 32,
             style: "default"
-        }
+        },
+
+        icon: "_images/widgets/Text.png"
     });
 
     check() {
@@ -166,7 +170,9 @@ export class MultilineTextWidget extends Widget {
             width: 64,
             height: 32,
             style: "default"
-        }
+        },
+
+        icon: "_images/widgets/MultilineText.png"
     });
 
     check() {
@@ -208,7 +214,9 @@ export class RectangleWidget extends Widget {
             }
         ],
 
-        defaultValue: { type: "Rectangle", x: 0, y: 0, width: 64, height: 32, style: "default" }
+        defaultValue: { type: "Rectangle", x: 0, y: 0, width: 64, height: 32, style: "default" },
+
+        icon: "_images/widgets/Rectangle.png"
     });
 
     check() {
@@ -247,7 +255,9 @@ export class BitmapWidget extends Widget {
             }
         ],
 
-        defaultValue: { type: "Bitmap", x: 0, y: 0, width: 64, height: 32, style: "default" }
+        defaultValue: { type: "Bitmap", x: 0, y: 0, width: 64, height: 32, style: "default" },
+
+        icon: "_images/widgets/Bitmap.png"
     });
 
     check() {
@@ -314,7 +324,9 @@ export class ButtonWidget extends Widget {
             }
         ],
 
-        defaultValue: { type: "Button", x: 0, y: 0, width: 32, height: 32, style: "default" }
+        defaultValue: { type: "Button", x: 0, y: 0, width: 32, height: 32, style: "default" },
+
+        icon: "_images/widgets/Button.png"
     });
 
     @computed
@@ -387,7 +399,9 @@ export class ToggleButtonWidget extends Widget {
             }
         ],
 
-        defaultValue: { type: "ToggleButton", x: 0, y: 0, width: 32, height: 32, style: "default" }
+        defaultValue: { type: "ToggleButton", x: 0, y: 0, width: 32, height: 32, style: "default" },
+
+        icon: "_images/widgets/ToggleButton.png"
     });
 
     check() {
@@ -419,7 +433,9 @@ registerClass(ToggleButtonWidget);
 
 export class ButtonGroupWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        defaultValue: { type: "ButtonGroup", x: 0, y: 0, width: 64, height: 32, style: "default" }
+        defaultValue: { type: "ButtonGroup", x: 0, y: 0, width: 64, height: 32, style: "default" },
+
+        icon: "_images/widgets/ButtonGroup.png"
     });
 
     check() {
@@ -489,7 +505,9 @@ export class ScaleWidget extends Widget {
             needleWidth: 19,
             needleHeight: 11,
             style: "default"
-        }
+        },
+
+        icon: "_images/widgets/Scale.png"
     });
 
     check() {
@@ -580,7 +598,9 @@ export class BarGraphWidget extends Widget {
             height: 32,
             orientation: "left-right",
             style: "default"
-        }
+        },
+
+        icon: "_images/widgets/BarGraph.png"
     });
 
     @computed
@@ -718,7 +738,9 @@ export class YTGraphWidget extends Widget {
             style: "default",
             y1Style: "default",
             y2Style: "default"
-        }
+        },
+
+        icon: "_images/widgets/YTGraph.png"
     });
 
     @computed
@@ -824,7 +846,9 @@ export class UpDownWidget extends Widget {
             buttonsStyle: "default",
             upButtonText: ">",
             downButtonText: "<"
-        }
+        },
+
+        icon: "_images/widgets/UpDown.png"
     });
 
     @computed
@@ -934,7 +958,9 @@ export class ListGraphWidget extends Widget {
             style: "default",
             y1Style: "default",
             y2Style: "default"
-        }
+        },
+
+        icon: "_images/widgets/ListGraph.png"
     });
 
     @computed
@@ -1077,7 +1103,9 @@ export class AppViewWidget extends Widget {
     page: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        defaultValue: { type: "AppView", x: 0, y: 0, width: 64, height: 32, style: "default" }
+        defaultValue: { type: "AppView", x: 0, y: 0, width: 64, height: 32, style: "default" },
+
+        icon: "_images/widgets/AppView.png"
     });
 
     check() {

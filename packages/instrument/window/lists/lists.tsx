@@ -575,7 +575,11 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                     this.props.appStore.history.oid,
                     channelIndex,
                     this.selectedList.name,
-                    toJS(channel)
+                    {
+                        dwell: toJS(channel.dwell),
+                        current: toJS(channel.current),
+                        voltage: toJS(channel.voltage)
+                    }
                 );
                 notification.success(`List sent.`);
             } catch (err) {

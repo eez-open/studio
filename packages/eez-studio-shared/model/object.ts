@@ -281,7 +281,7 @@ export function findClass(className: string) {
 export function getClassesDerivedFrom(parentClass: EezClass) {
     const derivedClasses = [];
     for (const aClass of classes.values()) {
-        if (isSubclassOf(aClass.classInfo, parentClass.classInfo)) {
+        if (isProperSubclassOf(aClass.classInfo, parentClass.classInfo)) {
             derivedClasses.push(aClass);
         }
     }
@@ -294,6 +294,21 @@ export function isSubclassOf(classInfo: ClassInfo | undefined, baseClassInfo: Cl
             return true;
         }
         classInfo = classInfo.parentClassInfo;
+    }
+    return false;
+}
+
+export function isProperSubclassOf(classInfo: ClassInfo | undefined, baseClassInfo: ClassInfo) {
+    if (classInfo) {
+        while (true) {
+            classInfo = classInfo.parentClassInfo;
+            if (!classInfo) {
+                return false;
+            }
+            if (classInfo === baseClassInfo) {
+                return true;
+            }
+        }
     }
     return false;
 }
