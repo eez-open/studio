@@ -5,7 +5,8 @@ import {
     PropertyType,
     isArray,
     asArray,
-    getProperty
+    getProperty,
+    isPropertyEnumerable
 } from "eez-studio-shared/model/object";
 import {
     DisplayItem,
@@ -116,11 +117,15 @@ class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDi
                 propertyInfo =>
                     (propertyInfo.type === PropertyType.Object ||
                         propertyInfo.type === PropertyType.Array) &&
-                    !(propertyInfo.enumerable !== undefined && !propertyInfo.enumerable) &&
+                    isPropertyEnumerable(this.object, propertyInfo) &&
                     getProperty(this.object, propertyInfo.name)
             );
 
-            if (properties.length == 1 && properties[0].type === PropertyType.Array) {
+            if (
+                properties.length == 1 &&
+                properties[0].type === PropertyType.Array &&
+                !(properties[0].showOnlyChildrenInTree === false)
+            ) {
                 return asArray(getProperty(this.object, properties[0].name)).map(
                     child => new DummyWidgetContainerDisplayItem(child)
                 );

@@ -1047,13 +1047,14 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                     <tr className={className} key={propertyInfo.name}>
                         {property}
                         <td>
-                            {!propertyInfo.readOnlyInPropertyGrid && (
-                                <PropertyMenu
-                                    propertyInfo={propertyInfo}
-                                    object={object}
-                                    updateObject={this.updateObject}
-                                />
-                            )}
+                            {!propertyInfo.readOnlyInPropertyGrid &&
+                                object._classInfo.isPropertyMenuSupported && (
+                                    <PropertyMenu
+                                        propertyInfo={propertyInfo}
+                                        object={object}
+                                        updateObject={this.updateObject}
+                                    />
+                                )}
                         </td>
                     </tr>
                 );

@@ -122,6 +122,14 @@ registerClass(BuildFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function isFilesPropertyEnumerable() {
+    return (
+        (ProjectStore.project as any).gui ||
+        ProjectStore.project.actions ||
+        ProjectStore.project.data
+    );
+}
+
 export class Build extends EezObject {
     @observable
     configurations: EezArrayObject<BuildConfiguration>;
@@ -139,13 +147,15 @@ export class Build extends EezObject {
                 name: "configurations",
                 type: PropertyType.Array,
                 typeClass: BuildConfiguration,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                showOnlyChildrenInTree: false
             },
             {
                 name: "files",
                 type: PropertyType.Array,
                 typeClass: BuildFile,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                enumerable: isFilesPropertyEnumerable
             },
             {
                 name: "destinationFolder",

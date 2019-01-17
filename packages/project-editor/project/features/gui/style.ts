@@ -231,6 +231,7 @@ export class Style extends EezObject {
 
     static classInfo: ClassInfo = {
         properties,
+        isPropertyMenuSupported: true,
         newItem: (object: EezObject) => {
             return Promise.resolve({
                 name: "Style"

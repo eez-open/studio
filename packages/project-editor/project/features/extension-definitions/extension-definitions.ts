@@ -83,6 +83,7 @@ export class ExtensionDefinition extends EezObject {
             },
             {
                 name: "extensionName",
+                displayName: "IEXT name",
                 type: PropertyType.String,
                 defaultValue: undefined
             },

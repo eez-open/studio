@@ -75,6 +75,14 @@ class Toolbar extends React.Component<
         UIStateStore.setSelectedBuildConfiguration(event.target.value);
     }
 
+    get isBuildConfigurationSelectorVisible() {
+        return (
+            (ProjectStore.project as any).gui ||
+            ProjectStore.project.actions ||
+            ProjectStore.project.data
+        );
+    }
+
     render() {
         let configurations = ProjectStore.project.settings.build.configurations._array.map(
             (item: BuildConfiguration) => {
@@ -117,17 +125,19 @@ class Toolbar extends React.Component<
                         />
                     </div>
 
-                    <div className="btn-group">
-                        <select
-                            title="Configuration"
-                            id="btn-toolbar-configuration"
-                            className="form-control"
-                            value={UIStateStore.selectedBuildConfiguration}
-                            onChange={this.onSelectedBuildConfigurationChange.bind(this)}
-                        >
-                            {configurations}
-                        </select>
-                    </div>
+                    {this.isBuildConfigurationSelectorVisible && (
+                        <div className="btn-group">
+                            <select
+                                title="Configuration"
+                                id="btn-toolbar-configuration"
+                                className="form-control"
+                                value={UIStateStore.selectedBuildConfiguration}
+                                onChange={this.onSelectedBuildConfigurationChange.bind(this)}
+                            >
+                                {configurations}
+                            </select>
+                        </div>
+                    )}
 
                     <div className="btn-group" role="group">
                         <IconAction

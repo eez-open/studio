@@ -94,7 +94,8 @@ export interface PropertyInfo {
     hideInPropertyGrid?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
     readOnlyInPropertyGrid?: boolean;
     propertyGridGroup?: IPropertyGridGroupDefinition;
-    enumerable?: boolean;
+    enumerable?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
+    showOnlyChildrenInTree?: boolean;
     isOptional?: boolean;
     defaultValue?: any;
     inheritable?: boolean;
@@ -148,6 +149,7 @@ export interface ClassInfo {
 
     showInNavigation?: boolean;
     hideInProperties?: boolean;
+    isPropertyMenuSupported?: boolean;
     navigationComponent?: typeof NavigationComponent | null;
     navigationComponentId?: string;
     defaultNavigationKey?: string;
@@ -345,11 +347,15 @@ export function getChildren(parent: EezObject): EezObject[] {
             propertyInfo =>
                 (propertyInfo.type === PropertyType.Object ||
                     propertyInfo.type === PropertyType.Array) &&
-                !(propertyInfo.enumerable !== undefined && !propertyInfo.enumerable) &&
+                isPropertyEnumerable(parent, propertyInfo) &&
                 getProperty(parent, propertyInfo.name)
         );
 
-        if (properties.length == 1 && properties[0].type === PropertyType.Array) {
+        if (
+            properties.length == 1 &&
+            properties[0].type === PropertyType.Array &&
+            !(properties[0].showOnlyChildrenInTree === false)
+        ) {
             return asArray(getProperty(parent, properties[0].name));
         }
 
@@ -431,6 +437,18 @@ export function isPropertyHidden(object: EezObject, propertyInfo: PropertyInfo) 
     }
 
     return propertyInfo.hideInPropertyGrid(object, propertyInfo);
+}
+
+export function isPropertyEnumerable(object: EezObject, propertyInfo: PropertyInfo) {
+    if (propertyInfo.enumerable === undefined) {
+        return true;
+    }
+
+    if (typeof propertyInfo.enumerable === "boolean") {
+        return propertyInfo.enumerable;
+    }
+
+    return propertyInfo.enumerable(object, propertyInfo);
 }
 
 export function getProperty(object: EezObject, name: string) {
@@ -749,4 +767,17 @@ export function hidePropertiesInPropertyGrid(aClass: EezClass, properties: strin
             propertyInfo.hideInPropertyGrid = true;
         }
     });
+}
+
+export function isShowOnlyChildrenInTree(object: EezObject) {
+    if (!object._parent || !object._key) {
+        return true;
+    }
+
+    const propertyInfo = findPropertyByName(object._parent, object._key);
+    if (!propertyInfo) {
+        return true;
+    }
+
+    return !(propertyInfo.showOnlyChildrenInTree === false);
 }

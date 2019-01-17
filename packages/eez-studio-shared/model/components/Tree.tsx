@@ -17,7 +17,8 @@ import {
     isAncestor,
     isArrayElement,
     objectToString,
-    cloneObject
+    cloneObject,
+    isShowOnlyChildrenInTree
 } from "eez-studio-shared/model/object";
 import {
     objectToClipboardData,
@@ -341,7 +342,11 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
                 childrenRows.push(
                     <TreeRow
                         key={child.item.object._id}
-                        showOnlyChildren={children.length == 1 && isArray(child.item.object)}
+                        showOnlyChildren={
+                            children.length == 1 &&
+                            isArray(child.item.object) &&
+                            isShowOnlyChildrenInTree(child.item.object)
+                        }
                         rootItem={this.props.rootItem}
                         item={child.item}
                         level={childrenLevel}

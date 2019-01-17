@@ -12,7 +12,6 @@ import {
     isArray,
     asArray,
     getProperty,
-    getChildOfObject,
     checkObject,
     IMessage
 } from "eez-studio-shared/model/object";
@@ -175,16 +174,8 @@ export async function build(onlyCheck: boolean) {
 
         let destinationFolderPath;
         if (!onlyCheck) {
-            // get and validate destination folder
-            const project = ProjectStore.project;
-            if (!project.settings.build.destinationFolder) {
-                throw new BuildException(
-                    "Destination folder is not specified.",
-                    getChildOfObject(project.settings.build, "destinationFolder")
-                );
-            }
             destinationFolderPath = ProjectStore.getAbsoluteFilePath(
-                project.settings.build.destinationFolder || "."
+                ProjectStore.project.settings.build.destinationFolder || "."
             );
             if (!fs.existsSync(destinationFolderPath)) {
                 throw new BuildException("Cannot find destination folder.");
