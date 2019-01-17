@@ -87,23 +87,49 @@ npm start
 
 ### Build DEB package on Ubuntu
 
+First: install dependecies:
+
 ```
 sudo npm install -g electron-installer-debian
+```
+
+Then build the package:
+
+```
 npm run build
 npm run build-installation
 npm run build-deb
+```
+
+Or in one step:
+
+```
+npm run build-deb-all
 ```
 
 Built DEB package is located in `installation/linux`.
 
 ### Build RPM package on Ubuntu
 
+First, install dependecies:
+
 ```
 sudo npm install -g electron-installer-redhat
 sudo apt install rpm
+```
+
+Then build the package:
+
+```
 npm run build
 npm run build-installation
 npm run build-rpm
+```
+
+Or in one step:
+
+```
+npm run build-rpm-all
 ```
 
 Built RPM package is located in `installation/linux`.
