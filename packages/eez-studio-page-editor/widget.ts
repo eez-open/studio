@@ -22,8 +22,10 @@ import {
     cloneObject,
     geometryGroup,
     styleGroup,
-    dataGroup,
-    actionsGroup
+    actionsGroup,
+    TargetDataType,
+    IPropertyGridGroupDefinition,
+    dataGroup
 } from "eez-studio-shared/model/object";
 import { loadObject } from "eez-studio-shared/model/serialization";
 import {
@@ -35,7 +37,8 @@ import {
 import { DocumentStore, IMenuItem, UIElementsFactory } from "eez-studio-shared/model/store";
 import * as output from "eez-studio-shared/model/output";
 
-import { PageContext } from "eez-studio-page-editor/context";
+import { PageInitContext } from "eez-studio-page-editor/page-init-context";
+import { PageContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,6 +53,25 @@ export interface GeometryProperties {
 export interface ObjectGeometryChange {
     object: EezObject;
     changedProperties: GeometryProperties;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function makeDataPropertyInfo(
+    name: string,
+    targetDataType?: TargetDataType,
+    displayName?: string,
+    propertyGridGroup?: IPropertyGridGroupDefinition
+) {
+    return {
+        name,
+        displayName,
+        type: PropertyType.ObjectReference,
+        referencedObjectCollectionPath: PageInitContext.dataItemsCollectionPath,
+        onSelect: PageInitContext.onDataItemSelect,
+        targetDataType: targetDataType || TargetDataType.String,
+        propertyGridGroup: propertyGridGroup || dataGroup
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,18 +136,6 @@ export class Widget extends EezObject {
                 hideInPropertyGrid: true
             },
             {
-                name: "data",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"],
-                propertyGridGroup: dataGroup
-            },
-            {
-                name: "action",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["actions"],
-                propertyGridGroup: actionsGroup
-            },
-            {
                 name: "x",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
@@ -144,6 +154,13 @@ export class Widget extends EezObject {
                 name: "height",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
+            },
+            makeDataPropertyInfo("data"),
+            {
+                name: "action",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: ["actions"],
+                propertyGridGroup: actionsGroup
             },
             {
                 name: "style",

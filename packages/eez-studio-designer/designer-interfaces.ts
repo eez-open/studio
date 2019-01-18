@@ -68,7 +68,7 @@ export interface IDesignerContext {
 }
 
 export interface IViewStatePersistantState {
-    transform: ITransform;
+    transform?: ITransform;
     selectedObjects: string[];
 }
 

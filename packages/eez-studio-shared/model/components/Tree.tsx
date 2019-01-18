@@ -109,7 +109,7 @@ export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
         return (
             <DropPlaceholderDiv
                 className={className}
-                style={{ marginLeft: this.props.level * 20 + 13 }}
+                style={{ marginLeft: this.props.level * 20 + 18 }}
                 onDragOver={this.onDragOver}
                 onDragLeave={this.onDragLeave}
             />
@@ -134,7 +134,7 @@ const TreeRowDiv = styled.div`
 
     .tree-row-label {
         display: inline-block;
-        margin-left: 13px;
+        margin-left: 18px;
     }
 
     .tree-row-triangle {

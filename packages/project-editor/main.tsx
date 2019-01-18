@@ -6,35 +6,46 @@ import ReactDOM from "react-dom";
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
 
-import { ProjectStore } from "project-editor/core/store";
-import { loadExtensions } from "project-editor/core/extensions";
-import { init as storeInit } from "project-editor/core/store";
-import { ProjectEditor } from "project-editor/project/ProjectEditor";
-
 configure({ enforceActions: "observed" });
 
-window.requestAnimationFrame(async () => {
-    try {
-        await loadExtensions();
-        storeInit();
-        ReactDOM.render(
-            <ThemeProvider theme={theme}>
-                <ProjectEditor />
-            </ThemeProvider>,
-            document.getElementById("EezStudio_Content")
-        );
-    } catch (err) {
-        console.error(err);
-    }
+EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
+    const storeModule = await import("project-editor/core/store");
+    storeModule.ProjectStore.closeWindow();
 });
 
-EEZStudio.electron.ipcRenderer.on("beforeClose", () => {
-    ProjectStore.closeWindow();
-});
-
-EEZStudio.electron.ipcRenderer.on("reload", () => {
-    ProjectStore.saveUIState();
+EEZStudio.electron.ipcRenderer.on("reload", async () => {
+    const storeModule = await import("project-editor/core/store");
+    storeModule.ProjectStore.saveUIState();
     window.location.reload();
 });
 
-//require("eez-studio-shared/module-stat");
+(async () => {
+    try {
+        // this must be executed before GUI widgets initialization,
+        // makeDataPropertyInfo will not work without this
+        const contextModule = await import("eez-studio-page-editor/page-init-context");
+        contextModule.setPageInitContext({
+            dataItemsCollectionPath: ["data"]
+        });
+
+        const storeModule = await import("project-editor/core/store");
+
+        const extensionsModule = await import("project-editor/core/extensions");
+        await extensionsModule.loadExtensions();
+
+        storeModule.init();
+
+        const ProjectEditorModule = await import("project-editor/project/ProjectEditor");
+
+        ReactDOM.render(
+            <ThemeProvider theme={theme}>
+                <ProjectEditorModule.ProjectEditor />
+            </ThemeProvider>,
+            document.getElementById("EezStudio_Content")
+        );
+
+        //require("eez-studio-shared/module-stat");
+    } catch (err) {
+        console.error(err);
+    }
+})();

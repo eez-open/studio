@@ -11,7 +11,7 @@ import {
 } from "eez-studio-shared/model/object";
 import * as output from "eez-studio-shared/model/output";
 
-import { setPageContext } from "eez-studio-page-editor/context";
+import { setPageContext } from "eez-studio-page-editor/page-context";
 
 import * as data from "project-editor/project/features/data/data";
 import { findActionIndex } from "project-editor/project/features/action/action";

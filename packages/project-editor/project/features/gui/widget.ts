@@ -7,11 +7,12 @@ import {
     registerClass,
     PropertyType,
     makeDerivedClassInfo,
-    getChildOfObject
+    getChildOfObject,
+    styleGroup
 } from "eez-studio-shared/model/object";
 import * as output from "eez-studio-shared/model/output";
 
-import { Widget } from "eez-studio-page-editor/widget";
+import { Widget, makeDataPropertyInfo } from "eez-studio-page-editor/widget";
 
 import * as data from "project-editor/project/features/data/data";
 
@@ -43,7 +44,8 @@ export class DisplayDataWidget extends Widget {
             {
                 name: "focusStyle",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             }
         ],
 
@@ -312,15 +314,12 @@ export class ButtonWidget extends Widget {
                 name: "text",
                 type: PropertyType.String
             },
-            {
-                name: "enabled",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
+            makeDataPropertyInfo("enabled"),
             {
                 name: "disabledStyle",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             }
         ],
 
@@ -566,27 +565,22 @@ export class BarGraphWidget extends Widget {
             {
                 name: "textStyle",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             },
-            {
-                name: "line1Data",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
+            makeDataPropertyInfo("line1Data"),
             {
                 name: "line1Style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             },
-            {
-                name: "line2Data",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
+            makeDataPropertyInfo("line2Data"),
             {
                 name: "line2Style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             }
         ],
 
@@ -715,17 +709,15 @@ export class YTGraphWidget extends Widget {
             {
                 name: "y1Style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             },
-            {
-                name: "y2Data",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
+            makeDataPropertyInfo("y2Data"),
             {
                 name: "y2Style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             }
         ],
 
@@ -824,7 +816,8 @@ export class UpDownWidget extends Widget {
             {
                 name: "buttonsStyle",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             },
             {
                 name: "downButtonText",
@@ -912,40 +905,27 @@ export class ListGraphWidget extends Widget {
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
-            {
-                name: "dwellData",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
-            {
-                name: "y1Data",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
+            makeDataPropertyInfo("dwellData"),
+            makeDataPropertyInfo("y1Data"),
             {
                 name: "y1Style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             },
-            {
-                name: "y2Data",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
+            makeDataPropertyInfo("y2Data"),
             {
                 name: "y2Style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             },
-            {
-                name: "cursorData",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["data"]
-            },
+            makeDataPropertyInfo("cursorData"),
             {
                 name: "cursorStyle",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
             }
         ],
 

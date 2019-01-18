@@ -674,10 +674,10 @@ class Property extends React.Component<PropertyProps> {
             return <CodeEditorProperty {...this.props} />;
         } else if (
             propertyInfo.type === PropertyType.Object ||
-            (propertyInfo.type === PropertyType.Array && propertyInfo.onSelect)
+            (propertyInfo.type === PropertyType.Array && this.props.propertyInfo.onSelect)
         ) {
             let value = getPropertyAsString(this.props.object, propertyInfo);
-            if (propertyInfo.onSelect) {
+            if (this.props.propertyInfo.onSelect) {
                 return (
                     <div className="input-group" title={value}>
                         <input
@@ -734,7 +734,7 @@ class Property extends React.Component<PropertyProps> {
                 </select>
             );
         } else if (propertyInfo.type === PropertyType.ObjectReference) {
-            if (propertyInfo.onSelect) {
+            if (this.props.propertyInfo.onSelect) {
                 return (
                     <div className="input-group" title={this.value}>
                         <input

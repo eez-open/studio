@@ -33,7 +33,7 @@ import { DragAndDropManager } from "eez-studio-shared/model/dd";
 import { INode } from "eez-studio-shared/snap-lines";
 import { SnapLines } from "eez-studio-designer/select-tool";
 
-import { PageContext } from "eez-studio-page-editor/context";
+import { PageContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 import {
     Widget,
@@ -1238,17 +1238,9 @@ export class PageEditor extends React.Component<
     get viewStatePersistantState(): IViewStatePersistantState {
         const uiState = UIStateStore.getObjectUIState(this.props.widgetContainer.object);
 
-        let transform: ITransform;
+        let transform: ITransform | undefined;
         if (uiState && uiState.pageEditorCanvasViewState) {
             transform = uiState.pageEditorCanvasViewState.transform;
-        } else {
-            transform = {
-                translate: {
-                    x: 0,
-                    y: 0
-                },
-                scale: 1
-            };
         }
 
         return {

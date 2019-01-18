@@ -15,7 +15,7 @@ import {
     DisplayItemChildren
 } from "eez-studio-shared/model/objectAdapter";
 
-import { PageContext } from "eez-studio-page-editor/context";
+import { PageContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 import {
     Widget,

@@ -19,7 +19,7 @@ import {
 } from "eez-studio-shared/model/object";
 
 import { Widget, WidgetContainerDisplayItem } from "eez-studio-page-editor/widget";
-import { PageContext } from "eez-studio-page-editor/context";
+import { PageContext } from "eez-studio-page-editor/page-context";
 
 ////////////////////////////////////////////////////////////////////////////////
 

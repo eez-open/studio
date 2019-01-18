@@ -6,6 +6,7 @@ import classNames from "classnames";
 import { humanize } from "eez-studio-shared/string";
 
 import { EezClass, getClassesDerivedFrom } from "eez-studio-shared/model/object";
+import { loadObject } from "eez-studio-shared/model/serialization";
 import { objectToClipboardData, setClipboardData } from "eez-studio-shared/model/clipboard";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
@@ -42,8 +43,12 @@ interface PaletteItemProps {
 class PaletteItem extends React.Component<PaletteItemProps> {
     @action.bound
     onDragStart(event: any) {
-        let object = new this.props.widgetClass();
-        Object.assign(object, object._classInfo.defaultValue!);
+        let protoObject = new this.props.widgetClass();
+        let object = loadObject(
+            undefined,
+            protoObject._classInfo.defaultValue!,
+            this.props.widgetClass
+        );
 
         if (!(object as any).style) {
             (object as any).style = "default";

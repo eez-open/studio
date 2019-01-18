@@ -90,7 +90,7 @@ export interface PropertyInfo {
     referencedObjectCollectionPath?: string[];
     matchObjectReference?: (object: EezObject, path: (string | number)[], value: string) => boolean;
     replaceObjectReference?: (value: string) => string;
-    onSelect?: (object: EezObject, propertyInfo: PropertyInfo) => Promise<any>;
+    onSelect?: ((object: EezObject, propertyInfo: PropertyInfo) => Promise<any>);
     hideInPropertyGrid?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
     readOnlyInPropertyGrid?: boolean;
     propertyGridGroup?: IPropertyGridGroupDefinition;
@@ -776,10 +776,14 @@ export function checkObject(object: EezObject): IMessage[] {
     return [];
 }
 
-export function hidePropertiesInPropertyGrid(aClass: EezClass, properties: string[]) {
+export function hidePropertiesInPropertyGrid(
+    aClass: EezClass,
+    properties: string[],
+    callback?: ((object: EezObject, propertyInfo: PropertyInfo) => boolean)
+) {
     aClass.classInfo.properties.forEach(propertyInfo => {
         if (properties.indexOf(propertyInfo.name) !== -1) {
-            propertyInfo.hideInPropertyGrid = true;
+            propertyInfo.hideInPropertyGrid = callback || true;
         }
     });
 }

@@ -43,8 +43,6 @@ import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 import { findAllReferences, isReferenced } from "eez-studio-shared/model/search";
 import { OutputSections, OutputSection } from "eez-studio-shared/model/output";
 
-import { BootstrapDialog } from "eez-studio-ui/dialog";
-
 ////////////////////////////////////////////////////////////////////////////////
 
 interface IPanel {
@@ -1310,7 +1308,7 @@ export interface IMenu {
 }
 
 export interface IUIElementsFactory {
-    Dialog: typeof BootstrapDialog;
+    Dialog: typeof React.Component;
     createMenuItem(menuItemConfig: IMenuItemConfig): IMenuItem;
     createMenu(): IMenu;
     confirm(message: string, detail: string | undefined, callback: () => void): void;
@@ -1325,8 +1323,14 @@ export function setUIElementsFactory(factory: IUIElementsFactory) {
     UIElementsFactory = factory;
 }
 
+class DummyDialogComponent extends React.Component {
+    render() {
+        return null;
+    }
+}
+
 export let UIElementsFactory: IUIElementsFactory = {
-    Dialog: BootstrapDialog,
+    Dialog: DummyDialogComponent,
 
     createMenuItem(config: IMenuItemConfig) {
         // todo

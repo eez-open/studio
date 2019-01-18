@@ -71,6 +71,8 @@ class ViewState implements IViewState {
             if (viewStatePersistantState.transform) {
                 this.transform.scale = viewStatePersistantState.transform.scale;
                 this.transform.translate = viewStatePersistantState.transform.translate;
+            } else {
+                this.resetTransform();
             }
 
             if (viewStatePersistantState.selectedObjects) {

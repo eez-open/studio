@@ -5,6 +5,8 @@ import { EezArrayObject } from "eez-studio-shared/model/object";
 import { Page } from "eez-studio-page-editor/page";
 import { Widget } from "eez-studio-page-editor/widget";
 
+////////////////////////////////////////////////////////////////////////////////
+
 export interface IDataItem {
     type: string;
     enumItems?: string;
