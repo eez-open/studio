@@ -5,15 +5,14 @@ import { Rect, rectContains } from "eez-studio-shared/geometry";
 
 import { isObjectInstanceOf, getProperty } from "eez-studio-shared/model/object";
 import { getEezStudioDataFromDragEvent } from "eez-studio-shared/model/clipboard";
-import { DisplayItem, reduceUntilCommonParent } from "eez-studio-shared/model/objectAdapter";
+import {
+    DisplayItem,
+    reduceUntilCommonParent,
+    TreeObjectAdapter
+} from "eez-studio-shared/model/objectAdapter";
 import { UIStateStore, DocumentStore } from "eez-studio-shared/model/store";
 
-import {
-    Widget,
-    SelectWidget,
-    WidgetContainerDisplayItem,
-    ObjectGeometryChange
-} from "eez-studio-page-editor/widget";
+import { Widget, SelectWidget, ObjectGeometryChange } from "eez-studio-page-editor/widget";
 import { TreeNode, createWidgetTree } from "eez-studio-page-editor/widget-tree";
 
 import {
@@ -39,7 +38,7 @@ export class WidgetContainerEditor extends CanvasEditor {
     }
 
     createTree() {
-        return createWidgetTree(this.props.displaySelection as WidgetContainerDisplayItem, true);
+        return createWidgetTree(this.props.displaySelection as TreeObjectAdapter, true);
     }
 
     applyGeometryChanges(geometryChanges: ObjectGeometryChange[]) {

@@ -25,9 +25,9 @@ import {
     NavigationStore,
     deleteItems,
     UndoManager,
-    UIStateStore,
-    UIElementsFactory
+    UIStateStore
 } from "eez-studio-shared/model/store";
+import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
 import { INode } from "eez-studio-shared/snap-lines";
@@ -41,8 +41,7 @@ import {
     ListWidget,
     GridWidget,
     SelectWidget,
-    SelectWidgetEditor,
-    WidgetContainerDisplayItem
+    SelectWidgetEditor
 } from "eez-studio-page-editor/widget";
 import { createWidgetTree, drawTree } from "eez-studio-page-editor/widget-tree";
 
@@ -1106,9 +1105,9 @@ class PageEditorContext extends DesignerContext {
 class PageDocument implements IDocument {
     rootObject: EditorObject;
 
-    constructor(page: Page, pageEditorContext: PageEditorContext) {
+    constructor(private page: TreeObjectAdapter, pageEditorContext: PageEditorContext) {
         const transformer = createObjectToEditorObjectTransformer(pageEditorContext);
-        this.rootObject = transformer(page);
+        this.rootObject = transformer(page.object);
     }
 
     get rootObjects() {
@@ -1151,7 +1150,7 @@ class PageDocument implements IDocument {
     }
 
     createContextMenu(objects: IBaseObject[]) {
-        return UIElementsFactory.createMenu();
+        return this.page.createSelectionContextMenu();
     }
 
     onDragStart(op: "move" | "resize"): void {
@@ -1195,7 +1194,7 @@ const PageEditorCanvas = styled(Canvas)`
 `;
 
 interface PageEditorProps {
-    widgetContainer: WidgetContainerDisplayItem;
+    widgetContainer: TreeObjectAdapter;
     showStructure?: boolean;
 }
 
@@ -1381,7 +1380,7 @@ export class PageEditor extends React.Component<
         }
 
         this.pageEditorContext.set(
-            new PageDocument(this.props.widgetContainer.object as Page, this.pageEditorContext),
+            new PageDocument(this.props.widgetContainer, this.pageEditorContext),
             this.viewStatePersistantState,
             this.onSavePersistantState,
             {

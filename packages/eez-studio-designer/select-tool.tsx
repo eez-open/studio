@@ -66,17 +66,8 @@ export const selectToolHandler: IToolHandler = {
         }
 
         setTimeout(() => {
-            if (context.viewState.selectedObjects.length > 0) {
-                const menu = context.document.createContextMenu(context.viewState.selectedObjects);
-
-                menu.append({
-                    label: "Delete",
-                    click: () => {
-                        context.document.deleteObjects(context.viewState.selectedObjects);
-                        context.viewState.deselectAllObjects();
-                    }
-                });
-
+            const menu = context.document.createContextMenu(context.viewState.selectedObjects);
+            if (menu) {
                 showContextMenu(menu);
             }
         }, 0);

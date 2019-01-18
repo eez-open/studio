@@ -17,8 +17,9 @@ import {
     geometryGroup,
     styleGroup
 } from "eez-studio-shared/model/object";
+import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 
-import { Widget, WidgetContainerDisplayItem } from "eez-studio-page-editor/widget";
+import { Widget } from "eez-studio-page-editor/widget";
 import { PageContext } from "eez-studio-page-editor/page-context";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,11 +168,11 @@ registerClass(Page);
 
 export class PageTabState implements IEditorState {
     page: Page;
-    widgetContainerDisplayItem: WidgetContainerDisplayItem;
+    widgetContainerDisplayItem: TreeObjectAdapter;
 
     constructor(object: EezObject) {
         this.page = object as Page;
-        this.widgetContainerDisplayItem = new WidgetContainerDisplayItem(this.page);
+        this.widgetContainerDisplayItem = new TreeObjectAdapter(this.page);
     }
 
     @computed

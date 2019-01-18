@@ -3,12 +3,12 @@ import { computed, action } from "mobx";
 import { _find } from "eez-studio-shared/algorithm";
 
 import { EezObject, IEditorState } from "eez-studio-shared/model/object";
+import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 
 import { Page } from "eez-studio-page-editor/page";
 
 import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
 
-import { WidgetContainerDisplayItem } from "project-editor/project/features/gui/widget";
 import { PageEditor } from "project-editor/project/features/gui/PageEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,11 +24,11 @@ Page.classInfo.navigationComponent = ListNavigationWithContent;
 
 export class PageTabState implements IEditorState {
     page: Page;
-    widgetContainerDisplayItem: WidgetContainerDisplayItem;
+    widgetContainerDisplayItem: TreeObjectAdapter;
 
     constructor(object: EezObject) {
         this.page = object as Page;
-        this.widgetContainerDisplayItem = new WidgetContainerDisplayItem(this.page);
+        this.widgetContainerDisplayItem = new TreeObjectAdapter(this.page);
     }
 
     @computed

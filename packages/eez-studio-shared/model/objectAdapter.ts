@@ -28,7 +28,7 @@ import {
     copyItem,
     pasteItem,
     deleteItems,
-    showContextMenu as showSingleItemContextMenu,
+    createContextMenu,
     IMenuItem,
     UIElementsFactory,
     IMenuAnchorPosition
@@ -518,10 +518,9 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
         }
     }
 
-    showSelectionContextMenu(position: IMenuAnchorPosition) {
+    createSelectionContextMenu() {
         if (this.selectedItems.length == 1) {
-            showSingleItemContextMenu(this.selectedItems[0].object, position);
-            return;
+            return createContextMenu(this.selectedItems[0].object);
         }
 
         let menuItems: IMenuItem[] = [];
@@ -607,6 +606,16 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
         if (menuItems.length > 0) {
             const menu = UIElementsFactory.createMenu();
             menuItems.forEach(menuItem => menu.append(menuItem));
+            return menu;
+        }
+
+        return undefined;
+    }
+
+    showSelectionContextMenu(position: IMenuAnchorPosition) {
+        let menu = this.createSelectionContextMenu();
+
+        if (menu) {
             menu.popup({}, position);
         }
     }

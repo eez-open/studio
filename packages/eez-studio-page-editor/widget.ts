@@ -1,4 +1,4 @@
-import { observable, computed, action, autorun } from "mobx";
+import { observable, computed, action } from "mobx";
 
 import { _find } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
@@ -28,12 +28,6 @@ import {
     dataGroup
 } from "eez-studio-shared/model/object";
 import { loadObject } from "eez-studio-shared/model/serialization";
-import {
-    TreeObjectAdapter,
-    DisplayItem,
-    DisplayItemChildrenArray,
-    getDisplayItemFromObjectId
-} from "eez-studio-shared/model/objectAdapter";
 import { DocumentStore, IMenuItem, UIElementsFactory } from "eez-studio-shared/model/store";
 import * as output from "eez-studio-shared/model/output";
 
@@ -121,14 +115,9 @@ export class Widget extends EezObject {
                 return `${humanize(widget.type)}: ${widget.data}`;
             }
 
-            if (widget instanceof LayoutViewWidget) {
-                if (widget.layout) {
-                    return `${widget.type}: ${widget.layout}`;
-                }
-            }
-
             return humanize(widget.type);
         },
+
         properties: [
             {
                 name: "type",
@@ -1086,6 +1075,14 @@ export class LayoutViewWidget extends Widget {
             }
         ],
 
+        label: (widget: LayoutViewWidget) => {
+            if (widget.layout) {
+                return `${widget.type}: ${widget.layout}`;
+            }
+
+            return humanize(widget.type);
+        },
+
         defaultValue: { type: "LayoutView", x: 0, y: 0, width: 64, height: 32, style: "default" },
 
         // eez-studio-page-editor\_images\LayoutView.png
@@ -1135,120 +1132,6 @@ export function getWidgetType(widgetClass: typeof EezObject) {
     if (widgetClass.name.endsWith("Widget")) {
         return widgetClass.name.substring(0, widgetClass.name.length - "Widget".length);
     }
+
     return widgetClass.name;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export interface IWidgetContainerDisplayItem extends DisplayItem {
-    getSelectedWidgetForSelectWidget(item: DisplayItem): DisplayItem | undefined;
-}
-
-export class WidgetContainerDisplayItem extends TreeObjectAdapter
-    implements IWidgetContainerDisplayItem {
-    // this is used to remember the last selected widget for the select widget
-    selectWidgetToSelectedWidget: any = {};
-
-    constructor(object: EezObject) {
-        super(object);
-
-        autorun(() => {
-            // update selectWidgetToSelectedWidget when selection is changed
-            let selectedObjects = this.selectedObjects;
-            for (let i = 0; i < selectedObjects.length; i++) {
-                let selectedObject = selectedObjects[i];
-
-                // remove all what we remembered below selected object
-                Object.keys(this.selectWidgetToSelectedWidget).forEach(key => {
-                    if (key.startsWith(selectedObject._id)) {
-                        delete this.selectWidgetToSelectedWidget[key];
-                    }
-                });
-
-                // remember from selectedObject up to the root
-                while (selectedObject._parent && selectedObject._parent!._parent) {
-                    if (selectedObject._parent!._parent instanceof SelectWidget) {
-                        this.selectWidgetToSelectedWidget[selectedObject._parent!._parent!._id] =
-                            selectedObject._id;
-                    }
-                    selectedObject = selectedObject._parent!;
-                }
-            }
-
-            // remove nonexistent objects from the selectWidgetToSelectedWidget
-            Object.keys(this.selectWidgetToSelectedWidget).forEach(key => {
-                if (!getDisplayItemFromObjectId(this, key)) {
-                    delete this.selectWidgetToSelectedWidget[key];
-                } else if (
-                    !getDisplayItemFromObjectId(this, this.selectWidgetToSelectedWidget[key])
-                ) {
-                    delete this.selectWidgetToSelectedWidget[key];
-                }
-            });
-        });
-    }
-
-    loadState(state: any) {
-        // restore selectWidgetToSelectedWidget
-        if (state.selectWidgetToSelectedWidget) {
-            this.selectWidgetToSelectedWidget = state.selectWidgetToSelectedWidget;
-        }
-
-        super.loadState(state.tree || {});
-    }
-
-    saveState() {
-        return {
-            tree: super.saveState(),
-            selectWidgetToSelectedWidget: this.selectWidgetToSelectedWidget
-        };
-    }
-
-    getSelectedWidgetForSelectWidget(item: DisplayItem): DisplayItem | undefined {
-        let widget = item.object as SelectWidget;
-        let widgetsItemChildren = item.children as DisplayItemChildrenArray;
-
-        let selectedWidgetItem: DisplayItem | undefined;
-
-        // first, find selected widget by checking if any child widget is selected or has descendant that is selected
-        function isSelected(item: DisplayItem): boolean {
-            return (
-                item.selected ||
-                !!_find(item.children, (displayItemChild: any) => {
-                    let child: DisplayItem = displayItemChild;
-                    return isSelected(child);
-                })
-            );
-        }
-        selectedWidgetItem = widgetsItemChildren.find(childWidgetItem =>
-            isSelected(childWidgetItem)
-        );
-
-        // second, use selectWidgetToSelectedWidget to find selected widget
-        if (!selectedWidgetItem) {
-            let selectedWidgetId = this.selectWidgetToSelectedWidget[widget._id];
-            if (selectedWidgetId) {
-                selectedWidgetItem = getDisplayItemFromObjectId(this, selectedWidgetId);
-            }
-        }
-
-        if (!selectedWidgetItem) {
-            // if not found then select default for enum data
-            if (widget.data && widget.widgets) {
-                let index: number = PageContext.data.getEnumValue(widget.data);
-                if (index >= 0 && index < widget.widgets._array.length) {
-                    selectedWidgetItem = widgetsItemChildren[index];
-                }
-            }
-        }
-
-        if (!selectedWidgetItem) {
-            // if still nothing selected then just select the first one
-            if (widgetsItemChildren.length) {
-                selectedWidgetItem = widgetsItemChildren[0];
-            }
-        }
-
-        return selectedWidgetItem;
-    }
 }

@@ -24,8 +24,6 @@ import * as draw from "project-editor/project/features/gui/draw";
 export {
     Widget,
     getWidgetType,
-    IWidgetContainerDisplayItem,
-    WidgetContainerDisplayItem,
     ContainerWidget,
     SelectWidget,
     ListWidget,

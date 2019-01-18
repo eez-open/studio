@@ -1,29 +1,17 @@
+import { _find } from "eez-studio-shared/algorithm";
 import { Point, Rect, pointInRect } from "eez-studio-shared/geometry";
 
-import {
-    EezObject,
-    PropertyType,
-    isArray,
-    asArray,
-    getProperty,
-    isPropertyEnumerable
-} from "eez-studio-shared/model/object";
+import { EezObject } from "eez-studio-shared/model/object";
 import {
     DisplayItem,
     DisplayItemChildrenObject,
     DisplayItemChildrenArray,
-    DisplayItemChildren
+    TreeObjectAdapter
 } from "eez-studio-shared/model/objectAdapter";
 
 import { PageContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
-import {
-    Widget,
-    ListWidget,
-    GridWidget,
-    SelectWidget,
-    IWidgetContainerDisplayItem
-} from "eez-studio-page-editor/widget";
+import { Widget, ListWidget, GridWidget, SelectWidget } from "eez-studio-page-editor/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -104,61 +92,6 @@ export function nodesFromPoint(tree: TreeNode, p: Point) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class DummyWidgetContainerDisplayItem implements DisplayItem, IWidgetContainerDisplayItem {
-    selected: boolean;
-
-    constructor(public object: EezObject) {}
-
-    get children(): DisplayItemChildren {
-        if (isArray(this.object)) {
-            return asArray(this.object).map(child => new DummyWidgetContainerDisplayItem(child));
-        } else {
-            let properties = this.object._classInfo.properties.filter(
-                propertyInfo =>
-                    (propertyInfo.type === PropertyType.Object ||
-                        propertyInfo.type === PropertyType.Array) &&
-                    isPropertyEnumerable(this.object, propertyInfo) &&
-                    getProperty(this.object, propertyInfo.name)
-            );
-
-            if (
-                properties.length == 1 &&
-                properties[0].type === PropertyType.Array &&
-                !(properties[0].showOnlyChildrenInTree === false)
-            ) {
-                return asArray(getProperty(this.object, properties[0].name)).map(
-                    child => new DummyWidgetContainerDisplayItem(child)
-                );
-            }
-
-            return properties.reduce(
-                (children, propertyInfo, i) => {
-                    children[propertyInfo.name] = new DummyWidgetContainerDisplayItem(
-                        getProperty(this.object, propertyInfo.name)
-                    );
-                    return children;
-                },
-                {} as DisplayItemChildrenObject
-            );
-        }
-    }
-
-    getSelectedWidgetForSelectWidget(item: DisplayItem): DisplayItem | undefined {
-        let widget = item.object as SelectWidget;
-        if (widget.data && widget.widgets) {
-            let index: number = PageContext.data.getEnumValue(widget.data);
-            if (index >= 0 && index < widget.widgets._array.length) {
-                let widgetsItemChildren = item.children as DisplayItemChildrenArray;
-
-                return widgetsItemChildren[index];
-            }
-        }
-        return undefined;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 function drawPageFrameForTreeNode(
     node: TreeNode,
     ctx: CanvasRenderingContext2D,
@@ -179,11 +112,52 @@ function drawPageFrameForTreeNode(
     );
 }
 
+function getSelectedWidgetForSelectWidget(
+    widgetContainerDisplayItem: TreeObjectAdapter,
+    item: DisplayItem
+) {
+    let widget = item.object as SelectWidget;
+    let widgetsItemChildren = item.children as DisplayItemChildrenArray;
+
+    let selectedWidgetItem: DisplayItem | undefined;
+
+    // first, find selected widget by checking if any child widget is selected or has descendant that is selected
+    function isSelected(item: DisplayItem): boolean {
+        return (
+            item.selected ||
+            !!_find(item.children, (displayItemChild: any) => {
+                let child: DisplayItem = displayItemChild;
+                return isSelected(child);
+            })
+        );
+    }
+    selectedWidgetItem = widgetsItemChildren.find(childWidgetItem => isSelected(childWidgetItem));
+
+    if (!selectedWidgetItem) {
+        // if not found then select default for enum data
+        if (widget.data && widget.widgets) {
+            let index: number = PageContext.data.getEnumValue(widget.data);
+            if (index >= 0 && index < widget.widgets._array.length) {
+                selectedWidgetItem = widgetsItemChildren[index];
+            }
+        }
+    }
+
+    if (!selectedWidgetItem) {
+        // if still nothing selected then just select the first one
+        if (widgetsItemChildren.length) {
+            selectedWidgetItem = widgetsItemChildren[0];
+        }
+    }
+
+    return selectedWidgetItem;
+}
+
 export function createWidgetTree(
-    widgetContainerDisplayItemOrObject: IWidgetContainerDisplayItem | EezObject,
+    widgetContainerDisplayItemOrObject: TreeObjectAdapter | EezObject,
     draw: boolean
 ) {
-    function enumWidgets(widgetContainerDisplayItem: IWidgetContainerDisplayItem) {
+    function enumWidgets(widgetContainerDisplayItem: TreeObjectAdapter) {
         function enumWidget(
             parentNode: TreeNode | undefined,
             item: DisplayItem,
@@ -269,7 +243,8 @@ export function createWidgetTree(
                         }
                     }
                 } else if (object.type == "Select") {
-                    let selectedWidgetItem = widgetContainerDisplayItem.getSelectedWidgetForSelectWidget(
+                    let selectedWidgetItem = getSelectedWidgetForSelectWidget(
+                        widgetContainerDisplayItem,
                         item
                     );
                     if (selectedWidgetItem) {
@@ -291,7 +266,7 @@ export function createWidgetTree(
     }
 
     if (widgetContainerDisplayItemOrObject instanceof EezObject) {
-        return enumWidgets(new DummyWidgetContainerDisplayItem(widgetContainerDisplayItemOrObject));
+        return enumWidgets(new TreeObjectAdapter(widgetContainerDisplayItemOrObject));
     } else {
         return enumWidgets(widgetContainerDisplayItemOrObject);
     }

@@ -28,7 +28,7 @@ export interface IDocument {
     resetTransform?(transform: ITransform): void;
 
     // misc.
-    createContextMenu(objects: IBaseObject[]): IMenu;
+    createContextMenu(objects: IBaseObject[]): IMenu | undefined;
 
     // events
     onDragStart(op: "move" | "resize"): void;

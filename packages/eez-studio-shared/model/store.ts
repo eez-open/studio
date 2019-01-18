@@ -1122,7 +1122,7 @@ function duplicateItem(object: EezObject) {
     DocumentStore.addObject(parent, duplicate);
 }
 
-export function showContextMenu(object: EezObject, position: IMenuAnchorPosition) {
+export function createContextMenu(object: EezObject) {
     let menuItems: IMenuItem[] = [];
 
     if (canAdd(object)) {
@@ -1236,6 +1236,16 @@ export function showContextMenu(object: EezObject, position: IMenuAnchorPosition
     if (menuItems.length > 0) {
         const menu = UIElementsFactory.createMenu();
         menuItems.forEach(menuItem => menu.append(menuItem));
+        return menu;
+    }
+
+    return undefined;
+}
+
+export function showContextMenu(object: EezObject, position: IMenuAnchorPosition) {
+    const menu = createContextMenu(object);
+
+    if (menu) {
         menu.popup({}, position);
     }
 }
