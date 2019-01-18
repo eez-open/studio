@@ -1,5 +1,4 @@
-import LodashModule from "lodash";
-const _ = require("lodash/lodash.min") as typeof LodashModule;
+import _ from "lodash";
 
 export const _countBy = _.countBy;
 export const _defer = _.defer;
