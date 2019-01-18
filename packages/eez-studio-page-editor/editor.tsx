@@ -77,8 +77,6 @@ function findSelectWidgetEditors(rootObject: Widget | Page) {
 ////////////////////////////////////////////////////////////////////////////////
 
 class EditorObject implements IBaseObject {
-    parent: EditorObject;
-
     constructor(
         public object: EezObject,
         private pageEditorContext: PageEditorContext,
@@ -165,13 +163,7 @@ class EditorObject implements IBaseObject {
             }
         }
 
-        return childrenObjects
-            ? childrenObjects.map(object => {
-                  const child = this.transformer(object);
-                  child.parent = this;
-                  return child;
-              })
-            : [];
+        return childrenObjects ? childrenObjects.map(object => this.transformer(object)) : [];
     }
 
     @computed
@@ -396,6 +388,13 @@ class EditorObject implements IBaseObject {
         }
 
         return -1;
+    }
+
+    @computed
+    get parent() {
+        return this.pageEditorContext.document.findObjectById(
+            this.object._parent!._id
+        )! as EditorObject;
     }
 
     // Return first ancestor which object type is:
@@ -1233,6 +1232,8 @@ export class PageEditor extends React.Component<
         NavigationStore.setSelectedPanel(this);
     }
 
+    savedViewState: IViewStatePersistantState | undefined;
+
     @computed
     get viewStatePersistantState(): IViewStatePersistantState {
         const uiState = UIStateStore.getObjectUIState(this.props.widgetContainer.object);
@@ -1242,21 +1243,34 @@ export class PageEditor extends React.Component<
             transform = uiState.pageEditorCanvasViewState.transform;
         }
 
-        return {
+        let viewState: IViewStatePersistantState = {
             transform,
             selectedObjects: this.props.widgetContainer.selectedItems.map(item => item.object._id)
         };
+
+        if (!this.savedViewState) {
+            // selection changed in Tree => change selection in Editor
+            return viewState;
+        }
+
+        // return existing viewState from editor
+        viewState = this.savedViewState;
+        this.savedViewState = undefined;
+        return viewState;
     }
 
     @bind
     onSavePersistantState(viewState: IViewStatePersistantState) {
         if (!this.pageEditorContext.dragWidget) {
+            this.savedViewState = viewState;
+
             UIStateStore.updateObjectUIState(this.props.widgetContainer.object, {
                 pageEditorCanvasViewState: {
                     transform: viewState.transform
                 }
             });
 
+            // selection changed in Editor => change selection in Tree
             this.props.widgetContainer.selectObjectIds(viewState.selectedObjects);
         }
     }
