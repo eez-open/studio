@@ -567,7 +567,7 @@ export function getChildOfObject(
 
 export function getAncestorOfType(object: EezObject, classInfo: ClassInfo): EezObject | undefined {
     if (object) {
-        if (object._classInfo === classInfo) {
+        if (isObjectInstanceOf(object, classInfo)) {
             return object;
         }
         return object._parent && getAncestorOfType(object._parent!, classInfo);
