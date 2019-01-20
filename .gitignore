@@ -4,6 +4,7 @@ eezstudio-darwin-x64
 node_modules
 npm-debug.log
 
+dist
 packages/**/*.js
 packages/**/*.js.map
 packages/eez-studio-ui/_stylesheets/main.css

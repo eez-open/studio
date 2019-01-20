@@ -14,6 +14,7 @@
         "strictNullChecks": true,
         "baseUrl": ".",
         "sourceMap": false,
-        "pretty": false
+        "pretty": false,
+        "outDir": "../dist"
     }
 }

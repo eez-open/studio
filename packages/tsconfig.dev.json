@@ -15,6 +15,7 @@
         "baseUrl": ".",
         "sourceMap": true,
         "pretty": true,
-        "watch": true
+        "watch": true,
+        "outDir": "../dist"
     }
 }

@@ -30,7 +30,6 @@ function getIgnore() {
         "^/\\.editorconfig",
         "^/notes\\.md",
         "^/watch-less\\.js",
-        "^/wipe-dependencies\\.js",
 
         "^/docs",
         "^/extensions",
@@ -40,12 +39,7 @@ function getIgnore() {
         "^/help",
         "^/test",
 
-        "^/packages/tsconfig\\.dev\\.json",
-        "^/packages/tsconfig\\.json",
-        "^/packages/.*\\.ts",
-        "^/packages/.*\\.tsx",
-        "^/packages/.*\\.js\\.map",
-        "^/packages/.*\\.less",
+        "^/packages",
 
         "^/node_modules/better-sqlite3/build/Release/.*",
         "^/node_modules/usb/build/Release/.*",
@@ -67,7 +61,7 @@ if (os.platform() === "win32") {
 } else if (os.platform() === "darwin") {
     icon = "icon.icns";
 } else {
-    icon = "packages/eez-studio-ui/_images/eez_logo.png";
+    icon = "dist/eez-studio-ui/_images/eez_logo.png";
 }
 
 (async () => {

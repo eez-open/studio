@@ -6,9 +6,7 @@
         "eezstudio-linux-x64": true,
         "node_modules": true,
         "libs": true,
-        "packages/**/*.js": true,
-        "packages/**/*.js.map": true,
-        "packages/eez-studio-ui/_stylesheets/main.css": true
+        "dist": true
     },
     "editor.formatOnSave": true,
     "typescript.reportStyleChecksAsWarnings": false,
