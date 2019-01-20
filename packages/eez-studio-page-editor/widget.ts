@@ -22,10 +22,8 @@ import {
     cloneObject,
     geometryGroup,
     styleGroup,
-    actionsGroup,
     TargetDataType,
-    IPropertyGridGroupDefinition,
-    dataGroup
+    IPropertyGridGroupDefinition
 } from "eez-studio-shared/model/object";
 import { loadObject } from "eez-studio-shared/model/serialization";
 import { DocumentStore, IMenuItem, UIElementsFactory } from "eez-studio-shared/model/store";
@@ -57,15 +55,20 @@ export function makeDataPropertyInfo(
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition
 ) {
-    return {
+    return PageInitContext.makeDataPropertyInfo(
         name,
+        targetDataType,
         displayName,
-        type: PropertyType.ObjectReference,
-        referencedObjectCollectionPath: PageInitContext.dataItemsCollectionPath,
-        onSelect: PageInitContext.onDataItemSelect,
-        targetDataType: targetDataType || TargetDataType.String,
-        propertyGridGroup: propertyGridGroup || dataGroup
-    };
+        propertyGridGroup
+    );
+}
+
+export function makeActionPropertyInfo(
+    name: string,
+    displayName?: string,
+    propertyGridGroup?: IPropertyGridGroupDefinition
+) {
+    return PageInitContext.makeActionPropertyInfo(name, displayName, propertyGridGroup);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,12 +148,7 @@ export class Widget extends EezObject {
                 propertyGridGroup: geometryGroup
             },
             makeDataPropertyInfo("data"),
-            {
-                name: "action",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["actions"],
-                propertyGridGroup: actionsGroup
-            },
+            makeActionPropertyInfo("action"),
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
@@ -914,6 +912,15 @@ export class SelectWidget extends Widget {
                     }
 
                     return `${label || "???"} ➔ ${childLabel}`;
+                },
+                
+                interceptAddObject: (widgets: EezArrayObject<Widget>, object: Widget) => {
+                    console.log("intercept");
+                    object.x = 0;
+                    object.y = 0;
+                    object.width = (widgets._parent as SelectWidget).width;
+                    object.height = (widgets._parent as SelectWidget).height;
+                    return object;
                 }
             },
             {
@@ -1057,8 +1064,6 @@ export class SelectWidget extends Widget {
         return PageContext.draw.drawDefaultWidget(this, rect);
     }
 }
-
-registerClass(SelectWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 

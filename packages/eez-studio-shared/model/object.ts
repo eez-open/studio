@@ -103,6 +103,7 @@ export interface PropertyInfo {
     skipSearch?: boolean;
     childLabel?: (childObject: EezObject, childLabel: string) => string;
     check?: (object: EezObject) => IMessage[];
+    interceptAddObject?: (parentObject: EezObject, object: EezObject) => EezObject;
 }
 
 export interface NavigationComponentProps {

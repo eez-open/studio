@@ -999,13 +999,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
 
         const groupPropertiesArray: IGroupProperties[] = [];
 
-        const groupForPropertiesWithoutGroupSpecified: IGroupProperties = {
-            group: {
-                id: "",
-                title: ""
-            },
-            properties: []
-        };
+        let groupForPropertiesWithoutGroupSpecified: IGroupProperties | undefined;
 
         for (let propertyInfo of object._classInfo.properties) {
             if (!isArray(object) && !isPropertyHidden(object, propertyInfo)) {
@@ -1075,13 +1069,19 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
 
                     groupProperties.properties.push(propertyComponent);
                 } else {
+                    if (!groupForPropertiesWithoutGroupSpecified) {
+                        groupForPropertiesWithoutGroupSpecified = {
+                            group: {
+                                id: "",
+                                title: ""
+                            },
+                            properties: []
+                        };
+                        groupPropertiesArray.push(groupForPropertiesWithoutGroupSpecified);
+                    }
                     groupForPropertiesWithoutGroupSpecified.properties.push(propertyComponent);
                 }
             }
-        }
-
-        if (groupForPropertiesWithoutGroupSpecified.properties.length > 0) {
-            groupPropertiesArray.push(groupForPropertiesWithoutGroupSpecified);
         }
 
         const rows = groupPropertiesArray.map(groupProperties => {

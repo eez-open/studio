@@ -30,7 +30,6 @@ import {
 import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
-import { INode } from "eez-studio-shared/snap-lines";
 import { SnapLines } from "eez-studio-designer/select-tool";
 
 import { PageContext } from "eez-studio-page-editor/page-context";
@@ -1048,10 +1047,7 @@ class DragSnapLines {
         this.pageEditorContext = pageEditorContext;
         this.dragWidget = pageEditorContext.dragWidget;
 
-        this.snapLines.find(
-            pageEditorContext,
-            (node: INode) => node.id !== pageEditorContext.dragWidget!._id
-        );
+        this.snapLines.find(pageEditorContext);
     }
 
     clear() {
@@ -1301,12 +1297,9 @@ export class PageEditor extends React.Component<
                 this.pageEditorContext.dragWidget = widget;
                 this.pageEditorContext.dragWidget._parent = page.widgets;
 
-                // select only dragWidget
-                setTimeout(() => {
-                    this.pageEditorContext.viewState.selectObjects([
-                        this.pageEditorContext.document.findObjectById("WidgetPaletteItem")!
-                    ]);
-                });
+                this.pageEditorContext.viewState.selectObjects([
+                    this.pageEditorContext.document.findObjectById("WidgetPaletteItem")!
+                ]);
 
                 dragSnapLines.start(this.pageEditorContext);
             }

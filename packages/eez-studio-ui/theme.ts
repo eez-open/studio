@@ -22,7 +22,7 @@ export interface ThemeInterface {
 
 export const theme: ThemeInterface = {
     borderColor: "#d5d5d5",
-    darkBorderColor: "#a5a5a5",
+    darkBorderColor: "#c5c5c5",
     panelHeaderColor: "#f0f0f0",
     selectionBackgroundColor: "#337bb7",
     selectionColor: "white",

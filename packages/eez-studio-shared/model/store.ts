@@ -844,6 +844,13 @@ class DocumentStoreClass {
     }
 
     addObject(parentObject: EezObject, object: any) {
+        if (parentObject._parent && parentObject._key) {
+            const propertyInfo = findPropertyByName(parentObject._parent, parentObject._key);
+            if (propertyInfo && propertyInfo.interceptAddObject) {
+                object = propertyInfo.interceptAddObject(parentObject, object);
+            }
+        }
+
         return addObject(
             {
                 undoManager: UndoManager,

@@ -1,10 +1,24 @@
-import { PropertyInfo, EezObject } from "eez-studio-shared/model/object";
+import {
+    PropertyInfo,
+    TargetDataType,
+    IPropertyGridGroupDefinition
+} from "eez-studio-shared/model/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IPageInitContext {
-    dataItemsCollectionPath?: string[];
-    onDataItemSelect?: (object: EezObject, propertyInfo: PropertyInfo) => Promise<any>;
+    makeDataPropertyInfo(
+        name: string,
+        targetDataType?: TargetDataType,
+        displayName?: string,
+        propertyGridGroup?: IPropertyGridGroupDefinition
+    ): PropertyInfo;
+
+    makeActionPropertyInfo(
+        name: string,
+        displayName?: string,
+        propertyGridGroup?: IPropertyGridGroupDefinition
+    ): PropertyInfo;
 }
 
 export let PageInitContext: IPageInitContext;

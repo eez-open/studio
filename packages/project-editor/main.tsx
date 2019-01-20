@@ -6,6 +6,14 @@ import ReactDOM from "react-dom";
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
 
+import {
+    PropertyType,
+    TargetDataType,
+    IPropertyGridGroupDefinition,
+    dataGroup,
+    actionsGroup
+} from "eez-studio-shared/model/object";
+
 configure({ enforceActions: "observed" });
 
 EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
@@ -25,7 +33,35 @@ EEZStudio.electron.ipcRenderer.on("reload", async () => {
         // makeDataPropertyInfo will not work without this
         const contextModule = await import("eez-studio-page-editor/page-init-context");
         contextModule.setPageInitContext({
-            dataItemsCollectionPath: ["data"]
+            makeDataPropertyInfo(
+                name: string,
+                targetDataType?: TargetDataType,
+                displayName?: string,
+                propertyGridGroup?: IPropertyGridGroupDefinition
+            ) {
+                return {
+                    name,
+                    displayName,
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["data"],
+                    targetDataType: targetDataType || TargetDataType.String,
+                    propertyGridGroup: propertyGridGroup || dataGroup
+                };
+            },
+
+            makeActionPropertyInfo(
+                name: string,
+                displayName?: string,
+                propertyGridGroup?: IPropertyGridGroupDefinition
+            ) {
+                return {
+                    name,
+                    displayName,
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: ["actions"],
+                    propertyGridGroup: propertyGridGroup || actionsGroup
+                };
+            }
         });
 
         const storeModule = await import("project-editor/core/store");

@@ -12,7 +12,11 @@ import {
 } from "eez-studio-shared/model/object";
 import * as output from "eez-studio-shared/model/output";
 
-import { Widget, makeDataPropertyInfo } from "eez-studio-page-editor/widget";
+import {
+    Widget,
+    makeDataPropertyInfo,
+    SelectWidget as BaseSelectWidget
+} from "eez-studio-page-editor/widget";
 
 import * as data from "project-editor/project/features/data/data";
 
@@ -30,6 +34,14 @@ export {
     GridWidget,
     LayoutViewWidget
 } from "eez-studio-page-editor/widget";
+
+////////////////////////////////////////////////////////////////////////////////
+
+class SelectWidget extends BaseSelectWidget {
+    static classInfo = makeDerivedClassInfo(BaseSelectWidget.classInfo, {});
+}
+
+registerClass(SelectWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
