@@ -42,7 +42,7 @@ import { replaceObjectReference } from "eez-studio-shared/model/search";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface PropertyProps {
+export interface PropertyProps {
     propertyInfo: PropertyInfo;
     object: EezObject;
     updateObject: (propertyValues: Object) => void;
@@ -639,7 +639,9 @@ class Property extends React.Component<PropertyProps> {
             return <input type="text" className="form-control" value={value} readOnly />;
         }
 
-        if (propertyInfo.type === PropertyType.String && propertyInfo.unique) {
+        if (propertyInfo.propertyGridComponent) {
+            return <propertyInfo.propertyGridComponent {...this.props} />;
+        } else if (propertyInfo.type === PropertyType.String && propertyInfo.unique) {
             return (
                 <div className="input-group">
                     <input
@@ -1001,9 +1003,13 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
 
         let groupForPropertiesWithoutGroupSpecified: IGroupProperties | undefined;
 
+        const isPropertyMenuSupported = object._classInfo.isPropertyMenuSupported;
+
         for (let propertyInfo of object._classInfo.properties) {
             if (!isArray(object) && !isPropertyHidden(object, propertyInfo)) {
-                const colSpan = propertyInfo.type === PropertyType.Boolean;
+                const colSpan =
+                    propertyInfo.type === PropertyType.Boolean ||
+                    propertyInfo.type === PropertyType.Any;
 
                 let property;
                 if (colSpan) {
@@ -1040,16 +1046,17 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 const propertyComponent = (
                     <tr className={className} key={propertyInfo.name}>
                         {property}
-                        <td>
-                            {!propertyInfo.readOnlyInPropertyGrid &&
-                                object._classInfo.isPropertyMenuSupported && (
+                        {isPropertyMenuSupported && (
+                            <td>
+                                {!propertyInfo.readOnlyInPropertyGrid && (
                                     <PropertyMenu
                                         propertyInfo={propertyInfo}
                                         object={object}
                                         updateObject={this.updateObject}
                                     />
                                 )}
-                        </td>
+                            </td>
+                        )}
                     </tr>
                 );
 

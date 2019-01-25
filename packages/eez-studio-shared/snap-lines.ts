@@ -10,6 +10,7 @@ const MAX_VISIBLE_SNAP_LINE_DISTANCE = 20;
 export interface INode {
     id: string;
     rect?: Rect;
+    boundingRect?: Rect;
     children: INode[];
 }
 
@@ -40,8 +41,8 @@ export function findSnapLines(
 
         function findSnapLinesInNode(node: INode) {
             if (excludeNodes.indexOf(node) === -1) {
-                if (node.rect) {
-                    let rect: any = node.rect;
+                const rect: any = node.boundingRect || node.rect;
+                if (rect) {
                     if (!filterCallback || filterCallback(node)) {
                         lines.push({
                             pos: rect[offsetFieldName],

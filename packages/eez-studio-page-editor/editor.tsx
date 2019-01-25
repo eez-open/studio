@@ -4,7 +4,7 @@ import { observer, inject, Provider } from "mobx-react";
 import { createTransformer, ITransformer } from "mobx-utils";
 import { bind } from "bind-decorator";
 
-import { _range } from "eez-studio-shared/algorithm";
+import { _range, _isEqual } from "eez-studio-shared/algorithm";
 import { Point, Rect, ITransform, pointInRect, isRectInsideRect } from "eez-studio-shared/geometry";
 
 import { SvgLabel } from "eez-studio-ui/svg-label";
@@ -42,7 +42,6 @@ import {
     SelectWidget,
     SelectWidgetEditor
 } from "eez-studio-page-editor/widget";
-import { createWidgetTree, drawTree } from "eez-studio-page-editor/widget-tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -830,33 +829,7 @@ class ObjectComponent extends React.Component<{
                 this.props.object.selectedIndexInSelectWidget
             ];
 
-            if (this.props.designerContext!.options.showStructure) {
-                let canvas = document.createElement("canvas");
-
-                const rect = this.props.object.rect;
-
-                canvas.width = rect.width;
-                canvas.height = rect.height;
-
-                let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-
-                let tree = createWidgetTree(selectedChild.object, true);
-                drawTree(ctx, tree, 1, () => {});
-
-                return (
-                    <img
-                        style={{
-                            position: "absolute",
-                            left: rect.left,
-                            top: rect.top,
-                            width: rect.width,
-                            height: rect.height,
-                            imageRendering: "pixelated"
-                        }}
-                        src={canvas.toDataURL()}
-                    />
-                );
-            } else if (selectedChild) {
+            if (selectedChild) {
                 return this.renderChildren([selectedChild]);
             } else {
                 return null;
@@ -1191,6 +1164,7 @@ const PageEditorCanvas = styled(Canvas)`
 interface PageEditorProps {
     widgetContainer: TreeObjectAdapter;
     showStructure?: boolean;
+    onFocus?: () => void;
 }
 
 @observer
@@ -1260,11 +1234,18 @@ export class PageEditor extends React.Component<
         if (!this.pageEditorContext.dragWidget) {
             this.savedViewState = viewState;
 
-            UIStateStore.updateObjectUIState(this.props.widgetContainer.object, {
-                pageEditorCanvasViewState: {
-                    transform: viewState.transform
-                }
-            });
+            const uiState = UIStateStore.getObjectUIState(this.props.widgetContainer.object);
+            if (
+                !uiState ||
+                !uiState.pageEditorCanvasViewState ||
+                !_isEqual(uiState.pageEditorCanvasViewState.transform, viewState.transform)
+            ) {
+                UIStateStore.updateObjectUIState(this.props.widgetContainer.object, {
+                    pageEditorCanvasViewState: {
+                        transform: viewState.transform
+                    }
+                });
+            }
 
             // selection changed in Editor => change selection in Tree
             this.props.widgetContainer.selectObjectIds(viewState.selectedObjects);
@@ -1396,6 +1377,27 @@ export class PageEditor extends React.Component<
                     y: 0
                 },
                 showStructure: this.props.showStructure || false
+            },
+            (node: IBaseObject) => {
+                const object = (node as EditorObject).object;
+
+                for (let i = 0; i < this.pageEditorContext.viewState.selectedObjects.length; ++i) {
+                    const selectedObject = (this.pageEditorContext.viewState.selectedObjects[
+                        i
+                    ] as EditorObject).object;
+
+                    if (
+                        selectedObject._parent === object._parent ||
+                        ((object instanceof Page ||
+                            object instanceof ContainerWidget ||
+                            object instanceof SelectWidget) &&
+                            selectedObject._parent === object.widgets)
+                    ) {
+                        return true;
+                    }
+                }
+
+                return false;
             }
         );
 
@@ -1403,7 +1405,7 @@ export class PageEditor extends React.Component<
             <Provider designerContext={this.pageEditorContext}>
                 <PageEditorCanvasContainer
                     tabIndex={0}
-                    onFocus={this.focusHander}
+                    onFocus={this.props.onFocus || this.focusHander}
                     onDragOver={this.onDragOver}
                     onDrop={this.onDrop}
                     onDragLeave={this.onDragLeave}

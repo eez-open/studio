@@ -11,6 +11,7 @@ export class MouseHandler implements IMouseHandler {
     lastOffsetPoint: Point;
     offsetDistance: Point;
     movement: Point;
+    distance: number;
 
     modelPointAtDown: Point;
     lastModelPoint: Point;
@@ -26,6 +27,7 @@ export class MouseHandler implements IMouseHandler {
             event
         );
         this.offsetDistance = { x: 0, y: 0 };
+        this.distance = 0;
         this.movement = { x: 0, y: 0 };
 
         this.modelPointAtDown = context.viewState.transform.mouseEventToModelPoint(event);
@@ -42,6 +44,11 @@ export class MouseHandler implements IMouseHandler {
             x: offsetPoint.x - this.offsetPointAtDown.x,
             y: offsetPoint.y - this.offsetPointAtDown.y
         };
+
+        this.distance = Math.sqrt(
+            this.offsetDistance.x * this.offsetDistance.x +
+                this.offsetDistance.y * this.offsetDistance.y
+        );
 
         this.movement = {
             x: offsetPoint.x - this.lastOffsetPoint.x,

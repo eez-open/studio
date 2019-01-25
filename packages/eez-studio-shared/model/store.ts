@@ -22,7 +22,8 @@ import {
     getObjectFromPath,
     getObjectFromStringPath,
     getObjectFromObjectId,
-    cloneObject
+    cloneObject,
+    isPropertyEnumerable
 } from "eez-studio-shared/model/object";
 import { checkClipboard, objectToClipboardData } from "eez-studio-shared/model/clipboard";
 import {
@@ -756,6 +757,8 @@ export class UndoManagerClass {
             NavigationStore.setSelection(undoItem.selectionBefore);
 
             this.redoStack.push(undoItem);
+
+            DocumentStore.setModified(true);
         }
     }
 
@@ -787,6 +790,8 @@ export class UndoManagerClass {
             NavigationStore.setSelection(redoItem.selectionAfter);
 
             this.undoStack.push(redoItem);
+
+            DocumentStore.setModified(true);
         }
     }
 }
@@ -1035,7 +1040,10 @@ export function canCopy(object: EezObject) {
 
 export function canContainChildren(object: EezObject) {
     for (const propertyInfo of object._classInfo.properties) {
-        if (propertyInfo.type === PropertyType.Array || propertyInfo.type === PropertyType.Object) {
+        if (
+            isPropertyEnumerable(object, propertyInfo) &&
+            (propertyInfo.type === PropertyType.Array || propertyInfo.type === PropertyType.Object)
+        ) {
             return true;
         }
     }

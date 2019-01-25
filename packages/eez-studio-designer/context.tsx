@@ -195,12 +195,15 @@ export class DesignerContext implements IDesignerContext {
         showStructure: false
     };
 
+    filterSnapLines: ((node: IBaseObject) => boolean) | undefined;
+
     @action
     set(
         document: IDocument,
         viewStatePersistantState: IViewStatePersistantState,
         onSavePersistantState: (viewStatePersistantState: IViewStatePersistantState) => void,
-        options?: IDesignerOptions
+        options?: IDesignerOptions,
+        filterSnapLines?: (node: IBaseObject) => boolean
     ) {
         this.document = document;
 
@@ -209,6 +212,8 @@ export class DesignerContext implements IDesignerContext {
         this.options = options || {
             showStructure: false
         };
+
+        this.filterSnapLines = filterSnapLines;
     }
 
     destroy() {

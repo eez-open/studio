@@ -8,7 +8,8 @@ import {
     PropertyType,
     makeDerivedClassInfo,
     getChildOfObject,
-    styleGroup
+    styleGroup,
+    hidePropertiesInPropertyGrid
 } from "eez-studio-shared/model/object";
 import * as output from "eez-studio-shared/model/output";
 
@@ -34,6 +35,10 @@ export {
     GridWidget,
     LayoutViewWidget
 } from "eez-studio-page-editor/widget";
+
+////////////////////////////////////////////////////////////////////////////////
+
+hidePropertiesInPropertyGrid(Widget, ["resizing"]);
 
 ////////////////////////////////////////////////////////////////////////////////
 

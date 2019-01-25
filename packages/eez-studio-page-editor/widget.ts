@@ -32,6 +32,7 @@ import * as output from "eez-studio-shared/model/output";
 import { PageInitContext } from "eez-studio-page-editor/page-init-context";
 import { PageContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
+import { IResizing, resizingProperty } from "eez-studio-page-editor/resizing-widget-property";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -103,6 +104,8 @@ export class Widget extends EezObject {
     width: number;
     @observable
     height: number;
+    @observable
+    resizing: IResizing;
 
     get label() {
         return this.type;
@@ -147,6 +150,7 @@ export class Widget extends EezObject {
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
             },
+            resizingProperty,
             makeDataPropertyInfo("data"),
             makeActionPropertyInfo("action"),
             {
@@ -913,7 +917,7 @@ export class SelectWidget extends Widget {
 
                     return `${label || "???"} ➔ ${childLabel}`;
                 },
-                
+
                 interceptAddObject: (widgets: EezArrayObject<Widget>, object: Widget) => {
                     console.log("intercept");
                     object.x = 0;

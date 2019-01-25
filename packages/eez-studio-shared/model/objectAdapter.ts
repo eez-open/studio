@@ -1,7 +1,7 @@
 import { observable, action, computed } from "mobx";
 import { createTransformer } from "mobx-utils";
 
-import { _each, _find, _pickBy } from "eez-studio-shared/algorithm";
+import { _each, _find, _pickBy, _isEqual } from "eez-studio-shared/algorithm";
 
 import {
     isArray,
@@ -105,9 +105,13 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
     private transformer: (object: EezObject) => TreeObjectAdapter;
 
     @observable selected: boolean = false;
-    @observable expanded: boolean = false;
+    @observable expanded: boolean;
 
-    constructor(public object: EezObject, transformer?: (object: EezObject) => TreeObjectAdapter) {
+    constructor(
+        public object: EezObject,
+        transformer?: (object: EezObject) => TreeObjectAdapter,
+        expanded?: boolean
+    ) {
         if (transformer) {
             this.transformer = transformer;
         } else {
@@ -115,6 +119,17 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
                 return new TreeObjectAdapter(object, this.transformer);
             });
         }
+        this.expanded = expanded || false;
+    }
+
+    static createWithExpandedAll(object: EezObject) {
+        const transformer: (object: EezObject) => TreeObjectAdapter = createTransformer(
+            (object: EezObject) => {
+                return new TreeObjectAdapter(object, transformer, true);
+            }
+        );
+
+        return new TreeObjectAdapter(object, transformer);
     }
 
     @computed
@@ -228,6 +243,11 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
 
     @action
     selectObjectIds(objectIds: string[]) {
+        const currentlySelectedObjectIds = this.selectedItems.map(item => item.object._id);
+        if (_isEqual(objectIds.sort(), currentlySelectedObjectIds.sort())) {
+            return;
+        }
+
         const rootObject = getRootObject(this.object);
 
         const objects: EezObject[] = [];
@@ -237,6 +257,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
                 objects.push(object);
             }
         }
+
         this.selectObjects(objects);
     }
 

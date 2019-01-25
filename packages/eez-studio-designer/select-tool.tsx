@@ -11,7 +11,6 @@ import {
     Transform
 } from "eez-studio-shared/geometry";
 import {
-    INode,
     ISnapLines,
     findSnapLines,
     findClosestHorizontalSnapLinesToPosition,
@@ -183,14 +182,14 @@ export class SnapLines {
     lines: ISnapLines;
     enabled: boolean = false;
 
-    find(context: IDesignerContext, filterCallback?: (node: INode) => boolean) {
+    find(context: IDesignerContext) {
         this.lines = findSnapLines(
             {
                 id: "",
                 children: context.document.rootObjects
             },
             context.viewState.selectedObjects,
-            filterCallback
+            context.filterSnapLines
         );
     }
 
@@ -343,6 +342,10 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
 
     move(context: IDesignerContext, event: MouseEvent) {
         super.move(context, event);
+
+        if (this.elapsedTime < 100 && this.distance < 20) {
+            return;
+        }
 
         this.left = Math.floor(this.left + this.movement.x / context.viewState.transform.scale);
         this.top = Math.floor(this.top + this.movement.y / context.viewState.transform.scale);

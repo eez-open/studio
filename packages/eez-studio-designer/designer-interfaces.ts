@@ -65,6 +65,7 @@ export interface IDesignerContext {
     document: IDocument;
     viewState: IViewState;
     options: IDesignerOptions;
+    filterSnapLines?: (node: IBaseObject) => boolean;
 }
 
 export interface IViewStatePersistantState {

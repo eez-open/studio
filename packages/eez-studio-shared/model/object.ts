@@ -94,6 +94,7 @@ export interface PropertyInfo {
     hideInPropertyGrid?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
     readOnlyInPropertyGrid?: boolean;
     propertyGridGroup?: IPropertyGridGroupDefinition;
+    propertyGridComponent?: typeof React.Component;
     enumerable?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
     showOnlyChildrenInTree?: boolean;
     isOptional?: boolean;
