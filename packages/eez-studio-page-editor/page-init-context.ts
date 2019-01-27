@@ -19,6 +19,8 @@ export interface IPageInitContext {
         displayName?: string,
         propertyGridGroup?: IPropertyGridGroupDefinition
     ): PropertyInfo;
+
+    layoutCollectionPath: string[];
 }
 
 export let PageInitContext: IPageInitContext;

@@ -23,7 +23,8 @@ export interface IDataContext {
 export interface IDrawContext {
     drawPageFrame(ctx: CanvasRenderingContext2D, rect: Rect, scale: number, style: string): void;
     drawDefaultWidget(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
-    drawLayoutViewWidget(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
+    drawLayoutViewWidget?(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
+    renderLayoutViewWidget?(widget: Widget, rect: Rect): React.ReactNode;
 }
 
 export interface IStyle {
@@ -37,8 +38,11 @@ export interface IPageContext {
     draw: IDrawContext;
 
     findActionIndex(actionName: any): number;
-    getPages(): EezArrayObject<Page>;
-    findPage(pageName: string): Page | undefined;
+
+    layoutConceptName: string;
+    getLayouts(): EezArrayObject<Page>;
+    findLayout(layoutName: string): Page | undefined;
+
     findStyle(styleName: any): IStyle | undefined;
     findStyleOrGetDefault(styleName: any): IStyle;
 }

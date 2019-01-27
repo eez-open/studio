@@ -854,7 +854,7 @@ class ObjectComponent extends React.Component<{
                 );
             }
 
-            const node = this.props.object.object.render();
+            const node = this.props.object.object.render(rect);
             if (node) {
                 return (
                     <div

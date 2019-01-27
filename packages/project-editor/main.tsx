@@ -61,7 +61,9 @@ EEZStudio.electron.ipcRenderer.on("reload", async () => {
                     referencedObjectCollectionPath: ["actions"],
                     propertyGridGroup: propertyGridGroup || actionsGroup
                 };
-            }
+            },
+
+            layoutCollectionPath: ["gui", "pages"]
         });
 
         const storeModule = await import("project-editor/core/store");

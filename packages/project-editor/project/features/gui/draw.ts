@@ -1,6 +1,11 @@
 import { Rect } from "eez-studio-shared/geometry";
 
-import { EezObject, EezArrayObject, isObjectInstanceOf } from "eez-studio-shared/model/object";
+import {
+    EezObject,
+    EezArrayObject,
+    isObjectInstanceOf,
+    isAncestor
+} from "eez-studio-shared/model/object";
 import { objectToJS } from "eez-studio-shared/model/serialization";
 
 import { createWidgetTree, drawTree } from "eez-studio-page-editor/widget-tree";
@@ -1153,16 +1158,18 @@ export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect) {
     if (layoutName) {
         const layout = findPage(layoutName);
         if (layout) {
-            return drawFromCache(
-                "drawLayoutViewWidget",
-                getCacheId(layout) + "." + rect.width + "." + rect.height,
-                rect.width,
-                rect.height,
-                (ctx: CanvasRenderingContext2D) => {
-                    let tree = createWidgetTree(layout, true);
-                    drawTree(ctx, tree, 1, () => {});
-                }
-            );
+            if (!isAncestor(widget, layout)) {
+                return drawFromCache(
+                    "drawLayoutViewWidget",
+                    getCacheId(layout) + "." + rect.width + "." + rect.height,
+                    rect.width,
+                    rect.height,
+                    (ctx: CanvasRenderingContext2D) => {
+                        let tree = createWidgetTree(layout, true);
+                        drawTree(ctx, tree, 1, () => {});
+                    }
+                );
+            }
         }
     }
 

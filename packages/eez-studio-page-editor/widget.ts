@@ -305,30 +305,23 @@ export class Widget extends EezObject {
                 break;
             }
         }
-        if (i == objects.length) {
+        if (i === objects.length) {
             additionalMenuItems.push(
                 UIElementsFactory.createMenuItem({
                     label: "Put in Container",
                     click: () => Widget.putInContainer(objects as Widget[])
                 })
             );
+
+            additionalMenuItems.push(
+                UIElementsFactory.createMenuItem({
+                    label: `Create ${PageContext.layoutConceptName}`,
+                    click: () => Widget.createLayout(objects as Widget[])
+                })
+            );
         }
 
         if (objects.length === 1) {
-            additionalMenuItems.push(
-                UIElementsFactory.createMenuItem({
-                    label: "Create Layout",
-                    click: () => (objects[0] as Widget).createLayout()
-                })
-            );
-
-            additionalMenuItems.push(
-                UIElementsFactory.createMenuItem({
-                    label: "Replace with Layout",
-                    click: () => (objects[0] as Widget).replaceWithLayout()
-                })
-            );
-
             let parent = objects[0]._parent;
             if (parent && parent._parent instanceof SelectWidget) {
                 additionalMenuItems.push(
@@ -370,50 +363,65 @@ export class Widget extends EezObject {
         DocumentStore.replaceObject(this, loadObject(undefined, selectWidgetJsObject, Widget));
     }
 
-    static putInContainer(widgets: Widget[]) {
-        let x1 = widgets[0].x;
-        let y1 = widgets[0].y;
-        let x2 = widgets[0].x + widgets[0].width;
-        let y2 = widgets[0].y + widgets[0].height;
-        for (let i = 1; i < widgets.length; i++) {
-            let widget = widgets[i];
+    static createWidgets(fromWidgets: Widget[]) {
+        let x1 = fromWidgets[0].x;
+        let y1 = fromWidgets[0].y;
+        let x2 = fromWidgets[0].x + fromWidgets[0].width;
+        let y2 = fromWidgets[0].y + fromWidgets[0].height;
+        for (let i = 1; i < fromWidgets.length; i++) {
+            let widget = fromWidgets[i];
             x1 = Math.min(widget.x, x1);
             y1 = Math.min(widget.y, y1);
             x2 = Math.max(widget.x + widget.width, x2);
             y2 = Math.max(widget.y + widget.height, y2);
         }
 
-        var containerWidgetJsObject = new ContainerWidget();
-        Object.assign(containerWidgetJsObject, ContainerWidget.classInfo.defaultValue);
+        const widgets = [];
 
-        containerWidgetJsObject.x = x1;
-        containerWidgetJsObject.y = y1;
-        containerWidgetJsObject.width = x2 - x1;
-        containerWidgetJsObject.height = y2 - y1;
-
-        for (let i = 0; i < widgets.length; i++) {
-            let widget = widgets[i];
+        for (let i = 0; i < fromWidgets.length; i++) {
+            let widget = fromWidgets[i];
             let widgetJsObject = objectToJS(widget);
 
             widgetJsObject.x -= x1;
             widgetJsObject.y -= y1;
 
-            containerWidgetJsObject.widgets._array = [widgetJsObject];
+            widgets.push(widgetJsObject);
         }
 
-        DocumentStore.replaceObjects(
+        return {
             widgets,
+            x: x1,
+            y: y1,
+            width: x2 - x1,
+            height: y2 - y1
+        };
+    }
+
+    static putInContainer(fromWidgets: Widget[]) {
+        var containerWidgetJsObject = ContainerWidget.classInfo.defaultValue;
+
+        const createWidgetsResult = Widget.createWidgets(fromWidgets);
+
+        containerWidgetJsObject.widgets = createWidgetsResult.widgets;
+
+        containerWidgetJsObject.x = createWidgetsResult.x;
+        containerWidgetJsObject.y = createWidgetsResult.y;
+        containerWidgetJsObject.width = createWidgetsResult.width;
+        containerWidgetJsObject.height = createWidgetsResult.height;
+
+        DocumentStore.replaceObjects(
+            fromWidgets,
             loadObject(undefined, containerWidgetJsObject, Widget)
         );
     }
 
-    async createLayout() {
-        const layouts = PageContext.getPages();
+    static async createLayout(fromWidgets: Widget[]) {
+        const layouts = PageContext.getLayouts();
 
         try {
             const result = await showGenericDialog({
                 dialogDefinition: {
-                    title: "Layout name",
+                    title: `${PageContext.layoutConceptName} name`,
                     fields: [
                         {
                             name: "name",
@@ -427,12 +435,9 @@ export class Widget extends EezObject {
                 }
             });
 
-            // create a new layout
             const layoutName = result.values.name;
 
-            const thisWidgetJS = objectToJS(this);
-            thisWidgetJS.x = 0;
-            thisWidgetJS.y = 0;
+            const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
             DocumentStore.addObject(
                 layouts,
@@ -442,74 +447,31 @@ export class Widget extends EezObject {
                         name: layoutName,
                         x: 0,
                         y: 0,
-                        width: this.width,
-                        height: this.height,
+                        width: createWidgetsResult.width,
+                        height: createWidgetsResult.height,
                         style: "default",
-                        widgets: [thisWidgetJS]
+                        widgets: createWidgetsResult.widgets
                     },
                     findClass("Page")!
                 )
             );
 
-            // replace this widget with the LayoutView of new layout
-            const newWidget = loadObject(
-                undefined,
-                {
-                    type: "LayoutView",
-                    style: "default",
-                    x: this.x,
-                    y: this.y,
-                    width: this.width,
-                    height: this.height,
-                    layout: layoutName
-                },
-                Widget
+            DocumentStore.replaceObjects(
+                fromWidgets,
+                loadObject(
+                    undefined,
+                    {
+                        type: "LayoutView",
+                        style: "default",
+                        x: createWidgetsResult.x,
+                        y: createWidgetsResult.y,
+                        width: createWidgetsResult.width,
+                        height: createWidgetsResult.height,
+                        layout: layoutName
+                    },
+                    Widget
+                )
             );
-
-            DocumentStore.replaceObject(this, newWidget);
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    async replaceWithLayout() {
-        const layouts = PageContext.getPages();
-
-        try {
-            const result = await showGenericDialog({
-                dialogDefinition: {
-                    title: "Select layout",
-                    fields: [
-                        {
-                            name: "name",
-                            type: "enum",
-                            enumItems: layouts._array.map(layout => layout.name)
-                        }
-                    ]
-                },
-                values: {
-                    name: ""
-                }
-            });
-
-            const layoutName = result.values.name;
-
-            // replace this widget with LayoutView
-            const newWidget = loadObject(
-                undefined,
-                {
-                    type: "LayoutView",
-                    style: "default",
-                    x: this.x,
-                    y: this.y,
-                    width: this.width,
-                    height: this.height,
-                    layout: layoutName
-                },
-                Widget
-            );
-
-            DocumentStore.replaceObject(this, newWidget);
         } catch (error) {
             console.error(error);
         }
@@ -552,7 +514,7 @@ export class Widget extends EezObject {
         return undefined;
     }
 
-    render(): React.ReactNode {
+    render(rect: Rect): React.ReactNode {
         return undefined;
     }
 }
@@ -1080,7 +1042,7 @@ export class LayoutViewWidget extends Widget {
             {
                 name: "layout",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "pages"]
+                referencedObjectCollectionPath: PageInitContext.layoutCollectionPath
             }
         ],
 
@@ -1118,7 +1080,7 @@ export class LayoutViewWidget extends Widget {
             }
 
             if (this.layout) {
-                let layout = PageContext.findPage(this.layout);
+                let layout = PageContext.findLayout(this.layout);
                 if (!layout) {
                     messages.push(output.propertyNotFoundMessage(this, "layout"));
                 }
@@ -1129,7 +1091,15 @@ export class LayoutViewWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageContext.draw.drawLayoutViewWidget(this, rect);
+        return PageContext.draw.drawLayoutViewWidget
+            ? PageContext.draw.drawLayoutViewWidget(this, rect)
+            : undefined;
+    }
+
+    render(rect: Rect): React.ReactNode {
+        return PageContext.draw.renderLayoutViewWidget
+            ? PageContext.draw.renderLayoutViewWidget(this, rect)
+            : null;
     }
 }
 

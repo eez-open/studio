@@ -36,10 +36,13 @@ setPageContext({
     data,
     draw,
     findActionIndex,
-    getPages() {
+
+    layoutConceptName: "Layout",
+    getLayouts() {
         return (getProperty(ProjectStore.project, "gui") as Gui).pages;
     },
-    findPage,
+
+    findLayout: findPage,
     findStyle,
     findStyleOrGetDefault
 });
