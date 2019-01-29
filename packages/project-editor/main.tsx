@@ -8,7 +8,6 @@ import { ThemeProvider } from "eez-studio-ui/styled-components";
 
 import {
     PropertyType,
-    TargetDataType,
     IPropertyGridGroupDefinition,
     dataGroup,
     actionsGroup
@@ -35,7 +34,6 @@ EEZStudio.electron.ipcRenderer.on("reload", async () => {
         contextModule.setPageInitContext({
             makeDataPropertyInfo(
                 name: string,
-                targetDataType?: TargetDataType,
                 displayName?: string,
                 propertyGridGroup?: IPropertyGridGroupDefinition
             ) {
@@ -44,7 +42,6 @@ EEZStudio.electron.ipcRenderer.on("reload", async () => {
                     displayName,
                     type: PropertyType.ObjectReference,
                     referencedObjectCollectionPath: ["data"],
-                    targetDataType: targetDataType || TargetDataType.String,
                     propertyGridGroup: propertyGridGroup || dataGroup
                 };
             },

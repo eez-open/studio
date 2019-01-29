@@ -139,17 +139,7 @@ class EditorObject implements IBaseObject {
     get children(): EditorObject[] {
         let childrenObjects: EezObject[] | undefined;
 
-        if (this.object instanceof ContainerWidget) {
-            childrenObjects = (this.object as ContainerWidget).widgets._array;
-        } else if (this.object instanceof ListWidget || this.object instanceof GridWidget) {
-            if (this.object.itemWidget) {
-                childrenObjects = [this.object.itemWidget];
-            }
-        } else if (this.object instanceof SelectWidget) {
-            childrenObjects = this.object.widgets._array;
-        } else if (this.object instanceof SelectWidgetEditor) {
-            childrenObjects = (this.object.parent! as SelectWidget).widgets._array;
-        } else if (this.object instanceof Page) {
+        if (this.object instanceof Page) {
             childrenObjects = this.object.widgets._array;
 
             if (this.pageEditorContext.dragWidget) {
@@ -159,6 +149,10 @@ class EditorObject implements IBaseObject {
             if (this.pageEditorContext.options.showStructure) {
                 childrenObjects = childrenObjects.concat(findSelectWidgetEditors(this.object));
             }
+        } else if (this.object instanceof SelectWidgetEditor) {
+            childrenObjects = (this.object.parent! as SelectWidget).widgets._array;
+        } else if (this.object instanceof Widget) {
+            childrenObjects = this.object.getChildrenObjectsInEditor();
         }
 
         return childrenObjects ? childrenObjects.map(object => this.transformer(object)) : [];

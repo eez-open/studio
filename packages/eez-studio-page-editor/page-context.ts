@@ -20,13 +20,6 @@ export interface IDataContext {
     findDataItem(dataItemId: string): IDataItem | undefined;
 }
 
-export interface IDrawContext {
-    drawPageFrame(ctx: CanvasRenderingContext2D, rect: Rect, scale: number, style: string): void;
-    drawDefaultWidget(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
-    drawLayoutViewWidget?(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
-    renderLayoutViewWidget?(widget: Widget, rect: Rect): React.ReactNode;
-}
-
 export interface IStyle {
     backgroundColor?: string;
 }
@@ -35,7 +28,10 @@ export interface IPageContext {
     inEditor: boolean;
 
     data: IDataContext;
-    draw: IDrawContext;
+
+    drawPageFrame(ctx: CanvasRenderingContext2D, rect: Rect, scale: number, style: string): void;
+    drawDefaultWidget(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
+    renderLayoutViewWidget(widget: Widget, rect: Rect): React.ReactNode;
 
     findActionIndex(actionName: any): number;
 

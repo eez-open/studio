@@ -99,7 +99,7 @@ function drawPageFrameForTreeNode(
     callback: () => void
 ) {
     let page = node.item.object as Page;
-    PageContext.draw.drawPageFrame(
+    PageContext.drawPageFrame(
         ctx,
         {
             left: page.x,

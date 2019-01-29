@@ -34,7 +34,11 @@ import { GuiNavigation } from "project-editor/project/features/gui/GuiNavigation
 setPageContext({
     inEditor: true,
     data,
-    draw,
+
+    drawPageFrame: draw.drawPageFrame,
+    drawDefaultWidget: draw.drawDefaultWidget,
+    renderLayoutViewWidget: draw.renderLayoutViewWidget,
+
     findActionIndex,
 
     layoutConceptName: "Layout",

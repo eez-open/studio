@@ -1,3 +1,5 @@
+import React from "react";
+
 import { Rect } from "eez-studio-shared/geometry";
 
 import {
@@ -89,7 +91,7 @@ function drawFromCache(
         canvas.width = w;
         canvas.height = h;
 
-        let ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
+        let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
         callback(ctx);
 
@@ -455,7 +457,7 @@ export function drawDefaultWidget(widget: Widget.Widget, rect: Rect) {
 }
 
 export function drawDisplayDataWidget(widget: Widget.Widget, rect: Rect) {
-    let text = (widget.data && ((<string>data.get(widget.data)) as string)) || "";
+    let text = (widget.data && (data.get(widget.data) as string)) || "";
     return drawText(text, rect.width, rect.height, findStyleOrGetDefault(widget.style), false);
 }
 
@@ -541,7 +543,7 @@ export function drawToggleButtonWidget(widget: Widget.Widget, rect: Rect) {
 
 export function drawButtonGroupWidget(widget: Widget.Widget, rect: Rect) {
     let buttonLabels = (widget.data && data.getValueList(widget.data)) || [];
-    let selectedButton = (widget.data && <number>data.get(widget.data)) || 0;
+    let selectedButton = (widget.data && data.get(widget.data)) || 0;
     let style = findStyleOrGetDefault(widget.style);
 
     return drawFromCache(
@@ -874,7 +876,7 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
             let min = (barGraphWidget.data && data.getMin(barGraphWidget.data)) || 0;
             let max = (barGraphWidget.data && data.getMax(barGraphWidget.data)) || 0;
 
-            let valueText = (barGraphWidget.data && <string>data.get(barGraphWidget.data)) || "0";
+            let valueText = (barGraphWidget.data && data.get(barGraphWidget.data)) || "0";
             let value = parseFloat(valueText);
             if (isNaN(value)) {
                 value = 0;
@@ -957,7 +959,7 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
             }
 
             function drawLine(lineData: string | undefined, lineStyle: string | undefined) {
-                let value = (lineData && parseFloat(<string>data.get(lineData))) || 0;
+                let value = (lineData && parseFloat(data.get(lineData))) || 0;
                 if (isNaN(value)) {
                     value = 0;
                 }
@@ -1174,6 +1176,27 @@ export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect) {
     }
 
     return undefined;
+}
+
+export function renderLayoutViewWidget(widget: Widget.Widget, rect: Rect) {
+    const canvas = drawLayoutViewWidget(widget, rect);
+    if (!canvas) {
+        return null;
+    }
+
+    return (
+        <img
+            style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: rect.width,
+                height: rect.height,
+                imageRendering: "pixelated"
+            }}
+            src={canvas.toDataURL()}
+        />
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -16,7 +16,8 @@ import {
     IEditorState,
     getRootObject,
     getObjectFromObjectId,
-    isPropertyEnumerable
+    isPropertyEnumerable,
+    EezBrowsableObject
 } from "eez-studio-shared/model/object";
 import { objectsToClipboardData } from "eez-studio-shared/model/clipboard";
 import {
@@ -132,8 +133,50 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
         return new TreeObjectAdapter(object, transformer);
     }
 
+    browsableObjectChildren(browsableObject: EezBrowsableObject) {
+        if (typeof browsableObject.value !== "object") {
+            return [];
+        }
+
+        if (Array.isArray(browsableObject.value)) {
+            return browsableObject.value.map((value, i) => {
+                const childBrowsableObject = EezBrowsableObject.create(
+                    browsableObject,
+                    {
+                        name: i.toString(),
+                        type: PropertyType.Object,
+                        typeClass: EezBrowsableObject
+                    },
+                    value
+                );
+                return new TreeObjectAdapter(childBrowsableObject, this.transformer);
+            });
+        }
+
+        const children = [];
+        for (var propertyName in browsableObject.value) {
+            if (browsableObject.value.hasOwnProperty(propertyName)) {
+                const childBrowsableObject = EezBrowsableObject.create(
+                    browsableObject,
+                    {
+                        name: propertyName,
+                        type: PropertyType.Object,
+                        typeClass: EezBrowsableObject
+                    },
+                    browsableObject.value[propertyName]
+                );
+                children.push(new TreeObjectAdapter(childBrowsableObject, this.transformer));
+            }
+        }
+        return children;
+    }
+
     @computed
     get children(): TreeObjectAdapterChildren {
+        if (this.object instanceof EezBrowsableObject) {
+            return this.browsableObjectChildren(this.object);
+        }
+
         if (isArray(this.object)) {
             return asArray(this.object).map(child => this.transformer(child));
         }
@@ -147,13 +190,22 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
         );
 
         if (
-            properties.length == 1 &&
+            properties.length === 1 &&
             properties[0].type === PropertyType.Array &&
             !(properties[0].showOnlyChildrenInTree === false)
         ) {
             return asArray(getProperty(this.object, properties[0].name)).map(child =>
                 this.transformer(child)
             );
+        }
+
+        if (
+            properties.length === 1 &&
+            properties[0].type === PropertyType.Object &&
+            properties[0].typeClass === EezBrowsableObject
+        ) {
+            const browsableObject = getProperty(this.object, properties[0].name);
+            return this.browsableObjectChildren(browsableObject);
         }
 
         return properties.reduce(

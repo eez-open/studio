@@ -33,13 +33,6 @@ export enum PropertyType {
     Any
 }
 
-export enum TargetDataType {
-    String,
-    Number,
-    Array,
-    Object
-}
-
 export enum MessageType {
     INFO,
     ERROR,
@@ -83,7 +76,6 @@ export interface PropertyInfo {
     type: PropertyType;
 
     // optional properties
-    targetDataType?: TargetDataType;
     displayName?: string;
     enumItems?: EnumItem[];
     typeClass?: EezClass;
@@ -105,6 +97,7 @@ export interface PropertyInfo {
     childLabel?: (childObject: EezObject, childLabel: string) => string;
     check?: (object: EezObject) => IMessage[];
     interceptAddObject?: (parentObject: EezObject, object: EezObject) => EezObject;
+    downloadFileName?: (object: EezObject, propertyInfo: PropertyInfo) => string;
 }
 
 export interface NavigationComponentProps {
@@ -273,6 +266,31 @@ export class EezValueObject extends EezObject {
 }
 
 registerClass(EezValueObject);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class EezBrowsableObject extends EezObject {
+    propertyInfo: any;
+    value: any;
+
+    static classInfo: ClassInfo = {
+        label: (object: EezBrowsableObject) => object.propertyInfo.name,
+        properties: []
+    };
+
+    static create(object: EezObject, propertyInfo: PropertyInfo, value: any) {
+        const browsableObject = new EezBrowsableObject();
+
+        browsableObject._id = object._id + "." + propertyInfo.name;
+        browsableObject._key = propertyInfo.name;
+        browsableObject._parent = object;
+
+        browsableObject.propertyInfo = propertyInfo;
+        browsableObject.value = value;
+
+        return browsableObject;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -22,7 +22,6 @@ import {
     cloneObject,
     geometryGroup,
     styleGroup,
-    TargetDataType,
     IPropertyGridGroupDefinition
 } from "eez-studio-shared/model/object";
 import { loadObject } from "eez-studio-shared/model/serialization";
@@ -52,16 +51,10 @@ export interface ObjectGeometryChange {
 
 export function makeDataPropertyInfo(
     name: string,
-    targetDataType?: TargetDataType,
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition
 ) {
-    return PageInitContext.makeDataPropertyInfo(
-        name,
-        targetDataType,
-        displayName,
-        propertyGridGroup
-    );
+    return PageInitContext.makeDataPropertyInfo(name, displayName, propertyGridGroup);
 }
 
 export function makeActionPropertyInfo(
@@ -517,6 +510,10 @@ export class Widget extends EezObject {
     render(rect: Rect): React.ReactNode {
         return undefined;
     }
+
+    getChildrenObjectsInEditor(): Widget[] | undefined {
+        return undefined;
+    }
 }
 
 registerClass(Widget);
@@ -603,7 +600,11 @@ export class ContainerWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageContext.draw.drawDefaultWidget(this, rect);
+        return PageContext.drawDefaultWidget(this, rect);
+    }
+
+    getChildrenObjectsInEditor() {
+        return this.widgets._array;
     }
 }
 
@@ -709,7 +710,11 @@ export class ListWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageContext.draw.drawDefaultWidget(this, rect);
+        return PageContext.drawDefaultWidget(this, rect);
+    }
+
+    getChildrenObjectsInEditor() {
+        return this.itemWidget && [this.itemWidget];
     }
 }
 
@@ -771,7 +776,11 @@ export class GridWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageContext.draw.drawDefaultWidget(this, rect);
+        return PageContext.drawDefaultWidget(this, rect);
+    }
+
+    getChildrenObjectsInEditor() {
+        return this.itemWidget && [this.itemWidget];
     }
 }
 
@@ -1027,7 +1036,11 @@ export class SelectWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageContext.draw.drawDefaultWidget(this, rect);
+        return PageContext.drawDefaultWidget(this, rect);
+    }
+
+    getChildrenObjectsInEditor() {
+        return this.widgets._array;
     }
 }
 
@@ -1090,16 +1103,8 @@ export class LayoutViewWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageContext.draw.drawLayoutViewWidget
-            ? PageContext.draw.drawLayoutViewWidget(this, rect)
-            : undefined;
-    }
-
     render(rect: Rect): React.ReactNode {
-        return PageContext.draw.renderLayoutViewWidget
-            ? PageContext.draw.renderLayoutViewWidget(this, rect)
-            : null;
+        return PageContext.renderLayoutViewWidget(this, rect);
     }
 }
 
