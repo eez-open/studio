@@ -13,7 +13,11 @@ import * as output from "eez-studio-shared/model/output";
 
 import { setPageContext } from "eez-studio-page-editor/page-context";
 
-import * as data from "project-editor/project/features/data/data";
+import {
+    dataContext,
+    findDataItemIndex,
+    findDataItem
+} from "project-editor/project/features/data/data";
 import { findActionIndex } from "project-editor/project/features/action/action";
 import * as draw from "project-editor/project/features/gui/draw";
 
@@ -33,13 +37,17 @@ import { GuiNavigation } from "project-editor/project/features/gui/GuiNavigation
 
 setPageContext({
     inEditor: true,
-    data,
+
+    rootDataContext: dataContext,
 
     drawPageFrame: draw.drawPageFrame,
     drawDefaultWidget: draw.drawDefaultWidget,
     renderLayoutViewWidget: draw.renderLayoutViewWidget,
 
     findActionIndex,
+
+    findDataItemIndex: findDataItemIndex,
+    findDataItem: findDataItem,
 
     layoutConceptName: "Layout",
     getLayouts() {

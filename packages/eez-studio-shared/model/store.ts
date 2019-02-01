@@ -889,30 +889,43 @@ class DocumentStoreClass {
         );
     }
 
-    updateObject(object: EezObject, values: any) {
+    updateObject(object: EezObject, inputValues: any) {
         // make sure that plain JavaScript objects to EezObject's
-        const convertedValues: any = {};
-        for (var propertyName in values) {
-            if (values.hasOwnProperty(propertyName)) {
-                const value = values[propertyName];
+        let values: any = {};
+
+        let oldValues: any;
+        if (object._classInfo.afterUpdateObjectHook) {
+            oldValues = {};
+        }
+
+        for (let propertyName in inputValues) {
+            if (inputValues.hasOwnProperty(propertyName)) {
+                if (object._classInfo.afterUpdateObjectHook) {
+                    oldValues[propertyName] = getProperty(object, propertyName);
+                }
 
                 const propertyInfo = findPropertyByName(object, propertyName);
                 if (propertyInfo) {
-                    if (
-                        (propertyInfo.type === PropertyType.Object ||
-                            propertyInfo.type === PropertyType.Array) &&
-                        value !== undefined &&
-                        !(value instanceof EezObject)
-                    ) {
-                        // convert to EezObject
-                        convertedValues[propertyName] = loadObject(
-                            object,
-                            values[propertyName],
-                            propertyInfo.typeClass!
-                        );
+                    if (propertyInfo.computed !== true) {
+                        const value = inputValues[propertyName];
+                        if (
+                            (propertyInfo.type === PropertyType.Object ||
+                                propertyInfo.type === PropertyType.Array) &&
+                            value !== undefined &&
+                            !(value instanceof EezObject)
+                        ) {
+                            // convert to EezObject
+                            values[propertyName] = loadObject(
+                                object,
+                                inputValues[propertyName],
+                                propertyInfo.typeClass!
+                            );
+                        } else {
+                            // use as is
+                            values[propertyName] = value;
+                        }
                     } else {
-                        // use as is
-                        convertedValues[propertyName] = value;
+                        console.warn("ignored computed property", propertyName);
                     }
                 } else {
                     console.error("ignored unknown property", propertyName);
@@ -920,14 +933,18 @@ class DocumentStoreClass {
             }
         }
 
-        return updateObject(
+        updateObject(
             {
                 undoManager: UndoManager,
                 selectionManager: NavigationStore
             },
             object,
-            convertedValues
+            values
         );
+
+        if (object._classInfo.afterUpdateObjectHook) {
+            object._classInfo.afterUpdateObjectHook(object, inputValues, oldValues);
+        }
     }
 
     deleteObject(object: EezObject) {

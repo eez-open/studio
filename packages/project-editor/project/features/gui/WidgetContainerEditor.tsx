@@ -12,8 +12,10 @@ import {
 } from "eez-studio-shared/model/objectAdapter";
 import { UIStateStore, DocumentStore } from "eez-studio-shared/model/store";
 
-import { Widget, SelectWidget, ObjectGeometryChange } from "eez-studio-page-editor/widget";
+import { Widget, SelectWidget } from "eez-studio-page-editor/widget";
 import { TreeNode, createWidgetTree } from "eez-studio-page-editor/widget-tree";
+
+import { dataContext } from "project-editor/project/features/data/data";
 
 import {
     CanvasEditor,
@@ -38,15 +40,11 @@ export class WidgetContainerEditor extends CanvasEditor {
     }
 
     createTree() {
-        return createWidgetTree(this.props.displaySelection as TreeObjectAdapter, true);
-    }
-
-    applyGeometryChanges(geometryChanges: ObjectGeometryChange[]) {
-        for (let i = 0; i < geometryChanges.length; i++) {
-            let geometryChange = geometryChanges[i];
-            let widget = geometryChange.object as Widget;
-            widget.applyGeometryChange(geometryChange.changedProperties, geometryChanges);
-        }
+        return createWidgetTree(
+            this.props.displaySelection as TreeObjectAdapter,
+            true,
+            dataContext
+        );
     }
 
     getItemsInsideRect(r: Rect) {
@@ -135,7 +133,7 @@ export class WidgetContainerEditor extends CanvasEditor {
                             children: []
                         },
 
-                        image: (object as Widget).draw(rect)
+                        image: (object as Widget).draw(rect, dataContext)
                     };
 
                     this.tree.children.push(dropItem);

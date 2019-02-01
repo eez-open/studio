@@ -11,6 +11,7 @@ import {
 import { objectToJS } from "eez-studio-shared/model/serialization";
 
 import { createWidgetTree, drawTree } from "eez-studio-page-editor/widget-tree";
+import { IDataContext } from "eez-studio-page-editor/page-context";
 
 import * as data from "project-editor/project/features/data/data";
 
@@ -1147,7 +1148,7 @@ export function drawListGraphWidget(widget: Widget.Widget, rect: Rect) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect) {
+export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect, dataContext: IDataContext) {
     let pageViewWidget = widget as Widget.LayoutViewWidget;
 
     let layoutName;
@@ -1167,7 +1168,7 @@ export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect) {
                     rect.width,
                     rect.height,
                     (ctx: CanvasRenderingContext2D) => {
-                        let tree = createWidgetTree(layout, true);
+                        let tree = createWidgetTree(layout, true, dataContext);
                         drawTree(ctx, tree, 1, () => {});
                     }
                 );
@@ -1178,8 +1179,12 @@ export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect) {
     return undefined;
 }
 
-export function renderLayoutViewWidget(widget: Widget.Widget, rect: Rect) {
-    const canvas = drawLayoutViewWidget(widget, rect);
+export function renderLayoutViewWidget(
+    widget: Widget.Widget,
+    rect: Rect,
+    dataContext: IDataContext
+) {
+    const canvas = drawLayoutViewWidget(widget, rect, dataContext);
     if (!canvas) {
         return null;
     }
@@ -1201,7 +1206,7 @@ export function renderLayoutViewWidget(widget: Widget.Widget, rect: Rect) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawAppViewWidget(widget: Widget.Widget, rect: Rect) {
+export function drawAppViewWidget(widget: Widget.Widget, rect: Rect, dataContext: IDataContext) {
     let pageViewWidget = widget as Widget.AppViewWidget;
 
     if (pageViewWidget.data) {
@@ -1216,7 +1221,7 @@ export function drawAppViewWidget(widget: Widget.Widget, rect: Rect) {
                     rect.width,
                     rect.height,
                     (ctx: CanvasRenderingContext2D) => {
-                        let tree = createWidgetTree(page, true);
+                        let tree = createWidgetTree(page, true, dataContext);
                         drawTree(ctx, tree, 1, () => {});
                     }
                 );
@@ -1266,7 +1271,8 @@ export function drawPage(
         width: number;
         height: number;
         widgets: EezArrayObject<Widget.Widget>;
-    } & EezObject
+    } & EezObject,
+    dataContext: IDataContext
 ) {
     let canvas = document.createElement("canvas");
 
@@ -1275,7 +1281,7 @@ export function drawPage(
 
     let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-    let tree = createWidgetTree(page, true);
+    let tree = createWidgetTree(page, true, dataContext);
     drawTree(ctx, tree, 1, () => {});
 
     return canvas;

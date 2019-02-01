@@ -9,6 +9,9 @@ export interface IBaseObject {
     selectionRects: Rect[];
     isSelectable?: boolean;
     isResizable?: boolean;
+    getResizeHandlers?: () => IResizeHandler[] | undefined | false;
+    getColumnWidth?: (columnIndex: number) => number;
+    resizeColumn?: (columnIndex: number, savedColumnWidth: number, offset: number) => void;
     open(): void;
 }
 
@@ -31,8 +34,30 @@ export interface IDocument {
     createContextMenu(objects: IBaseObject[]): IMenu | undefined;
 
     // events
-    onDragStart(op: "move" | "resize"): void;
-    onDragEnd(op: "move" | "resize", changed: boolean, objects: IBaseObject[]): void;
+    onDragStart(op: "move" | "resize" | "col-resize"): void;
+    onDragEnd(op: "move" | "resize" | "col-resize", changed: boolean, objects: IBaseObject[]): void;
+}
+
+export type HandleType =
+    | "nw-resize"
+    | "n-resize"
+    | "ne-resize"
+    | "w-resize"
+    | "e-resize"
+    | "sw-resize"
+    | "s-resize"
+    | "se-resize"
+    | "col-resize";
+
+export interface IResizeHandler {
+    // Top-left: 0, 0
+    // Bottom-right: 100, 100
+    // Left: 0 50
+    // ...
+    x: number;
+    y: number;
+    type: HandleType;
+    columnIndex?: number;
 }
 
 export interface IViewState {
@@ -44,7 +69,7 @@ export interface IViewState {
 
     // selection
     selectedObjects: IBaseObject[];
-    isSelectionResizable: boolean;
+    getResizeHandlers: () => IResizeHandler[] | undefined;
     selectedObjectsBoundingRect: Rect;
 
     isObjectSelected(object: IBaseObject): boolean;

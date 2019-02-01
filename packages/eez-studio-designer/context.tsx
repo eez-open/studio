@@ -16,7 +16,8 @@ import {
     IViewState,
     IViewStatePersistantState,
     IDesignerContext,
-    IDesignerOptions
+    IDesignerOptions,
+    IResizeHandler
 } from "eez-studio-designer/designer-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,13 +129,60 @@ class ViewState implements IViewState {
         }
     }
 
-    get isSelectionResizable() {
-        for (const object of this.selectedObjects) {
-            if (!object.isResizable) {
-                return false;
+    getResizeHandlers(): IResizeHandler[] | undefined {
+        if (!(this.selectedObjects.length === 1 && this.selectedObjects[0].isResizable === true)) {
+            return undefined;
+        }
+
+        if (this.selectedObjects[0].getResizeHandlers) {
+            const resizingHandlers = this.selectedObjects[0].getResizeHandlers();
+            if (resizingHandlers !== false) {
+                return resizingHandlers;
             }
         }
-        return true;
+
+        return [
+            {
+                x: 0,
+                y: 0,
+                type: "nw-resize"
+            },
+            {
+                x: 50,
+                y: 0,
+                type: "n-resize"
+            },
+            {
+                x: 100,
+                y: 0,
+                type: "ne-resize"
+            },
+            {
+                x: 0,
+                y: 50,
+                type: "w-resize"
+            },
+            {
+                x: 100,
+                y: 50,
+                type: "e-resize"
+            },
+            {
+                x: 0,
+                y: 100,
+                type: "sw-resize"
+            },
+            {
+                x: 50,
+                y: 100,
+                type: "s-resize"
+            },
+            {
+                x: 100,
+                y: 100,
+                type: "se-resize"
+            }
+        ];
     }
 
     get selectedObjectsBoundingRect(): Rect {

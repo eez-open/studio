@@ -44,6 +44,7 @@ import {
     StoryboardTabState
 } from "project-editor/project/features/gui/storyboard";
 import { getPages, findPage } from "project-editor/project/features/gui/gui";
+import { dataContext } from "project-editor/project/features/data/data";
 import { Page } from "project-editor/project/features/gui/page";
 import {
     drawPageFrame,
@@ -87,7 +88,7 @@ class RenderTask {
     }
 
     render() {
-        return drawPage(this.page);
+        return drawPage(this.page, dataContext);
     }
 
     callCallbacks() {

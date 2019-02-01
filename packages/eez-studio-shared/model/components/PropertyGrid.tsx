@@ -929,7 +929,7 @@ const PropertyGridDiv = styled.div`
                 }
 
                 & > td:first-child {
-                    min-width: 100px;
+                    white-space: nowrap;
                     vertical-align: baseline;
                     transform: translateY(8px);
                 }

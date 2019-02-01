@@ -9,7 +9,7 @@ import {
     TreeObjectAdapter
 } from "eez-studio-shared/model/objectAdapter";
 
-import { PageContext } from "eez-studio-page-editor/page-context";
+import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 import { Widget, ListWidget, GridWidget, SelectWidget } from "eez-studio-page-editor/widget";
 
@@ -114,7 +114,8 @@ function drawPageFrameForTreeNode(
 
 function getSelectedWidgetForSelectWidget(
     widgetContainerDisplayItem: TreeObjectAdapter,
-    item: DisplayItem
+    item: DisplayItem,
+    dataContext: IDataContext
 ) {
     let widget = item.object as SelectWidget;
     let widgetsItemChildren = item.children as DisplayItemChildrenArray;
@@ -136,7 +137,7 @@ function getSelectedWidgetForSelectWidget(
     if (!selectedWidgetItem) {
         // if not found then select default for enum data
         if (widget.data && widget.widgets) {
-            let index: number = PageContext.data.getEnumValue(widget.data);
+            let index: number = dataContext.getEnumValue(widget.data);
             if (index >= 0 && index < widget.widgets._array.length) {
                 selectedWidgetItem = widgetsItemChildren[index];
             }
@@ -155,7 +156,8 @@ function getSelectedWidgetForSelectWidget(
 
 export function createWidgetTree(
     widgetContainerDisplayItemOrObject: TreeObjectAdapter | EezObject,
-    draw: boolean
+    draw: boolean,
+    dataContext: IDataContext
 ) {
     function enumWidgets(widgetContainerDisplayItem: TreeObjectAdapter) {
         function enumWidget(
@@ -187,7 +189,7 @@ export function createWidgetTree(
                 selectable: object instanceof Widget,
                 item: item,
                 draw: object instanceof Widget ? undefined : drawPageFrameForTreeNode,
-                image: draw && object instanceof Widget ? object.draw(rect) : undefined
+                image: draw && object instanceof Widget ? object.draw(rect, dataContext) : undefined
             };
 
             if (parentNode) {
@@ -209,7 +211,7 @@ export function createWidgetTree(
                             "itemWidget"
                         ];
 
-                        for (let i = 0; i < PageContext.data.count(<string>widget.data); i++) {
+                        for (let i = 0; i < dataContext.count(<string>widget.data); i++) {
                             enumWidget(treeNode, itemWidgetItem, x, y);
 
                             if (widget.listType == "vertical") {
@@ -227,7 +229,7 @@ export function createWidgetTree(
                             "itemWidget"
                         ];
 
-                        for (let i = 0; i < PageContext.data.count(<string>widget.data); i++) {
+                        for (let i = 0; i < dataContext.count(<string>widget.data); i++) {
                             enumWidget(treeNode, itemWidgetItem, x, y);
 
                             if (x + itemWidget.width < widget.width) {
@@ -245,7 +247,8 @@ export function createWidgetTree(
                 } else if (object.type == "Select") {
                     let selectedWidgetItem = getSelectedWidgetForSelectWidget(
                         widgetContainerDisplayItem,
-                        item
+                        item,
+                        dataContext
                     );
                     if (selectedWidgetItem) {
                         enumWidget(treeNode, selectedWidgetItem, x, y);

@@ -66,6 +66,10 @@ export function loadObject(
     object._parent = parent as EezObject;
 
     for (const propertyInfo of classInfo.properties) {
+        if (propertyInfo.computed === true) {
+            continue;
+        }
+
         let value = jsObject[propertyInfo.name];
 
         if (propertyInfo.type === PropertyType.Object) {

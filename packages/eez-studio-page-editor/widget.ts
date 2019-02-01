@@ -1,4 +1,4 @@
-import { observable, computed, action } from "mobx";
+import { observable, computed } from "mobx";
 
 import { _find } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
@@ -28,24 +28,11 @@ import { loadObject } from "eez-studio-shared/model/serialization";
 import { DocumentStore, IMenuItem, UIElementsFactory } from "eez-studio-shared/model/store";
 import * as output from "eez-studio-shared/model/output";
 
+import { IResizeHandler } from "eez-studio-designer/designer-interfaces";
 import { PageInitContext } from "eez-studio-page-editor/page-init-context";
-import { PageContext } from "eez-studio-page-editor/page-context";
+import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 import { IResizing, resizingProperty } from "eez-studio-page-editor/resizing-widget-property";
-
-////////////////////////////////////////////////////////////////////////////////
-
-export interface GeometryProperties {
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-}
-
-export interface ObjectGeometryChange {
-    object: EezObject;
-    changedProperties: GeometryProperties;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -162,6 +149,16 @@ export class Widget extends EezObject {
     };
 
     @computed
+    get rect() {
+        return {
+            left: this.x,
+            top: this.y,
+            width: this.width,
+            height: this.height
+        };
+    }
+
+    @computed
     get styleObject() {
         if (this.style) {
             return PageContext.findStyle(this.style);
@@ -248,7 +245,7 @@ export class Widget extends EezObject {
         }
 
         if (this.data) {
-            let dataIndex = PageContext.data.findDataItemIndex(this.data);
+            let dataIndex = PageContext.findDataItemIndex(this.data);
             if (dataIndex == -1) {
                 messages.push(output.propertyNotFoundMessage(this, "data"));
             } else if (dataIndex >= 65535) {
@@ -480,40 +477,27 @@ export class Widget extends EezObject {
         }
     }
 
-    @action
-    applyGeometryChange(
-        geometryProperties: GeometryProperties,
-        geometryChanges: ObjectGeometryChange[]
-    ) {
-        let changedGeometryProperties: Partial<GeometryProperties> = {};
-
-        if (geometryProperties.x !== undefined && geometryProperties.x !== this.x) {
-            changedGeometryProperties.x = geometryProperties.x;
-        }
-        if (geometryProperties.y !== undefined && geometryProperties.y !== this.y) {
-            changedGeometryProperties.y = geometryProperties.y;
-        }
-        if (geometryProperties.width !== undefined && geometryProperties.width !== this.width) {
-            changedGeometryProperties.width = geometryProperties.width;
-        }
-        if (geometryProperties.height !== undefined && geometryProperties.height !== this.height) {
-            changedGeometryProperties.height = geometryProperties.height;
-        }
-
-        DocumentStore.updateObject(this, changedGeometryProperties);
-    }
-
-    draw(rect: Rect): HTMLCanvasElement | undefined {
+    draw(rect: Rect, dataContext: IDataContext): HTMLCanvasElement | undefined {
         return undefined;
     }
 
-    render(rect: Rect): React.ReactNode {
+    render(rect: Rect, dataContext: IDataContext): React.ReactNode {
         return undefined;
     }
 
     getChildrenObjectsInEditor(): Widget[] | undefined {
         return undefined;
     }
+
+    getResizeHandlers(): IResizeHandler[] | undefined | false {
+        return false;
+    }
+
+    getColumnWidth(columnIndex: number) {
+        return NaN;
+    }
+
+    resizeColumn(columnIndex: number, savedColumnWidth: number, offset: number) {}
 }
 
 registerClass(Widget);
@@ -557,46 +541,6 @@ export class ContainerWidget extends Widget {
         }
 
         return super.check().concat(messages);
-    }
-
-    @action
-    applyGeometryChange(
-        changedProperties: GeometryProperties,
-        geometryChanges: ObjectGeometryChange[]
-    ) {
-        let widthBefore = this.width;
-        let heightBefore = this.height;
-
-        DocumentStore.updateObject(this, changedProperties);
-
-        for (const childWidget of this.widgets._array) {
-            if (!geometryChanges.find(geometryChange => geometryChange.object == childWidget)) {
-                var childChangedProperties: GeometryProperties = {};
-                var changed = false;
-
-                if (
-                    changedProperties.width != undefined &&
-                    childWidget.x == 0 &&
-                    childWidget.x + childWidget.width == widthBefore
-                ) {
-                    childChangedProperties.width = changedProperties.width;
-                    changed = true;
-                }
-
-                if (
-                    changedProperties.height != undefined &&
-                    childWidget.y == 0 &&
-                    childWidget.y + childWidget.height == heightBefore
-                ) {
-                    childChangedProperties.height = changedProperties.height;
-                    changed = true;
-                }
-
-                if (changed) {
-                    childWidget.applyGeometryChange(childChangedProperties, geometryChanges);
-                }
-            }
-        }
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
@@ -678,35 +622,6 @@ export class ListWidget extends Widget {
         }
 
         return super.check().concat(messages);
-    }
-
-    @action
-    applyGeometryChange(
-        changedProperties: GeometryProperties,
-        geometryChanges: ObjectGeometryChange[]
-    ) {
-        DocumentStore.updateObject(this, changedProperties);
-
-        if (this.itemWidget) {
-            if (!geometryChanges.find(geometryChange => geometryChange.object == this.itemWidget)) {
-                var itemChangedProperties: GeometryProperties = {};
-                var changed = false;
-
-                if (this.listType == "vertical" && changedProperties.width != undefined) {
-                    itemChangedProperties.x = 0;
-                    itemChangedProperties.width = changedProperties.width;
-                    changed = true;
-                } else if (changedProperties.height != undefined) {
-                    itemChangedProperties.y = 0;
-                    itemChangedProperties.height = changedProperties.height;
-                    changed = true;
-                }
-
-                if (changed) {
-                    this.itemWidget.applyGeometryChange(itemChangedProperties, geometryChanges);
-                }
-            }
-        }
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
@@ -932,7 +847,7 @@ export class SelectWidget extends Widget {
         if (!this.data) {
             messages.push(output.propertyNotSetMessage(this, "data"));
         } else {
-            let dataItem = PageContext.data.findDataItem(this.data);
+            let dataItem = PageContext.findDataItem(this.data);
             if (dataItem) {
                 let enumItems: string[] = [];
 
@@ -969,43 +884,12 @@ export class SelectWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    @action
-    applyGeometryChange(
-        changedProperties: GeometryProperties,
-        geometryChanges: ObjectGeometryChange[]
-    ) {
-        DocumentStore.updateObject(this, changedProperties);
-
-        for (const childWidget of this.widgets._array) {
-            if (!geometryChanges.find(geometryChange => geometryChange.object == childWidget)) {
-                var childChangedProperties: GeometryProperties = {};
-                var changed = false;
-
-                if (changedProperties.width != undefined) {
-                    childWidget.x = 0;
-                    childChangedProperties.width = changedProperties.width;
-                    changed = true;
-                }
-
-                if (changedProperties.height != undefined) {
-                    childWidget.y = 0;
-                    childChangedProperties.height = changedProperties.height;
-                    changed = true;
-                }
-
-                if (changed) {
-                    childWidget.applyGeometryChange(childChangedProperties, geometryChanges);
-                }
-            }
-        }
-    }
-
     getChildLabel(childObject: Widget) {
         if (this.widgets) {
             let index = this.widgets._array.indexOf(childObject);
             if (index != -1) {
                 if (this.data) {
-                    let dataItem = PageContext.data.findDataItem(this.data);
+                    let dataItem = PageContext.findDataItem(this.data);
                     if (dataItem) {
                         if (dataItem.type == "enum") {
                             let enumItems: string[];
@@ -1103,8 +987,8 @@ export class LayoutViewWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    render(rect: Rect): React.ReactNode {
-        return PageContext.renderLayoutViewWidget(this, rect);
+    render(rect: Rect, dataContext: IDataContext): React.ReactNode {
+        return PageContext.renderLayoutViewWidget(this, rect, dataContext);
     }
 }
 

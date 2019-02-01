@@ -10,7 +10,6 @@ import { objectToString } from "eez-studio-shared/model/object";
 import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
 import { DisplayItem, DisplayItemSelection } from "eez-studio-shared/model/objectAdapter";
 
-import { GeometryProperties, ObjectGeometryChange } from "eez-studio-page-editor/widget";
 import {
     TreeNode,
     LineConnecting,
@@ -716,56 +715,48 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
                 ) {
                     const savedSelectionRect = this.mouseDrag.savedSelectionRect;
 
-                    var geometryChanges: ObjectGeometryChange[] = this.mouseDrag.nodes.map(
-                        mouseDragNode => {
-                            let updatedGeometryProperties: GeometryProperties = {
-                                x:
-                                    mouseDragNode.objectStartingPosition.x +
-                                    Math.round(
-                                        rect.left +
-                                            ((mouseDragNode.nodeRect.left -
-                                                savedSelectionRect.left) *
-                                                rect.width) /
-                                                savedSelectionRect.width -
-                                            mouseDragNode.nodeRect.left
-                                    ),
-                                y:
-                                    mouseDragNode.objectStartingPosition.y +
-                                    Math.round(
-                                        rect.top +
-                                            ((mouseDragNode.nodeRect.top - savedSelectionRect.top) *
-                                                rect.height) /
-                                                savedSelectionRect.height -
-                                            mouseDragNode.nodeRect.top
-                                    )
-                            };
+                    this.mouseDrag.nodes.forEach(mouseDragNode => {
+                        let updatedGeometryProperties: any = {
+                            x:
+                                mouseDragNode.objectStartingPosition.x +
+                                Math.round(
+                                    rect.left +
+                                        ((mouseDragNode.nodeRect.left - savedSelectionRect.left) *
+                                            rect.width) /
+                                            savedSelectionRect.width -
+                                        mouseDragNode.nodeRect.left
+                                ),
+                            y:
+                                mouseDragNode.objectStartingPosition.y +
+                                Math.round(
+                                    rect.top +
+                                        ((mouseDragNode.nodeRect.top - savedSelectionRect.top) *
+                                            rect.height) /
+                                            savedSelectionRect.height -
+                                        mouseDragNode.nodeRect.top
+                                )
+                        };
 
-                            if (
-                                mouseDragNode.node.resizable &&
-                                (rect.width != savedSelectionRect.width ||
-                                    rect.height != savedSelectionRect.height)
-                            ) {
-                                updatedGeometryProperties.width = Math.round(
-                                    (mouseDragNode.nodeRect.width * rect.width) /
-                                        savedSelectionRect.width
-                                );
-                                updatedGeometryProperties.height = Math.round(
-                                    (mouseDragNode.nodeRect.height * rect.height) /
-                                        savedSelectionRect.height
-                                );
-                            } else {
-                                updatedGeometryProperties.width = mouseDragNode.nodeRect.width;
-                                updatedGeometryProperties.height = mouseDragNode.nodeRect.height;
-                            }
-
-                            return {
-                                object: mouseDragNode.object,
-                                changedProperties: updatedGeometryProperties
-                            };
+                        if (
+                            mouseDragNode.node.resizable &&
+                            (rect.width != savedSelectionRect.width ||
+                                rect.height != savedSelectionRect.height)
+                        ) {
+                            updatedGeometryProperties.width = Math.round(
+                                (mouseDragNode.nodeRect.width * rect.width) /
+                                    savedSelectionRect.width
+                            );
+                            updatedGeometryProperties.height = Math.round(
+                                (mouseDragNode.nodeRect.height * rect.height) /
+                                    savedSelectionRect.height
+                            );
+                        } else {
+                            updatedGeometryProperties.width = mouseDragNode.nodeRect.width;
+                            updatedGeometryProperties.height = mouseDragNode.nodeRect.height;
                         }
-                    );
 
-                    this.applyGeometryChanges(geometryChanges);
+                        DocumentStore.updateObject(mouseDragNode.object, updatedGeometryProperties);
+                    });
                 }
             } else if (this.rubberBandSelection) {
                 let p1 = this.rubberBandSelection.fromPoint;
@@ -1006,11 +997,6 @@ export abstract class CanvasEditor extends React.Component<CanvasEditorProps, {}
     }
 
     abstract createTree(): TreeNode;
-    applyGeometryChanges(geometryChanges: ObjectGeometryChange[]) {
-        geometryChanges.forEach(geometryChange =>
-            DocumentStore.updateObject(geometryChange.object, geometryChange.changedProperties)
-        );
-    }
     abstract getItemsInsideRect(r: Rect): DisplayItem[];
     abstract hitTestFilter(nodes: TreeNode[]): TreeNode[];
     abstract findSnapLinesFilter(node: TreeNode): boolean;

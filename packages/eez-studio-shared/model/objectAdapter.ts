@@ -138,32 +138,27 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
             return [];
         }
 
-        if (Array.isArray(browsableObject.value)) {
-            return browsableObject.value.map((value, i) => {
-                const childBrowsableObject = EezBrowsableObject.create(
-                    browsableObject,
-                    {
-                        name: i.toString(),
-                        type: PropertyType.Object,
-                        typeClass: EezBrowsableObject
-                    },
-                    value
-                );
-                return new TreeObjectAdapter(childBrowsableObject, this.transformer);
-            });
+        let browsableObjectValue = browsableObject.value;
+
+        if (Array.isArray(browsableObjectValue)) {
+            if (browsableObjectValue.length === 0) {
+                return [];
+            }
+            browsableObjectValue = browsableObjectValue[0];
         }
 
         const children = [];
-        for (var propertyName in browsableObject.value) {
-            if (browsableObject.value.hasOwnProperty(propertyName)) {
+        for (var propertyName in browsableObjectValue) {
+            if (browsableObjectValue.hasOwnProperty(propertyName)) {
+                const childValue = browsableObjectValue[propertyName];
                 const childBrowsableObject = EezBrowsableObject.create(
                     browsableObject,
                     {
-                        name: propertyName,
+                        name: propertyName + (Array.isArray(childValue) ? "[]" : ""),
                         type: PropertyType.Object,
                         typeClass: EezBrowsableObject
                     },
-                    browsableObject.value[propertyName]
+                    childValue
                 );
                 children.push(new TreeObjectAdapter(childBrowsableObject, this.transformer));
             }

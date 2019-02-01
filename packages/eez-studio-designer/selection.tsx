@@ -2,7 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { addAlphaToColor } from "eez-studio-shared/color";
-import { Transform } from "eez-studio-shared/geometry";
+import { Transform, Rect } from "eez-studio-shared/geometry";
 
 import styled from "eez-studio-ui/styled-components";
 
@@ -12,6 +12,37 @@ import {
     IMouseHandler
 } from "eez-studio-designer/designer-interfaces";
 import { RubberBandSelectionMouseHandler } from "eez-studio-designer/select-tool";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const SelectionDiv = styled.div`
+    position: absolute;
+    left: 0;
+    top: 0;
+    cursor: move;
+
+    .EezStudio_DesignerSelection_SelectedObject {
+        pointer-events: none;
+        border: 2px solid ${props => props.theme.selectionBackgroundColor};
+    }
+
+    .EezStudio_DesignerSelection_BoundingRect {
+        border: 2px solid ${props => props.theme.selectionBackgroundColor};
+    }
+
+    .EezStudio_DesignerSelection_RubberBend {
+        position: absolute;
+        background-color: ${props => addAlphaToColor(props.theme.selectionBackgroundColor, 0.5)};
+        border: 1px solid ${props => props.theme.selectionBackgroundColor};
+    }
+
+    .EezStudio_DesignerSelection_ResizeHandle {
+        position: absolute;
+        background-color: rgba(0, 0, 255, 0.8);
+    }
+`;
+
+////////////////////////////////////////////////////////////////////////////////
 
 @observer
 class SelectedObject extends React.Component<
@@ -43,71 +74,7 @@ class SelectedObject extends React.Component<
     }
 }
 
-const SelectionDiv = styled.div`
-    position: absolute;
-    left: 0;
-    top: 0;
-    cursor: move;
-
-    .EezStudio_DesignerSelection_SelectedObject {
-        pointer-events: none;
-        border: 2px solid ${props => props.theme.selectionBackgroundColor};
-    }
-
-    .EezStudio_DesignerSelection_BoundingRect {
-        border: 2px solid ${props => props.theme.selectionBackgroundColor};
-    }
-
-    .EezStudio_DesignerSelection_RubberBend {
-        position: absolute;
-        background-color: ${props => addAlphaToColor(props.theme.selectionBackgroundColor, 0.5)};
-        border: 1px solid ${props => props.theme.selectionBackgroundColor};
-    }
-
-    .EezStudio_DesignerSelection_Handle {
-        position: absolute;
-    }
-
-    .EezStudio_DesignerSelection_Handle.Side {
-        background-color: rgba(0, 0, 255, 0.5);
-    }
-
-    .EezStudio_DesignerSelection_Handle.Corner {
-        background-color: rgba(0, 0, 255, 0.8);
-    }
-
-    .EezStudio_DesignerSelection_Handle.TopLeft {
-        cursor: nw-resize;
-    }
-
-    .EezStudio_DesignerSelection_Handle.Top {
-        cursor: n-resize;
-    }
-
-    .EezStudio_DesignerSelection_Handle.TopRight {
-        cursor: ne-resize;
-    }
-
-    .EezStudio_DesignerSelection_Handle.Left {
-        cursor: w-resize;
-    }
-
-    .EezStudio_DesignerSelection_Handle.Right {
-        cursor: e-resize;
-    }
-
-    .EezStudio_DesignerSelection_Handle.BottomLeft {
-        cursor: sw-resize;
-    }
-
-    .EezStudio_DesignerSelection_Handle.Bottom {
-        cursor: s-resize;
-    }
-
-    .EezStudio_DesignerSelection_Handle.BottomRight {
-        cursor: se-resize;
-    }
-`;
+////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class Selection extends React.Component<
@@ -119,6 +86,53 @@ export class Selection extends React.Component<
 > {
     constructor(props: any) {
         super(props);
+    }
+
+    getResizeHandlers(boundingRect: Rect) {
+        const resizeHandlers = this.props.context.viewState.getResizeHandlers();
+        if (!resizeHandlers || resizeHandlers.length === 0) {
+            return null;
+        }
+
+        let left = boundingRect.left;
+        let width = boundingRect.width;
+        let top = boundingRect.top;
+        let height = boundingRect.height;
+
+        const B = 8; // HANDLE SIZE
+        const A = B / 2;
+
+        if (width < 3 * B) {
+            width = 3 * B;
+            left -= (width - boundingRect.width) / 2;
+        }
+
+        if (height < 3 * B) {
+            height = 3 * B;
+            top -= (height - boundingRect.height) / 2;
+        }
+
+        return resizeHandlers.map(resizeHandler => {
+            const x = left + (resizeHandler.x * width) / 100;
+            const y = top + (resizeHandler.y * height) / 100;
+
+            const style = {
+                left: Math.floor(x - A) + "px",
+                top: Math.floor(y - A) + "px",
+                width: B + "px",
+                height: B + "px",
+                cursor: resizeHandler.type
+            };
+
+            return (
+                <div
+                    key={`${resizeHandler.x}-${resizeHandler.y}-${resizeHandler.type}`}
+                    className="EezStudio_DesignerSelection_ResizeHandle"
+                    style={style}
+                    data-column-index={resizeHandler.columnIndex}
+                />
+            );
+        });
     }
 
     render() {
@@ -171,132 +185,8 @@ export class Selection extends React.Component<
                 this.props.mouseHandler instanceof RubberBandSelectionMouseHandler &&
                 this.props.mouseHandler.rubberBendRect;
 
-            if (
-                !isActiveRubberBendSelection! &&
-                this.props.context.viewState.isSelectionResizable
-            ) {
-                let left = boundingRect.left;
-                let width = boundingRect.width;
-                let top = boundingRect.top;
-                let height = boundingRect.height;
-
-                const B = 8; // HANDLE SIZE
-                const A = B / 2;
-
-                if (width < 3 * B) {
-                    width = 3 * B;
-                    left -= (width - boundingRect.width) / 2;
-                }
-
-                if (height < 3 * B) {
-                    height = 3 * B;
-                    top -= (height - boundingRect.height) / 2;
-                }
-
-                let hcenter = left + width / 2;
-                let right = left + width;
-
-                let vcenter = top + height / 2;
-                let bottom = top + height;
-
-                let styleTopLeft: React.CSSProperties = {
-                    left: Math.floor(left - A) + "px",
-                    top: Math.floor(top - A) + "px",
-                    width: B + "px",
-                    height: B + "px"
-                };
-
-                let styleTop: React.CSSProperties = {
-                    left: Math.floor(hcenter - A) + "px",
-                    top: Math.floor(top - A) + "px",
-                    width: B + "px",
-                    height: B + "px"
-                };
-
-                let styleTopRight: React.CSSProperties = {
-                    left: Math.floor(right - A) + "px",
-                    top: Math.floor(top - A) + "px",
-                    width: B + "px",
-                    height: B + "px"
-                };
-
-                let styleLeft: React.CSSProperties = {
-                    left: Math.floor(left - A) + "px",
-                    top: Math.floor(vcenter - A) + "px",
-                    width: B + "px",
-                    height: B + "px"
-                };
-
-                let styleRight: React.CSSProperties = {
-                    left: Math.floor(right - A) + "px",
-                    top: Math.floor(vcenter - A) + "px",
-                    width: B + "px",
-                    height: B + "px"
-                };
-
-                let styleBottomLeft: React.CSSProperties = {
-                    left: Math.floor(left - A) + "px",
-                    top: Math.floor(bottom - A) + "px",
-                    width: B + "px",
-                    height: B + "px"
-                };
-
-                let styleBottom: React.CSSProperties = {
-                    left: Math.floor(hcenter - A) + "px",
-                    top: Math.floor(bottom - A) + "px",
-                    width: B + "px",
-                    height: B + "px"
-                };
-
-                let styleBottomRight: React.CSSProperties = {
-                    left: Math.floor(right - A) + "px",
-                    top: Math.floor(bottom - A) + "px",
-                    width: B + "px",
-                    height: B + "px"
-                };
-
-                resizeHandlers = [
-                    <div
-                        key="TopLeft"
-                        className="EezStudio_DesignerSelection_Handle Corner TopLeft"
-                        style={styleTopLeft}
-                    />,
-                    <div
-                        key="Top"
-                        className="EezStudio_DesignerSelection_Handle Side Top"
-                        style={styleTop}
-                    />,
-                    <div
-                        key="TopRight"
-                        className="EezStudio_DesignerSelection_Handle Corner TopRight"
-                        style={styleTopRight}
-                    />,
-                    <div
-                        key="Left"
-                        className="EezStudio_DesignerSelection_Handle Side Left"
-                        style={styleLeft}
-                    />,
-                    <div
-                        key="Right"
-                        className="EezStudio_DesignerSelection_Handle Side Right"
-                        style={styleRight}
-                    />,
-                    <div
-                        key="BottomLeft"
-                        className="EezStudio_DesignerSelection_Handle Corner BottomLeft"
-                        style={styleBottomLeft}
-                    />,
-                    <div
-                        key="Bottom"
-                        className="EezStudio_DesignerSelection_Handle Side Bottom"
-                        style={styleBottom}
-                    />,
-                    <div
-                        key="BottomRight"
-                        className="EezStudio_DesignerSelection_Handle Corner BottomRight"
-                        style={styleBottomRight}
-                    />
-                ];
+            if (!isActiveRubberBendSelection!) {
+                resizeHandlers = this.getResizeHandlers(boundingRect);
             }
         }
 

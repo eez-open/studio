@@ -23,7 +23,8 @@ import { IMenu } from "eez-studio-shared/model/store";
 import {
     IDesignerContext,
     IToolHandler,
-    IMouseHandler
+    IMouseHandler,
+    IBaseObject
 } from "eez-studio-designer/designer-interfaces";
 import { MouseHandler } from "eez-studio-designer/mouse-handler";
 import { Selection } from "eez-studio-designer/selection";
@@ -78,8 +79,36 @@ export const selectToolHandler: IToolHandler = {
     drop() {},
 
     createMouseHandler(context: IDesignerContext, event: MouseEvent) {
-        if (closestByClass(event.target, "EezStudio_DesignerSelection_Handle")) {
-            return new ResizeMouseHandler();
+        if (closestByClass(event.target, "EezStudio_DesignerSelection_ResizeHandle")) {
+            const cursor = (event.target as HTMLElement).style.cursor;
+            if (
+                cursor === "nw-resize" ||
+                cursor === "n-resize" ||
+                cursor === "ne-resize" ||
+                cursor === "w-resize" ||
+                cursor === "e-resize" ||
+                cursor === "sw-resize" ||
+                cursor === "s-resize" ||
+                cursor === "se-resize"
+            ) {
+                return new ResizeMouseHandler(cursor);
+            } else if (cursor === "col-resize") {
+                if (context.viewState.selectedObjects.length === 1) {
+                    const selectedObject = context.viewState.selectedObjects[0];
+                    if (selectedObject.resizeColumn) {
+                        const dataColumnIndex = (event.target as HTMLElement).getAttribute(
+                            "data-column-index"
+                        );
+                        if (dataColumnIndex) {
+                            const columnIndex = parseInt(dataColumnIndex);
+                            if (!Number.isNaN(columnIndex)) {
+                                return new ColumnResizeMouseHandler(selectedObject, columnIndex);
+                            }
+                        }
+                    }
+                }
+            }
+            return undefined;
         }
 
         if (closestByClass(event.target, "EezStudio_DesignerSelection")) {
@@ -316,7 +345,7 @@ class MouseHandlerWithSnapLines extends MouseHandler {
 }
 
 export class DragMouseHandler extends MouseHandlerWithSnapLines {
-    changed: boolean;
+    changed: boolean = false;
 
     selectionBoundingRectAtDown: Rect;
     objectPositionsAtDown: Point[];
@@ -382,20 +411,17 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     }
 }
 
-enum HandleType {
-    TopLeft,
-    Top,
-    TopRight,
-    Left,
-    Right,
-    BottomLeft,
-    Bottom,
-    BottomRight
-}
+type ResizeHandleType =
+    | "nw-resize"
+    | "n-resize"
+    | "ne-resize"
+    | "w-resize"
+    | "e-resize"
+    | "sw-resize"
+    | "s-resize"
+    | "se-resize";
 
 class ResizeMouseHandler extends MouseHandlerWithSnapLines {
-    handleType: HandleType;
-
     savedBoundingRect: Rect;
     boundingRect: Rect;
 
@@ -403,35 +429,16 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     savedRects: Rect[];
     rects: Rect[];
 
-    changed: boolean;
+    changed: boolean = false;
+
+    constructor(private handleType: ResizeHandleType) {
+        super();
+    }
 
     down(context: IDesignerContext, event: MouseEvent) {
         super.down(context, event);
 
         context.document.onDragStart("resize");
-
-        let className = (event.target as HTMLElement).className;
-        if (className.indexOf("Corner") !== -1) {
-            if (className.indexOf("TopLeft") !== -1) {
-                this.handleType = HandleType.TopLeft;
-            } else if (className.indexOf("TopRight") !== -1) {
-                this.handleType = HandleType.TopRight;
-            } else if (className.indexOf("BottomLeft") !== -1) {
-                this.handleType = HandleType.BottomLeft;
-            } else {
-                this.handleType = HandleType.BottomRight;
-            }
-        } else {
-            if (className.indexOf("Top") !== -1) {
-                this.handleType = HandleType.Top;
-            } else if (className.indexOf("Left") !== -1) {
-                this.handleType = HandleType.Left;
-            } else if (className.indexOf("Right") !== -1) {
-                this.handleType = HandleType.Right;
-            } else {
-                this.handleType = HandleType.Bottom;
-            }
-        }
 
         this.savedBoundingRect = rectClone(context.viewState.selectedObjectsBoundingRect);
         this.boundingRect = rectClone(this.savedBoundingRect);
@@ -540,27 +547,27 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     }
 
     resizeRect(context: IDesignerContext, savedRect: Rect, rect: Rect) {
-        if (this.handleType === HandleType.TopLeft) {
+        if (this.handleType === "nw-resize") {
             this.moveTop(context, savedRect, rect);
             this.moveLeft(context, savedRect, rect);
             //this.maintainSameAspectRatio(savedRect, rect, true, true);
-        } else if (this.handleType === HandleType.Top) {
+        } else if (this.handleType === "n-resize") {
             this.moveTop(context, savedRect, rect);
-        } else if (this.handleType === HandleType.TopRight) {
+        } else if (this.handleType === "ne-resize") {
             this.moveTop(context, savedRect, rect);
             this.moveRight(context, savedRect, rect);
             //this.maintainSameAspectRatio(savedRect, rect, true, false);
-        } else if (this.handleType === HandleType.Left) {
+        } else if (this.handleType === "w-resize") {
             this.moveLeft(context, savedRect, rect);
-        } else if (this.handleType === HandleType.Right) {
+        } else if (this.handleType === "e-resize") {
             this.moveRight(context, savedRect, rect);
-        } else if (this.handleType === HandleType.BottomLeft) {
+        } else if (this.handleType === "sw-resize") {
             this.moveBottom(context, savedRect, rect);
             this.moveLeft(context, savedRect, rect);
             //this.maintainSameAspectRatio(savedRect, rect, false, true);
-        } else if (this.handleType === HandleType.Bottom) {
+        } else if (this.handleType === "s-resize") {
             this.moveBottom(context, savedRect, rect);
-        } else {
+        } else if (this.handleType === "se-resize") {
             this.moveBottom(context, savedRect, rect);
             this.moveRight(context, savedRect, rect);
             //this.maintainSameAspectRatio(savedRect, rect, false, false);
@@ -606,5 +613,34 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         super.up(context, event);
 
         context.document.onDragEnd("resize", this.changed, context.viewState.selectedObjects);
+    }
+}
+
+class ColumnResizeMouseHandler extends MouseHandlerWithSnapLines {
+    changed: boolean = false;
+    savedColumnWidth: number;
+
+    constructor(private selectedObject: IBaseObject, private columnIndex: number) {
+        super();
+    }
+
+    down(context: IDesignerContext, event: MouseEvent) {
+        super.down(context, event);
+        this.savedColumnWidth = this.selectedObject.getColumnWidth!(this.columnIndex);
+    }
+
+    move(context: IDesignerContext, event: MouseEvent) {
+        super.move(context, event);
+        this.selectedObject.resizeColumn!(
+            this.columnIndex,
+            this.savedColumnWidth,
+            this.offsetDistance.x / context.viewState.transform.scale
+        );
+    }
+
+    up(context: IDesignerContext, event?: MouseEvent) {
+        super.up(context, event);
+
+        context.document.onDragEnd("col-resize", this.changed, [this.selectedObject]);
     }
 }

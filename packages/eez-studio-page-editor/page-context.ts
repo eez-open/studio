@@ -16,8 +16,7 @@ export interface IDataContext {
     get(dataItemId: string): any;
     count(dataItemId: string): number;
     getEnumValue(dataItemId: string): number;
-    findDataItemIndex(dataItemId: string): number;
-    findDataItem(dataItemId: string): IDataItem | undefined;
+    push(data: any): IDataContext;
 }
 
 export interface IStyle {
@@ -27,13 +26,15 @@ export interface IStyle {
 export interface IPageContext {
     inEditor: boolean;
 
-    data: IDataContext;
+    rootDataContext: IDataContext;
 
     drawPageFrame(ctx: CanvasRenderingContext2D, rect: Rect, scale: number, style: string): void;
     drawDefaultWidget(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
-    renderLayoutViewWidget(widget: Widget, rect: Rect): React.ReactNode;
+    renderLayoutViewWidget(widget: Widget, rect: Rect, dataContext: IDataContext): React.ReactNode;
 
     findActionIndex(actionName: any): number;
+    findDataItemIndex(dataItemId: string): number;
+    findDataItem(dataItemId: string): IDataItem | undefined;
 
     layoutConceptName: string;
     getLayouts(): EezArrayObject<Page>;

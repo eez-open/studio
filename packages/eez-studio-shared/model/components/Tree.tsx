@@ -264,14 +264,13 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
                 top: event.clientY
             };
 
-            if (this.props.item.selected) {
-                this.props.rootItem.showSelectionContextMenu(position);
-            } else {
+            if (!this.props.item.selected) {
                 this.props.rootItem.selectItems([this.props.item]);
-                setTimeout(() => {
-                    this.props.rootItem.showSelectionContextMenu(position);
-                });
             }
+
+            setTimeout(() => {
+                this.props.rootItem.showSelectionContextMenu(position);
+            });
         }
     }
 
@@ -476,6 +475,7 @@ const TreeOuterDiv = styled.div`
     overflow: auto;
     padding: 5px;
     border: 2px dashed transparent;
+    min-height: 100%;
 
     &:not(.drag-source) {
         .tree-row-enclosure:not(.drag-source) {

@@ -345,3 +345,14 @@ export function getValueList(dataItemId: string): string[] {
 
     return [];
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const dataContext = {
+    get,
+    count,
+    getEnumValue,
+    push(data: any) {
+        return dataContext;
+    }
+};

@@ -12,7 +12,8 @@ import {
     IBaseObject,
     IDocument,
     IViewStatePersistantState,
-    IDesignerContext
+    IDesignerContext,
+    IResizeHandler
 } from "eez-studio-designer/designer-interfaces";
 import { DesignerContext } from "eez-studio-designer/context";
 import { Canvas } from "eez-studio-designer/canvas";
@@ -32,7 +33,7 @@ import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
 import { SnapLines } from "eez-studio-designer/select-tool";
 
-import { PageContext } from "eez-studio-page-editor/page-context";
+import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 import {
     Widget,
@@ -87,14 +88,11 @@ class EditorObject implements IBaseObject {
 
     @computed
     get rect() {
-        if (this.object instanceof Widget || this.object instanceof Page) {
-            return {
-                left: this.object.x,
-                top: this.object.y,
-                width: this.object.width,
-                height: this.object.height
-            };
-        } else if (this.object instanceof SelectWidgetEditor) {
+        if (
+            this.object instanceof Widget ||
+            this.object instanceof Page ||
+            this.object instanceof SelectWidgetEditor
+        ) {
             return this.object.rect;
         } else {
             console.error("Unknown object type");
@@ -108,17 +106,7 @@ class EditorObject implements IBaseObject {
     }
 
     set rect(value: Rect) {
-        if (this.object instanceof Widget) {
-            this.object.applyGeometryChange(
-                {
-                    x: value.left,
-                    y: value.top,
-                    width: value.width,
-                    height: value.height
-                },
-                []
-            );
-        } else if (this.object instanceof Page) {
+        if (this.object instanceof Widget || this.object instanceof Page) {
             DocumentStore.updateObject(this.object, {
                 x: value.left,
                 y: value.top,
@@ -232,7 +220,9 @@ class EditorObject implements IBaseObject {
 
             const itemWidget = listWidget.itemWidget;
             if (itemWidget) {
-                let count = listWidget.data ? PageContext.data.count(listWidget.data) : 0;
+                let count = listWidget.data
+                    ? PageContext.rootDataContext.count(listWidget.data)
+                    : 0;
 
                 if (listWidget instanceof ListWidget) {
                     for (let i = 1; i < count; i++) {
@@ -297,6 +287,26 @@ class EditorObject implements IBaseObject {
             return false;
         } else {
             return true;
+        }
+    }
+
+    getResizeHandlers(): IResizeHandler[] | undefined | false {
+        if (this.object instanceof Widget) {
+            return this.object.getResizeHandlers();
+        }
+        return false;
+    }
+
+    getColumnWidth(columnIndex: number): number {
+        if (this.object instanceof Widget) {
+            return this.object.getColumnWidth(columnIndex);
+        }
+        return NaN;
+    }
+
+    resizeColumn(columnIndex: number, savedColumnWidth: number, offset: number) {
+        if (this.object instanceof Widget) {
+            return this.object.resizeColumn(columnIndex, savedColumnWidth, offset);
         }
     }
 
@@ -369,7 +379,7 @@ class EditorObject implements IBaseObject {
         }
 
         if (selectWidget.data) {
-            let index: number = PageContext.data.getEnumValue(selectWidget.data);
+            let index: number = PageContext.rootDataContext.getEnumValue(selectWidget.data);
             if (index >= 0 && index < selectWidget.widgets._array.length) {
                 return index;
             }
@@ -433,6 +443,7 @@ function createObjectToEditorObjectTransformer(designerContext: PageEditorContex
 class ObjectComponent extends React.Component<{
     designerContext?: IDesignerContext;
     object: EditorObject;
+    dataContext: IDataContext;
 }> {
     renderChildren(children: EditorObject[]) {
         return (
@@ -445,7 +456,13 @@ class ObjectComponent extends React.Component<{
                 }}
             >
                 {children.map((child, i) => {
-                    return <ObjectComponent key={child.id} object={child} />;
+                    return (
+                        <ObjectComponent
+                            key={child.id}
+                            object={child}
+                            dataContext={this.props.dataContext}
+                        />
+                    );
                 })}
             </div>
         );
@@ -480,7 +497,7 @@ class ObjectComponent extends React.Component<{
 
     get listItemsCount() {
         if (this.listItemWidget && this.listWidget.data) {
-            return PageContext.data.count(this.listWidget.data);
+            return this.props.dataContext.count(this.listWidget.data);
         } else {
             return 0;
         }
@@ -513,7 +530,12 @@ class ObjectComponent extends React.Component<{
                         transformOrigin: "0 0"
                     }}
                 >
-                    {<ObjectComponent object={itemWidgetEditorObject} />}
+                    {
+                        <ObjectComponent
+                            object={itemWidgetEditorObject}
+                            dataContext={this.props.dataContext}
+                        />
+                    }
                 </div>
             );
         });
@@ -529,7 +551,7 @@ class ObjectComponent extends React.Component<{
 
     get gridItemsCount() {
         if (this.gridItemWidget && this.gridWidget.data) {
-            return PageContext.data.count(this.gridWidget.data);
+            return this.props.dataContext.count(this.gridWidget.data);
         } else {
             return 0;
         }
@@ -568,7 +590,12 @@ class ObjectComponent extends React.Component<{
                             transformOrigin: "0 0"
                         }}
                     >
-                        {<ObjectComponent object={itemWidgetEditorObject} />}
+                        {
+                            <ObjectComponent
+                                object={itemWidgetEditorObject}
+                                dataContext={this.props.dataContext}
+                            />
+                        }
                     </div>
                 );
             })
@@ -794,7 +821,10 @@ class ObjectComponent extends React.Component<{
                             transformOrigin: "0 0"
                         }}
                     >
-                        <ObjectComponent object={this.props.object.children[i]} />
+                        <ObjectComponent
+                            object={this.props.object.children[i]}
+                            dataContext={this.props.dataContext}
+                        />
                     </div>
                 </React.Fragment>
             );
@@ -831,7 +861,7 @@ class ObjectComponent extends React.Component<{
         } else if (this.props.object.object instanceof Widget) {
             const rect = this.props.object.rect;
 
-            const canvas = this.props.object.object.draw(rect);
+            const canvas = this.props.object.object.draw(rect, this.props.dataContext);
             if (canvas) {
                 return (
                     <img
@@ -848,7 +878,7 @@ class ObjectComponent extends React.Component<{
                 );
             }
 
-            const node = this.props.object.object.render(rect);
+            const node = this.props.object.object.render(rect, this.props.dataContext);
             if (node) {
                 return (
                     <div
@@ -1141,11 +1171,7 @@ const PageEditorCanvasContainer = styled.div`
         background-color: rgba(255, 255, 255, 0.3);
     }
 
-    .EezStudio_DesignerSelection_Handle.Side {
-        background-color: rgba(0, 0, 0, 0.6);
-    }
-
-    .EezStudio_DesignerSelection_Handle.Corner {
+    .EezStudio_DesignerSelection_ResizeHandle {
         background-color: rgba(0, 0, 0, 0.6);
     }
 `;
@@ -1375,17 +1401,14 @@ export class PageEditor extends React.Component<
             (node: IBaseObject) => {
                 const object = (node as EditorObject).object;
 
-                for (let i = 0; i < this.pageEditorContext.viewState.selectedObjects.length; ++i) {
-                    const selectedObject = (this.pageEditorContext.viewState.selectedObjects[
-                        i
-                    ] as EditorObject).object;
+                const selectedObjects = this.pageEditorContext.viewState.selectedObjects;
+
+                for (let i = 0; i < selectedObjects.length; ++i) {
+                    const selectedObject = (selectedObjects[i] as EditorObject).object;
 
                     if (
                         selectedObject._parent === object._parent ||
-                        ((object instanceof Page ||
-                            object instanceof ContainerWidget ||
-                            object instanceof SelectWidget) &&
-                            selectedObject._parent === object.widgets)
+                        isAncestor(selectedObject, object)
                     ) {
                         return true;
                     }
@@ -1411,7 +1434,11 @@ export class PageEditor extends React.Component<
                     >
                         {this.pageEditorContext.document.rootObjects.map(
                             (rootObject: EditorObject) => (
-                                <ObjectComponent key={rootObject.id} object={rootObject} />
+                                <ObjectComponent
+                                    key={rootObject.id}
+                                    object={rootObject}
+                                    dataContext={PageContext.rootDataContext}
+                                />
                             )
                         )}
                     </PageEditorCanvas>

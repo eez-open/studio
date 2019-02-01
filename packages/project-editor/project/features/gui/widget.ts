@@ -18,6 +18,7 @@ import {
     makeDataPropertyInfo,
     SelectWidget as BaseSelectWidget
 } from "eez-studio-page-editor/widget";
+import { IDataContext } from "eez-studio-page-editor/page-context";
 
 import * as data from "project-editor/project/features/data/data";
 
@@ -1113,8 +1114,8 @@ export class AppViewWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawAppViewWidget(this, rect);
+    draw(rect: Rect, dataContext: IDataContext): HTMLCanvasElement | undefined {
+        return draw.drawAppViewWidget(this, rect, dataContext);
     }
 }
 

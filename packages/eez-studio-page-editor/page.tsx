@@ -135,13 +135,17 @@ export class Page extends EezObject {
     };
 
     @computed
-    get boundingRect() {
+    get rect() {
         return {
             left: this.x,
             top: this.y,
             width: this.width,
             height: this.height
         };
+    }
+
+    get boundingRect() {
+        return this.rect;
     }
 
     render() {

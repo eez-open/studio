@@ -82,6 +82,7 @@ export interface PropertyInfo {
     referencedObjectCollectionPath?: string[];
     matchObjectReference?: (object: EezObject, path: (string | number)[], value: string) => boolean;
     replaceObjectReference?: (value: string) => string;
+    computed?: boolean;
     onSelect?: ((object: EezObject, propertyInfo: PropertyInfo) => Promise<any>);
     hideInPropertyGrid?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
     readOnlyInPropertyGrid?: boolean;
@@ -162,6 +163,8 @@ export interface ClassInfo {
     icon?: string;
 
     propertyGridTableComponent?: any;
+
+    afterUpdateObjectHook?: (object: EezObject, changedProperties: any, oldValues: any) => void;
 }
 
 export function makeDerivedClassInfo(
@@ -169,9 +172,35 @@ export function makeDerivedClassInfo(
     derivedClassInfoProperties: Partial<ClassInfo>
 ): ClassInfo {
     if (derivedClassInfoProperties.properties) {
-        derivedClassInfoProperties.properties = baseClassInfo.properties.concat(
-            derivedClassInfoProperties.properties
-        );
+        const b = baseClassInfo.properties; // base class properties
+        const d = derivedClassInfoProperties.properties; // derived class properties
+        const r = []; // resulting properties
+
+        // put base and overriden properties into resulting properties array
+        for (let i = 0; i < b.length; ++i) {
+            let j;
+            for (j = 0; j < d.length; ++j) {
+                if (b[i].name === d[j].name) {
+                    break;
+                }
+            }
+            r.push(j < d.length ? d[j] /* overriden */ : b[i] /* base */);
+        }
+
+        // put derived (not overriden) properties into resulting array
+        for (let i = 0; i < d.length; ++i) {
+            let j;
+            for (j = 0; j < r.length; ++j) {
+                if (d[i].name === r[j].name) {
+                    break;
+                }
+            }
+            if (j === r.length) {
+                r.push(d[i]);
+            }
+        }
+
+        derivedClassInfoProperties.properties = r;
     }
 
     const derivedClassInfo = Object.assign({}, baseClassInfo, derivedClassInfoProperties);
@@ -492,17 +521,19 @@ export function getProperty(object: EezObject, name: string) {
 
 export function getPropertyAsString(object: EezObject, propertyInfo: PropertyInfo) {
     let value = getProperty(object, propertyInfo.name);
-    if (value) {
-        if (value instanceof EezArrayObject) {
-            return (value as EezArrayObject<EezObject>)._array
-                .map(object => object._label)
-                .join(", ");
-        }
-        if (value instanceof EezObject) {
-            return objectToString(value);
-        }
+    if (typeof value === "number") {
         return value.toString();
     }
+    if (typeof value === "string") {
+        return value;
+    }
+    if (value instanceof EezArrayObject) {
+        return (value as EezArrayObject<EezObject>)._array.map(object => object._label).join(", ");
+    }
+    if (value instanceof EezObject) {
+        return objectToString(value);
+    }
+    return "";
 }
 
 export function humanizePropertyName(object: EezObject, propertyName: string) {
