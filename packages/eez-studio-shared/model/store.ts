@@ -1351,6 +1351,7 @@ export interface IMenu {
 
 export interface IUIElementsFactory {
     Dialog: typeof React.Component;
+    Button: typeof React.Component;
     createMenuItem(menuItemConfig: IMenuItemConfig): IMenuItem;
     createMenu(): IMenu;
     confirm(message: string, detail: string | undefined, callback: () => void): void;
@@ -1365,14 +1366,16 @@ export function setUIElementsFactory(factory: IUIElementsFactory) {
     UIElementsFactory = factory;
 }
 
-class DummyDialogComponent extends React.Component {
+class DummyComponent extends React.Component {
     render() {
         return null;
     }
 }
 
 export let UIElementsFactory: IUIElementsFactory = {
-    Dialog: DummyDialogComponent,
+    Dialog: DummyComponent,
+
+    Button: DummyComponent,
 
     createMenuItem(config: IMenuItemConfig) {
         // todo

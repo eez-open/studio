@@ -134,11 +134,21 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
     }
 
     browsableObjectChildren(browsableObject: EezBrowsableObject) {
-        if (typeof browsableObject.value !== "object") {
+        if (!browsableObject.value || typeof browsableObject.value !== "object") {
             return [];
         }
 
         let browsableObjectValue = browsableObject.value;
+
+        function getAllProps(obj: any) {
+            var props: string[] = [];
+
+            do {
+                props = props.concat(Object.getOwnPropertyNames(obj));
+            } while ((obj = Object.getPrototypeOf(obj)));
+
+            return [...new Set(props)]; // return unique values
+        }
 
         if (Array.isArray(browsableObjectValue)) {
             if (browsableObjectValue.length === 0) {
@@ -148,20 +158,39 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
         }
 
         const children = [];
-        for (var propertyName in browsableObjectValue) {
-            if (browsableObjectValue.hasOwnProperty(propertyName)) {
-                const childValue = browsableObjectValue[propertyName];
-                const childBrowsableObject = EezBrowsableObject.create(
-                    browsableObject,
-                    {
-                        name: propertyName + (Array.isArray(childValue) ? "[]" : ""),
-                        type: PropertyType.Object,
-                        typeClass: EezBrowsableObject
-                    },
-                    childValue
-                );
-                children.push(new TreeObjectAdapter(childBrowsableObject, this.transformer));
+        for (var propertyName of getAllProps(browsableObjectValue)) {
+            if (propertyName.startsWith("_")) {
+                continue;
             }
+
+            if (
+                [
+                    "constructor",
+                    "hasOwnProperty",
+                    "isPrototypeOf",
+                    "propertyIsEnumerable",
+                    "toString",
+                    "valueOf",
+                    "toLocaleString"
+                ].indexOf(propertyName) !== -1
+            ) {
+                continue;
+            }
+
+            const childValue = browsableObjectValue[propertyName];
+            const childBrowsableObject = EezBrowsableObject.create(
+                browsableObject,
+                {
+                    name:
+                        propertyName +
+                        (Array.isArray(childValue) ? "[]" : "") +
+                        (typeof childValue === "function" ? "()" : ""),
+                    type: PropertyType.Object,
+                    typeClass: EezBrowsableObject
+                },
+                childValue
+            );
+            children.push(new TreeObjectAdapter(childBrowsableObject, this.transformer));
         }
         return children;
     }

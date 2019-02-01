@@ -346,12 +346,15 @@ export function getValueList(dataItemId: string): string[] {
     return [];
 }
 
+function executeAction(action: string) {}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const dataContext = {
     get,
     count,
     getEnumValue,
+    executeAction,
     push(data: any) {
         return dataContext;
     }

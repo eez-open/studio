@@ -310,7 +310,11 @@ class EditorObject implements IBaseObject {
         }
     }
 
-    open() {}
+    open() {
+        if (this.object instanceof Widget) {
+            return this.object.open();
+        }
+    }
 
     findObjectById(id: string): EditorObject | undefined {
         if (this.id === id) {
@@ -878,8 +882,26 @@ class ObjectComponent extends React.Component<{
                 );
             }
 
-            const node = this.props.object.object.render(rect, this.props.dataContext);
-            if (node) {
+            try {
+                const node = this.props.object.object.render(rect, this.props.dataContext);
+                if (node) {
+                    return (
+                        <div
+                            style={{
+                                position: "absolute",
+                                left: rect.left,
+                                top: rect.top,
+                                width: rect.width,
+                                height: rect.height
+                            }}
+                        >
+                            {node}
+                        </div>
+                    );
+                }
+
+                return this.renderBackgroundRect();
+            } catch {
                 return (
                     <div
                         style={{
@@ -887,15 +909,20 @@ class ObjectComponent extends React.Component<{
                             left: rect.left,
                             top: rect.top,
                             width: rect.width,
-                            height: rect.height
+                            height: rect.height,
+                            border: "1px dashed red",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            textAlign: "center",
+                            color: "red",
+                            padding: 10
                         }}
                     >
-                        {node}
+                        Failed to render widget!
                     </div>
                 );
             }
-
-            return this.renderBackgroundRect();
         } else if (this.props.object.object instanceof Page) {
             return (
                 <React.Fragment>
@@ -1158,7 +1185,6 @@ class PageDocument implements IDocument {
 
 const PageEditorCanvasContainer = styled.div`
     flex-grow: 1;
-    overflow: hidden;
     display: flex;
     position: relative;
 

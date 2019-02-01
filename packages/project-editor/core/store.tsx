@@ -512,8 +512,34 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class BootstrapButton extends React.Component<{
+    color: "primary" | "secondary";
+    size: "small" | "medium" | "large";
+    onClick: () => void;
+}> {
+    render() {
+        const { color, size, onClick } = this.props;
+        const className = classNames("btn", {
+            "btn-sm": size === "small",
+            "btn-lg": size === "large",
+            "btn-primary": color === "primary",
+            "btn-secondary": color === "secondary"
+        });
+
+        return (
+            <button className={className} onClick={onClick}>
+                {this.props.children}
+            </button>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 setUIElementsFactory({
     Dialog: BootstrapDialog,
+
+    Button: BootstrapButton,
 
     createMenuItem(config: IMenuItemConfig) {
         return new MenuItem(config);

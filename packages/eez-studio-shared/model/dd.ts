@@ -58,7 +58,7 @@ class DragAndDropManagerClass {
     }
 
     deleteDragItem() {
-        if (this.dropEffect == "move") {
+        if (this.dropObject && this.dropEffect == "move") {
             if (this.dragObject) {
                 DocumentStore.deleteObject(this.dragObject);
             }

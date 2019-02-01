@@ -1,4 +1,7 @@
+import React from "react";
 import { observable, computed } from "mobx";
+import { observer } from "mobx-react";
+import { bind } from "bind-decorator";
 
 import { _find } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
@@ -25,7 +28,12 @@ import {
     IPropertyGridGroupDefinition
 } from "eez-studio-shared/model/object";
 import { loadObject } from "eez-studio-shared/model/serialization";
-import { DocumentStore, IMenuItem, UIElementsFactory } from "eez-studio-shared/model/store";
+import {
+    DocumentStore,
+    IMenuItem,
+    UIElementsFactory,
+    NavigationStore
+} from "eez-studio-shared/model/store";
 import * as output from "eez-studio-shared/model/output";
 
 import { IResizeHandler } from "eez-studio-designer/designer-interfaces";
@@ -33,6 +41,7 @@ import { PageInitContext } from "eez-studio-page-editor/page-init-context";
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 import { IResizing, resizingProperty } from "eez-studio-page-editor/resizing-widget-property";
+import { PropertyProps } from "eez-studio-shared/model/components/PropertyGrid";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -498,6 +507,8 @@ export class Widget extends EezObject {
     }
 
     resizeColumn(columnIndex: number, savedColumnWidth: number, offset: number) {}
+
+    open() {}
 }
 
 registerClass(Widget);
@@ -930,6 +941,29 @@ export class SelectWidget extends Widget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@observer
+class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
+    @bind
+    showLayout(after: boolean) {
+        (this.props.object as LayoutViewWidget).open();
+    }
+
+    render() {
+        return (
+            <UIElementsFactory.Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={this.showLayout}
+            >
+                Show {PageContext.layoutConceptName}
+            </UIElementsFactory.Button>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class LayoutViewWidget extends Widget {
     @observable
     layout: string;
@@ -940,6 +974,12 @@ export class LayoutViewWidget extends Widget {
                 name: "layout",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: PageInitContext.layoutCollectionPath
+            },
+            {
+                name: "customUI",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridComponent: LayoutViewPropertyGridUI
             }
         ],
 
@@ -989,6 +1029,13 @@ export class LayoutViewWidget extends Widget {
 
     render(rect: Rect, dataContext: IDataContext): React.ReactNode {
         return PageContext.renderLayoutViewWidget(this, rect, dataContext);
+    }
+
+    open() {
+        const layout = PageContext.findLayout(this.layout);
+        if (layout) {
+            NavigationStore.showObject(layout);
+        }
     }
 }
 

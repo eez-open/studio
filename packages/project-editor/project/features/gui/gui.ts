@@ -50,11 +50,18 @@ setPageContext({
     findDataItem: findDataItem,
 
     layoutConceptName: "Layout",
-    getLayouts() {
+
+    getPages() {
         return (getProperty(ProjectStore.project, "gui") as Gui).pages;
     },
 
+    findPage,
+
+    getLayouts() {
+        return (getProperty(ProjectStore.project, "gui") as Gui).pages;
+    },
     findLayout: findPage,
+
     findStyle,
     findStyleOrGetDefault
 });

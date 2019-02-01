@@ -357,42 +357,42 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
                 );
             });
 
-            if (
-                DragAndDropManager.dragObject &&
-                !isAncestor(this.props.item.object, DragAndDropManager.dragObject)
-            ) {
-                let addDropPlaceholder = false;
+            // if (
+            //     DragAndDropManager.dragObject &&
+            //     !isAncestor(this.props.item.object, DragAndDropManager.dragObject)
+            // ) {
+            //     let addDropPlaceholder = false;
 
-                if (isArray(this.props.item.object)) {
-                    if (
-                        isObjectInstanceOf(
-                            DragAndDropManager.dragObject,
-                            this.props.item.object._classInfo
-                        )
-                    ) {
-                        addDropPlaceholder = true;
-                    }
-                } else {
-                    let place = findPastePlaceInside(
-                        this.props.item.object,
-                        DragAndDropManager.dragObject._classInfo,
-                        true
-                    );
-                    if (place) {
-                        addDropPlaceholder = true;
-                    }
-                }
+            //     if (isArray(this.props.item.object)) {
+            //         if (
+            //             isObjectInstanceOf(
+            //                 DragAndDropManager.dragObject,
+            //                 this.props.item.object._classInfo
+            //             )
+            //         ) {
+            //             addDropPlaceholder = true;
+            //         }
+            //     } else {
+            //         let place = findPastePlaceInside(
+            //             this.props.item.object,
+            //             DragAndDropManager.dragObject._classInfo,
+            //             true
+            //         );
+            //         if (place) {
+            //             addDropPlaceholder = true;
+            //         }
+            //     }
 
-                if (addDropPlaceholder) {
-                    childrenRows.push(
-                        <DropPlaceholder
-                            key="drop-placeholder"
-                            level={childrenLevel}
-                            item={this.props.item}
-                        />
-                    );
-                }
-            }
+            //     if (addDropPlaceholder) {
+            //         childrenRows.push(
+            //             <DropPlaceholder
+            //                 key="drop-placeholder"
+            //                 level={childrenLevel}
+            //                 item={this.props.item}
+            //             />
+            //         );
+            //     }
+            // }
         }
 
         let rowEnclosureClassName = classNames("tree-row-enclosure", {

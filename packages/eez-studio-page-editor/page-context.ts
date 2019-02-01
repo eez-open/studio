@@ -16,6 +16,7 @@ export interface IDataContext {
     get(dataItemId: string): any;
     count(dataItemId: string): number;
     getEnumValue(dataItemId: string): number;
+    executeAction(action: string): void;
     push(data: any): IDataContext;
 }
 
@@ -35,6 +36,9 @@ export interface IPageContext {
     findActionIndex(actionName: any): number;
     findDataItemIndex(dataItemId: string): number;
     findDataItem(dataItemId: string): IDataItem | undefined;
+
+    getPages(): EezArrayObject<Page>;
+    findPage(pageName: string): Page | undefined;
 
     layoutConceptName: string;
     getLayouts(): EezArrayObject<Page>;

@@ -95,7 +95,7 @@ export function resizeWidget(
     if (fixedHeight) {
         if (pinToTop && !pinToBottom) {
             bottom = top + rectWidgetOriginal.height;
-        } else if (pinToRight && !pinToTop) {
+        } else if (pinToBottom && !pinToTop) {
             top = bottom - rectWidgetOriginal.height;
         } else if (!pinToTop && !pinToBottom) {
             const center =
