@@ -614,9 +614,10 @@ export class Tree extends React.Component<TreeProps, {}> {
 
     @action.bound
     onDragOver(event: React.DragEvent) {
-        const dragObject = DragAndDropManager.dragObject;
+        if (DragAndDropManager.dragObject) {
+            const dragObject = DragAndDropManager.dragObject;
+            const rootItem = this.props.rootItem;
 
-        if (dragObject) {
             const $treeDiv = $(this.treeDiv);
             const $allRows = $treeDiv.find("[data-object-id]");
 
@@ -635,7 +636,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                     const labelRect = $label.get(0).getBoundingClientRect();
 
                     const objectId = $row.attr("data-object-id");
-                    let dropItem = this.props.rootItem.getObjectAdapter(objectId!)!;
+                    let dropItem = rootItem.getObjectAdapter(objectId!)!;
 
                     let dropPosition: DropPosition | undefined;
                     let canDrop = false;
@@ -644,7 +645,7 @@ export class Tree extends React.Component<TreeProps, {}> {
 
                     function checks() {
                         // check: can't drop object within itself
-                        if (isAncestor(dropItem.object, dragObject!)) {
+                        if (isAncestor(dropItem.object, dragObject)) {
                             return;
                         }
 
@@ -652,7 +653,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                         if (
                             !(
                                 isArrayElement(dropItem.object) &&
-                                isObjectInstanceOf(dragObject!, dropItem.object._parent!._classInfo)
+                                isObjectInstanceOf(dragObject, dropItem.object._parent!._classInfo)
                             )
                         ) {
                             return;
@@ -663,30 +664,40 @@ export class Tree extends React.Component<TreeProps, {}> {
                             return;
                         }
 
-                        const $row = $treeDiv.find(`[data-object-id="${dropItem.object._id}"]`);
-                        const rowIndexAtCursor = $allRows.index($row);
-                        if (dropPosition === DropPosition.DROP_POSITION_BEFORE) {
-                            if (rowIndexAtCursor === 0) {
-                                canDrop = true;
-                            } else {
-                                const $prevRow = $allRows.eq(rowIndexAtCursor - 1);
-                                const prevObjectId = $prevRow.attr("data-object-id");
-                                if (prevObjectId !== dragObject!._id) {
+                        if (dropItem.object._parent === dragObject._parent) {
+                            const $row = $treeDiv.find(`[data-object-id="${dropItem.object._id}"]`);
+                            const rowIndexAtCursor = $allRows.index($row);
+
+                            if (dropPosition === DropPosition.DROP_POSITION_BEFORE) {
+                                if (rowIndexAtCursor === 0) {
                                     canDrop = true;
+                                } else {
+                                    const $prevRow = $allRows.eq(rowIndexAtCursor - 1);
+                                    const prevObjectId = $prevRow.attr("data-object-id");
+                                    if (prevObjectId !== dragObject._id) {
+                                        canDrop = true;
+                                    }
+                                }
+                            } else if (dropPosition === DropPosition.DROP_POSITION_AFTER) {
+                                if (rowIndexAtCursor === $allRows.length - 1) {
+                                    canDrop = true;
+                                } else {
+                                    const $nextRow = $allRows.eq(rowIndexAtCursor + 1);
+                                    const nextObjectId = $nextRow.attr("data-object-id");
+                                    if (nextObjectId !== dragObject._id) {
+                                        canDrop = true;
+                                    }
                                 }
                             }
-                        } else if (dropPosition === DropPosition.DROP_POSITION_AFTER) {
-                            if (rowIndexAtCursor === $allRows.length - 1) {
-                                canDrop = true;
-                            } else {
-                                const $nextRow = $allRows.eq(rowIndexAtCursor + 1);
-                                const nextObjectId = $nextRow.attr("data-object-id");
-                                if (nextObjectId !== dragObject!._id) {
-                                    canDrop = true;
-                                }
-                            }
+                        } else {
+                            canDrop = true;
                         }
                     }
+
+                    const $nextRow = $allRows.eq(rowIndexAtCursor + 1);
+                    const nextObjectId = $nextRow.attr("data-object-id");
+                    let nextItem = rootItem.getObjectAdapter(nextObjectId!)!;
+                    let nextItemParent = nextItem && rootItem.getParent(nextItem);
 
                     if (event.nativeEvent.clientY < rowRect.top + rowRect.height / 2) {
                         dropPosition = DropPosition.DROP_POSITION_BEFORE;
@@ -695,30 +706,22 @@ export class Tree extends React.Component<TreeProps, {}> {
                     } else {
                         dropPosition = DropPosition.DROP_POSITION_AFTER;
 
-                        const $nextRow = $allRows.eq(rowIndexAtCursor + 1);
-                        const nextObjectId = $nextRow.attr("data-object-id");
-                        let nextItem = this.props.rootItem.getObjectAdapter(nextObjectId!)!;
-
                         if (
+                            event.nativeEvent.clientX > labelRect.left + CHILD_OFFSET &&
                             findPastePlaceInside(dropItem.object, dragObject._classInfo, true) &&
-                            event.nativeEvent.clientX > labelRect.left + CHILD_OFFSET
+                            !isAncestor(dropItem.object, dragObject) &&
+                            !(
+                                rowIndexAtCursor + 1 < $allRows.length &&
+                                isAncestor(nextItem.object, dropItem.object)
+                            )
                         ) {
-                            // check: can't drop object within itself
-                            if (!isAncestor(dropItem.object, dragObject)) {
-                                if (
-                                    !(
-                                        rowIndexAtCursor + 1 < $allRows.length &&
-                                        isAncestor(nextItem.object, dropItem.object)
-                                    )
-                                ) {
-                                    // no child, drop inside
-                                    dropPosition = DropPosition.DROP_POSITION_INSIDE;
-                                    canDrop = true;
-                                }
-                            }
-                        }
-
-                        if (!canDrop) {
+                            dropPosition = DropPosition.DROP_POSITION_INSIDE;
+                            canDrop = true;
+                        } else if (dropItem === nextItemParent) {
+                            dropItem = nextItem;
+                            dropPosition = DropPosition.DROP_POSITION_BEFORE;
+                            checks();
+                        } else {
                             let canDropToItem;
 
                             while (true) {
@@ -743,17 +746,9 @@ export class Tree extends React.Component<TreeProps, {}> {
                                     }
                                 }
 
-                                if (!nextItem) {
-                                    break;
-                                }
+                                const parentItem = rootItem.getParent(dropItem);
 
-                                const parentItem = this.props.rootItem.getParent(dropItem);
-
-                                if (!parentItem) {
-                                    break;
-                                }
-
-                                if (parentItem === this.props.rootItem.getParent(nextItem)) {
+                                if (!parentItem || parentItem === nextItemParent) {
                                     break;
                                 }
 
@@ -761,8 +756,14 @@ export class Tree extends React.Component<TreeProps, {}> {
                             }
 
                             if (canDropToItem) {
-                                dropItem = canDropToItem;
-                                canDrop = true;
+                                if (rootItem.getParent(canDropToItem) === nextItemParent) {
+                                    dropItem = nextItem;
+                                    dropPosition = DropPosition.DROP_POSITION_BEFORE;
+                                    checks();
+                                } else {
+                                    dropItem = canDropToItem;
+                                    canDrop = true;
+                                }
                             } else {
                                 canDrop = false;
                             }

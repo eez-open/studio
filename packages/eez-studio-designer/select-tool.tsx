@@ -626,6 +626,9 @@ class ColumnResizeMouseHandler extends MouseHandlerWithSnapLines {
 
     down(context: IDesignerContext, event: MouseEvent) {
         super.down(context, event);
+
+        context.document.onDragStart("col-resize");
+
         this.savedColumnWidth = this.selectedObject.getColumnWidth!(this.columnIndex);
     }
 
