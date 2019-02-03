@@ -1,10 +1,12 @@
 import React from "react";
+import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import classNames from "classnames";
 
-import { _filter, _map } from "eez-studio-shared/algorithm";
+import { _filter, _map, _each } from "eez-studio-shared/algorithm";
 import { hasClass } from "eez-studio-shared/dom";
+import { stringCompare } from "eez-studio-shared/string";
 
 import { Icon } from "eez-studio-ui/icon";
 import styled from "eez-studio-ui/styled-components";
@@ -13,12 +15,12 @@ import {
     EezObject,
     PropertyInfo,
     isArray,
-    isObjectInstanceOf,
-    isAncestor,
-    isArrayElement,
     objectToString,
     cloneObject,
-    isShowOnlyChildrenInTree
+    isShowOnlyChildrenInTree,
+    isAncestor,
+    isArrayElement,
+    isObjectInstanceOf
 } from "eez-studio-shared/model/object";
 import {
     objectToClipboardData,
@@ -26,36 +28,86 @@ import {
     findPastePlaceInside
 } from "eez-studio-shared/model/clipboard";
 import { DocumentStore, canContainChildren } from "eez-studio-shared/model/store";
-import { DragAndDropManager, DropPosition } from "eez-studio-shared/model/dd";
-import {
-    TreeObjectAdapter,
-    TreeObjectAdapterChildren
-} from "eez-studio-shared/model/objectAdapter";
+import { DragAndDropManager } from "eez-studio-shared/model/dd";
+import { ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
+import { computed } from "mobx";
+
+////////////////////////////////////////////////////////////////////////////////
+
+export enum DropPosition {
+    DROP_POSITION_NONE,
+    DROP_POSITION_BEFORE,
+    DROP_POSITION_AFTER,
+    DROP_POSITION_INSIDE
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const DropMarkDiv = styled.div`
     position: absolute;
-    font-size: 18px;
-    margin-top: -11px;
-    margin-left: -13px;
-    color: ${props => props.theme.dropPlaceColor};
-    -webkit-filter: drop-shadow(0px 0px 1px ${props => props.theme.dropPlaceColor});
-    filter: drop-shadow(0px 0px 1px ${props => props.theme.dropPlaceColor});
-    pointer-events: none;
-    text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+    height: 0;
+`;
+
+const DropHorizontalMarkDiv = styled.div`
+    position: relative;
+    top: 5px;
+    height: 2px;
+    border-top: 2px solid ${props => props.theme.dropPlaceColor};
+`;
+
+const DropHorizontalMarkLeftArrowDiv = styled.div`
+    position: relative;
+    top: -5px;
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 4px solid ${props => props.theme.dropPlaceColor};
+`;
+
+const DropHorizontalMarkRightArrowDiv = styled.div`
+    position: relative;
+    top: -13px;
+    left: calc(100% - 4px);
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-right: 4px solid ${props => props.theme.dropPlaceColor};
+`;
+
+const DropVerticalMarkDiv = styled.div`
+    position: relative;
+    width: 1px;
+    border-left: 1px solid ${props => props.theme.dropPlaceColor};
 `;
 
 interface DropMarkProps {
-    level: number;
+    left: number;
+    top: number;
+    width: number;
+    verticalConnectionLineHeight: number | undefined;
 }
 
 @observer
-export class DropMark extends React.Component<DropMarkProps, {}> {
+class DropMark extends React.Component<DropMarkProps, {}> {
     render() {
+        const { left, top, width, verticalConnectionLineHeight } = this.props;
+
         return (
-            <DropMarkDiv style={{ paddingLeft: this.props.level * 20 }}>
-                <i className="material-icons">chevron_right</i>
+            <DropMarkDiv style={{ left, top, width }}>
+                <DropHorizontalMarkDiv>
+                    <DropHorizontalMarkLeftArrowDiv />
+                    <DropHorizontalMarkRightArrowDiv />
+                </DropHorizontalMarkDiv>
+                {verticalConnectionLineHeight !== undefined && (
+                    <DropVerticalMarkDiv
+                        style={{
+                            top: -verticalConnectionLineHeight + "px",
+                            height: verticalConnectionLineHeight - 4 + "px"
+                        }}
+                    />
+                )}
             </DropMarkDiv>
         );
     }
@@ -63,74 +115,21 @@ export class DropMark extends React.Component<DropMarkProps, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const DropPlaceholderDiv = styled.div`
-    margin: 1px;
-    border: 1px dotted ${props => props.theme.dropPlaceColor};
-    height: 10px;
-
-    &.drop-target {
-        background-color: ${props => props.theme.dropPlaceColor};
-    }
-`;
-
-interface DropPlaceholderProps {
-    level: number;
-    item: TreeObjectAdapter;
-}
-
-@observer
-export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
-    @bind
-    onDragOver(event: any) {
-        if (!DragAndDropManager.dragObject) {
-            return;
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        DragAndDropManager.setDropEffect(event);
-
-        DragAndDropManager.setDropObjectAndPosition(this.props.item, DropPosition.DROP_INSIDE);
-    }
-
-    @bind
-    onDragLeave() {
-        DragAndDropManager.unsetDropObjectAndPosition();
-    }
-
-    render() {
-        let className = classNames({
-            "drop-target":
-                this.props.item == DragAndDropManager.dropObject &&
-                DragAndDropManager.dropPosition == DropPosition.DROP_INSIDE
-        });
-
-        return (
-            <DropPlaceholderDiv
-                className={className}
-                style={{ marginLeft: this.props.level * 20 + 18 }}
-                onDragOver={this.onDragOver}
-                onDragLeave={this.onDragLeave}
-            />
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-const TreeRowEnclosureDiv = styled.div`
-    &.drag-source {
-        background-color: ${props => props.theme.dragSourceBackgroundColor};
-        color: ${props => props.theme.dragSourceColor};
-    }
-`;
-
 const TreeRowDiv = styled.div`
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    &.drag-source {
+        background-color: ${props => props.theme.dragSourceBackgroundColor};
+        color: ${props => props.theme.dragSourceColor};
+    }
+
+    &.drop-target {
+        background-color: ${props => props.theme.dropTargetBackgroundColor};
+        color: ${props => props.theme.dropTargetColor};
+    }
 
     .tree-row-label {
         display: inline-block;
@@ -149,8 +148,8 @@ const TreeRowDiv = styled.div`
 interface TreeRowProps {
     showOnlyChildren: boolean;
     collapsable: boolean;
-    rootItem: TreeObjectAdapter;
-    item: TreeObjectAdapter;
+    rootItem: ITreeObjectAdapter;
+    item: ITreeObjectAdapter;
     onDoubleClick?: (object: EezObject) => void;
     level: number;
     filter?: (object: EezObject) => boolean;
@@ -158,7 +157,7 @@ interface TreeRowProps {
 }
 
 @observer
-export class TreeRow extends React.Component<TreeRowProps, {}> {
+class TreeRow extends React.Component<TreeRowProps, {}> {
     row: HTMLDivElement;
     index: number;
     ensureVisibleTimeout: any;
@@ -192,7 +191,6 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
         event.dataTransfer.effectAllowed = "copyMove";
         setClipboardData(event, objectToClipboardData(this.props.item.object));
         event.dataTransfer.setDragImage(DragAndDropManager.blankDragImage, 0, 0);
-
         // postpone render, otherwise we can receive onDragEnd immediatelly
         setTimeout(() => {
             DragAndDropManager.start(event, this.props.item.object);
@@ -207,50 +205,6 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
     @bind
     onDragEnd(event: any) {
         DragAndDropManager.end(event);
-    }
-
-    @bind
-    onDragOver(event: any) {
-        if (!DragAndDropManager.dragObject) {
-            return;
-        }
-
-        if (isAncestor(this.props.item.object, DragAndDropManager.dragObject)) {
-            return;
-        }
-
-        DragAndDropManager.delayedOnDragOver(() => {
-            if (!DragAndDropManager.dragObject) {
-                return;
-            }
-
-            if (isAncestor(this.props.item.object, DragAndDropManager.dragObject)) {
-                return;
-            }
-
-            if (
-                isArrayElement(this.props.item.object) &&
-                DragAndDropManager.dragObject &&
-                isObjectInstanceOf(
-                    DragAndDropManager.dragObject,
-                    this.props.item.object._parent!._classInfo
-                )
-            ) {
-                DragAndDropManager.setDropObjectAndPosition(
-                    this.props.item,
-                    DropPosition.DROP_BEFORE
-                );
-            }
-        });
-
-        event.preventDefault();
-        event.stopPropagation();
-        DragAndDropManager.setDropEffect(event);
-    }
-
-    @bind
-    onDragLeave() {
-        DragAndDropManager.unsetDropObjectAndPosition();
     }
 
     @bind
@@ -306,222 +260,209 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
     }
 
     render() {
-        let itemChildren: TreeObjectAdapterChildren = this.props.item.children;
-
-        if (this.props.filter) {
-            let filter = this.props.filter;
-            itemChildren = _filter(this.props.item.children, (item: any) => {
-                return filter(item.object);
-            }) as any;
-        }
-
-        let children: {
-            item: TreeObjectAdapter;
-            draggable: boolean;
-        }[] = _map(itemChildren, item => ({
-            item: item as any,
-            draggable: true
-        }));
-
-        let childrenRows: JSX.Element[] = [];
-
-        if (!this.props.collapsable || this.props.showOnlyChildren || this.props.item.expanded) {
-            let childrenLevel = this.props.showOnlyChildren
-                ? this.props.level
-                : this.props.level + 1;
-
-            children.forEach(child => {
-                if (
-                    child.item == DragAndDropManager.dropObject &&
-                    DragAndDropManager.dropPosition == DropPosition.DROP_BEFORE
-                ) {
-                    childrenRows.push(<DropMark key="drop-mark" level={childrenLevel} />);
-                }
-
-                childrenRows.push(
-                    <TreeRow
-                        key={child.item.object._id}
-                        showOnlyChildren={
-                            children.length == 1 &&
-                            isArray(child.item.object) &&
-                            isShowOnlyChildrenInTree(child.item.object)
-                        }
-                        rootItem={this.props.rootItem}
-                        item={child.item}
-                        level={childrenLevel}
-                        collapsable={this.props.collapsable}
-                        onDoubleClick={this.props.onDoubleClick}
-                        filter={this.props.filter}
-                        draggable={child.draggable}
-                    />
-                );
-            });
-
-            // if (
-            //     DragAndDropManager.dragObject &&
-            //     !isAncestor(this.props.item.object, DragAndDropManager.dragObject)
-            // ) {
-            //     let addDropPlaceholder = false;
-
-            //     if (isArray(this.props.item.object)) {
-            //         if (
-            //             isObjectInstanceOf(
-            //                 DragAndDropManager.dragObject,
-            //                 this.props.item.object._classInfo
-            //             )
-            //         ) {
-            //             addDropPlaceholder = true;
-            //         }
-            //     } else {
-            //         let place = findPastePlaceInside(
-            //             this.props.item.object,
-            //             DragAndDropManager.dragObject._classInfo,
-            //             true
-            //         );
-            //         if (place) {
-            //             addDropPlaceholder = true;
-            //         }
-            //     }
-
-            //     if (addDropPlaceholder) {
-            //         childrenRows.push(
-            //             <DropPlaceholder
-            //                 key="drop-placeholder"
-            //                 level={childrenLevel}
-            //                 item={this.props.item}
-            //             />
-            //         );
-            //     }
-            // }
-        }
-
-        let rowEnclosureClassName = classNames("tree-row-enclosure", {
-            "drag-source":
-                !this.props.showOnlyChildren &&
-                DragAndDropManager.dragObject == this.props.item.object
+        let className = classNames("tree-row", {
+            selected: this.props.item.selected,
+            "drag-source": DragAndDropManager.dragObject === this.props.item.object
         });
 
-        let row: JSX.Element | undefined;
-
-        if (!this.props.showOnlyChildren) {
-            let className = classNames("tree-row", {
-                selected: this.props.item.selected
-            });
-
-            let labelText = objectToString(this.props.item.object);
-
-            let label: JSX.Element | undefined;
-            let triangle: JSX.Element | undefined;
-            if (this.props.collapsable) {
-                if (
-                    (this.props.filter && children.length > 0) ||
-                    (!this.props.filter && canContainChildren(this.props.item.object))
-                ) {
-                    triangle = (
-                        <small className="tree-row-triangle" onClick={this.onTriangleClick}>
-                            <Icon
-                                icon={
-                                    this.props.item.expanded
-                                        ? "material:keyboard_arrow_down"
-                                        : "material:keyboard_arrow_right"
-                                }
-                                size={18}
-                            />
-                        </small>
-                    );
-                    label = <span>{labelText}</span>;
-                } else {
-                    label = <span className="tree-row-label">{labelText}</span>;
-                }
-            } else {
-                label = <span>{labelText}</span>;
-            }
-
-            row = (
-                <TreeRowDiv
-                    ref={ref => (this.row = ref!)}
-                    data-object-id={this.props.item.object._id}
-                    className={className}
-                    style={{ paddingLeft: this.props.level * 20 }}
-                    onMouseUp={this.onMouseUp}
-                    onClick={this.onClick}
-                    onDoubleClick={triangle ? this.onTriangleClick : this.onDoubleClick}
-                    draggable={this.props.draggable}
-                    onDragStart={this.onDragStart}
-                    onDrag={this.onDrag}
-                    onDragEnd={this.onDragEnd}
-                    onDragOver={this.onDragOver}
-                    onDragLeave={this.onDragLeave}
-                >
-                    {triangle}
-                    {label}
-                </TreeRowDiv>
+        let triangle: JSX.Element | undefined;
+        let labelClassName;
+        if (this.props.collapsable) {
+            triangle = (
+                <Icon
+                    icon={
+                        this.props.item.expanded
+                            ? "material:keyboard_arrow_down"
+                            : "material:keyboard_arrow_right"
+                    }
+                    size={18}
+                    className="tree-row-triangle"
+                    onClick={this.onTriangleClick}
+                />
             );
+        } else {
+            labelClassName = "tree-row-label";
         }
 
         return (
-            <TreeRowEnclosureDiv className={rowEnclosureClassName}>
-                {row}
-                {childrenRows}
-            </TreeRowEnclosureDiv>
+            <TreeRowDiv
+                ref={ref => (this.row = ref!)}
+                data-object-id={this.props.item.object._id}
+                className={className}
+                style={{ paddingLeft: this.props.level * 20 }}
+                onMouseUp={this.onMouseUp}
+                onClick={this.onClick}
+                onDoubleClick={triangle ? this.onTriangleClick : this.onDoubleClick}
+                draggable={this.props.draggable}
+                onDragStart={this.onDragStart}
+                onDrag={this.onDrag}
+                onDragEnd={this.onDragEnd}
+            >
+                {triangle}
+                <span className={labelClassName}>{objectToString(this.props.item.object)}</span>
+            </TreeRowDiv>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const TreeOuterDiv = styled.div`
+@observer
+class TreeRows extends React.Component<{
+    rootItem: ITreeObjectAdapter;
+    item?: ITreeObjectAdapter;
+    filter?: (object: EezObject) => boolean;
+    collapsable?: boolean;
+    sortDirection?: SortDirectionType;
+    maxLevel?: number;
+    onDoubleClick?: (object: EezObject) => void;
+}> {
+    @computed
+    get allRows() {
+        const { filter, collapsable, sortDirection, maxLevel } = this.props;
+
+        const draggable = sortDirection === "none";
+
+        const children: {
+            item: ITreeObjectAdapter;
+            level: number;
+            draggable: boolean;
+            collapsable: boolean;
+        }[] = [];
+
+        function getChildren(item: ITreeObjectAdapter) {
+            let itemChildren = _map(item.children, childItem => childItem) as ITreeObjectAdapter[];
+
+            if (sortDirection !== "none") {
+                if (sortDirection === "asc") {
+                    itemChildren = itemChildren.sort((a, b) =>
+                        stringCompare(a.object._label, b.object._label)
+                    );
+                } else if (sortDirection === "desc") {
+                    itemChildren = itemChildren.sort((a, b) =>
+                        stringCompare(b.object._label, a.object._label)
+                    );
+                }
+            }
+
+            return itemChildren;
+        }
+
+        function enumChildren(childItems: ITreeObjectAdapter[], level: number) {
+            childItems.forEach(childItem => {
+                if (!filter || filter(childItem.object)) {
+                    const showOnlyChildren =
+                        childItem.children.length == 1 &&
+                        isArray(childItem.object) &&
+                        isShowOnlyChildrenInTree(childItem.object);
+
+                    const childItems = getChildren(childItem);
+
+                    if (showOnlyChildren) {
+                        enumChildren(childItems, level);
+                    } else {
+                        const row = {
+                            item: childItem,
+                            level,
+                            draggable,
+                            collapsable: false
+                        };
+
+                        children.push(row);
+
+                        const maxLevelReached = maxLevel !== undefined && level === maxLevel;
+
+                        if (!maxLevelReached && childItem.expanded && childItems.length > 0) {
+                            enumChildren(childItems, level + 1);
+                        }
+
+                        row.collapsable =
+                            collapsable! &&
+                            !maxLevelReached &&
+                            ((filter && childItems.length > 0) ||
+                                (!filter && canContainChildren(childItem.object)));
+                    }
+                }
+            });
+        }
+
+        enumChildren(getChildren(this.props.item || this.props.rootItem), 0);
+
+        return children;
+    }
+
+    render() {
+        const { rootItem, onDoubleClick } = this.props;
+        return this.allRows.map(row => (
+            <TreeRow
+                key={row.item.object._id}
+                showOnlyChildren={true}
+                collapsable={row.collapsable}
+                rootItem={rootItem}
+                item={row.item}
+                onDoubleClick={onDoubleClick}
+                level={row.level}
+                draggable={row.draggable}
+            />
+        ));
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const TreeDiv = styled.div`
     flex-grow: 1;
     overflow: auto;
     padding: 5px;
     border: 2px dashed transparent;
-    min-height: 100%;
+    height: 100%;
+    position: relative;
+
+    &.zero-level .tree-row-label {
+        margin-left: 0 !important;
+    }
 
     &:not(.drag-source) {
-        .tree-row-enclosure:not(.drag-source) {
-            .tree-row {
-                &.selected {
-                    background-color: ${props => props.theme.nonFocusedSelectionBackgroundColor};
-                    color: ${props => props.theme.nonFocusedSelectionColor};
-                }
+        .tree-row:not(.drag-source) {
+            &.selected {
+                background-color: ${props => props.theme.nonFocusedSelectionBackgroundColor};
+                color: ${props => props.theme.nonFocusedSelectionColor};
             }
         }
 
         &:focus {
-            .tree-row-enclosure:not(.drag-source) {
-                .tree-row {
-                    &:hover {
-                        background-color: ${props => props.theme.hoverBackgroundColor};
-                        color: ${props => props.theme.hoverColor};
-                    }
+            .tree-row:not(.drag-source) {
+                &:hover {
+                    background-color: ${props => props.theme.hoverBackgroundColor};
+                    color: ${props => props.theme.hoverColor};
+                }
 
-                    &.focused {
-                        background-color: ${props => props.theme.focusBackgroundColor};
-                        color: ${props => props.theme.focusColor};
-                    }
+                &.focused {
+                    background-color: ${props => props.theme.focusBackgroundColor};
+                    color: ${props => props.theme.focusColor};
+                }
 
-                    &.selected {
-                        background-color: ${props => props.theme.selectionBackgroundColor};
-                        color: ${props => props.theme.selectionColor};
-                    }
+                &.selected {
+                    background-color: ${props => props.theme.selectionBackgroundColor};
+                    color: ${props => props.theme.selectionColor};
                 }
             }
         }
     }
 `;
 
-const TreeInnerDiv = styled.div`
-    position: relative;
-`;
+export type SortDirectionType = "asc" | "desc" | "none";
 
 interface TreeProps {
-    rootItem: TreeObjectAdapter;
-    item?: TreeObjectAdapter;
+    rootItem: ITreeObjectAdapter;
+    item?: ITreeObjectAdapter;
     onDoubleClick?: (object: EezObject) => void;
     tabIndex?: number;
     filter?: (object: EezObject) => boolean;
     collapsable?: boolean;
     onFocus?: () => void;
+    sortDirection?: SortDirectionType;
+    maxLevel?: number;
 }
 
 @observer
@@ -529,20 +470,17 @@ export class Tree extends React.Component<TreeProps, {}> {
     static defaultProps = {
         tabIndex: -1,
         maxLevel: undefined,
-        collapsable: false
+        collapsable: true,
+        sortDirection: "none"
     };
 
-    tree: HTMLDivElement;
+    treeDiv: HTMLDivElement;
 
-    dragAndDropUpdateTimeoutId: any;
-
-    constructor(props: TreeProps) {
-        super(props);
-
-        this.state = {
-            dropItem: undefined
-        };
-    }
+    @observable dropPosition: DropPosition | undefined;
+    @observable dropMarkLeft: number;
+    @observable dropMarkTop: number;
+    @observable dropMarkWidth: number;
+    @observable dropMarkVerticalConnectionLineHeight: number | undefined;
 
     componentWillReceiveProps(nextProps: TreeProps) {
         this.setState({
@@ -566,7 +504,7 @@ export class Tree extends React.Component<TreeProps, {}> {
 
     @bind
     onKeyDown(event: any) {
-        let focusedItemId = $(this.tree)
+        let focusedItemId = $(this.treeDiv)
             .find(".tree-row.selected")
             .attr("data-object-id");
 
@@ -574,7 +512,7 @@ export class Tree extends React.Component<TreeProps, {}> {
             return;
         }
 
-        let $focusedItem = $(this.tree).find(`.tree-row[data-object-id="${focusedItemId}"]`);
+        let $focusedItem = $(this.treeDiv).find(`.tree-row[data-object-id="${focusedItemId}"]`);
 
         if (event.altKey) {
         } else if (event.shiftKey) {
@@ -598,10 +536,10 @@ export class Tree extends React.Component<TreeProps, {}> {
                 event.keyCode == 36 ||
                 event.keyCode == 35
             ) {
-                let $rows = $(this.tree).find(".tree-row");
+                let $rows = $(this.treeDiv).find(".tree-row");
                 let index = $rows.index($focusedItem);
 
-                let pageSize = Math.floor($(this.tree).height()! / $rows.height()!);
+                let pageSize = Math.floor($(this.treeDiv).height()! / $rows.height()!);
 
                 if (event.keyCode == 38) {
                     // up
@@ -674,29 +612,260 @@ export class Tree extends React.Component<TreeProps, {}> {
         }
     }
 
-    @bind
+    @action.bound
+    onDragOver(event: React.DragEvent) {
+        const dragObject = DragAndDropManager.dragObject;
+
+        if (dragObject) {
+            const $treeDiv = $(this.treeDiv);
+            const $allRows = $treeDiv.find("[data-object-id]");
+
+            if ($allRows.length > 0) {
+                const firstRowRect = $allRows.get(0).getBoundingClientRect();
+                const treeDivRect = this.treeDiv.getBoundingClientRect();
+                let rowIndexAtCursor = Math.floor(
+                    (event.nativeEvent.clientY - treeDivRect.top) / firstRowRect.height
+                );
+
+                if (rowIndexAtCursor >= 0 && rowIndexAtCursor < $allRows.length) {
+                    const $row = $allRows.eq(rowIndexAtCursor);
+                    const rowRect = $row.get(0).getBoundingClientRect();
+
+                    const $label = $row.find("span");
+                    const labelRect = $label.get(0).getBoundingClientRect();
+
+                    const objectId = $row.attr("data-object-id");
+                    let dropItem = this.props.rootItem.getObjectAdapter(objectId!)!;
+
+                    let dropPosition: DropPosition | undefined;
+                    let canDrop = false;
+
+                    const CHILD_OFFSET = 25;
+
+                    function checks() {
+                        // check: can't drop object within itself
+                        if (isAncestor(dropItem.object, dragObject!)) {
+                            return;
+                        }
+
+                        // check: can't drop object if parent can't accept it
+                        if (
+                            !(
+                                isArrayElement(dropItem.object) &&
+                                isObjectInstanceOf(dragObject!, dropItem.object._parent!._classInfo)
+                            )
+                        ) {
+                            return;
+                        }
+
+                        // check: it makes no sense to drop dragObject before or after itself
+                        if (dropItem.object === dragObject) {
+                            return;
+                        }
+
+                        const $row = $treeDiv.find(`[data-object-id="${dropItem.object._id}"]`);
+                        const rowIndexAtCursor = $allRows.index($row);
+                        if (dropPosition === DropPosition.DROP_POSITION_BEFORE) {
+                            if (rowIndexAtCursor === 0) {
+                                canDrop = true;
+                            } else {
+                                const $prevRow = $allRows.eq(rowIndexAtCursor - 1);
+                                const prevObjectId = $prevRow.attr("data-object-id");
+                                if (prevObjectId !== dragObject!._id) {
+                                    canDrop = true;
+                                }
+                            }
+                        } else if (dropPosition === DropPosition.DROP_POSITION_AFTER) {
+                            if (rowIndexAtCursor === $allRows.length - 1) {
+                                canDrop = true;
+                            } else {
+                                const $nextRow = $allRows.eq(rowIndexAtCursor + 1);
+                                const nextObjectId = $nextRow.attr("data-object-id");
+                                if (nextObjectId !== dragObject!._id) {
+                                    canDrop = true;
+                                }
+                            }
+                        }
+                    }
+
+                    if (event.nativeEvent.clientY < rowRect.top + rowRect.height / 2) {
+                        dropPosition = DropPosition.DROP_POSITION_BEFORE;
+
+                        checks();
+                    } else {
+                        dropPosition = DropPosition.DROP_POSITION_AFTER;
+
+                        const $nextRow = $allRows.eq(rowIndexAtCursor + 1);
+                        const nextObjectId = $nextRow.attr("data-object-id");
+                        let nextItem = this.props.rootItem.getObjectAdapter(nextObjectId!)!;
+
+                        if (
+                            findPastePlaceInside(dropItem.object, dragObject._classInfo, true) &&
+                            event.nativeEvent.clientX > labelRect.left + CHILD_OFFSET
+                        ) {
+                            // check: can't drop object within itself
+                            if (!isAncestor(dropItem.object, dragObject)) {
+                                if (
+                                    !(
+                                        rowIndexAtCursor + 1 < $allRows.length &&
+                                        isAncestor(nextItem.object, dropItem.object)
+                                    )
+                                ) {
+                                    // no child, drop inside
+                                    dropPosition = DropPosition.DROP_POSITION_INSIDE;
+                                    canDrop = true;
+                                }
+                            }
+                        }
+
+                        if (!canDrop) {
+                            let canDropToItem;
+
+                            while (true) {
+                                const $row = $treeDiv.find(
+                                    `[data-object-id="${dropItem.object._id}"]`
+                                );
+
+                                if ($row.length > 0) {
+                                    canDrop = false;
+
+                                    checks();
+
+                                    if (canDrop) {
+                                        canDropToItem = dropItem;
+
+                                        const $label = $row.find("span");
+                                        const labelRect = $label.get(0).getBoundingClientRect();
+
+                                        if (event.nativeEvent.clientX > labelRect.left) {
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (!nextItem) {
+                                    break;
+                                }
+
+                                const parentItem = this.props.rootItem.getParent(dropItem);
+
+                                if (!parentItem) {
+                                    break;
+                                }
+
+                                if (parentItem === this.props.rootItem.getParent(nextItem)) {
+                                    break;
+                                }
+
+                                dropItem = parentItem;
+                            }
+
+                            if (canDropToItem) {
+                                dropItem = canDropToItem;
+                                canDrop = true;
+                            } else {
+                                canDrop = false;
+                            }
+                        }
+                    }
+
+                    if (canDrop) {
+                        if (
+                            dropItem !== DragAndDropManager.dropObject ||
+                            dropPosition !== this.dropPosition
+                        ) {
+                            if (dropItem !== DragAndDropManager.dropObject) {
+                                DragAndDropManager.setDropObject(dropItem);
+                            }
+
+                            if (dropPosition !== this.dropPosition) {
+                                this.dropPosition = dropPosition;
+                            }
+
+                            const $row = $treeDiv.find(`[data-object-id="${dropItem.object._id}"]`);
+                            const rowRect = $row[0].getBoundingClientRect();
+
+                            const $label = $row.find("span");
+                            const labelRect = $label.get(0).getBoundingClientRect();
+
+                            this.dropMarkVerticalConnectionLineHeight = undefined;
+
+                            if (dropPosition === DropPosition.DROP_POSITION_INSIDE) {
+                                this.dropMarkLeft =
+                                    labelRect.left - treeDivRect.left + CHILD_OFFSET;
+                                this.dropMarkTop = rowRect.bottom;
+                                this.dropMarkTop -= treeDivRect.top;
+                                this.dropMarkWidth = rowRect.right - labelRect.left - CHILD_OFFSET;
+                            } else {
+                                this.dropMarkLeft = labelRect.left - treeDivRect.left;
+                                if (this.dropPosition === DropPosition.DROP_POSITION_BEFORE) {
+                                    this.dropMarkTop = rowRect.top;
+                                } else {
+                                    if (rowIndexAtCursor !== $allRows.index($row)) {
+                                        const $row2 = $allRows.eq(rowIndexAtCursor);
+                                        const rowRect2 = $row2.get(0).getBoundingClientRect();
+
+                                        this.dropMarkTop = rowRect2.bottom;
+                                        this.dropMarkVerticalConnectionLineHeight =
+                                            rowRect2.bottom - rowRect.bottom;
+                                    } else {
+                                        this.dropMarkTop = rowRect.bottom;
+                                    }
+                                }
+                                this.dropMarkTop -= treeDivRect.top;
+                                this.dropMarkWidth = rowRect.right - labelRect.left;
+                            }
+                        }
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                        DragAndDropManager.setDropEffect(event);
+
+                        return;
+                    }
+                }
+            }
+        }
+
+        this.dropPosition = undefined;
+        if (DragAndDropManager.dropObject) {
+            DragAndDropManager.unsetDropObject();
+        }
+    }
+
+    @action.bound
+    onDragLeave(event: any) {
+        this.dropPosition = undefined;
+
+        if (DragAndDropManager.dropObject) {
+            DragAndDropManager.unsetDropObject();
+        }
+    }
+
+    @action.bound
     onDrop(event: any) {
         if (DragAndDropManager.dropObject) {
-            let dropPosition = DragAndDropManager.dropPosition;
+            let dropPosition = this.dropPosition;
+            this.dropPosition = undefined;
 
             DragAndDropManager.deleteDragItem();
 
             if (DragAndDropManager.dragObject) {
                 let object = cloneObject(undefined, DragAndDropManager.dragObject);
 
-                if (dropPosition == DropPosition.DROP_BEFORE) {
-                    DocumentStore.insertObjectBefore(DragAndDropManager.dropObject.object, object);
-                } else if (dropPosition == DropPosition.DROP_INSIDE) {
-                    let dropPlace = findPastePlaceInside(
-                        DragAndDropManager.dropObject.object,
-                        object._classInfo,
-                        true
-                    );
+                let dropItem = DragAndDropManager.dropObject as ITreeObjectAdapter;
+
+                if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
+                    DocumentStore.insertObjectBefore(dropItem.object, object);
+                } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
+                    DocumentStore.insertObjectAfter(dropItem.object, object);
+                } else if (dropPosition == DropPosition.DROP_POSITION_INSIDE) {
+                    let dropPlace = findPastePlaceInside(dropItem.object, object._classInfo, true);
                     if (dropPlace) {
                         if (isArray(dropPlace as EezObject)) {
                             DocumentStore.addObject(dropPlace as EezObject, object);
                         } else {
-                            DocumentStore.updateObject(DragAndDropManager.dropObject.object, {
+                            DocumentStore.updateObject(dropItem.object, {
                                 [(dropPlace as PropertyInfo).name]: object
                             });
                         }
@@ -708,37 +877,65 @@ export class Tree extends React.Component<TreeProps, {}> {
         }
     }
 
+    onContextMenu(event: React.MouseEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
     render() {
+        const {
+            rootItem,
+            item,
+            filter,
+            maxLevel,
+            collapsable,
+            sortDirection,
+            tabIndex,
+            onFocus
+        } = this.props;
+
         const className = classNames({
-            collapsable: this.props.collapsable,
-            "drag-source": DragAndDropManager.dragObject
+            collapsable,
+            "drag-source": DragAndDropManager.dragObject,
+            "zero-level": maxLevel === 0
         });
 
         return (
-            <TreeOuterDiv
-                ref={ref => (this.tree = ref!)}
+            <TreeDiv
                 className={className}
-                tabIndex={this.props.tabIndex}
+                tabIndex={tabIndex}
                 onKeyDown={this.onKeyDown}
-                onFocus={() => this.props.onFocus && this.props.onFocus()}
-                onContextMenu={event => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }}
+                onFocus={onFocus}
+                onDragOver={this.onDragOver}
+                onDragLeave={this.onDragLeave}
+                onDrop={this.onDrop}
+                onContextMenu={this.onContextMenu}
             >
-                <TreeInnerDiv onDrop={this.onDrop}>
-                    <TreeRow
-                        showOnlyChildren={true}
-                        collapsable={this.props.collapsable || false}
-                        rootItem={this.props.rootItem}
-                        item={this.props.item || this.props.rootItem}
+                <div
+                    ref={ref => (this.treeDiv = ref!)}
+                    style={{
+                        pointerEvents: DragAndDropManager.dragObject ? "none" : "auto"
+                    }}
+                >
+                    <TreeRows
+                        rootItem={rootItem}
+                        item={item}
+                        filter={filter}
+                        collapsable={collapsable}
+                        sortDirection={sortDirection}
+                        maxLevel={maxLevel}
                         onDoubleClick={this.onDoubleClick}
-                        level={0}
-                        filter={this.props.filter}
-                        draggable={false}
                     />
-                </TreeInnerDiv>
-            </TreeOuterDiv>
+                    {this.dropPosition && (
+                        <DropMark
+                            left={this.dropMarkLeft}
+                            top={this.dropMarkTop}
+                            width={this.dropMarkWidth}
+                            verticalConnectionLineHeight={this.dropMarkVerticalConnectionLineHeight}
+                        />
+                    )}
+                </div>
+            </TreeDiv>
         );
     }
 }

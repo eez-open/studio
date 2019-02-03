@@ -5,23 +5,17 @@ import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export enum DropPosition {
-    DROP_NONE,
-    DROP_BEFORE,
-    DROP_INSIDE,
-    DROP_APPEND
-}
+interface IDropObject {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class DragAndDropManagerClass {
     @observable dragObject: EezObject | undefined;
-    @observable dropObject: any | undefined;
-    @observable dropPosition: DropPosition | undefined;
+    @observable dropObject: IDropObject | undefined;
     dragItemDeleted: boolean;
     dropEffect: string | undefined;
     blankDragImage: HTMLImageElement;
-    timeoutID: any;
+    unsetDropObjectAndPositionTimeout: any;
 
     constructor() {
         this.blankDragImage = new Image();
@@ -38,15 +32,13 @@ class DragAndDropManagerClass {
     }
 
     @action
-    setDropObjectAndPosition(object: any, position: DropPosition) {
+    setDropObject(object: IDropObject) {
         this.dropObject = object;
-        this.dropPosition = position;
     }
 
-    @action
-    unsetDropObjectAndPosition() {
+    @action.bound
+    unsetDropObject() {
         this.dropObject = undefined;
-        this.dropPosition = undefined;
     }
 
     drag(event: any) {}
@@ -73,25 +65,9 @@ class DragAndDropManagerClass {
             this.dropEffect = event.dataTransfer.dropEffect;
             this.deleteDragItem();
         }
-
         this.dragObject = undefined;
-
-        if (this.dropObject && this.dropPosition === DropPosition.DROP_APPEND) {
-            DocumentStore.deleteObject(this.dropObject);
-        }
-        this.unsetDropObjectAndPosition();
-
+        this.unsetDropObject();
         UndoManager.setCombineCommands(false);
-    }
-
-    delayedOnDragOver(callback: () => void) {
-        if (this.timeoutID) {
-            clearTimeout(this.timeoutID);
-        }
-        this.timeoutID = setTimeout(() => {
-            this.timeoutID = undefined;
-            callback();
-        });
     }
 }
 

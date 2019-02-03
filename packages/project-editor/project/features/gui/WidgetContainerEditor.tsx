@@ -8,7 +8,7 @@ import { getEezStudioDataFromDragEvent } from "eez-studio-shared/model/clipboard
 import {
     DisplayItem,
     reduceUntilCommonParent,
-    TreeObjectAdapter
+    ITreeObjectAdapter
 } from "eez-studio-shared/model/objectAdapter";
 import { UIStateStore, DocumentStore } from "eez-studio-shared/model/store";
 
@@ -41,7 +41,7 @@ export class WidgetContainerEditor extends CanvasEditor {
 
     createTree() {
         return createWidgetTree(
-            this.props.displaySelection as TreeObjectAdapter,
+            this.props.displaySelection as ITreeObjectAdapter,
             true,
             dataContext
         );

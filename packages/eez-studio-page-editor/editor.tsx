@@ -28,7 +28,7 @@ import {
     UndoManager,
     UIStateStore
 } from "eez-studio-shared/model/store";
-import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
+import { ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
 import { SnapLines } from "eez-studio-designer/select-tool";
@@ -1124,7 +1124,7 @@ class PageEditorContext extends DesignerContext {
 class PageDocument implements IDocument {
     rootObject: EditorObject;
 
-    constructor(private page: TreeObjectAdapter, pageEditorContext: PageEditorContext) {
+    constructor(private page: ITreeObjectAdapter, pageEditorContext: PageEditorContext) {
         const transformer = createObjectToEditorObjectTransformer(pageEditorContext);
         this.rootObject = transformer(page.object);
     }
@@ -1208,7 +1208,7 @@ const PageEditorCanvas = styled(Canvas)`
 `;
 
 interface PageEditorProps {
-    widgetContainer: TreeObjectAdapter;
+    widgetContainer: ITreeObjectAdapter;
     showStructure?: boolean;
     onFocus?: () => void;
 }

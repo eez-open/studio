@@ -40,7 +40,10 @@ import {
     insertObjectAfter
 } from "eez-studio-shared/model/commands";
 import { loadObject } from "eez-studio-shared/model/serialization";
-import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
+import {
+    TreeObjectAdapter,
+    ITreeObjectAdapter
+} from "eez-studio-shared/model/objectAdapter";
 import { findAllReferences, isReferenced } from "eez-studio-shared/model/search";
 import { OutputSections, OutputSection } from "eez-studio-shared/model/output";
 
@@ -50,7 +53,7 @@ interface IPanel {
     selectedObject: EezObject | undefined;
 }
 
-type NavigationItem = EezObject | TreeObjectAdapter;
+type NavigationItem = EezObject | ITreeObjectAdapter;
 
 class NavigationStoreClass {
     @observable
@@ -96,10 +99,10 @@ class NavigationStoreClass {
             let navigationObject = DocumentStore.getObjectFromObjectId(id);
             if (navigationObject) {
                 let navigationObjectPath = getObjectPathAsString(navigationObject);
-                if (navigationItem instanceof TreeObjectAdapter) {
-                    map[navigationObjectPath] = navigationItem.saveState();
-                } else {
+                if (navigationItem instanceof EezObject) {
                     map[navigationObjectPath] = getObjectPathAsString(navigationItem);
+                } else {
+                    map[navigationObjectPath] = navigationItem.saveState();
                 }
             }
         }
@@ -123,7 +126,7 @@ class NavigationStoreClass {
             if (!child) {
                 return object;
             }
-            if (child instanceof TreeObjectAdapter) {
+            if (!(child instanceof EezObject)) {
                 return child.selectedObject;
             }
             object = child;
@@ -149,7 +152,7 @@ class NavigationStoreClass {
             let grandparent = parent._parent;
             if (!isArray(grandparent)) {
                 let navigationItem = this.getNavigationSelectedItem(parent);
-                if (navigationItem && navigationItem instanceof TreeObjectAdapter) {
+                if (navigationItem && !(navigationItem instanceof EezObject)) {
                     navigationItem.selectObject(object);
                 } else {
                     this.setNavigationSelectedItem(parent, iterObject);
@@ -169,7 +172,7 @@ class NavigationStoreClass {
                 let grandparent = parent._parent;
                 if (!isArray(grandparent)) {
                     let navigationItem = this.getNavigationSelectedItem(parent);
-                    if (navigationItem && navigationItem instanceof TreeObjectAdapter) {
+                    if (navigationItem && !(navigationItem instanceof EezObject)) {
                         if (navigationItem.selectedObject != object) {
                             return false;
                         }
@@ -190,7 +193,7 @@ class NavigationStoreClass {
     getNavigationSelectedItem(navigationObject: EezObject): NavigationItem | undefined {
         let item = this.navigationMap.get(navigationObject._id);
 
-        if (item && !(item instanceof TreeObjectAdapter)) {
+        if (item && item instanceof EezObject) {
             // is this maybe deleted object?
             item = DocumentStore.getObjectFromObjectId(item._id);
         }
@@ -206,7 +209,7 @@ class NavigationStoreClass {
 
     getNavigationSelectedItemAsObject(navigationObject: EezObject): EezObject | undefined {
         let navigationItem = this.getNavigationSelectedItem(navigationObject);
-        if (navigationItem instanceof TreeObjectAdapter) {
+        if (!(navigationItem instanceof EezObject)) {
             console.error("TreeObjectAdapter is not expected");
             return undefined;
         }
@@ -215,9 +218,9 @@ class NavigationStoreClass {
 
     getNavigationSelectedItemAsObjectAdapter(
         navigationObject: EezObject
-    ): TreeObjectAdapter | undefined {
+    ): ITreeObjectAdapter | undefined {
         let navigationItem = this.getNavigationSelectedItem(navigationObject);
-        if (navigationItem && !(navigationItem instanceof TreeObjectAdapter)) {
+        if (navigationItem && navigationItem instanceof EezObject) {
             console.error("TreeObjectAdapter is expected");
             return undefined;
         }
@@ -307,7 +310,12 @@ class EditorsStoreClass {
             while (object) {
                 let navigationItem = NavigationStore.getNavigationSelectedItem(object);
                 while (navigationItem) {
-                    if (navigationItem instanceof TreeObjectAdapter) {
+                    if (navigationItem instanceof EezObject) {
+                        if (!isArray(navigationItem) && navigationItem._classInfo.editorComponent) {
+                            this.openEditor(navigationItem);
+                        }
+                        navigationItem = NavigationStore.getNavigationSelectedItem(navigationItem);
+                    } else {
                         let object = navigationItem.selectedObject;
                         if (object && !isArray(object) && object._classInfo.editorComponent) {
                             this.openEditor(object);
@@ -315,11 +323,6 @@ class EditorsStoreClass {
                             this.openEditor(navigationItem.object);
                         }
                         return;
-                    } else {
-                        if (!isArray(navigationItem) && navigationItem._classInfo.editorComponent) {
-                            this.openEditor(navigationItem);
-                        }
-                        navigationItem = NavigationStore.getNavigationSelectedItem(navigationItem);
                     }
                 }
 

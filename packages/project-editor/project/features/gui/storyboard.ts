@@ -8,7 +8,10 @@ import {
     PropertyType,
     IEditorState
 } from "eez-studio-shared/model/object";
-import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
+import {
+    TreeObjectAdapter,
+    ITreeObjectAdapter
+} from "eez-studio-shared/model/objectAdapter";
 
 import { StoryboardEditor } from "project-editor/project/features/gui/StoryboardEditor";
 
@@ -151,7 +154,7 @@ registerClass(Storyboard);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class StoryboardTabState implements IEditorState {
-    storyboardAdapter: TreeObjectAdapter;
+    storyboardAdapter: ITreeObjectAdapter;
 
     constructor(object: EezObject) {
         this.storyboardAdapter = new TreeObjectAdapter(object);

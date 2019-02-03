@@ -75,11 +75,7 @@ export class PageEditor extends EditorComponent {
         );
 
         let pageStructure = (
-            <Tree
-                rootItem={pageTabState.widgetContainerDisplayItem}
-                tabIndex={0}
-                collapsable={true}
-            />
+            <Tree rootItem={pageTabState.widgetContainerDisplayItem} tabIndex={0} />
         );
 
         return (

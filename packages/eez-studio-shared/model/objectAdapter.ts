@@ -1,7 +1,7 @@
 import { observable, action, computed } from "mobx";
 import { createTransformer } from "mobx-utils";
 
-import { _each, _find, _pickBy, _isEqual } from "eez-studio-shared/algorithm";
+import { _each, _find, _pickBy, _isEqual, _map } from "eez-studio-shared/algorithm";
 
 import {
     isArray,
@@ -30,6 +30,7 @@ import {
     pasteItem,
     deleteItems,
     createContextMenu,
+    IMenu,
     IMenuItem,
     UIElementsFactory,
     IMenuAnchorPosition
@@ -96,21 +97,62 @@ export function reduceUntilCommonParent(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type TreeObjectAdapterChildrenArray = TreeObjectAdapter[];
-export type TreeObjectAdapterChildrenObject = { [key: string]: TreeObjectAdapter };
+export type TreeObjectAdapterChildrenArray = ITreeObjectAdapter[];
+export type TreeObjectAdapterChildrenObject = { [key: string]: ITreeObjectAdapter };
 export type TreeObjectAdapterChildren =
     | TreeObjectAdapterChildrenArray
     | TreeObjectAdapterChildrenObject;
 
-export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEditorState {
-    private transformer: (object: EezObject) => TreeObjectAdapter;
+export interface ITreeObjectAdapter extends DisplayItem, DisplayItemSelection, IEditorState {
+    object: EezObject;
+    selected: boolean;
+    expanded: boolean;
+    children: TreeObjectAdapterChildren;
+    hasChildren: boolean;
+    selectedItems: ITreeObjectAdapter[];
+    selectedObject: EezObject | undefined;
+    selectedObjects: EezObject[];
+    selectedItem: ITreeObjectAdapter | undefined;
+    selectItem(item: ITreeObjectAdapter): void;
+    selectItems(items: ITreeObjectAdapter[]): void;
+    selectObjects(objects: EezObject[]): void;
+    selectObjectIds(objectIds: string[]): void;
+    selectObject(object: EezObject): void;
+    toggleSelected(item: ITreeObjectAdapter): void;
+    toggleExpanded(): void;
+    loadState(state: any): void;
+    saveState(): void;
+    getObjectAdapter(
+        objectAdapterOrObjectOrObjectId:
+            | ITreeObjectAdapter
+            | EezObject
+            | EezArrayObject<EezObject>
+            | string
+    ): ITreeObjectAdapter | undefined;
+    getAncestorObjectAdapter(object: EezObject): ITreeObjectAdapter | undefined;
+    getParent(item: ITreeObjectAdapter): ITreeObjectAdapter | undefined;
+    getAncestors(item: ITreeObjectAdapter): ITreeObjectAdapter[];
+    canCut(): boolean;
+    cutSelection(): void;
+    canCopy(): boolean;
+    copySelection(): void;
+    canPaste(): boolean;
+    pasteSelection(): void;
+    canDelete(): boolean;
+    deleteSelection(): void;
+    createSelectionContextMenu(): IMenu | undefined;
+    showSelectionContextMenu(position: IMenuAnchorPosition): void;
+}
 
-    @observable selected: boolean = false;
+export class TreeObjectAdapter implements ITreeObjectAdapter {
+    private transformer: (object: EezObject) => ITreeObjectAdapter;
+
+    @observable selected: boolean;
     @observable expanded: boolean;
 
     constructor(
         public object: EezObject,
-        transformer?: (object: EezObject) => TreeObjectAdapter,
+        transformer?: (object: EezObject) => ITreeObjectAdapter,
         expanded?: boolean
     ) {
         if (transformer) {
@@ -124,7 +166,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
     }
 
     static createWithExpandedAll(object: EezObject) {
-        const transformer: (object: EezObject) => TreeObjectAdapter = createTransformer(
+        const transformer: (object: EezObject) => ITreeObjectAdapter = createTransformer(
             (object: EezObject) => {
                 return new TreeObjectAdapter(object, transformer, true);
             }
@@ -252,8 +294,13 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
     }
 
     @computed
-    get selectedItems(): TreeObjectAdapter[] {
-        let items: TreeObjectAdapter[] = [];
+    get hasChildren() {
+        return _map(this.children).length > 0;
+    }
+
+    @computed
+    get selectedItems(): ITreeObjectAdapter[] {
+        let items: ITreeObjectAdapter[] = [];
 
         if (this.selected) {
             items.push(this);
@@ -288,7 +335,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
     }
 
     @action
-    selectItem(item: TreeObjectAdapter) {
+    selectItem(item: ITreeObjectAdapter) {
         item.selected = true;
 
         for (let parent = this.getParent(item); parent; parent = this.getParent(parent)) {
@@ -297,7 +344,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
     }
 
     @action
-    selectItems(items: TreeObjectAdapter[]) {
+    selectItems(items: ITreeObjectAdapter[]) {
         // deselect previously selected items
         this.selectedItems.forEach(item => (item.selected = false));
 
@@ -307,7 +354,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
 
     @action
     selectObjects(objects: EezObject[]) {
-        const items: TreeObjectAdapter[] = [];
+        const items: ITreeObjectAdapter[] = [];
         for (const object of objects) {
             const item = this.getAncestorObjectAdapter(object);
             if (item) {
@@ -348,7 +395,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
     }
 
     @action
-    toggleSelected(item: TreeObjectAdapter) {
+    toggleSelected(item: ITreeObjectAdapter) {
         if (item.selected) {
             item.selected = false;
         } else {
@@ -389,7 +436,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
             _each(
                 _pickBy(
                     this.children,
-                    (childItem: TreeObjectAdapter) => childItem.selected || childItem.expanded
+                    (childItem: ITreeObjectAdapter) => childItem.selected || childItem.expanded
                 ),
                 (childItem: any, i: any) => {
                     state[i] = childItem.saveState();
@@ -402,15 +449,15 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
 
     getObjectAdapter(
         objectAdapterOrObjectOrObjectId:
-            | TreeObjectAdapter
+            | ITreeObjectAdapter
             | EezObject
             | EezArrayObject<EezObject>
             | string
-    ) {
+    ): ITreeObjectAdapter | undefined {
         function getObjectAdapterFromObjectId(
-            objectAdapter: TreeObjectAdapter,
+            objectAdapter: ITreeObjectAdapter,
             id: string
-        ): TreeObjectAdapter | undefined {
+        ): ITreeObjectAdapter | undefined {
             if (objectAdapter.object._id == id) {
                 return objectAdapter;
             }
@@ -426,16 +473,16 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
             return undefined;
         }
 
-        if (objectAdapterOrObjectOrObjectId instanceof TreeObjectAdapter) {
-            return objectAdapterOrObjectOrObjectId;
-        }
-
         if (objectAdapterOrObjectOrObjectId instanceof EezArrayObject) {
             return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId._id);
         }
 
         if (objectAdapterOrObjectOrObjectId instanceof EezObject) {
             return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId._id);
+        }
+
+        if (!(typeof objectAdapterOrObjectOrObjectId === "string")) {
+            return objectAdapterOrObjectOrObjectId;
         }
 
         return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId);
@@ -446,10 +493,10 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
             return undefined;
         }
 
-        let objectAdapter: TreeObjectAdapter = this;
+        let objectAdapter: ITreeObjectAdapter = this;
         while (true) {
             let childObjectAdapter = _find(objectAdapter.children, (treeObjectAdpterChild: any) => {
-                let child: TreeObjectAdapter = treeObjectAdpterChild;
+                let child: ITreeObjectAdapter = treeObjectAdpterChild;
                 return isAncestor(object, child.object);
             });
             if (!childObjectAdapter) {
@@ -459,7 +506,7 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
         }
     }
 
-    getParent(item: TreeObjectAdapter) {
+    getParent(item: ITreeObjectAdapter) {
         for (let parent = item.object._parent; parent; parent = parent._parent) {
             let parentObjectAdapter = this.getObjectAdapter(parent);
             if (parentObjectAdapter) {
@@ -469,17 +516,17 @@ export class TreeObjectAdapter implements DisplayItem, DisplayItemSelection, IEd
         return undefined;
     }
 
-    getAncestors(item: TreeObjectAdapter) {
-        let ancestors: TreeObjectAdapter[] = [];
+    getAncestors(item: ITreeObjectAdapter) {
+        let ancestors: ITreeObjectAdapter[] = [];
 
         if (this != item) {
-            let parentItem: TreeObjectAdapter = this;
+            let parentItem: ITreeObjectAdapter = this;
 
             while (true) {
                 ancestors.unshift(parentItem);
 
                 let result = _find(parentItem.children, (treeObjectAdpterChild: any) => {
-                    let child: TreeObjectAdapter = treeObjectAdpterChild;
+                    let child: ITreeObjectAdapter = treeObjectAdpterChild;
 
                     if (child == item) {
                         return true;

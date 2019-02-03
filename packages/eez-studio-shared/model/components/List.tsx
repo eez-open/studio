@@ -1,32 +1,18 @@
 import React from "react";
+import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
-import classNames from "classnames";
 
-import styled from "eez-studio-ui/styled-components";
+import { _each, _find, _pickBy, _isEqual, _map } from "eez-studio-shared/algorithm";
 
-import { stringCompare } from "eez-studio-shared/string";
-
+import { EezObject, EezArrayObject, asArray } from "eez-studio-shared/model/object";
 import {
-    EezObject,
-    PropertyInfo,
-    isObjectInstanceOf,
-    isSameInstanceTypeAs,
-    getChildren,
-    isArray,
-    isAncestor,
-    isArrayElement,
-    objectToString,
-    cloneObject
-} from "eez-studio-shared/model/object";
+    ITreeObjectAdapter,
+    TreeObjectAdapterChildren
+} from "eez-studio-shared/model/objectAdapter";
 import {
-    objectToClipboardData,
-    setClipboardData,
-    findPastePlaceInside
-} from "eez-studio-shared/model/clipboard";
-import {
-    DocumentStore,
     NavigationStore,
+    IMenuAnchorPosition,
+    createContextMenu,
     showContextMenu,
     canCut,
     cutItem,
@@ -38,353 +24,321 @@ import {
     deleteItem
 } from "eez-studio-shared/model/store";
 
-import { DragAndDropManager, DropPosition } from "eez-studio-shared/model/dd";
+import { Tree, SortDirectionType } from "eez-studio-shared/model/components/Tree";
+
+export { SortDirectionType } from "eez-studio-shared/model/components/Tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const DropMarkDiv = styled.div`
-    position: absolute;
-    font-size: 18px;
-    margin-top: -11px;
-    margin-left: -13px;
-    color: ${props => props.theme.dropPlaceColor};
-    -webkit-filter: drop-shadow(0px 0px 1px ${props => props.theme.dropPlaceColor});
-    filter: drop-shadow(0px 0px 1px ${props => props.theme.dropPlaceColor});
-    pointer-events: none;
-    text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
-`;
-
-@observer
-export class DropMark extends React.Component<{}, {}> {
-    render() {
-        return (
-            <DropMarkDiv>
-                <i className="material-icons">chevron_right</i>
-            </DropMarkDiv>
+class ListParentTreeObjectAdapter implements ITreeObjectAdapter {
+    constructor(public object: EezObject) {
+        setTimeout(
+            action(() => {
+                if (this.selectedItem) {
+                    this.selectedItem.selected = true;
+                }
+            })
         );
     }
-}
 
-////////////////////////////////////////////////////////////////////////////////
+    selected = false;
+    expanded = true;
 
-const DropPlaceholderDiv = styled.div`
-    margin: 1px;
-    border: 1px dotted ${props => props.theme.dropPlaceColor};
-    height: 10px;
-
-    &.drop-target {
-        background-color: ${props => props.theme.dropPlaceColor};
-    }
-`;
-
-interface DropPlaceholderProps {
-    object: EezObject;
-}
-
-@observer
-export class DropPlaceholder extends React.Component<DropPlaceholderProps, {}> {
-    @bind
-    onDragOver(event: any) {
-        if (!DragAndDropManager.dragObject) {
-            return;
+    @computed
+    get children(): TreeObjectAdapterChildren {
+        const array = asArray(this.object);
+        if (array) {
+            return array.map(object => new ListChildTreeObjectAdapter(object, this));
         }
 
-        event.preventDefault();
-        event.stopPropagation();
-
-        DragAndDropManager.setDropEffect(event);
-
-        DragAndDropManager.setDropObjectAndPosition(this.props.object, DropPosition.DROP_INSIDE);
+        return [];
     }
 
-    @bind
-    onDragLeave() {
-        DragAndDropManager.unsetDropObjectAndPosition();
+    @computed
+    get hasChildren() {
+        return this.children.length > 0;
     }
 
-    render() {
-        let className = classNames({
-            "drop-target":
-                this.props.object == DragAndDropManager.dropObject &&
-                DragAndDropManager.dropPosition == DropPosition.DROP_INSIDE
-        });
-
-        return (
-            <DropPlaceholderDiv
-                className={className}
-                onDragOver={this.onDragOver}
-                onDragLeave={this.onDragLeave}
-            />
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-const ListItemDiv = styled.div`
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    &.drag-source {
-        background-color: ${props => props.theme.dragSourceBackgroundColor};
-        color: ${props => props.theme.dragSourceColor};
+    @computed
+    get selectedItems(): ITreeObjectAdapter[] {
+        return this.selectedItem ? [this.selectedItem] : [];
     }
 
-    &.drop-target {
-        background-color: ${props => props.theme.dropPlaceColor};
-    }
-`;
+    @computed
+    get selectedObject(): EezObject | undefined {
+        const item = NavigationStore.getNavigationSelectedItem(this.object);
 
-interface ListItemProps {
-    navigationObject: EezObject;
-    item: EezObject;
-    onDoubleClick?: (object: EezObject) => void;
-    filter?: (object: EezObject) => boolean;
-    draggable: boolean;
-}
-
-@observer
-export class ListItem extends React.Component<ListItemProps, {}> {
-    item: HTMLDivElement;
-    index: number;
-
-    ensureVisible() {
-        setTimeout(() => {
-            if (!DragAndDropManager.dragObject) {
-                if ($(this.item).hasClass("selected")) {
-                    (this.item as any).scrollIntoViewIfNeeded();
-                }
-            }
-        }, 0);
-    }
-
-    componentDidMount() {
-        this.ensureVisible();
-    }
-
-    componentDidUpdate() {
-        this.ensureVisible();
-    }
-
-    @bind
-    onDragStart(event: any) {
-        event.dataTransfer.effectAllowed = "copyMove";
-        setClipboardData(event, objectToClipboardData(this.props.item));
-        event.dataTransfer.setDragImage(DragAndDropManager.blankDragImage, 0, 0);
-
-        // postpone render, otherwise we can receive onDragEnd immediatelly
-        setTimeout(() => {
-            DragAndDropManager.start(event, this.props.item);
-        });
-    }
-
-    @bind
-    onDrag(event: any) {
-        DragAndDropManager.drag(event);
-    }
-
-    @bind
-    onDragEnd(event: any) {
-        DragAndDropManager.end(event);
-    }
-
-    @bind
-    onDragOver(event: any) {
-        if (!DragAndDropManager.dragObject) {
-            return;
+        if (item instanceof EezObject) {
+            return item;
         }
 
-        if (isAncestor(this.props.item, DragAndDropManager.dragObject)) {
-            return;
+        if (this.children.length > 0) {
+            return (this.children as ITreeObjectAdapter[])[0].object;
         }
 
-        DragAndDropManager.delayedOnDragOver(() => {
-            if (!DragAndDropManager.dragObject) {
-                return;
-            }
-
-            if (isAncestor(this.props.item, DragAndDropManager.dragObject)) {
-                return;
-            }
-
-            let dropPosition = DropPosition.DROP_NONE;
-
-            if (
-                isArrayElement(this.props.item) &&
-                DragAndDropManager.dragObject &&
-                isSameInstanceTypeAs(this.props.item, DragAndDropManager.dragObject)
-            ) {
-                dropPosition = DropPosition.DROP_BEFORE;
-            } else {
-                if (isArray(this.props.item)) {
-                    if (
-                        isObjectInstanceOf(
-                            DragAndDropManager.dragObject,
-                            this.props.item._classInfo
-                        )
-                    ) {
-                        dropPosition = DropPosition.DROP_INSIDE;
-                    }
-                } else {
-                    if (
-                        findPastePlaceInside(
-                            this.props.item,
-                            DragAndDropManager.dragObject._classInfo,
-                            true
-                        )
-                    ) {
-                        dropPosition = DropPosition.DROP_INSIDE;
-                    }
-                }
-            }
-
-            if (dropPosition != DropPosition.DROP_NONE) {
-                DragAndDropManager.setDropObjectAndPosition(this.props.item, dropPosition);
-            }
-        });
-
-        event.preventDefault();
-        event.stopPropagation();
-        DragAndDropManager.setDropEffect(event);
+        return undefined;
     }
 
-    @bind
-    onDragLeave() {
-        DragAndDropManager.unsetDropObjectAndPosition();
+    @computed
+    get selectedObjects(): EezObject[] {
+        return this.selectedObject ? [this.selectedObject] : [];
     }
 
-    @bind
-    onClick(e: React.MouseEvent<HTMLDivElement>) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        // TODO multiple selection
-
-        // if (e.ctrlKey) {
-        //     toggleSelected(this.props.item.object);
-        // } else {
-        //     selectItems([this.props.item.object]);
-        // }
-
-        NavigationStore.setNavigationSelectedItem(this.props.navigationObject, this.props.item);
+    @computed
+    get selectedItem(): ITreeObjectAdapter | undefined {
+        if (this.selectedObject) {
+            return this.getObjectAdapter(this.selectedObject);
+        }
+        return undefined;
     }
 
-    @bind
-    onMouseUp(e: React.MouseEvent<HTMLDivElement>) {
-        if (e.button === 2) {
-            let selectedItem = NavigationStore.getNavigationSelectedItem(
-                this.props.navigationObject
+    selectItem(item: ITreeObjectAdapter) {
+        this.selectObject(item.object);
+    }
+
+    selectItems(items: ITreeObjectAdapter[]) {
+        if (items.length === 1) {
+            this.selectObject(items[0].object);
+        }
+    }
+
+    selectObjects(objects: EezObject[]) {
+        if (objects.length === 1) {
+            this.selectObject(objects[0]);
+        }
+    }
+
+    selectObjectIds(objectIds: string[]) {
+        if (objectIds.length === 1) {
+            const item = this.getObjectAdapter(objectIds[0]);
+            if (item) {
+                this.selectObject(item.object);
+            }
+        }
+    }
+
+    @action
+    selectObject(object: EezObject) {
+        let selectedItem = this.selectedItem;
+        if (selectedItem) {
+            selectedItem.selected = false;
+        }
+
+        NavigationStore.setNavigationSelectedItem(this.object, object);
+
+        selectedItem = this.selectedItem;
+        if (selectedItem) {
+            selectedItem.selected = true;
+        }
+    }
+
+    toggleSelected(item: ITreeObjectAdapter) {}
+
+    toggleExpanded() {}
+
+    loadState(state: any) {}
+
+    saveState() {}
+
+    getObjectAdapter(
+        objectAdapterOrObjectOrObjectId:
+            | ITreeObjectAdapter
+            | EezObject
+            | EezArrayObject<EezObject>
+            | string
+    ): ITreeObjectAdapter | undefined {
+        if (typeof objectAdapterOrObjectOrObjectId === "string") {
+            if (this.object._id === objectAdapterOrObjectOrObjectId) {
+                return this;
+            }
+
+            return (this.children as ITreeObjectAdapter[]).find(
+                child => child.object._id === objectAdapterOrObjectOrObjectId
             );
-
-            const position = {
-                left: e.clientX,
-                top: e.clientY
-            };
-
-            if (this.props.item == selectedItem) {
-                showContextMenu(this.props.item, position);
-            } else {
-                NavigationStore.setNavigationSelectedItem(
-                    this.props.navigationObject,
-                    this.props.item
-                );
-                setTimeout(() => {
-                    showContextMenu(this.props.item, position);
-                });
-            }
         }
+
+        if (
+            objectAdapterOrObjectOrObjectId instanceof EezArrayObject ||
+            objectAdapterOrObjectOrObjectId instanceof EezObject
+        ) {
+            return this.getObjectAdapter(objectAdapterOrObjectOrObjectId._id);
+        }
+
+        return this.getObjectAdapter(objectAdapterOrObjectOrObjectId.object._id);
     }
 
-    @bind
-    onDoubleClick(e: any) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (this.props.onDoubleClick) {
-            this.props.onDoubleClick(this.props.item);
+    getAncestorObjectAdapter(object: EezObject): ITreeObjectAdapter | undefined {
+        if (object._parent === this.object) {
+            return this;
         }
+        return undefined;
     }
 
-    render() {
-        let selectedItem = NavigationStore.getNavigationSelectedItem(this.props.navigationObject);
+    getParent(item: ITreeObjectAdapter): ITreeObjectAdapter | undefined {
+        if (item.object._parent === this.object) {
+            return this;
+        }
+        return undefined;
+    }
 
-        let className = classNames("list-item", {
-            selected: this.props.item == selectedItem,
-            "drag-source": DragAndDropManager.dragObject == this.props.item,
-            "drop-target":
-                this.props.item == DragAndDropManager.dropObject &&
-                DragAndDropManager.dropPosition == DropPosition.DROP_INSIDE
-        });
+    getAncestors(item: ITreeObjectAdapter): ITreeObjectAdapter[] {
+        if (item.object._parent === this.object) {
+            return [this];
+        }
+        return [];
+    }
 
-        const itemClassInfo = this.props.item._classInfo;
+    canCut(): boolean {
+        return false;
+    }
 
-        return (
-            <ListItemDiv
-                ref={ref => (this.item = ref!)}
-                data-object-id={this.props.item._id}
-                className={className}
-                onMouseUp={this.onMouseUp}
-                onClick={this.onClick}
-                onDoubleClick={this.onDoubleClick}
-                draggable={this.props.draggable}
-                onDragStart={this.onDragStart}
-                onDrag={this.onDrag}
-                onDragEnd={this.onDragEnd}
-                onDragOver={this.onDragOver}
-                onDragLeave={this.onDragLeave}
-            >
-                {itemClassInfo.listLabel
-                    ? itemClassInfo.listLabel(this.props.item)
-                    : objectToString(this.props.item)}
-            </ListItemDiv>
-        );
+    cutSelection() {}
+
+    canCopy(): boolean {
+        return false;
+    }
+
+    copySelection() {}
+
+    canPaste(): boolean {
+        return false;
+    }
+
+    pasteSelection() {}
+
+    canDelete(): boolean {
+        return false;
+    }
+
+    deleteSelection(): void {}
+
+    createSelectionContextMenu() {
+        return undefined;
+    }
+
+    showSelectionContextMenu(position: IMenuAnchorPosition) {}
+}
+
+class ListChildTreeObjectAdapter implements ITreeObjectAdapter {
+    constructor(public object: EezObject, private parent: ListParentTreeObjectAdapter) {}
+
+    @observable selected: boolean;
+    expanded: boolean = false;
+
+    children = [];
+
+    hasChildren = false;
+
+    get selectedItems(): ITreeObjectAdapter[] {
+        return this.parent.selectedItems;
+    }
+
+    get selectedObject(): EezObject | undefined {
+        return this.parent.selectedObject;
+    }
+
+    get selectedObjects(): EezObject[] {
+        return this.parent.selectedObjects;
+    }
+
+    get selectedItem(): ITreeObjectAdapter | undefined {
+        return this.parent.selectedItem;
+    }
+
+    selectItem(item: ITreeObjectAdapter) {
+        this.parent.selectItem(item);
+    }
+
+    selectItems(items: ITreeObjectAdapter[]) {
+        this.parent.selectItems(items);
+    }
+
+    selectObjects(objects: EezObject[]) {
+        this.parent.selectObjects(objects);
+    }
+
+    selectObjectIds(objectIds: string[]) {
+        this.parent.selectObjectIds(objectIds);
+    }
+
+    selectObject(object: EezObject) {
+        this.parent.selectObject(object);
+    }
+
+    toggleSelected(item: ITreeObjectAdapter) {
+        this.parent.toggleSelected(item);
+    }
+
+    toggleExpanded() {}
+
+    loadState(state: any) {}
+
+    saveState() {}
+
+    getObjectAdapter(
+        objectAdapterOrObjectOrObjectId:
+            | ITreeObjectAdapter
+            | EezObject
+            | EezArrayObject<EezObject>
+            | string
+    ): ITreeObjectAdapter | undefined {
+        return this.parent.getObjectAdapter(objectAdapterOrObjectOrObjectId);
+    }
+
+    getAncestorObjectAdapter(object: EezObject): ITreeObjectAdapter | undefined {
+        return this.parent.getAncestorObjectAdapter(object);
+    }
+
+    getParent(item: ITreeObjectAdapter): ITreeObjectAdapter | undefined {
+        return this.parent.getParent(item);
+    }
+
+    getAncestors(item: ITreeObjectAdapter): ITreeObjectAdapter[] {
+        return this.parent.getAncestors(item);
+    }
+
+    canCut(): boolean {
+        return !!canCut(this.object);
+    }
+
+    cutSelection() {
+        cutItem(this.object);
+    }
+
+    canCopy(): boolean {
+        return !!canCopy(this.object);
+    }
+
+    copySelection() {
+        copyItem(this.object);
+    }
+
+    canPaste(): boolean {
+        return !!canPaste(this.object);
+    }
+
+    pasteSelection() {
+        pasteItem(this.object);
+    }
+
+    canDelete(): boolean {
+        return !!canDelete(this.object);
+    }
+
+    deleteSelection(): void {
+        deleteItem(this.object);
+    }
+
+    createSelectionContextMenu() {
+        return createContextMenu(this.object);
+    }
+
+    showSelectionContextMenu(position: IMenuAnchorPosition) {
+        showContextMenu(this.object, position);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const ListOuterDiv = styled.div`
-    flex-grow: 1;
-    overflow: auto;
-    padding: 5px;
-    border: 2px dashed transparent;
-
-    &:not(.drag-source) {
-        .list-item:not(.drag-source) {
-            &.selected {
-                background-color: ${props => props.theme.nonFocusedSelectionBackgroundColor};
-                color: ${props => props.theme.nonFocusedSelectionColor};
-            }
-        }
-
-        &:focus {
-            .list-item:not(.drag-source) {
-                &:hover {
-                    background-color: ${props => props.theme.hoverBackgroundColor};
-                    color: ${props => props.theme.hoverColor};
-                }
-
-                &.focused {
-                    background-color: ${props => props.theme.focusBackgroundColor};
-                    color: ${props => props.theme.focusColor};
-                }
-
-                &.selected {
-                    background-color: ${props => props.theme.selectionBackgroundColor};
-                    color: ${props => props.theme.selectionColor};
-                }
-            }
-        }
-    }
-`;
-
-const ListInnerDiv = styled.div`
-    position: relative;
-`;
-
-export type SortDirectionType = "asc" | "desc" | "none";
 
 interface ListProps {
     navigationObject: EezObject;
@@ -396,241 +350,22 @@ interface ListProps {
 
 @observer
 export class List extends React.Component<ListProps, {}> {
-    static defaultProps = {
-        tabIndex: -1
-    };
-
-    list: HTMLDivElement;
-
-    dragAndDropUpdateTimeoutId: any;
-
-    constructor(props: ListProps) {
-        super(props);
-
-        this.state = {
-            dropItem: undefined
-        };
-    }
-
-    componentWillReceiveProps(nextProps: ListProps) {
-        this.setState({
-            dropItem: undefined
-        });
-    }
-
-    onDoubleClick(object: EezObject) {
-        if (this.props.onDoubleClick) {
-            this.props.onDoubleClick(object);
-        }
-    }
-
-    onSelect(objectId: string) {
-        let item = DocumentStore.getObjectFromObjectId(objectId);
-        if (item) {
-            NavigationStore.setNavigationSelectedItem(this.props.navigationObject, item);
-        }
-    }
-
-    onKeyDown(event: any) {
-        let focusedItemId = $(this.list)
-            .find(".list-item.selected")
-            .attr("data-object-id");
-
-        if (!focusedItemId) {
-            return;
-        }
-
-        let focusedItem = DocumentStore.getObjectFromObjectId(focusedItemId);
-
-        let $focusedItem = $(this.list).find(`.list-item[data-object-id="${focusedItemId}"]`);
-
-        if (event.altKey) {
-        } else if (event.shiftKey) {
-        } else if (event.ctrlKey) {
-            if (event.keyCode == "X".charCodeAt(0)) {
-                if (focusedItem && canCut(focusedItem)) {
-                    cutItem(focusedItem);
-                }
-            } else if (event.keyCode == "C".charCodeAt(0)) {
-                if (focusedItem && canCopy(focusedItem)) {
-                    copyItem(focusedItem);
-                }
-            } else if (event.keyCode == "V".charCodeAt(0)) {
-                if (focusedItem && canPaste(focusedItem)) {
-                    pasteItem(focusedItem);
-                }
-            }
-        } else if (event.keyCode == 46) {
-            // delete
-            if (focusedItem && canDelete(focusedItem)) {
-                deleteItem(focusedItem);
-            }
-        } else {
-            if (
-                event.keyCode == 38 ||
-                event.keyCode == 40 ||
-                event.keyCode == 33 ||
-                event.keyCode == 34 ||
-                event.keyCode == 36 ||
-                event.keyCode == 35
-            ) {
-                let $rows = $(this.list).find(".list-item");
-                let index = $rows.index($focusedItem);
-
-                let pageSize = Math.floor($(this.list).height()! / $rows.height()!);
-
-                if (event.keyCode == 38) {
-                    // up
-                    index--;
-                } else if (event.keyCode == 40) {
-                    // down
-                    index++;
-                } else if (event.keyCode == 33) {
-                    // page up
-                    index -= pageSize;
-                } else if (event.keyCode == 34) {
-                    // page down
-                    index += pageSize;
-                } else if (event.keyCode == 36) {
-                    // home
-                    index = 0;
-                } else if (event.keyCode == 35) {
-                    // end
-                    index = $rows.length - 1;
-                }
-
-                if (index < 0) {
-                    index = 0;
-                } else if (index >= $rows.length) {
-                    index = $rows.length - 1;
-                }
-
-                let newFocusedItemId = $($rows[index]).attr("data-object-id");
-                if (newFocusedItemId) {
-                    this.onSelect(newFocusedItemId);
-                }
-
-                event.preventDefault();
-            }
-        }
-    }
-
-    onDragOver(event: any) {
-        if (!DragAndDropManager.dragObject) {
-            return;
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-        DragAndDropManager.setDropEffect(event);
-    }
-
-    onDrop(event: any) {
-        if (DragAndDropManager.dropObject) {
-            let dropPosition = DragAndDropManager.dropPosition;
-
-            DragAndDropManager.deleteDragItem();
-
-            if (DragAndDropManager.dragObject) {
-                let object = cloneObject(undefined, DragAndDropManager.dragObject);
-
-                if (dropPosition == DropPosition.DROP_BEFORE) {
-                    DocumentStore.insertObjectBefore(DragAndDropManager.dropObject, object);
-                } else if (dropPosition == DropPosition.DROP_INSIDE) {
-                    let dropPlace = findPastePlaceInside(
-                        DragAndDropManager.dropObject,
-                        object._classInfo,
-                        true
-                    );
-                    if (dropPlace) {
-                        if (isArray(dropPlace as EezObject)) {
-                            DocumentStore.addObject(dropPlace as EezObject, object);
-                        } else {
-                            DocumentStore.updateObject(DragAndDropManager.dropObject, {
-                                [(dropPlace as PropertyInfo).name]: object
-                            });
-                        }
-                    }
-                }
-            }
-
-            DragAndDropManager.end(event);
-        }
+    @computed
+    get rootItem() {
+        return new ListParentTreeObjectAdapter(this.props.navigationObject);
     }
 
     render() {
-        let className = classNames({
-            "drag-source": DragAndDropManager.dragObject
-        });
-
-        let children = getChildren(this.props.navigationObject);
-        if (this.props.sortDirection === "asc") {
-            children = children.sort((a, b) => stringCompare(a._label, b._label));
-        } else if (this.props.sortDirection === "desc") {
-            children = children.sort((a, b) => stringCompare(b._label, a._label));
-        }
-
-        let childrenElements: JSX.Element[] = [];
-
-        children.forEach(child => {
-            if (
-                child == DragAndDropManager.dropObject &&
-                DragAndDropManager.dropPosition == DropPosition.DROP_BEFORE
-            ) {
-                childrenElements.push(<DropMark key="drop-mark" />);
-            }
-
-            childrenElements.push(
-                <ListItem
-                    navigationObject={this.props.navigationObject}
-                    key={child._id}
-                    item={child}
-                    onDoubleClick={this.props.onDoubleClick}
-                    draggable={this.props.sortDirection === "none"}
-                />
-            );
-        });
-
-        if (
-            DragAndDropManager.dragObject &&
-            !isAncestor(this.props.navigationObject, DragAndDropManager.dragObject)
-        ) {
-            let addDropPlaceholder = false;
-
-            if (isArray(this.props.navigationObject)) {
-                if (
-                    isSameInstanceTypeAs(this.props.navigationObject, DragAndDropManager.dragObject)
-                ) {
-                    addDropPlaceholder = true;
-                }
-            } else {
-                let place = findPastePlaceInside(
-                    this.props.navigationObject,
-                    DragAndDropManager.dragObject._classInfo,
-                    true
-                );
-                if (place) {
-                    addDropPlaceholder = true;
-                }
-            }
-
-            if (addDropPlaceholder) {
-                childrenElements.push(
-                    <DropPlaceholder key="drop-placeholder" object={this.props.navigationObject} />
-                );
-            }
-        }
-
+        const { onDoubleClick, tabIndex, onFocus, sortDirection } = this.props;
         return (
-            <ListOuterDiv
-                ref={ref => (this.list = ref!)}
-                className={className}
-                tabIndex={this.props.tabIndex}
-                onKeyDown={this.onKeyDown.bind(this)}
-                onFocus={() => this.props.onFocus && this.props.onFocus()}
-            >
-                <ListInnerDiv onDrop={this.onDrop.bind(this)}>{childrenElements}</ListInnerDiv>
-            </ListOuterDiv>
+            <Tree
+                rootItem={this.rootItem}
+                maxLevel={0}
+                onDoubleClick={onDoubleClick}
+                tabIndex={tabIndex}
+                onFocus={onFocus}
+                sortDirection={sortDirection}
+            />
         );
     }
 }

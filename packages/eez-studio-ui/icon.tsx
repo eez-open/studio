@@ -11,38 +11,46 @@ export class Icon extends React.Component<
         size?: number;
         className?: string;
         style?: React.CSSProperties;
+        onClick?: (event: React.MouseEvent) => void;
     },
     {}
 > {
     render() {
-        let size = this.props.size || 24;
-        if (this.props.icon.startsWith(MATERIAL_PREFIX)) {
-            let className = classnames("EezStudio_Icon", "material-icons", this.props.className);
+        const { icon, size, style, className, onClick } = this.props;
 
-            let style = {
-                fontSize: size + "px"
+        let iconSize = size || 24;
+
+        if (icon.startsWith(MATERIAL_PREFIX)) {
+            let iconClassName = classnames("EezStudio_Icon", "material-icons", className);
+
+            let iconStyle = {
+                fontSize: iconSize + "px"
             };
-
-            if (this.props.style) {
-                style = Object.assign(style, this.props.style);
+            if (style) {
+                iconStyle = Object.assign(iconStyle, style);
             }
 
             return (
-                <i className={className} style={style}>
-                    {this.props.icon.slice(MATERIAL_PREFIX.length)}
+                <i className={iconClassName} style={iconStyle} onClick={onClick}>
+                    {icon.slice(MATERIAL_PREFIX.length)}
                 </i>
             );
         } else {
-            let style: React.CSSProperties = {
+            let iconStyle: React.CSSProperties = {
                 objectFit: "contain"
             };
+            if (style) {
+                iconStyle = Object.assign(iconStyle, style);
+            }
+
             return (
                 <img
-                    src={this.props.icon}
-                    width={size}
-                    height={size}
-                    style={style}
-                    className={this.props.className}
+                    src={icon}
+                    width={iconSize}
+                    height={iconSize}
+                    className={className}
+                    style={iconStyle}
+                    onClick={onClick}
                 />
             );
         }

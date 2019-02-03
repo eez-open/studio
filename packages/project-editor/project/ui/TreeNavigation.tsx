@@ -12,7 +12,7 @@ import {
     addItem,
     canAdd
 } from "eez-studio-shared/model/store";
-import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
+import { TreeObjectAdapter, ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 
 import { Panel } from "eez-studio-shared/model/components/Panel";
 import { Tree } from "eez-studio-shared/model/components/Tree";
@@ -22,7 +22,7 @@ import { Tree } from "eez-studio-shared/model/components/Tree";
 @observer
 export class AddButton extends React.Component<
     {
-        objectAdapter: TreeObjectAdapter;
+        objectAdapter: ITreeObjectAdapter;
     },
     {}
 > {
@@ -53,7 +53,7 @@ export class AddButton extends React.Component<
 @observer
 export class DeleteButton extends React.Component<
     {
-        objectAdapter: TreeObjectAdapter;
+        objectAdapter: ITreeObjectAdapter;
     },
     {}
 > {
@@ -139,7 +139,6 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
                         onDoubleClick={this.onTreeDoubleClick.bind(this)}
                         tabIndex={0}
                         filter={TreeNavigationPanel.navigationTreeFilter}
-                        collapsable={true}
                         onFocus={this.onFocus.bind(this)}
                     />
                 }

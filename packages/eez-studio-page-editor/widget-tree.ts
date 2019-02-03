@@ -6,7 +6,8 @@ import {
     DisplayItem,
     DisplayItemChildrenObject,
     DisplayItemChildrenArray,
-    TreeObjectAdapter
+    TreeObjectAdapter,
+    ITreeObjectAdapter
 } from "eez-studio-shared/model/objectAdapter";
 
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
@@ -113,7 +114,7 @@ function drawPageFrameForTreeNode(
 }
 
 function getSelectedWidgetForSelectWidget(
-    widgetContainerDisplayItem: TreeObjectAdapter,
+    widgetContainerDisplayItem: ITreeObjectAdapter,
     item: DisplayItem,
     dataContext: IDataContext
 ) {
@@ -155,11 +156,11 @@ function getSelectedWidgetForSelectWidget(
 }
 
 export function createWidgetTree(
-    widgetContainerDisplayItemOrObject: TreeObjectAdapter | EezObject,
+    widgetContainerDisplayItemOrObject: ITreeObjectAdapter | EezObject,
     draw: boolean,
     dataContext: IDataContext
 ) {
-    function enumWidgets(widgetContainerDisplayItem: TreeObjectAdapter) {
+    function enumWidgets(widgetContainerDisplayItem: ITreeObjectAdapter) {
         function enumWidget(
             parentNode: TreeNode | undefined,
             item: DisplayItem,

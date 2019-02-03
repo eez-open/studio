@@ -3,7 +3,10 @@ import { computed, action } from "mobx";
 import { _find } from "eez-studio-shared/algorithm";
 
 import { EezObject, IEditorState } from "eez-studio-shared/model/object";
-import { TreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
+import {
+    TreeObjectAdapter,
+    ITreeObjectAdapter
+} from "eez-studio-shared/model/objectAdapter";
 
 import { Page } from "eez-studio-page-editor/page";
 
@@ -24,7 +27,7 @@ Page.classInfo.navigationComponent = ListNavigationWithContent;
 
 export class PageTabState implements IEditorState {
     page: Page;
-    widgetContainerDisplayItem: TreeObjectAdapter;
+    widgetContainerDisplayItem: ITreeObjectAdapter;
 
     constructor(object: EezObject) {
         this.page = object as Page;
