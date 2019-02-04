@@ -12,6 +12,7 @@ import {
     NavigationComponentProps,
     objectToString
 } from "eez-studio-shared/model/object";
+import { ListAdapter, SortDirectionType } from "eez-studio-shared/model/objectAdapter";
 import {
     NavigationStore,
     EditorsStore,
@@ -21,7 +22,7 @@ import {
     canAdd,
     canDelete
 } from "eez-studio-shared/model/store";
-import { List, SortDirectionType } from "eez-studio-shared/model/components/List";
+import { List } from "eez-studio-shared/model/components/List";
 
 import { Panel } from "eez-studio-shared/model/components/Panel";
 
@@ -171,6 +172,7 @@ export class ListNavigation extends React.Component<ListNavigationProps, {}> {
         );
     }
 
+    @bind
     onDoubleClickItem(object: EezObject) {
         if (this.props.onDoubleClickItem) {
             this.props.onDoubleClickItem(object);
@@ -185,6 +187,15 @@ export class ListNavigation extends React.Component<ListNavigationProps, {}> {
             this.props.navigationObject
         ) as EezObject;
         return selectedItem || NavigationStore.selectedObject;
+    }
+
+    @computed
+    get listAdapter() {
+        return new ListAdapter(
+            this.props.navigationObject,
+            this.sortDirection,
+            this.onDoubleClickItem
+        );
     }
 
     onFocus() {
@@ -218,11 +229,9 @@ export class ListNavigation extends React.Component<ListNavigationProps, {}> {
                 buttons={buttons}
                 body={
                     <List
-                        navigationObject={this.props.navigationObject}
-                        onDoubleClick={this.onDoubleClickItem.bind(this)}
+                        listAdapter={this.listAdapter}
                         tabIndex={0}
                         onFocus={this.onFocus.bind(this)}
-                        sortDirection={this.sortDirection}
                     />
                 }
             />

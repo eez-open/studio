@@ -7,6 +7,7 @@ import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { EditorComponent } from "eez-studio-shared/model/object";
+import { TreeAdapter } from "eez-studio-shared/model/objectAdapter";
 import { NavigationStore } from "eez-studio-shared/model/store";
 
 import { Tree } from "eez-studio-shared/model/components/Tree";
@@ -75,7 +76,17 @@ export class PageEditor extends EditorComponent {
         );
 
         let pageStructure = (
-            <Tree rootItem={pageTabState.widgetContainerDisplayItem} tabIndex={0} />
+            <Tree
+                treeAdapter={
+                    new TreeAdapter(
+                        pageTabState.widgetContainerDisplayItem,
+                        undefined,
+                        undefined,
+                        true
+                    )
+                }
+                tabIndex={0}
+            />
         );
 
         return (

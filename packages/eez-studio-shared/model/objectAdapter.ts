@@ -3,6 +3,8 @@ import { createTransformer } from "mobx-utils";
 
 import { _each, _find, _pickBy, _isEqual, _map } from "eez-studio-shared/algorithm";
 
+import { stringCompare } from "eez-studio-shared/string";
+
 import {
     isArray,
     asArray,
@@ -17,7 +19,13 @@ import {
     getRootObject,
     getObjectFromObjectId,
     isPropertyEnumerable,
-    EezBrowsableObject
+    EezBrowsableObject,
+    objectToString,
+    isShowOnlyChildrenInTree,
+    cloneObject,
+    PropertyInfo,
+    isArrayElement,
+    isObjectInstanceOf
 } from "eez-studio-shared/model/object";
 import { objectsToClipboardData } from "eez-studio-shared/model/clipboard";
 import {
@@ -28,13 +36,24 @@ import {
     cutItem,
     copyItem,
     pasteItem,
+    deleteItem,
     deleteItems,
     createContextMenu,
+    showContextMenu,
     IMenu,
     IMenuItem,
     UIElementsFactory,
-    IMenuAnchorPosition
+    IMenuAnchorPosition,
+    canContainChildren,
+    DocumentStore,
+    NavigationStore
 } from "eez-studio-shared/model/store";
+import {
+    objectToClipboardData,
+    setClipboardData,
+    findPastePlaceInside
+} from "eez-studio-shared/model/clipboard";
+import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -232,7 +251,9 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 },
                 childValue
             );
-            children.push(new TreeObjectAdapter(childBrowsableObject, this.transformer));
+            children.push(
+                new TreeObjectAdapter(childBrowsableObject, this.transformer, this.expanded)
+            );
         }
         return children;
     }
@@ -761,6 +782,656 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
         if (menu) {
             menu.popup({}, position);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface ITreeItem {}
+
+interface ITreeRow {
+    item: ITreeItem;
+    level: number;
+    draggable: boolean;
+    collapsable: boolean;
+}
+
+interface IDraggableTreeAdapter {
+    isDragging: boolean;
+    isDragSource(item: ITreeItem): boolean;
+    onDragStart(row: ITreeItem, event: any): void;
+    onDrag(row: ITreeItem, event: any): void;
+    onDragEnd(event: any): void;
+    onDragOver(dropItem: ITreeItem | undefined, event: any): void;
+    onDragLeave(event: any): void;
+    onDrop(dropPosition: DropPosition, event: any): void;
+    isAncestorOfDragObject(dropItem: ITreeItem): boolean;
+    canDrop(
+        dropItem: ITreeItem,
+        dropPosition: DropPosition,
+        prevObjectId: string | undefined,
+        nextObjectId: string | undefined
+    ): boolean;
+    canDropInside(dropItem: ITreeItem): boolean;
+    dropItem: ITreeItem | undefined;
+}
+
+interface ICollapsableTreeAdapter {
+    isExpanded(item: ITreeItem): boolean;
+    toggleExpanded(item: ITreeItem): void;
+}
+
+export interface ITreeAdapter {
+    allRows: ITreeRow[];
+    maxLevel?: number;
+
+    getItemId(item: ITreeItem): string;
+    getItemFromId(id: string): ITreeItem | undefined;
+    getItemParent(item: ITreeItem): ITreeItem | undefined;
+    itemToString(item: ITreeItem): string;
+    isAncestor(item: ITreeItem, ancestor: ITreeItem): boolean;
+
+    isSelected(item: ITreeItem): boolean;
+    selectItem(item: ITreeItem): void;
+    toggleSelected(item: ITreeItem): void;
+    showSelectionContextMenu(position: IMenuAnchorPosition): void;
+    cutSelection(): void;
+    copySelection(): void;
+    pasteSelection(): void;
+    deleteSelection(): void;
+
+    onDoubleClick(item: ITreeItem): void;
+
+    collapsableAdapter: ICollapsableTreeAdapter | undefined;
+    draggableAdapter: IDraggableTreeAdapter | undefined;
+}
+
+export type SortDirectionType = "asc" | "desc" | "none";
+
+export enum DropPosition {
+    DROP_POSITION_NONE,
+    DROP_POSITION_BEFORE,
+    DROP_POSITION_AFTER,
+    DROP_POSITION_INSIDE
+}
+
+export class TreeAdapter implements ITreeAdapter {
+    constructor(
+        private rootItem: ITreeObjectAdapter,
+        private item?: ITreeObjectAdapter,
+        private filter?: (object: EezObject) => boolean,
+        private collapsable?: boolean,
+        private sortDirection?: SortDirectionType,
+        public maxLevel?: number,
+        onDoubleClick?: (object: EezObject) => void
+    ) {
+        this.onDoubleClickCallback = onDoubleClick;
+    }
+
+    onDoubleClickCallback: ((object: EezObject) => void) | undefined;
+
+    get allRows() {
+        const { filter, collapsable, sortDirection, maxLevel } = this;
+
+        const draggable = sortDirection === undefined || sortDirection === "none";
+
+        const children: ITreeRow[] = [];
+
+        function getChildren(item: ITreeObjectAdapter) {
+            let itemChildren = _map(item.children, childItem => childItem) as ITreeObjectAdapter[];
+
+            if (sortDirection === "asc") {
+                itemChildren = itemChildren.sort((a, b) =>
+                    stringCompare(a.object._label, b.object._label)
+                );
+            } else if (sortDirection === "desc") {
+                itemChildren = itemChildren.sort((a, b) =>
+                    stringCompare(b.object._label, a.object._label)
+                );
+            }
+
+            return itemChildren;
+        }
+
+        function enumChildren(childItems: ITreeObjectAdapter[], level: number) {
+            childItems.forEach(childItem => {
+                if (!filter || filter(childItem.object)) {
+                    const showOnlyChildren =
+                        childItem.children.length == 1 &&
+                        isArray(childItem.object) &&
+                        isShowOnlyChildrenInTree(childItem.object);
+
+                    const childItems = getChildren(childItem);
+
+                    if (showOnlyChildren) {
+                        enumChildren(childItems, level);
+                    } else {
+                        const row = {
+                            item: childItem,
+                            level,
+                            draggable,
+                            collapsable: false
+                        };
+
+                        children.push(row);
+
+                        const maxLevelReached = maxLevel !== undefined && level === maxLevel;
+
+                        if (!maxLevelReached && childItem.expanded && childItems.length > 0) {
+                            enumChildren(childItems, level + 1);
+                        }
+
+                        row.collapsable =
+                            collapsable! &&
+                            !maxLevelReached &&
+                            (childItems.length > 0 || canContainChildren(childItem.object));
+                    }
+                }
+            });
+        }
+
+        enumChildren(getChildren(this.item || this.rootItem), 0);
+
+        return children;
+    }
+
+    getItemId(item: ITreeObjectAdapter) {
+        return item.object._id;
+    }
+
+    getItemFromId(id: string): ITreeObjectAdapter | undefined {
+        return this.rootItem.getObjectAdapter(id);
+    }
+
+    getItemParent(item: ITreeObjectAdapter): ITreeObjectAdapter | undefined {
+        return this.rootItem.getParent(item);
+    }
+
+    itemToString(item: ITreeObjectAdapter): string {
+        return objectToString(item.object);
+    }
+
+    isAncestor(item: ITreeObjectAdapter, ancestor: ITreeObjectAdapter): boolean {
+        return isAncestor(item.object, ancestor.object);
+    }
+
+    isSelected(item: ITreeObjectAdapter) {
+        return item.selected;
+    }
+
+    selectItem(item: ITreeObjectAdapter) {
+        this.rootItem.selectItems([item]);
+    }
+
+    toggleSelected(item: ITreeObjectAdapter): void {
+        this.rootItem.toggleSelected(item);
+    }
+
+    showSelectionContextMenu(position: IMenuAnchorPosition) {
+        this.rootItem.showSelectionContextMenu(position);
+    }
+
+    cutSelection() {
+        this.rootItem.cutSelection();
+    }
+
+    copySelection() {
+        this.rootItem.cutSelection();
+    }
+
+    pasteSelection() {
+        this.rootItem.cutSelection();
+    }
+
+    deleteSelection() {
+        this.rootItem.cutSelection();
+    }
+
+    get collapsableAdapter() {
+        return this.collapsable ? this : undefined;
+    }
+
+    isExpanded(item: ITreeObjectAdapter) {
+        return item.expanded;
+    }
+
+    toggleExpanded(item: ITreeObjectAdapter): void {
+        item.toggleExpanded();
+    }
+
+    onDoubleClick(item: ITreeObjectAdapter): void {
+        if (this.onDoubleClickCallback) {
+            this.onDoubleClickCallback(item.object);
+        }
+    }
+
+    get draggableAdapter() {
+        return this.sortDirection === undefined || this.sortDirection === "none" ? this : undefined;
+    }
+
+    get isDragging() {
+        return !!DragAndDropManager.dragObject;
+    }
+
+    isDragSource(item: ITreeObjectAdapter) {
+        return DragAndDropManager.dragObject === item.object;
+    }
+
+    onDragStart(item: ITreeObjectAdapter, event: any) {
+        event.dataTransfer.effectAllowed = "copyMove";
+        setClipboardData(event, objectToClipboardData(item.object));
+        event.dataTransfer.setDragImage(DragAndDropManager.blankDragImage, 0, 0);
+        // postpone render, otherwise we can receive onDragEnd immediatelly
+        setTimeout(() => {
+            DragAndDropManager.start(event, item.object);
+        });
+    }
+
+    onDrag(event: any) {
+        DragAndDropManager.drag(event);
+    }
+
+    onDragEnd(event: any) {
+        DragAndDropManager.end(event);
+    }
+
+    onDragOver(dropItem: ITreeObjectAdapter | undefined, event: any) {
+        if (dropItem) {
+            event.preventDefault();
+            event.stopPropagation();
+            DragAndDropManager.setDropEffect(event);
+        }
+
+        if (this.dropItem !== dropItem) {
+            this.dropItem = dropItem;
+        }
+    }
+
+    onDragLeave(event: any) {
+        if (this.dropItem) {
+            this.dropItem = undefined;
+        }
+    }
+
+    onDrop(dropPosition: DropPosition, event: any) {
+        DragAndDropManager.deleteDragItem();
+
+        if (DragAndDropManager.dragObject) {
+            let object = cloneObject(undefined, DragAndDropManager.dragObject);
+
+            let dropItem = DragAndDropManager.dropObject as ITreeObjectAdapter;
+
+            if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
+                DocumentStore.insertObjectBefore(dropItem.object, object);
+            } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
+                DocumentStore.insertObjectAfter(dropItem.object, object);
+            } else if (dropPosition == DropPosition.DROP_POSITION_INSIDE) {
+                let dropPlace = findPastePlaceInside(dropItem.object, object._classInfo, true);
+                if (dropPlace) {
+                    if (isArray(dropPlace as EezObject)) {
+                        DocumentStore.addObject(dropPlace as EezObject, object);
+                    } else {
+                        DocumentStore.updateObject(dropItem.object, {
+                            [(dropPlace as PropertyInfo).name]: object
+                        });
+                    }
+                }
+            }
+        }
+
+        DragAndDropManager.end(event);
+    }
+
+    isAncestorOfDragObject(dropItem: ITreeObjectAdapter) {
+        return isAncestor(dropItem.object, DragAndDropManager.dragObject!);
+    }
+
+    canDrop(
+        dropItem: ITreeObjectAdapter,
+        dropPosition: DropPosition,
+        prevObjectId: string | undefined,
+        nextObjectId: string | undefined
+    ): boolean {
+        const dragObject = DragAndDropManager.dragObject!;
+
+        // check: can't drop object within itself
+        if (this.isAncestorOfDragObject(dropItem)) {
+            return false;
+        }
+
+        // check: can't drop object if parent can't accept it
+        if (
+            !(
+                isArrayElement(dropItem.object) &&
+                isObjectInstanceOf(dragObject, dropItem.object._parent!._classInfo)
+            )
+        ) {
+            return false;
+        }
+
+        // check: it makes no sense to drop dragObject before or after itself
+        if (dropItem.object === dragObject) {
+            return false;
+        }
+
+        if (dropItem.object._parent === dragObject._parent) {
+            if (dropPosition === DropPosition.DROP_POSITION_BEFORE) {
+                if (prevObjectId !== dragObject._id) {
+                    return true;
+                }
+            } else if (dropPosition === DropPosition.DROP_POSITION_AFTER) {
+                if (nextObjectId !== dragObject._id) {
+                    return true;
+                }
+            }
+        } else {
+            return true;
+        }
+
+        return false;
+    }
+
+    canDropInside(dropItem: ITreeObjectAdapter) {
+        return !!findPastePlaceInside(
+            dropItem.object,
+            DragAndDropManager.dragObject!._classInfo,
+            true
+        );
+    }
+
+    get dropItem(): ITreeObjectAdapter | undefined {
+        return DragAndDropManager.dropObject as (ITreeObjectAdapter | undefined);
+    }
+
+    set dropItem(value: ITreeObjectAdapter | undefined) {
+        if (value) {
+            DragAndDropManager.setDropObject(value);
+        } else {
+            DragAndDropManager.unsetDropObject();
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class ListItem {
+    constructor(public object: EezObject) {}
+
+    @observable
+    selected: boolean = false;
+
+    get item() {
+        return this;
+    }
+
+    get level() {
+        return 0;
+    }
+
+    get draggable() {
+        return true;
+    }
+
+    get collapsable() {
+        return false;
+    }
+}
+
+export class ListAdapter implements ITreeAdapter {
+    constructor(
+        private object: EezObject,
+        private sortDirection?: SortDirectionType,
+        onDoubleClick?: (object: EezObject) => void
+    ) {
+        this.onDoubleClickCallback = onDoubleClick;
+    }
+
+    onDoubleClickCallback: ((object: EezObject) => void) | undefined;
+
+    parentItem = new ListItem(this.object);
+
+    @computed
+    get items() {
+        let items = asArray(this.object).map(object => new ListItem(object));
+
+        setTimeout(
+            action(() => {
+                if (this.selectedItem) {
+                    this.selectedItem.selected = true;
+                }
+            })
+        );
+
+        if (this.sortDirection === "asc") {
+            return items.sort((a, b) => stringCompare(a.object._label, b.object._label));
+        }
+
+        if (this.sortDirection === "desc") {
+            return items.sort((a, b) => stringCompare(b.object._label, a.object._label));
+        }
+
+        return items;
+    }
+
+    get allRows() {
+        return this.items;
+    }
+
+    maxLevel = 0;
+
+    getItemId(item: ListItem) {
+        return item.object._id;
+    }
+
+    getItemFromId(id: string) {
+        return this.items.find(item => item.object._id === id);
+    }
+
+    getItemParent(item: ListItem) {
+        return this.parentItem;
+    }
+
+    itemToString(item: ListItem) {
+        return objectToString(item.object);
+    }
+
+    isAncestor(item: ListItem, ancestor: ListItem): boolean {
+        return isAncestor(item.object, ancestor.object);
+    }
+
+    isSelected(item: ListItem): boolean {
+        return item.selected;
+    }
+
+    @computed
+    get selectedItem(): ListItem | undefined {
+        const item = NavigationStore.getNavigationSelectedItem(this.object);
+
+        if (item instanceof EezObject) {
+            return this.getItemFromId(item._id);
+        }
+
+        if (this.items.length > 0) {
+            return this.items[0];
+        }
+
+        return undefined;
+    }
+
+    @action
+    selectItem(item: ListItem): void {
+        let selectedItem = this.selectedItem;
+        if (selectedItem) {
+            selectedItem.selected = false;
+        }
+
+        NavigationStore.setNavigationSelectedItem(this.object, item.object);
+
+        selectedItem = this.selectedItem;
+        if (selectedItem) {
+            selectedItem.selected = true;
+        }
+    }
+
+    toggleSelected(item: ListItem): void {
+        this.selectItem(item);
+    }
+
+    showSelectionContextMenu(position: IMenuAnchorPosition): void {
+        showContextMenu(this.object, position);
+    }
+
+    cutSelection() {
+        if (this.selectedItem) {
+            cutItem(this.selectedItem.object);
+        }
+    }
+
+    copySelection() {
+        if (this.selectedItem) {
+            copyItem(this.selectedItem.object);
+        }
+    }
+
+    pasteSelection() {
+        if (this.selectedItem) {
+            pasteItem(this.selectedItem.object);
+        }
+    }
+
+    deleteSelection() {
+        if (this.selectedItem) {
+            deleteItem(this.selectedItem.object);
+        }
+    }
+
+    onDoubleClick(item: ListItem) {
+        if (this.onDoubleClickCallback) {
+            this.onDoubleClickCallback(item.object);
+        }
+    }
+
+    collapsableAdapter = undefined;
+
+    get draggableAdapter() {
+        return this.sortDirection === undefined || this.sortDirection === "none" ? this : undefined;
+    }
+
+    get isDragging() {
+        return !!DragAndDropManager.dragObject;
+    }
+
+    isDragSource(item: ListItem) {
+        return DragAndDropManager.dragObject === item.object;
+    }
+
+    onDragStart(item: ListItem, event: any) {
+        event.dataTransfer.effectAllowed = "copyMove";
+        setClipboardData(event, objectToClipboardData(item.object));
+        event.dataTransfer.setDragImage(DragAndDropManager.blankDragImage, 0, 0);
+        // postpone render, otherwise we can receive onDragEnd immediatelly
+        setTimeout(() => {
+            DragAndDropManager.start(event, item.object);
+        });
+    }
+
+    onDrag(event: any) {
+        DragAndDropManager.drag(event);
+    }
+
+    onDragEnd(event: any) {
+        DragAndDropManager.end(event);
+    }
+
+    onDragOver(dropItem: ListItem | undefined, event: any) {
+        if (dropItem) {
+            event.preventDefault();
+            event.stopPropagation();
+            DragAndDropManager.setDropEffect(event);
+        }
+
+        if (this.dropItem !== dropItem) {
+            this.dropItem = dropItem;
+        }
+    }
+
+    onDragLeave(event: any) {
+        if (this.dropItem) {
+            this.dropItem = undefined;
+        }
+    }
+
+    onDrop(dropPosition: DropPosition, event: any) {
+        DragAndDropManager.deleteDragItem();
+
+        if (DragAndDropManager.dragObject) {
+            let object = cloneObject(undefined, DragAndDropManager.dragObject);
+
+            let dropItem = DragAndDropManager.dropObject as ListItem;
+
+            if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
+                DocumentStore.insertObjectBefore(dropItem.object, object);
+            } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
+                DocumentStore.insertObjectAfter(dropItem.object, object);
+            }
+        }
+
+        DragAndDropManager.end(event);
+    }
+
+    isAncestorOfDragObject(dropItem: ListItem) {
+        return isAncestor(dropItem.object, DragAndDropManager.dragObject!);
+    }
+
+    canDrop(
+        dropItem: ListItem,
+        dropPosition: DropPosition,
+        prevObjectId: string | undefined,
+        nextObjectId: string | undefined
+    ): boolean {
+        const dragObject = DragAndDropManager.dragObject!;
+
+        // check: can't drop object if parent can't accept it
+        if (!isObjectInstanceOf(dragObject, this.object._classInfo)) {
+            return false;
+        }
+
+        // check: it makes no sense to drop dragObject before or after itself
+        if (dropItem.object === dragObject) {
+            return false;
+        }
+
+        if (dropItem.object._parent === dragObject._parent) {
+            if (dropPosition === DropPosition.DROP_POSITION_BEFORE) {
+                if (prevObjectId !== dragObject._id) {
+                    return true;
+                }
+            } else if (dropPosition === DropPosition.DROP_POSITION_AFTER) {
+                if (nextObjectId !== dragObject._id) {
+                    return true;
+                }
+            }
+        } else {
+            return true;
+        }
+
+        return false;
+    }
+
+    canDropInside(dropItem: ListItem) {
+        return false;
+    }
+
+    get dropItem(): ListItem | undefined {
+        return DragAndDropManager.dropObject as (ListItem | undefined);
+    }
+
+    set dropItem(value: ListItem | undefined) {
+        if (value) {
+            DragAndDropManager.setDropObject(value);
+        } else {
+            DragAndDropManager.unsetDropObject();
         }
     }
 }

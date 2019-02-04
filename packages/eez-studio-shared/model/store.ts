@@ -23,7 +23,8 @@ import {
     getObjectFromStringPath,
     getObjectFromObjectId,
     cloneObject,
-    isPropertyEnumerable
+    isPropertyEnumerable,
+    EezBrowsableObject
 } from "eez-studio-shared/model/object";
 import { checkClipboard, objectToClipboardData } from "eez-studio-shared/model/clipboard";
 import {
@@ -40,10 +41,7 @@ import {
     insertObjectAfter
 } from "eez-studio-shared/model/commands";
 import { loadObject } from "eez-studio-shared/model/serialization";
-import {
-    TreeObjectAdapter,
-    ITreeObjectAdapter
-} from "eez-studio-shared/model/objectAdapter";
+import { TreeObjectAdapter, ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 import { findAllReferences, isReferenced } from "eez-studio-shared/model/search";
 import { OutputSections, OutputSection } from "eez-studio-shared/model/output";
 
@@ -1047,6 +1045,9 @@ function isOptional(object: EezObject) {
 }
 
 export function canDelete(object: EezObject) {
+    if (object instanceof EezBrowsableObject) {
+        return false;
+    }
     return isArrayElement(object) || isOptional(object);
 }
 

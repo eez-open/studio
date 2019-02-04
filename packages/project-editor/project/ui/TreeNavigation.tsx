@@ -1,5 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
+import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
@@ -12,7 +13,11 @@ import {
     addItem,
     canAdd
 } from "eez-studio-shared/model/store";
-import { TreeObjectAdapter, ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
+import {
+    TreeObjectAdapter,
+    ITreeObjectAdapter,
+    TreeAdapter
+} from "eez-studio-shared/model/objectAdapter";
 
 import { Panel } from "eez-studio-shared/model/components/Panel";
 import { Tree } from "eez-studio-shared/model/components/Tree";
@@ -91,6 +96,7 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
         );
     }
 
+    @bind
     onTreeDoubleClick(object: EezObject) {
         if (EditorsStore.activeEditor && EditorsStore.activeEditor.object == object) {
             EditorsStore.activeEditor.makePermanent();
@@ -134,11 +140,18 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
                 ]}
                 body={
                     <Tree
-                        item={objectAdapter}
-                        rootItem={navigationObjectAdapter}
-                        onDoubleClick={this.onTreeDoubleClick.bind(this)}
+                        treeAdapter={
+                            new TreeAdapter(
+                                navigationObjectAdapter,
+                                objectAdapter,
+                                TreeNavigationPanel.navigationTreeFilter,
+                                true,
+                                "none",
+                                undefined,
+                                this.onTreeDoubleClick
+                            )
+                        }
                         tabIndex={0}
-                        filter={TreeNavigationPanel.navigationTreeFilter}
                         onFocus={this.onFocus.bind(this)}
                     />
                 }
