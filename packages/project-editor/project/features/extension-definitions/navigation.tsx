@@ -14,17 +14,14 @@ import { PropertyGrid } from "eez-studio-shared/model/components/PropertyGrid";
 export class ExtensionDefinitionsNavigation extends NavigationComponent {
     @computed
     get object() {
-        if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
-        }
-        return NavigationStore.selectedObject;
+        return (
+            (NavigationStore.selectedPanel && NavigationStore.selectedPanel.selectedObject) ||
+            NavigationStore.selectedObject
+        );
     }
 
     render() {
-        let content;
-        if (this.object) {
-            content = <PropertyGrid object={this.object} />;
-        }
+        let content = <PropertyGrid object={this.object} />;
 
         if (UIStateStore.viewOptions.navigationVisible) {
             return (

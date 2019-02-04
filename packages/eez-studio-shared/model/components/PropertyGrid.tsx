@@ -966,6 +966,29 @@ interface PropertyGridProps {
 
 @observer
 export class PropertyGrid extends React.Component<PropertyGridProps> {
+    div: HTMLDivElement | null;
+    lastObject: EezObject | undefined;
+
+    ensureHighlightedVisible() {
+        if (this.div) {
+            if (this.lastObject !== this.props.object) {
+                const $highlighted = $(this.div).find(".highlighted");
+                if ($highlighted[0]) {
+                    ($highlighted[0] as any).scrollIntoViewIfNeeded();
+                }
+                this.lastObject = this.props.object;
+            }
+        }
+    }
+
+    componentDidMount() {
+        this.ensureHighlightedVisible();
+    }
+
+    componentDidUpdate() {
+        this.ensureHighlightedVisible();
+    }
+
     @bind
     updateObject(propertyValues: Object) {
         let object = this.props.object;
@@ -1113,7 +1136,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
         }
 
         return (
-            <PropertyGridDiv className={this.props.className}>
+            <PropertyGridDiv ref={ref => (this.div = ref)} className={this.props.className}>
                 <table>
                     <tbody>{rows}</tbody>
                 </table>

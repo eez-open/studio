@@ -1,11 +1,11 @@
 {
     "name": "eezstudio-project-feature-extension-definitions",
     "version": "0.1.0",
-    "description": "This feature adds support for ESW extension definitions into your project",
+    "description": "This feature adds support for IEXT definitions into your project",
     "author": "EEZ",
     "authorLogo": "../eez-studio-ui/_images/eez_logo.png",
     "eezStudioExtension": {
-        "displayName": "ESW extension definitions",
+        "displayName": "IEXT definitions",
         "category": "project-feature",
         "implementation": "eez-studio://project/features/extension-definitions"
     }

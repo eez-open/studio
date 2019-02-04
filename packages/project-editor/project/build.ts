@@ -21,7 +21,10 @@ import { Section, Type } from "eez-studio-shared/model/output";
 import { ProjectStore } from "project-editor/core/store";
 
 import { BuildFile } from "project-editor/project/project";
-import { extensionDefinitionBuild } from "project-editor/project/features/extension-definitions/build";
+import {
+    extensionDefinitionAnythingToBuild,
+    extensionDefinitionBuild
+} from "project-editor/project/features/extension-definitions/build";
 
 const fs = EEZStudio.electron.remote.require("fs");
 
@@ -165,9 +168,21 @@ async function doBuild(destinationFolderPath: string, buildResults: BuildResult[
     }
 }
 
+function anythingToBuild() {
+    if (ProjectStore.project.settings.build.files._array.length > 0) {
+        return true;
+    }
+    return extensionDefinitionAnythingToBuild();
+}
+
 export async function build(onlyCheck: boolean) {
     OutputSectionsStore.setActiveSection(Section.OUTPUT);
     OutputSectionsStore.clear(Section.OUTPUT);
+
+    if (!anythingToBuild()) {
+        OutputSectionsStore.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
+        return;
+    }
 
     try {
         let sectionNames: string[] | undefined = undefined;

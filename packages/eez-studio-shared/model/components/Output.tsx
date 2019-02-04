@@ -1,5 +1,5 @@
-import { action } from "mobx";
-import { observer } from "mobx-react";
+import { action, autorun } from "mobx";
+import { observer, disposeOnUnmount } from "mobx-react";
 import React from "react";
 import classNames from "classnames";
 
@@ -155,9 +155,10 @@ const TabsViewContainer = styled.div`
 
 @observer
 export class Output extends React.Component<{}, {}> {
-    onSelectSection(event: any) {
-        OutputSectionsStore.setActiveSection(event.target.value);
-    }
+    @disposeOnUnmount
+    activeSectionChanged = autorun(() => {
+        NavigationStore.setSelectedPanel(OutputSectionsStore.activeSection);
+    });
 
     onFocus() {
         NavigationStore.setSelectedPanel(OutputSectionsStore.activeSection);

@@ -11,6 +11,6 @@ export function metrics(project: Project): { [key: string]: string | number } {
     >;
 
     return {
-        "Extension definitions": extensionDefinitions._array.length
+        "IEXT definitions": extensionDefinitions._array.length
     };
 }

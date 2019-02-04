@@ -207,6 +207,10 @@ export class ExtensionDefinition extends EezObject {
             messages.push(output.propertyNotSetMessage(this, "idfGuid"));
         }
 
+        if (!this.idfRevisionNumber) {
+            messages.push(output.propertyNotSetMessage(this, "idfRevisionNumber"));
+        }
+
         let extensionDefinitions = getProperty(
             ProjectStore.project,
             "extensionDefinitions"
@@ -253,7 +257,7 @@ registerFeatureImplementation("extension-definitions", {
     projectFeature: {
         mandatory: false,
         key: "extensionDefinitions",
-        displayName: "Extension definitions",
+        displayName: "IEXT definitions",
         type: PropertyType.Array,
         typeClass: ExtensionDefinition,
         create: () => {
