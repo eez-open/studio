@@ -18,6 +18,18 @@ export function confirm(message: string, detail: string | undefined, callback: (
     );
 }
 
+export function info(message: string, detail?: string) {
+    EEZStudio.electron.remote.dialog.showMessageBox(EEZStudio.electron.remote.getCurrentWindow(), {
+        type: "info",
+        title: "Project Editor - EEZ Studio",
+        message: message,
+        detail: detail,
+        noLink: true,
+        buttons: ["OK"],
+        cancelId: 1
+    });
+}
+
 export function strToColor16(colorStr: string) {
     let color24: any;
 

@@ -180,7 +180,8 @@ export class General extends EezObject {
             {
                 name: "scpiDocFolder",
                 displayName: "SCPI documentation folder",
-                type: PropertyType.RelativeFolder
+                type: PropertyType.RelativeFolder,
+                hideInPropertyGrid: () => !(ProjectStore.project as any).scpi
             }
         ],
         showInNavigation: true

@@ -98,7 +98,7 @@ class ProjectFeature extends React.Component<
         } else {
             button = (
                 <button
-                    className="btn float-right"
+                    className="btn btn-secondary float-right"
                     onClick={this.onAdd.bind(this)}
                     title="Add feature to the project"
                 >

@@ -18,6 +18,7 @@ import { BootstrapDialog, BootstrapButton } from "eez-studio-shared/model/ui-ele
 
 import { showGenericDialog, TableField } from "eez-studio-ui/generic-dialog";
 
+import { info } from "project-editor/core/util";
 import {
     Project,
     save as saveProject,
@@ -460,20 +461,27 @@ setUIElementsFactory({
                             className="btn btn-secondary"
                             type="button"
                             onClick={() => {
-                                EEZStudio.electron.remote.dialog.showOpenDialog(
-                                    {
-                                        properties: ["openDirectory"]
-                                    },
-                                    filePaths => {
-                                        if (filePaths[0]) {
-                                            onChange(
-                                                ProjectStore.getFolderPathRelativeToProjectPath(
-                                                    filePaths[0]
-                                                )
-                                            );
+                                if (ProjectStore.filePath) {
+                                    EEZStudio.electron.remote.dialog.showOpenDialog(
+                                        {
+                                            properties: ["openDirectory"]
+                                        },
+                                        filePaths => {
+                                            if (filePaths[0]) {
+                                                onChange(
+                                                    ProjectStore.getFolderPathRelativeToProjectPath(
+                                                        filePaths[0]
+                                                    )
+                                                );
+                                            }
                                         }
-                                    }
-                                );
+                                    );
+                                } else {
+                                    info(
+                                        "Project not saved.",
+                                        "To be able to select folder you need to save the project first."
+                                    );
+                                }
                             }}
                         >
                             &hellip;
