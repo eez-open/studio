@@ -96,11 +96,38 @@ class Measurement {
         return this.measurementDefinition.measurementId;
     }
 
-    get name() {
+    get namePrefix() {
         return (
             (this.measurementFunction && this.measurementFunction.name) ||
             this.measurementDefinition.measurementFunctionId
         );
+    }
+
+    @computed
+    get name() {
+        const namePrefix = this.namePrefix;
+
+        let samePrefixBeforeCounter = 0;
+
+        const measurements = this.measurementsController.measurements;
+
+        let i;
+        for (i = 0; i < measurements.length && measurements[i] !== this; ++i) {
+            if (measurements[i].namePrefix === namePrefix) {
+                samePrefixBeforeCounter++;
+            }
+        }
+
+        if (i < measurements.length) {
+            for (++i; i < measurements.length && measurements[i].namePrefix !== namePrefix; ++i) {}
+        }
+
+        if (samePrefixBeforeCounter === 0 && i === measurements.length) {
+            // no measurement with the same namePrefix found
+            return namePrefix;
+        }
+
+        return `${namePrefix} ${samePrefixBeforeCounter + 1}`;
     }
 
     get arity() {
