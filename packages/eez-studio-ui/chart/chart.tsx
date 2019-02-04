@@ -203,18 +203,26 @@ export abstract class AxisController {
         return (this.from > this.minValue || this.to < this.maxValue) && this.range != 0;
     }
 
-    @computed
-    get minValue() {
+    get _minValue() {
         return this.position === "x"
             ? this.chartsController.minValue
             : this.chartController!.minValue[this.position];
     }
 
     @computed
-    get maxValue() {
+    get minValue() {
+        return this._minValue;
+    }
+
+    get _maxValue() {
         return this.position === "x"
             ? this.chartsController.maxValue
             : this.chartController!.maxValue[this.position];
+    }
+
+    @computed
+    get maxValue() {
+        return this._maxValue;
     }
 
     @computed
@@ -999,6 +1007,24 @@ class FixedAxisController extends AxisController {
         }
 
         return this.subdivisionOffset + this.subdivisionScale * this.majorSubdivison;
+    }
+
+    @computed
+    get minValue(): number {
+        const minValue = this._minValue;
+        if (this.axisModel.fixed.zoomMode === "all") {
+            return minValue;
+        }
+        return Math.min(minValue, this.from);
+    }
+
+    @computed
+    get maxValue(): number {
+        const maxValue = super._maxValue;
+        if (this.axisModel.fixed.zoomMode === "all") {
+            return maxValue;
+        }
+        return Math.max(maxValue, this.to);
     }
 
     @computed
