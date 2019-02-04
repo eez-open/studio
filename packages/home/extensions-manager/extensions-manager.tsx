@@ -752,6 +752,11 @@ const ExtensionDetailsHeader: typeof Header = styled(Header)`
     * {
         user-select: auto;
     }
+
+    pre {
+        font-family: inherit;
+        font-size: 100%;
+    }
 ` as any;
 
 const ExtensionDetailsHeaderImageContainer = styled.div`
@@ -949,6 +954,38 @@ export class DetailsView extends React.Component {
         );
     }
 
+    static getFullDescription(extension: IExtension): React.ReactNode {
+        let fullDescription;
+        if (extension.moreDescription) {
+            if (extension.description) {
+                fullDescription = extension.description.trim();
+                if (fullDescription) {
+                    if (!fullDescription.endsWith(".")) {
+                        fullDescription += ".";
+                    }
+                }
+            }
+
+            if (extension.moreDescription) {
+                if (fullDescription) {
+                    fullDescription += "\n";
+                }
+                fullDescription += extension.moreDescription.trim();
+                if (fullDescription) {
+                    if (!fullDescription.endsWith(".")) {
+                        fullDescription += ".";
+                    }
+                }
+            }
+        } else {
+            fullDescription = extension.description;
+        }
+        if (fullDescription) {
+            fullDescription = <pre>{fullDescription}</pre>;
+        }
+        return fullDescription;
+    }
+
     render() {
         const extension = this.displayedExtension;
         if (!extension) {
@@ -992,7 +1029,7 @@ export class DetailsView extends React.Component {
                                 </select>
                             </div>
                         </ExtensionDetailsHeaderPropertiesNameAndVersion>
-                        <div>{extension.description}</div>
+                        <div>{DetailsView.getFullDescription(extension)}</div>
                         <div>{extension.author}</div>
                         <div style={{ marginBottom: "10px" }}>
                             <small>{extension.id}</small>

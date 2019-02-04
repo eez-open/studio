@@ -54,6 +54,7 @@ async function loadExtension(extensionFolderPath: string): Promise<IExtension | 
                     extension.version = packageJson.version;
                     extension.author = packageJson.author;
                     extension.description = packageJson.description;
+                    extension.moreDescription = packageJsonEezStudio.moreDescription;
 
                     extension.download = packageJson.download;
                     extension.sha256 = packageJson.sha256;

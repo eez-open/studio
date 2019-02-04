@@ -50,7 +50,15 @@ export function makeDataPropertyInfo(
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition
 ) {
-    return PageInitContext.makeDataPropertyInfo(name, displayName, propertyGridGroup);
+    if (PageInitContext) {
+        return PageInitContext.makeDataPropertyInfo(name, displayName, propertyGridGroup);
+    } else {
+        return {
+            name,
+            displayName,
+            type: PropertyType.String
+        };
+    }
 }
 
 export function makeActionPropertyInfo(
@@ -58,7 +66,15 @@ export function makeActionPropertyInfo(
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition
 ) {
-    return PageInitContext.makeActionPropertyInfo(name, displayName, propertyGridGroup);
+    if (PageInitContext) {
+        return PageInitContext.makeActionPropertyInfo(name, displayName, propertyGridGroup);
+    } else {
+        return {
+            name,
+            displayName,
+            type: PropertyType.String
+        };
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -973,7 +989,9 @@ export class LayoutViewWidget extends Widget {
             {
                 name: "layout",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: PageInitContext.layoutCollectionPath
+                referencedObjectCollectionPath: PageInitContext
+                    ? PageInitContext.layoutCollectionPath
+                    : []
             },
             {
                 name: "customUI",

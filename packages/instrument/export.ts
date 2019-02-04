@@ -83,10 +83,10 @@ function buildPackageJson(idf: IdfProperties, properties: any) {
         {
             id: idf.idfGuid,
             name: idf.extensionName,
+            description: idf.idfDescription,
             displayName: idf.idfName,
             version: idf.idfRevisionNumber,
             author: idf.idfAuthor,
-            description: idf.idfDescription,
             "eez-studio": properties
         },
         undefined,

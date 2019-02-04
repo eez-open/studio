@@ -415,6 +415,7 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                 let isEditable: boolean;
                 let downloadUrl: string | undefined;
                 let sha256: string | undefined;
+                let moreDescription: string | undefined;
 
                 let packageJsonFilePath = extensionFolderPath + "/package.json";
                 if (await fileExists(packageJsonFilePath)) {
@@ -424,6 +425,7 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                     isEditable = await fileExists(extensionFolderPath + "/.editable");
                     downloadUrl = packageJson.download;
                     sha256 = packageJson.sha256;
+                    moreDescription = properties.moreDescription;
                 } else {
                     properties = EMPTY_INSTRUMENT_PROPERTIES;
                     isEditable = true;
@@ -451,6 +453,7 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                         name,
                         description:
                             ScpiConfiguration.attr("description") || "Unknown description.",
+                        moreDescription,
                         version,
                         author: ScpiConfiguration.attr("author") || "Unknown author",
                         image: "",

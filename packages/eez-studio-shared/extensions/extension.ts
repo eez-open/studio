@@ -43,6 +43,7 @@ export interface IObject {
 export interface IExtensionProperties {
     properties?: any;
     shortcuts?: IShortcut[];
+    moreDescription?: string;
 }
 
 export interface IHomeSection {
@@ -136,6 +137,7 @@ export interface IExtensionDescription {
     version: string;
     author: string;
     description?: string;
+    moreDescription?: string;
     image?: string;
     download?: string;
     sha256?: string;

@@ -60,7 +60,7 @@ export async function extensionDefinitionBuild() {
                     const instrumentIdf: InstrumentIdfProperties = idfFromProject as any;
 
                     // collect extension properties
-                    let properties = {};
+                    let properties: any = {};
 
                     // from configuration
                     const configuration = ProjectStore.project.settings.build.configurations._array.find(
@@ -89,6 +89,10 @@ export async function extensionDefinitionBuild() {
                         },
                         getInstrumentExtensionProperties(idfFromProject)
                     );
+
+                    if (configuration) {
+                        properties.moreDescription = configuration.description;
+                    }
 
                     if (instrumentIdf.extensionName && instrumentIdf.idfGuid) {
                         let idfFileName = `${instrumentIdf.extensionName}-${
