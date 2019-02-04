@@ -232,7 +232,7 @@ class MasterView extends React.Component {
                         />
                     </DropdownIconAction>
                     <IconAction
-                        icon="material:remove"
+                        icon="material:delete"
                         iconSize={16}
                         title="Remove notebook"
                         enabled={!!notebooksHomeSectionStore.selectedNotebook}

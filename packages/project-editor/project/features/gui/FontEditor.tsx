@@ -401,7 +401,7 @@ class Glyphs extends React.Component<
             deleteGlyphButton = (
                 <IconAction
                     title="Delete Glyph"
-                    icon="material:remove"
+                    icon="material:delete"
                     iconSize={16}
                     onClick={this.props.onDeleteGlyph}
                 />

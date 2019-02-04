@@ -210,7 +210,7 @@ class MasterView extends React.Component<
                         onClick={this.addList}
                     />
                     <IconAction
-                        icon="material:remove"
+                        icon="material:delete"
                         iconSize={16}
                         title="Remove list"
                         enabled={!!this.props.selectedList}

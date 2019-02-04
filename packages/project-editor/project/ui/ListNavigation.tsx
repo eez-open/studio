@@ -132,7 +132,7 @@ export class DeleteButton extends React.Component<{
         return (
             <IconAction
                 title="Delete Selected Item"
-                icon="material:remove"
+                icon="material:delete"
                 iconSize={16}
                 onClick={this.onDelete.bind(this)}
                 enabled={selectedItem && canDelete(selectedItem)}
