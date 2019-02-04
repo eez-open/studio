@@ -1202,10 +1202,10 @@ const PageEditorCanvasContainer = styled.div`
     }
 `;
 
-const PageEditorCanvas = styled(Canvas)`
+const PageEditorCanvas: typeof Canvas = styled(Canvas)`
     flex-grow: 1;
     position: relative;
-`;
+` as any;
 
 interface PageEditorProps {
     widgetContainer: ITreeObjectAdapter;

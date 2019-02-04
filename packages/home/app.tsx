@@ -18,10 +18,10 @@ const SessionInfoContainer = styled.div`
     background: ${props => props.theme.panelHeaderColor};
 `;
 
-const AppHeader = styled(Header)`
+const AppHeader: typeof Header = styled(Header)`
     display: flex;
     flex-direction: row;
-`;
+` as any;
 
 const TabContainer = styled.div`
     flex-grow: 1;
@@ -39,7 +39,7 @@ class AppComponent extends React.Component {
     render() {
         return (
             <VerticalHeaderWithBody>
-                <AppHeader className="">
+                <AppHeader>
                     <TabsView tabs={tabs.tabs} />
                     <SessionInfoContainer>
                         <SessionInfo appStore={getAppStore()} />

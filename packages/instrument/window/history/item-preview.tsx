@@ -11,7 +11,7 @@ import { VerticalHeaderWithBody, PanelHeader, Body } from "eez-studio-ui/header-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ZoomedPreviewBody = styled(VerticalHeaderWithBody)`
+const ZoomedPreviewBody: typeof VerticalHeaderWithBody = styled(VerticalHeaderWithBody)`
     .EezStudio_Toolbar {
         margin-top: 0;
     }
@@ -45,7 +45,7 @@ const ZoomedPreviewBody = styled(VerticalHeaderWithBody)`
             }
         }
     }
-`;
+` as any;
 
 @observer
 class ZoomedPreview extends React.Component<{
@@ -88,7 +88,7 @@ class ZoomedPreview extends React.Component<{
     render() {
         return ReactDOM.createPortal(
             <ZoomedPreviewBody className={this.props.className} onContextMenu={this.onContextMenu}>
-                <PanelHeader className="">
+                <PanelHeader>
                     {this.props.toolbar || <Toolbar />}
                     <Toolbar>
                         <IconAction

@@ -270,13 +270,13 @@ const CommandSyntaxes = styled.div`
     }
 `;
 
-const CommandsBrowserTree = styled(VerticalHeaderWithBody)`
+const CommandsBrowserTree: typeof VerticalHeaderWithBody = styled(VerticalHeaderWithBody)`
     > div:nth-child(1) {
         padding: 1px;
         padding-top: 2px;
         border-bottom: 1px solid ${props => props.theme.borderColor};
     }
-`;
+` as any;
 
 const CommandsBrowserSyntax = styled.div``;
 
@@ -417,7 +417,7 @@ export class CommandsBrowser extends React.Component<
                 sizes="240px|100%"
                 persistId="instrument/window/commands-browser/splitter1"
             >
-                <CommandsBrowserTree className="">
+                <CommandsBrowserTree>
                     <Header>
                         <SearchInput
                             searchText={this.searchText}

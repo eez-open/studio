@@ -44,7 +44,7 @@ const CONF_DEFAULT_ENVELOPE_LIST_DURATION = 1; // 1 second
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const ListChartViewHeader = styled(Header)`
+export const ListChartViewHeader: typeof Header = styled(Header)`
     padding: 10px;
     border-bottom: 1px solid ${props => props.theme.borderColor};
 
@@ -85,7 +85,7 @@ export const ListChartViewHeader = styled(Header)`
     input[type="text"] {
         width: 100px;
     }
-`;
+` as any;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -241,7 +241,7 @@ export class DetailsView extends React.Component<{ list: BaseList | undefined },
         return (
             <VerticalHeaderWithBody>
                 {description && (
-                    <PanelHeader className="">
+                    <PanelHeader>
                         <Icon icon="material:comment" /> {description}
                     </PanelHeader>
                 )}

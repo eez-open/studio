@@ -744,7 +744,7 @@ export function downloadAndInstallExtension(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ExtensionDetailsHeader = styled(Header)`
+const ExtensionDetailsHeader: typeof Header = styled(Header)`
     display: flex;
     flex-direction: row;
     padding: 10px;
@@ -752,7 +752,7 @@ const ExtensionDetailsHeader = styled(Header)`
     * {
         user-select: auto;
     }
-`;
+` as any;
 
 const ExtensionDetailsHeaderImageContainer = styled.div`
     flex-grow: 0;
@@ -957,7 +957,7 @@ export class DetailsView extends React.Component {
 
         return (
             <VerticalHeaderWithBody>
-                <ExtensionDetailsHeader className="">
+                <ExtensionDetailsHeader>
                     <ExtensionDetailsHeaderImageContainer>
                         <img src={extension.image} width={256} />
                         <a href="#" style={{ cursor: "pointer" }} onClick={this.handleChangeImage}>

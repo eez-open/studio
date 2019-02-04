@@ -382,7 +382,7 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
 
     render() {
         return (
-            <ListChartViewHeader className="">
+            <ListChartViewHeader>
                 <Toolbar>
                     <ButtonAction
                         text="Edit Properties"
@@ -712,16 +712,16 @@ export class Table extends React.Component<
     }
 }
 
-const TableListEditorToolbarHeader = styled(ToolbarHeader)`
+const TableListEditorToolbarHeader: typeof ToolbarHeader = styled(ToolbarHeader)`
     justify-content: flex-start;
     background-color: white;
-`;
+` as any;
 
-const TableListEditorBody = styled(Body)`
+const TableListEditorBody: typeof Body = styled(Body)`
     overflow-x: hidden !important;
-`;
+` as any;
 
-const TableListEditorTable = styled(Table)`
+const TableListEditorTable: typeof Table = styled(Table)`
     border-bottom: 1px solid ${props => props.theme.tableBorderColor};
     border-collapse: collapse;
 
@@ -765,7 +765,7 @@ const TableListEditorTable = styled(Table)`
     tr:last-child td {
         border-bottom: none;
     }
-`;
+` as any;
 
 interface TableDetailsViewProps {
     list: TableList;
@@ -955,7 +955,7 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
                 </VerticalHeaderWithBody>
 
                 <VerticalHeaderWithBody>
-                    <TableListEditorToolbarHeader className="">
+                    <TableListEditorToolbarHeader>
                         <DropdownButtonAction
                             text="Insert"
                             title="Insert rows"
@@ -999,7 +999,7 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
                         )}
                         {<div className="text-danger">{this.error}</div>}
                     </TableListEditorToolbarHeader>
-                    <TableListEditorBody className="">
+                    <TableListEditorBody>
                         <TableListEditorTable
                             list={list}
                             onCellFocus={this.onCellFocus}

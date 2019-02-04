@@ -15,5 +15,6 @@
         "iosfwd": "cpp",
         "xiosbase": "cpp",
         "xlocale": "cpp"
-    }
+    },
+    "typescript.tsdk": "node_modules\\typescript\\lib"
 }

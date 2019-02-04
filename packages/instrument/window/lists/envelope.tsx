@@ -1538,7 +1538,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
 
     render() {
         return (
-            <ListChartViewHeader className="">
+            <ListChartViewHeader>
                 <Toolbar>
                     <Toolbar>
                         <ButtonAction

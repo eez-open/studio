@@ -16,7 +16,7 @@ import { IInstrumentWindowNavigationItem } from "instrument/window/navigation-st
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ConnectionBar = styled(PanelHeader)`
+const ConnectionBar: typeof PanelHeader = styled(PanelHeader)`
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -56,7 +56,7 @@ const ConnectionBar = styled(PanelHeader)`
             }
         }
     }
-`;
+` as any;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -122,7 +122,7 @@ export class AppBar extends React.Component<
             this.props.selectedItem && this.props.selectedItem.renderToolbarButtons();
 
         return (
-            <ConnectionBar className="">
+            <ConnectionBar>
                 <div>
                     <img src={this.instrument.image} draggable={false} />
                 </div>

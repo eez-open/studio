@@ -144,14 +144,14 @@ class ObjectComponent extends React.Component<
     }
 }
 
-const WorkbenchCanvas = styled(Canvas)`
+const WorkbenchCanvas: typeof Canvas = styled(Canvas)`
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     background-color: white;
-`;
+` as any;
 
 @observer
 export class WorkbenchDocument extends React.Component {

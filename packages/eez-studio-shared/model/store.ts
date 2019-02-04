@@ -1,4 +1,3 @@
-import React from "react";
 import { observable, extendObservable, computed, action, toJS, reaction, autorun } from "mobx";
 
 import { _each, _isArray, _map, _uniqWith } from "eez-studio-shared/algorithm";
@@ -44,6 +43,22 @@ import { loadObject } from "eez-studio-shared/model/serialization";
 import { TreeObjectAdapter, ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 import { findAllReferences, isReferenced } from "eez-studio-shared/model/search";
 import { OutputSections, OutputSection } from "eez-studio-shared/model/output";
+
+import {
+    IMenuItem,
+    IMenuAnchorPosition,
+    IUIElementsFactory,
+    DefaultUIElementsFactory
+} from "eez-studio-shared/model/ui-elements-factory";
+
+export {
+    IMenuItemConfig,
+    IMenuItem,
+    IMenuPopupOptions,
+    IMenuAnchorPosition,
+    IMenu,
+    IUIElementsFactory
+} from "eez-studio-shared/model/ui-elements-factory";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1330,75 +1345,11 @@ export function deleteItems(objects: EezObject[], callback?: () => void) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type IMenuItemConfig =
-    | {
-          label: string;
-          click: () => void;
-      }
-    | {
-          type: "separator";
-      };
-
-export interface IMenuItem {}
-
-export interface IMenuPopupOptions {}
-
-export interface IMenuAnchorPosition {
-    left: number;
-    top: number;
-}
-
-export interface IMenu {
-    append(menuItem: IMenuItem): void;
-    popup(options: IMenuPopupOptions, position: IMenuAnchorPosition): void;
-}
-
-export interface IUIElementsFactory {
-    Dialog: typeof React.Component;
-    Button: typeof React.Component;
-    createMenuItem(menuItemConfig: IMenuItemConfig): IMenuItem;
-    createMenu(): IMenu;
-    confirm(message: string, detail: string | undefined, callback: () => void): void;
-    renderProperty(
-        propertyInfo: PropertyInfo,
-        value: any,
-        onChange: (value: any) => void
-    ): React.ReactNode;
-}
-
 export function setUIElementsFactory(factory: IUIElementsFactory) {
     UIElementsFactory = factory;
 }
 
-class DummyComponent extends React.Component {
-    render() {
-        return null;
-    }
-}
-
-export let UIElementsFactory: IUIElementsFactory = {
-    Dialog: DummyComponent,
-
-    Button: DummyComponent,
-
-    createMenuItem(config: IMenuItemConfig) {
-        // todo
-        return {};
-    },
-    createMenu() {
-        // todo
-        return {
-            append(menuItem: IMenuItem) {},
-            popup(options: IMenuPopupOptions) {}
-        };
-    },
-    confirm(message: string, detail: string | undefined, callback: () => void) {
-        // todo
-    },
-    renderProperty(propertyInfo: PropertyInfo, value: any, onChange: (value: any) => void) {
-        return null;
-    }
-};
+export let UIElementsFactory: IUIElementsFactory = DefaultUIElementsFactory;
 
 ////////////////////////////////////////////////////////////////////////////////
 

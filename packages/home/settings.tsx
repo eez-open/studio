@@ -285,14 +285,14 @@ const HomeSettingsBody = styled.div`
     max-width: 640px;
 `;
 
-const HomeSettingsBar = styled(PanelHeader)`
+const HomeSettingsBar: typeof PanelHeader = styled(PanelHeader)`
     position: absolute;
     bottom: 0;
     width: 100%;
     text-align: right;
     border-bottom-width: 0;
     border-top-width: 1px;
-`;
+` as any;
 
 const DatabaseCompactDiv = styled.div`
     margin-top: 10px;
@@ -423,7 +423,7 @@ export class Settings extends React.Component {
                 </HomeSettingsBody>
 
                 {settingsController.restartRequired && (
-                    <HomeSettingsBar className="">
+                    <HomeSettingsBar>
                         <div className="btn-group mr-2">
                             <button
                                 className="btn btn-primary EezStudio_PulseTransition"

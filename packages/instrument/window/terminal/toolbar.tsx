@@ -45,7 +45,7 @@ export class ShortcutButton extends React.Component<
     }
 }
 
-const ShortcutsToolbarContainer = styled(Toolbar)`
+const ShortcutsToolbarContainer: typeof Toolbar = styled(Toolbar)`
     flex-grow: 0;
     flex-shrink: 0;
     flex-wrap: wrap;
@@ -56,7 +56,7 @@ const ShortcutsToolbarContainer = styled(Toolbar)`
     & > button {
         margin: 5px 5px;
     }
-`;
+` as any;
 
 @observer
 export class ShortcutsToolbar extends React.Component<
@@ -92,7 +92,7 @@ export class ShortcutsToolbar extends React.Component<
         }
 
         return (
-            <ShortcutsToolbarContainer className="">
+            <ShortcutsToolbarContainer>
                 {this.shortcuts.map(shortcut => (
                     <ShortcutButton
                         key={shortcut.id}
