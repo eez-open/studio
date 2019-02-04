@@ -187,10 +187,12 @@ export class HistoryItemPreview extends React.Component<{
 }> {
     @bind
     toggleZoom(event: React.MouseEvent<HTMLElement>) {
-        event.preventDefault();
-        event.stopPropagation();
+        if (this.props.zoom || (!event.shiftKey && !event.ctrlKey)) {
+            event.preventDefault();
+            event.stopPropagation();
 
-        this.props.toggleZoom();
+            this.props.toggleZoom();
+        }
     }
 
     render() {

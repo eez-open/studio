@@ -118,7 +118,7 @@ export class HistoryItems extends React.Component<{
                     selected:
                         !this.props.appStore.selectHistoryItemsSpecification &&
                         historyItem.selected,
-                    disablePreview: showCheckbox || this.props.history.selection.items.length > 1
+                    disablePreview: showCheckbox
                 }
             );
 
