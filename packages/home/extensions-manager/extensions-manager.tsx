@@ -756,6 +756,7 @@ const ExtensionDetailsHeader: typeof Header = styled(Header)`
     pre {
         font-family: inherit;
         font-size: 100%;
+        white-space: pre-wrap;
     }
 ` as any;
 
@@ -772,6 +773,7 @@ const ExtensionDetailsHeaderImageContainer = styled.div`
 const ExtensionDetailsHeaderProperties = styled.div`
     flex-grow: 1;
     flex-shrink: 0;
+    width: 0;
 `;
 
 const ExtensionDetailsHeaderPropertiesNameAndVersion = styled.div`
