@@ -14,6 +14,7 @@ export interface IDataItem {
 
 export interface IDataContext {
     get(dataItemId: string): any;
+    set(dataItemId: string, value: any): any;
     count(dataItemId: string): number;
     getEnumValue(dataItemId: string): number;
     executeAction(action: string): void;

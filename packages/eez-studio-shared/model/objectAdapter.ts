@@ -195,7 +195,11 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
     }
 
     browsableObjectChildren(browsableObject: EezBrowsableObject) {
-        if (!browsableObject.value || typeof browsableObject.value !== "object") {
+        if (
+            !browsableObject.value ||
+            typeof browsableObject.value !== "object" ||
+            browsableObject.value instanceof Date
+        ) {
             return [];
         }
 
@@ -251,9 +255,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 },
                 childValue
             );
-            children.push(
-                new TreeObjectAdapter(childBrowsableObject, this.transformer, this.expanded)
-            );
+            children.push(new TreeObjectAdapter(childBrowsableObject, this.transformer, false));
         }
         return children;
     }

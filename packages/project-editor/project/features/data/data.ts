@@ -352,6 +352,7 @@ function executeAction(action: string) {}
 
 export const dataContext = {
     get,
+    set(dataItemId: string, value: any) {},
     count,
     getEnumValue,
     executeAction,

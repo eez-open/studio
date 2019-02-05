@@ -362,8 +362,7 @@ export class Widget extends EezObject {
     putInSelect() {
         let thisWidgetJsObject = objectToJS(this);
 
-        var selectWidgetJsObject = new SelectWidget();
-        Object.assign(selectWidgetJsObject, SelectWidget.classInfo.defaultValue);
+        var selectWidgetJsObject = SelectWidget.classInfo.defaultValue;
 
         selectWidgetJsObject.x = thisWidgetJsObject.x;
         selectWidgetJsObject.y = thisWidgetJsObject.y;
@@ -373,7 +372,7 @@ export class Widget extends EezObject {
         thisWidgetJsObject.x = 0;
         thisWidgetJsObject.y = 0;
 
-        selectWidgetJsObject.widgets._array = [thisWidgetJsObject];
+        selectWidgetJsObject.widgets = [thisWidgetJsObject];
 
         DocumentStore.replaceObject(this, loadObject(undefined, selectWidgetJsObject, Widget));
     }

@@ -901,7 +901,8 @@ class ObjectComponent extends React.Component<{
                 }
 
                 return this.renderBackgroundRect();
-            } catch {
+            } catch (err) {
+                console.error(err);
                 return (
                     <div
                         style={{
