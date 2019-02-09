@@ -184,16 +184,6 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         this.expanded = expanded || false;
     }
 
-    static createWithExpandedAll(object: EezObject) {
-        const transformer: (object: EezObject) => ITreeObjectAdapter = createTransformer(
-            (object: EezObject) => {
-                return new TreeObjectAdapter(object, transformer, true);
-            }
-        );
-
-        return new TreeObjectAdapter(object, transformer);
-    }
-
     browsableObjectChildren(browsableObject: EezBrowsableObject) {
         if (
             !browsableObject.value ||
@@ -204,6 +194,17 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
 
         let browsableObjectValue = browsableObject.value;
+
+        // prevent cycle
+        for (
+            let ancestor = this.object._parent;
+            ancestor !== undefined && ancestor instanceof EezBrowsableObject;
+            ancestor = ancestor._parent
+        ) {
+            if (ancestor.value === browsableObjectValue) {
+                return [];
+            }
+        }
 
         function getAllProps(obj: any) {
             var props: string[] = [];
@@ -601,9 +602,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 let objects = this.selectedItems.map(item => item.object);
                 let cliboardText = btoa(objectsToClipboardData(objects));
                 deleteItems(objects, () => {
-                    EEZStudio.electron.remote.clipboard.write({
-                        text: cliboardText
-                    });
+                    UIElementsFactory.copyToClipboard(cliboardText);
                 });
             }
         }
@@ -629,9 +628,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 copyItem(this.selectedItems[0].object);
             } else {
                 let objects = this.selectedItems.map(item => item.object);
-                EEZStudio.electron.remote.clipboard.write({
-                    text: btoa(objectsToClipboardData(objects))
-                });
+                UIElementsFactory.copyToClipboard(btoa(objectsToClipboardData(objects)));
             }
         }
     }

@@ -27,7 +27,8 @@ import { showDialog, Dialog } from "eez-studio-ui/dialog";
 import { Loader } from "eez-studio-ui/loader";
 
 import styled from "eez-studio-ui/styled-components";
-import { PropertyList, FileInputProperty, SelectProperty } from "eez-studio-ui/properties";
+import { PropertyList, SelectProperty } from "eez-studio-ui/properties";
+import { FileInputProperty } from "eez-studio-ui/properties-electron";
 import * as notification from "eez-studio-ui/notification";
 import { PanelHeader } from "eez-studio-ui/header-with-body";
 

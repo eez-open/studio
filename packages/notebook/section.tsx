@@ -11,7 +11,7 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
 import { IconAction, DropdownIconAction, DropdownItem } from "eez-studio-ui/action";
 import { List as ListComponent } from "eez-studio-ui/list";
-import { confirm } from "eez-studio-ui/dialog";
+import { confirm } from "eez-studio-ui/dialog-electron";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { validators } from "eez-studio-shared/model/validation";

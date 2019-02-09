@@ -22,7 +22,8 @@ import {
 } from "eez-studio-ui/header-with-body";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
 import { List as ListComponent } from "eez-studio-ui/list";
-import { Dialog, showDialog, error, confirm } from "eez-studio-ui/dialog";
+import { Dialog, showDialog } from "eez-studio-ui/dialog";
+import { error, confirm } from "eez-studio-ui/dialog-electron";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import * as notification from "eez-studio-ui/notification";
 import { PropertyList, SelectProperty } from "eez-studio-ui/properties";

@@ -36,7 +36,7 @@ import {
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction, DropdownIconAction, DropdownItem } from "eez-studio-ui/action";
 import { List, ListItem, IListNode } from "eez-studio-ui/list";
-import { confirm, confirmWithButtons, info } from "eez-studio-ui/dialog";
+import { info, confirm, confirmWithButtons } from "eez-studio-ui/dialog-electron";
 import * as notification from "eez-studio-ui/notification";
 
 import { ExtensionShortcuts } from "home/extensions-manager/extension-shortcuts";

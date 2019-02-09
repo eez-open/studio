@@ -19,7 +19,7 @@ import {
 } from "eez-studio-shared/store";
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 
-import { confirm } from "eez-studio-ui/dialog";
+import { confirm } from "eez-studio-ui/dialog-electron";
 import * as notification from "eez-studio-ui/notification";
 
 import { Filters, FilterStats } from "instrument/window/history/filters";

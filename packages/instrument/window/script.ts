@@ -8,7 +8,7 @@ import {
 } from "eez-studio-shared/activity-log";
 
 import * as NotificationModule from "eez-studio-ui/notification";
-import { confirm, info } from "eez-studio-ui/dialog";
+import { info, confirm } from "eez-studio-ui/dialog-electron";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { validators } from "eez-studio-shared/model/validation";

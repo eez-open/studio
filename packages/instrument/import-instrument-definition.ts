@@ -1,7 +1,7 @@
 import { getFileNameWithoutExtension } from "eez-studio-shared/util";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 import { installExtension } from "eez-studio-shared/extensions/extensions";
-import { confirmWithButtons } from "eez-studio-ui/dialog";
+import { confirmWithButtons } from "eez-studio-ui/dialog-electron";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import * as notification from "eez-studio-ui/notification";
 import { importInstrumentDefinitionAsProject } from "instrument/import-instrument-definition-as-project";

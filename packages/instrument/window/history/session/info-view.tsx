@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import styled from "eez-studio-ui/styled-components";
-import { confirm } from "eez-studio-ui/dialog";
+import { confirm } from "eez-studio-ui/dialog-electron";
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
 
 import { IAppStore } from "instrument/window/history/history";

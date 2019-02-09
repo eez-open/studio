@@ -8,7 +8,7 @@ import {
     PropertyInfo
 } from "eez-studio-shared/model/object";
 
-function getChildId(parent: EezObject | undefined) {
+export function getChildId(parent: EezObject | undefined) {
     let id;
     if (parent) {
         if (parent._lastChildId === undefined) {

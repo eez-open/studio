@@ -83,7 +83,7 @@ export interface PropertyInfo {
     matchObjectReference?: (object: EezObject, path: (string | number)[], value: string) => boolean;
     replaceObjectReference?: (value: string) => string;
     computed?: boolean;
-    onSelect?: ((object: EezObject, propertyInfo: PropertyInfo) => Promise<any>);
+    onSelect?: (object: EezObject, propertyInfo: PropertyInfo) => Promise<any>;
     hideInPropertyGrid?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
     readOnlyInPropertyGrid?: boolean;
     propertyGridGroup?: IPropertyGridGroupDefinition;
@@ -830,7 +830,7 @@ export function checkObject(object: EezObject): IMessage[] {
 export function hidePropertiesInPropertyGrid(
     aClass: EezClass,
     properties: string[],
-    callback?: ((object: EezObject, propertyInfo: PropertyInfo) => boolean)
+    callback?: (object: EezObject, propertyInfo: PropertyInfo) => boolean
 ) {
     aClass.classInfo.properties.forEach(propertyInfo => {
         if (properties.indexOf(propertyInfo.name) !== -1) {
@@ -850,4 +850,13 @@ export function isShowOnlyChildrenInTree(object: EezObject) {
     }
 
     return !(propertyInfo.showOnlyChildrenInTree === false);
+}
+
+export function areAllChildrenOfTheSameParent(objects: EezObject[]) {
+    for (let i = 1; i < objects.length; i++) {
+        if (objects[i]._parent !== objects[0]._parent) {
+            return false;
+        }
+    }
+    return true;
 }

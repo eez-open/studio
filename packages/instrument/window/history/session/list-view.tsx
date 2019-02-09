@@ -14,7 +14,7 @@ import styled from "eez-studio-ui/styled-components";
 import { IconAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { Body } from "eez-studio-ui/header-with-body";
-import { confirm } from "eez-studio-ui/dialog";
+import { confirm } from "eez-studio-ui/dialog-electron";
 
 import { IAppStore, History } from "instrument/window/history/history";
 import { ISession } from "instrument/window/history/session/store";

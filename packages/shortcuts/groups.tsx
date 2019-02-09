@@ -9,7 +9,8 @@ import { _countBy } from "eez-studio-shared/algorithm";
 import styled from "eez-studio-ui/styled-components";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
-import { showDialog, confirm } from "eez-studio-ui/dialog";
+import { showDialog } from "eez-studio-ui/dialog";
+import { confirm } from "eez-studio-ui/dialog-electron";
 import { Table, IColumn, IRow } from "eez-studio-ui/table";
 
 import { IGroup, IGroupsStore, IShortcutsStore } from "shortcuts/interfaces";

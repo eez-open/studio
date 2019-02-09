@@ -8,7 +8,6 @@ export interface IBaseObject {
     boundingRect: Rect;
     selectionRects: Rect[];
     isSelectable?: boolean;
-    isResizable?: boolean;
     getResizeHandlers?: () => IResizeHandler[] | undefined | false;
     getColumnWidth?: (columnIndex: number) => number;
     resizeColumn?: (columnIndex: number, savedColumnWidth: number, offset: number) => void;

@@ -130,15 +130,13 @@ class ViewState implements IViewState {
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined {
-        if (!(this.selectedObjects.length === 1 && this.selectedObjects[0].isResizable === true)) {
+        if (this.selectedObjects.length !== 1 || !this.selectedObjects[0].getResizeHandlers) {
             return undefined;
         }
 
-        if (this.selectedObjects[0].getResizeHandlers) {
-            const resizingHandlers = this.selectedObjects[0].getResizeHandlers();
-            if (resizingHandlers !== false) {
-                return resizingHandlers;
-            }
+        const resizingHandlers = this.selectedObjects[0].getResizeHandlers();
+        if (resizingHandlers !== false) {
+            return resizingHandlers;
         }
 
         return [

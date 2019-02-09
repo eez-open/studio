@@ -321,10 +321,6 @@ export let deleteObjects = action((context: ICommandContext, objects: EezObject[
 
 export let replaceObject = action(
     (context: ICommandContext, object: EezObject, replaceWithObject: EezObject) => {
-        replaceWithObject._id = object._id;
-        replaceWithObject._key = object._key;
-        replaceWithObject._parent = object._parent;
-
         let parent = object._parent!;
         if (isArrayElement(object)) {
             const array = asArray(parent);
@@ -359,10 +355,6 @@ export let replaceObjects = action(
         const parent = objects[0]._parent;
         const array = asArray(parent!);
         const index = array.indexOf(objects[0]);
-
-        replaceWithObject._id = objects[0]._id;
-        replaceWithObject._key = objects[0]._key;
-        replaceWithObject._parent = parent;
 
         let undoIndexes: number[];
 

@@ -3,7 +3,8 @@ import { findDOMNode } from "react-dom";
 import { computed, values } from "mobx";
 import { observer } from "mobx-react";
 
-import { Dialog, showDialog, confirm } from "eez-studio-ui/dialog";
+import { Dialog, showDialog } from "eez-studio-ui/dialog";
+import { confirm } from "eez-studio-ui/dialog-electron";
 import { ListContainer, List, IListNode, ListItem } from "eez-studio-ui/list";
 import { ButtonAction } from "eez-studio-ui/action";
 

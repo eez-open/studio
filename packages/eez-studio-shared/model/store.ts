@@ -984,6 +984,10 @@ class DocumentStoreClass {
     }
 
     replaceObject(object: EezObject, replaceWithObject: EezObject) {
+        if (object._parent !== replaceWithObject._parent) {
+            console.error("assert failed");
+        }
+
         return replaceObject(
             {
                 undoManager: UndoManager,
@@ -995,6 +999,10 @@ class DocumentStoreClass {
     }
 
     replaceObjects(objects: EezObject[], replaceWithObject: EezObject) {
+        if (objects[0]._parent !== replaceWithObject._parent) {
+            console.error("assert failed");
+        }
+
         return replaceObjects(
             {
                 undoManager: UndoManager,
@@ -1155,16 +1163,12 @@ export function cutItem(object: EezObject) {
     let clipboardText = btoa(objectToClipboardData(object));
 
     deleteItems([object], () => {
-        EEZStudio.electron.remote.clipboard.write({
-            text: clipboardText
-        });
+        UIElementsFactory.copyToClipboard(clipboardText);
     });
 }
 
 export function copyItem(object: EezObject) {
-    EEZStudio.electron.remote.clipboard.write({
-        text: btoa(objectToClipboardData(object))
-    });
+    UIElementsFactory.copyToClipboard(btoa(objectToClipboardData(object)));
 }
 
 function duplicateItem(object: EezObject) {

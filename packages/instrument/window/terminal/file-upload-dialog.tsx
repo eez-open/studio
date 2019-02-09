@@ -18,9 +18,9 @@ import {
     PropertyList,
     TextInputProperty,
     NumberInputProperty,
-    BooleanProperty,
-    FileInputProperty
+    BooleanProperty
 } from "eez-studio-ui/properties";
+import { FileInputProperty } from "eez-studio-ui/properties-electron";
 
 import { IFileUploadInstructions } from "instrument/connection/file-upload";
 

@@ -163,6 +163,10 @@ export const DefaultUIElementsFactory: IUIElementsFactory = {
     },
     renderProperty(propertyInfo: PropertyInfo, value: any, onChange: (value: any) => void) {
         return null;
+    },
+    copyToClipboard(text: string) {},
+    pasteFromClipboard(): string | undefined {
+        return undefined;
     }
 };
 
@@ -202,4 +206,6 @@ export interface IUIElementsFactory {
         value: any,
         onChange: (value: any) => void
     ): React.ReactNode;
+    copyToClipboard(text: string): void;
+    pasteFromClipboard(): string | undefined;
 }

@@ -9,7 +9,7 @@ import {
     PropertyType
 } from "eez-studio-shared/model/object";
 import { loadObject, objectToJson } from "eez-studio-shared/model/serialization";
-import { DocumentStore } from "eez-studio-shared/model/store";
+import { DocumentStore, UIElementsFactory } from "eez-studio-shared/model/store";
 
 export interface SerializedData {
     objectClassName: string;
@@ -130,7 +130,7 @@ export function findPastePlaceInsideAndOutside(object: EezObject, serializedData
 }
 
 export function checkClipboard(object: EezObject) {
-    let text = EEZStudio.electron.remote.clipboard.readText();
+    let text = UIElementsFactory.pasteFromClipboard();
     if (text) {
         let serializedData = clipboardDataToObject(atob(text));
         if (serializedData) {

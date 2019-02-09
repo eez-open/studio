@@ -4,7 +4,8 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { IExtension } from "eez-studio-shared/extensions/extension";
-import { Dialog, showDialog, info } from "eez-studio-ui/dialog";
+import { Dialog, showDialog } from "eez-studio-ui/dialog";
+import { info } from "eez-studio-ui/dialog-electron";
 import { PropertyList, SelectFromListProperty } from "eez-studio-ui/properties";
 import { IListNode, ListItem } from "eez-studio-ui/list";
 

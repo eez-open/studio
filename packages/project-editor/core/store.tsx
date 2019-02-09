@@ -547,6 +547,16 @@ setUIElementsFactory({
             );
         }
         return null;
+    },
+
+    copyToClipboard(text: string) {
+        EEZStudio.electron.remote.clipboard.write({
+            text
+        });
+    },
+
+    pasteFromClipboard(): string | undefined {
+        return EEZStudio.electron.remote.clipboard.readText();
     }
 });
 

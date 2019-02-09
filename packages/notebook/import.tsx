@@ -11,7 +11,7 @@ import {
 import { db } from "eez-studio-shared/db";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-import { confirm } from "eez-studio-ui/dialog";
+import { confirm } from "eez-studio-ui/dialog-electron";
 import * as notification from "eez-studio-ui/notification";
 
 import { validators } from "eez-studio-shared/model/validation";

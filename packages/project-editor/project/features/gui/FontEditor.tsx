@@ -624,7 +624,7 @@ export class FontEditor extends EditorComponent {
                 projectFilePath: ProjectStore.filePath!
             });
 
-            DocumentStore.replaceObject(font, loadObject(undefined, newFont, Font));
+            DocumentStore.replaceObject(font, loadObject(font._parent, newFont, Font));
 
             notification.info(`Font rebuilded.`);
         } catch (err) {

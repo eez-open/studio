@@ -9,7 +9,7 @@ import { objectEqual } from "eez-studio-shared/util";
 import styled from "eez-studio-ui/styled-components";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
-import { confirm } from "eez-studio-ui/dialog";
+import { confirm } from "eez-studio-ui/dialog-electron";
 import { Icon } from "eez-studio-ui/icon";
 import { Table, IColumn, IRow } from "eez-studio-ui/table";
 

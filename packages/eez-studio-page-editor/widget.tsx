@@ -25,7 +25,8 @@ import {
     cloneObject,
     geometryGroup,
     styleGroup,
-    IPropertyGridGroupDefinition
+    IPropertyGridGroupDefinition,
+    areAllChildrenOfTheSameParent
 } from "eez-studio-shared/model/object";
 import { loadObject } from "eez-studio-shared/model/serialization";
 import {
@@ -314,13 +315,7 @@ export class Widget extends EezObject {
             );
         }
 
-        let i: number;
-        for (i = 1; i < objects.length; i++) {
-            if (objects[i]._parent !== objects[0]._parent) {
-                break;
-            }
-        }
-        if (i === objects.length) {
+        if (areAllChildrenOfTheSameParent(objects)) {
             additionalMenuItems.push(
                 UIElementsFactory.createMenuItem({
                     label: "Put in Container",
@@ -337,12 +332,23 @@ export class Widget extends EezObject {
         }
 
         if (objects.length === 1) {
-            let parent = objects[0]._parent;
+            const object = objects[0];
+
+            if (object instanceof LayoutViewWidget) {
+                additionalMenuItems.push(
+                    UIElementsFactory.createMenuItem({
+                        label: "Replace with Container",
+                        click: () => object.replaceWithContainer()
+                    })
+                );
+            }
+
+            let parent = object._parent;
             if (parent && parent._parent instanceof SelectWidget) {
                 additionalMenuItems.push(
                     UIElementsFactory.createMenuItem({
                         label: "Replace Parent",
-                        click: () => (objects[0] as Widget).replaceParent()
+                        click: () => (object as Widget).replaceParent()
                     })
                 );
             }
@@ -362,7 +368,7 @@ export class Widget extends EezObject {
     putInSelect() {
         let thisWidgetJsObject = objectToJS(this);
 
-        var selectWidgetJsObject = SelectWidget.classInfo.defaultValue;
+        var selectWidgetJsObject = Object.assign({}, SelectWidget.classInfo.defaultValue);
 
         selectWidgetJsObject.x = thisWidgetJsObject.x;
         selectWidgetJsObject.y = thisWidgetJsObject.y;
@@ -374,7 +380,7 @@ export class Widget extends EezObject {
 
         selectWidgetJsObject.widgets = [thisWidgetJsObject];
 
-        DocumentStore.replaceObject(this, loadObject(undefined, selectWidgetJsObject, Widget));
+        DocumentStore.replaceObject(this, loadObject(this._parent, selectWidgetJsObject, Widget));
     }
 
     static createWidgets(fromWidgets: Widget[]) {
@@ -412,7 +418,7 @@ export class Widget extends EezObject {
     }
 
     static putInContainer(fromWidgets: Widget[]) {
-        var containerWidgetJsObject = ContainerWidget.classInfo.defaultValue;
+        var containerWidgetJsObject = Object.assign({}, ContainerWidget.classInfo.defaultValue);
 
         const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
@@ -425,7 +431,7 @@ export class Widget extends EezObject {
 
         DocumentStore.replaceObjects(
             fromWidgets,
-            loadObject(undefined, containerWidgetJsObject, Widget)
+            loadObject(fromWidgets[0]._parent, containerWidgetJsObject, Widget)
         );
     }
 
@@ -473,7 +479,7 @@ export class Widget extends EezObject {
             DocumentStore.replaceObjects(
                 fromWidgets,
                 loadObject(
-                    undefined,
+                    fromWidgets[0]._parent,
                     {
                         type: "LayoutView",
                         style: "default",
@@ -496,7 +502,7 @@ export class Widget extends EezObject {
         if (parent) {
             let selectWidget = parent._parent;
             if (selectWidget instanceof SelectWidget) {
-                DocumentStore.replaceObject(selectWidget, cloneObject(undefined, this));
+                DocumentStore.replaceObject(selectWidget, cloneObject(selectWidget._parent, this));
             }
         }
     }
@@ -811,6 +817,8 @@ export class SelectWidget extends Widget {
     @observable
     editor: SelectWidgetEditor;
 
+    _lastSelectedIndexInSelectWidget: number | undefined;
+
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
             {
@@ -1052,6 +1060,27 @@ export class LayoutViewWidget extends Widget {
         const layout = PageContext.findLayout(this.layout);
         if (layout) {
             NavigationStore.showObject(layout);
+        }
+    }
+
+    replaceWithContainer() {
+        const layout = PageContext.findLayout(this.layout);
+        if (layout) {
+            var containerWidgetJsObject = Object.assign({}, ContainerWidget.classInfo.defaultValue);
+
+            containerWidgetJsObject.widgets = layout.widgets._array.map(widget =>
+                objectToJS(widget)
+            );
+
+            containerWidgetJsObject.x = this.x;
+            containerWidgetJsObject.y = this.y;
+            containerWidgetJsObject.width = this.width;
+            containerWidgetJsObject.height = this.height;
+
+            DocumentStore.replaceObject(
+                this,
+                loadObject(this._parent, containerWidgetJsObject, Widget)
+            );
         }
     }
 }

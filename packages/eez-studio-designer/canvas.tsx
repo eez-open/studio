@@ -44,7 +44,7 @@ export class Canvas extends React.Component<{
 }> {
     div: Element;
     innerDiv: Element;
-    intervalTimerIDForClientRectUpdate: any;
+    clientRectChangeDetectionAnimationFrameHandle: any;
     deltaY = 0;
 
     get designerContext() {
@@ -107,16 +107,9 @@ export class Canvas extends React.Component<{
 
     userScrollTimeout: any;
 
-    componentDidMount() {
-        this.draggable.attach(this.innerDiv);
-
-        this.updateScroll();
-
-        this.intervalTimerIDForClientRectUpdate = setInterval(() => {
-            if (!$(this.div).is(":visible")) {
-                return;
-            }
-
+    @bind
+    clientRectChangeDetection() {
+        if ($(this.div).is(":visible")) {
             const transform = this.designerContext.viewState.transform;
 
             let clientRect = this.div.getBoundingClientRect();
@@ -150,7 +143,17 @@ export class Canvas extends React.Component<{
                     });
                 }, CONF_AFTER_SCROLL_ADJUSTMENT_TIMEOUT);
             }
-        }, 0);
+        }
+
+        this.clientRectChangeDetectionAnimationFrameHandle = requestAnimationFrame(
+            this.clientRectChangeDetection
+        );
+    }
+
+    componentDidMount() {
+        this.draggable.attach(this.innerDiv);
+        this.updateScroll();
+        this.clientRectChangeDetection();
     }
 
     componentDidUpdate() {
@@ -160,9 +163,9 @@ export class Canvas extends React.Component<{
     componentWillUnmount() {
         this.draggable.attach(null);
 
-        if (this.intervalTimerIDForClientRectUpdate) {
-            clearInterval(this.intervalTimerIDForClientRectUpdate);
-            this.intervalTimerIDForClientRectUpdate = undefined;
+        if (this.clientRectChangeDetectionAnimationFrameHandle) {
+            cancelAnimationFrame(this.clientRectChangeDetectionAnimationFrameHandle);
+            this.clientRectChangeDetectionAnimationFrameHandle = undefined;
         }
     }
 

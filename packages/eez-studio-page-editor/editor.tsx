@@ -282,16 +282,8 @@ class EditorObject implements IBaseObject {
         }
     }
 
-    get isResizable() {
-        if (this.object instanceof Page) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     getResizeHandlers(): IResizeHandler[] | undefined | false {
-        if (this.object instanceof Widget) {
+        if (this.object instanceof Page || this.object instanceof Widget) {
             return this.object.getResizeHandlers();
         }
         return false;
@@ -378,8 +370,13 @@ class EditorObject implements IBaseObject {
                     isAncestor(selectedObject.object, selectWidget.widgets._array[i])
                 )
             ) {
+                selectWidget._lastSelectedIndexInSelectWidget = i;
                 return i;
             }
+        }
+
+        if (selectWidget._lastSelectedIndexInSelectWidget !== undefined) {
+            return selectWidget._lastSelectedIndexInSelectWidget;
         }
 
         if (selectWidget.data) {
@@ -1210,8 +1207,9 @@ const PageEditorCanvas: typeof Canvas = styled(Canvas)`
 
 interface PageEditorProps {
     widgetContainer: ITreeObjectAdapter;
-    showStructure?: boolean;
+    showStructure: boolean;
     onFocus?: () => void;
+    dataContext?: IDataContext;
 }
 
 @observer
@@ -1221,6 +1219,10 @@ export class PageEditor extends React.Component<
         hasError: boolean;
     }
 > {
+    static defaultProps = {
+        showStructure: true
+    };
+
     pageEditorContext: PageEditorContext;
 
     constructor(props: PageEditorProps) {
@@ -1393,6 +1395,9 @@ export class PageEditor extends React.Component<
         if (event.keyCode == 46) {
             // delete
             this.props.widgetContainer.deleteSelection();
+        } else if (event.keyCode == 27) {
+            // esc
+            this.pageEditorContext.viewState.deselectAllObjects();
         }
     }
 
@@ -1414,8 +1419,10 @@ export class PageEditor extends React.Component<
             return <div>Error!</div>;
         }
 
+        const { widgetContainer, dataContext, showStructure, onFocus } = this.props;
+
         this.pageEditorContext.set(
-            new PageDocument(this.props.widgetContainer, this.pageEditorContext),
+            new PageDocument(widgetContainer, this.pageEditorContext),
             this.viewStatePersistantState,
             this.onSavePersistantState,
             {
@@ -1423,7 +1430,7 @@ export class PageEditor extends React.Component<
                     x: 0,
                     y: 0
                 },
-                showStructure: this.props.showStructure || false
+                showStructure
             },
             (node: IBaseObject) => {
                 const object = (node as EditorObject).object;
@@ -1449,7 +1456,7 @@ export class PageEditor extends React.Component<
             <Provider designerContext={this.pageEditorContext}>
                 <PageEditorCanvasContainer
                     tabIndex={0}
-                    onFocus={this.props.onFocus || this.focusHander}
+                    onFocus={onFocus || this.focusHander}
                     onDragOver={this.onDragOver}
                     onDrop={this.onDrop}
                     onDragLeave={this.onDragLeave}
@@ -1464,7 +1471,7 @@ export class PageEditor extends React.Component<
                                 <ObjectComponent
                                     key={rootObject.id}
                                     object={rootObject}
-                                    dataContext={PageContext.rootDataContext}
+                                    dataContext={dataContext || PageContext.rootDataContext}
                                 />
                             )
                         )}
