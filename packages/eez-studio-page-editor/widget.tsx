@@ -184,6 +184,10 @@ export class Widget extends EezObject {
         };
     }
 
+    get contentRect() {
+        return this.rect;
+    }
+
     @computed
     get styleObject() {
         if (this.style) {
@@ -528,6 +532,12 @@ export class Widget extends EezObject {
     }
 
     resizeColumn(columnIndex: number, savedColumnWidth: number, offset: number) {}
+
+    getRowHeight(rowIndex: number) {
+        return NaN;
+    }
+
+    resizeRow(rowIndex: number, savedRowWidth: number, offset: number) {}
 
     open() {}
 }

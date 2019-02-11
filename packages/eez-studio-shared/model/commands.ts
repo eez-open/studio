@@ -47,6 +47,9 @@ function onObjectModified(object: EezObject) {
 }
 
 function getUniquePropertyValue(existingObjects: EezObject[], key: string, value: string) {
+    if (value === undefined) {
+        return value;
+    }
     while (true) {
         if (!existingObjects.find(object => getProperty(object, key) == value)) {
             return value;

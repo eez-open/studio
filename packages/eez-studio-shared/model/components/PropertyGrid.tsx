@@ -598,12 +598,11 @@ class Property extends React.Component<PropertyProps> {
                         name: this.props.propertyInfo.name,
                         type: "string",
                         validators: [
-                            validators.required,
                             validators.unique(
                                 this.props.object,
                                 asArray(this.props.object._parent!)
                             )
-                        ]
+                        ].concat(this.props.propertyInfo.isOptional ? [] : [validators.required])
                     }
                 ]
             },
@@ -611,7 +610,10 @@ class Property extends React.Component<PropertyProps> {
         })
             .then(result => {
                 let oldValue = this.value;
-                let newValue = result.values[this.props.propertyInfo.name];
+                let newValue = result.values[this.props.propertyInfo.name].trim();
+                if (newValue.length === 0) {
+                    newValue = undefined;
+                }
                 if (newValue != oldValue) {
                     UndoManager.setCombineCommands(true);
                     replaceObjectReference(this.props.object, newValue);
@@ -1037,7 +1039,14 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 let property;
                 if (colSpan) {
                     property = (
-                        <td colSpan={2}>
+                        <td
+                            colSpan={2}
+                            style={
+                                propertyInfo.type === PropertyType.Any
+                                    ? { transform: "translateY(0)" }
+                                    : undefined
+                            }
+                        >
                             <Property
                                 propertyInfo={propertyInfo}
                                 object={object}

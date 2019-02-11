@@ -175,8 +175,8 @@ class EditorObject implements IBaseObject {
                     }
                 }
 
-                rect.left += parent.x;
-                rect.top += parent.y;
+                rect.left += parent.contentRect.left;
+                rect.top += parent.contentRect.top;
 
                 if (!(parent instanceof Widget)) {
                     break;
@@ -299,6 +299,19 @@ class EditorObject implements IBaseObject {
     resizeColumn(columnIndex: number, savedColumnWidth: number, offset: number) {
         if (this.object instanceof Widget) {
             return this.object.resizeColumn(columnIndex, savedColumnWidth, offset);
+        }
+    }
+
+    getRowHeight(rowIndex: number): number {
+        if (this.object instanceof Widget) {
+            return this.object.getRowHeight(rowIndex);
+        }
+        return NaN;
+    }
+
+    resizeRow(rowIndex: number, savedRowHeight: number, offset: number) {
+        if (this.object instanceof Widget) {
+            return this.object.resizeRow(rowIndex, savedRowHeight, offset);
         }
     }
 

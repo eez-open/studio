@@ -145,7 +145,7 @@ export class Page extends EezObject {
         };
     }
 
-    get boundingRect() {
+    get contentRect() {
         return this.rect;
     }
 

@@ -107,6 +107,21 @@ export const selectToolHandler: IToolHandler = {
                         }
                     }
                 }
+            } else if (cursor === "row-resize") {
+                if (context.viewState.selectedObjects.length === 1) {
+                    const selectedObject = context.viewState.selectedObjects[0];
+                    if (selectedObject.resizeRow) {
+                        const dataRowIndex = (event.target as HTMLElement).getAttribute(
+                            "data-row-index"
+                        );
+                        if (dataRowIndex) {
+                            const rowIndex = parseInt(dataRowIndex);
+                            if (!Number.isNaN(rowIndex)) {
+                                return new RowResizeMouseHandler(selectedObject, rowIndex);
+                            }
+                        }
+                    }
+                }
             }
             return undefined;
         }
@@ -645,5 +660,37 @@ class ColumnResizeMouseHandler extends MouseHandlerWithSnapLines {
         super.up(context, event);
 
         context.document.onDragEnd("col-resize", this.changed, [this.selectedObject]);
+    }
+}
+
+class RowResizeMouseHandler extends MouseHandlerWithSnapLines {
+    changed: boolean = false;
+    savedRowHeight: number;
+
+    constructor(private selectedObject: IBaseObject, private rowIndex: number) {
+        super();
+    }
+
+    down(context: IDesignerContext, event: MouseEvent) {
+        super.down(context, event);
+
+        context.document.onDragStart("row-resize");
+
+        this.savedRowHeight = this.selectedObject.getRowHeight!(this.rowIndex);
+    }
+
+    move(context: IDesignerContext, event: MouseEvent) {
+        super.move(context, event);
+        this.selectedObject.resizeRow!(
+            this.rowIndex,
+            this.savedRowHeight,
+            this.offsetDistance.y / context.viewState.transform.scale
+        );
+    }
+
+    up(context: IDesignerContext, event?: MouseEvent) {
+        super.up(context, event);
+
+        context.document.onDragEnd("row-resize", this.changed, [this.selectedObject]);
     }
 }

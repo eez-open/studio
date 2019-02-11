@@ -57,9 +57,18 @@ export function loadObject(
         });
     }
 
-    let object: EezObject = aClass.classInfo.getClass
-        ? new (aClass.classInfo.getClass(jsObject))()
-        : new aClass();
+    let object: EezObject;
+
+    try {
+        object = aClass.classInfo.getClass
+            ? new (aClass.classInfo.getClass(jsObject))()
+            : new aClass();
+    } catch (err) {
+        // TODO we need much better error recovery here
+        console.error(err);
+        return new EezObject();
+    }
+
     const classInfo = object._classInfo;
 
     object._id = getChildId(parent as EezObject);

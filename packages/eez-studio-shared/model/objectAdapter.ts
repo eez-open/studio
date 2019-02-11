@@ -57,6 +57,38 @@ import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export function getPropertyNames(obj: any) {
+    var allPropertyNames: string[] = [];
+
+    do {
+        allPropertyNames = allPropertyNames.concat(Object.getOwnPropertyNames(obj));
+    } while ((obj = Object.getPrototypeOf(obj)));
+
+    return [...new Set(allPropertyNames)].filter(propertyName => {
+        if (propertyName.startsWith("_")) {
+            return false;
+        }
+
+        if (
+            [
+                "constructor",
+                "hasOwnProperty",
+                "isPrototypeOf",
+                "propertyIsEnumerable",
+                "toString",
+                "valueOf",
+                "toLocaleString"
+            ].indexOf(propertyName) !== -1
+        ) {
+            return false;
+        }
+
+        return true;
+    });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export type DisplayItemChildrenArray = DisplayItem[];
 export type DisplayItemChildrenObject = { [key: string]: DisplayItem };
 export type DisplayItemChildren = DisplayItemChildrenArray | DisplayItemChildrenObject;
@@ -206,16 +238,6 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             }
         }
 
-        function getAllProps(obj: any) {
-            var props: string[] = [];
-
-            do {
-                props = props.concat(Object.getOwnPropertyNames(obj));
-            } while ((obj = Object.getPrototypeOf(obj)));
-
-            return [...new Set(props)]; // return unique values
-        }
-
         if (Array.isArray(browsableObjectValue)) {
             if (browsableObjectValue.length === 0) {
                 return [];
@@ -224,7 +246,8 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
 
         const children = [];
-        for (var propertyName of getAllProps(browsableObjectValue)) {
+        const propertyNames = getPropertyNames(browsableObjectValue);
+        for (var propertyName of propertyNames) {
             if (propertyName.startsWith("_")) {
                 continue;
             }

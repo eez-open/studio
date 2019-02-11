@@ -55,7 +55,8 @@ export const generalGroup: IPropertyGridGroupDefinition = {
 };
 
 export const geometryGroup: IPropertyGridGroupDefinition = {
-    id: "geometry"
+    id: "geometry",
+    title: "Position and size"
 };
 
 export const styleGroup: IPropertyGridGroupDefinition = {

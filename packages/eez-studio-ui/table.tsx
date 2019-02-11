@@ -9,6 +9,14 @@ import styled from "eez-studio-ui/styled-components";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+interface ITableProps {
+    persistId: string;
+    className?: string;
+    columns: IColumn[];
+    rows: IRow[];
+    defaultSortColumn: string;
+}
+
 export interface IColumn {
     name: string;
     title: string;
@@ -20,8 +28,13 @@ export interface IRow {
     selected: boolean;
     [key: string]: any;
     className?: string;
-    onClick: () => void;
-    onDoubleClick: () => void;
+    onClick?: () => void;
+    onDoubleClick?: () => void;
+}
+
+interface ISortOrderItem {
+    columnName: string;
+    asc: boolean;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,19 +106,6 @@ const StyledTable = styled.table`
         background-image: url("../eez-studio-ui/_images/col_sort_desc.png");
     }
 `;
-
-interface ITableProps {
-    persistId: string;
-    className?: string;
-    columns: IColumn[];
-    rows: IRow[];
-    defaultSortColumn: string;
-}
-
-interface ISortOrderItem {
-    columnName: string;
-    asc: boolean;
-}
 
 @observer
 export class Table extends React.Component<ITableProps> {

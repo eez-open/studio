@@ -11,6 +11,8 @@ export interface IBaseObject {
     getResizeHandlers?: () => IResizeHandler[] | undefined | false;
     getColumnWidth?: (columnIndex: number) => number;
     resizeColumn?: (columnIndex: number, savedColumnWidth: number, offset: number) => void;
+    getRowHeight?: (rowIndex: number) => number;
+    resizeRow?: (rowIndex: number, savedRowHeight: number, offset: number) => void;
     open(): void;
 }
 
@@ -33,8 +35,12 @@ export interface IDocument {
     createContextMenu(objects: IBaseObject[]): IMenu | undefined;
 
     // events
-    onDragStart(op: "move" | "resize" | "col-resize"): void;
-    onDragEnd(op: "move" | "resize" | "col-resize", changed: boolean, objects: IBaseObject[]): void;
+    onDragStart(op: "move" | "resize" | "col-resize" | "row-resize"): void;
+    onDragEnd(
+        op: "move" | "resize" | "col-resize" | "row-resize",
+        changed: boolean,
+        objects: IBaseObject[]
+    ): void;
 }
 
 export type HandleType =
@@ -46,7 +52,8 @@ export type HandleType =
     | "sw-resize"
     | "s-resize"
     | "se-resize"
-    | "col-resize";
+    | "col-resize"
+    | "row-resize";
 
 export interface IResizeHandler {
     // Top-left: 0, 0
@@ -57,6 +64,7 @@ export interface IResizeHandler {
     y: number;
     type: HandleType;
     columnIndex?: number;
+    rowIndex?: number;
 }
 
 export interface IViewState {

@@ -130,6 +130,7 @@ export class Selection extends React.Component<
                     className="EezStudio_DesignerSelection_ResizeHandle"
                     style={style}
                     data-column-index={resizeHandler.columnIndex}
+                    data-row-index={resizeHandler.rowIndex}
                 />
             );
         });

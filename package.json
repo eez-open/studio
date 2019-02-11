@@ -83,6 +83,8 @@
     "typescript": "^3.3.3"
   },
   "dependencies": {
+    "@material-ui/core": "^3.9.2",
+    "@material-ui/icons": "^3.0.2",
     "app-module-path": "^2.2.0",
     "archiver": "^2.1.1",
     "better-sqlite3": "^5.4.0",
