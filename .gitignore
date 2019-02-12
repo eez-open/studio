@@ -21,8 +21,6 @@ tools/freetype-tools/FreeType-Emscripten
 
 TODO.txt
 
-.cache-require-paths.json
-
 .DS_Store
 
 package-lock.json
