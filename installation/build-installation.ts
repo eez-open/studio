@@ -23,6 +23,8 @@ function getIgnore() {
         "^/\\.vscode",
         "^/\\.prettierrc",
         "^/tslint\\.json",
+        "^/tsconfig\\.json",
+        "^/tsconfig\\.dev\\.json",
         "^/npm-debug\\.log",
         "^/gulpfile\\.js",
         "^/package-lock\\.json",

@@ -1,5 +1,10 @@
-import { activityLogStore, log, logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
-import { getFileSizeInBytes, openFile, readFile, closeFile } from "eez-studio-shared/util";
+import {
+    activityLogStore,
+    log,
+    logUpdate,
+    IActivityLogEntry
+} from "eez-studio-shared/activity-log";
+import { getFileSizeInBytes, openFile, readFile, closeFile } from "eez-studio-shared/util-electron";
 import { Buffer } from "buffer";
 
 import { FileState } from "instrument/connection/file-state";

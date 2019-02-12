@@ -1,4 +1,4 @@
-import { getFileNameWithoutExtension } from "eez-studio-shared/util";
+import { getFileNameWithoutExtension } from "eez-studio-shared/util-electron";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 import { installExtension } from "eez-studio-shared/extensions/extensions";
 import { confirmWithButtons } from "eez-studio-ui/dialog-electron";

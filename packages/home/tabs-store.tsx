@@ -1,7 +1,7 @@
 import React from "react";
 import { observable, action, runInAction, reaction } from "mobx";
 
-import { isRenderer } from "eez-studio-shared/util";
+import { isRenderer } from "eez-studio-shared/util-electron";
 
 import { loadPreinstalledExtension } from "eez-studio-shared/extensions/extensions";
 import { IEditor } from "eez-studio-shared/extensions/extension";

@@ -5,15 +5,13 @@
     "tasks": [
         {
             "type": "typescript",
-            "tsconfig": "src\\tsconfig.dev.json",
-            "problemMatcher": [
-                "$tsc-watch"
-            ],
+            "tsconfig": "tsconfig.dev.json",
+            "option": "watch",
+            "problemMatcher": ["$tsc-watch"],
             "group": {
                 "kind": "build",
                 "isDefault": true
-            },
-            "isBackground": false
+            }
         }
     ]
 }

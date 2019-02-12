@@ -1,4 +1,4 @@
-import { isRenderer } from "eez-studio-shared/util";
+import { isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 
 // Execute given function in service process.

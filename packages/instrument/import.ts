@@ -2,17 +2,17 @@ import { observable } from "mobx";
 
 import { _map } from "eez-studio-shared/algorithm";
 
+import { parseXmlString } from "eez-studio-shared/util";
 import {
     localPathToFileUrl,
     fileExists,
     readTextFile,
     readJsObjectFromFile,
     readFolder,
-    parseXmlString,
     isRenderer,
     writeBinaryData,
     writeJsObjectToFile
-} from "eez-studio-shared/util";
+} from "eez-studio-shared/util-electron";
 import { getExtensionFolderPath } from "eez-studio-shared/extensions/extension-folder";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 

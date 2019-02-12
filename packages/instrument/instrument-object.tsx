@@ -11,7 +11,8 @@ import {
 import { IExtension } from "eez-studio-shared/extensions/extension";
 import { loadExtensionById, extensions } from "eez-studio-shared/extensions/extensions";
 import { activityLogStore, log, IActivityLogEntry } from "eez-studio-shared/activity-log";
-import { objectEqual, isRenderer } from "eez-studio-shared/util";
+import { objectEqual } from "eez-studio-shared/util";
+import { isRenderer } from "eez-studio-shared/util-electron";
 import { IUnit } from "eez-studio-shared/units";
 import { db } from "eez-studio-shared/db";
 import { _defer } from "eez-studio-shared/algorithm";

@@ -1,4 +1,4 @@
-import { isRenderer } from "eez-studio-shared/util";
+import { isRenderer } from "eez-studio-shared/util-electron";
 
 import * as MainSettingsModule from "main/settings";
 

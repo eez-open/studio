@@ -22,7 +22,7 @@ import {
     getTempFilePath,
     getValidFileNameFromFileName,
     writeBinaryData
-} from "eez-studio-shared/util";
+} from "eez-studio-shared/util-electron";
 import { stringCompare } from "eez-studio-shared/string";
 
 import styled from "eez-studio-ui/styled-components";

@@ -6,7 +6,7 @@ import {
     IExtensionProperties
 } from "eez-studio-shared/extensions/extension";
 import { extensions } from "eez-studio-shared/extensions/extensions";
-import { isRenderer } from "eez-studio-shared/util";
+import { isRenderer } from "eez-studio-shared/util-electron";
 import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 

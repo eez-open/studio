@@ -5,7 +5,8 @@ import { BrowserWindow, ipcMain, Event, WebContents } from "electron";
 import * as ExtensionsModule from "eez-studio-shared/extensions/extensions";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 
-import { isDev, getUserDataPath, makeFolder, copyFile, delay } from "eez-studio-shared/util";
+import { delay } from "eez-studio-shared/util";
+import { isDev, getUserDataPath, makeFolder, copyFile } from "eez-studio-shared/util-electron";
 import { DEFAULT_DB_NAME, EXTENSIONS_FOLDER_NAME } from "eez-studio-shared/conf";
 
 async function setupExtensions(

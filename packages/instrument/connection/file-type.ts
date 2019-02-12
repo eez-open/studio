@@ -2,7 +2,7 @@ import { BrowserWindow, ipcMain } from "electron";
 
 const fileType = require("file-type");
 
-import { getFileNameExtension } from "eez-studio-shared/util";
+import { getFileNameExtension } from "eez-studio-shared/util-electron";
 import { UNITS, PREFIXES } from "eez-studio-shared/units";
 
 import { FileState } from "instrument/connection/file-state";

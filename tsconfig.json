@@ -12,10 +12,10 @@
         "noImplicitThis": true,
         "noUnusedLocals": true,
         "strictNullChecks": true,
-        "baseUrl": ".",
-        "sourceMap": true,
-        "pretty": true,
-        "watch": true,
-        "outDir": "../dist"
-    }
+        "baseUrl": "./packages",
+        "sourceMap": false,
+        "pretty": false,
+        "outDir": "./dist"
+    },
+    "include": ["./packages"]
 }

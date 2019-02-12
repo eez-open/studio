@@ -4,7 +4,11 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { logGet, logUpdate } from "eez-studio-shared/activity-log";
-import { readCsvFile, writeCsvFile, getValidFileNameFromFileName } from "eez-studio-shared/util";
+import {
+    readCsvFile,
+    writeCsvFile,
+    getValidFileNameFromFileName
+} from "eez-studio-shared/util-electron";
 import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { _range } from "eez-studio-shared/algorithm";

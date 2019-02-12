@@ -5,14 +5,13 @@ import { clipboard, nativeImage, SaveDialogOptions } from "electron";
 import VisibilitySensor from "react-visibility-sensor";
 import { bind } from "bind-decorator";
 
+import { formatTransferSpeed, formatDateTimeLong } from "eez-studio-shared/util";
 import {
     writeBinaryData,
-    formatTransferSpeed,
     getFileName,
-    formatDateTimeLong,
     getTempDirPath,
     fileExists
-} from "eez-studio-shared/util";
+} from "eez-studio-shared/util-electron";
 import { formatBytes } from "eez-studio-shared/formatBytes";
 
 import * as notification from "eez-studio-ui/notification";

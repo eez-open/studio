@@ -4,7 +4,7 @@ import { observable, computed, action, keys } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { readBinaryFile } from "eez-studio-shared/util";
+import { readBinaryFile } from "eez-studio-shared/util-electron";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { log } from "eez-studio-shared/activity-log";
 

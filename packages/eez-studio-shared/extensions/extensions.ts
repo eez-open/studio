@@ -2,6 +2,7 @@ import { observable, computed, action, runInAction, values } from "mobx";
 const EventEmitter = require("events");
 const fs = require("fs");
 
+import { delay } from "eez-studio-shared/util";
 import {
     localPathToFileUrl,
     zipExtract,
@@ -11,9 +12,8 @@ import {
     removeFolder,
     renameFile,
     readFolder,
-    writeJsObjectToFile,
-    delay
-} from "eez-studio-shared/util";
+    writeJsObjectToFile
+} from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 
 import { registerSource, sendMessage, watch } from "eez-studio-shared/notify";

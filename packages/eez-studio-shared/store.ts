@@ -2,7 +2,7 @@ import { observable, computed, action, toJS } from "mobx";
 
 import { db } from "eez-studio-shared/db";
 import { watch, sendMessage, registerSource } from "eez-studio-shared/notify";
-import { isRenderer } from "eez-studio-shared/util";
+import { isRenderer } from "eez-studio-shared/util-electron";
 import { _each, _extend, _keys, _map, _pickBy } from "eez-studio-shared/algorithm";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,9 +181,8 @@ export function createStore({
             ","
         );
 
-        let values = _map(
-            nonTransientProperties,
-            (value: IType, key: string) => (value.toDB ? value.toDB(object[key]) : object[key])
+        let values = _map(nonTransientProperties, (value: IType, key: string) =>
+            value.toDB ? value.toDB(object[key]) : object[key]
         );
 
         let info = db

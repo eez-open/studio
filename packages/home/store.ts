@@ -1,6 +1,6 @@
 import { observable, computed, runInAction } from "mobx";
 
-import { isRenderer } from "eez-studio-shared/util";
+import { isRenderer } from "eez-studio-shared/util-electron";
 import {
     createStore,
     types,

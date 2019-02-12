@@ -3,7 +3,7 @@ import { bind } from "bind-decorator";
 
 import { IActivityLogEntry, activityLogStore, log } from "eez-studio-shared/activity-log";
 import { registerSource, unregisterSource, sendMessage, watch } from "eez-studio-shared/notify";
-import { isRenderer } from "eez-studio-shared/util";
+import { isRenderer } from "eez-studio-shared/util-electron";
 
 import { InstrumentObject } from "instrument/instrument-object";
 import { EthernetInterface } from "instrument/connection/interfaces/ethernet";

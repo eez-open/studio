@@ -1,4 +1,4 @@
-import { getUserDataPath } from "eez-studio-shared/util";
+import { getUserDataPath } from "eez-studio-shared/util-electron";
 import { EXTENSIONS_FOLDER_NAME } from "eez-studio-shared/conf";
 
 export const preInstalledExtensionsFolderPath = __dirname + "/../..";

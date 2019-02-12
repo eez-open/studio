@@ -1,6 +1,7 @@
 import { createTransformer } from "mobx-utils";
 
-import { writeTextFile, formatNumber } from "eez-studio-shared/util";
+import { formatNumber } from "eez-studio-shared/util";
+import { writeTextFile } from "eez-studio-shared/util-electron";
 import { _map } from "eez-studio-shared/algorithm";
 import { underscore } from "eez-studio-shared/string";
 
