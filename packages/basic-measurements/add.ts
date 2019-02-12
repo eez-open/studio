@@ -21,7 +21,10 @@ export default function(task: IMeasureTask) {
             unit: "time"
         },
         yAxes: {
-            unit: "unknown"
+            unit:
+                task.inputs[0].valueUnit === task.inputs[1].valueUnit
+                    ? task.inputs[0].valueUnit
+                    : "unknown"
         }
     };
 }

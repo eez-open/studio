@@ -186,7 +186,7 @@ class DlogWaveformLineController extends LineController {
     }
 
     render(): JSX.Element {
-        return <WaveformLineView key={this.id} waveformLineController={this} useWorker={false} />;
+        return <WaveformLineView key={this.id} waveformLineController={this} />;
     }
 }
 

@@ -10,7 +10,6 @@ import {
     IWaveformRenderJobSpecification,
     renderWaveformPath
 } from "eez-studio-ui/chart/render";
-import { drawWithWorker, releaseCanvas } from "eez-studio-ui/chart/worker-manager";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -20,7 +19,6 @@ interface IWaveformLineController extends ILineController {
 
 interface WaveformLineViewProperties {
     waveformLineController: IWaveformLineController;
-    useWorker: boolean;
 }
 
 @observer
@@ -31,12 +29,6 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
     canvas: HTMLCanvasElement | null;
     continuation: any;
     requestAnimationFrameId: any;
-
-    get useWorker() {
-        return (
-            this.props.useWorker && !this.props.waveformLineController.xAxisController.logarithmic
-        );
-    }
 
     @computed
     get waveformRenderJobSpecification(): IWaveformRenderJobSpecification | undefined {
@@ -71,21 +63,13 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
 
     componentDidMount() {
         if (this.canvas) {
-            if (this.useWorker) {
-                drawWithWorker(this.canvas, this.nextJob);
-            } else {
-                this.draw();
-            }
+            this.draw();
         }
     }
 
     componentDidUpdate() {
         if (this.canvas) {
-            if (this.useWorker) {
-                drawWithWorker(this.canvas, this.nextJob);
-            } else {
-                this.draw();
-            }
+            this.draw();
         }
     }
 
@@ -111,14 +95,8 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
     }
 
     componentWillUnmount() {
-        if (this.useWorker) {
-            if (this.canvas) {
-                releaseCanvas(this.canvas);
-            }
-        } else {
-            if (this.requestAnimationFrameId) {
-                window.cancelAnimationFrame(this.requestAnimationFrameId);
-            }
+        if (this.requestAnimationFrameId) {
+            window.cancelAnimationFrame(this.requestAnimationFrameId);
         }
     }
 
@@ -130,18 +108,9 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
 
         const chartsController = this.props.waveformLineController.yAxisController.chartsController;
 
-        let canvasKey;
-        if (this.useWorker) {
-            // Canvas has "key" because we want canvas to be recreated every time width or height change
-            // (apparently React recreates element if key is different).
-            // This is required because we are using transferControlToOffscreen to pass offscreen canvas to worker.
-            canvasKey = `${chartsController.chartWidth}_${chartsController.chartHeight}`;
-        }
-
         return (
             <foreignObject x={chartsController.chartLeft} y={chartsController.chartTop}>
                 <canvas
-                    key={canvasKey}
                     ref={ref => (this.canvas = ref)}
                     width={chartsController.chartWidth}
                     height={chartsController.chartHeight}

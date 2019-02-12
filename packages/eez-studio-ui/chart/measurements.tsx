@@ -10,7 +10,7 @@ import { guid } from "eez-studio-shared/guid";
 import { stringCompare } from "eez-studio-shared/string";
 import { UNITS } from "eez-studio-shared/units";
 
-import { IMeasurementFunction, IChart } from "eez-studio-shared/extensions/extension";
+import { IMeasurementFunction, IMeasureTask, IChart } from "eez-studio-shared/extensions/extension";
 import { extensions } from "eez-studio-shared/extensions/extensions";
 
 import { theme } from "eez-studio-ui/theme";
@@ -24,7 +24,7 @@ import { Loader } from "eez-studio-ui/loader";
 
 import { ChartsController, ChartController } from "eez-studio-ui/chart/chart";
 import * as GenericChartModule from "eez-studio-ui/chart/generic-chart";
-import { WaveformFormat } from "eez-studio-ui/chart/buffer";
+import { WaveformFormat, initValuesAccesor } from "eez-studio-ui/chart/buffer";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -67,22 +67,27 @@ interface IMeasurementDefinition {
     parameters?: any;
 }
 
-interface ISingleInputMeasurementTaskSpecification {
-    xStartValue: number;
-    xStartIndex: number;
-    xNumSamples: number;
-
+interface IInput {
     format: WaveformFormat;
     values: any;
     offset: number;
     scale: number;
     samplingRate: number;
-
     valueUnit: keyof typeof UNITS;
+}
 
-    parameters: any;
+interface ISingleInputMeasurementTaskSpecification extends IInput {
+    xStartValue: number;
+    xStartIndex: number;
+    xNumSamples: number;
+}
 
-    measureFunctionScript: string;
+interface IMultiInputMeasurementTaskSpecification {
+    xStartValue: number;
+    xStartIndex: number;
+    xNumSamples: number;
+
+    inputs: IInput[];
 }
 
 class Measurement {
@@ -252,18 +257,81 @@ class Measurement {
             scale: waveformModel.scale,
             samplingRate: waveformModel.samplingRate,
 
-            valueUnit: waveformModel.valueUnit,
-
-            parameters: toJS(this.parameters),
-
-            measureFunctionScript: this.script
+            valueUnit: waveformModel.valueUnit
         };
     }
 
-    @computed
-    get task() {
+    getMeasureTaskForSingleInput(taskSpec: ISingleInputMeasurementTaskSpecification) {
+        const accessor = {
+            format: taskSpec.format,
+            values: taskSpec.values,
+            offset: taskSpec.offset,
+            scale: taskSpec.scale,
+            length: 0,
+            value: (value: number) => 0,
+            waveformData: (value: number) => 0
+        };
+
+        initValuesAccesor(accessor, true);
+
+        return {
+            xStartValue: taskSpec.xStartValue,
+            xStartIndex: taskSpec.xStartIndex,
+            xNumSamples: taskSpec.xNumSamples,
+            samplingRate: taskSpec.samplingRate,
+            getSampleValueAtIndex: accessor.value,
+            valueUnit: taskSpec.valueUnit,
+            inputs: [],
+            parameters: this.parameters,
+            result: null
+        };
+    }
+
+    getMeasureTaskForMultipleInputs(taskSpec: IMultiInputMeasurementTaskSpecification) {
+        const inputs = taskSpec.inputs.map(input => {
+            const accessor = {
+                format: input.format,
+                values: input.values,
+                offset: input.offset,
+                scale: input.scale,
+                length: 0,
+                value: (value: number) => 0,
+                waveformData: (value: number) => 0
+            };
+
+            initValuesAccesor(accessor, true);
+
+            return {
+                samplingRate: input.samplingRate,
+                getSampleValueAtIndex: accessor.value,
+                valueUnit: input.valueUnit
+            };
+        });
+
+        return {
+            xStartValue: taskSpec.xStartValue,
+            xStartIndex: taskSpec.xStartIndex,
+            xNumSamples: taskSpec.xNumSamples,
+            samplingRate: taskSpec.inputs[0].samplingRate,
+            getSampleValueAtIndex: inputs[0].getSampleValueAtIndex,
+            valueUnit: inputs[0].valueUnit,
+            inputs,
+            parameters: this.parameters,
+            result: null
+        };
+    }
+
+    get task(): IMeasureTask | null {
+        if (!this.script) {
+            return null;
+        }
+
         if (this.arity === 1) {
-            return this.getChartTask(this.chartIndex);
+            const singleInputTaskSpec = this.getChartTask(this.chartIndex);
+            if (!singleInputTaskSpec) {
+                return null;
+            }
+            return this.getMeasureTaskForSingleInput(singleInputTaskSpec);
         }
 
         const tasks = this.chartIndexes
@@ -296,7 +364,7 @@ class Measurement {
             return null;
         }
 
-        return {
+        return this.getMeasureTaskForMultipleInputs({
             xStartValue,
             xStartIndex,
             xNumSamples,
@@ -307,105 +375,30 @@ class Measurement {
                 offset: task.offset,
                 scale: task.scale,
                 samplingRate: task.samplingRate,
-                valueUnit: task.valueUnit
-            })),
-
-            parameters: toJS(this.parameters),
-
-            measureFunctionScript: this.script
-        };
-    }
-
-    @observable
-    _value: number | string | IChart | null = null;
-
-    @observable
-    valueUnit: keyof typeof UNITS | undefined;
-
-    lastTask: any;
-
-    worker: Worker | null = null;
-    workerReadyReceived: boolean;
-    workerIdle: boolean;
-    workerIdleTimeout: any;
-    workerTask: any;
-
-    @action
-    sendTaskToWorker() {
-        this._value = null;
-        this.workerTask = this.lastTask;
-        this.worker!.postMessage(this.workerTask);
-        this.workerIdle = false;
-        if (this.workerIdleTimeout) {
-            clearTimeout(this.workerIdleTimeout);
-        }
-    }
-
-    setWorkerIdle() {
-        this.workerTask = null;
-        this.workerIdle = true;
-        this.workerIdleTimeout = setTimeout(() => {
-            this.workerIdleTimeout = undefined;
-            this.worker!.terminate();
-            this.worker = null;
-        }, 10000);
-    }
-
-    measureValue(task: any) {
-        if (task != this.lastTask) {
-            this.lastTask = task;
-
-            if (this.lastTask) {
-                if (!this.worker) {
-                    this.worker = new Worker("../eez-studio-ui/chart/measurement-worker.js");
-
-                    this.workerReadyReceived = false;
-
-                    this.worker.onmessage = (e: any) => {
-                        if (this.worker) {
-                            if (!this.workerReadyReceived) {
-                                this.workerReadyReceived = true;
-
-                                // worker is now ready
-                                if (this.lastTask) {
-                                    this.sendTaskToWorker();
-                                } else {
-                                    this.setWorkerIdle();
-                                }
-                            } else {
-                                // worker done
-                                runInAction(() => {
-                                    this._value = e.data.result;
-                                    this.valueUnit = e.data.resultUnit;
-                                });
-
-                                // is there a newer task?
-                                if (this.lastTask !== this.workerTask) {
-                                    this.sendTaskToWorker();
-                                } else {
-                                    this.setWorkerIdle();
-                                }
-                            }
-                        }
-                    };
-                } else {
-                    if (this.workerReadyReceived && this.workerIdle) {
-                        this.sendTaskToWorker();
-                    }
-                }
-            } else {
-                runInAction(() => {
-                    this._value = null;
-                });
-            }
-        }
+                valueUnit: task.valueUnit,
+                getSampleValueAtIndex: (index: number) => 0
+            }))
+        });
     }
 
     @computed
-    get value(): number | string | IChart | null {
+    get result(): {
+        result: number | string | IChart | null;
+        resultUnit?: keyof typeof UNITS | undefined;
+    } | null {
+        if (!this.script) {
+            return null;
+        }
+
         const task = this.task;
-        setTimeout(() => this.measureValue(task), 0);
-        return this._value;
+        if (!task) {
+            return null;
+        }
+
+        let measureFunction: (task: IMeasureTask) => void;
+        measureFunction = (require(this.script) as any).default;
+        measureFunction(task);
+        return task;
     }
 
     get chartPanelTitle() {
@@ -676,9 +669,9 @@ export class MeasurementValue extends React.Component<{
             return "?";
         }
 
-        const value = this.props.measurement.value;
+        const measurementResult = this.props.measurement.result;
 
-        if (value === null) {
+        if (measurementResult === null || measurementResult.result === null) {
             if (this.props.inDockablePanel) {
                 return (
                     <LoaderContainerDiv>
@@ -689,14 +682,14 @@ export class MeasurementValue extends React.Component<{
             return <input type="text" className="form-control" value={""} readOnly={true} />;
         }
 
-        if (typeof value === "string") {
-            return value;
+        if (typeof measurementResult.result === "string") {
+            return measurementResult.result;
         }
 
-        if (typeof value === "number") {
+        if (typeof measurementResult.result === "number") {
             let unit;
-            if (this.props.measurement.valueUnit) {
-                unit = UNITS[this.props.measurement.valueUnit];
+            if (measurementResult.resultUnit) {
+                unit = UNITS[measurementResult.resultUnit];
             }
 
             if (!unit) {
@@ -704,7 +697,7 @@ export class MeasurementValue extends React.Component<{
                     .chartControllers[this.props.measurement.chartIndex].yAxisController.unit;
             }
 
-            const strValue = unit.formatValue(value, 4);
+            const strValue = unit.formatValue(measurementResult.result, 4);
 
             return <input type="text" className="form-control" value={strValue} readOnly={true} />;
         }
@@ -715,7 +708,7 @@ export class MeasurementValue extends React.Component<{
 
         return (
             <ChartContainerDiv>
-                <GenericChart chart={value} />
+                <GenericChart chart={measurementResult.result} />
             </ChartContainerDiv>
         );
     }
