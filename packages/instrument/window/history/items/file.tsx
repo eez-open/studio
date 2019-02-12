@@ -41,6 +41,10 @@ import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const CONF_SET_IS_VISIBLE_DELAY = 250;
+
+////////////////////////////////////////////////////////////////////////////////
+
 const FileHistoryItemDiv = styled(HistoryItemDiv)`
     display: flex;
     flex-direction: row;
@@ -220,11 +224,11 @@ export class FileHistoryItemComponent extends React.Component<
     },
     {}
 > {
-    @action.bound
+    setVisibleTimeoutId: any;
+
+    @bind
     onVisibilityChange(isVisible: boolean) {
-        if (!this.props.historyItem.isVisible && isVisible) {
-            this.props.historyItem.isVisible = isVisible;
-        }
+        this.props.historyItem.isVisible = isVisible;
     }
 
     @bind
@@ -748,5 +752,25 @@ export class FileHistoryItem extends HistoryItem {
     }
 
     @observable
-    isVisible: boolean;
+    _isVisible: boolean;
+
+    get isVisible() {
+        return this._isVisible;
+    }
+
+    setVisibleTimeoutId: any;
+
+    set isVisible(value: boolean) {
+        if (this.setVisibleTimeoutId) {
+            clearTimeout(this.setVisibleTimeoutId);
+            this.setVisibleTimeoutId = undefined;
+        }
+
+        if (value) {
+            this.setVisibleTimeoutId = setTimeout(
+                action(() => (this._isVisible = value)),
+                CONF_SET_IS_VISIBLE_DELAY
+            );
+        }
+    }
 }

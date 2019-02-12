@@ -3,6 +3,7 @@ import React from "react";
 import { observable, action, runInAction, reaction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
+const os = require("os");
 
 import { objectClone } from "eez-studio-shared/util";
 
@@ -26,6 +27,8 @@ interface ConnectionPropertiesProps {
 
 @observer
 export class ConnectionProperties extends React.Component<ConnectionPropertiesProps, {}> {
+    static neverEnumeratedConnectionDevices = true;
+
     constructor(props: any) {
         super(props);
 
@@ -76,8 +79,13 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
     }
 
     componentDidMount() {
-        this.refreshSerialPortPaths();
-        this.refreshUsbDevices();
+        if (os.platform() !== "darwin") {
+            if (ConnectionProperties.neverEnumeratedConnectionDevices) {
+                ConnectionProperties.neverEnumeratedConnectionDevices = false;
+                this.refreshSerialPortPaths();
+                this.refreshUsbDevices();
+            }
+        }
 
         $(this.refs.div).modal();
 

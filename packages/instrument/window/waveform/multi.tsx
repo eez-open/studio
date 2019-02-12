@@ -99,7 +99,9 @@ export class ChartHistoryItemComponent extends React.Component<
     },
     {}
 > {
-    @action.bound
+    setVisibleTimeoutId: any;
+
+    @bind
     onVisibilityChange(isVisible: boolean) {
         this.props.historyItem.isVisible = isVisible;
     }
