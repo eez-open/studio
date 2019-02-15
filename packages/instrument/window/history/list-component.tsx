@@ -286,6 +286,12 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
     autoReloadEnabled: boolean = true;
     timeOfLastAutoLoad: number;
 
+    lastScrollHeight: number;
+    lastClientHeight: number;
+
+    findCenterItemTimeut: any;
+    lastItemInTheCenterId: string | undefined;
+
     componentDidMount() {
         this.autoScroll();
         this.div.addEventListener("scroll", this.onScroll);
@@ -367,6 +373,8 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         const time = Date.now();
         if (
             this.autoReloadEnabled &&
+            this.div.clientHeight > 0 &&
+            this.div.scrollHeight >= this.div.clientHeight &&
             (this.timeOfLastAutoLoad === undefined ||
                 time - this.timeOfLastAutoLoad > CONF_AUTO_RELOAD_TIMEOUT)
         ) {
@@ -389,12 +397,6 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
 
         this.animationFrameRequestId = window.requestAnimationFrame(this.autoScroll);
     }
-
-    lastScrollHeight: number;
-    lastClientHeight: number;
-
-    findCenterItemTimeut: any;
-    lastItemInTheCenterId: string | undefined;
 
     @bind
     onScroll(event: any) {
