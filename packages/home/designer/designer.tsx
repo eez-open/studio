@@ -86,21 +86,22 @@ export class Properties extends React.Component<{
             </Box>
         );
 
-        if (this.viewStateSelectedObject.length === 1) {
-            return (
-                <Splitter
-                    type="vertical"
-                    sizes="100%|240px"
-                    className={className}
-                    persistId="home/designer/properties/splitter"
-                >
-                    {(this.viewStateSelectedObject[0] as IWorkbenchObject).details}
-                    {history}
-                </Splitter>
-            );
-        }
-
-        return <div className={className}>{history}</div>;
+        return (
+            <Splitter
+                type="vertical"
+                sizes={this.viewStateSelectedObject.length === 1 ? "100%|240px" : "100%"}
+                className={className}
+                persistId={
+                    this.viewStateSelectedObject.length === 1
+                        ? "home/designer/properties/splitter"
+                        : undefined
+                }
+            >
+                {this.viewStateSelectedObject.length === 1 &&
+                    (this.viewStateSelectedObject[0] as IWorkbenchObject).details}
+                {history}
+            </Splitter>
+        );
     }
 }
 

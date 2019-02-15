@@ -366,7 +366,6 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         // automatically load more content
         const time = Date.now();
         if (
-            !this.props.simple &&
             this.autoReloadEnabled &&
             (this.timeOfLastAutoLoad === undefined ||
                 time - this.timeOfLastAutoLoad > CONF_AUTO_RELOAD_TIMEOUT)
