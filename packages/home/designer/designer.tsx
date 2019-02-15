@@ -76,14 +76,12 @@ export class Properties extends React.Component<{
             <Box direction="column" background="panel-header" style={{ height: "100%" }}>
                 <PanelTitle title="History" />
                 <Box scrollable={true} background="white" grow={1}>
-                    <div>
-                        <HistorySection
-                            oids={this.viewStateSelectedObject.map(
-                                selectedObject => (selectedObject as IWorkbenchObject).oid
-                            )}
-                            simple={true}
-                        />
-                    </div>
+                    <HistorySection
+                        oids={this.viewStateSelectedObject.map(
+                            selectedObject => (selectedObject as IWorkbenchObject).oid
+                        )}
+                        simple={true}
+                    />
                 </Box>
             </Box>
         );
