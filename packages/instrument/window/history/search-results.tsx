@@ -80,7 +80,7 @@ export class SearchResults extends React.Component<{ history: History }> {
                                 <ButtonAction
                                     text="Stop"
                                     title="Stop search"
-                                    className="btn-sm"
+                                    className="btn-sm btn-secondary"
                                     onClick={() => this.props.history.search.stopSearch()}
                                 />
                             </div>

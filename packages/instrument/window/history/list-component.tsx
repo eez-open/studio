@@ -6,6 +6,7 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
 
+import { _debounce } from "eez-studio-shared/algorithm";
 import { addAlphaToColor } from "eez-studio-shared/color";
 
 import styled from "eez-studio-ui/styled-components";
@@ -15,6 +16,11 @@ import { Waveform } from "instrument/window/waveform/generic";
 
 import { History, IAppStore } from "instrument/window/history/history";
 import { IHistoryItem } from "instrument/window/history/item";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const CONF_AUTO_RELOAD_TIMEOUT = 1000 / 30;
+const CONF_AUTO_RELOAD_Y_THRESHOLD = 20;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -235,6 +241,28 @@ export class HistoryItems extends React.Component<{
     }
 }
 
+class LoadMoreButton extends React.Component<{
+    icon: string;
+    loadMore: () => void;
+    isVisible?: boolean;
+}> {
+    render() {
+        const { icon, loadMore } = this.props;
+
+        return (
+            <button
+                className="btn btn-secondary"
+                onClick={loadMore}
+                style={{ marginTop: 15, marginBottom: 15 }}
+            >
+                <Icon icon={icon} /> More
+            </button>
+        );
+    }
+}
+
+///
+
 const HistoryListComponentContainer = styled.div`
     padding: 8px;
     display: flex;
@@ -242,15 +270,21 @@ const HistoryListComponentContainer = styled.div`
     align-items: flex-start;
 `;
 
-@observer
-export class HistoryListComponent extends React.Component<{
+interface HistoryListComponentProps {
     appStore: IAppStore;
     history: History;
-}> {
+}
+
+@observer
+export class HistoryListComponent extends React.Component<HistoryListComponentProps> {
     animationFrameRequestId: any;
     div: Element;
+
     fromBottom: number | undefined;
     fromTop: number | undefined = 0;
+
+    autoReloadEnabled: boolean = true;
+    timeOfLastAutoLoad: number;
 
     componentDidMount() {
         this.autoScroll();
@@ -260,12 +294,19 @@ export class HistoryListComponent extends React.Component<{
         this.lastItemInTheCenterId = undefined;
     }
 
+    componentWillReceiveProps(props: HistoryListComponentProps) {
+        if (props.history !== this.props.history) {
+            this.fromBottom = undefined;
+            this.fromTop = 0;
+        }
+    }
+
     componentDidUpdate() {
-        // make sure scroll bar is recalculated after render
-        $(this.div).css("overflow", "hidden");
-        setTimeout(() => {
-            $(this.div).css("overflow", "auto");
-        }, 1);
+        // // make sure scroll bar is recalculated after render
+        // $(this.div).css("overflow", "hidden");
+        // setTimeout(() => {
+        //     $(this.div).css("overflow", "auto");
+        // }, 1);
 
         this.lastItemInTheCenterId = undefined;
     }
@@ -288,6 +329,8 @@ export class HistoryListComponent extends React.Component<{
 
     @action
     showHistoryItem(historyItem: IHistoryItem) {
+        this.autoReloadEnabled = false;
+
         let c = 0;
 
         const scrollIntoView = (() => {
@@ -297,6 +340,8 @@ export class HistoryListComponent extends React.Component<{
             }
             if (++c < 5) {
                 setTimeout(scrollIntoView, 10);
+            } else {
+                this.autoReloadEnabled = true;
             }
         }).bind(this);
 
@@ -315,6 +360,30 @@ export class HistoryListComponent extends React.Component<{
                 if (scrollTop != this.div.scrollTop) {
                     this.div.scrollTop = scrollTop;
                 }
+            }
+        }
+
+        // automatically load more content
+        const time = Date.now();
+        if (
+            this.autoReloadEnabled &&
+            (this.timeOfLastAutoLoad === undefined ||
+                time - this.timeOfLastAutoLoad > CONF_AUTO_RELOAD_TIMEOUT)
+        ) {
+            this.timeOfLastAutoLoad = Date.now();
+
+            if (
+                this.props.history.navigator.hasOlder &&
+                this.div.scrollTop < CONF_AUTO_RELOAD_Y_THRESHOLD
+            ) {
+                this.loadOlder();
+            }
+            if (
+                this.props.history.navigator.hasNewer &&
+                this.div.scrollHeight - (this.div.scrollTop + this.div.clientHeight) <
+                    CONF_AUTO_RELOAD_Y_THRESHOLD
+            ) {
+                this.loadNewer();
             }
         }
 
@@ -375,7 +444,7 @@ export class HistoryListComponent extends React.Component<{
                     }
                 }
             }
-        }, 10);
+        }, 100);
     }
 
     selectAll() {
@@ -408,6 +477,29 @@ export class HistoryListComponent extends React.Component<{
         }
     }
 
+    @bind
+    async loadOlder() {
+        this.autoReloadEnabled = false;
+
+        this.fromBottom = undefined;
+        this.fromTop = undefined;
+
+        const scrollHeight = this.div.scrollHeight;
+
+        await this.props.history.navigator.loadOlder();
+
+        window.requestAnimationFrame(() => {
+            this.div.scrollTop = this.div.scrollHeight - scrollHeight;
+
+            this.autoReloadEnabled = true;
+        });
+    }
+
+    @bind
+    loadNewer() {
+        this.props.history.navigator.loadNewer();
+    }
+
     render() {
         return (
             <HistoryListComponentContainer
@@ -424,24 +516,7 @@ export class HistoryListComponent extends React.Component<{
                 }}
             >
                 {this.props.history.navigator.hasOlder && (
-                    <button
-                        className="btn btn-secondary"
-                        style={{ marginBottom: 20 }}
-                        onClick={async () => {
-                            this.fromBottom = undefined;
-                            this.fromTop = undefined;
-
-                            const scrollHeight = this.div.scrollHeight;
-
-                            await this.props.history.navigator.loadOlder();
-
-                            window.requestAnimationFrame(() => {
-                                this.div.scrollTop = this.div.scrollHeight - scrollHeight;
-                            });
-                        }}
-                    >
-                        <Icon icon="material:expand_less" /> More
-                    </button>
+                    <LoadMoreButton icon="material:expand_less" loadMore={this.loadOlder} />
                 )}
                 {this.props.history.blocks.map(historyItems => {
                     if (historyItems.length === 0) {
@@ -457,13 +532,7 @@ export class HistoryListComponent extends React.Component<{
                     );
                 })}
                 {this.props.history.navigator.hasNewer && (
-                    <button
-                        className="btn btn-secondary"
-                        onClick={this.props.history.navigator.loadNewer}
-                        style={{ marginTop: 15 }}
-                    >
-                        <Icon icon="material:expand_more" /> More
-                    </button>
+                    <LoadMoreButton icon="material:expand_more" loadMore={this.loadNewer} />
                 )}
             </HistoryListComponentContainer>
         );

@@ -39,7 +39,8 @@ import {
 
 const CONF_START_SEARCH_TIMEOUT = 250;
 const CONF_SINGLE_SEARCH_LIMIT = 1;
-export const CONF_BLOCK_SIZE = 100;
+export const CONF_BLOCK_SIZE = 10;
+const CONF_MAX_NUM_OF_LOADED_ITEMS = 100;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -96,10 +97,15 @@ class HistoryCalendar {
     minDate: Date;
     @observable
     maxDate: Date;
+
+    // "YYYY-MM-DD" -> number of items at date
     @observable
     counters = new Map<string, number>();
     @observable
     showFirstHistoryItemAsSelectedDay: boolean = false;
+
+    @observable
+    lastSelectedDay: Date;
 
     constructor(public history: History) {}
 
@@ -149,7 +155,8 @@ class HistoryCalendar {
     @action
     async update(selectedDay?: Date) {
         if (selectedDay) {
-            this.showFirstHistoryItemAsSelectedDay = true;
+            this.lastSelectedDay = selectedDay;
+            this.showFirstHistoryItemAsSelectedDay = false;
 
             const rows = await dbQuery(
                 `SELECT
@@ -175,6 +182,7 @@ class HistoryCalendar {
 
             moveToTopOfHistory(this.history.appStore.navigationStore.mainHistoryView);
         } else {
+            this.lastSelectedDay = new Date();
             this.showFirstHistoryItemAsSelectedDay = false;
 
             // display most recent log items
@@ -207,6 +215,10 @@ class HistoryCalendar {
 
         if (this.history.itemInTheCenterOfTheView) {
             return this.history.itemInTheCenterOfTheView.date;
+        }
+
+        if (this.lastSelectedDay) {
+            return this.lastSelectedDay;
         }
 
         if (this.showFirstHistoryItemAsSelectedDay) {
@@ -469,9 +481,9 @@ class HistorySearch {
                     ) ORDER BY date`
             ).all(
                 searchResult.logEntry.date.getTime(),
-                CONF_BLOCK_SIZE / 2,
+                Math.round(CONF_BLOCK_SIZE / 2),
                 searchResult.logEntry.date.getTime(),
-                CONF_BLOCK_SIZE / 2
+                Math.round(CONF_BLOCK_SIZE / 2)
             );
 
             this.history.displayRows(rows);
@@ -599,6 +611,7 @@ class HistoryNavigator {
                 runInAction(() => {
                     this.history.calendar.showFirstHistoryItemAsSelectedDay = true;
                     this.history.blocks.splice(0, 0, this.history.rowsToHistoryItems(rows));
+                    this.history.freeSomeHistoryItemsFromBottomIfTooMany();
                 });
                 this.update();
             }
@@ -632,6 +645,7 @@ class HistoryNavigator {
                 runInAction(() => {
                     this.history.calendar.showFirstHistoryItemAsSelectedDay = false;
                     this.history.blocks.push(this.history.rowsToHistoryItems(rows));
+                    this.history.freeSomeHistoryItemsFromTopIfTooMany();
                 });
                 this.update();
             }
@@ -905,6 +919,55 @@ export class History {
         }
 
         return undefined;
+    }
+
+    get numLoadedHistoryItems() {
+        let counter = 0;
+        for (let i = 0; i < this.blocks.length; i++) {
+            const historyItems = this.blocks[i];
+            for (let j = 0; j < historyItems.length; j++) {
+                counter++;
+            }
+        }
+        return counter;
+    }
+
+    @action
+    freeSomeHistoryItemsFromTopIfTooMany() {
+        const numLoadedHistoryItems = this.numLoadedHistoryItems;
+        if (numLoadedHistoryItems > CONF_MAX_NUM_OF_LOADED_ITEMS) {
+            let toBeRemoved = numLoadedHistoryItems - CONF_MAX_NUM_OF_LOADED_ITEMS;
+            while (true) {
+                const historyItems = this.blocks[0];
+
+                if (toBeRemoved < historyItems.length) {
+                    historyItems.splice(0, toBeRemoved);
+                    break;
+                }
+
+                this.blocks.splice(0, 1);
+                toBeRemoved -= historyItems.length;
+            }
+        }
+    }
+
+    @action
+    freeSomeHistoryItemsFromBottomIfTooMany() {
+        const numLoadedHistoryItems = this.numLoadedHistoryItems;
+        if (numLoadedHistoryItems > CONF_MAX_NUM_OF_LOADED_ITEMS) {
+            let toBeRemoved = numLoadedHistoryItems - CONF_MAX_NUM_OF_LOADED_ITEMS;
+            while (true) {
+                const historyItems = this.blocks[this.blocks.length - 1];
+
+                if (toBeRemoved < historyItems.length) {
+                    historyItems.splice(historyItems.length - toBeRemoved, toBeRemoved);
+                    break;
+                }
+
+                this.blocks.splice(this.blocks.length - 1, 1);
+                toBeRemoved -= historyItems.length;
+            }
+        }
     }
 
     getHistoryItemById(id: string) {

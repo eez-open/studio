@@ -94,7 +94,8 @@ export class Box extends React.Component<
             justifyContent: this.props.justify,
             alignItems: this.props.align,
             flexGrow: this.grow,
-            flexShrink: this.props.shrink || 0,
+            flexShrink:
+                this.props.shrink !== undefined ? this.props.shrink : this.grow ? undefined : 0,
             overflow: this.props.scrollable ? "auto" : "hidden"
         };
 

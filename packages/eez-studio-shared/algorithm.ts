@@ -21,3 +21,4 @@ export const _zipObject = _.zipObject;
 export const _max = _.max;
 export const _difference = _.difference;
 export const _flatten = _.flatten;
+export const _debounce = _.debounce;

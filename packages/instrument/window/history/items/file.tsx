@@ -41,7 +41,8 @@ import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const CONF_SET_IS_VISIBLE_DELAY = 250;
+const CONF_SET_IS_VISIBLE_DELAY = 500;
+const CONF_UNSET_IS_VISIBLE_DELAY = 5000;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -767,10 +768,22 @@ export class FileHistoryItem extends HistoryItem {
         }
 
         if (value) {
-            this.setVisibleTimeoutId = setTimeout(
-                action(() => (this._isVisible = value)),
-                CONF_SET_IS_VISIBLE_DELAY
-            );
+            if (!this._isVisible) {
+                this.setVisibleTimeoutId = setTimeout(
+                    action(() => (this._isVisible = true)),
+                    CONF_SET_IS_VISIBLE_DELAY
+                );
+            }
+        } else {
+            if (this._isVisible) {
+                this.setVisibleTimeoutId = setTimeout(
+                    action(() => {
+                        this._isVisible = false;
+                        this._data = undefined;
+                    }),
+                    CONF_UNSET_IS_VISIBLE_DELAY
+                );
+            }
         }
     }
 }

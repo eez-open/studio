@@ -132,7 +132,7 @@ export class ListHistoryItem extends HistoryItem {
     constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
         super(activityLogEntry, appStore);
 
-        if (appStore.history.options.store === activityLogStore) {
+        if (appStore && appStore.history.options.store === activityLogStore) {
             this.instrument = instruments.get(activityLogEntry.oid);
         } else {
             if (activityLogEntry.sid) {

@@ -113,6 +113,7 @@
     "react": "^16.8.1",
     "react-dom": "^16.8.1",
     "react-electron-web-view": "^2.0.1",
+    "react-on-screen": "^2.1.1",
     "react-toastify": "^4.5.2",
     "react-transition-group": "^2.5.3",
     "react-visibility-sensor": "^5.0.2",
