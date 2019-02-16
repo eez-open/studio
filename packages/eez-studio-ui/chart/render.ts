@@ -38,7 +38,6 @@ function genRandomOffsets(K: number) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IWaveform {
-    isVisible: boolean;
     format: any;
     values: any;
     length: number;

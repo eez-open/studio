@@ -244,7 +244,6 @@ export class HistoryItems extends React.Component<{
 class LoadMoreButton extends React.Component<{
     icon: string;
     loadMore: () => void;
-    isVisible?: boolean;
 }> {
     render() {
         const { icon, loadMore } = this.props;
@@ -486,12 +485,31 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         this.fromBottom = undefined;
         this.fromTop = undefined;
 
-        const scrollHeight = this.div.scrollHeight;
+        // when we load older items, we don't want scroll position to change
+
+        // find first item above scrollTop
+        let firstItem: HTMLDivElement;
+
+        const items = this.div.children[0].children;
+        for (let i = 0; i < items.length; ++i) {
+            const item = items[i] as HTMLDivElement;
+            if (
+                item.className.indexOf("EezStudio_HistoryItemEnclosure") !== -1 &&
+                item.offsetTop > this.div.scrollTop
+            ) {
+                firstItem = item;
+                break;
+            }
+        }
+
+        // remember offset of the firstItem from scrollTop
+        let offset = firstItem!.offsetTop - this.div.scrollTop;
 
         await this.props.history.navigator.loadOlder();
 
         window.requestAnimationFrame(() => {
-            this.div.scrollTop = this.div.scrollHeight - scrollHeight;
+            // make sure firstItem is again at the same offset
+            this.div.scrollTop = firstItem!.offsetTop - offset;
 
             this.autoReloadEnabled = true;
         });

@@ -115,8 +115,6 @@ class GenericChartWaveform implements IWaveform {
         };
     }
 
-    isVisible = true;
-
     format = WaveformFormat.JS_NUMBERS;
 
     get values() {

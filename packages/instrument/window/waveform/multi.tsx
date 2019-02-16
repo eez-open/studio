@@ -2,7 +2,6 @@ import React from "react";
 import { observable, computed, action, runInAction, reaction, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
-import VisibilitySensor from "react-visibility-sensor";
 
 import { objectEqual, objectClone, formatDateTimeLong } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -101,26 +100,19 @@ export class ChartHistoryItemComponent extends React.Component<
 > {
     setVisibleTimeoutId: any;
 
-    @bind
-    onVisibilityChange(isVisible: boolean) {
-        this.props.historyItem.isVisible = isVisible;
-    }
-
     render() {
         return (
-            <VisibilitySensor partialVisibility={true} onChange={this.onVisibilityChange}>
-                <ChartHistoryItemDiv>
-                    <Icon className="mr-3" icon={"material:insert_chart"} size={48} />
-                    <div>
-                        <p>
-                            <HistoryItemDate>
-                                {formatDateTimeLong(this.props.historyItem.date)}
-                            </HistoryItemDate>
-                        </p>
-                        <ChartPreview data={this.props.historyItem} />
-                    </div>
-                </ChartHistoryItemDiv>
-            </VisibilitySensor>
+            <ChartHistoryItemDiv>
+                <Icon className="mr-3" icon={"material:insert_chart"} size={48} />
+                <div>
+                    <p>
+                        <HistoryItemDate>
+                            {formatDateTimeLong(this.props.historyItem.date)}
+                        </HistoryItemDate>
+                    </p>
+                    <ChartPreview data={this.props.historyItem} />
+                </div>
+            </ChartHistoryItemDiv>
         );
     }
 }
@@ -346,10 +338,6 @@ export class MultiWaveform extends HistoryItem {
 
     openConfigurationDialog() {
         showDialog(<MultiWaveformConfigurationDialog multiWaveform={this} />);
-    }
-
-    set isVisible(value: boolean) {
-        this.linkedWaveforms.forEach(linkedWaveform => (linkedWaveform.waveform.isVisible = true));
     }
 
     get xAxisDefaultSubdivisionOffset(): number | undefined {

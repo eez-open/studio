@@ -308,7 +308,7 @@ export class Waveform extends FileHistoryItem {
         this.measurements = new MeasurementsModel(message.measurements);
 
         when(
-            () => this.transferSucceeded && this.isVisible,
+            () => this.transferSucceeded,
             () => {
                 scheduleTask(`Load waveform ${this.id}`, Priority.Lowest, async () =>
                     this.initWaveformDefinition()

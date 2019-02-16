@@ -147,7 +147,6 @@ class DlogWaveformLineController extends LineController {
         }
 
         this.waveform = {
-            isVisible: true,
             format: WaveformFormat.EEZ_DLOG,
             values,
             length,
@@ -255,9 +254,6 @@ export class DlogWaveform extends FileHistoryItem {
         appStore: InstrumentAppStore
     ) {
         super(activityLogEntry, appStore);
-        if (activityLogEntry instanceof FileHistoryItem) {
-            this.isVisible = activityLogEntry.isVisible;
-        }
 
         const message = JSON.parse(this.message);
 
@@ -354,10 +350,6 @@ export class DlogWaveform extends FileHistoryItem {
 
     @computed
     get values() {
-        if (!this.isVisible) {
-            return undefined;
-        }
-
         if (!this.transferSucceeded) {
             return undefined;
         }

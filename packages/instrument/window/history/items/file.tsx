@@ -2,7 +2,6 @@ import React from "react";
 import { observable, computed, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { clipboard, nativeImage, SaveDialogOptions } from "electron";
-import VisibilitySensor from "react-visibility-sensor";
 import { bind } from "bind-decorator";
 
 import { formatTransferSpeed, formatDateTimeLong } from "eez-studio-shared/util";
@@ -38,11 +37,6 @@ import { showAddNoteDialog, showEditNoteDialog } from "instrument/window/note-di
 import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
-
-////////////////////////////////////////////////////////////////////////////////
-
-const CONF_SET_IS_VISIBLE_DELAY = 500;
-const CONF_UNSET_IS_VISIBLE_DELAY = 5000;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -226,11 +220,6 @@ export class FileHistoryItemComponent extends React.Component<
     {}
 > {
     setVisibleTimeoutId: any;
-
-    @bind
-    onVisibilityChange(isVisible: boolean) {
-        this.props.historyItem.isVisible = isVisible;
-    }
 
     @bind
     onAbortFileTransfer() {
@@ -469,30 +458,28 @@ export class FileHistoryItemComponent extends React.Component<
         }
 
         return (
-            <VisibilitySensor partialVisibility={true} onChange={this.onVisibilityChange}>
-                <FileHistoryItemDiv>
-                    <Icon
-                        className="mr-3"
-                        icon={
-                            this.props.historyItem.direction === "upload"
-                                ? "material:file_upload"
-                                : this.props.historyItem.direction === "download"
-                                ? "material:file_download"
-                                : "material:attach_file"
-                        }
-                        size={48}
-                    />
-                    <div>
-                        <p>
-                            <HistoryItemDate>
-                                {formatDateTimeLong(this.props.historyItem.date)}
-                            </HistoryItemDate>
-                        </p>
-                        {this.props.historyItem.sourceDescriptionElement}
-                        {body}
-                    </div>
-                </FileHistoryItemDiv>
-            </VisibilitySensor>
+            <FileHistoryItemDiv>
+                <Icon
+                    className="mr-3"
+                    icon={
+                        this.props.historyItem.direction === "upload"
+                            ? "material:file_upload"
+                            : this.props.historyItem.direction === "download"
+                            ? "material:file_download"
+                            : "material:attach_file"
+                    }
+                    size={48}
+                />
+                <div>
+                    <p>
+                        <HistoryItemDate>
+                            {formatDateTimeLong(this.props.historyItem.date)}
+                        </HistoryItemDate>
+                    </p>
+                    {this.props.historyItem.sourceDescriptionElement}
+                    {body}
+                </div>
+            </FileHistoryItemDiv>
         );
     }
 }
@@ -750,40 +737,5 @@ export class FileHistoryItem extends HistoryItem {
                 <p>{secondRow}</p>
             </React.Fragment>
         );
-    }
-
-    @observable
-    _isVisible: boolean;
-
-    get isVisible() {
-        return this._isVisible;
-    }
-
-    setVisibleTimeoutId: any;
-
-    set isVisible(value: boolean) {
-        if (this.setVisibleTimeoutId) {
-            clearTimeout(this.setVisibleTimeoutId);
-            this.setVisibleTimeoutId = undefined;
-        }
-
-        if (value) {
-            if (!this._isVisible) {
-                this.setVisibleTimeoutId = setTimeout(
-                    action(() => (this._isVisible = true)),
-                    CONF_SET_IS_VISIBLE_DELAY
-                );
-            }
-        } else {
-            if (this._isVisible) {
-                this.setVisibleTimeoutId = setTimeout(
-                    action(() => {
-                        this._isVisible = false;
-                        this._data = undefined;
-                    }),
-                    CONF_UNSET_IS_VISIBLE_DELAY
-                );
-            }
-        }
     }
 }

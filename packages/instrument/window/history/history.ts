@@ -260,9 +260,9 @@ class HistoryCalendar {
     }
 
     @action
-    showRecent() {
+    async showRecent() {
         this.history.search.selectSearchResult(undefined);
-        this.update();
+        await this.update();
     }
 
     @action
@@ -436,8 +436,11 @@ class HistorySearch {
         if (this.selectedSearchResult) {
             this.selectedSearchResult.selected = false;
 
-            const historyItem = this.history.map.get(this.selectedSearchResult.logEntry.id);
-            if (historyItem) {
+            const foundItem = this.history.findHistoryItemById(
+                this.selectedSearchResult.logEntry.id
+            );
+            if (foundItem) {
+                const historyItem = foundItem.block[foundItem.index];
                 historyItem.selected = false;
             }
         }
@@ -488,8 +491,9 @@ class HistorySearch {
 
             this.history.displayRows(rows);
 
-            const historyItem = this.history.map.get(searchResult.logEntry.id);
-            if (historyItem) {
+            const foundItem = this.history.findHistoryItemById(searchResult.logEntry.id);
+            if (foundItem) {
+                const historyItem = foundItem.block[foundItem.index];
                 runInAction(() => {
                     historyItem.selected = true;
                 });
@@ -708,7 +712,6 @@ export class History {
         this.optionsArg
     );
 
-    map = new Map<string, IHistoryItem>();
     @observable
     blocks: IHistoryItem[][] = [];
 
@@ -971,16 +974,14 @@ export class History {
     }
 
     getHistoryItemById(id: string) {
-        const historyItem = this.map.get(id);
-        if (historyItem) {
-            return historyItem;
+        const foundItem = this.findHistoryItemById(id);
+        if (foundItem) {
+            return foundItem.block[foundItem.index];
         }
 
         const activityLogEntry = this.options.store.findById(id);
         if (activityLogEntry) {
-            const historyItem = createHistoryItem(activityLogEntry, this.appStore);
-            this.map.set(historyItem.id, historyItem);
-            return historyItem;
+            return createHistoryItem(activityLogEntry, this.appStore);
         }
 
         return undefined;
@@ -1000,7 +1001,6 @@ export class History {
 
     addActivityLogEntryToBlocks(activityLogEntry: IActivityLogEntry) {
         const historyItem = createHistoryItem(activityLogEntry, this.appStore);
-        this.map.set(historyItem.id, historyItem);
 
         this.filterStats.onHistoryItemCreated(historyItem);
 
@@ -1083,25 +1083,13 @@ export class History {
             );
             this.calendar.decrementCounter(day);
         }
-
-        if (this.map.get(activityLogEntry.id)) {
-            this.map.delete(activityLogEntry.id);
-        } else {
-            if (!this.isDeletedItemsHistory) {
-                console.warn("history item not found");
-            }
-        }
     }
 
     rowsToHistoryItems(rows: any[]) {
         const historyItems: IHistoryItem[] = [];
         rows.forEach(row => {
-            let historyItem = this.map.get(row.id.toString());
-            if (!historyItem) {
-                const activityLogEntry = this.options.store.dbRowToObject(row);
-                historyItem = createHistoryItem(activityLogEntry, this.appStore);
-                this.map.set(historyItem.id, historyItem);
-            }
+            const activityLogEntry = this.options.store.dbRowToObject(row);
+            const historyItem = createHistoryItem(activityLogEntry, this.appStore);
             historyItems.push(historyItem);
         });
         return historyItems;
@@ -1115,7 +1103,7 @@ export class History {
     }
 
     @action
-    onCreateActivityLogEntry(
+    async onCreateActivityLogEntry(
         activityLogEntry: IActivityLogEntry,
         op: StoreOperation,
         options: IStoreOperationOptions
@@ -1150,7 +1138,8 @@ export class History {
             }
         }
 
-        if (this.map.get(activityLogEntry.id)) {
+        const foundItem = this.findHistoryItemById(activityLogEntry.id);
+        if (foundItem) {
             return;
         }
 
@@ -1165,7 +1154,7 @@ export class History {
             // This is a new history item,
             // add it to the bottom of history list (last block) ...
             if (this.navigator.hasNewer) {
-                this.calendar.showRecent();
+                await this.calendar.showRecent();
             } else {
                 this.addActivityLogEntryToBlocks(activityLogEntry);
             }
@@ -1189,8 +1178,6 @@ export class History {
         const foundItem = this.findHistoryItemById(activityLogEntry.id);
         if (foundItem) {
             historyItem = foundItem.block[foundItem.index];
-        } else {
-            historyItem = this.map.get(activityLogEntry.id);
         }
 
         if (!historyItem) {
@@ -1206,7 +1193,6 @@ export class History {
             if (foundItem) {
                 foundItem.block[foundItem.index] = updatedHistoryItem;
             }
-            this.map.set(updatedHistoryItem.id, updatedHistoryItem);
         }
     }
 
@@ -1348,7 +1334,7 @@ export class DeletedItemsHistory extends History {
     }
 
     @action
-    onCreateActivityLogEntry(
+    async onCreateActivityLogEntry(
         activityLogEntry: IActivityLogEntry,
         op: StoreOperation,
         options: IStoreOperationOptions
