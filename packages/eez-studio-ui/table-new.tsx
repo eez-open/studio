@@ -2,8 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
-import Paper from "@material-ui/core/Paper";
-import TablePagination from "@material-ui/core/TablePagination";
+import { Paper, TablePagination } from "@material-ui/core";
 
 import { _mapValues, _range } from "eez-studio-shared/algorithm";
 import { Rect } from "eez-studio-shared/geometry";

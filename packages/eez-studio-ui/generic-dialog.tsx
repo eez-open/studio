@@ -162,10 +162,15 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                     enumItem = enumItems[0];
                 }
 
-                values[fieldProperties.name] =
-                    typeof enumItem === "string" || typeof enumItem === "number"
-                        ? enumItem
-                        : enumItem.id;
+                if (enumItem !== undefined) {
+                    if (typeof enumItem === "string" || typeof enumItem === "number") {
+                        values[fieldProperties.name] = enumItem;
+                    } else {
+                        values[fieldProperties.name] = enumItem.id;
+                    }
+                } else {
+                    values[fieldProperties.name] = undefined;
+                }
             } else if (fieldProperties.unit !== undefined) {
                 values[fieldProperties.name] = UNITS[fieldProperties.unit].parseValue(
                     this.state.values[fieldProperties.name]
