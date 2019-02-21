@@ -1,4 +1,4 @@
-import { observable, action, computed } from "mobx";
+import { observable, action, computed, runInAction, autorun } from "mobx";
 import { createTransformer } from "mobx-utils";
 
 import { _each, _find, _pickBy, _isEqual, _map } from "eez-studio-shared/algorithm";
@@ -1207,6 +1207,21 @@ export class ListAdapter implements ITreeAdapter {
         onDoubleClick?: (object: EezObject) => void
     ) {
         this.onDoubleClickCallback = onDoubleClick;
+
+        autorun(() => {
+            const selectedItem = this.selectedItem;
+            if (selectedItem && !selectedItem.selected) {
+                runInAction(() => {
+                    this.items.forEach(item => {
+                        if (item.selected) {
+                            item.selected = false;
+                        }
+                    });
+
+                    selectedItem.selected = true;
+                });
+            }
+        });
     }
 
     onDoubleClickCallback: ((object: EezObject) => void) | undefined;
@@ -1216,14 +1231,6 @@ export class ListAdapter implements ITreeAdapter {
     @computed
     get items() {
         let items = asArray(this.object).map(object => new ListItem(object));
-
-        setTimeout(
-            action(() => {
-                if (this.selectedItem) {
-                    this.selectedItem.selected = true;
-                }
-            })
-        );
 
         if (this.sortDirection === "asc") {
             return items.sort((a, b) => stringCompare(a.object._label, b.object._label));
