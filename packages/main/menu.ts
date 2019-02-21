@@ -1,6 +1,7 @@
 import os from "os";
-import { app, dialog, Menu, ipcMain } from "electron";
-import { autorun } from "mobx";
+import fs from "fs";
+import { app, dialog, Menu, ipcMain, BrowserWindow } from "electron";
+import { autorun, runInAction } from "mobx";
 
 import { importInstrumentDefinitionFile } from "main/home-window";
 import { createNewProjectWindow, openFile } from "main/project-editor-window";
@@ -69,7 +70,10 @@ const darwinAppMenu: Electron.MenuItemConstructorOptions = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const fileRecentSubmenu: Electron.MenuItemConstructorOptions[] = [];
+let fileRecentSubmenu: Electron.MenuItemConstructorOptions = {
+    label: "Open Recent",
+    submenu: []
+};
 
 const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
     {
@@ -102,10 +106,7 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
             );
         }
     },
-    {
-        label: "Open Recent",
-        submenu: fileRecentSubmenu
-    },
+    fileRecentSubmenu,
     {
         type: "separator"
     },
@@ -378,15 +379,30 @@ const helpMenu: Electron.MenuItemConstructorOptions = {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildFileMenu(windowType: WindowType) {
-    fileRecentSubmenu.splice(0, fileRecentSubmenu.length);
-    settings.mru.map(mru => {
-        fileRecentSubmenu.push({
-            label: mru.filePath,
-            click: function() {
+    fileRecentSubmenu.submenu = settings.mru.map(mru => ({
+        label: mru.filePath,
+        click: function() {
+            if (fs.existsSync(mru.filePath)) {
                 openFile(mru.filePath);
+            } else {
+                // file not found, remove from mru
+                var i = settings.mru.indexOf(mru);
+                if (i != -1) {
+                    runInAction(() => {
+                        settings.mru.splice(i, 1);
+                    });
+                }
+
+                // notify user
+                dialog.showMessageBox(BrowserWindow.getFocusedWindow()!, {
+                    type: "error",
+                    title: "EEZ Studio",
+                    message: "File does not exist.",
+                    detail: `The file '${mru.filePath}' does not seem to exist anymore.`
+                });
             }
-        });
-    });
+        }
+    }));
 
     if (windowType === "home") {
         return homeFileMenu;
