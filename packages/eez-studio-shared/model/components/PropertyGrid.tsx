@@ -231,7 +231,8 @@ class CodeEditorProperty extends React.Component<PropertyProps> {
                 onBlur={this.onBlur}
                 className="form-control"
                 mode="json"
-                style={{ height: 320 }}
+                minLines={20}
+                maxLines={50}
             />
         );
     }

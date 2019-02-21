@@ -16,7 +16,9 @@ function createEditor(
     readOnly: boolean,
     mode: string,
     lineNumber: number,
-    columnNumber: number
+    columnNumber: number,
+    minLines?: number,
+    maxLines?: number
 ) {
     return new Promise(resolve => {
         function aceReady() {
@@ -24,6 +26,18 @@ function createEditor(
 
             editor.getSession().setMode("ace/mode/" + mode);
             editor.setShowPrintMargin(false);
+
+            if (minLines !== undefined) {
+                editor.setOptions({
+                    minLines
+                });
+            }
+
+            if (maxLines !== undefined) {
+                editor.setOptions({
+                    maxLines
+                });
+            }
 
             editor.setReadOnly(readOnly);
             if (readOnly) {
@@ -123,6 +137,8 @@ interface CodeEditorProps {
     readOnly?: boolean;
     lineNumber?: number;
     columnNumber?: number;
+    minLines?: number;
+    maxLines?: number;
 }
 
 export class CodeEditor extends React.Component<CodeEditorProps, {}> {
@@ -171,7 +187,9 @@ export class CodeEditor extends React.Component<CodeEditorProps, {}> {
                 this.props.readOnly || false,
                 this.props.mode,
                 this.props.lineNumber || 1,
-                this.props.columnNumber || 1
+                this.props.columnNumber || 1,
+                this.props.minLines,
+                this.props.maxLines
             ).then((editor: any) => {
                 this.editor = editor;
 
