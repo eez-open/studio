@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, runInAction, reaction } from "mobx";
+import { observable, action, runInAction, reaction, autorun } from "mobx";
 
 import { isRenderer } from "eez-studio-shared/util-electron";
 
@@ -149,6 +149,14 @@ class Tabs {
                 ),
             tabs => window.localStorage.setItem("home/tabs", JSON.stringify(tabs))
         );
+
+        autorun(() => {
+            const tabsToClose = this.tabs.filter(
+                tab => tab instanceof ObjectEditorTab && !workbenchObjects.get(tab.id)
+            ) as ObjectEditorTab[];
+
+            tabsToClose.forEach(tab => tab.close());
+        });
     }
 
     findObjectTab(id: string) {

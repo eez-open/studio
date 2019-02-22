@@ -231,7 +231,9 @@ export function findWorkbenchObjectById(id: string) {
 export function deleteWorkbenchObject(object: WorkbenchObject) {
     if (object.type === "instrument") {
         if (object.implementation) {
-            instrumentStore.deleteObject(object.implementation);
+            instrumentStore.deleteObject({
+                id: object.implementation.id
+            });
         }
     }
     store.deleteObject(object);

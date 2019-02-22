@@ -221,10 +221,15 @@ export class InstrumentObject {
             return undefined;
         }
 
-        this._extension = Object.assign({}, UNKNOWN_INSTRUMENT_EXTENSION, {
+        const extension = Object.assign({}, UNKNOWN_INSTRUMENT_EXTENSION, {
             id: this.instrumentExtensionId
         });
-        return this._extension;
+
+        _defer(() => {
+            this._extension = extension;
+        });
+
+        return extension;
     }
 
     @computed
