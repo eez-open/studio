@@ -84,6 +84,10 @@ const instrumentExtension: IExtensionDefinition = {
                     showAddInstrumentDialog(extension => {
                         beginTransaction("Add instrument");
                         let params = createInstrument(extension);
+                        params.rect.left =
+                            context.viewState.transform.centerPoint.x - params.rect.width / 2;
+                        params.rect.top =
+                            context.viewState.transform.centerPoint.y - params.rect.height / 2;
                         context.document.createObject(params);
                         commitTransaction();
                     });

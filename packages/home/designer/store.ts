@@ -136,6 +136,14 @@ class WorkbenchDocument implements IDocument {
             }
 
             if (object.isEditable) {
+                if (menu.items.length > 0) {
+                    menu.append(
+                        new MenuItem({
+                            type: "separator"
+                        })
+                    );
+                }
+
                 menu.append(
                     new MenuItem({
                         label: "Open in Tab",
@@ -153,13 +161,26 @@ class WorkbenchDocument implements IDocument {
                         }
                     })
                 );
+            }
+        }
 
+        if (objects.length > 0) {
+            if (menu.items.length > 0) {
                 menu.append(
                     new MenuItem({
                         type: "separator"
                     })
                 );
             }
+
+            menu.append(
+                new MenuItem({
+                    label: "Delete",
+                    click: () => {
+                        this.deleteObjects(objects);
+                    }
+                })
+            );
         }
 
         return {

@@ -866,18 +866,20 @@ export class InstrumentObject {
         if (this.isUnknownExtension) {
             const { MenuItem } = EEZStudio.electron.remote;
 
+            if (menu.items.length > 0) {
+                menu.append(
+                    new MenuItem({
+                        type: "separator"
+                    })
+                );
+            }
+
             menu.append(
                 new MenuItem({
                     label: "Install Extension",
                     click: () => {
                         this.installExtension();
                     }
-                })
-            );
-
-            menu.append(
-                new MenuItem({
-                    type: "separator"
                 })
             );
         }
