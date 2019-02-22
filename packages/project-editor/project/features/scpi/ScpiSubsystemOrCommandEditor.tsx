@@ -22,6 +22,17 @@ export class ScpiSubsystemOrCommandEditor extends React.Component<
                 ProjectStore.project.settings.general.scpiDocFolder
             );
 
+            let src;
+            if (
+                this.props.object.helpLink.trim().startsWith("http://") ||
+                this.props.object.helpLink.trim().startsWith("https://") ||
+                this.props.object.helpLink.trim().startsWith("//")
+            ) {
+                src = this.props.object.helpLink;
+            } else {
+                src = scpiHelpFolderPath + "/" + this.props.object.helpLink;
+            }
+
             return (
                 <Splitter
                     type="vertical"
@@ -30,7 +41,7 @@ export class ScpiSubsystemOrCommandEditor extends React.Component<
                 >
                     <PropertyGrid object={this.props.object} />
                     <iframe
-                        src={scpiHelpFolderPath + "/" + this.props.object.helpLink}
+                        src={src}
                         style={{
                             position: "absolute",
                             width: "100%",
