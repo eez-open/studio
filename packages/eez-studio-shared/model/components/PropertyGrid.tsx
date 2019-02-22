@@ -176,7 +176,16 @@ class PropertyMenu extends React.Component<PropertyProps> {
 class CodeEditorProperty extends React.Component<PropertyProps> {
     @observable
     value: string = this.getValue();
+
     editor: CodeEditor;
+
+    @disposeOnUnmount updateValue = autorun(() => {
+        console.log("autorun");
+        const value = this.getValue();
+        runInAction(() => {
+            this.value = value;
+        });
+    });
 
     getValue(props?: PropertyProps) {
         props = props || this.props;
@@ -204,6 +213,7 @@ class CodeEditorProperty extends React.Component<PropertyProps> {
 
     @action.bound
     onChange(value: string) {
+        console.log("change");
         this.value = value;
     }
 
@@ -214,7 +224,9 @@ class CodeEditorProperty extends React.Component<PropertyProps> {
 
     @bind
     onBlur() {
+        console.log("blur");
         if (this.getValue() !== this.value) {
+            console.log("update");
             this.props.updateObject({
                 [this.props.propertyInfo.name]: this.value
             });
@@ -222,6 +234,7 @@ class CodeEditorProperty extends React.Component<PropertyProps> {
     }
 
     render() {
+        console.log("render");
         return (
             <CodeEditor
                 ref={ref => (this.editor = ref!)}

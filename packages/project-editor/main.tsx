@@ -16,6 +16,16 @@ import {
 configure({ enforceActions: "observed" });
 
 EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
+    function blurAll() {
+        var tmp = document.createElement("input");
+        document.body.appendChild(tmp);
+        tmp.focus();
+        document.body.removeChild(tmp);
+    }
+
+    // make sure we store all the values waiting to be stored inside blur event handler
+    blurAll();
+
     const storeModule = await import("project-editor/core/store");
     storeModule.ProjectStore.closeWindow();
 });
