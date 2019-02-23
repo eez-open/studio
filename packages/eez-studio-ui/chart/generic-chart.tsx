@@ -36,29 +36,29 @@ export function getNearestValuePoint(
     let i1 = Math.floor(xAxisController.pxToValue(point.x - 0.5) * waveform.samplingRate);
     let i2 = Math.ceil(xAxisController.pxToValue(point.x + 0.5) * waveform.samplingRate);
     if (i2 - i1 > 1) {
-        if (yAxisController.unit.unitSymbol === "dB") {
-            // find max value for logarithmic unit
-            let max = waveform.value(i1);
-            for (let i = i1 + 1; i <= i2; ++i) {
-                const value = waveform.value(i);
-                if (value > max) {
-                    max = value;
-                }
+        // find max value for logarithmic unit
+        let min = waveform.value(i1);
+        let max = waveform.value(i1);
+        for (let i = i1 + 1; i <= i2; ++i) {
+            const value = waveform.value(i);
+            if (value > max) {
+                max = value;
+            } else if (value < min) {
+                min = value;
             }
+        }
+
+        let xValue = xAxisController.pxToValue(point.x);
+        let yValue = yAxisController.pxToValue(point.y);
+        if (Math.abs(min - yValue) < Math.abs(max - yValue)) {
             return {
-                x: xAxisController.pxToValue(point.x),
-                y: max
+                x: xValue,
+                y: min
             };
         } else {
-            // find average value
-            let sum = 0;
-            for (let i = i1; i <= i2; ++i) {
-                sum += waveform.value(i);
-            }
-            let avg = sum / (i2 - i1 + 1);
             return {
-                x: xAxisController.pxToValue(point.x),
-                y: avg
+                x: xValue,
+                y: max
             };
         }
     } else {
