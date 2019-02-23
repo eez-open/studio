@@ -176,7 +176,7 @@ class FindChanges {
             name: this.getUniqueEnumName(suggestedEnumName),
             members: members.split("|").map((member, i) => ({
                 name: member,
-                value: (i + 1).toString()
+                value: ""
             }))
         };
 
