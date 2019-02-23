@@ -637,7 +637,7 @@ class DynamicAxisController extends AxisController {
             addLinearLines(from, to, steps.length - 1);
         }
 
-        if (ticks.length === 0) {
+        if (ticks.length === 0 && !this.logarithmic) {
             // no tick lines, at least add lines for "from" and "to"
             let from = Math.ceil(this.from / this.steps[0]) * this.steps[0];
             ticks.push({
@@ -849,6 +849,10 @@ class DynamicAxisController extends AxisController {
         const oldFrom = this.from;
         const oldTo = this.to;
 
+        this.animationFrom = oldFrom;
+        this.animationTo = oldTo;
+        this.isAnimationActive = true;
+
         runInAction(set);
 
         const newFrom = this.from;
@@ -859,7 +863,6 @@ class DynamicAxisController extends AxisController {
                 if (t === 1) {
                     this.isAnimationActive = false;
                 } else {
-                    this.isAnimationActive = true;
                     this.animationFrom = oldFrom + t * (newFrom - oldFrom);
                     this.animationTo = oldTo + t * (newTo - oldTo);
                 }
@@ -933,8 +936,6 @@ class FixedAxisController extends AxisController {
         super(position, chartsController, chartController, axisModel);
     }
 
-    @observable
-    isAnimationActive: boolean;
     animationController = new AnimationController();
 
     @observable
@@ -1234,6 +1235,10 @@ class FixedAxisController extends AxisController {
         const oldOffset = this.subdivisionOffset;
         const oldScale = this.subdivisionScale;
 
+        this.isAnimationActive = true;
+        this.animationSubdivisionOffset = oldOffset;
+        this.animationSubdivisionScale = oldScale;
+
         runInAction(set);
 
         const newOffset = this.subdivisionOffset;
@@ -1244,7 +1249,6 @@ class FixedAxisController extends AxisController {
                 if (t === 1) {
                     this.isAnimationActive = false;
                 } else {
-                    this.isAnimationActive = true;
                     this.animationSubdivisionOffset = oldOffset + t * (newOffset - oldOffset);
                     this.animationSubdivisionScale = oldScale + t * (newScale - oldScale);
                 }

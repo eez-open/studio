@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { observable, computed, action, reaction, runInAction, toJS } from "mobx";
+import { observable, computed, reaction, action, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -20,11 +20,42 @@ import { IconAction } from "eez-studio-ui/action";
 import { DockablePanels } from "eez-studio-ui/side-dock";
 import { GenericDialog, IFieldProperties, FieldComponent } from "eez-studio-ui/generic-dialog";
 import { SideDockViewContainer } from "eez-studio-ui/side-dock";
-import { Loader } from "eez-studio-ui/loader";
+import * as notification from "eez-studio-ui/notification";
+import { cssTransition } from "react-toastify";
 
 import { ChartsController, ChartController } from "eez-studio-ui/chart/chart";
 import * as GenericChartModule from "eez-studio-ui/chart/generic-chart";
 import { WaveformFormat, initValuesAccesor } from "eez-studio-ui/chart/buffer";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const CONF_MAX_NUM_SAMPLES_TO_SHOW_CALCULATING_MESSAGE = 1000000;
+
+////////////////////////////////////////////////////////////////////////////////
+
+let calculatingToastId: any;
+
+const Fade = cssTransition({
+    enter: "fadeIn",
+    exit: "fadeOut",
+    duration: 0
+});
+
+function showCalculating() {
+    if (!calculatingToastId) {
+        calculatingToastId = notification.info("Calculating...", {
+            transition: Fade,
+            closeButton: false
+        });
+    }
+}
+
+function hideCalculating() {
+    if (calculatingToastId) {
+        notification.dismiss(calculatingToastId);
+        calculatingToastId = undefined;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -215,34 +246,11 @@ class Measurement {
             return value * waveformModel!.samplingRate;
         }
 
-        const rulersModel = this.measurementsController.chartsController.rulersController!
-            .rulersModel;
+        const { x1, x2 } = this.measurementsController.measurementsInterval!;
 
-        let xStartValue: number;
-        let a: number;
-        let b: number;
-        if (rulersModel.xAxisRulersEnabled) {
-            let x1;
-            let x2;
-            if (rulersModel.x1 < rulersModel.x2) {
-                x1 = rulersModel.x1;
-                x2 = rulersModel.x2;
-            } else {
-                x1 = rulersModel.x2;
-                x2 = rulersModel.x1;
-            }
-
-            xStartValue = x1;
-            a = clamp(Math.floor(xAxisValueToIndex(x1)), 0, waveformModel.length);
-            b = clamp(Math.ceil(xAxisValueToIndex(x2)), 0, waveformModel.length - 1);
-        } else {
-            const from = this.measurementsController.chartsController.xAxisController.from;
-            const to = this.measurementsController.chartsController.xAxisController.to;
-
-            xStartValue = from;
-            a = clamp(Math.floor(xAxisValueToIndex(from)), 0, waveformModel.length);
-            b = clamp(Math.ceil(xAxisValueToIndex(to)), 0, waveformModel.length - 1);
-        }
+        let xStartValue: number = x1;
+        let a: number = clamp(Math.floor(xAxisValueToIndex(x1)), 0, waveformModel.length);
+        let b: number = clamp(Math.ceil(xAxisValueToIndex(x2)), 0, waveformModel.length - 1);
 
         const xNumSamples = b - a + 1;
         if (xNumSamples <= 0) {
@@ -390,6 +398,10 @@ class Measurement {
         resultUnit?: keyof typeof UNITS | undefined;
     } | null {
         if (!this.script) {
+            return null;
+        }
+
+        if (!this.measurementsController.measurementsInterval) {
             return null;
         }
 
@@ -589,10 +601,82 @@ export class MeasurementsController {
         } else {
             this.chartPanelsViewState = JSON.stringify(this.defaultChartPanelViewState);
         }
+
+        this.timeoutId = setTimeout(() => {
+            this.timeoutId = undefined;
+            this.startMeasurement(this.calcMeasurementsInterval());
+        }, 500);
+
+        reaction(
+            () => ({
+                isAnimationActive: this.chartsController.xAxisController.isAnimationActive,
+                measurementsInterval: this.calcMeasurementsInterval()
+            }),
+            ({ isAnimationActive, measurementsInterval }) => {
+                if (!isAnimationActive) {
+                    this.startMeasurement(measurementsInterval);
+                }
+            }
+        );
     }
 
     @observable
     measurements: Measurement[];
+
+    @observable
+    measurementsInterval: { x1: number; x2: number } | undefined;
+
+    timeoutId: any;
+
+    calcMeasurementsInterval() {
+        const rulersModel = this.chartsController.rulersController!.rulersModel;
+
+        let x1: number;
+        let x2: number;
+        if (rulersModel.xAxisRulersEnabled) {
+            if (rulersModel.x1 < rulersModel.x2) {
+                x1 = rulersModel.x1;
+                x2 = rulersModel.x2;
+            } else {
+                x1 = rulersModel.x2;
+                x2 = rulersModel.x1;
+            }
+        } else {
+            x1 = this.chartsController.xAxisController.from;
+            x2 = this.chartsController.xAxisController.to;
+        }
+
+        let numSamples = 0;
+
+        for (let i = 0; i < this.chartsController.chartControllers.length; ++i) {
+            const waveformModel = this.chartsController.getWaveformModel(i);
+            if (waveformModel) {
+                numSamples = Math.max(numSamples, waveformModel.samplingRate * (x2 - x1));
+            }
+        }
+
+        return { x1, x2, numSamples };
+    }
+
+    startMeasurement(measurementsInterval: { x1: number; x2: number; numSamples: number }) {
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = undefined;
+        }
+
+        if (measurementsInterval.numSamples > CONF_MAX_NUM_SAMPLES_TO_SHOW_CALCULATING_MESSAGE) {
+            showCalculating();
+            this.timeoutId = setTimeout(() => {
+                this.timeoutId = undefined;
+                runInAction(() => (this.measurementsInterval = measurementsInterval));
+                setTimeout(() => {
+                    hideCalculating();
+                }, 10);
+            }, 150);
+        } else {
+            runInAction(() => (this.measurementsInterval = measurementsInterval));
+        }
+    }
 
     @computed
     get chartMeasurements() {
@@ -655,13 +739,6 @@ const ChartContainerDiv = styled.div`
     }
 `;
 
-const LoaderContainerDiv = styled.div`
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-`;
-
 @observer
 export class MeasurementValue extends React.Component<{
     measurement: Measurement;
@@ -676,11 +753,7 @@ export class MeasurementValue extends React.Component<{
 
         if (measurementResult === null || measurementResult.result === null) {
             if (this.props.inDockablePanel) {
-                return (
-                    <LoaderContainerDiv>
-                        <Loader />
-                    </LoaderContainerDiv>
-                );
+                return null;
             }
             return <input type="text" className="form-control" value={""} readOnly={true} />;
         }

@@ -123,8 +123,6 @@ export default function(task: IMeasureTask) {
 
     let F = task.xNumSamples / numSamples;
 
-    console.log(task.xNumSamples, numSamples, F);
-
     let halfNumSamples = Math.floor(numSamples / 2);
 
     //

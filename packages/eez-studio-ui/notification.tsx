@@ -49,8 +49,8 @@ export function update(toastId: number, options: ToastModule.UpdateOptions) {
     return getToast().update(toastId, options);
 }
 
-export function done(toastId: number) {
-    getToast().done(toastId);
+export function dismiss(toastId: number) {
+    getToast().dismiss(toastId);
 }
 
 export const container = observable.box<JSX.Element | undefined>(undefined, { deep: false });
