@@ -61,7 +61,7 @@
     "@types/usb": "^1.5.1",
     "concurrently": "^4.1.0",
     "electron": "4.0.4",
-    "electron-packager": "^13.0.1",
+    "electron-packager": "^13.1.0",
     "electron-rebuild": "^1.8.4",
     "globby": "^9.0.0",
     "gulp": "^4.0.0",
