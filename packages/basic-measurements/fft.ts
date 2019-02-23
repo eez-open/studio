@@ -125,7 +125,7 @@ export default function(task: IMeasureTask) {
 
     console.log(task.xNumSamples, numSamples, F);
 
-    let halfNumSamples = numSamples / 2;
+    let halfNumSamples = Math.floor(numSamples / 2);
 
     //
     const real = new Float64Array(numSamples);

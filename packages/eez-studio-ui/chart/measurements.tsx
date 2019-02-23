@@ -236,9 +236,12 @@ class Measurement {
             a = clamp(Math.floor(xAxisValueToIndex(x1)), 0, waveformModel.length);
             b = clamp(Math.ceil(xAxisValueToIndex(x2)), 0, waveformModel.length - 1);
         } else {
-            xStartValue = 0;
-            a = 0;
-            b = waveformModel.length - 1;
+            const from = this.measurementsController.chartsController.xAxisController.from;
+            const to = this.measurementsController.chartsController.xAxisController.to;
+
+            xStartValue = from;
+            a = clamp(Math.floor(xAxisValueToIndex(from)), 0, waveformModel.length);
+            b = clamp(Math.ceil(xAxisValueToIndex(to)), 0, waveformModel.length - 1);
         }
 
         const xNumSamples = b - a + 1;

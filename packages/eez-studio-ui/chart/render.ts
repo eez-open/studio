@@ -448,12 +448,14 @@ export function renderWaveformPath(
             ctx.lineWidth = 1;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            for (i = 1; i < points.length; ++i) {
-                ctx.lineTo(points[i].x, points[i].y);
+            if (points.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                for (i = 1; i < points.length; ++i) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                ctx.stroke();
             }
-            ctx.stroke();
 
             let R = 1.5;
             for (i = 0; i < points.length; ++i) {
