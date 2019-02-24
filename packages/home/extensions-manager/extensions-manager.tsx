@@ -697,6 +697,7 @@ export function downloadAndInstallExtension(
                         type: notification.ERROR
                     });
                     reject();
+                    return;
                 }
             }
 

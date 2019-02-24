@@ -71,4 +71,10 @@ class DragAndDropManagerClass {
     }
 }
 
-export let DragAndDropManager = new DragAndDropManagerClass();
+export let DragAndDropManager: DragAndDropManagerClass;
+
+try {
+    DragAndDropManager = new DragAndDropManagerClass();
+} catch (err) {
+    console.error(err);
+}
