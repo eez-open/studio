@@ -1179,6 +1179,10 @@ export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect, dataCont
     return undefined;
 }
 
+export function renderRootElement(child: React.ReactNode) {
+    return child;
+}
+
 export function renderLayoutViewWidget(
     widget: Widget.Widget,
     rect: Rect,

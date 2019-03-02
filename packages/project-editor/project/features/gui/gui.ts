@@ -42,6 +42,7 @@ setPageContext({
 
     drawPageFrame: draw.drawPageFrame,
     drawDefaultWidget: draw.drawDefaultWidget,
+    renderRootElement: draw.renderRootElement,
     renderLayoutViewWidget: draw.renderLayoutViewWidget,
 
     findActionIndex,

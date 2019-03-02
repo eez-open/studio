@@ -43,6 +43,7 @@ import {
     SelectWidget,
     SelectWidgetEditor
 } from "eez-studio-page-editor/widget";
+import { renderBackgroundRect, renderFail, renderRootElement } from "eez-studio-page-editor/render";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -482,25 +483,6 @@ class ObjectComponent extends React.Component<{
         );
     }
 
-    renderBackgroundRect() {
-        const rect = this.props.object.rect;
-        const widget = this.props.object.object as Widget;
-        const style = PageContext.findStyleOrGetDefault(widget.style);
-
-        return (
-            <div
-                style={{
-                    position: "absolute",
-                    left: rect.left,
-                    top: rect.top,
-                    width: rect.width,
-                    height: rect.height,
-                    backgroundColor: style.backgroundColor
-                }}
-            />
-        );
-    }
-
     get listWidget() {
         return this.props.object.object as ListWidget;
     }
@@ -769,7 +751,6 @@ class ObjectComponent extends React.Component<{
         return "left";
     }
 
-    @action
     renderSelectChildren() {
         const selectWidget = this.props.object.object._parent! as SelectWidget;
 
@@ -848,21 +829,27 @@ class ObjectComponent extends React.Component<{
     render() {
         if (this.props.object.object instanceof ContainerWidget) {
             return this.renderChildren(this.props.object.children);
-        } else if (this.props.object.object instanceof ListWidget) {
+        }
+
+        if (this.props.object.object instanceof ListWidget) {
             return (
                 <React.Fragment>
-                    {this.renderBackgroundRect()}
+                    {renderBackgroundRect(this.props.object.object, this.props.object.rect)}
                     {this.renderListItems()}
                 </React.Fragment>
             );
-        } else if (this.props.object.object instanceof GridWidget) {
+        }
+
+        if (this.props.object.object instanceof GridWidget) {
             return (
                 <React.Fragment>
-                    {this.renderBackgroundRect()}
+                    {renderBackgroundRect(this.props.object.object, this.props.object.rect)}
                     {this.renderGridItems()}
                 </React.Fragment>
             );
-        } else if (this.props.object.object instanceof SelectWidget) {
+        }
+
+        if (this.props.object.object instanceof SelectWidget) {
             const selectedChild = this.props.object.children[
                 this.props.object.selectedIndexInSelectWidget
             ];
@@ -872,7 +859,9 @@ class ObjectComponent extends React.Component<{
             } else {
                 return null;
             }
-        } else if (this.props.object.object instanceof Widget) {
+        }
+
+        if (this.props.object.object instanceof Widget) {
             const rect = this.props.object.rect;
 
             const canvas = this.props.object.object.draw(rect, this.props.dataContext);
@@ -910,38 +899,23 @@ class ObjectComponent extends React.Component<{
                     );
                 }
 
-                return this.renderBackgroundRect();
+                return renderBackgroundRect(this.props.object.object, this.props.object.rect);
             } catch (err) {
                 console.error(err);
-                return (
-                    <div
-                        style={{
-                            position: "absolute",
-                            left: rect.left,
-                            top: rect.top,
-                            width: rect.width,
-                            height: rect.height,
-                            border: "1px dashed red",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            textAlign: "center",
-                            color: "red",
-                            padding: 10
-                        }}
-                    >
-                        Failed to render widget!
-                    </div>
-                );
+                return renderFail(rect);
             }
-        } else if (this.props.object.object instanceof Page) {
+        }
+
+        if (this.props.object.object instanceof Page) {
             return (
                 <React.Fragment>
                     {this.props.object.object.render()}
                     {this.renderChildren(this.props.object.children)}
                 </React.Fragment>
             );
-        } else if (this.props.object.object instanceof SelectWidgetEditor) {
+        }
+
+        if (this.props.object.object instanceof SelectWidgetEditor) {
             const selectWidget = this.props.object.parent;
 
             const boundingRect = this.props.object.boundingRect;
@@ -1061,10 +1035,10 @@ class ObjectComponent extends React.Component<{
                     {this.renderSelectChildren()}
                 </React.Fragment>
             );
-        } else {
-            console.error("Unknown object type");
-            return null;
         }
+
+        console.error("Unknown object type");
+        return null;
     }
 }
 
@@ -1479,13 +1453,15 @@ export class PageEditor extends React.Component<
                         toolHandler={selectToolHandler}
                         customOverlay={<DragSnapLinesOverlay />}
                     >
-                        {this.pageEditorContext.document.rootObjects.map(
-                            (rootObject: EditorObject) => (
-                                <ObjectComponent
-                                    key={rootObject.id}
-                                    object={rootObject}
-                                    dataContext={dataContext || PageContext.rootDataContext}
-                                />
+                        {renderRootElement(
+                            this.pageEditorContext.document.rootObjects.map(
+                                (rootObject: EditorObject) => (
+                                    <ObjectComponent
+                                        key={rootObject.id}
+                                        object={rootObject}
+                                        dataContext={dataContext || PageContext.rootDataContext}
+                                    />
+                                )
                             )
                         )}
                     </PageEditorCanvas>
