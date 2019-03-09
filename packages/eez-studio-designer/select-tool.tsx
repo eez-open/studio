@@ -391,8 +391,8 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
             return;
         }
 
-        this.left = Math.floor(this.left + this.movement.x / context.viewState.transform.scale);
-        this.top = Math.floor(this.top + this.movement.y / context.viewState.transform.scale);
+        this.left += this.movement.x / context.viewState.transform.scale;
+        this.top += this.movement.y / context.viewState.transform.scale;
 
         const { left, top } = this.snapLines.dragSnap(
             this.left,
@@ -405,10 +405,12 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
             const object = context.viewState.selectedObjects[i];
 
             let rect = {
-                left:
-                    this.objectPositionsAtDown[i].x +
-                    (left - this.selectionBoundingRectAtDown.left),
-                top: this.objectPositionsAtDown[i].y + (top - this.selectionBoundingRectAtDown.top),
+                left: Math.round(
+                    this.objectPositionsAtDown[i].x + (left - this.selectionBoundingRectAtDown.left)
+                ),
+                top: Math.round(
+                    this.objectPositionsAtDown[i].y + (top - this.selectionBoundingRectAtDown.top)
+                ),
                 width: object.rect.width,
                 height: object.rect.height
             };

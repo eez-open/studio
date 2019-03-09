@@ -37,6 +37,7 @@ export function clipboardDataToObject(data: string) {
 
     const aClass = findClass(serializedData.objectClassName);
     if (aClass) {
+        serializedData.classInfo = aClass.classInfo;
         if (serializedData.object) {
             serializedData.object = loadObject(undefined, serializedData.object, aClass);
         } else if (serializedData.objects) {
