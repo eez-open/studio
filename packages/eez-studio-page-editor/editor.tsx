@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, toJS } from "mobx";
+import { observable, computed, action, toJS, autorun } from "mobx";
 import { observer, inject, Provider } from "mobx-react";
 import { createTransformer, ITransformer } from "mobx-utils";
 import { bind } from "bind-decorator";
@@ -13,7 +13,8 @@ import {
     IDocument,
     IViewStatePersistantState,
     IDesignerContext,
-    IResizeHandler
+    IResizeHandler,
+    IDesignerOptions
 } from "eez-studio-designer/designer-interfaces";
 import { DesignerContext } from "eez-studio-designer/context";
 import { Canvas } from "eez-studio-designer/canvas";
@@ -463,11 +464,13 @@ class ObjectComponent extends React.Component<{
     renderChildren(children: EditorObject[]) {
         return (
             <div
+                className={(this.props.object.object as any).className}
                 style={{
-                    transform: `translate(${this.props.object.rect.left}px, ${
-                        this.props.object.rect.top
-                    }px)`,
-                    transformOrigin: "0 0"
+                    position: "absolute",
+                    left: this.props.object.rect.left,
+                    top: this.props.object.rect.top,
+                    width: this.props.object.rect.width,
+                    height: this.props.object.rect.height
                 }}
             >
                 {children.map((child, i) => {
@@ -1210,7 +1213,12 @@ export class PageEditor extends React.Component<
         showStructure: true
     };
 
-    pageEditorContext: PageEditorContext;
+    pageEditorContext: PageEditorContext = new PageEditorContext();
+
+    @observable
+    pageDocument: PageDocument;
+
+    @observable options: IDesignerOptions;
 
     constructor(props: PageEditorProps) {
         super(props);
@@ -1218,6 +1226,47 @@ export class PageEditor extends React.Component<
         this.state = { hasError: false };
 
         this.pageEditorContext = new PageEditorContext();
+
+        this.componentWillReceiveProps(props);
+
+        autorun(() => {
+            this.pageEditorContext.set(
+                this.pageDocument,
+                this.viewStatePersistantState,
+                this.onSavePersistantState,
+                this.options,
+                this.filterSnapLines
+            );
+        });
+    }
+
+    componentWillReceiveProps(props: PageEditorProps) {
+        this.pageDocument = new PageDocument(props.widgetContainer, this.pageEditorContext);
+
+        this.options = {
+            center: {
+                x: 0,
+                y: 0
+            },
+            showStructure: props.showStructure
+        };
+    }
+
+    @bind
+    filterSnapLines(node: IBaseObject) {
+        const object = (node as EditorObject).object;
+
+        const selectedObjects = this.pageEditorContext.viewState.selectedObjects;
+
+        for (let i = 0; i < selectedObjects.length; ++i) {
+            const selectedObject = (selectedObjects[i] as EditorObject).object;
+
+            if (selectedObject._parent === object._parent || isAncestor(selectedObject, object)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @computed
@@ -1406,38 +1455,7 @@ export class PageEditor extends React.Component<
             return <div>Error!</div>;
         }
 
-        const { widgetContainer, dataContext, showStructure, onFocus } = this.props;
-
-        this.pageEditorContext.set(
-            new PageDocument(widgetContainer, this.pageEditorContext),
-            this.viewStatePersistantState,
-            this.onSavePersistantState,
-            {
-                center: {
-                    x: 0,
-                    y: 0
-                },
-                showStructure
-            },
-            (node: IBaseObject) => {
-                const object = (node as EditorObject).object;
-
-                const selectedObjects = this.pageEditorContext.viewState.selectedObjects;
-
-                for (let i = 0; i < selectedObjects.length; ++i) {
-                    const selectedObject = (selectedObjects[i] as EditorObject).object;
-
-                    if (
-                        selectedObject._parent === object._parent ||
-                        isAncestor(selectedObject, object)
-                    ) {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-        );
+        const { dataContext, onFocus } = this.props;
 
         return (
             <Provider designerContext={this.pageEditorContext}>

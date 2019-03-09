@@ -27,6 +27,12 @@ const CONF_AFTER_SCROLL_ADJUSTMENT_TIMEOUT = 1000; // ms
 ////////////////////////////////////////////////////////////////////////////////
 
 const CanvasDiv = styled.div`
+    cursor: default;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
     background-color: white;
     & > * {
         user-select: none;
@@ -42,7 +48,7 @@ export class Canvas extends React.Component<{
     className?: string;
     style?: React.CSSProperties;
 }> {
-    div: Element;
+    div: HTMLDivElement;
     innerDiv: Element;
     clientRectChangeDetectionAnimationFrameHandle: any;
     deltaY = 0;
@@ -103,6 +109,18 @@ export class Canvas extends React.Component<{
 
         this.div.scrollTop = -boundingRect.top;
         this.scrollTop = this.div.scrollTop;
+
+        if (this.boundingRect.width > this.designerContext.viewState.transform.clientRect.width) {
+            this.div.style.overflowX = "auto";
+        } else {
+            this.div.style.overflowX = "hidden";
+        }
+
+        if (this.boundingRect.height > this.designerContext.viewState.transform.clientRect.height) {
+            this.div.style.overflowY = "auto";
+        } else {
+            this.div.style.overflowY = "hidden";
+        }
     }
 
     userScrollTimeout: any;
@@ -356,15 +374,7 @@ export class Canvas extends React.Component<{
     }
 
     render() {
-        let style: React.CSSProperties = {
-            cursor: "default",
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: "100%",
-            height: "100%",
-            overflow: "auto"
-        };
+        let style: React.CSSProperties = {};
         if (this.mouseHandler) {
             style.cursor = this.mouseHandler.cursor;
         } else {

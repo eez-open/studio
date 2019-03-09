@@ -7,6 +7,7 @@ import {
     IReactionDisposer,
     autorun
 } from "mobx";
+import stringify from "json-stable-stringify";
 
 import { Rect, Transform, BoundingRectBuilder } from "eez-studio-shared/geometry";
 
@@ -49,7 +50,7 @@ class ViewState implements IViewState {
 
             if (selectedObjects.length !== this._selectedObjects.length) {
                 runInAction(() => {
-                    this._selectedObjects = selectedObjects;
+                    this.selectObjects(selectedObjects);
                 });
             }
         });
@@ -84,7 +85,7 @@ class ViewState implements IViewState {
                         selectedObjects.push(object);
                     }
                 }
-                this._selectedObjects = selectedObjects;
+                this.selectObjects(selectedObjects);
             }
         }
 
@@ -203,6 +204,7 @@ class ViewState implements IViewState {
         });
     }
 
+    @action
     selectObjects(objects: IBaseObject[]) {
         if (
             JSON.stringify(objects.map(object => object.id).sort()) ===
@@ -212,16 +214,12 @@ class ViewState implements IViewState {
             return;
         }
 
-        this.deselectAllObjects();
-        runInAction(() => {
-            this._selectedObjects = objects;
-        });
+        this._selectedObjects = objects;
     }
 
+    @action
     deselectAllObjects(): void {
-        runInAction(() => {
-            this._selectedObjects = [];
-        });
+        this._selectedObjects = [];
     }
 
     destroy() {
@@ -255,9 +253,12 @@ export class DesignerContext implements IDesignerContext {
 
         this.viewState.set(document, viewStatePersistantState, onSavePersistantState);
 
-        this.options = options || {
+        const newOptions = options || {
             showStructure: false
         };
+        if (stringify(newOptions) !== stringify(this.options)) {
+            this.options = newOptions;
+        }
 
         this.filterSnapLines = filterSnapLines;
     }

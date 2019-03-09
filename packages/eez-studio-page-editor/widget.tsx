@@ -112,6 +112,7 @@ export class Widget extends EezObject {
     height: number;
     @observable
     resizing: IResizing;
+    @observable className: string;
 
     get label() {
         return this.type;
@@ -169,6 +170,11 @@ export class Widget extends EezObject {
                 name: "activeStyle",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
+            },
+            {
+                name: "className",
+                type: PropertyType.String,
                 propertyGridGroup: styleGroup
             }
         ]
