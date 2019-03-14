@@ -32,7 +32,6 @@ export interface IPageContext {
 
     drawDefaultWidget(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
     renderRootElement(child: React.ReactNode): React.ReactNode;
-    renderLayoutViewWidget(widget: Widget, rect: Rect, dataContext: IDataContext): React.ReactNode;
 
     findActionIndex(actionName: any): number;
     findDataItemIndex(dataItemId: string): number;

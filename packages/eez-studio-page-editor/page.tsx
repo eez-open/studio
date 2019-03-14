@@ -2,7 +2,7 @@ import React from "react";
 import { observable, computed, action } from "mobx";
 
 import { _find } from "eez-studio-shared/algorithm";
-import { addAlphaToColor } from "eez-studio-shared/color";
+import { Rect } from "eez-studio-shared/geometry";
 
 import {
     EezObject,
@@ -19,9 +19,13 @@ import {
 } from "eez-studio-shared/model/object";
 import { TreeObjectAdapter, ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 
+import { IResizeHandler } from "eez-studio-designer/designer-interfaces";
+
 import { Widget } from "eez-studio-page-editor/widget";
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
-import { IResizeHandler } from "eez-studio-designer/designer-interfaces";
+import { WidgetContainerComponent } from "eez-studio-page-editor/render";
+
+import styled from "eez-studio-ui/styled-components";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -149,20 +153,34 @@ export class Page extends EezObject {
         return this.rect;
     }
 
-    render(dataContext: IDataContext) {
+    getClassNameStr(dataContext: IDataContext) {
+        return undefined;
+    }
+
+    @computed get Div() {
+        return styled.div``;
+    }
+
+    render(rect: Rect, dataContext: IDataContext, root: boolean) {
         const style = PageContext.findStyleOrGetDefault(this.style);
         return (
             <div
                 style={{
                     position: "absolute",
-                    left: this.x,
-                    top: this.y,
-                    width: this.width,
-                    height: this.height,
-                    backgroundColor: style.backgroundColor,
-                    boxShadow: `5px 5px 20px 0px ${addAlphaToColor(style.backgroundColor!, 0.5)}`
+                    left: root ? rect.left : 0,
+                    top: root ? rect.top : 0,
+                    width: rect.width,
+                    height: rect.height,
+                    backgroundColor: style.backgroundColor
                 }}
-            />
+            >
+                <WidgetContainerComponent
+                    containerWidget={this}
+                    rectContainer={rect}
+                    widgets={this.widgets._array}
+                    dataContext={dataContext}
+                />
+            </div>
         );
     }
 

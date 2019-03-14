@@ -3,7 +3,7 @@ import { observable, computed } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { _find } from "eez-studio-shared/algorithm";
+import { _find, _range } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
 
@@ -27,7 +27,8 @@ import {
     geometryGroup,
     styleGroup,
     IPropertyGridGroupDefinition,
-    areAllChildrenOfTheSameParent
+    areAllChildrenOfTheSameParent,
+    isAncestor
 } from "eez-studio-shared/model/object";
 import { loadObject } from "eez-studio-shared/model/serialization";
 import {
@@ -38,11 +39,18 @@ import {
 } from "eez-studio-shared/model/store";
 import * as output from "eez-studio-shared/model/output";
 
-import { IResizeHandler } from "eez-studio-designer/designer-interfaces";
+import { IResizeHandler, IDesignerContext } from "eez-studio-designer/designer-interfaces";
 import { PageInitContext } from "eez-studio-page-editor/page-init-context";
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 import { IResizing, resizingProperty } from "eez-studio-page-editor/resizing-widget-property";
+import {
+    renderBackgroundRect,
+    WidgetContainerComponent,
+    WidgetComponent
+} from "eez-studio-page-editor/render";
+import { EditorObject } from "eez-studio-page-editor/editor";
+
 import { PropertyProps } from "eez-studio-shared/model/components/PropertyGrid";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -238,6 +246,22 @@ export class Widget extends EezObject {
 
     check() {
         let messages: output.Message[] = [];
+
+        if (isNaN(this.x)) {
+            messages.push(output.propertyNotSetMessage(this, "x"));
+        }
+
+        if (isNaN(this.y)) {
+            messages.push(output.propertyNotSetMessage(this, "y"));
+        }
+
+        if (isNaN(this.width)) {
+            messages.push(output.propertyNotSetMessage(this, "width"));
+        }
+
+        if (isNaN(this.height)) {
+            messages.push(output.propertyNotSetMessage(this, "height"));
+        }
 
         let parent = this.parent;
         if (
@@ -528,7 +552,11 @@ export class Widget extends EezObject {
         return undefined;
     }
 
-    render(rect: Rect, dataContext: IDataContext): React.ReactNode {
+    render(
+        rect: Rect,
+        dataContext: IDataContext,
+        designerContext?: IDesignerContext
+    ): React.ReactNode {
         return undefined;
     }
 
@@ -619,8 +647,15 @@ export class ContainerWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageContext.drawDefaultWidget(this, rect);
+    render(rect: Rect, dataContext: IDataContext) {
+        return (
+            <WidgetContainerComponent
+                containerWidget={this}
+                rectContainer={rect}
+                widgets={this.widgets._array}
+                dataContext={dataContext}
+            />
+        );
     }
 
     getChildrenObjectsInEditor() {
@@ -700,8 +735,44 @@ export class ListWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageContext.drawDefaultWidget(this, rect);
+    renderItems(dataContext: IDataContext) {
+        const itemWidget = this.itemWidget;
+        if (!itemWidget) {
+            return null;
+        }
+
+        const itemRect = itemWidget.rect;
+
+        const listItemsCount = this.data ? dataContext.count(this.data) : 0;
+
+        return _range(listItemsCount).map(i => {
+            let xListItem = 0;
+            let yListItem = 0;
+
+            if (this.listType === "horizontal") {
+                xListItem += i * itemRect.width;
+            } else {
+                yListItem += i * itemRect.height;
+            }
+
+            return (
+                <WidgetComponent
+                    key={i}
+                    widget={itemWidget}
+                    rect={{
+                        left: xListItem,
+                        top: yListItem,
+                        width: itemRect.width,
+                        height: itemRect.height
+                    }}
+                    dataContext={dataContext}
+                />
+            );
+        });
+    }
+
+    render(rect: Rect, dataContext: IDataContext) {
+        return this.renderItems(dataContext);
     }
 
     getChildrenObjectsInEditor() {
@@ -766,8 +837,54 @@ export class GridWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageContext.drawDefaultWidget(this, rect);
+    renderItems(rect: Rect, dataContext: IDataContext) {
+        const itemWidget = this.itemWidget;
+        if (!itemWidget) {
+            return null;
+        }
+
+        const gridRect = rect;
+        const itemRect = itemWidget.rect;
+
+        const gridItemsCount = this.data ? dataContext.count(this.data) : 0;
+
+        return _range(gridItemsCount).map(i => {
+            const rows = Math.floor(gridRect.width / itemRect.width);
+            const cols = Math.floor(gridRect.height / itemRect.height);
+
+            const row = i % rows;
+            const col = Math.floor(i / rows);
+
+            if (col >= cols) {
+                return undefined;
+            }
+
+            let xListItem = row * itemRect.width;
+            let yListItem = col * itemRect.height;
+
+            return (
+                <WidgetComponent
+                    key={i}
+                    widget={itemWidget}
+                    rect={{
+                        left: xListItem,
+                        top: yListItem,
+                        width: itemRect.width,
+                        height: itemRect.height
+                    }}
+                    dataContext={dataContext}
+                />
+            );
+        });
+    }
+
+    render(rect: Rect, dataContext: IDataContext) {
+        return (
+            <React.Fragment>
+                {renderBackgroundRect(this, rect)}
+                {this.renderItems(rect, dataContext)}
+            </React.Fragment>
+        );
     }
 
     getChildrenObjectsInEditor() {
@@ -782,6 +899,8 @@ registerClass(GridWidget);
 export class SelectWidget extends Widget {
     @observable
     widgets: EezArrayObject<Widget>;
+
+    @observable transition: "none" | "horizontal" | "vertical" = "none";
 
     _lastSelectedIndexInSelectWidget: number | undefined;
 
@@ -908,8 +1027,81 @@ export class SelectWidget extends Widget {
         return undefined;
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        return PageContext.drawDefaultWidget(this, rect);
+    getSelectedWidget(dataContext: IDataContext) {
+        if (this.data) {
+            let index: number = PageContext.rootDataContext.getEnumValue(this.data);
+            if (index >= 0 && index < this.widgets._array.length) {
+                return this.widgets._array[index];
+            }
+        }
+        return undefined;
+    }
+
+    getSelectedIndex(dataContext?: IDataContext, designerContext?: IDesignerContext) {
+        if (designerContext) {
+            const selectedObjects = designerContext.viewState.selectedObjects;
+
+            for (let i = 0; i < this.widgets._array.length; ++i) {
+                if (
+                    selectedObjects.find(selectedObject =>
+                        isAncestor((selectedObject as EditorObject).object, this.widgets._array[i])
+                    )
+                ) {
+                    this._lastSelectedIndexInSelectWidget = i;
+                    return i;
+                }
+            }
+        }
+
+        if (this._lastSelectedIndexInSelectWidget !== undefined) {
+            return this._lastSelectedIndexInSelectWidget;
+        }
+
+        if (dataContext) {
+            const selectedWidget = this.getSelectedWidget(dataContext);
+            if (selectedWidget) {
+                return this.widgets._array.indexOf(selectedWidget);
+            }
+        }
+
+        if (this.widgets._array.length > 0) {
+            return 0;
+        }
+
+        return -1;
+    }
+
+    render(rect: Rect, dataContext: IDataContext, designerContext?: IDesignerContext) {
+        const index = this.getSelectedIndex(dataContext, designerContext);
+        if (index === -1) {
+            return null;
+        }
+
+        const selectedWidget = this.widgets._array[index];
+
+        if (designerContext || this.transition === "none") {
+            return (
+                <WidgetContainerComponent
+                    containerWidget={this}
+                    rectContainer={rect}
+                    widgets={[selectedWidget]}
+                    dataContext={dataContext}
+                />
+            );
+        }
+
+        return (
+            <WidgetContainerComponent
+                containerWidget={this}
+                rectContainer={rect}
+                widgets={this.widgets._array}
+                dataContext={dataContext}
+                transition={{
+                    type: this.transition,
+                    index
+                }}
+            />
+        );
     }
 
     getChildrenObjectsInEditor() {
@@ -1016,7 +1208,13 @@ export class LayoutViewWidget extends Widget {
         if (this.dataContext) {
             dataContext = dataContext.push(dataContext.get(this.dataContext));
         }
-        return PageContext.renderLayoutViewWidget(this, rect, dataContext);
+
+        const layout = PageContext.findLayout(this.layout);
+        if (!layout || isAncestor(this, layout)) {
+            return null;
+        }
+
+        return layout.render(rect, dataContext, false);
     }
 
     open() {

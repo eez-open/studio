@@ -2,11 +2,8 @@ import React from "react";
 
 import { Rect } from "eez-studio-shared/geometry";
 
-import { EezObject, isObjectInstanceOf, isAncestor } from "eez-studio-shared/model/object";
+import { EezObject, isObjectInstanceOf } from "eez-studio-shared/model/object";
 import { objectToJS } from "eez-studio-shared/model/serialization";
-
-import { drawTree } from "eez-studio-page-editor/widget-tree";
-import { IDataContext } from "eez-studio-page-editor/page-context";
 
 import * as data from "project-editor/project/features/data/data";
 
@@ -18,7 +15,6 @@ import {
 } from "project-editor/project/features/gui/style";
 import { Bitmap } from "project-editor/project/features/gui/bitmap";
 import {
-    findPage,
     findStyle,
     findStyleOrGetDefault,
     findFont,
@@ -29,16 +25,6 @@ import * as lcd from "project-editor/project/features/gui/lcd";
 ////////////////////////////////////////////////////////////////////////////////
 
 const MAX_DRAW_CACHE_SIZE = 1000;
-
-////////////////////////////////////////////////////////////////////////////////
-
-export interface WidgetCursor {
-    widget: Widget.Widget;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1143,91 +1129,6 @@ export function drawListGraphWidget(widget: Widget.Widget, rect: Rect) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect, dataContext: IDataContext) {
-    let pageViewWidget = widget as Widget.LayoutViewWidget;
-
-    let layoutName;
-    if (pageViewWidget.layout) {
-        layoutName = pageViewWidget.layout;
-    } else if (pageViewWidget.data) {
-        layoutName = data.get(pageViewWidget.data) as string;
-    }
-
-    if (layoutName) {
-        const layout = findPage(layoutName);
-        if (layout) {
-            if (!isAncestor(widget, layout)) {
-                return drawFromCache(
-                    "drawLayoutViewWidget",
-                    getCacheId(layout) + "." + rect.width + "." + rect.height,
-                    rect.width,
-                    rect.height,
-                    (ctx: CanvasRenderingContext2D) => {
-                        drawTree(ctx, layout, dataContext);
-                    }
-                );
-            }
-        }
-    }
-
-    return undefined;
-}
-
 export function renderRootElement(child: React.ReactNode) {
     return child;
-}
-
-export function renderLayoutViewWidget(
-    widget: Widget.Widget,
-    rect: Rect,
-    dataContext: IDataContext
-) {
-    const canvas = drawLayoutViewWidget(widget, rect, dataContext);
-    if (!canvas) {
-        return null;
-    }
-
-    return (
-        <img
-            style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                width: rect.width,
-                height: rect.height,
-                imageRendering: "pixelated"
-            }}
-            src={canvas.toDataURL()}
-        />
-    );
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function drawAppViewWidget(widget: Widget.Widget, rect: Rect, dataContext: IDataContext) {
-    let pageViewWidget = widget as Widget.AppViewWidget;
-
-    if (pageViewWidget.data) {
-        const pageName = data.get(pageViewWidget.data) as string;
-        if (pageName) {
-            const page = findPage(pageName);
-            let x;
-            if (page) {
-                x = drawFromCache(
-                    "drawAppViewWidget",
-                    getCacheId(page) + "." + rect.width + "." + rect.height,
-                    rect.width,
-                    rect.height,
-                    (ctx: CanvasRenderingContext2D) => {
-                        drawTree(ctx, page, dataContext);
-                    }
-                );
-            }
-            if (x) {
-                return x;
-            }
-        }
-    }
-
-    return undefined;
 }

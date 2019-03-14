@@ -19,7 +19,7 @@ import {
     SelectWidget as BaseSelectWidget,
     LayoutViewWidget
 } from "eez-studio-page-editor/widget";
-import { IDataContext } from "eez-studio-page-editor/page-context";
+import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 
 import * as data from "project-editor/project/features/data/data";
 
@@ -1116,8 +1116,22 @@ export class AppViewWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect, dataContext: IDataContext): HTMLCanvasElement | undefined {
-        return draw.drawAppViewWidget(this, rect, dataContext);
+    render(rect: Rect, dataContext: IDataContext) {
+        if (!this.data) {
+            return null;
+        }
+
+        const pageName = dataContext.get(this.data);
+        if (!pageName) {
+            return null;
+        }
+
+        const page = PageContext.findPage(pageName);
+        if (!page) {
+            return null;
+        }
+
+        return page.render(rect, dataContext, false);
     }
 }
 

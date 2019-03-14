@@ -205,7 +205,9 @@ export class CodeEditor extends React.Component<CodeEditorProps, {}> {
                 }
 
                 setTimeout(() => {
-                    resizeEditor(this.editor);
+                    if (this.editor) {
+                        resizeEditor(this.editor);
+                    }
                 }, 0);
             })
         );

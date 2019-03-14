@@ -3,7 +3,7 @@ import { computed, observable, action, runInAction } from "mobx";
 import { observer, inject } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { Point, pointDistance, BoundingRectBuilder } from "eez-studio-shared/geometry";
+import { Point, pointDistance, Rect, BoundingRectBuilder } from "eez-studio-shared/geometry";
 import { getScrollbarWidth } from "eez-studio-shared/dom";
 
 import { IMenu } from "eez-studio-shared/model/store";
@@ -47,6 +47,7 @@ export class Canvas extends React.Component<{
     customOverlay?: React.ReactNode;
     className?: string;
     style?: React.CSSProperties;
+    pageRect: Rect;
 }> {
     div: HTMLDivElement;
     innerDiv: Element;
@@ -390,9 +391,13 @@ export class Canvas extends React.Component<{
 
         const transform = this.designerContext.viewState.transform;
 
-        const CENTER_LINES_COLOR = "rgba(0, 0, 0, 0.2)";
+        const CENTER_LINES_COLOR = "#ddd";
         const CENTER_LINES_WIDTH = 1 / transform.scale;
-        const centerLineStyle = { stroke: CENTER_LINES_COLOR, strokeWidth: CENTER_LINES_WIDTH };
+        const centerLineStyle = {
+            fill: "transparent",
+            stroke: CENTER_LINES_COLOR,
+            strokeWidth: CENTER_LINES_WIDTH
+        };
 
         const modelRect = transform.clientToModelRect(transform.clientRect);
 
@@ -461,6 +466,13 @@ export class Canvas extends React.Component<{
                                     y1={modelRect.top}
                                     x2={this.designerContext.options.center.x}
                                     y2={modelRect.top + modelRect.height}
+                                    style={centerLineStyle}
+                                />
+                                <rect
+                                    x={this.props.pageRect.left}
+                                    y={this.props.pageRect.top}
+                                    width={this.props.pageRect.width}
+                                    height={this.props.pageRect.height}
                                     style={centerLineStyle}
                                 />
                             </svg>

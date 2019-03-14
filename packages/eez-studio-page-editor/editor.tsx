@@ -1,6 +1,6 @@
 import React from "react";
 import { observable, computed, action, toJS, autorun } from "mobx";
-import { observer, inject, Provider } from "mobx-react";
+import { observer, Provider } from "mobx-react";
 import { createTransformer, ITransformer } from "mobx-utils";
 import { bind } from "bind-decorator";
 
@@ -11,7 +11,6 @@ import {
     IBaseObject,
     IDocument,
     IViewStatePersistantState,
-    IDesignerContext,
     IResizeHandler,
     IDesignerOptions
 } from "eez-studio-designer/designer-interfaces";
@@ -35,18 +34,12 @@ import { SnapLines } from "eez-studio-designer/select-tool";
 
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
-import {
-    Widget,
-    ContainerWidget,
-    ListWidget,
-    GridWidget,
-    SelectWidget
-} from "eez-studio-page-editor/widget";
-import { renderBackgroundRect, renderFail, renderRootElement } from "eez-studio-page-editor/render";
+import { Widget, SelectWidget } from "eez-studio-page-editor/widget";
+import { renderRootElement } from "eez-studio-page-editor/render";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class EditorObject implements IBaseObject {
+export class EditorObject implements IBaseObject {
     constructor(
         public object: EezObject,
         private pageEditorContext: PageEditorContext,
@@ -144,66 +137,7 @@ class EditorObject implements IBaseObject {
     @computed
     get selectionRects() {
         if (this.object instanceof Widget) {
-            let rects = [this.boundingRect];
-
-            let listWidget = this.object._parent;
-            while (
-                !(listWidget instanceof ListWidget || listWidget instanceof GridWidget) &&
-                listWidget instanceof Widget
-            ) {
-                listWidget = listWidget._parent;
-            }
-
-            if (!(listWidget instanceof ListWidget || listWidget instanceof GridWidget)) {
-                return rects;
-            }
-
-            const itemWidget = listWidget.itemWidget;
-            if (itemWidget) {
-                let count = listWidget.data
-                    ? PageContext.rootDataContext.count(listWidget.data)
-                    : 0;
-
-                if (listWidget instanceof ListWidget) {
-                    for (let i = 1; i < count; i++) {
-                        if (listWidget.listType === "horizontal") {
-                            rects.push({
-                                left: this.boundingRect.left + i * itemWidget.width,
-                                top: this.boundingRect.top,
-                                width: this.boundingRect.width,
-                                height: this.boundingRect.height
-                            });
-                        } else {
-                            rects.push({
-                                left: this.boundingRect.left,
-                                top: this.boundingRect.top + i * itemWidget.height,
-                                width: this.boundingRect.width,
-                                height: this.boundingRect.height
-                            });
-                        }
-                    }
-                } else {
-                    const rows = Math.floor(listWidget.width / itemWidget.width);
-                    const cols = Math.floor(listWidget.height / itemWidget.height);
-                    for (let i = 1; i < count; i++) {
-                        const row = i % rows;
-                        const col = Math.floor(i / rows);
-
-                        if (col >= cols) {
-                            break;
-                        }
-
-                        rects.push({
-                            left: this.boundingRect.left + row * itemWidget.width,
-                            top: this.boundingRect.top + col * itemWidget.height,
-                            width: this.boundingRect.width,
-                            height: this.boundingRect.height
-                        });
-                    }
-                }
-            }
-
-            return rects;
+            return [this.boundingRect];
         } else if (this.object instanceof Page) {
             return [this.rect];
         } else {
@@ -279,7 +213,7 @@ class EditorObject implements IBaseObject {
 
         if (this.children.length > 0) {
             if (this.object instanceof SelectWidget) {
-                const child = this.children[this.selectedIndexInSelectWidget];
+                const child = this.children[this.object.getSelectedIndex()];
                 let result = child.objectFromPoint(point);
                 if (result) {
                     foundObject = result;
@@ -306,40 +240,6 @@ class EditorObject implements IBaseObject {
 
         return undefined;
     }
-
-    @computed
-    get selectedIndexInSelectWidget() {
-        const selectWidget = this.object as SelectWidget;
-
-        const selectedObjects = this.pageEditorContext.viewState.selectedObjects;
-        for (let i = 0; i < selectWidget.widgets._array.length; ++i) {
-            if (
-                selectedObjects.find((selectedObject: EditorObject) =>
-                    isAncestor(selectedObject.object, selectWidget.widgets._array[i])
-                )
-            ) {
-                selectWidget._lastSelectedIndexInSelectWidget = i;
-                return i;
-            }
-        }
-
-        if (selectWidget._lastSelectedIndexInSelectWidget !== undefined) {
-            return selectWidget._lastSelectedIndexInSelectWidget;
-        }
-
-        if (selectWidget.data) {
-            let index: number = PageContext.rootDataContext.getEnumValue(selectWidget.data);
-            if (index >= 0 && index < selectWidget.widgets._array.length) {
-                return index;
-            }
-        }
-
-        if (selectWidget.widgets._array.length > 0) {
-            return 0;
-        }
-
-        return -1;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -351,264 +251,6 @@ function createObjectToEditorObjectTransformer(designerContext: PageEditorContex
         }
     );
     return transformer;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@inject("designerContext")
-@observer
-class ObjectComponent extends React.Component<{
-    designerContext?: IDesignerContext;
-    object: EditorObject;
-    dataContext: IDataContext;
-}> {
-    renderChildren(children: EditorObject[]) {
-        let ContainerDiv;
-
-        if ((this.props.object.object as any).css) {
-            ContainerDiv = styled.div`
-                ${(this.props.object.object as any).css}
-            `;
-        } else {
-            ContainerDiv = styled.div``;
-        }
-
-        let className;
-        if ((this.props.object.object as any).getClassNameStr) {
-            className = (this.props.object.object as any).getClassNameStr(this.props.dataContext);
-        }
-
-        return (
-            <ContainerDiv
-                className={className}
-                style={{
-                    position: "absolute",
-                    left: this.props.object.rect.left,
-                    top: this.props.object.rect.top,
-                    width: this.props.object.rect.width,
-                    height: this.props.object.rect.height
-                }}
-            >
-                {children.map((child, i) => {
-                    return (
-                        <ObjectComponent
-                            key={child.id}
-                            object={child}
-                            dataContext={this.props.dataContext}
-                        />
-                    );
-                })}
-            </ContainerDiv>
-        );
-    }
-
-    get listWidget() {
-        return this.props.object.object as ListWidget;
-    }
-
-    get listItemWidget() {
-        return this.listWidget.itemWidget;
-    }
-
-    get listItemsCount() {
-        if (this.listItemWidget && this.listWidget.data) {
-            return this.props.dataContext.count(this.listWidget.data);
-        } else {
-            return 0;
-        }
-    }
-
-    @action
-    renderListItems() {
-        const itemWidgetEditorObject = this.props.object.children[0];
-        if (!itemWidgetEditorObject) {
-            return null;
-        }
-
-        const itemRect = itemWidgetEditorObject.rect;
-
-        return _range(this.listItemsCount).map(i => {
-            let xListItem = this.props.object.rect.left;
-            let yListItem = this.props.object.rect.top;
-
-            if (this.listWidget.listType === "horizontal") {
-                xListItem += i * itemRect.width;
-            } else {
-                yListItem += i * itemRect.height;
-            }
-
-            return (
-                <div
-                    key={i}
-                    style={{
-                        transform: `translate(${xListItem}px, ${yListItem}px)`,
-                        transformOrigin: "0 0"
-                    }}
-                >
-                    {
-                        <ObjectComponent
-                            object={itemWidgetEditorObject}
-                            dataContext={this.props.dataContext}
-                        />
-                    }
-                </div>
-            );
-        });
-    }
-
-    get gridWidget() {
-        return this.props.object.object as GridWidget;
-    }
-
-    get gridItemWidget() {
-        return this.gridWidget.itemWidget;
-    }
-
-    get gridItemsCount() {
-        if (this.gridItemWidget && this.gridWidget.data) {
-            return this.props.dataContext.count(this.gridWidget.data);
-        } else {
-            return 0;
-        }
-    }
-
-    @action
-    renderGridItems() {
-        const itemWidgetEditorObject = this.props.object.children[0];
-        if (!itemWidgetEditorObject) {
-            return null;
-        }
-
-        const gridRect = this.props.object.rect;
-        const itemRect = itemWidgetEditorObject.rect;
-
-        return _range(this.gridItemsCount)
-            .map(i => {
-                const rows = Math.floor(gridRect.width / itemRect.width);
-                const cols = Math.floor(gridRect.height / itemRect.height);
-
-                const row = i % rows;
-                const col = Math.floor(i / rows);
-
-                if (col >= cols) {
-                    return undefined;
-                }
-
-                let xListItem = gridRect.left + row * itemRect.width;
-                let yListItem = gridRect.top + col * itemRect.height;
-
-                return (
-                    <div
-                        key={i}
-                        style={{
-                            transform: `translate(${xListItem}px, ${yListItem}px)`,
-                            transformOrigin: "0 0"
-                        }}
-                    >
-                        {
-                            <ObjectComponent
-                                object={itemWidgetEditorObject}
-                                dataContext={this.props.dataContext}
-                            />
-                        }
-                    </div>
-                );
-            })
-            .filter(item => !!item);
-    }
-
-    render() {
-        if (this.props.object.object instanceof ContainerWidget) {
-            return this.renderChildren(this.props.object.children);
-        }
-
-        if (this.props.object.object instanceof ListWidget) {
-            return (
-                <React.Fragment>
-                    {renderBackgroundRect(this.props.object.object, this.props.object.rect)}
-                    {this.renderListItems()}
-                </React.Fragment>
-            );
-        }
-
-        if (this.props.object.object instanceof GridWidget) {
-            return (
-                <React.Fragment>
-                    {renderBackgroundRect(this.props.object.object, this.props.object.rect)}
-                    {this.renderGridItems()}
-                </React.Fragment>
-            );
-        }
-
-        if (this.props.object.object instanceof SelectWidget) {
-            const selectedChild = this.props.object.children[
-                this.props.object.selectedIndexInSelectWidget
-            ];
-
-            if (selectedChild) {
-                return this.renderChildren([selectedChild]);
-            } else {
-                return null;
-            }
-        }
-
-        if (this.props.object.object instanceof Widget) {
-            const rect = this.props.object.rect;
-
-            const canvas = this.props.object.object.draw(rect, this.props.dataContext);
-            if (canvas) {
-                return (
-                    <img
-                        style={{
-                            position: "absolute",
-                            left: rect.left,
-                            top: rect.top,
-                            width: rect.width,
-                            height: rect.height,
-                            imageRendering: "pixelated"
-                        }}
-                        src={canvas.toDataURL()}
-                    />
-                );
-            }
-
-            try {
-                const node = this.props.object.object.render(rect, this.props.dataContext);
-                if (node) {
-                    return (
-                        <div
-                            style={{
-                                position: "absolute",
-                                left: rect.left,
-                                top: rect.top,
-                                width: rect.width,
-                                height: rect.height
-                            }}
-                        >
-                            {node}
-                        </div>
-                    );
-                }
-
-                return renderBackgroundRect(this.props.object.object, this.props.object.rect);
-            } catch (err) {
-                console.error(err);
-                return renderFail(rect);
-            }
-        }
-
-        if (this.props.object.object instanceof Page) {
-            return (
-                <React.Fragment>
-                    {this.props.object.object.render(this.props.dataContext)}
-                    {this.renderChildren(this.props.object.children)}
-                </React.Fragment>
-            );
-        }
-
-        console.error("Unknown object type");
-        return null;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1013,9 +655,13 @@ export class PageEditor extends React.Component<
         this.pageEditorContext.destroy();
     }
 
+    get page() {
+        return (this.pageEditorContext.document.rootObjects[0] as EditorObject).object as Page;
+    }
+
     render() {
         if (this.state.hasError) {
-            // TODO better error presentatin
+            // TODO better error presentation
             return <div>Error!</div>;
         }
 
@@ -1034,16 +680,13 @@ export class PageEditor extends React.Component<
                     <PageEditorCanvas
                         toolHandler={selectToolHandler}
                         customOverlay={<DragSnapLinesOverlay />}
+                        pageRect={this.page.rect}
                     >
                         {renderRootElement(
-                            this.pageEditorContext.document.rootObjects.map(
-                                (rootObject: EditorObject) => (
-                                    <ObjectComponent
-                                        key={rootObject.id}
-                                        object={rootObject}
-                                        dataContext={dataContext || PageContext.rootDataContext}
-                                    />
-                                )
+                            this.page.render(
+                                this.page.rect,
+                                dataContext || PageContext.rootDataContext,
+                                true
                             )
                         )}
                     </PageEditorCanvas>
