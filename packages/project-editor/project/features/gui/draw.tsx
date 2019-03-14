@@ -2,15 +2,10 @@ import React from "react";
 
 import { Rect } from "eez-studio-shared/geometry";
 
-import {
-    EezObject,
-    EezArrayObject,
-    isObjectInstanceOf,
-    isAncestor
-} from "eez-studio-shared/model/object";
+import { EezObject, isObjectInstanceOf, isAncestor } from "eez-studio-shared/model/object";
 import { objectToJS } from "eez-studio-shared/model/serialization";
 
-import { createWidgetTree, drawTree } from "eez-studio-page-editor/widget-tree";
+import { drawTree } from "eez-studio-page-editor/widget-tree";
 import { IDataContext } from "eez-studio-page-editor/page-context";
 
 import * as data from "project-editor/project/features/data/data";
@@ -1168,8 +1163,7 @@ export function drawLayoutViewWidget(widget: Widget.Widget, rect: Rect, dataCont
                     rect.width,
                     rect.height,
                     (ctx: CanvasRenderingContext2D) => {
-                        let tree = createWidgetTree(layout, true, dataContext);
-                        drawTree(ctx, tree, 1, () => {});
+                        drawTree(ctx, layout, dataContext);
                     }
                 );
             }
@@ -1225,8 +1219,7 @@ export function drawAppViewWidget(widget: Widget.Widget, rect: Rect, dataContext
                     rect.width,
                     rect.height,
                     (ctx: CanvasRenderingContext2D) => {
-                        let tree = createWidgetTree(page, true, dataContext);
-                        drawTree(ctx, tree, 1, () => {});
+                        drawTree(ctx, page, dataContext);
                     }
                 );
             }
@@ -1237,56 +1230,4 @@ export function drawAppViewWidget(widget: Widget.Widget, rect: Rect, dataContext
     }
 
     return undefined;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function drawPageFrameWithColor(
-    ctx: CanvasRenderingContext2D,
-    rect: Rect,
-    scale: number,
-    color: string
-) {
-    lcd.setColor(color);
-    ctx.save();
-    ctx.shadowColor = "#999";
-    ctx.shadowBlur = Math.max(5, Math.ceil(20 * scale));
-    ctx.shadowOffsetX = Math.max(2, Math.ceil(5 * scale));
-    ctx.shadowOffsetY = Math.max(2, Math.ceil(5 * scale));
-    lcd.fillRect(ctx, rect.left, rect.top, rect.left + rect.width - 1, rect.top + rect.height - 1);
-    ctx.restore();
-}
-
-export function drawPageFrame(
-    ctx: CanvasRenderingContext2D,
-    rect: Rect,
-    scale: number,
-    style: string
-) {
-    drawPageFrameWithColor(ctx, rect, scale, getStyleProperty(style, "backgroundColor"));
-}
-
-export function drawNotFoundPageFrame(ctx: CanvasRenderingContext2D, rect: Rect, scale: number) {
-    drawPageFrameWithColor(ctx, rect, scale, "red");
-}
-
-export function drawPage(
-    page: {
-        width: number;
-        height: number;
-        widgets: EezArrayObject<Widget.Widget>;
-    } & EezObject,
-    dataContext: IDataContext
-) {
-    let canvas = document.createElement("canvas");
-
-    canvas.width = page.width;
-    canvas.height = page.height;
-
-    let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-
-    let tree = createWidgetTree(page, true, dataContext);
-    drawTree(ctx, tree, 1, () => {});
-
-    return canvas;
 }

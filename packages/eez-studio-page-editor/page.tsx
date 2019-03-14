@@ -20,7 +20,7 @@ import {
 import { TreeObjectAdapter, ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 
 import { Widget } from "eez-studio-page-editor/widget";
-import { PageContext } from "eez-studio-page-editor/page-context";
+import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { IResizeHandler } from "eez-studio-designer/designer-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,7 +149,7 @@ export class Page extends EezObject {
         return this.rect;
     }
 
-    render() {
+    render(dataContext: IDataContext) {
         const style = PageContext.findStyleOrGetDefault(this.style);
         return (
             <div

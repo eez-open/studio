@@ -235,9 +235,7 @@ export class DesignerContext implements IDesignerContext {
     viewState: ViewState = new ViewState();
 
     @observable
-    options: IDesignerOptions = {
-        showStructure: false
-    };
+    options: IDesignerOptions = {};
 
     filterSnapLines: ((node: IBaseObject) => boolean) | undefined;
 
@@ -253,9 +251,7 @@ export class DesignerContext implements IDesignerContext {
 
         this.viewState.set(document, viewStatePersistantState, onSavePersistantState);
 
-        const newOptions = options || {
-            showStructure: false
-        };
+        const newOptions = options || {};
         if (stringify(newOptions) !== stringify(this.options)) {
             this.options = newOptions;
         }

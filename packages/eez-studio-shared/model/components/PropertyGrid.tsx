@@ -13,7 +13,7 @@ import { NavigationStore } from "eez-studio-shared/model/store";
 
 import styled from "eez-studio-ui/styled-components";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-import { CodeEditor } from "eez-studio-ui/code-editor";
+import { CodeEditor, CodeEditorMode } from "eez-studio-ui/code-editor";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 
@@ -173,14 +173,13 @@ class PropertyMenu extends React.Component<PropertyProps> {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class CodeEditorProperty extends React.Component<PropertyProps> {
+class CodeEditorProperty extends React.Component<PropertyProps & { mode: CodeEditorMode }> {
     @observable
     value: string = this.getValue();
 
     editor: CodeEditor;
 
     @disposeOnUnmount updateValue = autorun(() => {
-        console.log("autorun");
         const value = this.getValue();
         runInAction(() => {
             this.value = value;
@@ -213,7 +212,6 @@ class CodeEditorProperty extends React.Component<PropertyProps> {
 
     @action.bound
     onChange(value: string) {
-        console.log("change");
         this.value = value;
     }
 
@@ -224,9 +222,7 @@ class CodeEditorProperty extends React.Component<PropertyProps> {
 
     @bind
     onBlur() {
-        console.log("blur");
         if (this.getValue() !== this.value) {
-            console.log("update");
             this.props.updateObject({
                 [this.props.propertyInfo.name]: this.value
             });
@@ -234,7 +230,6 @@ class CodeEditorProperty extends React.Component<PropertyProps> {
     }
 
     render() {
-        console.log("render");
         return (
             <CodeEditor
                 ref={ref => (this.editor = ref!)}
@@ -243,8 +238,8 @@ class CodeEditorProperty extends React.Component<PropertyProps> {
                 onFocus={this.onFocus}
                 onBlur={this.onBlur}
                 className="form-control"
-                mode="json"
-                minLines={20}
+                mode={this.props.mode}
+                minLines={2}
                 maxLines={50}
             />
         );
@@ -689,7 +684,9 @@ class Property extends React.Component<PropertyProps> {
                 />
             );
         } else if (propertyInfo.type === PropertyType.JSON) {
-            return <CodeEditorProperty {...this.props} />;
+            return <CodeEditorProperty {...this.props} mode="json" />;
+        } else if (propertyInfo.type === PropertyType.CSS) {
+            return <CodeEditorProperty {...this.props} mode="css" />;
         } else if (
             propertyInfo.type === PropertyType.Object ||
             (propertyInfo.type === PropertyType.Array && this.props.propertyInfo.onSelect)
@@ -897,14 +894,49 @@ class Property extends React.Component<PropertyProps> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class GroupMenu extends React.Component<{
+    group: IPropertyGridGroupDefinition;
+    object: EezObject;
+}> {
+    @bind onClick(event: MouseEvent) {
+        const { group, object } = this.props;
+        const groupMenu = group.menu!(object)!;
+
+        const menu = UIElementsFactory.createMenu();
+
+        groupMenu.forEach(groupMenuItem =>
+            menu.append(UIElementsFactory.createMenuItem(groupMenuItem))
+        );
+
+        menu.popup(
+            {},
+            {
+                left: event.clientX,
+                top: event.clientY
+            }
+        );
+    }
+
+    render() {
+        return <IconAction icon="material:menu" title="" onClick={this.onClick} />;
+    }
+}
+
 class GroupTitle extends React.Component<{
     group: IPropertyGridGroupDefinition;
+    object: EezObject;
 }> {
     render() {
+        const { group, object } = this.props;
         return (
             <tr>
-                <td className="group-title" colSpan={3}>
-                    {this.props.group.title}
+                <td colSpan={3} className="group-cell">
+                    <div className="group-container">
+                        <div className="group-title">{group.title}</div>
+                        {group.menu && group.menu(object) && (
+                            <GroupMenu group={group} object={object} />
+                        )}
+                    </div>
                 </td>
             </tr>
         );
@@ -960,15 +992,23 @@ const PropertyGridDiv = styled.div`
                 }
 
                 & > td.group-border {
-                    padding: 0;
+                    padding-top: 5px;
                     border-bottom: 1px solid ${props => props.theme.darkBorderColor};
                 }
 
-                & > td.group-title {
-                    font-size: 90%;
-                    text-transform: uppercase;
-                    font-weight: bold;
+                & > td.group-cell {
                     padding-top: 0;
+                    padding-bottom: 5px;
+                    & > div.group-container {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        & > div.group-title {
+                            font-size: 90%;
+                            text-transform: uppercase;
+                            font-weight: bold;
+                        }
+                    }
                 }
             }
         }
@@ -1057,7 +1097,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                             colSpan={2}
                             style={
                                 propertyInfo.type === PropertyType.Any
-                                    ? { transform: "translateY(0)" }
+                                    ? { transform: "translateY(0)", padding: 0 }
                                     : undefined
                             }
                         >
@@ -1141,7 +1181,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             if (groupProperties.group.title) {
                 return (
                     <React.Fragment key={groupProperties.group.id}>
-                        <GroupTitle group={groupProperties.group} />
+                        <GroupTitle group={groupProperties.group} object={this.props.object!} />
                         {groupProperties.properties}
                     </React.Fragment>
                 );

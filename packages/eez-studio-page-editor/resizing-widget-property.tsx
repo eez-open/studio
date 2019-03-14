@@ -768,7 +768,7 @@ export class ResizingProperty extends React.Component<PropertyProps> {
         ////////////////////////////////////////////////////////////////////////////////
 
         return (
-            <svg width={X3 + W + X1} height={Y1 + H + G1 + TH}>
+            <svg style={{ margin: "10 10 5 10" }} width={X3 + W + X1} height={Y1 + H + G1 + TH}>
                 {pinToEdge}
                 {fixSize}
                 {preview}

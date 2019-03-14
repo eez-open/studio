@@ -30,7 +30,6 @@ export interface IPageContext {
 
     rootDataContext: IDataContext;
 
-    drawPageFrame(ctx: CanvasRenderingContext2D, rect: Rect, scale: number, style: string): void;
     drawDefaultWidget(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
     renderRootElement(child: React.ReactNode): React.ReactNode;
     renderLayoutViewWidget(widget: Widget, rect: Rect, dataContext: IDataContext): React.ReactNode;

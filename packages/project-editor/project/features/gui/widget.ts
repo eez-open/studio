@@ -16,7 +16,8 @@ import * as output from "eez-studio-shared/model/output";
 import {
     Widget,
     makeDataPropertyInfo,
-    SelectWidget as BaseSelectWidget
+    SelectWidget as BaseSelectWidget,
+    LayoutViewWidget
 } from "eez-studio-page-editor/widget";
 import { IDataContext } from "eez-studio-page-editor/page-context";
 
@@ -39,7 +40,8 @@ export {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-hidePropertiesInPropertyGrid(Widget, ["resizing"]);
+hidePropertiesInPropertyGrid(Widget, ["resizing", "css", "className"]);
+hidePropertiesInPropertyGrid(LayoutViewWidget, ["dataContext"]);
 
 ////////////////////////////////////////////////////////////////////////////////
 

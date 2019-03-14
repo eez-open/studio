@@ -21,7 +21,7 @@ The EEZ Studio is an open source cross-platform modular visual tool aimed to add
     -   _Actions_
     -   _Data_
     -   _Extentsion definitions_
-    -   _GUI (Storyboard, Pages, Widgets, Styles, Fonts, Bitmaps)_
+    -   _GUI (Pages, Widgets, Styles, Fonts, Bitmaps)_
     -   _SCPI (command subsystems, commands and context sensitive help)_
     -   _Shortcuts_
 -   Generate C++ code for HMI functionality that can be directly included in Arduino IDE and upload into the 32-bit Arduino Due board
@@ -133,7 +133,6 @@ npm run build-rpm-all
 ```
 
 Built RPM package is located in `installation/linux`.
-
 
 ### Build Snap package on Ubuntu
 

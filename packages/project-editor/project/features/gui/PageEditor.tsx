@@ -1,9 +1,8 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
+import { computed } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { EditorComponent } from "eez-studio-shared/model/object";
@@ -26,16 +25,6 @@ export class PageEditor extends EditorComponent {
         return this.props.editor.object as Page;
     }
 
-    @observable
-    showStructure: boolean =
-        window.localStorage.getItem("showStructureInPageEditor") === "1" ? true : false;
-
-    @action.bound
-    toggleShowStructure() {
-        this.showStructure = !this.showStructure;
-        window.localStorage.setItem("showStructureInPageEditor", this.showStructure ? "1" : "0");
-    }
-
     @bind
     focusHandler() {
         NavigationStore.setSelectedPanel(this);
@@ -50,30 +39,9 @@ export class PageEditor extends EditorComponent {
     render() {
         let pageTabState = this.props.editor.state as PageTabState;
 
-        let editor = (
-            <StudioPageEditor
-                widgetContainer={pageTabState.widgetContainerDisplayItem}
-                showStructure={this.showStructure}
-            />
-        );
+        let editor = <StudioPageEditor widgetContainer={pageTabState.widgetContainerDisplayItem} />;
 
-        const panel = (
-            <Panel
-                id="page-editor"
-                title=""
-                buttons={[
-                    <IconAction
-                        key="showDeepStructure"
-                        title="Show structure"
-                        icon="_images/diagram.png"
-                        iconSize={24}
-                        onClick={this.toggleShowStructure}
-                        selected={this.showStructure}
-                    />
-                ]}
-                body={editor}
-            />
-        );
+        const panel = <Panel id="page-editor" title="" body={editor} />;
 
         let pageStructure = (
             <Tree

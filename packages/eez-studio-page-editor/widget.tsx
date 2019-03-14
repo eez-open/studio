@@ -10,6 +10,7 @@ import { Rect } from "eez-studio-shared/geometry";
 import { validators } from "eez-studio-shared/model/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import styled from "eez-studio-ui/styled-components";
 
 import {
     ClassInfo,
@@ -112,6 +113,7 @@ export class Widget extends EezObject {
     height: number;
     @observable
     resizing: IResizing;
+    @observable css: string;
     @observable className: string;
 
     get label() {
@@ -170,6 +172,11 @@ export class Widget extends EezObject {
                 name: "activeStyle",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
+            },
+            {
+                name: "css",
+                type: PropertyType.CSS,
                 propertyGridGroup: styleGroup
             },
             {
@@ -546,6 +553,27 @@ export class Widget extends EezObject {
     resizeRow(rowIndex: number, savedRowWidth: number, offset: number) {}
 
     open() {}
+
+    @computed get Div() {
+        return this.css
+            ? styled.div`
+                  ${this.css}
+              `
+            : styled.div``;
+    }
+
+    getClassNameStr(dataContext: IDataContext, widgetClassName?: string) {
+        if (this.className) {
+            let className = dataContext.get(this.className);
+            if (className) {
+                if (widgetClassName) {
+                    return widgetClassName + " " + className;
+                }
+                return className;
+            }
+        }
+        return widgetClassName;
+    }
 }
 
 registerClass(Widget);
@@ -751,87 +779,9 @@ registerClass(GridWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type Position = "left" | "right" | "top" | "bottom";
-
-export class SelectWidgetEditor extends EezObject {
-    static readonly EDITOR_PADDING = 10;
-
-    @observable
-    x: number;
-    @observable
-    y: number;
-
-    static classInfo: ClassInfo = {
-        label: (selectWidgetEditor: SelectWidgetEditor) => {
-            const parent = selectWidgetEditor._parent!;
-            return parent._label + " Editor";
-        },
-
-        properties: [
-            {
-                name: "x",
-                type: PropertyType.Number
-            },
-            {
-                name: "y",
-                type: PropertyType.Number
-            }
-        ],
-
-        defaultValue: {
-            x: 350,
-            y: 0
-        }
-    };
-
-    get parent() {
-        return this._parent as SelectWidget;
-    }
-
-    @computed
-    get editorOrientation(): "vertical" | "horizontal" {
-        // currently, it is always vertical orientation
-        return "vertical";
-    }
-
-    @computed
-    get rect() {
-        let width;
-        let height;
-
-        const count = this.parent.widgets._array.length;
-
-        if (this.editorOrientation === "vertical") {
-            width = this.parent.width + 2 * SelectWidgetEditor.EDITOR_PADDING;
-
-            height =
-                (this.parent.height + SelectWidgetEditor.EDITOR_PADDING) * count +
-                SelectWidgetEditor.EDITOR_PADDING;
-        } else {
-            width =
-                (this.parent.width + SelectWidgetEditor.EDITOR_PADDING) * count +
-                SelectWidgetEditor.EDITOR_PADDING;
-
-            height = this.parent.height + 2 * SelectWidgetEditor.EDITOR_PADDING;
-        }
-
-        return {
-            left: this.x - Math.round(width / 2),
-            top: this.y - Math.round(height / 2),
-            width,
-            height
-        };
-    }
-}
-
-registerClass(SelectWidgetEditor);
-
 export class SelectWidget extends Widget {
     @observable
     widgets: EezArrayObject<Widget>;
-
-    @observable
-    editor: SelectWidgetEditor;
 
     _lastSelectedIndexInSelectWidget: number | undefined;
 
@@ -862,22 +812,11 @@ export class SelectWidget extends Widget {
                     object.height = (widgets._parent as SelectWidget).height;
                     return object;
                 }
-            },
-            {
-                name: "editor",
-                type: PropertyType.Object,
-                typeClass: SelectWidgetEditor,
-                hideInPropertyGrid: true,
-                enumerable: false
             }
         ],
 
         defaultValue: {
             type: "Select",
-            editor: {
-                x: 0,
-                y: 0
-            },
             widgets: [],
             x: 0,
             y: 0,
@@ -994,6 +933,7 @@ class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
                 color="primary"
                 size="small"
                 onClick={this.showLayout}
+                style={{ margin: 5 }}
             >
                 Show {PageContext.layoutConceptName}
             </UIElementsFactory.Button>
@@ -1007,6 +947,9 @@ export class LayoutViewWidget extends Widget {
     @observable
     layout: string;
 
+    @observable
+    dataContext: string;
+
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
             {
@@ -1016,6 +959,7 @@ export class LayoutViewWidget extends Widget {
                     ? PageInitContext.layoutCollectionPath
                     : []
             },
+            makeDataPropertyInfo("dataContext"),
             {
                 name: "customUI",
                 type: PropertyType.Any,
@@ -1069,6 +1013,9 @@ export class LayoutViewWidget extends Widget {
     }
 
     render(rect: Rect, dataContext: IDataContext): React.ReactNode {
+        if (this.dataContext) {
+            dataContext = dataContext.push(dataContext.get(this.dataContext));
+        }
         return PageContext.renderLayoutViewWidget(this, rect, dataContext);
     }
 

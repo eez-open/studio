@@ -25,10 +25,26 @@ interface ConnectionPropertiesProps {
     serialBaudRates: number[];
 }
 
+class Devices {
+    neverEnumerated = true;
+
+    @observable
+    serialPortPaths: {
+        path: string;
+        description: string;
+    }[] = [];
+
+    @observable usbDevices: {
+        name?: string;
+        idVendor: number;
+        idProduct: number;
+    }[] = [];
+}
+
+const devices = new Devices();
+
 @observer
 export class ConnectionProperties extends React.Component<ConnectionPropertiesProps, {}> {
-    static neverEnumeratedConnectionDevices = true;
-
     constructor(props: any) {
         super(props);
 
@@ -40,23 +56,12 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
         form: HTMLFormElement;
     };
 
-    @observable
-    serialPortPaths: {
-        path: string;
-        description: string;
-    }[] = [];
-
     @observable iface: string;
     @observable ethernetAddress: string;
     @observable ethernetPort: number;
     @observable serialPortPath: string;
     @observable serialPortBaudRate: number;
 
-    @observable usbDevices: {
-        name?: string;
-        idVendor: number;
-        idProduct: number;
-    }[] = [];
     @observable selectedUsbDeviceIndex: string;
     @observable idVendor: number;
     @observable idProduct: number;
@@ -80,8 +85,8 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
 
     componentDidMount() {
         if (os.platform() !== "darwin") {
-            if (ConnectionProperties.neverEnumeratedConnectionDevices) {
-                ConnectionProperties.neverEnumeratedConnectionDevices = false;
+            if (devices.neverEnumerated) {
+                devices.neverEnumerated = false;
                 this.refreshSerialPortPaths();
                 this.refreshUsbDevices();
             }
@@ -160,7 +165,7 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                 runInAction(() => {
                     let found;
 
-                    this.serialPortPaths = [
+                    devices.serialPortPaths = [
                         {
                             path: "",
                             description: ""
@@ -199,9 +204,9 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
         this.selectedUsbDeviceIndex = value;
 
         const usbDeviceIndex = parseInt(value);
-        if (usbDeviceIndex >= 0 && usbDeviceIndex < this.usbDevices.length) {
-            this.idVendor = this.usbDevices[usbDeviceIndex].idVendor;
-            this.idProduct = this.usbDevices[usbDeviceIndex].idProduct;
+        if (usbDeviceIndex >= 0 && usbDeviceIndex < devices.usbDevices.length) {
+            this.idVendor = devices.usbDevices[usbDeviceIndex].idVendor;
+            this.idProduct = devices.usbDevices[usbDeviceIndex].idProduct;
         }
     }
 
@@ -213,13 +218,13 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
         const usbDevices = await getUsbDevices();
 
         runInAction(() => {
-            this.usbDevices = usbDevices;
+            devices.usbDevices = usbDevices;
 
             let selectedUsbDeviceIndex = "0";
-            for (let i = 0; i < this.usbDevices.length; ++i) {
+            for (let i = 0; i < devices.usbDevices.length; ++i) {
                 if (
-                    this.usbDevices[i].idVendor === this.idVendor ||
-                    this.usbDevices[i].idProduct === this.idProduct
+                    devices.usbDevices[i].idVendor === this.idVendor ||
+                    devices.usbDevices[i].idProduct === this.idProduct
                 ) {
                     selectedUsbDeviceIndex = i.toString();
                     break;
@@ -272,7 +277,7 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                         </div>
                     }
                 >
-                    {this.serialPortPaths.map(serialPortPath => (
+                    {devices.serialPortPaths.map(serialPortPath => (
                         <option key={serialPortPath.path} value={serialPortPath.path}>
                             {serialPortPath.description}
                         </option>
@@ -310,7 +315,7 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                         </div>
                     }
                 >
-                    {this.usbDevices.map((usbDevice, i) => (
+                    {devices.usbDevices.map((usbDevice, i) => (
                         <option key={i} value={i}>
                             {usbDevice.name ||
                                 `VID=0x${usbDevice.idVendor.toString(

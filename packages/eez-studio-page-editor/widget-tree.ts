@@ -1,7 +1,6 @@
 import { _find } from "eez-studio-shared/algorithm";
-import { Point, Rect, pointInRect } from "eez-studio-shared/geometry";
+import { Rect } from "eez-studio-shared/geometry";
 
-import { EezObject } from "eez-studio-shared/model/object";
 import {
     DisplayItem,
     DisplayItemChildrenObject,
@@ -16,124 +15,17 @@ import { Widget, ListWidget, GridWidget, SelectWidget } from "eez-studio-page-ed
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface LineConnecting {
-    move(target: TreeNode | undefined, p: Point): void;
-    draw(ctx: CanvasRenderingContext2D, scale: number): void;
-    commit(): void;
-}
-
-export interface TreeNode {
-    id: string;
-
-    parent: TreeNode;
-    children: TreeNode[];
-
+interface TreeNode {
+    object: Page | Widget;
     rect: Rect;
-    selected: boolean;
-    selectable: boolean;
-    movable: boolean;
-    resizable: boolean;
-
-    item: DisplayItem;
-    custom?: any;
-
-    hitTest?: (treeNode: TreeNode, p: Point) => boolean;
-    draw?: (
-        treeNode: TreeNode,
-        ctx: CanvasRenderingContext2D,
-        scale: number,
-        callback: () => void
-    ) => void;
-    image?: HTMLCanvasElement | undefined;
-    drawSelectedDecoration?: (
-        treeNode: TreeNode,
-        ctx: CanvasRenderingContext2D,
-        scale: number
-    ) => void;
-    startLineConnecting?: (treeNode: TreeNode, p: Point) => LineConnecting;
+    children: TreeNode[];
 }
 
-export enum TraverseTreeContinuation {
-    CONTINUE,
-    SKIP_CHILDREN,
-    BREAK
-}
-
-export function traverseTree(
-    node: TreeNode,
-    callback: (node: TreeNode) => TraverseTreeContinuation | void
-) {
-    let result = callback(node);
-    if (result == undefined || result === TraverseTreeContinuation.CONTINUE) {
-        for (let i = 0; i < node.children.length; i++) {
-            if (traverseTree(node.children[i], callback) == TraverseTreeContinuation.BREAK) {
-                return TraverseTreeContinuation.BREAK;
-            }
-        }
-    }
-
-    return result;
-}
-
-export function nodesFromPoint(tree: TreeNode, p: Point) {
-    let result: TreeNode[] = [];
-
-    traverseTree(tree, node => {
-        if (
-            node != tree &&
-            ((node.hitTest && node.hitTest(node, p)) || (node.rect && pointInRect(p, node.rect)))
-        ) {
-            result.push(node);
-        }
-        return TraverseTreeContinuation.CONTINUE;
-    });
-
-    return result;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function drawPageFrameForTreeNode(
-    node: TreeNode,
-    ctx: CanvasRenderingContext2D,
-    scale: number,
-    callback: () => void
-) {
-    let page = node.item.object as Page;
-    PageContext.drawPageFrame(
-        ctx,
-        {
-            left: page.x,
-            top: page.y,
-            width: page.width,
-            height: page.height
-        },
-        scale,
-        page.style || "default"
-    );
-}
-
-function getSelectedWidgetForSelectWidget(
-    widgetContainerDisplayItem: ITreeObjectAdapter,
-    item: DisplayItem,
-    dataContext: IDataContext
-) {
+function getSelectedWidgetForSelectWidget(item: DisplayItem, dataContext: IDataContext) {
     let widget = item.object as SelectWidget;
     let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
     let selectedWidgetItem: DisplayItem | undefined;
-
-    // first, find selected widget by checking if any child widget is selected or has descendant that is selected
-    function isSelected(item: DisplayItem): boolean {
-        return (
-            item.selected ||
-            !!_find(item.children, (displayItemChild: any) => {
-                let child: DisplayItem = displayItemChild;
-                return isSelected(child);
-            })
-        );
-    }
-    selectedWidgetItem = widgetsItemChildren.find(childWidgetItem => isSelected(childWidgetItem));
 
     if (!selectedWidgetItem) {
         // if not found then select default for enum data
@@ -155,175 +47,138 @@ function getSelectedWidgetForSelectWidget(
     return selectedWidgetItem;
 }
 
-export function createWidgetTree(
-    widgetContainerDisplayItemOrObject: ITreeObjectAdapter | EezObject,
-    draw: boolean,
-    dataContext: IDataContext
-) {
-    function enumWidgets(widgetContainerDisplayItem: ITreeObjectAdapter) {
-        function enumWidget(
-            parentNode: TreeNode | undefined,
-            item: DisplayItem,
-            x: number,
-            y: number
-        ) {
-            let object = item.object as Widget | Page;
+function enumWidgets(widgetContainerDisplayItem: ITreeObjectAdapter, dataContext: IDataContext) {
+    function enumWidget(parentNode: TreeNode | undefined, item: DisplayItem, x: number, y: number) {
+        let object = item.object as Widget | Page;
 
-            x += object.x || 0;
-            y += object.y || 0;
+        x += object.x || 0;
+        y += object.y || 0;
 
-            let rect = {
-                left: x,
-                top: y,
-                width: object.width,
-                height: object.height
-            };
+        let rect = {
+            left: x,
+            top: y,
+            width: object.width,
+            height: object.height
+        };
 
-            let treeNode: TreeNode = {
-                id: object._id,
-                parent: <TreeNode>parentNode,
-                children: [],
-                rect,
-                selected: object instanceof Widget && item.selected,
-                resizable: true,
-                movable: object instanceof Widget,
-                selectable: object instanceof Widget,
-                item: item,
-                draw: object instanceof Widget ? undefined : drawPageFrameForTreeNode,
-                image: draw && object instanceof Widget ? object.draw(rect, dataContext) : undefined
-            };
+        let treeNode: TreeNode = {
+            object: item.object as Page | Widget,
+            rect,
+            children: []
+        };
 
-            if (parentNode) {
-                parentNode.children.push(treeNode);
-            }
+        if (parentNode) {
+            parentNode.children.push(treeNode);
+        }
 
-            if (object instanceof Widget) {
-                if (object.type == "Container") {
-                    let widgetsItemChildren = item.children as DisplayItemChildrenArray;
-
-                    widgetsItemChildren.forEach(child => {
-                        enumWidget(treeNode, child, x, y);
-                    });
-                } else if (object.type == "List") {
-                    let widget = object as ListWidget;
-                    let itemWidget = widget.itemWidget;
-                    if (itemWidget) {
-                        let itemWidgetItem = (item.children as DisplayItemChildrenObject)[
-                            "itemWidget"
-                        ];
-
-                        for (let i = 0; i < dataContext.count(<string>widget.data); i++) {
-                            enumWidget(treeNode, itemWidgetItem, x, y);
-
-                            if (widget.listType == "vertical") {
-                                y += itemWidget.height;
-                            } else {
-                                x += itemWidget.width;
-                            }
-                        }
-                    }
-                } else if (object.type == "Grid") {
-                    let widget = object as GridWidget;
-                    let itemWidget = widget.itemWidget;
-                    if (itemWidget) {
-                        let itemWidgetItem = (item.children as DisplayItemChildrenObject)[
-                            "itemWidget"
-                        ];
-
-                        for (let i = 0; i < dataContext.count(<string>widget.data); i++) {
-                            enumWidget(treeNode, itemWidgetItem, x, y);
-
-                            if (x + itemWidget.width < widget.width) {
-                                x += itemWidget.width;
-                            } else {
-                                if (y + itemWidget.height < widget.height) {
-                                    y += itemWidget.height;
-                                    x = rect.left;
-                                } else {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                } else if (object.type == "Select") {
-                    let selectedWidgetItem = getSelectedWidgetForSelectWidget(
-                        widgetContainerDisplayItem,
-                        item,
-                        dataContext
-                    );
-                    if (selectedWidgetItem) {
-                        enumWidget(treeNode, selectedWidgetItem, x, y);
-                    }
-                }
-            } else {
+        if (object instanceof Widget) {
+            if (object.type == "Container") {
                 let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
                 widgetsItemChildren.forEach(child => {
                     enumWidget(treeNode, child, x, y);
                 });
-            }
+            } else if (object.type == "List") {
+                let widget = object as ListWidget;
+                let itemWidget = widget.itemWidget;
+                if (itemWidget) {
+                    let itemWidgetItem = (item.children as DisplayItemChildrenObject)["itemWidget"];
 
-            return treeNode;
+                    for (let i = 0; i < dataContext.count(<string>widget.data); i++) {
+                        enumWidget(treeNode, itemWidgetItem, x, y);
+
+                        if (widget.listType == "vertical") {
+                            y += itemWidget.height;
+                        } else {
+                            x += itemWidget.width;
+                        }
+                    }
+                }
+            } else if (object.type == "Grid") {
+                let widget = object as GridWidget;
+                let itemWidget = widget.itemWidget;
+                if (itemWidget) {
+                    let itemWidgetItem = (item.children as DisplayItemChildrenObject)["itemWidget"];
+
+                    for (let i = 0; i < dataContext.count(<string>widget.data); i++) {
+                        enumWidget(treeNode, itemWidgetItem, x, y);
+
+                        if (x + itemWidget.width < widget.width) {
+                            x += itemWidget.width;
+                        } else {
+                            if (y + itemWidget.height < widget.height) {
+                                y += itemWidget.height;
+                                x = rect.left;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else if (object.type == "Select") {
+                let selectedWidgetItem = getSelectedWidgetForSelectWidget(item, dataContext);
+                if (selectedWidgetItem) {
+                    enumWidget(treeNode, selectedWidgetItem, x, y);
+                }
+            }
+        } else {
+            let widgetsItemChildren = item.children as DisplayItemChildrenArray;
+
+            widgetsItemChildren.forEach(child => {
+                enumWidget(treeNode, child, x, y);
+            });
         }
 
-        return enumWidget(undefined, widgetContainerDisplayItem, 0, 0);
+        return treeNode;
     }
 
-    if (widgetContainerDisplayItemOrObject instanceof EezObject) {
-        return enumWidgets(new TreeObjectAdapter(widgetContainerDisplayItemOrObject));
-    } else {
-        return enumWidgets(widgetContainerDisplayItemOrObject);
+    return enumWidget(undefined, widgetContainerDisplayItem, 0, 0);
+}
+
+function traverseTree(node: TreeNode, callback: (node: TreeNode) => void) {
+    callback(node);
+    for (let i = 0; i < node.children.length; i++) {
+        traverseTree(node.children[i], callback);
     }
 }
 
-export function drawTree(
-    ctx: CanvasRenderingContext2D,
-    tree: TreeNode,
-    scale: number,
-    callback: () => void
-) {
+export function drawTree(ctx: CanvasRenderingContext2D, page: Page, dataContext: IDataContext) {
+    const tree: TreeNode = enumWidgets(new TreeObjectAdapter(page), dataContext);
+
     traverseTree(tree, node => {
-        if (node.draw) {
-            node.draw(node, ctx, scale, callback);
-        } else if (node.image && node.image.width && node.image.height) {
-            ctx.drawImage(node.image, node.rect.left, node.rect.top);
-            if (
-                node.rect.left < tree.rect.left ||
-                node.rect.left + node.rect.width > tree.rect.left + tree.rect.width ||
-                node.rect.top < tree.rect.top ||
-                node.rect.top + node.rect.height > tree.rect.top + tree.rect.height
-            ) {
-                ctx.save();
+        if (node.object instanceof Page) {
+            let page = node.object;
 
-                ctx.beginPath();
-                ctx.rect(node.rect.left, node.rect.top, node.rect.width, node.rect.height);
-                ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
-                ctx.stroke();
+            ctx.save();
 
-                ctx.clip();
+            ctx.shadowColor = "#999";
+            ctx.shadowBlur = Math.max(5, Math.ceil(20));
+            ctx.shadowOffsetX = Math.max(2, Math.ceil(5));
+            ctx.shadowOffsetY = Math.max(2, Math.ceil(5));
 
-                ctx.beginPath();
+            const style = PageContext.findStyle(page.style || "default");
 
-                let OFFSET = 12;
+            ctx.fillStyle = (style && style.backgroundColor) || "red";
 
-                for (
-                    let y = OFFSET + 0.5;
-                    y <
-                    Math.max(node.rect.width, node.rect.height) +
-                        Math.min(node.rect.width, node.rect.height);
-                    y += OFFSET
-                ) {
-                    ctx.moveTo(node.rect.left, node.rect.top + y);
-                    ctx.lineTo(node.rect.left + y, node.rect.top);
-                }
+            const rect = {
+                left: page.x,
+                top: page.y,
+                width: page.width,
+                height: page.height
+            };
 
-                ctx.strokeStyle = "rgba(255, 0, 0, 0.2)";
-                ctx.stroke();
+            ctx.fillRect(
+                rect.left,
+                rect.top,
+                rect.left + rect.width - 1,
+                rect.top + rect.height - 1
+            );
 
-                ctx.restore();
-
-                // ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
-                // ctx.fillRect(node.rect.x, node.rect.y, node.rect.width, node.rect.height);
+            ctx.restore();
+        } else {
+            const image = node.object.draw(node.rect, dataContext);
+            if (image && image.width && image.height) {
+                ctx.drawImage(image, node.rect.left, node.rect.top);
             }
         }
     });

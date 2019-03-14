@@ -18,6 +18,7 @@ export enum PropertyType {
     String,
     MultilineText,
     JSON,
+    CSS,
     Number,
     NumberArray,
     Array,
@@ -48,6 +49,14 @@ export interface IMessage {
 export interface IPropertyGridGroupDefinition {
     id: string;
     title?: string;
+    menu?: (
+        object: EezObject
+    ) =>
+        | {
+              label: string;
+              click: () => void;
+          }[]
+        | undefined;
 }
 
 export const generalGroup: IPropertyGridGroupDefinition = {

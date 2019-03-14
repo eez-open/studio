@@ -24,7 +24,6 @@ import * as draw from "project-editor/project/features/gui/draw";
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
-import { Storyboard } from "project-editor/project/features/gui/storyboard";
 import { Page } from "project-editor/project/features/gui/page";
 import { Style, getDefaultStyle } from "project-editor/project/features/gui/style";
 import { Font } from "project-editor/project/features/gui/font";
@@ -40,7 +39,6 @@ setPageContext({
 
     rootDataContext: dataContext,
 
-    drawPageFrame: draw.drawPageFrame,
     drawDefaultWidget: draw.drawDefaultWidget,
     renderRootElement: draw.renderRootElement,
     renderLayoutViewWidget: draw.renderLayoutViewWidget,
@@ -71,9 +69,6 @@ setPageContext({
 
 export class Gui extends EezObject {
     @observable
-    storyboard: Storyboard;
-
-    @observable
     pages: EezArrayObject<Page>;
 
     @observable
@@ -88,12 +83,6 @@ export class Gui extends EezObject {
     static classInfo: ClassInfo = {
         label: () => "GUI",
         properties: [
-            {
-                name: "storyboard",
-                type: PropertyType.Object,
-                typeClass: Storyboard,
-                hideInPropertyGrid: true
-            },
             {
                 name: "pages",
                 displayName: "Pages (Layouts)",
@@ -162,7 +151,7 @@ export class Gui extends EezObject {
         ],
         navigationComponent: GuiNavigation,
         navigationComponentId: "gui",
-        defaultNavigationKey: "storyboard",
+        defaultNavigationKey: "pages",
         icon: "filter"
     };
 }

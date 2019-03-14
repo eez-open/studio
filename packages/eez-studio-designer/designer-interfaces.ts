@@ -90,7 +90,6 @@ export interface IViewState {
 
 export interface IDesignerOptions {
     center?: Point;
-    showStructure: boolean;
 }
 
 export interface IDesignerContext {
