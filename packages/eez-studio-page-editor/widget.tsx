@@ -44,11 +44,7 @@ import { PageInitContext } from "eez-studio-page-editor/page-init-context";
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 import { IResizing, resizingProperty } from "eez-studio-page-editor/resizing-widget-property";
-import {
-    renderBackgroundRect,
-    WidgetContainerComponent,
-    WidgetComponent
-} from "eez-studio-page-editor/render";
+import { WidgetContainerComponent, WidgetComponent } from "eez-studio-page-editor/render";
 import { EditorObject } from "eez-studio-page-editor/editor";
 
 import { PropertyProps } from "eez-studio-shared/model/components/PropertyGrid";
@@ -560,10 +556,6 @@ export class Widget extends EezObject {
         return undefined;
     }
 
-    getChildrenObjectsInEditor(): Widget[] | undefined {
-        return undefined;
-    }
-
     getResizeHandlers(): IResizeHandler[] | undefined | false {
         return false;
     }
@@ -656,10 +648,6 @@ export class ContainerWidget extends Widget {
                 dataContext={dataContext}
             />
         );
-    }
-
-    getChildrenObjectsInEditor() {
-        return this.widgets._array;
     }
 }
 
@@ -774,10 +762,6 @@ export class ListWidget extends Widget {
     render(rect: Rect, dataContext: IDataContext) {
         return this.renderItems(dataContext);
     }
-
-    getChildrenObjectsInEditor() {
-        return this.itemWidget && [this.itemWidget];
-    }
 }
 
 registerClass(ListWidget);
@@ -879,16 +863,7 @@ export class GridWidget extends Widget {
     }
 
     render(rect: Rect, dataContext: IDataContext) {
-        return (
-            <React.Fragment>
-                {renderBackgroundRect(this, rect)}
-                {this.renderItems(rect, dataContext)}
-            </React.Fragment>
-        );
-    }
-
-    getChildrenObjectsInEditor() {
-        return this.itemWidget && [this.itemWidget];
+        return this.renderItems(rect, dataContext);
     }
 }
 
@@ -1102,10 +1077,6 @@ export class SelectWidget extends Widget {
                 }}
             />
         );
-    }
-
-    getChildrenObjectsInEditor() {
-        return this.widgets._array;
     }
 }
 

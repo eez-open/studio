@@ -4,7 +4,7 @@ import { observer, Provider } from "mobx-react";
 import { createTransformer, ITransformer } from "mobx-utils";
 import { bind } from "bind-decorator";
 
-import { _range, _isEqual } from "eez-studio-shared/algorithm";
+import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
 import { Point, Rect, ITransform, pointInRect, isRectInsideRect } from "eez-studio-shared/geometry";
 
 import {
@@ -19,7 +19,7 @@ import { Canvas } from "eez-studio-designer/canvas";
 import { selectToolHandler } from "eez-studio-designer/select-tool";
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, isObjectInstanceOf, isAncestor } from "eez-studio-shared/model/object";
+import { isObjectInstanceOf, isAncestor } from "eez-studio-shared/model/object";
 import {
     DocumentStore,
     NavigationStore,
@@ -39,12 +39,27 @@ import { renderRootElement } from "eez-studio-page-editor/render";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function createObjectToEditorObjectTransformer(designerContext: PageEditorContext) {
+    const transformer = createTransformer(
+        (treeObjectAdapter: ITreeObjectAdapter): EditorObject => {
+            return new EditorObject(treeObjectAdapter, designerContext, transformer);
+        }
+    );
+    return transformer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class EditorObject implements IBaseObject {
     constructor(
-        public object: EezObject,
+        public treeObjectAdapter: ITreeObjectAdapter,
         private pageEditorContext: PageEditorContext,
-        private transformer: ITransformer<EezObject, EditorObject>
+        private transformer: ITransformer<ITreeObjectAdapter, EditorObject>
     ) {}
+
+    get object() {
+        return this.treeObjectAdapter.object as Page | Widget;
+    }
 
     get id() {
         return this.object._id;
@@ -52,47 +67,35 @@ export class EditorObject implements IBaseObject {
 
     @computed
     get rect() {
-        if (this.object instanceof Widget || this.object instanceof Page) {
-            return this.object.rect;
-        } else {
-            console.error("Unknown object type");
-            return {
-                left: 0,
-                top: 0,
-                width: 0,
-                height: 0
-            };
-        }
+        return this.object.rect;
     }
 
     set rect(value: Rect) {
-        if (this.object instanceof Widget || this.object instanceof Page) {
-            DocumentStore.updateObject(this.object, {
-                x: value.left,
-                y: value.top,
-                width: value.width,
-                height: value.height
-            });
-        } else {
-            console.error("Unknown object type");
-        }
+        DocumentStore.updateObject(this.object, {
+            x: value.left,
+            y: value.top,
+            width: value.width,
+            height: value.height
+        });
     }
 
     @computed
     get children(): EditorObject[] {
-        let childrenObjects: EezObject[] | undefined;
+        let childrenObjects = this.treeObjectAdapter.children;
 
-        if (this.object instanceof Page) {
-            childrenObjects = this.object.widgets._array;
-
+        if (Array.isArray(childrenObjects) && this.object instanceof Page) {
             if (this.pageEditorContext.dragWidget) {
-                childrenObjects = [...childrenObjects, this.pageEditorContext.dragWidget];
+                childrenObjects = [
+                    ...childrenObjects,
+                    {
+                        object: this.pageEditorContext.dragWidget,
+                        children: []
+                    } as any
+                ];
             }
-        } else if (this.object instanceof Widget) {
-            childrenObjects = this.object.getChildrenObjectsInEditor();
         }
 
-        return childrenObjects ? childrenObjects.map(object => this.transformer(object)) : [];
+        return _map(childrenObjects, (object: ITreeObjectAdapter) => this.transformer(object));
     }
 
     @computed
@@ -121,44 +124,17 @@ export class EditorObject implements IBaseObject {
             }
 
             return rect;
-        } else if (this.object instanceof Page) {
-            return this.rect;
-        } else {
-            console.error("Unknown object type");
-            return {
-                left: 0,
-                top: 0,
-                width: 0,
-                height: 0
-            };
         }
-    }
 
-    @computed
-    get selectionRects() {
-        if (this.object instanceof Widget) {
-            return [this.boundingRect];
-        } else if (this.object instanceof Page) {
-            return [this.rect];
-        } else {
-            console.error("Unknown object type");
-            return [];
-        }
+        return this.rect;
     }
 
     get isSelectable() {
-        if (this.object instanceof Page) {
-            return false;
-        } else {
-            return true;
-        }
+        return true;
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined | false {
-        if (this.object instanceof Page || this.object instanceof Widget) {
-            return this.object.getResizeHandlers();
-        }
-        return false;
+        return this.object.getResizeHandlers();
     }
 
     getColumnWidth(columnIndex: number): number {
@@ -232,25 +208,12 @@ export class EditorObject implements IBaseObject {
             return foundObject;
         }
 
-        for (let i = 0; i < this.selectionRects.length; i++) {
-            if (pointInRect(point, this.selectionRects[i])) {
-                return this;
-            }
+        if (pointInRect(point, this.boundingRect)) {
+            return this;
         }
 
         return undefined;
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function createObjectToEditorObjectTransformer(designerContext: PageEditorContext) {
-    const transformer = createTransformer(
-        (object: EezObject): EditorObject => {
-            return new EditorObject(object, designerContext, transformer);
-        }
-    );
-    return transformer;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -322,7 +285,7 @@ class PageDocument implements IDocument {
 
     constructor(private page: ITreeObjectAdapter, pageEditorContext: PageEditorContext) {
         const transformer = createObjectToEditorObjectTransformer(pageEditorContext);
-        this.rootObject = transformer(page.object);
+        this.rootObject = transformer(page);
     }
 
     get rootObjects() {
@@ -417,8 +380,6 @@ export class PageEditor extends React.Component<
         hasError: boolean;
     }
 > {
-    static defaultProps = {};
-
     pageEditorContext: PageEditorContext = new PageEditorContext();
 
     @observable
@@ -656,7 +617,7 @@ export class PageEditor extends React.Component<
     }
 
     get page() {
-        return (this.pageEditorContext.document.rootObjects[0] as EditorObject).object as Page;
+        return this.pageDocument.rootObject.object as Page;
     }
 
     render() {
@@ -686,7 +647,8 @@ export class PageEditor extends React.Component<
                             this.page.render(
                                 this.page.rect,
                                 dataContext || PageContext.rootDataContext,
-                                true
+                                true,
+                                this.pageEditorContext.dragWidget
                             )
                         )}
                     </PageEditorCanvas>

@@ -69,11 +69,6 @@ export class WorkbenchObject {
         return this.rect;
     }
 
-    @computed
-    get selectionRects() {
-        return [this.boundingRect];
-    }
-
     get content(): JSX.Element | null {
         return this.implementation.content;
     }

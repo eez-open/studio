@@ -54,22 +54,19 @@ class SelectedObject extends React.Component<
     {}
 > {
     render() {
-        const rects = this.props.object.selectionRects;
+        const rect = this.props.transform.modelToOffsetRect(this.props.object.boundingRect);
 
         return (
-            <React.Fragment>
-                {rects.map((rect, i) => {
-                    rect = this.props.transform.modelToOffsetRect(rect);
-                    let style: React.CSSProperties = {
-                        position: "absolute",
-                        left: rect.left + "px",
-                        top: rect.top + "px",
-                        width: rect.width + "px",
-                        height: rect.height + "px"
-                    };
-                    return <div key={i} className={this.props.className} style={style} />;
-                })}
-            </React.Fragment>
+            <div
+                className={this.props.className}
+                style={{
+                    position: "absolute",
+                    left: rect.left + "px",
+                    top: rect.top + "px",
+                    width: rect.width + "px",
+                    height: rect.height + "px"
+                }}
+            />
         );
     }
 }
@@ -212,8 +209,8 @@ export class Selection extends React.Component<
                     </React.Fragment>
                 )}
                 {this.props.mouseHandler &&
-                    this.props.mouseHandler.renderInSelectionLayer &&
-                    this.props.mouseHandler.renderInSelectionLayer(this.props.context)}
+                    this.props.mouseHandler.render &&
+                    this.props.mouseHandler.render(this.props.context)}
             </SelectionDiv>
         );
     }

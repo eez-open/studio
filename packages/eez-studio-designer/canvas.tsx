@@ -47,7 +47,7 @@ export class Canvas extends React.Component<{
     customOverlay?: React.ReactNode;
     className?: string;
     style?: React.CSSProperties;
-    pageRect: Rect;
+    pageRect?: Rect;
 }> {
     div: HTMLDivElement;
     innerDiv: Element;
@@ -468,13 +468,15 @@ export class Canvas extends React.Component<{
                                     y2={modelRect.top + modelRect.height}
                                     style={centerLineStyle}
                                 />
-                                <rect
-                                    x={this.props.pageRect.left}
-                                    y={this.props.pageRect.top}
-                                    width={this.props.pageRect.width}
-                                    height={this.props.pageRect.height}
-                                    style={centerLineStyle}
-                                />
+                                {this.props.pageRect && (
+                                    <rect
+                                        x={this.props.pageRect.left}
+                                        y={this.props.pageRect.top}
+                                        width={this.props.pageRect.width}
+                                        height={this.props.pageRect.height}
+                                        style={centerLineStyle}
+                                    />
+                                )}
                             </svg>
                         )}
                         {this.props.children}

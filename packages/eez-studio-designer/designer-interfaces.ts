@@ -6,7 +6,6 @@ export interface IBaseObject {
     rect: Rect;
     children: IBaseObject[];
     boundingRect: Rect;
-    selectionRects: Rect[];
     isSelectable?: boolean;
     getResizeHandlers?: () => IResizeHandler[] | undefined | false;
     getColumnWidth?: (columnIndex: number) => number;
@@ -118,7 +117,7 @@ export interface IMouseHandler {
     move(context: IDesignerContext, event: MouseEvent): void;
     up(context: IDesignerContext, event?: MouseEvent): void;
     selectionVisible: boolean;
-    renderInSelectionLayer?(context: IDesignerContext): React.ReactNode;
+    render?(context: IDesignerContext): React.ReactNode;
 }
 
 export interface IToolHandler {

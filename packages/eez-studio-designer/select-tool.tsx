@@ -205,7 +205,7 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
         });
     }
 
-    renderInSelectionLayer(context: IDesignerContext) {
+    render(context: IDesignerContext) {
         return (
             this.rubberBendRect && (
                 <div
@@ -351,7 +351,7 @@ class MouseHandlerWithSnapLines extends MouseHandler {
             !event.shiftKey && this.elapsedTime > CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME;
     }
 
-    renderInSelectionLayer(context: IDesignerContext) {
+    render(context: IDesignerContext) {
         return this.snapLines.render(
             context.viewState.transform,
             context.viewState.selectedObjectsBoundingRect

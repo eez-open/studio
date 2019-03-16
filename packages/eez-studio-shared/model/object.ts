@@ -175,6 +175,8 @@ export interface ClassInfo {
     propertyGridTableComponent?: any;
 
     afterUpdateObjectHook?: (object: EezObject, changedProperties: any, oldValues: any) => void;
+
+    creatableFromPalette?: boolean;
 }
 
 export function makeDerivedClassInfo(

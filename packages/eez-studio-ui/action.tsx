@@ -63,7 +63,7 @@ export class TextAction extends React.Component<
 @observer
 export class IconAction extends React.Component<
     {
-        icon: string;
+        icon: string | JSX.Element;
         iconSize?: number;
         title: string;
         onClick?: (event: any) => void;

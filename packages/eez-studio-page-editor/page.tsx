@@ -161,8 +161,15 @@ export class Page extends EezObject {
         return styled.div``;
     }
 
-    render(rect: Rect, dataContext: IDataContext, root: boolean) {
+    render(rect: Rect, dataContext: IDataContext, root: boolean, dragWidget?: Widget) {
         const style = PageContext.findStyleOrGetDefault(this.style);
+
+        let widgets = this.widgets._array;
+
+        if (dragWidget) {
+            widgets = [...widgets, dragWidget];
+        }
+
         return (
             <div
                 style={{
@@ -177,7 +184,7 @@ export class Page extends EezObject {
                 <WidgetContainerComponent
                     containerWidget={this}
                     rectContainer={rect}
-                    widgets={this.widgets._array}
+                    widgets={widgets}
                     dataContext={dataContext}
                 />
             </div>

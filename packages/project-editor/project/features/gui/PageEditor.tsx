@@ -41,8 +41,6 @@ export class PageEditor extends EditorComponent {
 
         let editor = <StudioPageEditor widgetContainer={pageTabState.widgetContainerDisplayItem} />;
 
-        const panel = <Panel id="page-editor" title="" body={editor} />;
-
         let pageStructure = (
             <Tree
                 treeAdapter={
@@ -66,7 +64,7 @@ export class PageEditor extends EditorComponent {
                 onFocus={this.focusHandler}
                 childrenOverflow="hidden"
             >
-                {panel}
+                {editor}
                 <Splitter
                     type="vertical"
                     persistId="page-editor/vertical"

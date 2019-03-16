@@ -149,16 +149,18 @@ export class WidgetPalette extends React.Component {
     }
 
     render() {
-        let widgets = getClassesDerivedFrom(Widget).map(widgetClass => {
-            return (
-                <PaletteItem
-                    key={widgetClass.name}
-                    widgetClass={widgetClass}
-                    onSelect={this.onSelect}
-                    selected={widgetClass === this.selectedWidgetClass}
-                />
-            );
-        });
+        let widgets = getClassesDerivedFrom(Widget)
+            .filter(widgetClass => widgetClass.classInfo.creatableFromPalette !== false)
+            .map(widgetClass => {
+                return (
+                    <PaletteItem
+                        key={widgetClass.name}
+                        widgetClass={widgetClass}
+                        onSelect={this.onSelect}
+                        selected={widgetClass === this.selectedWidgetClass}
+                    />
+                );
+            });
 
         return <WidgetPaletteDiv tabIndex={0}>{widgets}</WidgetPaletteDiv>;
     }
