@@ -685,6 +685,8 @@ class Property extends React.Component<PropertyProps> {
             );
         } else if (propertyInfo.type === PropertyType.JSON) {
             return <CodeEditorProperty {...this.props} mode="json" />;
+        } else if (propertyInfo.type === PropertyType.JavaScript) {
+            return <CodeEditorProperty {...this.props} mode="javascript" />;
         } else if (propertyInfo.type === PropertyType.CSS) {
             return <CodeEditorProperty {...this.props} mode="css" />;
         } else if (

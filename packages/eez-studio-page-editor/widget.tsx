@@ -10,13 +10,12 @@ import { Rect } from "eez-studio-shared/geometry";
 import { validators } from "eez-studio-shared/model/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-import styled from "eez-studio-ui/styled-components";
 
 import {
-    ClassInfo,
     EezObject,
     registerClass,
     EezArrayObject,
+    ClassInfo,
     PropertyType,
     makeDerivedClassInfo,
     findClass,
@@ -48,6 +47,8 @@ import { WidgetContainerComponent, WidgetComponent } from "eez-studio-page-edito
 import { EditorObject } from "eez-studio-page-editor/editor";
 
 import { PropertyProps } from "eez-studio-shared/model/components/PropertyGrid";
+
+import { initResolutionDependableProperties } from "eez-studio-page-editor/resolution-dependable-properties";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -97,28 +98,21 @@ export type WidgetParent = Page | Widget;
 
 export class Widget extends EezObject {
     // shared properties
-    @observable
-    type: string;
-    @observable
-    style?: string;
-    @observable
-    activeStyle?: string;
-    @observable
-    data?: string;
-    @observable
-    action?: string;
-    @observable
+    @observable type: string;
+    @observable style?: string;
+    @observable activeStyle?: string;
+    @observable data?: string;
+    @observable action?: string;
+
+    // resolution dependant properties
+    display: boolean;
     x: number;
-    @observable
     y: number;
-    @observable
     width: number;
-    @observable
     height: number;
-    @observable
     resizing: IResizing;
-    @observable css: string;
-    @observable className: string;
+    css: string;
+    className: string;
 
     get label() {
         return this.type;
@@ -142,6 +136,12 @@ export class Widget extends EezObject {
                 name: "type",
                 type: PropertyType.Enum,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "display",
+                type: PropertyType.Boolean,
+                defaultValue: true,
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "x",
@@ -574,27 +574,36 @@ export class Widget extends EezObject {
 
     open() {}
 
-    @computed get Div() {
-        return this.css
-            ? styled.div`
-                  ${this.css}
-              `
-            : styled.div``;
-    }
+    getClassNameStr(dataContext: IDataContext) {
+        const widgetClassName = this._class.name;
 
-    getClassNameStr(dataContext: IDataContext, widgetClassName?: string) {
         if (this.className) {
             let className = dataContext.get(this.className);
             if (className) {
-                if (widgetClassName) {
-                    return widgetClassName + " " + className;
-                }
-                return className;
+                return widgetClassName + " " + className;
             }
         }
+
         return widgetClassName;
     }
+
+    styleHook(style: React.CSSProperties) {}
+
+    get divAttributes(): { [key: string]: any } | undefined {
+        return undefined;
+    }
 }
+
+initResolutionDependableProperties(Widget, [
+    "display",
+    "x",
+    "y",
+    "width",
+    "height",
+    "resizing",
+    "css",
+    "className"
+]);
 
 registerClass(Widget);
 
@@ -604,6 +613,9 @@ export class ContainerWidget extends Widget {
     @observable
     widgets: EezArrayObject<Widget>;
 
+    @observable
+    scrollable: boolean;
+
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
             {
@@ -611,6 +623,10 @@ export class ContainerWidget extends Widget {
                 type: PropertyType.Array,
                 typeClass: Widget,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "scrollable",
+                type: PropertyType.Boolean
             }
         ],
 
@@ -648,6 +664,14 @@ export class ContainerWidget extends Widget {
                 dataContext={dataContext}
             />
         );
+    }
+
+    styleHook(style: React.CSSProperties) {
+        style.overflow = PageContext.inEditor ? "visible" : this.scrollable ? "auto" : "hidden";
+    }
+
+    get divAttributes() {
+        return !PageContext.inEditor && this.scrollable ? { "data-simplebar": 1 } : undefined;
     }
 }
 
@@ -1035,12 +1059,16 @@ export class SelectWidget extends Widget {
         if (dataContext) {
             const selectedWidget = this.getSelectedWidget(dataContext);
             if (selectedWidget) {
-                return this.widgets._array.indexOf(selectedWidget);
+                this._lastSelectedIndexInSelectWidget = this.widgets._array.indexOf(selectedWidget);
+                return this._lastSelectedIndexInSelectWidget;
             }
         }
 
-        if (this.widgets._array.length > 0) {
-            return 0;
+        if (designerContext) {
+            if (this.widgets._array.length > 0) {
+                this._lastSelectedIndexInSelectWidget = 0;
+                return this._lastSelectedIndexInSelectWidget;
+            }
         }
 
         return -1;
@@ -1054,7 +1082,7 @@ export class SelectWidget extends Widget {
 
         const selectedWidget = this.widgets._array[index];
 
-        if (designerContext || this.transition === "none") {
+        if (designerContext || !this.transition || this.transition === "none") {
             return (
                 <WidgetContainerComponent
                     containerWidget={this}
@@ -1065,17 +1093,56 @@ export class SelectWidget extends Widget {
             );
         }
 
+        let widgetComponents: React.ReactNode = this.widgets._array.map((widget, i) => {
+            let rectWidget;
+
+            if (this.transition === "horizontal") {
+                rectWidget = {
+                    left: i * rect.width,
+                    top: 0,
+                    width: rect.width,
+                    height: rect.height
+                };
+            } else {
+                rectWidget = {
+                    left: 0,
+                    top: i * rect.height,
+                    width: rect.width,
+                    height: rect.height
+                };
+            }
+            return (
+                <WidgetComponent
+                    key={widget._id}
+                    widget={widget}
+                    rect={rectWidget}
+                    dataContext={dataContext}
+                />
+            );
+        });
+
+        const CONF_SLIDE_TRANSITION = "transform 0.15s ease-out";
+
+        const style: React.CSSProperties = {
+            transition: CONF_SLIDE_TRANSITION
+        };
+
+        if (this.transition === "horizontal") {
+            style.transform = `translateX(${-index * rect.width}px)`;
+        } else {
+            style.transform = `translateY(${-index * rect.height}px)`;
+        }
+
         return (
-            <WidgetContainerComponent
-                containerWidget={this}
-                rectContainer={rect}
-                widgets={this.widgets._array}
-                dataContext={dataContext}
-                transition={{
-                    type: this.transition,
-                    index
+            <div
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    overflow: "hidden"
                 }}
-            />
+            >
+                <div style={style}>{widgetComponents}</div>
+            </div>
         );
     }
 }

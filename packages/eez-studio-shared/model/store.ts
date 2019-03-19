@@ -127,7 +127,7 @@ class NavigationStoreClass {
         this.selectedPanel = selectedPanel;
     }
 
-    @computed
+    //@computed
     get selectedObject(): EezObject | undefined {
         let object: EezObject = DocumentStore.document;
         if (!object) {
@@ -245,9 +245,7 @@ class NavigationStoreClass {
         this.navigationMap.set(navigationObject._id, navigationSelectedItem);
         let parent = navigationObject._parent;
         if (parent) {
-            if (!this.getNavigationSelectedItem(parent)) {
-                this.setNavigationSelectedItem(parent, navigationObject);
-            }
+            this.setNavigationSelectedItem(parent, navigationObject);
         }
     }
 

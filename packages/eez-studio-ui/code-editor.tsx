@@ -130,8 +130,8 @@ interface CodeEditorProps {
     mode: CodeEditorMode;
     value: string;
     onChange: (value: string) => void;
-    onFocus?: () => void;
-    onBlur?: () => void;
+    onFocus?: (event: any) => void;
+    onBlur?: (event: any) => void;
     className?: string;
     style?: React.CSSProperties;
     tabIndex?: number;

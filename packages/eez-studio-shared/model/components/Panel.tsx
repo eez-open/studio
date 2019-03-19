@@ -38,6 +38,12 @@ const PanelTitle = styled.div`
     text-overflow: ellipsis;
 `;
 
+const Toolbar = styled.div`
+    & > button {
+        margin-right: 4px;
+    }
+`;
+
 interface PanelProps {
     id: string;
     title: JSX.Element | string;
@@ -59,9 +65,9 @@ export class Panel extends React.Component<PanelProps> {
             <PanelContainer>
                 <PanelHeader>
                     {title}
-                    <div className="btn-toolbar" role="toolbar">
+                    <Toolbar className="btn-toolbar" role="toolbar">
                         {this.props.buttons}
-                    </div>
+                    </Toolbar>
                 </PanelHeader>
                 {this.props.body}
             </PanelContainer>

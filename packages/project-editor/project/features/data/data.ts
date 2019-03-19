@@ -211,7 +211,7 @@ export function count(dataItemId: string): number {
     return 0;
 }
 
-export function get(dataItemId: string): any {
+export function get(dataItemId: string, params?: { [key: string]: any }): any {
     let dataItem = findDataItem(dataItemId);
     if (dataItem) {
         let value: any;

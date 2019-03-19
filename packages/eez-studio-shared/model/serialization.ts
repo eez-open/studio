@@ -74,6 +74,10 @@ export function loadObject(
     object._id = getChildId(parent as EezObject);
     object._parent = parent as EezObject;
 
+    if (classInfo.beforeLoadHook) {
+        classInfo.beforeLoadHook(object, jsObject);
+    }
+
     for (const propertyInfo of classInfo.properties) {
         if (propertyInfo.computed === true) {
             continue;
@@ -104,7 +108,9 @@ export function loadObject(
                 (object as any)[propertyInfo.name] = loadArrayObject(value, object, propertyInfo);
             }
         } else {
-            (object as any)[propertyInfo.name] = value;
+            if (value !== undefined) {
+                (object as any)[propertyInfo.name] = value;
+            }
         }
     }
 

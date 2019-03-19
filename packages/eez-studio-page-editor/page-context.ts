@@ -13,7 +13,7 @@ export interface IDataItem {
 }
 
 export interface IDataContext {
-    get(dataItemId: string): any;
+    get(dataItemId: string, params?: { [key: string]: any }): any;
     set(dataItemId: string, value: any): any;
     count(dataItemId: string): number;
     getEnumValue(dataItemId: string): number;
@@ -46,6 +46,9 @@ export interface IPageContext {
 
     findStyle(styleName: any): IStyle | undefined;
     findStyleOrGetDefault(styleName: any): IStyle;
+
+    resolution: number | undefined;
+    allResolutions: number[] | undefined;
 }
 
 export let PageContext: IPageContext;

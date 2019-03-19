@@ -24,38 +24,30 @@ import { IResizeHandler } from "eez-studio-designer/designer-interfaces";
 import { Widget } from "eez-studio-page-editor/widget";
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { WidgetContainerComponent } from "eez-studio-page-editor/render";
+import { IResizing, resizingProperty } from "eez-studio-page-editor/resizing-widget-property";
 
 import styled from "eez-studio-ui/styled-components";
+
+import { initResolutionDependableProperties } from "eez-studio-page-editor/resolution-dependable-properties";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Page extends EezObject {
-    @observable
-    name: string;
+    @observable name: string;
+    @observable description?: string;
+    @observable style?: string;
+    @observable widgets: EezArrayObject<Widget>;
+    @observable closePageIfTouchedOutside: boolean;
+    @observable usedIn: string[] | undefined;
 
-    @observable
-    description?: string;
-
-    @observable
+    // resolution dependant properties
     x: number;
-    @observable
     y: number;
-    @observable
     width: number;
-    @observable
     height: number;
-
-    @observable
-    style?: string;
-
-    @observable
-    widgets: EezArrayObject<Widget>;
-
-    @observable
-    closePageIfTouchedOutside: boolean;
-
-    @observable
-    usedIn: string[] | undefined;
+    resizing: IResizing;
+    css: string;
+    className: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -90,10 +82,21 @@ export class Page extends EezObject {
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
             },
+            resizingProperty,
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
+            },
+            {
+                name: "css",
+                type: PropertyType.CSS,
+                propertyGridGroup: styleGroup
+            },
+            {
+                name: "className",
+                type: PropertyType.String,
                 propertyGridGroup: styleGroup
             },
             {
@@ -154,7 +157,7 @@ export class Page extends EezObject {
     }
 
     getClassNameStr(dataContext: IDataContext) {
-        return undefined;
+        return dataContext.get(this.className);
     }
 
     @computed get Div() {
@@ -171,7 +174,8 @@ export class Page extends EezObject {
         }
 
         return (
-            <div
+            <this.Div
+                className={this.getClassNameStr(dataContext)}
                 style={{
                     position: "absolute",
                     left: root ? rect.left : 0,
@@ -187,7 +191,7 @@ export class Page extends EezObject {
                     widgets={widgets}
                     dataContext={dataContext}
                 />
-            </div>
+            </this.Div>
         );
     }
 
@@ -195,6 +199,16 @@ export class Page extends EezObject {
         return false;
     }
 }
+
+initResolutionDependableProperties(Page, [
+    "x",
+    "y",
+    "width",
+    "height",
+    "resizing",
+    "css",
+    "className"
+]);
 
 registerClass(Page);
 

@@ -219,6 +219,11 @@ class ViewState implements IViewState {
 
     @action
     deselectAllObjects(): void {
+        if (this._selectedObjects.length === 0) {
+            // there is no change
+            return;
+        }
+
         this._selectedObjects = [];
     }
 

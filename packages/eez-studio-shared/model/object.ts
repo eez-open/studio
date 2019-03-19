@@ -18,6 +18,7 @@ export enum PropertyType {
     String,
     MultilineText,
     JSON,
+    JavaScript,
     CSS,
     Number,
     NumberArray,
@@ -83,6 +84,7 @@ export const actionsGroup: IPropertyGridGroupDefinition = {
 
 export interface PropertyInfo {
     name: string;
+    alias?: string;
     type: PropertyType;
 
     // optional properties
@@ -173,6 +175,8 @@ export interface ClassInfo {
     icon?: string;
 
     propertyGridTableComponent?: any;
+
+    beforeLoadHook?(object: EezObject, jsObject: any): void;
 
     afterUpdateObjectHook?: (object: EezObject, changedProperties: any, oldValues: any) => void;
 

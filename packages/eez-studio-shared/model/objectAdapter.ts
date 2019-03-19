@@ -12,7 +12,6 @@ import {
     EezObject,
     EezArrayObject,
     PropertyType,
-    isSameInstanceTypeAs,
     isAncestor,
     reduceUntilCommonParent as reduceObjectsUntilCommonParent,
     IEditorState,
@@ -781,7 +780,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         if (selectedObjects.length > 0) {
             let i: number;
             for (i = 1; i < selectedObjects.length; i++) {
-                if (isSameInstanceTypeAs(selectedObjects[i], selectedObjects[0])) {
+                if (selectedObjects[i]._parent !== selectedObjects[0]._parent) {
                     break;
                 }
             }
