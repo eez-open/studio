@@ -38,7 +38,7 @@ setPageContext({
     inEditor: true,
 
     resolution: undefined,
-    defaultResolution: undefined,
+    allResolutions: undefined,
 
     rootDataContext: dataContext,
 
