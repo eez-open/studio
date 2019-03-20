@@ -35,7 +35,7 @@ import { SnapLines } from "eez-studio-designer/select-tool";
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 import { Widget, SelectWidget } from "eez-studio-page-editor/widget";
-import { renderRootElement } from "eez-studio-page-editor/render";
+import { renderRootElement, WidgetComponent } from "eez-studio-page-editor/render";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -273,6 +273,33 @@ class DragSnapLinesOverlay extends React.Component {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const DragWidget = observer(
+    ({
+        page,
+        pageEditorContext,
+        dataContext
+    }: {
+        page: Page;
+        pageEditorContext: PageEditorContext;
+        dataContext: IDataContext;
+    }) => {
+        return pageEditorContext.dragWidget ? (
+            <WidgetComponent
+                widget={pageEditorContext.dragWidget}
+                rect={{
+                    left: page.rect.left + pageEditorContext.dragWidget.x,
+                    top: page.rect.top + pageEditorContext.dragWidget.y,
+                    width: pageEditorContext.dragWidget.width,
+                    height: pageEditorContext.dragWidget.height
+                }}
+                dataContext={dataContext}
+            />
+        ) : null;
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 class PageEditorContext extends DesignerContext {
     @observable
     dragWidget: Widget | undefined;
@@ -427,6 +454,10 @@ export class PageEditor extends React.Component<
 
         for (let i = 0; i < selectedObjects.length; ++i) {
             const selectedObject = (selectedObjects[i] as EditorObject).object;
+
+            if (object === selectedObject) {
+                return false;
+            }
 
             if (selectedObject._parent === object._parent || isAncestor(selectedObject, object)) {
                 return true;
@@ -647,10 +678,14 @@ export class PageEditor extends React.Component<
                             this.page.render(
                                 this.page.rect,
                                 dataContext || PageContext.rootDataContext,
-                                true,
-                                this.pageEditorContext.dragWidget
+                                true
                             )
                         )}
+                        <DragWidget
+                            page={this.page}
+                            pageEditorContext={this.pageEditorContext}
+                            dataContext={dataContext || PageContext.rootDataContext}
+                        />
                     </PageEditorCanvas>
                 </PageEditorCanvasContainer>
             </Provider>

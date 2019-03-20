@@ -21,7 +21,6 @@ import {
     getObjectFromPath,
     getObjectFromStringPath,
     getObjectFromObjectId,
-    cloneObject,
     isPropertyEnumerable,
     EezBrowsableObject
 } from "eez-studio-shared/model/object";
@@ -1171,8 +1170,7 @@ export function copyItem(object: EezObject) {
 
 function duplicateItem(object: EezObject) {
     let parent = object._parent as EezObject;
-    let duplicate = cloneObject(parent, object);
-    DocumentStore.addObject(parent, duplicate);
+    DocumentStore.addObject(parent, toJS(object));
 }
 
 export function createContextMenu(object: EezObject) {

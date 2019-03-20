@@ -30,6 +30,8 @@ export interface IPageContext {
 
     rootDataContext: IDataContext;
 
+    resolution: number;
+
     drawDefaultWidget(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
     renderRootElement(child: React.ReactNode): React.ReactNode;
 
@@ -46,9 +48,6 @@ export interface IPageContext {
 
     findStyle(styleName: any): IStyle | undefined;
     findStyleOrGetDefault(styleName: any): IStyle;
-
-    resolution: number | undefined;
-    allResolutions: number[] | undefined;
 }
 
 export let PageContext: IPageContext;

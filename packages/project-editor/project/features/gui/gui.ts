@@ -37,8 +37,7 @@ import { GuiNavigation } from "project-editor/project/features/gui/GuiNavigation
 setPageContext({
     inEditor: true,
 
-    resolution: undefined,
-    allResolutions: undefined,
+    resolution: 0,
 
     rootDataContext: dataContext,
 

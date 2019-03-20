@@ -119,6 +119,29 @@ export class WidgetComponent extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
+export class ChaChaK extends React.Component<{
+    widget: Widget;
+    rectContainerOriginal: Rect;
+    rectContainer: Rect;
+    dataContext: IDataContext;
+}> {
+    render() {
+        const { widget, rectContainerOriginal, rectContainer, dataContext } = this.props;
+
+        const rect = resizeWidget(
+            widget.rect,
+            rectContainerOriginal,
+            rectContainer,
+            widget.resizing
+        );
+
+        return <WidgetComponent widget={widget} rect={rect} dataContext={dataContext} />;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
 export class WidgetContainerComponent extends React.Component<{
     containerWidget: Widget | Page;
     rectContainer: Rect;
@@ -129,18 +152,12 @@ export class WidgetContainerComponent extends React.Component<{
         const { containerWidget, rectContainer, widgets, dataContext } = this.props;
 
         return widgets.map((widget, i) => {
-            const rect = resizeWidget(
-                widget.rect,
-                containerWidget.contentRect,
-                rectContainer,
-                widget.resizing
-            );
-
             return (
-                <WidgetComponent
+                <ChaChaK
                     key={widget._id}
                     widget={widget}
-                    rect={rect}
+                    rectContainerOriginal={containerWidget.contentRect}
+                    rectContainer={rectContainer}
                     dataContext={dataContext}
                 />
             );

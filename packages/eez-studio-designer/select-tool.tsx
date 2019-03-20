@@ -232,7 +232,6 @@ export class SnapLines {
                 id: "",
                 children: context.document.rootObjects
             },
-            context.viewState.selectedObjects,
             context.filterSnapLines
         );
     }

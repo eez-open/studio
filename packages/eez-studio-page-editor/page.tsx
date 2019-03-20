@@ -39,6 +39,7 @@ export class Page extends EezObject {
     @observable widgets: EezArrayObject<Widget>;
     @observable closePageIfTouchedOutside: boolean;
     @observable usedIn: string[] | undefined;
+    @observable scrollable: boolean;
 
     // resolution dependant properties
     x: number;
@@ -114,6 +115,10 @@ export class Page extends EezObject {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 propertyGridGroup: generalGroup
+            },
+            {
+                name: "scrollable",
+                type: PropertyType.Boolean
             }
         ],
         newItem: (parent: EezObject) => {
@@ -164,14 +169,8 @@ export class Page extends EezObject {
         return styled.div``;
     }
 
-    render(rect: Rect, dataContext: IDataContext, root: boolean, dragWidget?: Widget) {
+    render(rect: Rect, dataContext: IDataContext, root: boolean) {
         const style = PageContext.findStyleOrGetDefault(this.style);
-
-        let widgets = this.widgets._array;
-
-        if (dragWidget) {
-            widgets = [...widgets, dragWidget];
-        }
 
         return (
             <this.Div
@@ -182,13 +181,15 @@ export class Page extends EezObject {
                     top: root ? rect.top : 0,
                     width: rect.width,
                     height: rect.height,
-                    backgroundColor: style.backgroundColor
+                    backgroundColor: style.backgroundColor,
+                    overflow: PageContext.inEditor ? "visible" : this.scrollable ? "auto" : "hidden"
                 }}
+                data-simplebar={!PageContext.inEditor && this.scrollable ? 1 : undefined}
             >
                 <WidgetContainerComponent
                     containerWidget={this}
                     rectContainer={rect}
-                    widgets={widgets}
+                    widgets={this.widgets._array}
                     dataContext={dataContext}
                 />
             </this.Div>

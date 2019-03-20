@@ -1,4 +1,4 @@
-import { Point, Rect } from "eez-studio-shared/geometry";
+import { Rect } from "eez-studio-shared/geometry";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -31,36 +31,30 @@ export interface ISnapLines {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findSnapLines(
-    tree: INode,
-    excludeNodes: INode[],
-    filterCallback?: (node: INode) => boolean
-): ISnapLines {
+export function findSnapLines(tree: INode, filterCallback?: (node: INode) => boolean): ISnapLines {
     function findSnapLinesInTree(offsetFieldName: string, sizeFieldName: string) {
         let lines: ISnapLine[] = [];
 
         function findSnapLinesInNode(node: INode) {
-            if (excludeNodes.indexOf(node) === -1) {
-                const rect: any = node.boundingRect || node.rect;
-                if (rect) {
-                    if (!filterCallback || filterCallback(node)) {
+            const rect: any = node.boundingRect || node.rect;
+            if (rect) {
+                if (!filterCallback || filterCallback(node)) {
+                    lines.push({
+                        pos: rect[offsetFieldName],
+                        node: node
+                    });
+
+                    if (rect[sizeFieldName] > 0) {
                         lines.push({
-                            pos: rect[offsetFieldName],
+                            pos: rect[offsetFieldName] + rect[sizeFieldName],
                             node: node
                         });
-
-                        if (rect[sizeFieldName] > 0) {
-                            lines.push({
-                                pos: rect[offsetFieldName] + rect[sizeFieldName],
-                                node: node
-                            });
-                        }
                     }
                 }
+            }
 
-                for (let i = 0; i < node.children.length; i++) {
-                    findSnapLinesInNode(node.children[i]);
-                }
+            for (let i = 0; i < node.children.length; i++) {
+                findSnapLinesInNode(node.children[i]);
             }
         }
 
@@ -220,44 +214,4 @@ export function drawSnapLinesGeneric(
             }
         }
     }
-}
-
-export interface IDrawTheme {
-    lineColor: string;
-    lineWidth: number;
-    closestLineColor: string;
-    closestLineWidth: number;
-}
-
-export function drawSnapLines(
-    ctx: CanvasRenderingContext2D,
-    topLeft: Point,
-    bottomRight: Point,
-    snapLines: ISnapLines,
-    selectionRect: Rect,
-    scale: number,
-    theme: IDrawTheme
-) {
-    drawSnapLinesGeneric(
-        snapLines,
-        selectionRect,
-        (pos: number, horizontal: boolean, closest: boolean) => {
-            if (closest) {
-                ctx.strokeStyle = theme.closestLineColor;
-                ctx.lineWidth = theme.closestLineWidth / scale;
-            } else {
-                ctx.strokeStyle = theme.lineColor;
-                ctx.lineWidth = theme.lineWidth / scale;
-            }
-            ctx.beginPath();
-            if (horizontal) {
-                ctx.moveTo(topLeft.x, pos);
-                ctx.lineTo(bottomRight.x, pos);
-            } else {
-                ctx.moveTo(pos, topLeft.y);
-                ctx.lineTo(pos, bottomRight.y);
-            }
-            ctx.stroke();
-        }
-    );
 }
