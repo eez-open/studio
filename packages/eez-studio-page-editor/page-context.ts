@@ -31,6 +31,10 @@ export interface IPageContext {
     rootDataContext: IDataContext;
 
     resolution: number;
+    allResolutions: {
+        name: string;
+        shortName: string;
+    }[];
 
     drawDefaultWidget(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
     renderRootElement(child: React.ReactNode): React.ReactNode;

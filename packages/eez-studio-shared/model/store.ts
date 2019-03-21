@@ -38,7 +38,7 @@ import {
     insertObjectBefore,
     insertObjectAfter
 } from "eez-studio-shared/model/commands";
-import { loadObject } from "eez-studio-shared/model/serialization";
+import { loadObject, objectToJS } from "eez-studio-shared/model/serialization";
 import { TreeObjectAdapter, ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 import { findAllReferences, isReferenced } from "eez-studio-shared/model/search";
 import { OutputSections, OutputSection } from "eez-studio-shared/model/output";
@@ -917,7 +917,15 @@ class DocumentStoreClass {
                     oldValues[propertyName] = getProperty(object, propertyName);
                 }
 
-                const propertyInfo = findPropertyByName(object, propertyName);
+                const resolutionDependableProperty = propertyName.endsWith("_");
+
+                let propertyInfo;
+                if (resolutionDependableProperty) {
+                    propertyInfo = findPropertyByName(object, propertyName.slice(0, -1));
+                } else {
+                    propertyInfo = findPropertyByName(object, propertyName);
+                }
+
                 if (propertyInfo) {
                     if (propertyInfo.computed !== true) {
                         const value = inputValues[propertyName];
@@ -1010,7 +1018,7 @@ class DocumentStoreClass {
         );
     }
 
-    insertObjectBefore(object: EezObject, objectToInsert: EezObject) {
+    insertObjectBefore(object: EezObject, objectToInsert: any) {
         return insertObjectBefore(
             {
                 undoManager: UndoManager,
@@ -1021,7 +1029,7 @@ class DocumentStoreClass {
         );
     }
 
-    insertObjectAfter(object: EezObject, objectToInsert: EezObject) {
+    insertObjectAfter(object: EezObject, objectToInsert: any) {
         return insertObjectAfter(
             {
                 undoManager: UndoManager,
@@ -1141,9 +1149,15 @@ export function pasteItem(object: EezObject) {
                 });
             } else {
                 if (c.serializedData.object) {
-                    DocumentStore.addObject(c.pastePlace as EezObject, c.serializedData.object);
+                    DocumentStore.addObject(
+                        c.pastePlace as EezObject,
+                        objectToJS(c.serializedData.object)
+                    );
                 } else if (c.serializedData.objects) {
-                    DocumentStore.addObjects(c.pastePlace as EezObject, c.serializedData.objects);
+                    DocumentStore.addObjects(
+                        c.pastePlace as EezObject,
+                        objectToJS(c.serializedData.objects)
+                    );
                 }
             }
         }
@@ -1157,7 +1171,7 @@ export function deleteItem(object: EezObject) {
 }
 
 export function cutItem(object: EezObject) {
-    let clipboardText = btoa(objectToClipboardData(object));
+    let clipboardText = objectToClipboardData(object);
 
     deleteItems([object], () => {
         UIElementsFactory.copyToClipboard(clipboardText);
@@ -1165,7 +1179,7 @@ export function cutItem(object: EezObject) {
 }
 
 export function copyItem(object: EezObject) {
-    UIElementsFactory.copyToClipboard(btoa(objectToClipboardData(object)));
+    UIElementsFactory.copyToClipboard(objectToClipboardData(object));
 }
 
 function duplicateItem(object: EezObject) {

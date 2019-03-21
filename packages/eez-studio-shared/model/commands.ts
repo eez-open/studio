@@ -9,8 +9,7 @@ import {
     getProperty,
     getHumanReadableObjectPath,
     isArrayElement,
-    findPropertyByName,
-    PropertyType
+    findPropertyByName
 } from "eez-studio-shared/model/object";
 import { loadObject } from "eez-studio-shared/model/serialization";
 
@@ -139,7 +138,7 @@ export let addObjects = action(
 );
 
 export let insertObject = action(
-    (context: ICommandContext, parentObject: EezObject, index: number, object: EezObject) => {
+    (context: ICommandContext, parentObject: EezObject, index: number, object: any) => {
         object = loadObject(parentObject, object, parentObject._class);
         ensureUniqueProperties(parentObject, [object]);
 
@@ -173,23 +172,37 @@ class UpdateCommand implements ICommand {
         }
 
         for (let propertyName in values) {
-            let propertyInfo = findPropertyByName(object, propertyName);
+            const resolutionDependableProperty = propertyName.endsWith("_");
+
+            let propertyInfo;
+            if (resolutionDependableProperty) {
+                propertyInfo = findPropertyByName(object, propertyName.slice(0, -1));
+            } else {
+                propertyInfo = findPropertyByName(object, propertyName);
+            }
+
             if (propertyInfo) {
+                if (object._classInfo.updateObjectValueHook) {
+                    const result = object._classInfo.updateObjectValueHook(
+                        object,
+                        propertyName,
+                        values[propertyName]
+                    );
+
+                    if (result !== undefined) {
+                        if (!lastCommand) {
+                            this.oldValues[propertyName] = result.oldValue;
+                        }
+                        this.newValues[propertyName] = result.newValue;
+
+                        continue;
+                    }
+                }
+
                 if (!lastCommand) {
                     this.oldValues[propertyName] = getProperty(object, propertyName);
                 }
-
-                let value = values[propertyName];
-
-                if (propertyInfo.type == PropertyType.Number) {
-                    if (value !== undefined) {
-                        this.newValues[propertyName] = +value;
-                    } else {
-                        this.newValues[propertyName] = undefined;
-                    }
-                } else {
-                    this.newValues[propertyName] = values[propertyName];
-                }
+                this.newValues[propertyName] = values[propertyName];
             }
         }
     }
@@ -401,7 +414,7 @@ export let replaceObjects = action(
 export function insertObjectBefore(
     context: ICommandContext,
     object: EezObject,
-    objectToInsert: EezObject
+    objectToInsert: any
 ) {
     const parent = object._parent!;
     const array = asArray(parent);
@@ -412,7 +425,7 @@ export function insertObjectBefore(
 export function insertObjectAfter(
     context: ICommandContext,
     object: EezObject,
-    objectToInsert: EezObject
+    objectToInsert: any
 ) {
     const parent = object._parent!;
     const array = asArray(parent);

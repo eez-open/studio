@@ -84,7 +84,6 @@ export const actionsGroup: IPropertyGridGroupDefinition = {
 
 export interface PropertyInfo {
     name: string;
-    alias?: string;
     type: PropertyType;
 
     // optional properties
@@ -111,6 +110,7 @@ export interface PropertyInfo {
     check?: (object: EezObject) => IMessage[];
     interceptAddObject?: (parentObject: EezObject, object: EezObject) => EezObject;
     downloadFileName?: (object: EezObject, propertyInfo: PropertyInfo) => string;
+    resolutionDependable?: boolean;
 }
 
 export interface NavigationComponentProps {
@@ -177,6 +177,17 @@ export interface ClassInfo {
     propertyGridTableComponent?: any;
 
     beforeLoadHook?(object: EezObject, jsObject: any): void;
+
+    updateObjectValueHook?: (
+        object: EezObject,
+        propertyName: string,
+        value: any
+    ) =>
+        | {
+              oldValue: any;
+              newValue: any;
+          }
+        | undefined;
 
     afterUpdateObjectHook?: (object: EezObject, changedProperties: any, oldValues: any) => void;
 

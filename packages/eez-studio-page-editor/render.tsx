@@ -1,11 +1,10 @@
 import React from "react";
 import { observer, inject } from "mobx-react";
+import styled from "styled-components";
 
 import { Rect } from "eez-studio-shared/geometry";
 
 import { IDesignerContext } from "eez-studio-designer";
-
-import styled from "eez-studio-ui/styled-components";
 
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Widget } from "eez-studio-page-editor/widget";
@@ -90,7 +89,7 @@ export class WidgetComponent extends React.Component<{
         }
 
         try {
-            const node = widget.render(rect, dataContext, designerContext);
+            let node = widget.render(rect, dataContext, designerContext);
             if (node) {
                 const className = widget.getClassNameStr(dataContext);
 
@@ -98,13 +97,17 @@ export class WidgetComponent extends React.Component<{
 
                 widget.styleHook(style);
 
-                const Div = styled.div`
-                    ${widget.css || ""}
-                `;
+                if (widget.css) {
+                    const Div = styled.div`
+                        ${widget.css || ""}
+                    `;
+                    node = <Div>{node}</Div>;
+                }
+
                 return (
-                    <Div style={style} className={className} {...widget.divAttributes}>
+                    <div style={style} className={className} {...widget.divAttributes}>
                         {node}
-                    </Div>
+                    </div>
                 );
             }
 
@@ -119,7 +122,7 @@ export class WidgetComponent extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class ChaChaK extends React.Component<{
+export class WidgetComponent2 extends React.Component<{
     widget: Widget;
     rectContainerOriginal: Rect;
     rectContainer: Rect;
@@ -147,20 +150,34 @@ export class WidgetContainerComponent extends React.Component<{
     rectContainer: Rect;
     widgets: Widget[];
     dataContext: IDataContext;
+    widgetRects?: Rect[];
 }> {
     render() {
-        const { containerWidget, rectContainer, widgets, dataContext } = this.props;
+        const { containerWidget, rectContainer, widgets, dataContext, widgetRects } = this.props;
 
-        return widgets.map((widget, i) => {
-            return (
-                <ChaChaK
-                    key={widget._id}
-                    widget={widget}
-                    rectContainerOriginal={containerWidget.contentRect}
-                    rectContainer={rectContainer}
-                    dataContext={dataContext}
-                />
-            );
-        });
+        if (widgetRects !== undefined) {
+            return widgets.map((widget, i) => {
+                return (
+                    <WidgetComponent
+                        key={widget._id}
+                        widget={widget}
+                        rect={widgetRects[i]}
+                        dataContext={dataContext}
+                    />
+                );
+            });
+        } else {
+            return widgets.map((widget, i) => {
+                return (
+                    <WidgetComponent2
+                        key={widget._id}
+                        widget={widget}
+                        rectContainerOriginal={containerWidget.contentRect}
+                        rectContainer={rectContainer}
+                        dataContext={dataContext}
+                    />
+                );
+            });
+        }
     }
 }

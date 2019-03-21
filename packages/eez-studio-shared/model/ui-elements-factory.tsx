@@ -175,7 +175,8 @@ export const DefaultUIElementsFactory: IUIElementsFactory = {
 export type IMenuItemConfig =
     | {
           label: string;
-          click: () => void;
+          click?: () => void;
+          checked?: boolean;
       }
     | {
           type: "separator";

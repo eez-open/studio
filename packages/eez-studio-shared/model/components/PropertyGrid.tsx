@@ -40,6 +40,13 @@ import {
 } from "eez-studio-shared/model/store";
 import { replaceObjectReference } from "eez-studio-shared/model/search";
 
+import { PageContext } from "eez-studio-page-editor/page-context";
+import {
+    getPropertyValueForAllResolutions,
+    unsetResolutionDependablePropertyForCurrentResolution,
+    unsetResolutionDependablePropertyForLowerResolutions
+} from "eez-studio-page-editor/resolution-dependable-properties";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface PropertyProps {
@@ -126,17 +133,75 @@ class PropertyMenu extends React.Component<PropertyProps> {
     onClicked(event: React.MouseEvent) {
         let menuItems: IMenuItem[] = [];
 
-        if (this.sourceInfo.source === "modified") {
-            menuItems.push(
-                UIElementsFactory.createMenuItem({
-                    label: "Reset",
-                    click: () => {
-                        this.props.updateObject({
-                            [this.props.propertyInfo.name]: this.props.propertyInfo.defaultValue
-                        });
-                    }
-                })
+        if (this.props.propertyInfo.resolutionDependable) {
+            const allValues = getPropertyValueForAllResolutions(
+                this.props.object,
+                this.props.propertyInfo.name
             );
+
+            for (let i = 0; i < PageContext.allResolutions.length; ++i) {
+                const value = i < allValues.length ? allValues[i] : null;
+                menuItems.push(
+                    UIElementsFactory.createMenuItem({
+                        label: `${PageContext.allResolutions[i].shortName}: ${
+                            value != null ? value : "undefined"
+                        }`,
+                        checked: PageContext.resolution === i
+                    })
+                );
+            }
+
+            if (PageContext.resolution > 0 && allValues[PageContext.resolution] != null) {
+                menuItems.push(
+                    UIElementsFactory.createMenuItem({
+                        label: "Unset",
+                        click: () => {
+                            unsetResolutionDependablePropertyForCurrentResolution(
+                                this.props.object,
+                                this.props.propertyInfo.name
+                            );
+                        }
+                    })
+                );
+            }
+
+            if (
+                PageContext.resolution < PageContext.allResolutions.length - 1 &&
+                allValues.slice(PageContext.resolution + 1).find((value: any) => value != null)
+            ) {
+                menuItems.push(
+                    UIElementsFactory.createMenuItem({
+                        label: "Unset for lower resolutions",
+                        click: () => {
+                            unsetResolutionDependablePropertyForLowerResolutions(
+                                this.props.object,
+                                this.props.propertyInfo.name
+                            );
+                        }
+                    })
+                );
+            }
+        } else {
+            if (this.sourceInfo.source === "modified") {
+                if (menuItems.length > 0) {
+                    menuItems.push(
+                        UIElementsFactory.createMenuItem({
+                            type: "separator"
+                        })
+                    );
+                }
+
+                menuItems.push(
+                    UIElementsFactory.createMenuItem({
+                        label: "Reset",
+                        click: () => {
+                            this.props.updateObject({
+                                [this.props.propertyInfo.name]: this.props.propertyInfo.defaultValue
+                            });
+                        }
+                    })
+                );
+            }
         }
 
         if (menuItems.length > 0) {

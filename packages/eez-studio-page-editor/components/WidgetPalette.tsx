@@ -46,7 +46,7 @@ class PaletteItem extends React.Component<PaletteItemProps> {
         let protoObject = new this.props.widgetClass();
         let object = loadObject(
             undefined,
-            protoObject._classInfo.defaultValue!,
+            JSON.parse(JSON.stringify(protoObject._classInfo.defaultValue!)),
             this.props.widgetClass
         );
 

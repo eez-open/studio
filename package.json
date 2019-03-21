@@ -57,7 +57,7 @@
     "@types/request-promise-native": "^1.0.15",
     "@types/sha256": "^0.2.0",
     "@types/sharp": "^0.21.2",
-    "@types/styled-components": "^4.1.8",
+    "@types/styled-components": "4.1.8",
     "@types/tinycolor2": "^1.4.1",
     "@types/usb": "^1.5.1",
     "concurrently": "^4.1.0",

@@ -28,7 +28,7 @@ import { IResizing, resizingProperty } from "eez-studio-page-editor/resizing-wid
 
 import styled from "eez-studio-ui/styled-components";
 
-import { initResolutionDependableProperties } from "eez-studio-page-editor/resolution-dependable-properties";
+import { withResolutionDependableProperties } from "eez-studio-page-editor/resolution-dependable-properties";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,7 @@ export class Page extends EezObject {
     @observable usedIn: string[] | undefined;
     @observable scrollable: boolean;
 
-    // resolution dependant properties
+    // resolution dependandable properties
     x: number;
     y: number;
     width: number;
@@ -121,6 +121,7 @@ export class Page extends EezObject {
                 type: PropertyType.Boolean
             }
         ],
+        isPropertyMenuSupported: true,
         newItem: (parent: EezObject) => {
             return Promise.resolve({
                 name: "Page",
@@ -201,17 +202,17 @@ export class Page extends EezObject {
     }
 }
 
-initResolutionDependableProperties(Page, [
-    "x",
-    "y",
-    "width",
-    "height",
-    "resizing",
-    "css",
-    "className"
-]);
-
-registerClass(Page);
+registerClass(
+    withResolutionDependableProperties(Page, [
+        "x",
+        "y",
+        "width",
+        "height",
+        "resizing",
+        "css",
+        "className"
+    ])
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

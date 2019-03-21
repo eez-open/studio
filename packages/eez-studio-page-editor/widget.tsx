@@ -34,7 +34,8 @@ import {
     DocumentStore,
     IMenuItem,
     UIElementsFactory,
-    NavigationStore
+    NavigationStore,
+    UndoManager
 } from "eez-studio-shared/model/store";
 import * as output from "eez-studio-shared/model/output";
 
@@ -48,7 +49,10 @@ import { EditorObject } from "eez-studio-page-editor/editor";
 
 import { PropertyProps } from "eez-studio-shared/model/components/PropertyGrid";
 
-import { initResolutionDependableProperties } from "eez-studio-page-editor/resolution-dependable-properties";
+import {
+    withResolutionDependableProperties,
+    unsetAllResolutionDependablePropertiesForLowerResolutions
+} from "eez-studio-page-editor/resolution-dependable-properties";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -92,6 +96,40 @@ function htmlEncode(value: string) {
     return el.innerHTML;
 }
 
+function hideIfNotGridLayout(object: EezObject) {
+    return !(
+        object._parent &&
+        object._parent._parent instanceof ContainerWidget &&
+        object._parent._parent.layout === "grid"
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+class UnsetAllResolutionDependablePropertiesForLowerResolutionsPropertyGridUI extends React.Component<
+    PropertyProps
+> {
+    @bind
+    reset() {
+        unsetAllResolutionDependablePropertiesForLowerResolutions(this.props.object);
+    }
+
+    render() {
+        return (
+            <UIElementsFactory.Button
+                variant="text"
+                color="primary"
+                size="small"
+                onClick={this.reset}
+                style={{ margin: 5 }}
+            >
+                Unset All Resolution Dependable Properties for Lower Resolutions
+            </UIElementsFactory.Button>
+        );
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export type WidgetParent = Page | Widget;
@@ -104,7 +142,7 @@ export class Widget extends EezObject {
     @observable data?: string;
     @observable action?: string;
 
-    // resolution dependant properties
+    // resolution dependandable properties
     display: boolean;
     x: number;
     y: number;
@@ -113,6 +151,10 @@ export class Widget extends EezObject {
     resizing: IResizing;
     css: string;
     className: string;
+    row: number;
+    col: number;
+    rowSpan: number;
+    colSpan: number;
 
     get label() {
         return this.type;
@@ -187,8 +229,40 @@ export class Widget extends EezObject {
                 name: "className",
                 type: PropertyType.String,
                 propertyGridGroup: styleGroup
+            },
+            {
+                name: "row",
+                type: PropertyType.Number,
+                hideInPropertyGrid: hideIfNotGridLayout
+            },
+            {
+                name: "col",
+                displayName: "Column",
+                type: PropertyType.Number,
+                hideInPropertyGrid: hideIfNotGridLayout
+            },
+            {
+                name: "rowSpan",
+                type: PropertyType.Number,
+                hideInPropertyGrid: hideIfNotGridLayout
+            },
+            {
+                name: "colSpan",
+                displayName: "Column span",
+                type: PropertyType.Number,
+                hideInPropertyGrid: hideIfNotGridLayout
+            },
+            {
+                name: "unsetAllResolutionDependablePropertiesForLowerResolutions",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridComponent: UnsetAllResolutionDependablePropertiesForLowerResolutionsPropertyGridUI,
+                hideInPropertyGrid: () =>
+                    PageContext.resolution === PageContext.allResolutions.length - 1
             }
-        ]
+        ],
+
+        isPropertyMenuSupported: true
     };
 
     @computed
@@ -594,20 +668,82 @@ export class Widget extends EezObject {
     }
 }
 
-initResolutionDependableProperties(Widget, [
-    "display",
-    "x",
-    "y",
-    "width",
-    "height",
-    "resizing",
-    "css",
-    "className"
-]);
-
-registerClass(Widget);
+registerClass(
+    withResolutionDependableProperties(Widget, [
+        "display",
+        "x",
+        "y",
+        "width",
+        "height",
+        "resizing",
+        "css",
+        "className",
+        "row",
+        "col",
+        "rowSpan",
+        "colSpan"
+    ])
+);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const CONF_DEFAULT_PADDING = 20;
+const CONF_DEFAULT_GAP = 20;
+
+@observer
+class ResizeWidgetsPropertyGridUI extends React.Component<PropertyProps> {
+    @bind
+    resizeWidgets(after: boolean) {
+        const containerWidget = this.props.object as ContainerWidget;
+        const widgetRects = containerWidget.getWidgetRects(containerWidget.rect);
+        UndoManager.setCombineCommands(true);
+
+        DocumentStore.updateObject(containerWidget, {
+            height:
+                2 * (containerWidget.padding || CONF_DEFAULT_PADDING) +
+                (widgetRects.length > 0
+                    ? widgetRects[widgetRects.length - 1].top +
+                      widgetRects[widgetRects.length - 1].height -
+                      widgetRects[0].top
+                    : 0)
+        });
+
+        for (
+            let widgetIndex = 0;
+            widgetIndex < containerWidget.widgets._array.length;
+            widgetIndex++
+        ) {
+            DocumentStore.updateObject(containerWidget.widgets._array[widgetIndex], {
+                x: widgetRects[widgetIndex].left,
+                y: widgetRects[widgetIndex].top,
+                width: widgetRects[widgetIndex].width,
+                height: widgetRects[widgetIndex].height
+            });
+        }
+        UndoManager.setCombineCommands(false);
+    }
+
+    render() {
+        return (
+            <UIElementsFactory.Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={this.resizeWidgets}
+                style={{ margin: 5 }}
+            >
+                Resize Widgets
+            </UIElementsFactory.Button>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const containerPropertiesGroup: IPropertyGridGroupDefinition = {
+    id: "containerProperties",
+    title: "Container properties"
+};
 
 export class ContainerWidget extends Widget {
     @observable
@@ -615,6 +751,12 @@ export class ContainerWidget extends Widget {
 
     @observable
     scrollable: boolean;
+
+    // resolution dependandable properties
+    layout: "free" | "grid";
+    cols: number;
+    padding: number;
+    gap: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
@@ -625,8 +767,42 @@ export class ContainerWidget extends Widget {
                 hideInPropertyGrid: true
             },
             {
+                name: "layout",
+                type: PropertyType.Enum,
+                enumItems: [{ id: "free" }, { id: "grid" }],
+                propertyGridGroup: containerPropertiesGroup
+            },
+            {
                 name: "scrollable",
-                type: PropertyType.Boolean
+                type: PropertyType.Boolean,
+                propertyGridGroup: containerPropertiesGroup
+            },
+            {
+                name: "cols",
+                displayName: "Columns",
+                type: PropertyType.Number,
+                propertyGridGroup: containerPropertiesGroup,
+                hideInPropertyGrid: (object: ContainerWidget) => object.layout !== "grid"
+            },
+            {
+                name: "padding",
+                type: PropertyType.Number,
+                propertyGridGroup: containerPropertiesGroup,
+                hideInPropertyGrid: (object: ContainerWidget) => object.layout !== "grid"
+            },
+            {
+                name: "gap",
+                type: PropertyType.Number,
+                propertyGridGroup: containerPropertiesGroup,
+                hideInPropertyGrid: (object: ContainerWidget) => object.layout !== "grid"
+            },
+            {
+                name: "customUI",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridComponent: ResizeWidgetsPropertyGridUI,
+                propertyGridGroup: containerPropertiesGroup,
+                hideInPropertyGrid: (object: ContainerWidget) => object.layout !== "grid"
             }
         ],
 
@@ -637,7 +813,8 @@ export class ContainerWidget extends Widget {
             y: 0,
             width: 64,
             height: 32,
-            style: "default"
+            style: "default",
+            layout: "free"
         },
 
         // eez-studio-page-editor\_images\Container.png
@@ -655,19 +832,230 @@ export class ContainerWidget extends Widget {
         return super.check().concat(messages);
     }
 
+    @computed get grid() {
+        function setCell(rowIndex: number, colIndex: number, widgetIndex: number) {
+            while (rowIndex >= grid.length) {
+                grid.push([]);
+                for (let colIndex = 0; colIndex < cols; colIndex++) {
+                    grid[rowIndex].push(0);
+                }
+            }
+
+            while (colIndex >= grid[rowIndex].length) {
+                grid[rowIndex].push(0);
+            }
+
+            grid[rowIndex][colIndex] = widgetIndex + 1;
+        }
+
+        function set(
+            rowIndex: number,
+            colIndex: number,
+            rowSpan: number,
+            colSpan: number,
+            widgetIndex: number
+        ) {
+            rowSpan = rowSpan || 1;
+
+            for (let i = rowIndex; i < rowIndex + rowSpan; i++) {
+                setCell(i, colIndex, widgetIndex);
+            }
+
+            colSpan = colSpan || 1;
+
+            for (let i = colIndex + 1; i < colIndex + colSpan; i++) {
+                setCell(rowIndex, i, widgetIndex);
+            }
+
+            widgetLocations[widgetIndex].rowIndex = rowIndex;
+            widgetLocations[widgetIndex].colIndex = colIndex;
+            widgetLocations[widgetIndex].rowSpan = rowSpan;
+            widgetLocations[widgetIndex].colSpan = colSpan;
+        }
+
+        function isAvailable(rowIndex: number, colIndex: number, rowSpan: number, colSpan: number) {
+            if (rowIndex + rowSpan > grid.length) {
+                return false;
+            }
+
+            if (colIndex + colSpan > grid[rowIndex].length) {
+                return false;
+            }
+
+            for (let i = rowIndex; i < rowIndex + rowSpan; i++) {
+                if (grid[i][colIndex] !== 0) {
+                    return false;
+                }
+            }
+
+            for (let i = colIndex + 1; i < colIndex + colSpan; i++) {
+                if (grid[rowIndex][i] != 0) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function findPlace(rowSpan: number, colSpan: number) {
+            rowSpan = rowSpan || 1;
+            colSpan = colSpan || 1;
+
+            for (let rowIndex = 0; rowIndex < grid.length; rowIndex++) {
+                for (let colIndex = 0; colIndex < grid[rowIndex].length; colIndex++) {
+                    if (isAvailable(rowIndex, colIndex, rowSpan, colSpan)) {
+                        return [rowIndex, colIndex];
+                    }
+                }
+            }
+
+            return [grid.length, 0];
+        }
+
+        const grid: number[][] = [];
+
+        const widgetLocations: {
+            rowIndex: number;
+            colIndex: number;
+            rowSpan: number;
+            colSpan: number;
+        }[] = [];
+
+        for (let widgetIndex = 0; widgetIndex < this.widgets._array.length; widgetIndex++) {
+            widgetLocations.push({
+                rowIndex: 0,
+                colIndex: 0,
+                rowSpan: 0,
+                colSpan: 0
+            });
+        }
+
+        const cols = this.cols || 1;
+
+        for (let widgetIndex = 0; widgetIndex < this.widgets._array.length; widgetIndex++) {
+            const widget = this.widgets._array[widgetIndex];
+            if (widget.row != undefined && widget.col != undefined) {
+                set(widget.row, widget.col, widget.rowSpan, widget.colSpan, widgetIndex);
+            }
+        }
+
+        for (let widgetIndex = 0; widgetIndex < this.widgets._array.length; widgetIndex++) {
+            const widget = this.widgets._array[widgetIndex];
+            if (!(widget.row != undefined && widget.col != undefined)) {
+                const [rowIndex, colIndex] = findPlace(widget.rowSpan, widget.colSpan);
+                set(rowIndex, colIndex, widget.rowSpan, widget.colSpan, widgetIndex);
+            }
+        }
+
+        let maxCols = cols;
+        for (let rowIndex = 0; rowIndex < grid.length; rowIndex++) {
+            maxCols = Math.max(maxCols, grid[rowIndex].length);
+        }
+
+        return {
+            grid,
+            widgetLocations,
+            maxCols
+        };
+    }
+
+    getWidgetRects(rect: Rect) {
+        const { grid, widgetLocations, maxCols } = this.grid;
+
+        const padding = this.padding || CONF_DEFAULT_PADDING;
+        const gap = this.gap || CONF_DEFAULT_GAP;
+
+        const availableColWidth = Math.max(rect.width - 2 * padding - (maxCols - 1) * gap, 0);
+
+        const colWidth = Math.floor(availableColWidth / maxCols);
+
+        const colWidths = [];
+        for (let colIndex = 0; colIndex < maxCols - 1; colIndex++) {
+            colWidths.push(colWidth);
+        }
+        colWidths.push(availableColWidth - (maxCols - 1) * colWidth);
+
+        const rowHeights = [];
+        for (let rowIndex = 0; rowIndex < grid.length; rowIndex++) {
+            let maxHeight = 0;
+            for (let colIndex = 0; colIndex < grid[rowIndex].length; colIndex++) {
+                if (grid[rowIndex][colIndex] != 0) {
+                    const widget = this.widgets._array[grid[rowIndex][colIndex] - 1];
+                    const rowSpan = widget.rowSpan || 1;
+                    maxHeight = Math.max(
+                        (widget.height - (rowSpan - 1) * gap) / rowSpan,
+                        maxHeight
+                    );
+                }
+            }
+            rowHeights.push(maxHeight);
+        }
+
+        const widgetRects = [];
+        for (let widgetIndex = 0; widgetIndex < this.widgets._array.length; widgetIndex++) {
+            let left = padding;
+            for (let colIndex = 0; colIndex < widgetLocations[widgetIndex].colIndex; colIndex++) {
+                left += colWidths[colIndex] + gap;
+            }
+
+            let top = padding;
+            for (let rowIndex = 0; rowIndex < widgetLocations[widgetIndex].rowIndex; rowIndex++) {
+                top += rowHeights[rowIndex] + gap;
+            }
+
+            let width = 0;
+            for (
+                let colIndex = widgetLocations[widgetIndex].colIndex;
+                colIndex <
+                widgetLocations[widgetIndex].colIndex + widgetLocations[widgetIndex].colSpan;
+                colIndex++
+            ) {
+                width += colWidths[colIndex] + gap;
+            }
+            width -= gap;
+
+            let height = 0;
+            for (
+                let rowIndex = widgetLocations[widgetIndex].rowIndex;
+                rowIndex <
+                widgetLocations[widgetIndex].rowIndex + widgetLocations[widgetIndex].rowSpan;
+                rowIndex++
+            ) {
+                height += rowHeights[rowIndex] + gap;
+            }
+            height -= gap;
+
+            widgetRects.push({
+                left,
+                top,
+                width,
+                height
+            });
+        }
+
+        return widgetRects;
+    }
+
     render(rect: Rect, dataContext: IDataContext) {
+        let widgetRects: Rect[] | undefined;
+
+        if (this.layout === "grid") {
+            widgetRects = this.getWidgetRects(rect);
+        }
+
         return (
             <WidgetContainerComponent
                 containerWidget={this}
                 rectContainer={rect}
                 widgets={this.widgets._array}
                 dataContext={dataContext}
+                widgetRects={widgetRects}
             />
         );
     }
 
     styleHook(style: React.CSSProperties) {
-        style.overflow = PageContext.inEditor ? "visible" : this.scrollable ? "auto" : "hidden";
+        style.overflow = PageContext.inEditor ? "visible" : this.scrollable ? "auto" : "visible";
     }
 
     get divAttributes() {
@@ -675,7 +1063,9 @@ export class ContainerWidget extends Widget {
     }
 }
 
-registerClass(ContainerWidget);
+registerClass(
+    withResolutionDependableProperties(ContainerWidget, ["layout", "cols", "padding", "gap"])
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1050,24 +1440,25 @@ export class SelectWidget extends Widget {
                     return i;
                 }
             }
-        }
 
-        if (this._lastSelectedIndexInSelectWidget !== undefined) {
-            return this._lastSelectedIndexInSelectWidget;
-        }
-
-        if (dataContext) {
-            const selectedWidget = this.getSelectedWidget(dataContext);
-            if (selectedWidget) {
-                this._lastSelectedIndexInSelectWidget = this.widgets._array.indexOf(selectedWidget);
+            if (this._lastSelectedIndexInSelectWidget !== undefined) {
                 return this._lastSelectedIndexInSelectWidget;
             }
-        }
 
-        if (designerContext) {
             if (this.widgets._array.length > 0) {
                 this._lastSelectedIndexInSelectWidget = 0;
                 return this._lastSelectedIndexInSelectWidget;
+            }
+        } else {
+            if (this._lastSelectedIndexInSelectWidget !== undefined) {
+                return this._lastSelectedIndexInSelectWidget;
+            }
+
+            if (dataContext) {
+                const selectedWidget = this.getSelectedWidget(dataContext);
+                if (selectedWidget) {
+                    return this.widgets._array.indexOf(selectedWidget);
+                }
             }
         }
 

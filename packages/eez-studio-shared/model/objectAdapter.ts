@@ -21,7 +21,6 @@ import {
     EezBrowsableObject,
     objectToString,
     isShowOnlyChildrenInTree,
-    cloneObject,
     PropertyInfo,
     isArrayElement,
     isObjectInstanceOf
@@ -53,6 +52,7 @@ import {
     findPastePlaceInside
 } from "eez-studio-shared/model/clipboard";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
+import { objectToJson } from "eez-studio-shared/model/serialization";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -622,7 +622,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 cutItem(this.selectedItems[0].object);
             } else {
                 let objects = this.selectedItems.map(item => item.object);
-                let cliboardText = btoa(objectsToClipboardData(objects));
+                let cliboardText = objectsToClipboardData(objects);
                 deleteItems(objects, () => {
                     UIElementsFactory.copyToClipboard(cliboardText);
                 });
@@ -650,7 +650,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 copyItem(this.selectedItems[0].object);
             } else {
                 let objects = this.selectedItems.map(item => item.object);
-                UIElementsFactory.copyToClipboard(btoa(objectsToClipboardData(objects)));
+                UIElementsFactory.copyToClipboard(objectsToClipboardData(objects));
             }
         }
     }
@@ -1079,7 +1079,7 @@ export class TreeAdapter implements ITreeAdapter {
         DragAndDropManager.deleteDragItem();
 
         if (DragAndDropManager.dragObject) {
-            let object = cloneObject(undefined, DragAndDropManager.dragObject);
+            let object = objectToJson(DragAndDropManager.dragObject);
 
             let dropItem = DragAndDropManager.dropObject as ITreeObjectAdapter;
 
@@ -1088,7 +1088,11 @@ export class TreeAdapter implements ITreeAdapter {
             } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
                 DocumentStore.insertObjectAfter(dropItem.object, object);
             } else if (dropPosition == DropPosition.DROP_POSITION_INSIDE) {
-                let dropPlace = findPastePlaceInside(dropItem.object, object._classInfo, true);
+                let dropPlace = findPastePlaceInside(
+                    dropItem.object,
+                    DragAndDropManager.dragObject._classInfo,
+                    true
+                );
                 if (dropPlace) {
                     if (isArray(dropPlace as EezObject)) {
                         DocumentStore.addObject(dropPlace as EezObject, object);
@@ -1394,7 +1398,7 @@ export class ListAdapter implements ITreeAdapter {
         DragAndDropManager.deleteDragItem();
 
         if (DragAndDropManager.dragObject) {
-            let object = cloneObject(undefined, DragAndDropManager.dragObject);
+            let object = objectToJson(DragAndDropManager.dragObject);
 
             let dropItem = DragAndDropManager.dropObject as ListItem;
 

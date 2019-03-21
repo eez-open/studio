@@ -133,7 +133,7 @@ export function findPastePlaceInsideAndOutside(object: EezObject, serializedData
 export function checkClipboard(object: EezObject) {
     let text = UIElementsFactory.pasteFromClipboard();
     if (text) {
-        let serializedData = clipboardDataToObject(atob(text));
+        let serializedData = clipboardDataToObject(text);
         if (serializedData) {
             let pastePlace = findPastePlaceInsideAndOutside(object, serializedData);
             if (pastePlace) {
