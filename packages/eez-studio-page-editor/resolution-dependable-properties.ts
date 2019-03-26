@@ -130,9 +130,12 @@ export function unsetResolutionDependablePropertyForCurrentResolution(
     object: EezObject,
     propertyName: string
 ) {
-    const allValues = getPropertyValueForAllResolutions(object, propertyName);
+    const allValues: (any | null)[] = getPropertyValueForAllResolutions(object, propertyName);
 
     allValues[PageContext.resolution] = null;
+    while (allValues.length > 1 && allValues[allValues.length - 1] === null) {
+        allValues.pop();
+    }
 
     DocumentStore.updateObject(object, {
         [propertyName + "_"]: allValues
@@ -143,10 +146,12 @@ export function unsetResolutionDependablePropertyForLowerResolutions(
     object: EezObject,
     propertyName: string
 ) {
-    const allValues = getPropertyValueForAllResolutions(object, propertyName);
+    const allValues: (any | null)[] = getPropertyValueForAllResolutions(object, propertyName);
 
-    for (let i = PageContext.resolution + 1; i < allValues.length; i++) {
-        allValues[i] = null;
+    allValues.splice(PageContext.resolution + 1);
+
+    while (allValues.length > 1 && allValues[allValues.length - 1] === null) {
+        allValues.pop();
     }
 
     DocumentStore.updateObject(object, {

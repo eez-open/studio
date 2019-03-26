@@ -124,7 +124,7 @@ class UnsetAllResolutionDependablePropertiesForLowerResolutionsPropertyGridUI ex
                 onClick={this.reset}
                 style={{ margin: 5 }}
             >
-                Unset All Resolution Dependable Properties for Lower Resolutions
+                Unset in Lower Resolutions
             </UIElementsFactory.Button>
         );
     }

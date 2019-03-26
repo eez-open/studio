@@ -173,6 +173,10 @@ export class Canvas extends React.Component<{
         this.draggable.attach(this.innerDiv);
         this.updateScroll();
         this.clientRectChangeDetection();
+
+        this.div.addEventListener("wheel", this.onWheel, {
+            passive: false
+        });
     }
 
     componentDidUpdate() {
@@ -186,10 +190,12 @@ export class Canvas extends React.Component<{
             cancelAnimationFrame(this.clientRectChangeDetectionAnimationFrameHandle);
             this.clientRectChangeDetectionAnimationFrameHandle = undefined;
         }
+
+        this.div.removeEventListener("wheel", this.onWheel);
     }
 
     @bind
-    onWheel(event: React.WheelEvent<HTMLDivElement>) {
+    onWheel(event: WheelEvent) {
         if (this.isScrolling) {
             return;
         }
@@ -412,7 +418,6 @@ export class Canvas extends React.Component<{
                 className={this.props.className}
                 style={style}
                 onClick={this.onClick}
-                onWheel={this.onWheel}
                 onContextMenu={this.onContextMenu}
             >
                 <div

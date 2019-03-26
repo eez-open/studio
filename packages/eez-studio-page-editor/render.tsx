@@ -93,7 +93,8 @@ export class WidgetComponent extends React.Component<{
             if (node) {
                 const className = widget.getClassNameStr(dataContext);
 
-                style.overflow = PageContext.inEditor ? "visible" : "hidden";
+                //style.overflow = PageContext.inEditor ? "visible" : "hidden";
+                style.overflow = "visible";
 
                 widget.styleHook(style);
 

@@ -183,7 +183,11 @@ export class Page extends EezObject {
                     width: rect.width,
                     height: rect.height,
                     backgroundColor: style.backgroundColor,
-                    overflow: PageContext.inEditor ? "visible" : this.scrollable ? "auto" : "hidden"
+                    overflow: PageContext.inEditor
+                        ? "visible"
+                        : this.scrollable
+                        ? "auto"
+                        : "visible"
                 }}
                 data-simplebar={!PageContext.inEditor && this.scrollable ? 1 : undefined}
             >
