@@ -126,18 +126,20 @@ class ObjectComponent extends React.Component<
     }
 
     render() {
+        const { object } = this.props;
         return (
             <div
                 ref={ref => (this.element = ref!)}
                 style={{
                     position: "absolute",
-                    left: this.props.object.rect.left,
-                    top: this.props.object.rect.top,
-                    width: this.props.object.rect.width,
-                    height: this.props.object.rect.height
+                    left: object.rect.left,
+                    top: object.rect.top,
+                    width: object.rect.width,
+                    height: object.rect.height
                 }}
+                data-designer-object-id={object.id}
             >
-                {this.props.object.content}
+                {object.content}
             </div>
         );
     }

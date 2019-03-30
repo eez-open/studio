@@ -5,7 +5,6 @@ export interface IBaseObject {
     id: string;
     rect: Rect;
     children: IBaseObject[];
-    boundingRect: Rect;
     isSelectable?: boolean;
     getResizeHandlers?: () => IResizeHandler[] | undefined | false;
     getColumnWidth?: (columnIndex: number) => number;
@@ -25,7 +24,6 @@ export interface IDocument {
     deleteObjects(objects: IBaseObject[]): void;
 
     // view
-    boundingRect: Rect | undefined;
     objectFromPoint(point: Point): IBaseObject | undefined;
     getObjectsInsideRect(rect: Rect): IBaseObject[];
     resetTransform?(transform: ITransform): void;
@@ -76,7 +74,6 @@ export interface IViewState {
     // selection
     selectedObjects: IBaseObject[];
     getResizeHandlers: () => IResizeHandler[] | undefined;
-    selectedObjectsBoundingRect: Rect;
 
     isObjectSelected(object: IBaseObject): boolean;
 

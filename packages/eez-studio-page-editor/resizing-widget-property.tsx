@@ -786,5 +786,6 @@ export const resizingProperty: PropertyInfo = {
         id: "resizing",
         title: "Resizing"
     },
-    propertyGridComponent: ResizingProperty
+    propertyGridComponent: ResizingProperty,
+    resolutionDependable: true
 };

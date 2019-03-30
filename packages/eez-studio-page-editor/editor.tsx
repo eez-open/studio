@@ -5,7 +5,7 @@ import { createTransformer, ITransformer } from "mobx-utils";
 import { bind } from "bind-decorator";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
-import { Point, Rect, ITransform, pointInRect, isRectInsideRect } from "eez-studio-shared/geometry";
+import { Point, Rect, ITransform } from "eez-studio-shared/geometry";
 
 import {
     IBaseObject,
@@ -16,7 +16,7 @@ import {
 } from "eez-studio-designer/designer-interfaces";
 import { DesignerContext } from "eez-studio-designer/context";
 import { Canvas } from "eez-studio-designer/canvas";
-import { selectToolHandler } from "eez-studio-designer/select-tool";
+import { selectToolHandler, getObjectIdFromPoint } from "eez-studio-designer/select-tool";
 import styled from "eez-studio-ui/styled-components";
 
 import { isObjectInstanceOf, isAncestor } from "eez-studio-shared/model/object";
@@ -34,7 +34,7 @@ import { SnapLines } from "eez-studio-designer/select-tool";
 
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
-import { Widget, SelectWidget } from "eez-studio-page-editor/widget";
+import { Widget } from "eez-studio-page-editor/widget";
 import { renderRootElement, WidgetComponent } from "eez-studio-page-editor/render";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,8 +72,8 @@ export class EditorObject implements IBaseObject {
 
     set rect(value: Rect) {
         DocumentStore.updateObject(this.object, {
-            x: value.left,
-            y: value.top,
+            left: value.left,
+            top: value.top,
             width: value.width,
             height: value.height
         });
@@ -96,37 +96,6 @@ export class EditorObject implements IBaseObject {
         }
 
         return _map(childrenObjects, (object: ITreeObjectAdapter) => this.transformer(object));
-    }
-
-    @computed
-    get boundingRect() {
-        if (this.object instanceof Widget) {
-            const rect = {
-                left: this.object.x,
-                top: this.object.y,
-                width: this.object.width,
-                height: this.object.height
-            };
-
-            let object: Widget = this.object;
-
-            while (true) {
-                let parent = object.parent;
-
-                rect.left += parent.contentRect.left;
-                rect.top += parent.contentRect.top;
-
-                if (!(parent instanceof Widget)) {
-                    break;
-                }
-
-                object = parent;
-            }
-
-            return rect;
-        }
-
-        return this.rect;
     }
 
     get isSelectable() {
@@ -183,37 +152,6 @@ export class EditorObject implements IBaseObject {
 
         return undefined;
     }
-
-    objectFromPoint(point: Point): EditorObject | undefined {
-        let foundObject: EditorObject | undefined = undefined;
-
-        if (this.children.length > 0) {
-            if (this.object instanceof SelectWidget) {
-                const child = this.children[this.object.getSelectedIndex()];
-                let result = child.objectFromPoint(point);
-                if (result) {
-                    foundObject = result;
-                }
-            } else {
-                for (const child of this.children) {
-                    let result = child.objectFromPoint(point);
-                    if (result) {
-                        foundObject = result;
-                    }
-                }
-            }
-        }
-
-        if (foundObject) {
-            return foundObject;
-        }
-
-        if (pointInRect(point, this.boundingRect)) {
-            return this;
-        }
-
-        return undefined;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -245,12 +183,7 @@ const dragSnapLines = new DragSnapLines();
 @observer
 class DragSnapLinesOverlay extends React.Component {
     get dragWidgetRect() {
-        return {
-            left: dragSnapLines.dragWidget!.x,
-            top: dragSnapLines.dragWidget!.y,
-            width: dragSnapLines.dragWidget!.width,
-            height: dragSnapLines.dragWidget!.height
-        };
+        return dragSnapLines.dragWidget!.rect;
     }
 
     render() {
@@ -287,10 +220,10 @@ const DragWidget = observer(
             <WidgetComponent
                 widget={pageEditorContext.dragWidget}
                 rect={{
-                    left: page.rect.left + pageEditorContext.dragWidget.x,
-                    top: page.rect.top + pageEditorContext.dragWidget.y,
-                    width: pageEditorContext.dragWidget.width,
-                    height: pageEditorContext.dragWidget.height
+                    left: page.rect.left + pageEditorContext.dragWidget.rect.left,
+                    top: page.rect.top + pageEditorContext.dragWidget.rect.top,
+                    width: pageEditorContext.dragWidget.rect.width,
+                    height: pageEditorContext.dragWidget.rect.height
                 }}
                 dataContext={dataContext}
             />
@@ -310,7 +243,7 @@ class PageEditorContext extends DesignerContext {
 class PageDocument implements IDocument {
     rootObject: EditorObject;
 
-    constructor(private page: ITreeObjectAdapter, pageEditorContext: PageEditorContext) {
+    constructor(private page: ITreeObjectAdapter, private pageEditorContext: PageEditorContext) {
         const transformer = createObjectToEditorObjectTransformer(pageEditorContext);
         this.rootObject = transformer(page);
     }
@@ -331,27 +264,25 @@ class PageDocument implements IDocument {
         deleteItems(objects.map(editorObject => editorObject.object));
     }
 
-    get boundingRect() {
-        return this.rootObject.boundingRect;
-    }
-
     objectFromPoint(point: Point) {
-        return this.rootObject.objectFromPoint(point);
+        const id = getObjectIdFromPoint(this.pageEditorContext.viewState, point);
+        if (!id) {
+            return undefined;
+        }
+        return this.findObjectById(id);
     }
 
     resetTransform(transform: ITransform) {
         const page = this.rootObject.object as Page;
         transform.translate = {
-            x: -page.width / 2,
-            y: -page.height / 2
+            x: -page.WindowWidth / 2,
+            y: -page.WindowHeight / 2
         };
         transform.scale = 1;
     }
 
     getObjectsInsideRect(rect: Rect) {
-        return this.rootObject.children.filter(object =>
-            isRectInsideRect(object.boundingRect, rect)
-        );
+        return [];
     }
 
     createContextMenu(objects: IBaseObject[]) {
@@ -398,6 +329,7 @@ interface PageEditorProps {
     widgetContainer: ITreeObjectAdapter;
     onFocus?: () => void;
     dataContext?: IDataContext;
+    pageRect?: Rect;
 }
 
 @observer
@@ -573,19 +505,19 @@ export class PageEditor extends React.Component<
             const transform = this.pageEditorContext.viewState.transform;
 
             const p = transform.clientToModelPoint({
-                x: event.nativeEvent.clientX - (widget.width * transform.scale) / 2,
-                y: event.nativeEvent.clientY - (widget.height * transform.scale) / 2
+                x: event.nativeEvent.clientX - (widget.rect.width * transform.scale) / 2,
+                y: event.nativeEvent.clientY - (widget.rect.height * transform.scale) / 2
             });
 
             const { left, top } = dragSnapLines.snapLines!.dragSnap(
                 p.x,
                 p.y,
-                widget.width,
-                widget.height
+                widget.rect.width,
+                widget.rect.height
             );
 
-            widget.x = Math.round(left - page.x);
-            widget.y = Math.round(top - page.y);
+            widget.left = Math.round(left - page.rect.left).toString();
+            widget.top = Math.round(top - page.rect.top).toString();
         }
     }
 
@@ -659,6 +591,8 @@ export class PageEditor extends React.Component<
 
         const { dataContext, onFocus } = this.props;
 
+        const pageRect = this.props.pageRect || this.page.rect;
+
         return (
             <Provider designerContext={this.pageEditorContext}>
                 <PageEditorCanvasContainer
@@ -674,13 +608,24 @@ export class PageEditor extends React.Component<
                         customOverlay={<DragSnapLinesOverlay />}
                         pageRect={this.page.rect}
                     >
-                        {renderRootElement(
-                            this.page.render(
-                                this.page.rect,
-                                dataContext || PageContext.rootDataContext,
-                                true
-                            )
-                        )}
+                        {
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    left: pageRect.left,
+                                    top: pageRect.top,
+                                    width: pageRect.width,
+                                    height: pageRect.height
+                                }}
+                            >
+                                {renderRootElement(
+                                    <WidgetComponent
+                                        widget={this.page}
+                                        dataContext={dataContext || PageContext.rootDataContext}
+                                    />
+                                )}
+                            </div>
+                        }
                         <DragWidget
                             page={this.page}
                             pageEditorContext={this.pageEditorContext}

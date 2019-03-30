@@ -2,13 +2,7 @@ import { computed } from "mobx";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
-import {
-    Rect,
-    Point,
-    BoundingRectBuilder,
-    pointInRect,
-    isRectInsideRect
-} from "eez-studio-shared/geometry";
+import { Rect, Point, pointInRect, isRectInsideRect } from "eez-studio-shared/geometry";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { humanize } from "eez-studio-shared/string";
 
@@ -57,17 +51,6 @@ class WorkbenchDocument implements IDocument {
 
     findObjectById(id: string): IBaseObject | undefined {
         return this.objects.find(object => object.id === id);
-    }
-
-    @computed
-    get boundingRect() {
-        let boundingRectBuilder = new BoundingRectBuilder();
-
-        for (let i = 0; i < this.objects.length; i++) {
-            boundingRectBuilder.addRect(this.objects[i].rect);
-        }
-
-        return boundingRectBuilder.getRect();
     }
 
     getObjectsInsideRect(rect: Rect) {

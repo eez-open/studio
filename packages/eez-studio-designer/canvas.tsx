@@ -17,6 +17,7 @@ import {
     IDesignerContext
 } from "eez-studio-designer/designer-interfaces";
 import { PanMouseHandler } from "eez-studio-designer/mouse-handlers/pan";
+import { getObjectBoundingRect } from "eez-studio-designer/select-tool";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,19 +86,25 @@ export class Canvas extends React.Component<{
     }
 
     @computed
+    get documentBoundingRect() {
+        const document = this.props.designerContext!.document;
+
+        let boundingRectBuilder = new BoundingRectBuilder();
+
+        for (const object of document.rootObjects) {
+            boundingRectBuilder.addRect(
+                getObjectBoundingRect(this.designerContext.viewState, object)
+            );
+        }
+
+        return boundingRectBuilder.getRect();
+    }
+
+    @computed
     get boundingRect() {
         const transform = this.designerContext.viewState.transform;
         const builder = new BoundingRectBuilder();
-        builder.addRect(
-            transform.modelToOffsetRect(
-                this.props.designerContext!.document.boundingRect || {
-                    left: -50,
-                    top: -50,
-                    width: 100,
-                    height: 100
-                }
-            )
-        );
+        builder.addRect(transform.modelToOffsetRect(this.documentBoundingRect));
         builder.addRect(transform.clientToOffsetRect(transform.clientRect));
         return builder.getRect()!;
     }

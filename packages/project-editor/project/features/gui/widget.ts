@@ -70,8 +70,8 @@ export class DisplayDataWidget extends Widget {
         defaultValue: {
             type: "DisplayData",
             data: "data",
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 64,
             height: 32,
             style: "default"
@@ -137,8 +137,8 @@ export class TextWidget extends Widget {
         defaultValue: {
             type: "Text",
             text: "Text",
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 64,
             height: 32,
             style: "default"
@@ -185,8 +185,8 @@ export class MultilineTextWidget extends Widget {
         defaultValue: {
             type: "MultilineText",
             text: "Multiline text",
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 64,
             height: 32,
             style: "default"
@@ -234,7 +234,14 @@ export class RectangleWidget extends Widget {
             }
         ],
 
-        defaultValue: { type: "Rectangle", x: 0, y: 0, width: 64, height: 32, style: "default" },
+        defaultValue: {
+            type: "Rectangle",
+            left: 0,
+            top: 0,
+            width: 64,
+            height: 32,
+            style: "default"
+        },
 
         icon: "_images/widgets/Rectangle.png"
     });
@@ -275,7 +282,7 @@ export class BitmapWidget extends Widget {
             }
         ],
 
-        defaultValue: { type: "Bitmap", x: 0, y: 0, width: 64, height: 32, style: "default" },
+        defaultValue: { type: "Bitmap", left: 0, top: 0, width: 64, height: 32, style: "default" },
 
         icon: "_images/widgets/Bitmap.png"
     });
@@ -341,7 +348,7 @@ export class ButtonWidget extends Widget {
             }
         ],
 
-        defaultValue: { type: "Button", x: 0, y: 0, width: 32, height: 32, style: "default" },
+        defaultValue: { type: "Button", left: 0, top: 0, width: 32, height: 32, style: "default" },
 
         icon: "_images/widgets/Button.png"
     });
@@ -416,7 +423,14 @@ export class ToggleButtonWidget extends Widget {
             }
         ],
 
-        defaultValue: { type: "ToggleButton", x: 0, y: 0, width: 32, height: 32, style: "default" },
+        defaultValue: {
+            type: "ToggleButton",
+            left: 0,
+            top: 0,
+            width: 32,
+            height: 32,
+            style: "default"
+        },
 
         icon: "_images/widgets/ToggleButton.png"
     });
@@ -450,7 +464,14 @@ registerClass(ToggleButtonWidget);
 
 export class ButtonGroupWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        defaultValue: { type: "ButtonGroup", x: 0, y: 0, width: 64, height: 32, style: "default" },
+        defaultValue: {
+            type: "ButtonGroup",
+            left: 0,
+            top: 0,
+            width: 64,
+            height: 32,
+            style: "default"
+        },
 
         icon: "_images/widgets/ButtonGroup.png"
     });
@@ -514,8 +535,8 @@ export class ScaleWidget extends Widget {
 
         defaultValue: {
             type: "Scale",
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 64,
             height: 32,
             needlePostion: "right",
@@ -604,8 +625,8 @@ export class BarGraphWidget extends Widget {
 
         defaultValue: {
             type: "BarGraph",
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 64,
             height: 32,
             orientation: "left-right",
@@ -741,8 +762,8 @@ export class YTGraphWidget extends Widget {
 
         defaultValue: {
             type: "YTGraph",
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 64,
             height: 32,
             style: "default",
@@ -849,8 +870,8 @@ export class UpDownWidget extends Widget {
 
         defaultValue: {
             type: "UpDown",
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 64,
             height: 32,
             style: "default",
@@ -949,8 +970,8 @@ export class ListGraphWidget extends Widget {
 
         defaultValue: {
             type: "ListGraph",
-            x: 0,
-            y: 0,
+            left: 0,
+            top: 0,
             width: 64,
             height: 32,
             style: "default",
@@ -1101,7 +1122,7 @@ export class AppViewWidget extends Widget {
     page: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        defaultValue: { type: "AppView", x: 0, y: 0, width: 64, height: 32, style: "default" },
+        defaultValue: { type: "AppView", left: 0, top: 0, width: 64, height: 32, style: "default" },
 
         icon: "_images/widgets/AppView.png"
     });
@@ -1131,7 +1152,7 @@ export class AppViewWidget extends Widget {
             return null;
         }
 
-        return page.render(rect, dataContext, false);
+        return page.render(rect, dataContext);
     }
 }
 

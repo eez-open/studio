@@ -295,18 +295,22 @@ class CodeEditorProperty extends React.Component<PropertyProps & { mode: CodeEdi
     }
 
     render() {
+        const { propertyInfo } = this.props;
         return (
-            <CodeEditor
-                ref={ref => (this.editor = ref!)}
-                value={this.value}
-                onChange={this.onChange}
-                onFocus={this.onFocus}
-                onBlur={this.onBlur}
-                className="form-control"
-                mode={this.props.mode}
-                minLines={2}
-                maxLines={50}
-            />
+            <React.Fragment>
+                <div>{propertyInfo.displayName || humanize(propertyInfo.name)}</div>
+                <CodeEditor
+                    ref={ref => (this.editor = ref!)}
+                    value={this.value}
+                    onChange={this.onChange}
+                    onFocus={this.onFocus}
+                    onBlur={this.onBlur}
+                    className="form-control"
+                    mode={this.props.mode}
+                    minLines={2}
+                    maxLines={50}
+                />
+            </React.Fragment>
         );
     }
 }
@@ -1155,7 +1159,10 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             if (!isArray(object) && !isPropertyHidden(object, propertyInfo)) {
                 const colSpan =
                     propertyInfo.type === PropertyType.Boolean ||
-                    propertyInfo.type === PropertyType.Any;
+                    propertyInfo.type === PropertyType.Any ||
+                    propertyInfo.type === PropertyType.JavaScript ||
+                    propertyInfo.type === PropertyType.JSON ||
+                    propertyInfo.type === PropertyType.CSS;
 
                 let property;
                 if (colSpan) {

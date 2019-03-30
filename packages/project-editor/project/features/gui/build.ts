@@ -614,22 +614,22 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
     // x
     let x: number = 0;
     if (object instanceof Widget.Widget || object instanceof Page) {
-        x = object.x || 0;
+        x = object.rect.left;
     }
     result.addField(new Int16(x));
 
     // y
     let y: number = 0;
     if (object instanceof Widget.Widget || object instanceof Page) {
-        y = object.y || 0;
+        y = object.rect.top;
     }
     result.addField(new Int16(y));
 
     // width
-    result.addField(new Int16(object.width || 0));
+    result.addField(new Int16(object.rect.width));
 
     // height
-    result.addField(new Int16(object.height || 0));
+    result.addField(new Int16(object.rect.height));
 
     // style
     let style: number;

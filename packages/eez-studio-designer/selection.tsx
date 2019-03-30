@@ -2,16 +2,21 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { addAlphaToColor } from "eez-studio-shared/color";
-import { Transform, Rect } from "eez-studio-shared/geometry";
+import { Rect } from "eez-studio-shared/geometry";
 
 import styled from "eez-studio-ui/styled-components";
 
 import {
     IBaseObject,
     IDesignerContext,
-    IMouseHandler
+    IMouseHandler,
+    IViewState
 } from "eez-studio-designer/designer-interfaces";
-import { RubberBandSelectionMouseHandler } from "eez-studio-designer/select-tool";
+import {
+    RubberBandSelectionMouseHandler,
+    getObjectBoundingRect,
+    getSelectedObjectsBoundingRect
+} from "eez-studio-designer/select-tool";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,13 +53,15 @@ const SelectionDiv = styled.div`
 class SelectedObject extends React.Component<
     {
         object: IBaseObject;
-        transform: Transform;
+        viewState: IViewState;
         className?: string;
     },
     {}
 > {
     render() {
-        const rect = this.props.transform.modelToOffsetRect(this.props.object.boundingRect);
+        const rect = this.props.viewState.transform.modelToOffsetRect(
+            getObjectBoundingRect(this.props.viewState, this.props.object)
+        );
 
         return (
             <div
@@ -154,13 +161,13 @@ export class Selection extends React.Component<
                     className={selectedObjectClassName}
                     key={object.id}
                     object={object}
-                    transform={transform}
+                    viewState={this.props.context.viewState}
                 />
             ));
 
             //
             let boundingRect = transform.modelToOffsetRect(
-                this.props.context.viewState.selectedObjectsBoundingRect
+                getSelectedObjectsBoundingRect(this.props.context.viewState)
             );
 
             if (selectedObjects.length > 1) {

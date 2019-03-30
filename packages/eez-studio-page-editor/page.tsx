@@ -1,11 +1,13 @@
 import React from "react";
 import { observable, computed, action } from "mobx";
+import styled from "styled-components";
 
 import { _find } from "eez-studio-shared/algorithm";
 import { Rect } from "eez-studio-shared/geometry";
 
 import {
     EezObject,
+    EezClass,
     ClassInfo,
     PropertyInfo,
     registerClass,
@@ -25,9 +27,6 @@ import { Widget } from "eez-studio-page-editor/widget";
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { WidgetContainerComponent } from "eez-studio-page-editor/render";
 import { IResizing, resizingProperty } from "eez-studio-page-editor/resizing-widget-property";
-
-import styled from "eez-studio-ui/styled-components";
-
 import { withResolutionDependableProperties } from "eez-studio-page-editor/resolution-dependable-properties";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,15 +41,26 @@ export class Page extends EezObject {
     @observable scrollable: boolean;
 
     // resolution dependandable properties
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+    display: string;
+    position: string;
+    left: string;
+    top: string;
+    right: string;
+    bottom: string;
+    width: string;
+    height: string;
+    private windowWidth: number;
+    private windowHeight: number;
     resizing: IResizing;
     css: string;
     className: string;
 
     static classInfo: ClassInfo = {
+        getClass: function(jsObject: any, aClass: EezClass) {
+            withResolutionDependableProperties(aClass);
+            return aClass;
+        },
+
         properties: [
             {
                 name: "name",
@@ -64,24 +74,158 @@ export class Page extends EezObject {
                 propertyGridGroup: generalGroup
             },
             {
-                name: "x",
-                type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                name: "display",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "none"
+                    },
+                    {
+                        id: "inline"
+                    },
+                    {
+                        id: "block"
+                    },
+                    {
+                        id: "contents"
+                    },
+                    {
+                        id: "flex"
+                    },
+                    {
+                        id: "grid"
+                    },
+                    {
+                        id: "inline-block"
+                    },
+                    {
+                        id: "inline-flex"
+                    },
+                    {
+                        id: "inline-grid"
+                    },
+                    {
+                        id: "inline-table"
+                    },
+                    {
+                        id: "list-item"
+                    },
+                    {
+                        id: "run-in"
+                    },
+                    {
+                        id: "table"
+                    },
+                    {
+                        id: "table-caption"
+                    },
+                    {
+                        id: "table-column-group"
+                    },
+                    {
+                        id: "table-header-group"
+                    },
+                    {
+                        id: "table-footer-group"
+                    },
+                    {
+                        id: "table-row-group"
+                    },
+                    {
+                        id: "table-cell"
+                    },
+                    {
+                        id: "table-column"
+                    },
+                    {
+                        id: "table-row"
+                    },
+                    {
+                        id: "initial"
+                    },
+                    {
+                        id: "inherit"
+                    }
+                ],
+                defaultValue: "block",
+                propertyGridGroup: geometryGroup,
+                resolutionDependable: true
             },
             {
-                name: "y",
-                type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                name: "position",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "static"
+                    },
+                    {
+                        id: "absolute"
+                    },
+                    {
+                        id: "fixed"
+                    },
+                    {
+                        id: "relative"
+                    },
+                    {
+                        id: "sticky"
+                    },
+                    {
+                        id: "initial"
+                    },
+                    {
+                        id: "inherit"
+                    }
+                ],
+                defaultValue: "absolute",
+                propertyGridGroup: geometryGroup,
+                resolutionDependable: true
+            },
+            {
+                name: "left",
+                type: PropertyType.String,
+                propertyGridGroup: geometryGroup,
+                resolutionDependable: true
+            },
+            {
+                name: "top",
+                type: PropertyType.String,
+                propertyGridGroup: geometryGroup,
+                resolutionDependable: true
+            },
+            {
+                name: "right",
+                type: PropertyType.String,
+                propertyGridGroup: geometryGroup,
+                resolutionDependable: true
+            },
+            {
+                name: "bottom",
+                type: PropertyType.String,
+                propertyGridGroup: geometryGroup,
+                resolutionDependable: true
             },
             {
                 name: "width",
-                type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                type: PropertyType.String,
+                propertyGridGroup: geometryGroup,
+                resolutionDependable: true
             },
             {
                 name: "height",
+                type: PropertyType.String,
+                propertyGridGroup: geometryGroup,
+                resolutionDependable: true
+            },
+            {
+                name: "windowWidth",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                resolutionDependable: true
+            },
+            {
+                name: "windowHeight",
+                type: PropertyType.Number,
+                resolutionDependable: true
             },
             resizingProperty,
             {
@@ -93,12 +237,14 @@ export class Page extends EezObject {
             {
                 name: "css",
                 type: PropertyType.CSS,
-                propertyGridGroup: styleGroup
+                propertyGridGroup: styleGroup,
+                resolutionDependable: true
             },
             {
                 name: "className",
                 type: PropertyType.String,
-                propertyGridGroup: styleGroup
+                propertyGridGroup: styleGroup,
+                resolutionDependable: true
             },
             {
                 name: "widgets",
@@ -121,12 +267,33 @@ export class Page extends EezObject {
                 type: PropertyType.Boolean
             }
         ],
+        beforeLoadHook: (object: EezObject, jsObject: any) => {
+            if (jsObject["x"] !== undefined) {
+                jsObject["left"] = jsObject["x"];
+                delete jsObject["x"];
+            }
+
+            if (jsObject["x_"] !== undefined) {
+                jsObject["left_"] = jsObject["x_"];
+                delete jsObject["x_"];
+            }
+
+            if (jsObject["y"] !== undefined) {
+                jsObject["top"] = jsObject["y"];
+                delete jsObject["y"];
+            }
+
+            if (jsObject["y_"] !== undefined) {
+                jsObject["top_"] = jsObject["y_"];
+                delete jsObject["y_"];
+            }
+        },
         isPropertyMenuSupported: true,
         newItem: (parent: EezObject) => {
             return Promise.resolve({
                 name: "Page",
-                x: 0,
-                y: 0,
+                left: 0,
+                top: 0,
                 width: 480,
                 height: 272,
                 widgets: [],
@@ -150,11 +317,31 @@ export class Page extends EezObject {
 
     @computed
     get rect() {
+        let left = parseInt(this.left);
+        if (isNaN(left)) {
+            left = 0;
+        }
+
+        let top = parseInt(this.top);
+        if (isNaN(top)) {
+            top = 0;
+        }
+
+        let width = parseInt(this.width);
+        if (isNaN(width)) {
+            width = 0;
+        }
+
+        let height = parseInt(this.height);
+        if (isNaN(height)) {
+            height = 0;
+        }
+
         return {
-            left: this.x,
-            top: this.y,
-            width: this.width,
-            height: this.height
+            left,
+            top,
+            width,
+            height
         };
     }
 
@@ -162,61 +349,82 @@ export class Page extends EezObject {
         return this.rect;
     }
 
+    getResizeHandlers(): IResizeHandler[] | undefined | false {
+        if (!this.position || this.position === "absolute") {
+            return [
+                {
+                    x: 100,
+                    y: 50,
+                    type: "e-resize"
+                },
+                {
+                    x: 50,
+                    y: 100,
+                    type: "s-resize"
+                },
+                {
+                    x: 100,
+                    y: 100,
+                    type: "se-resize"
+                }
+            ];
+        } else {
+            return [];
+        }
+    }
+
     getClassNameStr(dataContext: IDataContext) {
         return dataContext.get(this.className);
     }
 
-    @computed get Div() {
-        return styled.div``;
-    }
-
-    render(rect: Rect, dataContext: IDataContext, root: boolean) {
-        const style = PageContext.findStyleOrGetDefault(this.style);
-
+    render(rect: Rect, dataContext: IDataContext) {
         return (
-            <this.Div
-                className={this.getClassNameStr(dataContext)}
-                style={{
-                    position: "absolute",
-                    left: root ? rect.left : 0,
-                    top: root ? rect.top : 0,
-                    width: rect.width,
-                    height: rect.height,
-                    backgroundColor: style.backgroundColor,
-                    overflow: PageContext.inEditor
-                        ? "visible"
-                        : this.scrollable
-                        ? "auto"
-                        : "visible"
-                }}
-                data-simplebar={!PageContext.inEditor && this.scrollable ? 1 : undefined}
-            >
-                <WidgetContainerComponent
-                    containerWidget={this}
-                    rectContainer={rect}
-                    widgets={this.widgets._array}
-                    dataContext={dataContext}
-                />
-            </this.Div>
+            <WidgetContainerComponent
+                containerWidget={this}
+                widgets={this.widgets._array}
+                dataContext={dataContext}
+            />
         );
     }
 
-    getResizeHandlers(): IResizeHandler[] | undefined | false {
-        return false;
+    styleHook(style: React.CSSProperties) {
+        style.overflow = PageContext.inEditor ? "visible" : this.scrollable ? "auto" : "visible";
+    }
+
+    get divAttributes() {
+        return !PageContext.inEditor && this.scrollable ? { "data-simplebar": 1 } : undefined;
+    }
+
+    @computed get Div() {
+        return this.css
+            ? styled.div`
+                  ${this.css}
+              `
+            : styled.div``;
+    }
+
+    get WindowWidth() {
+        if (this.windowWidth) {
+            return this.windowWidth;
+        }
+        if (PageContext.resolution < PageContext.allResolutions.length) {
+            return PageContext.allResolutions[PageContext.resolution].windowWidth;
+        }
+        return this.width;
+    }
+
+    get WindowHeight() {
+        if (this.windowHeight) {
+            return this.windowHeight;
+        }
+        if (PageContext.resolution < PageContext.allResolutions.length) {
+            return PageContext.allResolutions[PageContext.resolution].windowHeight;
+        }
+        return this.height;
     }
 }
 
-registerClass(
-    withResolutionDependableProperties(Page, [
-        "x",
-        "y",
-        "width",
-        "height",
-        "resizing",
-        "css",
-        "className"
-    ])
-);
+registerClass(Page);
 
 ////////////////////////////////////////////////////////////////////////////////
 

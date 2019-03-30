@@ -149,7 +149,7 @@ export interface ClassInfo {
     properties: PropertyInfo[];
 
     // optional properties
-    getClass?: (jsObject: any) => any;
+    getClass?: (jsObject: any, aClass: EezClass) => any;
     label?: (object: EezObject) => string;
     listLabel?: (object: EezObject) => JSX.Element | string;
 

@@ -61,7 +61,7 @@ export function loadObject(
 
     try {
         object = aClass.classInfo.getClass
-            ? new (aClass.classInfo.getClass(jsObject))()
+            ? new (aClass.classInfo.getClass(jsObject, aClass))()
             : new aClass();
     } catch (err) {
         // TODO we need much better error recovery here

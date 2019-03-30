@@ -5,6 +5,8 @@ import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
 
 import { PageContext } from "eez-studio-page-editor/page-context";
 
+////////////////////////////////////////////////////////////////////////////////
+
 export function getProperty(object: any, propertyName: string, resolution?: number): any {
     if (resolution == undefined) {
         resolution = PageContext.resolution;
@@ -46,7 +48,22 @@ export function setProperty(object: any, propertyName: string, value: any) {
     });
 }
 
-export function withResolutionDependableProperties(aClass: EezClass, propertyNames: string[]) {
+////////////////////////////////////////////////////////////////////////////////
+
+export function withResolutionDependableProperties(aClass: EezClass) {
+    if ((aClass.classInfo as any).__withResolutionDependablePropertiesCalled) {
+        return aClass;
+    }
+    (aClass.classInfo as any).__withResolutionDependablePropertiesCalled = true;
+
+    const propertyNames = aClass.classInfo.properties
+        .filter(propertyInfo => propertyInfo.resolutionDependable)
+        .map(propertyInfo => propertyInfo.name);
+
+    if (propertyNames.length === 0) {
+        return aClass;
+    }
+
     const oldBeforeLoadHook = aClass.classInfo.beforeLoadHook;
 
     aClass.classInfo.beforeLoadHook = (object: EezObject, jsObject: any) => {
@@ -121,6 +138,8 @@ export function withResolutionDependableProperties(aClass: EezClass, propertyNam
 
     return aClass;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 export function getPropertyValueForAllResolutions(object: any, propertyName: string) {
     return toJS((object as any)[propertyName + "_"]);

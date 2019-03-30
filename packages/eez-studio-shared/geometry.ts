@@ -401,6 +401,21 @@ export class Transform implements ITransform {
         return p;
     }
 
+    modelToClientPoint(p: Point) {
+        p = { x: p.x, y: p.y };
+
+        p.x *= this.scale;
+        p.y *= this.scale;
+
+        p.x += this.translate.x + this.clientRect.width / 2;
+        p.y += this.translate.y + this.clientRect.height / 2;
+
+        p.x += this.clientRect.left;
+        p.y += this.clientRect.top;
+
+        return p;
+    }
+
     mouseEventToModelPoint(event: MouseEvent) {
         return this.clientToModelPoint({
             x: event.clientX,

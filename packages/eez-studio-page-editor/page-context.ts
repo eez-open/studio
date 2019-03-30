@@ -34,6 +34,8 @@ export interface IPageContext {
     allResolutions: {
         name: string;
         shortName: string;
+        windowWidth: number;
+        windowHeight: number;
     }[];
 
     drawDefaultWidget(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;

@@ -1,5 +1,7 @@
 import React from "react";
-import { observable, runInAction } from "mobx";
+import { observable, action, runInAction } from "mobx";
+
+import { BoundingRectBuilder } from "eez-studio-shared/geometry";
 
 import { closestByClass } from "eez-studio-shared/dom";
 import {
@@ -24,7 +26,8 @@ import {
     IDesignerContext,
     IToolHandler,
     IMouseHandler,
-    IBaseObject
+    IBaseObject,
+    IViewState
 } from "eez-studio-designer/designer-interfaces";
 import { MouseHandler } from "eez-studio-designer/mouse-handler";
 import { Selection } from "eez-studio-designer/selection";
@@ -43,6 +46,107 @@ const CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME = 300;
 // - move selection
 // - resize selection
 
+class BoundingRects {
+    @observable map = new Map<string, Rect>();
+
+    constructor() {
+        this.updateBoundingRects();
+    }
+
+    @action.bound
+    updateBoundingRects() {
+        const $divs = $(`[data-designer-object-id]`);
+
+        const map = new Map<string, Rect>();
+
+        for (let i = 0; i < $divs.length; ++i) {
+            const div = $divs[i];
+            const id = div.getAttribute("data-designer-object-id")!;
+            const rect = div.getBoundingClientRect();
+            map.set(id, rect);
+        }
+
+        for (const key of this.map.keys()) {
+            if (!map.has(key)) {
+                this.map.delete(key);
+            }
+        }
+
+        for (const key of map.keys()) {
+            const r1 = map.get(key)!;
+            const r2 = this.map.get(key);
+            if (
+                !r2 ||
+                r2.left != r1.left ||
+                r2.top != r1.top ||
+                r2.width != r1.width ||
+                r2.height != r1.height
+            ) {
+                this.map.set(key, r1);
+            }
+        }
+
+        window.requestAnimationFrame(this.updateBoundingRects);
+    }
+
+    getBoundingRect(viewState: IViewState, object: IBaseObject) {
+        const rect = this.map.get(object.id);
+        if (rect) {
+            const modelRect = viewState.transform.clientToModelRect(rect);
+
+            const right = Math.ceil(modelRect.left + modelRect.width);
+            const bottom = Math.ceil(modelRect.top + modelRect.height);
+
+            modelRect.left = Math.floor(modelRect.left);
+            modelRect.top = Math.floor(modelRect.top);
+
+            modelRect.width = right - modelRect.left;
+            modelRect.height = bottom - modelRect.top;
+
+            return modelRect;
+        }
+        return {
+            left: 0,
+            top: 0,
+            width: 0,
+            height: 0
+        };
+    }
+
+    getObjectIdFromPoint(viewState: IViewState, point: Point) {
+        let foundId: string | undefined;
+        point = viewState.transform.modelToClientPoint(point);
+        for (const key of this.map.keys()) {
+            if (pointInRect(point, this.map.get(key)!)) {
+                if (!foundId || key.length > foundId.length) {
+                    foundId = key;
+                }
+            }
+        }
+        return foundId;
+    }
+}
+
+const boundingRects = new BoundingRects();
+
+export function getObjectBoundingRect(viewState: IViewState, object: IBaseObject) {
+    return boundingRects.getBoundingRect(viewState, object);
+}
+
+export function getSelectedObjectsBoundingRect(viewState: IViewState) {
+    let boundingRectBuilder = new BoundingRectBuilder();
+
+    for (const object of viewState.selectedObjects) {
+        boundingRectBuilder.addRect(getObjectBoundingRect(viewState, object));
+    }
+
+    return boundingRectBuilder.getRect();
+}
+
+export function getObjectIdFromPoint(viewState: IViewState, point: Point) {
+    return boundingRects.getObjectIdFromPoint(viewState, point);
+}
+
 export const selectToolHandler: IToolHandler = {
     render(context: IDesignerContext, mouseHandler: IMouseHandler | undefined) {
         return <Selection context={context} mouseHandler={mouseHandler} />;
@@ -53,7 +157,7 @@ export const selectToolHandler: IToolHandler = {
     onContextMenu(context: IDesignerContext, point: Point, showContextMenu: (menu: IMenu) => void) {
         if (
             context.viewState.selectedObjects.length === 0 ||
-            !pointInRect(point, context.viewState.selectedObjectsBoundingRect)
+            !pointInRect(point, getSelectedObjectsBoundingRect(context.viewState))
         ) {
             context.viewState.deselectAllObjects();
 
@@ -353,7 +457,7 @@ class MouseHandlerWithSnapLines extends MouseHandler {
     render(context: IDesignerContext) {
         return this.snapLines.render(
             context.viewState.transform,
-            context.viewState.selectedObjectsBoundingRect
+            getSelectedObjectsBoundingRect(context.viewState)
         );
     }
 }
@@ -372,7 +476,9 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
 
         context.document.onDragStart("move");
 
-        this.selectionBoundingRectAtDown = rectClone(context.viewState.selectedObjectsBoundingRect);
+        this.selectionBoundingRectAtDown = rectClone(
+            getSelectedObjectsBoundingRect(context.viewState)
+        );
 
         this.objectPositionsAtDown = context.viewState.selectedObjects.map(object => ({
             x: object.rect.left,
@@ -456,14 +562,14 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
         context.document.onDragStart("resize");
 
-        this.savedBoundingRect = rectClone(context.viewState.selectedObjectsBoundingRect);
+        this.savedBoundingRect = rectClone(getSelectedObjectsBoundingRect(context.viewState));
         this.boundingRect = rectClone(this.savedBoundingRect);
 
         this.savedBoundingRects = [];
         this.savedRects = [];
         this.rects = [];
         for (const object of context.viewState.selectedObjects) {
-            const boundingRect = object.boundingRect;
+            const boundingRect = getObjectBoundingRect(context.viewState, object);
             this.savedBoundingRects.push(rectClone(boundingRect));
 
             const rect = object.rect;

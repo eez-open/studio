@@ -9,7 +9,7 @@ import {
 } from "mobx";
 import stringify from "json-stable-stringify";
 
-import { Rect, Transform, BoundingRectBuilder } from "eez-studio-shared/geometry";
+import { Transform } from "eez-studio-shared/geometry";
 
 import {
     IBaseObject,
@@ -182,16 +182,6 @@ class ViewState implements IViewState {
                 type: "se-resize"
             }
         ];
-    }
-
-    get selectedObjectsBoundingRect(): Rect {
-        let boundingRectBuilder = new BoundingRectBuilder();
-
-        for (const object of this.selectedObjects) {
-            boundingRectBuilder.addRect(object.boundingRect);
-        }
-
-        return boundingRectBuilder.getRect();
     }
 
     isObjectSelected(object: IBaseObject): boolean {
