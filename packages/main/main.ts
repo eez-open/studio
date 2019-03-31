@@ -7,12 +7,14 @@ import { setup } from "setup/setup";
 
 import * as HomeWindowModule from "main/home-window";
 import * as SettingsModule from "main/settings";
+import { openFile } from "main/project-editor-window";
 
 configure({ enforceActions: "observed" });
 
 ////////////////////////////////////////////////////////////////////////////////
 
 let setupFinished: boolean = false;
+let projectFilePath: string | undefined;
 
 app.on("ready", async function() {
     // make sure there is only one instance of this application
@@ -21,9 +23,16 @@ app.on("ready", async function() {
         app.quit();
         return;
     }
-    app.on("second-instance", function(commandLine, workingDirectory) {
-        const { bringHomeWindowToFocus } = require("main/home-window") as typeof HomeWindowModule;
-        bringHomeWindowToFocus();
+    app.on("second-instance", function(event, commandLine, workingDirectory) {
+        const projectFilePath = commandLine[commandLine.length - 1];
+        if (projectFilePath.toLowerCase().endsWith(".eez-project")) {
+            openFile(projectFilePath);
+        } else {
+            const {
+                bringHomeWindowToFocus
+            } = require("main/home-window") as typeof HomeWindowModule;
+            bringHomeWindowToFocus();
+        }
     });
 
     const { loadSettings } = require("main/settings") as typeof SettingsModule;
@@ -39,8 +48,17 @@ app.on("ready", async function() {
         BrowserWindow.addDevToolsExtension(process.argv[2].substr("devToolsExtension=".length));
     }
 
-    const { openHomeWindow } = require("main/home-window") as typeof HomeWindowModule;
-    openHomeWindow();
+    if (projectFilePath) {
+        openFile(projectFilePath);
+    } else {
+        const projectFilePath = process.argv[process.argv.length - 1];
+        if (projectFilePath.toLowerCase().endsWith(".eez-project")) {
+            openFile(projectFilePath);
+        } else {
+            const { openHomeWindow } = require("main/home-window") as typeof HomeWindowModule;
+            openHomeWindow();
+        }
+    }
 
     require("main/menu");
 
@@ -57,4 +75,17 @@ app.on("window-all-closed", function() {
 app.on("quit", function() {
     const { saveSettings } = require("main/settings") as typeof SettingsModule;
     saveSettings();
+});
+
+app.on("will-finish-launching", function() {
+    app.on("open-file", function(event, path) {
+        event.preventDefault();
+        if (path.toLowerCase().endsWith(".eez-project")) {
+            if (app.isReady()) {
+                openFile(path);
+            } else {
+                projectFilePath = path;
+            }
+        }
+    });
 });

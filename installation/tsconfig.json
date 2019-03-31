@@ -13,6 +13,7 @@
         "strictNullChecks": true,
         "baseUrl": "../src",
         "sourceMap": false,
-        "pretty": false
+        "pretty": false,
+        "skipLibCheck": true
     }
 }

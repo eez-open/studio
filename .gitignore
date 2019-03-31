@@ -11,6 +11,8 @@ packages/eez-studio-ui/_stylesheets/main.css
 
 installation/build-installation.js
 installation/build-installation.js.map
+installation/build-installation-new.js
+installation/build-installation-new.js.map
 installation/extra-resources/**
 installation/extra-resource.js
 installation/extra-resource.js.map
@@ -24,3 +26,5 @@ TODO.txt
 .DS_Store
 
 package-lock.json
+
+builder-output
