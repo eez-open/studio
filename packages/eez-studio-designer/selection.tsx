@@ -60,7 +60,7 @@ class SelectedObject extends React.Component<
 > {
     render() {
         const rect = this.props.viewState.transform.modelToOffsetRect(
-            getObjectBoundingRect(this.props.viewState, this.props.object)
+            getObjectBoundingRect(this.props.object, this.props.viewState)
         );
 
         return (

@@ -93,7 +93,7 @@ export class Canvas extends React.Component<{
 
         for (const object of document.rootObjects) {
             boundingRectBuilder.addRect(
-                getObjectBoundingRect(this.designerContext.viewState, object)
+                getObjectBoundingRect(object, this.designerContext.viewState)
             );
         }
 
@@ -411,6 +411,13 @@ export class Canvas extends React.Component<{
             stroke: CENTER_LINES_COLOR,
             strokeWidth: CENTER_LINES_WIDTH
         };
+        const PAGE_RECT_LINES_COLOR = "#ddd";
+        const PAGE_RECT_LINES_WIDTH = 2 / transform.scale;
+        const pageRectLineStyle = {
+            fill: "transparent",
+            stroke: PAGE_RECT_LINES_COLOR,
+            strokeWidth: PAGE_RECT_LINES_WIDTH
+        };
 
         const modelRect = transform.clientToModelRect(transform.clientRect);
 
@@ -453,6 +460,7 @@ export class Canvas extends React.Component<{
                             pointerEvents: "none"
                         }}
                     >
+                        {this.props.children}
                         {this.designerContext.options && this.designerContext.options.center && (
                             <svg
                                 width={modelRect.width}
@@ -486,12 +494,11 @@ export class Canvas extends React.Component<{
                                         y={this.props.pageRect.top}
                                         width={this.props.pageRect.width}
                                         height={this.props.pageRect.height}
-                                        style={centerLineStyle}
+                                        style={pageRectLineStyle}
                                     />
                                 )}
                             </svg>
                         )}
-                        {this.props.children}
                     </div>
                     {this.props.toolHandler.render(this.designerContext, this.mouseHandler)}
                     {this.props.customOverlay}

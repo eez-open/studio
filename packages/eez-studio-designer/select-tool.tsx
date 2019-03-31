@@ -89,7 +89,18 @@ class BoundingRects {
         window.requestAnimationFrame(this.updateBoundingRects);
     }
 
-    getBoundingRect(viewState: IViewState, object: IBaseObject) {
+    getBoundingRectFromId(id: string) {
+        return (
+            this.map.get(id) || {
+                left: 0,
+                top: 0,
+                width: 0,
+                height: 0
+            }
+        );
+    }
+
+    getBoundingRect(object: IBaseObject, viewState: IViewState) {
         const rect = this.map.get(object.id);
         if (rect) {
             const modelRect = viewState.transform.clientToModelRect(rect);
@@ -105,11 +116,12 @@ class BoundingRects {
 
             return modelRect;
         }
+
         return {
             left: 0,
             top: 0,
-            width: 0,
-            height: 0
+            width: 1,
+            height: 1
         };
     }
 
@@ -129,15 +141,19 @@ class BoundingRects {
 
 const boundingRects = new BoundingRects();
 
-export function getObjectBoundingRect(viewState: IViewState, object: IBaseObject) {
-    return boundingRects.getBoundingRect(viewState, object);
+export function getObjectBoundingRectFromId(id: string) {
+    return boundingRects.getBoundingRectFromId(id);
+}
+
+export function getObjectBoundingRect(object: IBaseObject, viewState: IViewState) {
+    return boundingRects.getBoundingRect(object, viewState);
 }
 
 export function getSelectedObjectsBoundingRect(viewState: IViewState) {
     let boundingRectBuilder = new BoundingRectBuilder();
 
     for (const object of viewState.selectedObjects) {
-        boundingRectBuilder.addRect(getObjectBoundingRect(viewState, object));
+        boundingRectBuilder.addRect(getObjectBoundingRect(object, viewState));
     }
 
     return boundingRectBuilder.getRect();
@@ -569,7 +585,7 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         this.savedRects = [];
         this.rects = [];
         for (const object of context.viewState.selectedObjects) {
-            const boundingRect = getObjectBoundingRect(context.viewState, object);
+            const boundingRect = getObjectBoundingRect(object, context.viewState);
             this.savedBoundingRects.push(rectClone(boundingRect));
 
             const rect = object.rect;

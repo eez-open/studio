@@ -391,10 +391,6 @@ export class Page extends EezObject {
         style.overflow = PageContext.inEditor ? "visible" : this.scrollable ? "auto" : "visible";
     }
 
-    get divAttributes() {
-        return !PageContext.inEditor && this.scrollable ? { "data-simplebar": 1 } : undefined;
-    }
-
     @computed get Div() {
         return this.css
             ? styled.div`
@@ -410,7 +406,7 @@ export class Page extends EezObject {
         if (PageContext.resolution < PageContext.allResolutions.length) {
             return PageContext.allResolutions[PageContext.resolution].windowWidth;
         }
-        return this.width;
+        return this.rect.width;
     }
 
     get WindowHeight() {
@@ -420,7 +416,7 @@ export class Page extends EezObject {
         if (PageContext.resolution < PageContext.allResolutions.length) {
             return PageContext.allResolutions[PageContext.resolution].windowHeight;
         }
-        return this.height;
+        return this.rect.height;
     }
 }
 

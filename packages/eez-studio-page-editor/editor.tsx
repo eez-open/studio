@@ -606,7 +606,7 @@ export class PageEditor extends React.Component<
                     <PageEditorCanvas
                         toolHandler={selectToolHandler}
                         customOverlay={<DragSnapLinesOverlay />}
-                        pageRect={this.page.rect}
+                        pageRect={pageRect}
                     >
                         {
                             <div

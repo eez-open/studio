@@ -847,10 +847,6 @@ export class Widget extends EezObject {
 
     styleHook(style: React.CSSProperties) {}
 
-    get divAttributes(): { [key: string]: any } | undefined {
-        return undefined;
-    }
-
     @computed get Div() {
         return this.css
             ? styled.div`
@@ -929,10 +925,6 @@ export class ContainerWidget extends Widget {
 
     styleHook(style: React.CSSProperties) {
         style.overflow = PageContext.inEditor ? "visible" : this.scrollable ? "auto" : "visible";
-    }
-
-    get divAttributes() {
-        return !PageContext.inEditor && this.scrollable ? { "data-simplebar": 1 } : undefined;
     }
 }
 

@@ -113,7 +113,6 @@ export class WidgetComponent extends React.Component<{
                     data-designer-object-id={pageEditorObjectId}
                     className={className}
                     style={style}
-                    {...widget.divAttributes}
                 >
                     {widget.render(rect, dataContext, designerContext)}
                 </widget.Div>
