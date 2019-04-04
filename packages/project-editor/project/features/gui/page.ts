@@ -2,11 +2,12 @@ import { computed, action } from "mobx";
 
 import { _find } from "eez-studio-shared/algorithm";
 
-import { EezObject, IEditorState } from "eez-studio-shared/model/object";
 import {
-    TreeObjectAdapter,
-    ITreeObjectAdapter
-} from "eez-studio-shared/model/objectAdapter";
+    EezObject,
+    IEditorState,
+    hidePropertiesInPropertyGrid
+} from "eez-studio-shared/model/object";
+import { TreeObjectAdapter, ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 
 import { Page } from "eez-studio-page-editor/page";
 
@@ -22,6 +23,18 @@ export { Page } from "eez-studio-page-editor/page";
 
 Page.classInfo.editorComponent = PageEditor;
 Page.classInfo.navigationComponent = ListNavigationWithContent;
+
+hidePropertiesInPropertyGrid(Page, [
+    "display",
+    "position",
+    "right",
+    "bottom",
+    "windowWidth",
+    "windowHeight",
+    "scrollable",
+    "css",
+    "className"
+]);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -10,7 +10,13 @@ import { TabsView } from "eez-studio-ui/tabs";
 import * as notification from "eez-studio-ui/notification";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { EezObject, isArray, objectToString } from "eez-studio-shared/model/object";
+import {
+    EezObject,
+    isArray,
+    objectToString,
+    findPropertyByChildObject,
+    isValue
+} from "eez-studio-shared/model/object";
 import {
     UndoManager,
     DocumentStore,
@@ -178,7 +184,7 @@ class Editor extends React.Component<{}, {}> {
 
         let activeEditor = EditorsStore.activeEditor;
         if (activeEditor) {
-            let EditorComponent = activeEditor.object._classInfo.editorComponent;
+            let EditorComponent = activeEditor.object.editorComponent;
             if (EditorComponent) {
                 editor = <EditorComponent editor={activeEditor} />;
             }
@@ -219,6 +225,17 @@ class Properties extends React.Component<{ object: EezObject | undefined }, {}> 
 
         let object = this.props.object;
         if (object) {
+            if (isValue(object)) {
+                const childObject = object._parent!;
+                const parent = childObject._parent;
+                if (parent) {
+                    const propertyInfo = findPropertyByChildObject(parent, childObject);
+                    if (propertyInfo && !propertyInfo.hideInPropertyGrid) {
+                        object = parent;
+                    }
+                }
+            }
+
             propertyGrid = <PropertyGrid object={object} />;
         }
 
@@ -241,7 +258,7 @@ class Content extends React.Component<{}, {}> {
     @computed
     get hideInProperties() {
         for (let object: EezObject | undefined = this.object; object; object = object._parent) {
-            if (!isArray(object) && object._classInfo.editorComponent) {
+            if (!isArray(object) && object.editorComponent) {
                 return object._classInfo.hideInProperties;
             }
         }

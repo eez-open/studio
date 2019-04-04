@@ -251,7 +251,7 @@ class NavigationStoreClass {
     showObject(objectToShow: EezObject) {
         this.setSelection([objectToShow]);
         for (let object: EezObject | undefined = objectToShow; object; object = object._parent) {
-            if (object._classInfo.editorComponent) {
+            if (object.editorComponent) {
                 const editor = EditorsStore.openEditor(object);
                 setTimeout(() => {
                     if (editor && editor.state) {
@@ -321,15 +321,15 @@ class EditorsStoreClass {
                 let navigationItem = NavigationStore.getNavigationSelectedItem(object);
                 while (navigationItem) {
                     if (navigationItem instanceof EezObject) {
-                        if (!isArray(navigationItem) && navigationItem._classInfo.editorComponent) {
+                        if (!isArray(navigationItem) && navigationItem.editorComponent) {
                             this.openEditor(navigationItem);
                         }
                         navigationItem = NavigationStore.getNavigationSelectedItem(navigationItem);
                     } else {
                         let object = navigationItem.selectedObject;
-                        if (object && !isArray(object) && object._classInfo.editorComponent) {
+                        if (object && !isArray(object) && object.editorComponent) {
                             this.openEditor(object);
-                        } else if (navigationItem.object._classInfo.editorComponent) {
+                        } else if (navigationItem.object.editorComponent) {
                             this.openEditor(navigationItem.object);
                         }
                         return;
@@ -847,13 +847,10 @@ class DocumentStoreClass {
         this.modified = modified_;
     }
 
+    @action
     changeDocument(document?: EezObject, uiState?: EezObject) {
-        action(() => {
-            this._document = document;
-        })();
-
+        this._document = document;
         UIStateStore.load(uiState || {});
-
         UndoManager.clear();
     }
 

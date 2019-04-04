@@ -414,14 +414,16 @@ async function buildGuiBitmapsData(assets: Assets) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiStylesEnum(assets: Assets) {
-    let styles = assets.styles.map(
-        (style, i) =>
-            `${projectBuild.TAB}${projectBuild.getName(
-                "STYLE_ID_",
-                style.name,
-                projectBuild.NamingConvention.UnderscoreUpperCase
-            )} = ${i + 1}`
-    );
+    let styles = assets.styles
+        .filter(style => !!style.name)
+        .map(
+            (style, i) =>
+                `${projectBuild.TAB}${projectBuild.getName(
+                    "STYLE_ID_",
+                    style.name,
+                    projectBuild.NamingConvention.UnderscoreUpperCase
+                )} = ${i + 1}`
+        );
 
     styles.unshift(`${projectBuild.TAB}STYLE_ID_NONE = 0`);
 
@@ -1298,15 +1300,29 @@ class Assets {
         return -1;
     }
 
-    getStyleIndex(styleName: string) {
-        for (let i = 0; i < this.styles.length; i++) {
-            if (this.styles[i].name == styleName) {
-                return i + 1;
-            }
-        }
+    getStyleIndex(styleNameOrObject: string | Style) {
+        if (typeof styleNameOrObject === "string") {
+            const styleName = styleNameOrObject;
 
-        const style = findStyle(styleName);
-        if (style) {
+            for (let i = 0; i < this.styles.length; i++) {
+                if (this.styles[i].name == styleName) {
+                    return i + 1;
+                }
+            }
+
+            const style = findStyle(styleName);
+            if (style) {
+                this.styles.push(style);
+            }
+        } else {
+            const style = styleNameOrObject;
+
+            for (let i = 0; i < this.styles.length; i++) {
+                if (style.compareTo(this.styles[i])) {
+                    return i;
+                }
+            }
+
             this.styles.push(style);
         }
 

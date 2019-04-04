@@ -591,7 +591,7 @@ export class PageEditor extends React.Component<
 
         const { dataContext, onFocus } = this.props;
 
-        const pageRect = this.props.pageRect || this.page.rect;
+        const pageRect = this.props.pageRect;
 
         return (
             <Provider designerContext={this.pageEditorContext}>
@@ -612,10 +612,10 @@ export class PageEditor extends React.Component<
                             <div
                                 style={{
                                     position: "absolute",
-                                    left: pageRect.left,
-                                    top: pageRect.top,
-                                    width: pageRect.width,
-                                    height: pageRect.height
+                                    left: pageRect && pageRect.left,
+                                    top: pageRect && pageRect.top,
+                                    width: pageRect && pageRect.width,
+                                    height: pageRect && pageRect.height
                                 }}
                             >
                                 {renderRootElement(

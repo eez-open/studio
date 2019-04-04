@@ -1,9 +1,7 @@
-import { Rect } from "eez-studio-shared/geometry";
-
 import { EezArrayObject } from "eez-studio-shared/model/object";
 
 import { Page } from "eez-studio-page-editor/page";
-import { Widget } from "eez-studio-page-editor/widget";
+import { Style } from "eez-studio-page-editor/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -21,10 +19,6 @@ export interface IDataContext {
     push(data: any): IDataContext;
 }
 
-export interface IStyle {
-    backgroundColor?: string;
-}
-
 export interface IPageContext {
     inEditor: boolean;
 
@@ -38,7 +32,6 @@ export interface IPageContext {
         windowHeight: number;
     }[];
 
-    drawDefaultWidget(widget: Widget, rect: Rect): HTMLCanvasElement | undefined;
     renderRootElement(child: React.ReactNode): React.ReactNode;
 
     findActionIndex(actionName: any): number;
@@ -52,8 +45,8 @@ export interface IPageContext {
     getLayouts(): EezArrayObject<Page>;
     findLayout(layoutName: string): Page | undefined;
 
-    findStyle(styleName: any): IStyle | undefined;
-    findStyleOrGetDefault(styleName: any): IStyle;
+    findStyle(styleName: any): Style | undefined;
+    findFont(fontName: any): any;
 }
 
 export let PageContext: IPageContext;

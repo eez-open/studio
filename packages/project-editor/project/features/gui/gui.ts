@@ -25,7 +25,7 @@ import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { Page } from "project-editor/project/features/gui/page";
-import { Style, getDefaultStyle } from "project-editor/project/features/gui/style";
+import { Style } from "project-editor/project/features/gui/style";
 import { Font } from "project-editor/project/features/gui/font";
 import { Bitmap } from "project-editor/project/features/gui/bitmap";
 import { build } from "project-editor/project/features/gui/build";
@@ -42,7 +42,6 @@ setPageContext({
 
     rootDataContext: dataContext,
 
-    drawDefaultWidget: draw.drawDefaultWidget,
     renderRootElement: draw.renderRootElement,
 
     findActionIndex,
@@ -64,7 +63,7 @@ setPageContext({
     findLayout: findPage,
 
     findStyle,
-    findStyleOrGetDefault
+    findFont
 });
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +201,7 @@ export function findPage(pageName: string) {
     return undefined;
 }
 
-export function findStyle(styleName: any) {
+export function findStyle(styleName: string | undefined) {
     let gui = getGui();
     let styles = (gui && gui.styles._array) || [];
     for (const style of styles) {
@@ -211,10 +210,6 @@ export function findStyle(styleName: any) {
         }
     }
     return undefined;
-}
-
-export function findStyleOrGetDefault(styleName: any) {
-    return findStyle(styleName) || getDefaultStyle();
 }
 
 export function findFont(fontName: any) {

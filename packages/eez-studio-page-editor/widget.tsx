@@ -17,6 +17,7 @@ import {
     registerClass,
     EezArrayObject,
     ClassInfo,
+    PropertyInfo,
     PropertyType,
     makeDerivedClassInfo,
     findClass,
@@ -43,6 +44,7 @@ import { IResizeHandler, IDesignerContext } from "eez-studio-designer/designer-i
 import { PageInitContext } from "eez-studio-page-editor/page-init-context";
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
+import { Style } from "eez-studio-page-editor/style";
 import { IResizing, resizingProperty } from "eez-studio-page-editor/resizing-widget-property";
 import { WidgetContainerComponent, WidgetComponent } from "eez-studio-page-editor/render";
 import { EditorObject } from "eez-studio-page-editor/editor";
@@ -60,7 +62,7 @@ export function makeDataPropertyInfo(
     name: string,
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition
-) {
+): PropertyInfo {
     if (PageInitContext) {
         return PageInitContext.makeDataPropertyInfo(name, displayName, propertyGridGroup);
     } else {
@@ -76,7 +78,7 @@ export function makeActionPropertyInfo(
     name: string,
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition
-) {
+): PropertyInfo {
     if (PageInitContext) {
         return PageInitContext.makeActionPropertyInfo(name, displayName, propertyGridGroup);
     } else {
@@ -86,6 +88,18 @@ export function makeActionPropertyInfo(
             type: PropertyType.String
         };
     }
+}
+
+export function makeStylePropertyInfo(name: string, displayName?: string): PropertyInfo {
+    return {
+        name,
+        displayName,
+        type: PropertyType.Object,
+        typeClass: Style,
+        propertyGridGroup: styleGroup,
+        propertyGridCollapsable: true,
+        enumerable: false
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,8 +143,8 @@ export type WidgetParent = Page | Widget;
 export class Widget extends EezObject {
     // shared properties
     @observable type: string;
-    @observable style?: string;
-    @observable activeStyle?: string;
+    @observable style: Style;
+    @observable activeStyle: Style;
     @observable data?: string;
     @observable action?: string;
 
@@ -321,18 +335,8 @@ export class Widget extends EezObject {
             resizingProperty,
             makeDataPropertyInfo("data"),
             makeActionPropertyInfo("action"),
-            {
-                name: "style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
-            },
-            {
-                name: "activeStyle",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
-            },
+            makeStylePropertyInfo("style", "Normal style"),
+            makeStylePropertyInfo("activeStyle"),
             {
                 name: "css",
                 type: PropertyType.CSS,
@@ -375,6 +379,18 @@ export class Widget extends EezObject {
                 jsObject["top_"] = jsObject["y_"];
                 delete jsObject["y_"];
             }
+
+            if (typeof jsObject["style"] === "string") {
+                jsObject["style"] = {
+                    inheritFrom: jsObject["style"]
+                };
+            }
+
+            if (typeof jsObject["activeStyle"] === "string") {
+                jsObject["activeStyle"] = {
+                    inheritFrom: jsObject["activeStyle"]
+                };
+            }
         },
 
         isPropertyMenuSupported: true
@@ -416,18 +432,12 @@ export class Widget extends EezObject {
 
     @computed
     get styleObject() {
-        if (this.style) {
-            return PageContext.findStyle(this.style);
-        }
-        return undefined;
+        return this.style;
     }
 
     @computed
     get activeStyleObject() {
-        if (this.activeStyle) {
-            return PageContext.findStyle(this.activeStyle);
-        }
-        return undefined;
+        return this.activeStyle;
     }
 
     // Return immediate parent, which can be of type Page or Widget
@@ -503,20 +513,6 @@ export class Widget extends EezObject {
                         this
                     )
                 );
-            }
-        }
-
-        if (this.style) {
-            if (!this.styleObject) {
-                messages.push(output.propertyNotFoundMessage(this, "style"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "style"));
-        }
-
-        if (this.activeStyle) {
-            if (!this.activeStyleObject) {
-                messages.push(output.propertyNotFoundMessage(this, "activeStyle"));
             }
         }
 
@@ -720,7 +716,6 @@ export class Widget extends EezObject {
                         top: 0,
                         width: createWidgetsResult.width,
                         height: createWidgetsResult.height,
-                        style: "default",
                         widgets: createWidgetsResult.widgets
                     },
                     findClass("Page")!
@@ -733,7 +728,6 @@ export class Widget extends EezObject {
                     fromWidgets[0]._parent,
                     {
                         type: "LayoutView",
-                        style: "default",
                         left: createWidgetsResult.left,
                         top: createWidgetsResult.top,
                         width: createWidgetsResult.width,
@@ -894,7 +888,6 @@ export class ContainerWidget extends Widget {
             top: 0,
             width: 64,
             height: 32,
-            style: "default",
             layout: "free"
         },
 
@@ -975,8 +968,7 @@ export class ListWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32,
-            style: "default"
+            height: 32
         },
 
         // eez-studio-page-editor\_images\List.png
@@ -1069,8 +1061,7 @@ export class GridWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 64,
-            style: "default"
+            height: 64
         },
 
         // eez-studio-page-editor\_images\Grid.png
@@ -1181,8 +1172,7 @@ export class SelectWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32,
-            style: "default"
+            height: 32
         },
 
         // eez-studio-page-editor\_images\Select.png
@@ -1297,6 +1287,13 @@ export class SelectWidget extends Widget {
                 return this._lastSelectedIndexInSelectWidget;
             }
 
+            if (dataContext) {
+                const selectedWidget = this.getSelectedWidget(dataContext);
+                if (selectedWidget) {
+                    return this.widgets._array.indexOf(selectedWidget);
+                }
+            }
+
             if (this.widgets._array.length > 0) {
                 this._lastSelectedIndexInSelectWidget = 0;
                 return this._lastSelectedIndexInSelectWidget;
@@ -1399,8 +1396,7 @@ export class LayoutViewWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32,
-            style: "default"
+            height: 32
         },
 
         // eez-studio-page-editor\_images\LayoutView.png
@@ -1447,7 +1443,7 @@ export class LayoutViewWidget extends Widget {
             return null;
         }
 
-        return <WidgetComponent widget={layout} rect={rect} dataContext={dataContext} />;
+        return <WidgetComponent widget={layout} dataContext={dataContext} />;
     }
 
     open() {

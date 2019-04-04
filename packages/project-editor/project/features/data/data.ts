@@ -212,6 +212,10 @@ export function count(dataItemId: string): number {
 }
 
 export function get(dataItemId: string, params?: { [key: string]: any }): any {
+    if (dataItemId === undefined) {
+        return undefined;
+    }
+
     let dataItem = findDataItem(dataItemId);
     if (dataItem) {
         let value: any;

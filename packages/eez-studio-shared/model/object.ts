@@ -99,6 +99,7 @@ export interface PropertyInfo {
     readOnlyInPropertyGrid?: boolean;
     propertyGridGroup?: IPropertyGridGroupDefinition;
     propertyGridComponent?: typeof React.Component;
+    propertyGridCollapsable?: boolean;
     enumerable?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
     showOnlyChildrenInTree?: boolean;
     isOptional?: boolean;
@@ -141,7 +142,7 @@ export class EditorComponent extends React.Component<EditorComponentProps, {}> {
 export type InheritedValue =
     | {
           value: any;
-          source: string;
+          source: EezObject;
       }
     | undefined;
 
@@ -163,6 +164,8 @@ export interface ClassInfo {
     defaultNavigationKey?: string;
 
     editorComponent?: typeof EditorComponent;
+    isEditorSupported?: (object: EezObject) => boolean;
+
     createEditorState?: (object: EezObject) => IEditorState;
     newItem?: (object: EezObject) => Promise<any>;
     getInheritedValue?: (object: EezObject, propertyName: string) => InheritedValue;
@@ -230,6 +233,15 @@ export function makeDerivedClassInfo(
         derivedClassInfoProperties.properties = r;
     }
 
+    const baseBeforeLoadHook = baseClassInfo.beforeLoadHook;
+    const derivedBeforeLoadHook = derivedClassInfoProperties.beforeLoadHook;
+    if (baseBeforeLoadHook && derivedBeforeLoadHook) {
+        derivedClassInfoProperties.beforeLoadHook = (object: EezObject, jsObject: any) => {
+            baseBeforeLoadHook(object, jsObject);
+            derivedBeforeLoadHook(object, jsObject);
+        };
+    }
+
     const derivedClassInfo = Object.assign({}, baseClassInfo, derivedClassInfoProperties);
     derivedClassInfo.parentClassInfo = baseClassInfo;
     return derivedClassInfo;
@@ -266,6 +278,13 @@ export class EezObject {
         }
 
         return this._id;
+    }
+
+    get editorComponent(): typeof EditorComponent | undefined {
+        if (this._classInfo.isEditorSupported && !this._classInfo.isEditorSupported(this)) {
+            return undefined;
+        }
+        return this._classInfo.editorComponent;
     }
 }
 
@@ -510,6 +529,12 @@ export function findPropertyByName(object: EezObject, propertyName: string) {
     return object._classInfo.properties.find(propertyInfo => propertyInfo.name == propertyName);
 }
 
+export function findPropertyByChildObject(object: EezObject, childObject: EezObject) {
+    return object._classInfo.properties.find(
+        propertyInfo => getProperty(object, propertyInfo.name) === childObject
+    );
+}
+
 export function getInheritedValue(object: EezObject, propertyName: string) {
     const getInheritedValue = object._classInfo.getInheritedValue;
     if (getInheritedValue) {
@@ -731,7 +756,7 @@ export function getAncestors(
                     let possibleAncestor: EezObject = (ancestor as any)[propertyInfo.name];
 
                     if (possibleAncestor === object) {
-                        return [];
+                        return [ancestor];
                     }
 
                     if (possibleAncestor && object._id.startsWith(possibleAncestor._id + ".")) {

@@ -31,3 +31,24 @@ export function blendColor(fgColor: string, bgColor: string, alpha: number) {
 
     return "rgba(" + mix.join(",") + ")";
 }
+
+export function strToColor16(colorStr: string) {
+    let color24: any;
+
+    if (colorStr && colorStr[0] == "#") {
+        color24 = parseInt(colorStr.substring(1), 16);
+    }
+
+    if (color24 === undefined || isNaN(color24)) {
+        return NaN;
+    }
+
+    const r = (color24 & 0xff0000) >> 16;
+    const g = (color24 & 0x00ff00) >> 8;
+    const b = color24 & 0x0000ff;
+
+    // rrrrrggggggbbbbb
+    let color16 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+
+    return color16;
+}

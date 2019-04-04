@@ -175,7 +175,7 @@ export class SettingsNavigation extends NavigationComponent {
 
     render() {
         let content = this.props.content;
-        if (this.object && this.object._classInfo.editorComponent) {
+        if (this.object && this.object.editorComponent) {
             content = this.props.content;
         } else {
             content = <SettingsEditor object={this.object} />;

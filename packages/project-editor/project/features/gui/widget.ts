@@ -1,29 +1,33 @@
-import { observable, computed } from "mobx";
+import { observable } from "mobx";
 
 import { _find } from "eez-studio-shared/algorithm";
 import { Rect } from "eez-studio-shared/geometry";
 
 import {
+    EezObject,
     registerClass,
     PropertyType,
     makeDerivedClassInfo,
     getChildOfObject,
-    styleGroup,
-    hidePropertiesInPropertyGrid
+    hidePropertiesInPropertyGrid,
+    IPropertyGridGroupDefinition
 } from "eez-studio-shared/model/object";
 import * as output from "eez-studio-shared/model/output";
 
 import {
     Widget,
+    ContainerWidget,
     makeDataPropertyInfo,
+    makeStylePropertyInfo,
     SelectWidget as BaseSelectWidget,
     LayoutViewWidget
 } from "eez-studio-page-editor/widget";
+import { Style } from "eez-studio-page-editor/style";
 import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
 
 import * as data from "project-editor/project/features/data/data";
 
-import { findStyle, findBitmap } from "project-editor/project/features/gui/gui";
+import { findBitmap } from "project-editor/project/features/gui/gui";
 import * as draw from "project-editor/project/features/gui/draw";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,8 +44,18 @@ export {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-hidePropertiesInPropertyGrid(Widget, ["resizing", "css", "className"]);
+hidePropertiesInPropertyGrid(Widget, [
+    "display",
+    "position",
+    "right",
+    "bottom",
+    "resizing",
+    "css",
+    "className",
+    "unsetAllResolutionDependablePropertiesForLowerResolutions"
+]);
 hidePropertiesInPropertyGrid(LayoutViewWidget, ["dataContext"]);
+hidePropertiesInPropertyGrid(ContainerWidget, ["scrollable"]);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,18 +68,18 @@ registerClass(SelectWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DisplayDataWidget extends Widget {
-    @observable
-    focusStyle?: string;
+    @observable focusStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: [
-            {
-                name: "focusStyle",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
+        properties: [makeStylePropertyInfo("focusStyle")],
+
+        beforeLoadHook: (object: EezObject, jsObject: any) => {
+            if (typeof jsObject["focusStyle"] === "string") {
+                jsObject["focusStyle"] = {
+                    inheritFrom: jsObject["focusStyle"]
+                };
             }
-        ],
+        },
 
         defaultValue: {
             type: "DisplayData",
@@ -73,32 +87,17 @@ export class DisplayDataWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32,
-            style: "default"
+            height: 32
         },
 
         icon: "_images/widgets/Data.png"
     });
-
-    @computed
-    get focusStyleObject() {
-        if (this.focusStyle) {
-            return findStyle(this.focusStyle);
-        }
-        return undefined;
-    }
 
     check() {
         let messages: output.Message[] = [];
 
         if (!this.data) {
             messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (this.focusStyle) {
-            if (!this.focusStyleObject) {
-                messages.push(output.propertyNotFoundMessage(this, "focusStyle"));
-            }
         }
 
         return super.check().concat(messages);
@@ -110,6 +109,13 @@ export class DisplayDataWidget extends Widget {
 }
 
 registerClass(DisplayDataWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const textPropertiesGroup: IPropertyGridGroupDefinition = {
+    id: "text",
+    title: "Text properties"
+};
 
 export class TextWidget extends Widget {
     @observable
@@ -125,12 +131,14 @@ export class TextWidget extends Widget {
         properties: [
             {
                 name: "text",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: textPropertiesGroup
             },
             {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
-                defaultValue: false
+                defaultValue: false,
+                propertyGridGroup: textPropertiesGroup
             }
         ],
 
@@ -140,8 +148,7 @@ export class TextWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32,
-            style: "default"
+            height: 32
         },
 
         icon: "_images/widgets/Text.png"
@@ -166,6 +173,11 @@ registerClass(TextWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const multilineTextPropertiesGroup: IPropertyGridGroupDefinition = {
+    id: "multilineText",
+    title: "Multiline text properties"
+};
+
 export class MultilineTextWidget extends Widget {
     @observable
     text?: string;
@@ -178,7 +190,8 @@ export class MultilineTextWidget extends Widget {
         properties: [
             {
                 name: "text",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: multilineTextPropertiesGroup
             }
         ],
 
@@ -188,8 +201,7 @@ export class MultilineTextWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32,
-            style: "default"
+            height: 32
         },
 
         icon: "_images/widgets/MultilineText.png"
@@ -214,6 +226,11 @@ registerClass(MultilineTextWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const rectanglePropertiesGroup: IPropertyGridGroupDefinition = {
+    id: "multilineText",
+    title: "Rectangle properties"
+};
+
 export class RectangleWidget extends Widget {
     @observable
     ignoreLuminocity: boolean;
@@ -225,11 +242,13 @@ export class RectangleWidget extends Widget {
             {
                 name: "invertColors",
                 type: PropertyType.Boolean,
+                propertyGridGroup: rectanglePropertiesGroup,
                 defaultValue: false
             },
             {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
+                propertyGridGroup: rectanglePropertiesGroup,
                 defaultValue: false
             }
         ],
@@ -239,8 +258,7 @@ export class RectangleWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32,
-            style: "default"
+            height: 32
         },
 
         icon: "_images/widgets/Rectangle.png"
@@ -265,6 +283,11 @@ registerClass(RectangleWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const bitmapPropertiesGroup: IPropertyGridGroupDefinition = {
+    id: "bitmap",
+    title: "Bitmap properties"
+};
+
 export class BitmapWidget extends Widget {
     @observable
     bitmap?: string;
@@ -278,11 +301,12 @@ export class BitmapWidget extends Widget {
             {
                 name: "bitmap",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "bitmaps"]
+                referencedObjectCollectionPath: ["gui", "bitmaps"],
+                propertyGridGroup: bitmapPropertiesGroup
             }
         ],
 
-        defaultValue: { type: "Bitmap", left: 0, top: 0, width: 64, height: 32, style: "default" },
+        defaultValue: { type: "Bitmap", left: 0, top: 0, width: 64, height: 32 },
 
         icon: "_images/widgets/Bitmap.png"
     });
@@ -331,7 +355,7 @@ export class ButtonWidget extends Widget {
     @observable
     enabled?: string;
     @observable
-    disabledStyle?: string;
+    disabledStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
@@ -340,26 +364,21 @@ export class ButtonWidget extends Widget {
                 type: PropertyType.String
             },
             makeDataPropertyInfo("enabled"),
-            {
-                name: "disabledStyle",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
-            }
+            makeStylePropertyInfo("disabledStyle")
         ],
 
-        defaultValue: { type: "Button", left: 0, top: 0, width: 32, height: 32, style: "default" },
+        beforeLoadHook: (object: EezObject, jsObject: any) => {
+            if (typeof jsObject["disabledStyle"] === "string") {
+                jsObject["disabledStyle"] = {
+                    inheritFrom: jsObject["disabledStyle"]
+                };
+            }
+        },
+
+        defaultValue: { type: "Button", left: 0, top: 0, width: 32, height: 32 },
 
         icon: "_images/widgets/Button.png"
     });
-
-    @computed
-    get disabledStyleObject() {
-        if (this.disabledStyle) {
-            return findStyle(this.disabledStyle);
-        }
-        return undefined;
-    }
 
     check() {
         let messages: output.Message[] = [];
@@ -383,14 +402,6 @@ export class ButtonWidget extends Widget {
             }
         } else {
             messages.push(output.propertyNotSetMessage(this, "enabled"));
-        }
-
-        if (this.disabledStyle) {
-            if (!this.disabledStyleObject) {
-                messages.push(output.propertyNotFoundMessage(this, "disabledStyle"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "disabledStyle"));
         }
 
         return super.check().concat(messages);
@@ -428,8 +439,7 @@ export class ToggleButtonWidget extends Widget {
             left: 0,
             top: 0,
             width: 32,
-            height: 32,
-            style: "default"
+            height: 32
         },
 
         icon: "_images/widgets/ToggleButton.png"
@@ -469,8 +479,7 @@ export class ButtonGroupWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32,
-            style: "default"
+            height: 32
         },
 
         icon: "_images/widgets/ButtonGroup.png"
@@ -541,8 +550,7 @@ export class ScaleWidget extends Widget {
             height: 32,
             needlePostion: "right",
             needleWidth: 19,
-            needleHeight: 11,
-            style: "default"
+            needleHeight: 11
         },
 
         icon: "_images/widgets/Scale.png"
@@ -568,18 +576,12 @@ registerClass(ScaleWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class BarGraphWidget extends Widget {
-    @observable
-    orientation?: string;
-    @observable
-    textStyle?: string;
-    @observable
-    line1Data?: string;
-    @observable
-    line1Style?: string;
-    @observable
-    line2Data?: string;
-    @observable
-    line2Style?: string;
+    @observable orientation?: string;
+    @observable textStyle: Style;
+    @observable line1Data?: string;
+    @observable line1Style: Style;
+    @observable line2Data?: string;
+    @observable line2Style: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
@@ -601,27 +603,32 @@ export class BarGraphWidget extends Widget {
                     }
                 ]
             },
-            {
-                name: "textStyle",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
-            },
+            makeStylePropertyInfo("textStyle"),
+            makeStylePropertyInfo("line1Style"),
+            makeStylePropertyInfo("line2Style"),
             makeDataPropertyInfo("line1Data"),
-            {
-                name: "line1Style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
-            },
-            makeDataPropertyInfo("line2Data"),
-            {
-                name: "line2Style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
-            }
+            makeDataPropertyInfo("line2Data")
         ],
+
+        beforeLoadHook: (object: EezObject, jsObject: any) => {
+            if (typeof jsObject["textStyle"] === "string") {
+                jsObject["textStyle"] = {
+                    inheritFrom: jsObject["textStyle"]
+                };
+            }
+
+            if (typeof jsObject["line1Style"] === "string") {
+                jsObject["line1Style"] = {
+                    inheritFrom: jsObject["line1Style"]
+                };
+            }
+
+            if (typeof jsObject["line2Style"] === "string") {
+                jsObject["line2Style"] = {
+                    inheritFrom: jsObject["line2Style"]
+                };
+            }
+        },
 
         defaultValue: {
             type: "BarGraph",
@@ -629,48 +636,17 @@ export class BarGraphWidget extends Widget {
             top: 0,
             width: 64,
             height: 32,
-            orientation: "left-right",
-            style: "default"
+            orientation: "left-right"
         },
 
         icon: "_images/widgets/BarGraph.png"
     });
-
-    @computed
-    get textStyleObject() {
-        if (this.textStyle) {
-            return findStyle(this.textStyle);
-        }
-        return undefined;
-    }
-
-    @computed
-    get line1StyleObject() {
-        if (this.line1Style) {
-            return findStyle(this.line1Style);
-        }
-        return undefined;
-    }
-
-    @computed
-    get line2StyleObject() {
-        if (this.line2Style) {
-            return findStyle(this.line2Style);
-        }
-        return undefined;
-    }
 
     check() {
         let messages: output.Message[] = [];
 
         if (!this.data) {
             messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (this.textStyle) {
-            if (!this.textStyleObject) {
-                messages.push(output.propertyNotFoundMessage(this, "textStyle"));
-            }
         }
 
         if (this.line1Data) {
@@ -690,14 +666,6 @@ export class BarGraphWidget extends Widget {
             messages.push(output.propertyNotSetMessage(this, "line1Data"));
         }
 
-        if (this.line1Style) {
-            if (!this.line1StyleObject) {
-                messages.push(output.propertyNotFoundMessage(this, "line1Style"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "line1Style"));
-        }
-
         if (this.line2Data) {
             let dataIndex = data.findDataItemIndex(this.line2Data);
             if (dataIndex == -1) {
@@ -715,14 +683,6 @@ export class BarGraphWidget extends Widget {
             messages.push(output.propertyNotSetMessage(this, "line2Data"));
         }
 
-        if (this.line2Style) {
-            if (!this.line2StyleObject) {
-                messages.push(output.propertyNotFoundMessage(this, "line2Style"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "line2Style"));
-        }
-
         return super.check().concat(messages);
     }
 
@@ -736,73 +696,47 @@ registerClass(BarGraphWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class YTGraphWidget extends Widget {
-    @observable
-    y1Style?: string;
-    @observable
-    y2Data?: string;
-    @observable
-    y2Style?: string;
+    @observable y1Style: Style;
+    @observable y2Data?: string;
+    @observable y2Style: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
-            {
-                name: "y1Style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
-            },
-            makeDataPropertyInfo("y2Data"),
-            {
-                name: "y2Style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
-            }
+            makeStylePropertyInfo("y1Style"),
+            makeStylePropertyInfo("y2Style"),
+            makeDataPropertyInfo("y2Data")
         ],
+
+        beforeLoadHook: (object: EezObject, jsObject: any) => {
+            if (typeof jsObject["y1Style"] === "string") {
+                jsObject["y1Style"] = {
+                    inheritFrom: jsObject["y1Style"]
+                };
+            }
+
+            if (typeof jsObject["y2Style"] === "string") {
+                jsObject["y2Style"] = {
+                    inheritFrom: jsObject["y2Style"]
+                };
+            }
+        },
 
         defaultValue: {
             type: "YTGraph",
             left: 0,
             top: 0,
             width: 64,
-            height: 32,
-            style: "default",
-            y1Style: "default",
-            y2Style: "default"
+            height: 32
         },
 
         icon: "_images/widgets/YTGraph.png"
     });
-
-    @computed
-    get y1StyleObject() {
-        if (this.y1Style) {
-            return findStyle(this.y1Style);
-        }
-        return undefined;
-    }
-
-    @computed
-    get y2StyleObject() {
-        if (this.y2Style) {
-            return findStyle(this.y2Style);
-        }
-        return undefined;
-    }
 
     check() {
         let messages: output.Message[] = [];
 
         if (!this.data) {
             messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (this.y1Style) {
-            if (!this.y1StyleObject) {
-                messages.push(output.propertyNotFoundMessage(this, "y1Style"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "y1Style"));
         }
 
         if (this.y2Data) {
@@ -822,14 +756,6 @@ export class YTGraphWidget extends Widget {
             messages.push(output.propertyNotSetMessage(this, "y2Data"));
         }
 
-        if (this.y2Style) {
-            if (!this.y2StyleObject) {
-                messages.push(output.propertyNotFoundMessage(this, "y2Style"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "y2Style"));
-        }
-
         return super.check().concat(messages);
     }
 
@@ -843,21 +769,13 @@ registerClass(YTGraphWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class UpDownWidget extends Widget {
-    @observable
-    buttonsStyle?: string;
-    @observable
-    downButtonText?: string;
-    @observable
-    upButtonText?: string;
+    @observable buttonsStyle: Style;
+    @observable downButtonText?: string;
+    @observable upButtonText?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
-            {
-                name: "buttonsStyle",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
-            },
+            makeStylePropertyInfo("buttonsStyle"),
             {
                 name: "downButtonText",
                 type: PropertyType.String
@@ -868,14 +786,20 @@ export class UpDownWidget extends Widget {
             }
         ],
 
+        beforeLoadHook: (object: EezObject, jsObject: any) => {
+            if (typeof jsObject["buttonsStyle"] === "string") {
+                jsObject["buttonsStyle"] = {
+                    inheritFrom: jsObject["buttonsStyle"]
+                };
+            }
+        },
+
         defaultValue: {
             type: "UpDown",
             left: 0,
             top: 0,
             width: 64,
             height: 32,
-            style: "default",
-            buttonsStyle: "default",
             upButtonText: ">",
             downButtonText: "<"
         },
@@ -883,27 +807,11 @@ export class UpDownWidget extends Widget {
         icon: "_images/widgets/UpDown.png"
     });
 
-    @computed
-    get buttonsStyleObject() {
-        if (this.buttonsStyle) {
-            return findStyle(this.buttonsStyle);
-        }
-        return undefined;
-    }
-
     check() {
         let messages: output.Message[] = [];
 
         if (!this.data) {
             messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (this.buttonsStyle) {
-            if (!this.buttonsStyle) {
-                messages.push(output.propertyNotFoundMessage(this, "buttonsStyle"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "buttonsStyle"));
         }
 
         if (!this.downButtonText) {
@@ -927,84 +835,55 @@ registerClass(UpDownWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ListGraphWidget extends Widget {
-    @observable
-    dwellData?: string;
-    @observable
-    y1Data?: string;
-    @observable
-    y1Style?: string;
-    @observable
-    y2Data?: string;
-    @observable
-    y2Style?: string;
-    @observable
-    cursorData?: string;
-    @observable
-    cursorStyle?: string;
+    @observable dwellData?: string;
+    @observable y1Data?: string;
+    @observable y1Style: Style;
+    @observable y2Data?: string;
+    @observable y2Style: Style;
+    @observable cursorData?: string;
+    @observable cursorStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
             makeDataPropertyInfo("dwellData"),
             makeDataPropertyInfo("y1Data"),
-            {
-                name: "y1Style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
-            },
+            makeStylePropertyInfo("y1Style"),
+            makeStylePropertyInfo("y2Style"),
+            makeStylePropertyInfo("cursorStyle"),
             makeDataPropertyInfo("y2Data"),
-            {
-                name: "y2Style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
-            },
-            makeDataPropertyInfo("cursorData"),
-            {
-                name: "cursorStyle",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
-                propertyGridGroup: styleGroup
-            }
+            makeDataPropertyInfo("cursorData")
         ],
+
+        beforeLoadHook: (object: EezObject, jsObject: any) => {
+            if (typeof jsObject["y1Style"] === "string") {
+                jsObject["y1Style"] = {
+                    inheritFrom: jsObject["y1Style"]
+                };
+            }
+
+            if (typeof jsObject["y2Style"] === "string") {
+                jsObject["y2Style"] = {
+                    inheritFrom: jsObject["y2Style"]
+                };
+            }
+
+            if (typeof jsObject["cursorStyle"] === "string") {
+                jsObject["cursorStyle"] = {
+                    inheritFrom: jsObject["cursorStyle"]
+                };
+            }
+        },
 
         defaultValue: {
             type: "ListGraph",
             left: 0,
             top: 0,
             width: 64,
-            height: 32,
-            style: "default",
-            y1Style: "default",
-            y2Style: "default"
+            height: 32
         },
 
         icon: "_images/widgets/ListGraph.png"
     });
-
-    @computed
-    get y1StyleObject() {
-        if (this.y1Style) {
-            return findStyle(this.y1Style);
-        }
-        return undefined;
-    }
-
-    @computed
-    get y2StyleObject() {
-        if (this.y2Style) {
-            return findStyle(this.y2Style);
-        }
-        return undefined;
-    }
-
-    @computed
-    get cursorStyleObject() {
-        if (this.cursorStyle) {
-            return findStyle(this.cursorStyle);
-        }
-        return undefined;
-    }
 
     check() {
         let messages: output.Message[] = [];
@@ -1047,14 +926,6 @@ export class ListGraphWidget extends Widget {
             messages.push(output.propertyNotSetMessage(this, "y1Data"));
         }
 
-        if (this.y1Style) {
-            if (!this.y1StyleObject) {
-                messages.push(output.propertyNotFoundMessage(this, "y1Style"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "y1Style"));
-        }
-
         if (this.y2Data) {
             let dataIndex = data.findDataItemIndex(this.y2Data);
             if (dataIndex == -1) {
@@ -1070,14 +941,6 @@ export class ListGraphWidget extends Widget {
             }
         } else {
             messages.push(output.propertyNotSetMessage(this, "y2Data"));
-        }
-
-        if (this.y2Style) {
-            if (!this.y2StyleObject) {
-                messages.push(output.propertyNotFoundMessage(this, "y2Style"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "y2Style"));
         }
 
         if (this.cursorData) {
@@ -1097,14 +960,6 @@ export class ListGraphWidget extends Widget {
             messages.push(output.propertyNotSetMessage(this, "cursorData"));
         }
 
-        if (this.cursorStyle) {
-            if (!this.cursorStyleObject) {
-                messages.push(output.propertyNotFoundMessage(this, "cursorStyle"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "cursorStyle"));
-        }
-
         return super.check().concat(messages);
     }
 
@@ -1122,7 +977,7 @@ export class AppViewWidget extends Widget {
     page: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        defaultValue: { type: "AppView", left: 0, top: 0, width: 64, height: 32, style: "default" },
+        defaultValue: { type: "AppView", left: 0, top: 0, width: 64, height: 32 },
 
         icon: "_images/widgets/AppView.png"
     });

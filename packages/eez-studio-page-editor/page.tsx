@@ -389,6 +389,12 @@ export class Page extends EezObject {
 
     styleHook(style: React.CSSProperties) {
         style.overflow = PageContext.inEditor ? "visible" : this.scrollable ? "auto" : "visible";
+        if (this.style) {
+            const pageStyle = PageContext.findStyle(this.style);
+            if (pageStyle) {
+                style.backgroundColor = pageStyle.backgroundColor;
+            }
+        }
     }
 
     @computed get Div() {

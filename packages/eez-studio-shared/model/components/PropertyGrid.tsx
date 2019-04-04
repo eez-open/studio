@@ -16,6 +16,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { CodeEditor, CodeEditorMode } from "eez-studio-ui/code-editor";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
+import { Icon } from "eez-studio-ui/icon";
 
 import {
     EezObject,
@@ -57,37 +58,9 @@ export interface PropertyProps {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const PropertyMenuDiv = styled.div`
-    padding: 6px;
-    width: 20px;
-    height: 20px;
-
-    &:hover {
-        background-color: #eee;
-    }
-
-    & > div {
-        width: 8px;
-        height: 8px;
-        border: 1px solid #666;
-    }
-
-    &.default > div {
-        background-color: #fff;
-    }
-
-    &.modified > div {
-        background-color: #666;
-    }
-
-    &.inherited > div {
-        background-color: #00d;
-    }
-`;
-
 interface PropertyValueSourceInfo {
     source: "default" | "modified" | "inherited";
-    inheritedFrom?: string;
+    inheritedFrom?: EezObject;
 }
 
 @observer
@@ -107,14 +80,6 @@ class PropertyMenu extends React.Component<PropertyProps> {
                         inheritedFrom: inheritedValue.source
                     };
                 }
-            }
-        }
-
-        if ("defaultValue" in this.props.propertyInfo) {
-            if (value !== this.props.propertyInfo.defaultValue) {
-                return {
-                    source: "modified"
-                };
             }
         }
 
@@ -196,7 +161,7 @@ class PropertyMenu extends React.Component<PropertyProps> {
                         label: "Reset",
                         click: () => {
                             this.props.updateObject({
-                                [this.props.propertyInfo.name]: this.props.propertyInfo.defaultValue
+                                [this.props.propertyInfo.name]: undefined
                             });
                         }
                     })
@@ -220,17 +185,17 @@ class PropertyMenu extends React.Component<PropertyProps> {
     render() {
         let title = humanize(this.sourceInfo.source);
         if (this.sourceInfo.inheritedFrom) {
-            title += " from " + this.sourceInfo.inheritedFrom;
+            title += " from " + objectToString(this.sourceInfo.inheritedFrom);
         }
 
         return (
-            <PropertyMenuDiv
-                className={this.sourceInfo.source}
+            <div
+                className={classNames("property-menu", this.sourceInfo.source)}
                 title={title}
                 onClick={this.onClicked}
             >
                 <div />
-            </PropertyMenuDiv>
+            </div>
         );
     }
 }
@@ -417,34 +382,6 @@ class ArrayElementProperties extends React.Component<PropertyGridProps> {
     }
 }
 
-const ArrayPropertyDiv = styled.div`
-    border: 1px solid ${props => props.theme.borderColor};
-    padding: 5px;
-
-    & > table {
-        width: 100%;
-        margin-bottom: 10px;
-
-        & > thead > tr > th {
-            padding-right: 10px;
-            font-weight: 500;
-            white-space: nowrap;
-            padding-bottom: 5px;
-        }
-
-        & > tbody {
-            & > tr {
-                & > td {
-                    padding: 2px;
-                }
-                & > td.highlighted {
-                    border: 2px solid #ffccd4;
-                }
-            }
-        }
-    }
-`;
-
 @observer
 class ArrayProperty extends React.Component<PropertyProps> {
     @computed
@@ -519,7 +456,7 @@ class ArrayProperty extends React.Component<PropertyProps> {
         );
 
         return (
-            <ArrayPropertyDiv>
+            <div className="array-property">
                 {typeClass.classInfo.propertyGridTableComponent ? (
                     <typeClass.classInfo.propertyGridTableComponent>
                         {tableContent}
@@ -528,17 +465,86 @@ class ArrayProperty extends React.Component<PropertyProps> {
                     <table>{tableContent}</table>
                 )}
                 {addButton}
-            </ArrayPropertyDiv>
+            </div>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const EmbeddedPropertyGridDiv = styled.div`
-    border: 1px solid ${props => props.theme.borderColor};
-    padding: 5px;
-`;
+class PropertyCollapsedStore {
+    @observable map: {
+        [key: string]: boolean;
+    } = {};
+
+    // constructor() {
+    //     const savedState = localStorage.getItem("PropertyCollapsedStore");
+    //     if (savedState) {
+    //         this.map = JSON.parse(savedState);
+    //     }
+    // }
+
+    getKey({ propertyInfo }: PropertyProps) {
+        return propertyInfo.name;
+    }
+
+    isCollapsed(props: PropertyProps) {
+        const collapsed = this.map[this.getKey(props)];
+        if (collapsed !== undefined) {
+            return collapsed;
+        }
+        return !(props.propertyInfo.name === "style");
+    }
+
+    @action
+    toggleColapsed(props: PropertyProps) {
+        this.map[this.getKey(props)] = !this.isCollapsed(props);
+        //localStorage.setItem("PropertyCollapsedStore", JSON.stringify(this.map));
+    }
+}
+
+const propertyCollapsedStore = new PropertyCollapsedStore();
+
+@observer
+class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
+    @observable collapsed = true;
+
+    @bind
+    toggleCollapsed() {
+        propertyCollapsedStore.toggleColapsed(this.props);
+    }
+
+    render() {
+        const { propertyInfo, object } = this.props;
+
+        const collapsed = propertyCollapsedStore.isCollapsed(this.props);
+
+        return (
+            <div
+                className={classNames("embedded-property-grid", {
+                    collapsable: propertyInfo.propertyGridCollapsable,
+                    collapsed
+                })}
+            >
+                {propertyInfo.propertyGridCollapsable && (
+                    <div onClick={this.toggleCollapsed}>
+                        <Icon
+                            icon={
+                                collapsed
+                                    ? "material:keyboard_arrow_right"
+                                    : "material:keyboard_arrow_down"
+                            }
+                            size={18}
+                            className="triangle"
+                        />
+                        {propertyInfo.displayName || humanize(propertyInfo.name)}
+                    </div>
+                )}
+                <PropertyGrid object={(object as any)[propertyInfo.name]} />
+            </div>
+        );
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -785,11 +791,7 @@ class Property extends React.Component<PropertyProps> {
                     </div>
                 );
             } else {
-                return (
-                    <EmbeddedPropertyGridDiv>
-                        <PropertyGrid object={this.value} />
-                    </EmbeddedPropertyGridDiv>
-                );
+                return <EmbeddedPropertyGrid {...this.props} />;
             }
         } else if (propertyInfo.type === PropertyType.Enum) {
             let options: JSX.Element[];
@@ -1020,7 +1022,9 @@ class GroupBorder extends React.Component {
     render() {
         return (
             <tr>
-                <td className="group-border" colSpan={3} />
+                <td className="group-border" colSpan={3}>
+                    <div />
+                </td>
             </tr>
         );
     }
@@ -1030,7 +1034,7 @@ class GroupBorder extends React.Component {
 
 const PropertyGridDiv = styled.div`
     flex-grow: 1;
-    padding: 5px;
+    padding: 10px;
     overflow: auto;
 
     & > table {
@@ -1038,37 +1042,37 @@ const PropertyGridDiv = styled.div`
 
         & > tbody {
             & > tr {
+                padding-bottom: 5px;
+
                 &.highlighted {
                     border: 2px solid #ffccd4;
                 }
 
                 & > td {
-                    padding: 5px;
                     vertical-align: middle;
+                    padding-bottom: 5px;
                 }
 
-                & > td:first-child {
+                & > td.property-name {
                     white-space: nowrap;
                     vertical-align: baseline;
-                    transform: translateY(8px);
+                    padding-right: 10px;
+                    transform: translateY(7px);
                 }
 
                 & > td:nth-child(2) {
                     width: 100%;
                 }
 
-                & > td > input[type="checkbox"] {
-                    height: 20px;
-                    margin-top: 7px;
-                }
-
                 & > td.group-border {
-                    padding-top: 5px;
-                    border-bottom: 1px solid ${props => props.theme.darkBorderColor};
+                    padding-top: 10px;
+                    padding-bottom: 10px;
+                    & > div {
+                        border-bottom: 1px solid ${props => props.theme.darkBorderColor};
+                    }
                 }
 
                 & > td.group-cell {
-                    padding-top: 0;
                     padding-bottom: 5px;
                     & > div.group-container {
                         display: flex;
@@ -1081,6 +1085,86 @@ const PropertyGridDiv = styled.div`
                         }
                     }
                 }
+
+                & > td.embedded-property-grid-cell {
+                    transform: translateY(0);
+                    padding-right: 0;
+                }
+            }
+        }
+    }
+
+    .property-menu {
+        padding: 6px;
+        width: 20px;
+        height: 20px;
+
+        &:hover {
+            background-color: #eee;
+        }
+
+        & > div {
+            width: 8px;
+            height: 8px;
+            border: 1px solid #666;
+        }
+
+        &.default > div {
+            background-color: #fff;
+        }
+
+        &.inherited > div {
+            background-color: #fff;
+        }
+
+        &.modified > div {
+            background-color: #333;
+        }
+    }
+
+    .array-property {
+        border: 1px solid ${props => props.theme.borderColor};
+        padding: 5px;
+
+        & > table {
+            width: 100%;
+            margin-bottom: 10px;
+
+            & > thead > tr > th {
+                padding-right: 10px;
+                font-weight: 500;
+                white-space: nowrap;
+                padding-bottom: 5px;
+            }
+
+            & > tbody {
+                & > tr {
+                    & > td {
+                        padding: 2px;
+                    }
+                    & > td.highlighted {
+                        border: 2px solid #ffccd4;
+                    }
+                }
+            }
+        }
+    }
+
+    .embedded-property-grid {
+        border: 1px solid ${props => props.theme.borderColor};
+        &.collapsable {
+            border: none;
+            & > div:first-child {
+                cursor: pointer;
+                &:hover {
+                    background-color: #eee;
+                }
+            }
+            &.collapsed > div:nth-child(2) {
+                display: none;
+            }
+            & > div:nth-child(2) {
+                padding: 0;
             }
         }
     }
@@ -1162,19 +1246,17 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                     propertyInfo.type === PropertyType.Any ||
                     propertyInfo.type === PropertyType.JavaScript ||
                     propertyInfo.type === PropertyType.JSON ||
-                    propertyInfo.type === PropertyType.CSS;
+                    propertyInfo.type === PropertyType.CSS ||
+                    propertyInfo.propertyGridCollapsable;
+
+                let propertyMenuEnabled =
+                    !propertyInfo.readOnlyInPropertyGrid &&
+                    (propertyInfo.inheritable || propertyInfo.resolutionDependable);
 
                 let property;
                 if (colSpan) {
                     property = (
-                        <td
-                            colSpan={2}
-                            style={
-                                propertyInfo.type === PropertyType.Any
-                                    ? { transform: "translateY(0)", padding: 0 }
-                                    : undefined
-                            }
-                        >
+                        <td colSpan={propertyInfo.propertyGridCollapsable ? 3 : 2}>
                             <Property
                                 propertyInfo={propertyInfo}
                                 object={object}
@@ -1185,7 +1267,9 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 } else {
                     property = (
                         <React.Fragment>
-                            <td>{propertyInfo.displayName || humanize(propertyInfo.name)}</td>
+                            <td className="property-name">
+                                {propertyInfo.displayName || humanize(propertyInfo.name)}
+                            </td>
                             <td>
                                 <Property
                                     propertyInfo={propertyInfo}
@@ -1206,9 +1290,9 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 const propertyComponent = (
                     <tr className={className} key={propertyInfo.name}>
                         {property}
-                        {isPropertyMenuSupported && (
+                        {isPropertyMenuSupported && !propertyInfo.propertyGridCollapsable && (
                             <td>
-                                {!propertyInfo.readOnlyInPropertyGrid && (
+                                {propertyMenuEnabled && (
                                     <PropertyMenu
                                         propertyInfo={propertyInfo}
                                         object={object}
