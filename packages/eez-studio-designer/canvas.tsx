@@ -16,7 +16,7 @@ import {
     IMouseHandler,
     IDesignerContext
 } from "eez-studio-designer/designer-interfaces";
-import { PanMouseHandler } from "eez-studio-designer/mouse-handlers/pan";
+import { PanMouseHandler } from "eez-studio-designer/mouse-handler";
 import { getObjectBoundingRect } from "eez-studio-designer/select-tool";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,19 @@ export class Canvas extends React.Component<{
             );
         }
 
-        return boundingRectBuilder.getRect();
+        const rect = boundingRectBuilder.getRect();
+
+        const left = Math.floor(rect.left);
+        const top = Math.floor(rect.top);
+        const right = Math.ceil(rect.left + rect.width);
+        const bottom = Math.ceil(rect.top + rect.height);
+
+        return {
+            left,
+            top,
+            width: right - left,
+            height: bottom - top
+        };
     }
 
     @computed

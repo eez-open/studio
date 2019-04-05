@@ -105,11 +105,11 @@ class BoundingRects {
 
         const modelRect = viewState.transform.clientToModelRect(rect);
 
-        const right = Math.ceil(modelRect.left + modelRect.width);
-        const bottom = Math.ceil(modelRect.top + modelRect.height);
+        const right = modelRect.left + modelRect.width;
+        const bottom = modelRect.top + modelRect.height;
 
-        modelRect.left = Math.floor(modelRect.left);
-        modelRect.top = Math.floor(modelRect.top);
+        modelRect.left = modelRect.left;
+        modelRect.top = modelRect.top;
 
         modelRect.width = right - modelRect.left;
         modelRect.height = bottom - modelRect.top;
