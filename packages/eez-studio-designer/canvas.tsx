@@ -23,7 +23,6 @@ import { getObjectBoundingRect } from "eez-studio-designer/select-tool";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
-const CONF_AFTER_SCROLL_ADJUSTMENT_TIMEOUT = 1000; // ms
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -79,11 +78,6 @@ export class Canvas extends React.Component<{
 
     scrollLeft: number;
     scrollTop: number;
-    afterScrollAdjustmentTimeout: any;
-
-    get isScrolling() {
-        return !!this.afterScrollAdjustmentTimeout;
-    }
 
     @computed
     get documentBoundingRect() {
@@ -161,26 +155,6 @@ export class Canvas extends React.Component<{
                     transform.clientRect = clientRect;
                 });
             }
-
-            if (this.div.scrollLeft !== this.scrollLeft || this.div.scrollTop !== this.scrollTop) {
-                this.scrollLeft = this.div.scrollLeft;
-                this.scrollTop = this.div.scrollTop;
-
-                if (this.afterScrollAdjustmentTimeout) {
-                    clearTimeout(this.afterScrollAdjustmentTimeout);
-                }
-
-                this.afterScrollAdjustmentTimeout = setTimeout(() => {
-                    this.afterScrollAdjustmentTimeout = undefined;
-
-                    const boundingRect = this.boundingRect;
-
-                    transform.translateBy({
-                        x: -(boundingRect.left + this.div.scrollLeft),
-                        y: -(boundingRect.top + this.div.scrollTop)
-                    });
-                }, CONF_AFTER_SCROLL_ADJUSTMENT_TIMEOUT);
-            }
         }
 
         this.clientRectChangeDetectionAnimationFrameHandle = requestAnimationFrame(
@@ -215,10 +189,6 @@ export class Canvas extends React.Component<{
 
     @bind
     onWheel(event: WheelEvent) {
-        if (this.isScrolling) {
-            return;
-        }
-
         if (event.buttons === 4) {
             // do nothing if mouse wheel is pressed, i.e. pan will be activated in onMouseDown
             return;
@@ -272,10 +242,6 @@ export class Canvas extends React.Component<{
 
     @action.bound
     onDragStart(event: PointerEvent) {
-        if (this.isScrolling) {
-            return;
-        }
-
         this.buttonsAtDown = event.buttons;
 
         if (this.mouseHandler) {
@@ -399,6 +365,12 @@ export class Canvas extends React.Component<{
         }
     }
 
+    @action.bound
+    onScroll() {
+        this.div.scrollLeft = this.scrollLeft;
+        this.div.scrollTop = this.scrollTop;
+    }
+
     render() {
         let style: React.CSSProperties = {};
         if (this.mouseHandler) {
@@ -445,6 +417,7 @@ export class Canvas extends React.Component<{
                 style={style}
                 onClick={this.onClick}
                 onContextMenu={this.onContextMenu}
+                onScroll={this.onScroll}
             >
                 <div
                     ref={ref => (this.innerDiv = ref!)}
