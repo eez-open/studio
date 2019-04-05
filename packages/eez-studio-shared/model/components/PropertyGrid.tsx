@@ -1251,7 +1251,9 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
 
                 let propertyMenuEnabled =
                     !propertyInfo.readOnlyInPropertyGrid &&
-                    (propertyInfo.inheritable || propertyInfo.resolutionDependable);
+                    (propertyInfo.inheritable ||
+                        (propertyInfo.resolutionDependable &&
+                            getPageContext().allResolutions.length > 0));
 
                 let property;
                 if (colSpan) {

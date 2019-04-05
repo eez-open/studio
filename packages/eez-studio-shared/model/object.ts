@@ -253,7 +253,7 @@ export class EezObject {
     _key?: string;
     _parent?: EezObject;
     _lastChildId?: number;
-    _modificationTime?: number;
+    @observable _modificationTime?: number;
     _propertyInfo?: PropertyInfo;
 
     static classInfo: ClassInfo;
