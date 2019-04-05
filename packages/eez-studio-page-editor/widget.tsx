@@ -615,13 +615,15 @@ export class Widget extends EezObject {
 
         var selectWidgetJsObject = Object.assign({}, SelectWidget.classInfo.defaultValue);
 
-        selectWidgetJsObject.left = thisWidgetJsObject.left;
-        selectWidgetJsObject.top = thisWidgetJsObject.top;
-        selectWidgetJsObject.width = thisWidgetJsObject.width;
-        selectWidgetJsObject.height = thisWidgetJsObject.height;
+        selectWidgetJsObject.left = this.rect.left;
+        selectWidgetJsObject.top = this.rect.top;
+        selectWidgetJsObject.width = this.rect.width;
+        selectWidgetJsObject.height = this.rect.height;
 
         thisWidgetJsObject.left = 0;
+        delete thisWidgetJsObject.left_;
         thisWidgetJsObject.top = 0;
+        delete thisWidgetJsObject.top_;
 
         selectWidgetJsObject.widgets = [thisWidgetJsObject];
 
