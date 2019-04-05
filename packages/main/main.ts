@@ -18,11 +18,11 @@ let projectFilePath: string | undefined;
 
 app.on("ready", async function() {
     // make sure there is only one instance of this application
-    var gotTheLock = app.requestSingleInstanceLock();
-    if (!gotTheLock) {
-        app.quit();
-        return;
-    }
+    // var gotTheLock = app.requestSingleInstanceLock();
+    // if (!gotTheLock) {
+    //     app.quit();
+    //     return;
+    // }
     app.on("second-instance", function(event, commandLine, workingDirectory) {
         const projectFilePath = commandLine[commandLine.length - 1];
         if (projectFilePath.toLowerCase().endsWith(".eez-project")) {
