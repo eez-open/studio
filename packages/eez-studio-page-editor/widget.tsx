@@ -864,18 +864,32 @@ const containerPropertiesGroup: IPropertyGridGroupDefinition = {
 
 export class ContainerWidget extends Widget {
     @observable
+    name: string;
+
+    @observable
     widgets: EezArrayObject<Widget>;
 
     @observable
     scrollable: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        label: (widget: ContainerWidget) => {
+            if (widget.name) {
+                return `${humanize(widget.type)}: ${widget.name}`;
+            }
+            return humanize(widget.type);
+        },
+
         properties: [
             {
                 name: "widgets",
                 type: PropertyType.Array,
                 typeClass: Widget,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "name",
+                type: PropertyType.String
             },
             {
                 name: "scrollable",

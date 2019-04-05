@@ -1,6 +1,7 @@
 import { observable } from "mobx";
 
 import { _find } from "eez-studio-shared/algorithm";
+import { humanize } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
 
 import {
@@ -123,11 +124,19 @@ export class TextWidget extends Widget {
     @observable
     ignoreLuminocity: boolean;
 
-    get label() {
-        return this.text ? `${this.type}: "${this.text}"` : this.type;
-    }
-
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        label: (widget: TextWidget) => {
+            if (widget.text) {
+                return `${humanize(widget.type)}: ${widget.text}`;
+            }
+
+            if (widget.data) {
+                return `${humanize(widget.type)}: ${widget.data}`;
+            }
+
+            return humanize(widget.type);
+        },
+
         properties: [
             {
                 name: "text",
