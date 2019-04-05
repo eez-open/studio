@@ -648,8 +648,10 @@ export class Widget extends EezObject {
             let widget = fromWidgets[i];
             let widgetJsObject = objectToJS(widget);
 
-            widgetJsObject.left = (parseInt(widgetJsObject.left) - x1).toString();
-            widgetJsObject.top = (parseInt(widgetJsObject.top) - y1).toString();
+            widgetJsObject.left = fromWidgets[i].rect.left - x1;
+            delete widgetJsObject.left_;
+            widgetJsObject.top = fromWidgets[i].rect.top - y1;
+            delete widgetJsObject.top_;
 
             widgets.push(widgetJsObject);
         }

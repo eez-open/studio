@@ -12,6 +12,9 @@ export function getProperty(object: any, propertyName: string, resolution?: numb
         resolution = getPageContext().resolution;
     }
     let dependableProperty = object[propertyName + "_"];
+    if (!dependableProperty) {
+        return undefined;
+    }
     for (let i = resolution; i >= 0; i--) {
         if (i < dependableProperty.length) {
             let value = dependableProperty[i];
