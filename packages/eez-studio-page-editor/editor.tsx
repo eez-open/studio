@@ -381,6 +381,9 @@ export class PageEditor extends React.Component<
     @bind
     filterSnapLines(node: IBaseObject) {
         const object = (node as EditorObject).object;
+        if (!object) {
+            return false;
+        }
 
         const selectedObjects = this.pageEditorContext.viewState.selectedObjects;
 

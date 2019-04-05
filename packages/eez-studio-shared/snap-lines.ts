@@ -1,5 +1,8 @@
 import { Rect } from "eez-studio-shared/geometry";
 
+import { IDesignerContext } from "eez-studio-designer/designer-interfaces";
+import { getObjectBoundingRectFromId } from "eez-studio-designer/select-tool";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const MAX_SNAP_LINE_DISTANCE = 8;
@@ -9,8 +12,6 @@ const MAX_VISIBLE_SNAP_LINE_DISTANCE = 20;
 
 export interface INode {
     id: string;
-    rect?: Rect;
-    boundingRect?: Rect;
     children: INode[];
 }
 
@@ -31,12 +32,16 @@ export interface ISnapLines {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findSnapLines(tree: INode, filterCallback?: (node: INode) => boolean): ISnapLines {
+export function findSnapLines(
+    context: IDesignerContext,
+    tree: INode,
+    filterCallback?: (node: INode) => boolean
+): ISnapLines {
     function findSnapLinesInTree(offsetFieldName: string, sizeFieldName: string) {
         let lines: ISnapLine[] = [];
 
         function findSnapLinesInNode(node: INode) {
-            const rect: any = node.boundingRect || node.rect;
+            const rect: any = getObjectBoundingRectFromId(node.id, context.viewState);
             if (rect) {
                 if (!filterCallback || filterCallback(node)) {
                     lines.push({

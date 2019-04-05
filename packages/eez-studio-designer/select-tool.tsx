@@ -89,40 +89,40 @@ class BoundingRects {
         window.requestAnimationFrame(this.updateBoundingRects);
     }
 
-    getBoundingRectFromId(id: string) {
-        return (
-            this.map.get(id) || {
+    static boundigRectToModalRect(rect?: Rect, viewState?: IViewState) {
+        if (!rect) {
+            return {
                 left: 0,
                 top: 0,
-                width: 0,
-                height: 0
-            }
-        );
+                width: 1,
+                height: 1
+            };
+        }
+
+        if (!viewState) {
+            return rect;
+        }
+
+        const modelRect = viewState.transform.clientToModelRect(rect);
+
+        const right = Math.ceil(modelRect.left + modelRect.width);
+        const bottom = Math.ceil(modelRect.top + modelRect.height);
+
+        modelRect.left = Math.floor(modelRect.left);
+        modelRect.top = Math.floor(modelRect.top);
+
+        modelRect.width = right - modelRect.left;
+        modelRect.height = bottom - modelRect.top;
+
+        return modelRect;
+    }
+
+    getBoundingRectFromId(id: string, viewState?: IViewState) {
+        return BoundingRects.boundigRectToModalRect(this.map.get(id), viewState);
     }
 
     getBoundingRect(object: IBaseObject, viewState: IViewState) {
-        const rect = this.map.get(object.id);
-        if (rect) {
-            const modelRect = viewState.transform.clientToModelRect(rect);
-
-            const right = Math.ceil(modelRect.left + modelRect.width);
-            const bottom = Math.ceil(modelRect.top + modelRect.height);
-
-            modelRect.left = Math.floor(modelRect.left);
-            modelRect.top = Math.floor(modelRect.top);
-
-            modelRect.width = right - modelRect.left;
-            modelRect.height = bottom - modelRect.top;
-
-            return modelRect;
-        }
-
-        return {
-            left: 0,
-            top: 0,
-            width: 1,
-            height: 1
-        };
+        return BoundingRects.boundigRectToModalRect(this.map.get(object.id), viewState);
     }
 
     getObjectIdFromPoint(viewState: IViewState, point: Point) {
@@ -141,8 +141,8 @@ class BoundingRects {
 
 const boundingRects = new BoundingRects();
 
-export function getObjectBoundingRectFromId(id: string) {
-    return boundingRects.getBoundingRectFromId(id);
+export function getObjectBoundingRectFromId(id: string, viewState?: IViewState) {
+    return boundingRects.getBoundingRectFromId(id, viewState);
 }
 
 export function getObjectBoundingRect(object: IBaseObject, viewState: IViewState) {
@@ -348,6 +348,7 @@ export class SnapLines {
 
     find(context: IDesignerContext) {
         this.lines = findSnapLines(
+            context,
             {
                 id: "",
                 children: context.document.rootObjects
