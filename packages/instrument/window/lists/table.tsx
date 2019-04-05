@@ -468,7 +468,7 @@ class Cell extends React.Component<CellProps, {}> {
             sel,
             range;
         sel = window.getSelection();
-        if (sel.rangeCount) {
+        if (sel != null && sel.rangeCount) {
             range = sel.getRangeAt(0);
             if (range.commonAncestorContainer.parentNode === editableDiv) {
                 caretPos = range.endOffset;
