@@ -57,10 +57,12 @@ export interface IPropertyGridGroupDefinition {
               click: () => void;
           }[]
         | undefined;
+    position?: 0;
 }
 
 export const generalGroup: IPropertyGridGroupDefinition = {
-    id: "general"
+    id: "general",
+    position: 0
 };
 
 export const geometryGroup: IPropertyGridGroupDefinition = {

@@ -56,7 +56,7 @@ hidePropertiesInPropertyGrid(Widget, [
     "unsetAllResolutionDependablePropertiesForLowerResolutions"
 ]);
 hidePropertiesInPropertyGrid(LayoutViewWidget, ["dataContext"]);
-hidePropertiesInPropertyGrid(ContainerWidget, ["scrollable"]);
+hidePropertiesInPropertyGrid(ContainerWidget, ["scrollable", "data", "action"]);
 
 ////////////////////////////////////////////////////////////////////////////////
 

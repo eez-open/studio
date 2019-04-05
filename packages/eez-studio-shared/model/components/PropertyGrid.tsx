@@ -1337,6 +1337,23 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             }
         }
 
+        let maxPosition = 0;
+
+        groupPropertiesArray.forEach(groupProperties => {
+            if (
+                groupProperties.group.position != undefined &&
+                groupProperties.group.position > maxPosition
+            ) {
+                maxPosition = groupProperties.group.position;
+            }
+        });
+
+        groupPropertiesArray.sort((a: IGroupProperties, b: IGroupProperties) => {
+            const aPosition = a.group.position !== undefined ? a.group.position : maxPosition + 1;
+            const bPosition = b.group.position !== undefined ? b.group.position : maxPosition + 1;
+            return aPosition - bPosition;
+        });
+
         const rows = groupPropertiesArray.map(groupProperties => {
             if (groupProperties.group.title) {
                 return (

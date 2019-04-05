@@ -28,7 +28,8 @@ import {
     styleGroup,
     IPropertyGridGroupDefinition,
     areAllChildrenOfTheSameParent,
-    isAncestor
+    isAncestor,
+    generalGroup
 } from "eez-studio-shared/model/object";
 import { loadObject, objectToJS } from "eez-studio-shared/model/serialization";
 import {
@@ -889,7 +890,8 @@ export class ContainerWidget extends Widget {
             },
             {
                 name: "name",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: generalGroup
             },
             {
                 name: "scrollable",
