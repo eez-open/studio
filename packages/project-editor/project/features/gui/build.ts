@@ -1300,7 +1300,7 @@ class Assets {
         return -1;
     }
 
-    getStyleIndex(styleNameOrObject: string | Style) {
+    getStyleIndex(styleNameOrObject: string | Style): number {
         if (typeof styleNameOrObject === "string") {
             const styleName = styleNameOrObject;
 
@@ -1313,17 +1313,35 @@ class Assets {
             const style = findStyle(styleName);
             if (style) {
                 this.styles.push(style);
+                return this.styles.length;
             }
         } else {
             const style = styleNameOrObject;
 
+            let parentStyle: Style | undefined = style;
+            while (true) {
+                if (!parentStyle.inheritFrom) {
+                    break;
+                }
+
+                parentStyle = findStyle(parentStyle.inheritFrom);
+                if (!parentStyle) {
+                    break;
+                }
+
+                if (style.compareTo(parentStyle)) {
+                    return this.getStyleIndex(parentStyle.name);
+                }
+            }
+
             for (let i = 0; i < this.styles.length; i++) {
                 if (style.compareTo(this.styles[i])) {
-                    return i;
+                    return i + 1;
                 }
             }
 
             this.styles.push(style);
+            return this.styles.length;
         }
 
         return 0;

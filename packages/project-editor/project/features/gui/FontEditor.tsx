@@ -10,8 +10,8 @@ import * as notification from "eez-studio-ui/notification";
 import { Splitter } from "eez-studio-ui/splitter";
 import { Loader } from "eez-studio-ui/loader";
 
-import { EditorComponent, objectToJS, cloneObject } from "eez-studio-shared/model/object";
-import { loadObject } from "eez-studio-shared/model/serialization";
+import { EditorComponent, cloneObject } from "eez-studio-shared/model/object";
+import { loadObject, objectToJS } from "eez-studio-shared/model/serialization";
 import { NavigationStore, DocumentStore } from "eez-studio-shared/model/store";
 
 import { ProjectStore } from "project-editor/core/store";

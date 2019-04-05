@@ -6,9 +6,9 @@ import {
     EezObject,
     EezArrayObject,
     PropertyType,
-    getProperty,
-    objectToJS
+    getProperty
 } from "eez-studio-shared/model/object";
+import { objectToJS } from "eez-studio-shared/model/serialization";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { ExtensionDefinition } from "project-editor/project/features/extension-definitions/extension-definitions";

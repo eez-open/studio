@@ -3,13 +3,13 @@ import { runInAction, extendObservable, toJS } from "mobx";
 import { EezObject, EezClass, getChildren } from "eez-studio-shared/model/object";
 import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
 
-import { PageContext } from "eez-studio-page-editor/page-context";
+import { getPageContext } from "eez-studio-page-editor/page-context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getProperty(object: any, propertyName: string, resolution?: number): any {
     if (resolution == undefined) {
-        resolution = PageContext.resolution;
+        resolution = getPageContext().resolution;
     }
     let dependableProperty = object[propertyName + "_"];
     for (let i = resolution; i >= 0; i--) {
@@ -114,8 +114,8 @@ export function withResolutionDependableProperties(aClass: EezClass) {
         }
 
         return {
-            oldValue: [PageContext.resolution, (object as any)[propertyName]],
-            newValue: [PageContext.resolution, value]
+            oldValue: [getPageContext().resolution, (object as any)[propertyName]],
+            newValue: [getPageContext().resolution, value]
         };
     };
 
@@ -151,7 +151,7 @@ export function unsetResolutionDependablePropertyForCurrentResolution(
 ) {
     const allValues: (any | null)[] = getPropertyValueForAllResolutions(object, propertyName);
 
-    allValues[PageContext.resolution] = null;
+    allValues[getPageContext().resolution] = null;
     while (allValues.length > 1 && allValues[allValues.length - 1] === null) {
         allValues.pop();
     }
@@ -167,7 +167,7 @@ export function unsetResolutionDependablePropertyForLowerResolutions(
 ) {
     const allValues: (any | null)[] = getPropertyValueForAllResolutions(object, propertyName);
 
-    allValues.splice(PageContext.resolution + 1);
+    allValues.splice(getPageContext().resolution + 1);
 
     while (allValues.length > 1 && allValues[allValues.length - 1] === null) {
         allValues.pop();
@@ -189,7 +189,7 @@ export function unsetAllResolutionDependablePropertiesForLowerResolutions(root: 
         object._classInfo.properties.forEach(propertyInfo => {
             if (propertyInfo.resolutionDependable) {
                 const value = getPropertyValueForAllResolutions(object, propertyInfo.name);
-                for (let i = PageContext.resolution + 1; i < value.length; i++) {
+                for (let i = getPageContext().resolution + 1; i < value.length; i++) {
                     value[i] = null;
                 }
                 changes[propertyInfo.name + "_"] = value;

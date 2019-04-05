@@ -18,7 +18,7 @@ import {
 import { loadObject } from "eez-studio-shared/model/serialization";
 import * as output from "eez-studio-shared/model/output";
 
-import { PageContext } from "eez-studio-page-editor/page-context";
+import { getPageContext } from "eez-studio-page-editor/page-context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -199,7 +199,7 @@ function getInheritedValue(styleObject: Style, propertyName: string): InheritedV
     }
 
     if (styleObject.inheritFrom) {
-        let inheritFromStyleObject = PageContext.findStyle(styleObject.inheritFrom);
+        let inheritFromStyleObject = getPageContext().findStyle(styleObject.inheritFrom);
         if (inheritFromStyleObject) {
             return getInheritedValue(inheritFromStyleObject, propertyName);
         }
@@ -250,7 +250,7 @@ export class Style extends EezObject {
     get fontObject(): any {
         let fontName = this.fontName;
         if (fontName) {
-            return PageContext.findFont(fontName);
+            return getPageContext().findFont(fontName);
         }
         return getDefaultStyle().fontObject;
     }
@@ -271,18 +271,33 @@ export class Style extends EezObject {
     }
 
     @computed
+    get colorProperty(): string {
+        return getStyleProperty(this, "color");
+    }
+
+    @computed
     get color16(): number {
-        return strToColor16(getStyleProperty(this, "color"));
+        return strToColor16(this.colorProperty);
+    }
+
+    @computed
+    get backgroundColorProperty(): string {
+        return getStyleProperty(this, "backgroundColor");
     }
 
     @computed
     get backgroundColor16(): number {
-        return strToColor16(getStyleProperty(this, "backgroundColor"));
+        return strToColor16(this.backgroundColorProperty);
+    }
+
+    @computed
+    get borderColorProperty(): string {
+        return getStyleProperty(this, "borderColor");
     }
 
     @computed
     get borderColor16(): number {
-        return strToColor16(getStyleProperty(this, "borderColor"));
+        return strToColor16(this.borderColorProperty);
     }
 
     @computed
@@ -355,10 +370,10 @@ export class Style extends EezObject {
             this.fontName === otherStyle.fontName &&
             this.alignHorizontalProperty === otherStyle.alignHorizontalProperty &&
             this.alignVerticalProperty === otherStyle.alignVerticalProperty &&
-            this.color === otherStyle.color &&
-            this.backgroundColor === otherStyle.backgroundColor &&
+            this.colorProperty === otherStyle.colorProperty &&
+            this.backgroundColorProperty === otherStyle.backgroundColorProperty &&
             this.borderSizeProperty === otherStyle.borderSizeProperty &&
-            this.borderColor === otherStyle.borderColor &&
+            this.borderColorProperty === otherStyle.borderColorProperty &&
             this.paddingHorizontalProperty === otherStyle.paddingHorizontalProperty &&
             this.paddingVerticalProperty === otherStyle.paddingVerticalProperty &&
             this.opacityProperty === otherStyle.opacityProperty &&
@@ -374,7 +389,7 @@ registerClass(Style);
 let DEFAULT_STYLE: Style;
 
 export function getDefaultStyle(): Style {
-    let defaultStyle = PageContext.findStyle("default");
+    let defaultStyle = getPageContext().findStyle("default");
     if (defaultStyle) {
         return defaultStyle;
     }
@@ -413,7 +428,7 @@ export function getStyleProperty(
     if (!styleNameOrObject) {
         style = getDefaultStyle();
     } else if (typeof styleNameOrObject == "string") {
-        style = PageContext.findStyle(styleNameOrObject) || getDefaultStyle();
+        style = getPageContext().findStyle(styleNameOrObject) || getDefaultStyle();
     } else {
         style = styleNameOrObject;
     }

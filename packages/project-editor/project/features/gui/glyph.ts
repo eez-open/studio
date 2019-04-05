@@ -11,10 +11,9 @@ import {
     ClassInfo,
     EezObject,
     registerClass,
-    PropertyType,
-    objectToJS
+    PropertyType    
 } from "eez-studio-shared/model/object";
-import { loadObject } from "eez-studio-shared/model/serialization";
+import { loadObject, objectToJS } from "eez-studio-shared/model/serialization";
 
 import { GlyphSelectFieldType } from "project-editor/project/features/gui/FontEditor";
 import { Font } from "project-editor/project/features/gui/font";

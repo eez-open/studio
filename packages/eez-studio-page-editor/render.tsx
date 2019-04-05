@@ -5,14 +5,14 @@ import { Rect } from "eez-studio-shared/geometry";
 
 import { IDesignerContext } from "eez-studio-designer";
 
-import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
+import { getPageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Widget } from "eez-studio-page-editor/widget";
 import { Page } from "eez-studio-page-editor/page";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function renderRootElement(child: React.ReactNode) {
-    return PageContext.renderRootElement(child);
+    return getPageContext().renderRootElement(child);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +86,7 @@ export class WidgetComponent extends React.Component<{
             height
         };
 
-        const pageEditorObjectId = PageContext.inEditor && widget._id;
+        const dataDesignerObjectId = getPageContext().inEditor ? widget._id : undefined;
 
         if (widget instanceof Widget) {
             const canvas = widget.draw(rect, dataContext);
@@ -94,7 +94,7 @@ export class WidgetComponent extends React.Component<{
                 style.imageRendering = "pixelated";
                 return (
                     <img
-                        data-designer-object-id={pageEditorObjectId}
+                        data-designer-object-id={dataDesignerObjectId}
                         style={style}
                         src={canvas.toDataURL()}
                     />
@@ -110,7 +110,7 @@ export class WidgetComponent extends React.Component<{
 
             return (
                 <widget.Div
-                    data-designer-object-id={pageEditorObjectId}
+                    data-designer-object-id={dataDesignerObjectId}
                     className={className}
                     style={style}
                 >
@@ -121,7 +121,7 @@ export class WidgetComponent extends React.Component<{
             console.error(err);
             return (
                 <div
-                    data-designer-object-id={pageEditorObjectId}
+                    data-designer-object-id={dataDesignerObjectId}
                     style={{
                         position: "absolute",
                         left: rect.left,

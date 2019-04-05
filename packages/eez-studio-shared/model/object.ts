@@ -4,8 +4,7 @@ import { observable } from "mobx";
 import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
-import { loadObject, objectToJson, objectToJS } from "eez-studio-shared/model/serialization";
-export { loadObject, objectToJson, objectToJS };
+import { loadObject, objectToJson } from "eez-studio-shared/model/serialization";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -32,7 +32,7 @@ import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
 import { SnapLines } from "eez-studio-designer/select-tool";
 
-import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
+import { getPageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 import { Widget } from "eez-studio-page-editor/widget";
 import { renderRootElement, WidgetComponent } from "eez-studio-page-editor/render";
@@ -621,7 +621,9 @@ export class PageEditor extends React.Component<
                                 {renderRootElement(
                                     <WidgetComponent
                                         widget={this.page}
-                                        dataContext={dataContext || PageContext.rootDataContext}
+                                        dataContext={
+                                            dataContext || getPageContext().rootDataContext
+                                        }
                                     />
                                 )}
                             </div>
@@ -629,7 +631,7 @@ export class PageEditor extends React.Component<
                         <DragWidget
                             page={this.page}
                             pageEditorContext={this.pageEditorContext}
-                            dataContext={dataContext || PageContext.rootDataContext}
+                            dataContext={dataContext || getPageContext().rootDataContext}
                         />
                     </PageEditorCanvas>
                 </PageEditorCanvasContainer>

@@ -23,7 +23,6 @@ import {
     findClass,
     isArray,
     getChildOfObject,
-    objectToJS,
     cloneObject,
     geometryGroup,
     styleGroup,
@@ -31,7 +30,7 @@ import {
     areAllChildrenOfTheSameParent,
     isAncestor
 } from "eez-studio-shared/model/object";
-import { loadObject } from "eez-studio-shared/model/serialization";
+import { loadObject, objectToJS } from "eez-studio-shared/model/serialization";
 import {
     DocumentStore,
     IMenuItem,
@@ -42,7 +41,7 @@ import * as output from "eez-studio-shared/model/output";
 
 import { IResizeHandler, IDesignerContext } from "eez-studio-designer/designer-interfaces";
 import { PageInitContext } from "eez-studio-page-editor/page-init-context";
-import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
+import { getPageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 import { Style } from "eez-studio-page-editor/style";
 import { IResizing, resizingProperty } from "eez-studio-page-editor/resizing-widget-property";
@@ -355,7 +354,7 @@ export class Widget extends EezObject {
                 computed: true,
                 propertyGridComponent: UnsetAllResolutionDependablePropertiesForLowerResolutionsPropertyGridUI,
                 hideInPropertyGrid: () =>
-                    PageContext.resolution === PageContext.allResolutions.length - 1
+                    getPageContext().resolution === getPageContext().allResolutions.length - 1
             }
         ],
 
@@ -517,7 +516,7 @@ export class Widget extends EezObject {
         }
 
         if (this.data) {
-            let dataIndex = PageContext.findDataItemIndex(this.data);
+            let dataIndex = getPageContext().findDataItemIndex(this.data);
             if (dataIndex == -1) {
                 messages.push(output.propertyNotFoundMessage(this, "data"));
             } else if (dataIndex >= 65535) {
@@ -532,7 +531,7 @@ export class Widget extends EezObject {
         }
 
         if (this.action) {
-            let actionIndex = PageContext.findActionIndex(this.action);
+            let actionIndex = getPageContext().findActionIndex(this.action);
             if (actionIndex == -1) {
                 messages.push(output.propertyNotFoundMessage(this, "action"));
             } else if (actionIndex >= 65535) {
@@ -571,7 +570,7 @@ export class Widget extends EezObject {
 
             additionalMenuItems.push(
                 UIElementsFactory.createMenuItem({
-                    label: `Create ${PageContext.layoutConceptName}`,
+                    label: `Create ${getPageContext().layoutConceptName}`,
                     click: () => Widget.createLayout(objects as Widget[])
                 })
             );
@@ -683,12 +682,12 @@ export class Widget extends EezObject {
     }
 
     static async createLayout(fromWidgets: Widget[]) {
-        const layouts = PageContext.getLayouts();
+        const layouts = getPageContext().getLayouts();
 
         try {
             const result = await showGenericDialog({
                 dialogDefinition: {
-                    title: `${PageContext.layoutConceptName} name`,
+                    title: `${getPageContext().layoutConceptName} name`,
                     fields: [
                         {
                             name: "name",
@@ -917,7 +916,11 @@ export class ContainerWidget extends Widget {
     }
 
     styleHook(style: React.CSSProperties) {
-        style.overflow = PageContext.inEditor ? "visible" : this.scrollable ? "auto" : "visible";
+        style.overflow = getPageContext().inEditor
+            ? "visible"
+            : this.scrollable
+            ? "auto"
+            : "visible";
     }
 }
 
@@ -1186,7 +1189,7 @@ export class SelectWidget extends Widget {
         if (!this.data) {
             messages.push(output.propertyNotSetMessage(this, "data"));
         } else {
-            let dataItem = PageContext.findDataItem(this.data);
+            let dataItem = getPageContext().findDataItem(this.data);
             if (dataItem) {
                 let enumItems: string[] = [];
 
@@ -1228,7 +1231,7 @@ export class SelectWidget extends Widget {
             let index = this.widgets._array.indexOf(childObject);
             if (index != -1) {
                 if (this.data) {
-                    let dataItem = PageContext.findDataItem(this.data);
+                    let dataItem = getPageContext().findDataItem(this.data);
                     if (dataItem) {
                         if (dataItem.type == "enum") {
                             let enumItems: string[];
@@ -1260,7 +1263,7 @@ export class SelectWidget extends Widget {
 
     getSelectedWidget(dataContext: IDataContext) {
         if (this.data) {
-            let index: number = PageContext.rootDataContext.getEnumValue(this.data);
+            let index: number = getPageContext().rootDataContext.getEnumValue(this.data);
             if (index >= 0 && index < this.widgets._array.length) {
                 return this.widgets._array[index];
             }
@@ -1350,7 +1353,7 @@ class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
                 onClick={this.showLayout}
                 style={{ margin: 5 }}
             >
-                Show {PageContext.layoutConceptName}
+                Show {getPageContext().layoutConceptName}
             </UIElementsFactory.Button>
         );
     }
@@ -1423,7 +1426,7 @@ export class LayoutViewWidget extends Widget {
             }
 
             if (this.layout) {
-                let layout = PageContext.findLayout(this.layout);
+                let layout = getPageContext().findLayout(this.layout);
                 if (!layout) {
                     messages.push(output.propertyNotFoundMessage(this, "layout"));
                 }
@@ -1438,7 +1441,7 @@ export class LayoutViewWidget extends Widget {
             dataContext = dataContext.push(dataContext.get(this.dataContext));
         }
 
-        const layout = PageContext.findLayout(this.layout);
+        const layout = getPageContext().findLayout(this.layout);
         if (!layout || isAncestor(this, layout)) {
             return null;
         }
@@ -1447,14 +1450,14 @@ export class LayoutViewWidget extends Widget {
     }
 
     open() {
-        const layout = PageContext.findLayout(this.layout);
+        const layout = getPageContext().findLayout(this.layout);
         if (layout) {
             NavigationStore.showObject(layout);
         }
     }
 
     replaceWithContainer() {
-        const layout = PageContext.findLayout(this.layout);
+        const layout = getPageContext().findLayout(this.layout);
         if (layout) {
             var containerWidgetJsObject = Object.assign({}, ContainerWidget.classInfo.defaultValue);
 

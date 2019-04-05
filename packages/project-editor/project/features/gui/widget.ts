@@ -23,7 +23,7 @@ import {
     LayoutViewWidget
 } from "eez-studio-page-editor/widget";
 import { Style } from "eez-studio-page-editor/style";
-import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
+import { getPageContext, IDataContext } from "eez-studio-page-editor/page-context";
 
 import * as data from "project-editor/project/features/data/data";
 
@@ -1002,7 +1002,7 @@ export class AppViewWidget extends Widget {
             return null;
         }
 
-        const page = PageContext.findPage(pageName);
+        const page = getPageContext().findPage(pageName);
         if (!page) {
             return null;
         }

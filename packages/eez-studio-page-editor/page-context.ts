@@ -49,7 +49,11 @@ export interface IPageContext {
     findFont(fontName: any): any;
 }
 
-export let PageContext: IPageContext;
+let PageContext: IPageContext;
+
+export function getPageContext() {
+    return PageContext;
+}
 
 export function setPageContext(context: IPageContext) {
     PageContext = context;

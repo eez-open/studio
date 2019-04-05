@@ -41,7 +41,7 @@ import {
 } from "eez-studio-shared/model/store";
 import { replaceObjectReference } from "eez-studio-shared/model/search";
 
-import { PageContext } from "eez-studio-page-editor/page-context";
+import { getPageContext } from "eez-studio-page-editor/page-context";
 import {
     getPropertyValueForAllResolutions,
     unsetResolutionDependablePropertyForCurrentResolution,
@@ -104,19 +104,19 @@ class PropertyMenu extends React.Component<PropertyProps> {
                 this.props.propertyInfo.name
             );
 
-            for (let i = 0; i < PageContext.allResolutions.length; ++i) {
+            for (let i = 0; i < getPageContext().allResolutions.length; ++i) {
                 const value = i < allValues.length ? allValues[i] : null;
                 menuItems.push(
                     UIElementsFactory.createMenuItem({
-                        label: `${PageContext.allResolutions[i].shortName}: ${
+                        label: `${getPageContext().allResolutions[i].shortName}: ${
                             value != null ? value : "undefined"
                         }`,
-                        checked: PageContext.resolution === i
+                        checked: getPageContext().resolution === i
                     })
                 );
             }
 
-            if (PageContext.resolution > 0 && allValues[PageContext.resolution] != null) {
+            if (getPageContext().resolution > 0 && allValues[getPageContext().resolution] != null) {
                 menuItems.push(
                     UIElementsFactory.createMenuItem({
                         label: "Unset",
@@ -131,8 +131,8 @@ class PropertyMenu extends React.Component<PropertyProps> {
             }
 
             if (
-                PageContext.resolution < PageContext.allResolutions.length - 1 &&
-                allValues.slice(PageContext.resolution + 1).find((value: any) => value != null)
+                getPageContext().resolution < getPageContext().allResolutions.length - 1 &&
+                allValues.slice(getPageContext().resolution + 1).find((value: any) => value != null)
             ) {
                 menuItems.push(
                     UIElementsFactory.createMenuItem({

@@ -24,7 +24,7 @@ import { TreeObjectAdapter, ITreeObjectAdapter } from "eez-studio-shared/model/o
 import { IResizeHandler } from "eez-studio-designer/designer-interfaces";
 
 import { Widget } from "eez-studio-page-editor/widget";
-import { PageContext, IDataContext } from "eez-studio-page-editor/page-context";
+import { getPageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { WidgetContainerComponent } from "eez-studio-page-editor/render";
 import { IResizing, resizingProperty } from "eez-studio-page-editor/resizing-widget-property";
 import { withResolutionDependableProperties } from "eez-studio-page-editor/resolution-dependable-properties";
@@ -388,9 +388,13 @@ export class Page extends EezObject {
     }
 
     styleHook(style: React.CSSProperties) {
-        style.overflow = PageContext.inEditor ? "visible" : this.scrollable ? "auto" : "visible";
+        style.overflow = getPageContext().inEditor
+            ? "visible"
+            : this.scrollable
+            ? "auto"
+            : "visible";
         if (this.style) {
-            const pageStyle = PageContext.findStyle(this.style);
+            const pageStyle = getPageContext().findStyle(this.style);
             if (pageStyle) {
                 style.backgroundColor = pageStyle.backgroundColor;
             }
@@ -409,8 +413,8 @@ export class Page extends EezObject {
         if (this.windowWidth) {
             return this.windowWidth;
         }
-        if (PageContext.resolution < PageContext.allResolutions.length) {
-            return PageContext.allResolutions[PageContext.resolution].windowWidth;
+        if (getPageContext().resolution < getPageContext().allResolutions.length) {
+            return getPageContext().allResolutions[getPageContext().resolution].windowWidth;
         }
         return this.rect.width;
     }
@@ -419,8 +423,8 @@ export class Page extends EezObject {
         if (this.windowHeight) {
             return this.windowHeight;
         }
-        if (PageContext.resolution < PageContext.allResolutions.length) {
-            return PageContext.allResolutions[PageContext.resolution].windowHeight;
+        if (getPageContext().resolution < getPageContext().allResolutions.length) {
+            return getPageContext().allResolutions[getPageContext().resolution].windowHeight;
         }
         return this.rect.height;
     }
