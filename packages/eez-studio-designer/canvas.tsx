@@ -99,7 +99,7 @@ export class Canvas extends React.Component<{
         const transform = this.designerContext.viewState.transform;
         const builder = new BoundingRectBuilder();
         builder.addRect(transform.pageToOffsetRect(this.documentBoundingRect));
-        builder.addRect((this._last = transform.clientToOffsetRect(transform.clientRect)));
+        builder.addRect(transform.clientToOffsetRect(transform.clientRect));
         return builder.getRect()!;
     }
 
@@ -361,6 +361,8 @@ export class Canvas extends React.Component<{
 
     @action.bound
     onScroll() {
+        // TODO
+        // currently, scrolling by using scroll bars are disabled
         this.div.scrollLeft = this.scrollLeft;
         this.div.scrollTop = this.scrollTop;
     }
