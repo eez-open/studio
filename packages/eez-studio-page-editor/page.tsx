@@ -21,7 +21,7 @@ import {
 } from "eez-studio-shared/model/object";
 import { TreeObjectAdapter, ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 
-import { IResizeHandler } from "eez-studio-designer/designer-interfaces";
+import { IResizeHandler, IDesignerContext } from "eez-studio-designer";
 
 import { Widget } from "eez-studio-page-editor/widget";
 import { getPageContext, IDataContext } from "eez-studio-page-editor/page-context";
@@ -387,12 +387,8 @@ export class Page extends EezObject {
         );
     }
 
-    styleHook(style: React.CSSProperties) {
-        style.overflow = getPageContext().inEditor
-            ? "visible"
-            : this.scrollable
-            ? "auto"
-            : "visible";
+    styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
+        style.overflow = designerContext ? "visible" : this.scrollable ? "auto" : "visible";
         if (this.style) {
             const pageStyle = getPageContext().findStyle(this.style);
             if (pageStyle) {

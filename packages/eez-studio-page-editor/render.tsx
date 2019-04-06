@@ -86,7 +86,7 @@ export class WidgetComponent extends React.Component<{
             height
         };
 
-        const dataDesignerObjectId = getPageContext().inEditor ? widget._id : undefined;
+        const dataDesignerObjectId = designerContext ? widget._id : undefined;
 
         if (widget instanceof Widget) {
             const canvas = widget.draw(rect, dataContext);
@@ -106,7 +106,7 @@ export class WidgetComponent extends React.Component<{
             const className = widget.getClassNameStr(dataContext);
 
             style.overflow = "visible";
-            widget.styleHook(style);
+            widget.styleHook(style, designerContext);
 
             return (
                 <widget.Div

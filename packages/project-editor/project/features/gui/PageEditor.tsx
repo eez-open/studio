@@ -14,6 +14,7 @@ import { Panel } from "eez-studio-shared/model/components/Panel";
 
 import { WidgetPalette } from "eez-studio-page-editor/components/WidgetPalette";
 import { PageEditor as StudioPageEditor } from "eez-studio-page-editor/editor";
+import { getPageContext } from "eez-studio-page-editor/page-context";
 
 import { Page, PageTabState } from "project-editor/project/features/gui/page";
 
@@ -39,7 +40,12 @@ export class PageEditor extends EditorComponent {
     render() {
         let pageTabState = this.props.editor.state as PageTabState;
 
-        let editor = <StudioPageEditor widgetContainer={pageTabState.widgetContainerDisplayItem} />;
+        let editor = (
+            <StudioPageEditor
+                widgetContainer={pageTabState.widgetContainerDisplayItem}
+                dataContext={getPageContext().rootDataContext}
+            />
+        );
 
         let pageStructure = (
             <Tree

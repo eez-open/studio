@@ -32,14 +32,14 @@ import {
 import { ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
 
-import { getPageContext, IDataContext } from "eez-studio-page-editor/page-context";
+import { IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
 import { Widget } from "eez-studio-page-editor/widget";
 import { renderRootElement, WidgetComponent } from "eez-studio-page-editor/render";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function createObjectToEditorObjectTransformer(designerContext: PageEditorContext) {
+function createObjectToEditorObjectTransformer(designerContext: PageEditorDesignerContext) {
     const transformer = createTransformer(
         (treeObjectAdapter: ITreeObjectAdapter): EditorObject => {
             return new EditorObject(treeObjectAdapter, designerContext, transformer);
@@ -53,7 +53,7 @@ function createObjectToEditorObjectTransformer(designerContext: PageEditorContex
 export class EditorObject implements IBaseObject {
     constructor(
         public treeObjectAdapter: ITreeObjectAdapter,
-        private pageEditorContext: PageEditorContext,
+        private pageEditorContext: PageEditorDesignerContext,
         private transformer: ITransformer<ITreeObjectAdapter, EditorObject>
     ) {}
 
@@ -160,10 +160,10 @@ class DragSnapLines {
     @observable
     snapLines: SnapLines | undefined;
 
-    pageEditorContext: PageEditorContext | undefined;
+    pageEditorContext: PageEditorDesignerContext | undefined;
     dragWidget: Widget | undefined;
 
-    start(pageEditorContext: PageEditorContext) {
+    start(pageEditorContext: PageEditorDesignerContext) {
         this.snapLines = new SnapLines();
         this.pageEditorContext = pageEditorContext;
         this.dragWidget = pageEditorContext.dragWidget;
@@ -213,7 +213,7 @@ const DragWidget = observer(
         dataContext
     }: {
         page: Page;
-        pageEditorContext: PageEditorContext;
+        pageEditorContext: PageEditorDesignerContext;
         dataContext: IDataContext;
     }) => {
         return pageEditorContext.dragWidget ? (
@@ -233,7 +233,7 @@ const DragWidget = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class PageEditorContext extends DesignerContext {
+class PageEditorDesignerContext extends DesignerContext {
     @observable
     dragWidget: Widget | undefined;
 }
@@ -243,7 +243,10 @@ class PageEditorContext extends DesignerContext {
 class PageDocument implements IDocument {
     rootObject: EditorObject;
 
-    constructor(private page: ITreeObjectAdapter, private pageEditorContext: PageEditorContext) {
+    constructor(
+        private page: ITreeObjectAdapter,
+        private pageEditorContext: PageEditorDesignerContext
+    ) {
         const transformer = createObjectToEditorObjectTransformer(pageEditorContext);
         this.rootObject = transformer(page);
     }
@@ -327,8 +330,8 @@ const PageEditorCanvas: typeof Canvas = styled(Canvas)`
 
 interface PageEditorProps {
     widgetContainer: ITreeObjectAdapter;
+    dataContext: IDataContext;
     onFocus?: () => void;
-    dataContext?: IDataContext;
     pageRect?: Rect;
 }
 
@@ -339,7 +342,7 @@ export class PageEditor extends React.Component<
         hasError: boolean;
     }
 > {
-    pageEditorContext: PageEditorContext = new PageEditorContext();
+    pageEditorContext: PageEditorDesignerContext = new PageEditorDesignerContext();
 
     @observable
     pageDocument: PageDocument;
@@ -351,7 +354,7 @@ export class PageEditor extends React.Component<
 
         this.state = { hasError: false };
 
-        this.pageEditorContext = new PageEditorContext();
+        this.pageEditorContext = new PageEditorDesignerContext();
 
         this.componentWillReceiveProps(props);
 
@@ -622,19 +625,14 @@ export class PageEditor extends React.Component<
                                 }}
                             >
                                 {renderRootElement(
-                                    <WidgetComponent
-                                        widget={this.page}
-                                        dataContext={
-                                            dataContext || getPageContext().rootDataContext
-                                        }
-                                    />
+                                    <WidgetComponent widget={this.page} dataContext={dataContext} />
                                 )}
                             </div>
                         }
                         <DragWidget
                             page={this.page}
                             pageEditorContext={this.pageEditorContext}
-                            dataContext={dataContext || getPageContext().rootDataContext}
+                            dataContext={dataContext}
                         />
                     </PageEditorCanvas>
                 </PageEditorCanvasContainer>

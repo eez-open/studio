@@ -843,7 +843,7 @@ export class Widget extends EezObject {
         return widgetClassName;
     }
 
-    styleHook(style: React.CSSProperties) {}
+    styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {}
 
     @computed get Div() {
         return this.css
@@ -935,12 +935,8 @@ export class ContainerWidget extends Widget {
         );
     }
 
-    styleHook(style: React.CSSProperties) {
-        style.overflow = getPageContext().inEditor
-            ? "visible"
-            : this.scrollable
-            ? "auto"
-            : "visible";
+    styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
+        style.overflow = designerContext ? "visible" : this.scrollable ? "auto" : "visible";
     }
 }
 
