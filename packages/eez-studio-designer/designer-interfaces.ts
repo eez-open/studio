@@ -1,5 +1,7 @@
-import { Point, Rect, ITransform, Transform } from "eez-studio-shared/geometry";
+import { Point, Rect } from "eez-studio-shared/geometry";
 import { IMenu } from "eez-studio-shared/model/store";
+
+import { ITransform, Transform } from "eez-studio-designer/transform";
 
 export interface IBaseObject {
     id: string;

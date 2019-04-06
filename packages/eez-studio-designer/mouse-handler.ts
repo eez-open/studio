@@ -30,7 +30,7 @@ export class MouseHandler implements IMouseHandler {
         this.distance = 0;
         this.movement = { x: 0, y: 0 };
 
-        this.modelPointAtDown = context.viewState.transform.mouseEventToModelPoint(event);
+        this.modelPointAtDown = context.viewState.transform.mouseEventToPagePoint(event);
     }
 
     move(context: IDesignerContext, event: MouseEvent) {
@@ -57,7 +57,7 @@ export class MouseHandler implements IMouseHandler {
 
         this.lastOffsetPoint = offsetPoint;
 
-        this.lastModelPoint = context.viewState.transform.mouseEventToModelPoint(event);
+        this.lastModelPoint = context.viewState.transform.mouseEventToPagePoint(event);
     }
 
     up(context: IDesignerContext, event?: MouseEvent) {

@@ -4,7 +4,6 @@ import { observer, inject } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { Point, pointDistance, Rect, BoundingRectBuilder } from "eez-studio-shared/geometry";
-import { getScrollbarWidth } from "eez-studio-shared/dom";
 
 import { IMenu } from "eez-studio-shared/model/store";
 
@@ -17,7 +16,7 @@ import {
     IDesignerContext
 } from "eez-studio-designer/designer-interfaces";
 import { PanMouseHandler } from "eez-studio-designer/mouse-handler";
-import { getObjectBoundingRect } from "eez-studio-designer/select-tool";
+import { getDocumentBoundingRect } from "eez-studio-designer/bounding-rects";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -79,25 +78,17 @@ export class Canvas extends React.Component<{
     scrollLeft: number;
     scrollTop: number;
 
+    @observable isScrolling: any;
+    _last: any;
+
     @computed
     get documentBoundingRect() {
-        const document = this.props.designerContext!.document;
-
-        let boundingRectBuilder = new BoundingRectBuilder();
-
-        for (const object of document.rootObjects) {
-            boundingRectBuilder.addRect(
-                getObjectBoundingRect(object, this.designerContext.viewState)
-            );
-        }
-
-        const rect = boundingRectBuilder.getRect();
+        const rect = getDocumentBoundingRect(this.designerContext.viewState);
 
         const left = Math.floor(rect.left);
         const top = Math.floor(rect.top);
         const right = Math.ceil(rect.left + rect.width);
         const bottom = Math.ceil(rect.top + rect.height);
-
         return {
             left,
             top,
@@ -107,16 +98,29 @@ export class Canvas extends React.Component<{
     }
 
     @computed
-    get boundingRect() {
+    get boundingOffsetRect() {
         const transform = this.designerContext.viewState.transform;
         const builder = new BoundingRectBuilder();
-        builder.addRect(transform.modelToOffsetRect(this.documentBoundingRect));
+        builder.addRect(transform.pageToOffsetRect(this.documentBoundingRect));
         builder.addRect(transform.clientToOffsetRect(transform.clientRect));
-        return builder.getRect()!;
+        const rect = builder.getRect()!;
+        if (this.isScrolling) {
+            return {
+                left: -this.div.scrollLeft,
+                top: -this.div.scrollTop,
+                width: rect.width,
+                height: rect.height
+            };
+        }
+        return rect;
     }
 
     updateScroll() {
-        const boundingRect = this.boundingRect;
+        if (this.isScrolling) {
+            return;
+        }
+
+        const boundingRect = this.boundingOffsetRect;
 
         this.div.scrollLeft = -boundingRect.left;
         this.scrollLeft = this.div.scrollLeft;
@@ -124,13 +128,19 @@ export class Canvas extends React.Component<{
         this.div.scrollTop = -boundingRect.top;
         this.scrollTop = this.div.scrollTop;
 
-        if (this.boundingRect.width > this.designerContext.viewState.transform.clientRect.width) {
+        if (
+            this.boundingOffsetRect.width >
+            this.designerContext.viewState.transform.clientRect.width
+        ) {
             this.div.style.overflowX = "auto";
         } else {
             this.div.style.overflowX = "hidden";
         }
 
-        if (this.boundingRect.height > this.designerContext.viewState.transform.clientRect.height) {
+        if (
+            this.boundingOffsetRect.height >
+            this.designerContext.viewState.transform.clientRect.height
+        ) {
             this.div.style.overflowY = "auto";
         } else {
             this.div.style.overflowY = "hidden";
@@ -189,6 +199,10 @@ export class Canvas extends React.Component<{
 
     @bind
     onWheel(event: WheelEvent) {
+        if (this.isScrolling) {
+            return;
+        }
+
         if (event.buttons === 4) {
             // do nothing if mouse wheel is pressed, i.e. pan will be activated in onMouseDown
             return;
@@ -201,9 +215,9 @@ export class Canvas extends React.Component<{
             if (Math.abs(this.deltaY) > 10) {
                 let scale: number;
                 if (this.deltaY < 0) {
-                    scale = transform.nextScale();
+                    scale = transform.nextScale;
                 } else {
-                    scale = transform.previousScale();
+                    scale = transform.previousScale;
                 }
 
                 this.deltaY = 0;
@@ -242,6 +256,10 @@ export class Canvas extends React.Component<{
 
     @action.bound
     onDragStart(event: PointerEvent) {
+        if (this.isScrolling) {
+            return;
+        }
+
         this.buttonsAtDown = event.buttons;
 
         if (this.mouseHandler) {
@@ -338,7 +356,7 @@ export class Canvas extends React.Component<{
             if (!preventContextMenu && this.props.toolHandler && this.buttonsAtDown === 2) {
                 this.props.toolHandler.onContextMenu(
                     this.designerContext,
-                    transform.mouseEventToModelPoint(event),
+                    transform.mouseEventToPagePoint(event),
                     (menu: IMenu) => {
                         if (this.mouseHandler) {
                             this.mouseHandler.up(this.designerContext);
@@ -360,7 +378,7 @@ export class Canvas extends React.Component<{
 
             this.props.toolHandler.onClick(
                 this.designerContext,
-                this.designerContext.viewState.transform.mouseEventToModelPoint(event.nativeEvent)
+                this.designerContext.viewState.transform.mouseEventToPagePoint(event.nativeEvent)
             );
         }
     }
@@ -403,9 +421,9 @@ export class Canvas extends React.Component<{
             strokeWidth: PAGE_RECT_LINES_WIDTH
         };
 
-        const modelRect = transform.clientToModelRect(transform.clientRect);
+        const pageRect = transform.clientToPageRect(transform.clientRect);
 
-        const boundingRect = this.boundingRect;
+        const boundingOffsetRect = this.boundingOffsetRect;
 
         const xt = transform.translate.x + transform.clientRect.width / 2;
         const yt = transform.translate.y + transform.clientRect.height / 2;
@@ -422,21 +440,11 @@ export class Canvas extends React.Component<{
                 <div
                     ref={ref => (this.innerDiv = ref!)}
                     style={{
-                        transform: `translate(${-boundingRect.left}px, ${-boundingRect.top}px)`,
+                        transform: `translate(${-boundingOffsetRect.left}px, ${-boundingOffsetRect.top}px)`,
                         width: "100%",
                         height: "100%"
                     }}
                 >
-                    <div
-                        style={{
-                            position: "absolute",
-                            left: boundingRect.left,
-                            top: boundingRect.top,
-                            width: boundingRect.width - getScrollbarWidth(),
-                            height: boundingRect.height - getScrollbarWidth(),
-                            pointerEvents: "none"
-                        }}
-                    />
                     <div
                         style={{
                             position: "absolute",
@@ -448,29 +456,29 @@ export class Canvas extends React.Component<{
                         {this.props.children}
                         {this.designerContext.options && this.designerContext.options.center && (
                             <svg
-                                width={modelRect.width}
-                                height={modelRect.height}
+                                width={pageRect.width}
+                                height={pageRect.height}
                                 style={{
                                     position: "absolute",
-                                    left: modelRect.left,
-                                    top: modelRect.top
+                                    left: pageRect.left,
+                                    top: pageRect.top
                                 }}
-                                viewBox={`${modelRect.left}, ${modelRect.top}, ${
-                                    modelRect.width
-                                }, ${modelRect.height}`}
+                                viewBox={`${pageRect.left}, ${pageRect.top}, ${pageRect.width}, ${
+                                    pageRect.height
+                                }`}
                             >
                                 <line
-                                    x1={modelRect.left}
+                                    x1={pageRect.left}
                                     y1={this.designerContext.options.center.y}
-                                    x2={modelRect.left + modelRect.width}
+                                    x2={pageRect.left + pageRect.width}
                                     y2={this.designerContext.options.center.y}
                                     style={centerLineStyle}
                                 />
                                 <line
                                     x1={this.designerContext.options.center.x}
-                                    y1={modelRect.top}
+                                    y1={pageRect.top}
                                     x2={this.designerContext.options.center.x}
-                                    y2={modelRect.top + modelRect.height}
+                                    y2={pageRect.top + pageRect.height}
                                     style={centerLineStyle}
                                 />
                                 {this.props.pageRect && (

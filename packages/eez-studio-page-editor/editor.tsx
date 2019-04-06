@@ -5,7 +5,7 @@ import { createTransformer, ITransformer } from "mobx-utils";
 import { bind } from "bind-decorator";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
-import { Point, Rect, ITransform } from "eez-studio-shared/geometry";
+import { Point, Rect } from "eez-studio-shared/geometry";
 
 import {
     IBaseObject,
@@ -14,9 +14,11 @@ import {
     IResizeHandler,
     IDesignerOptions
 } from "eez-studio-designer/designer-interfaces";
+import { ITransform } from "eez-studio-designer/transform";
 import { DesignerContext } from "eez-studio-designer/context";
 import { Canvas } from "eez-studio-designer/canvas";
-import { selectToolHandler, getObjectIdFromPoint } from "eez-studio-designer/select-tool";
+import { selectToolHandler, SnapLines } from "eez-studio-designer/select-tool";
+import { getObjectIdFromPoint } from "eez-studio-designer/bounding-rects";
 import styled from "eez-studio-ui/styled-components";
 
 import { isObjectInstanceOf, isAncestor } from "eez-studio-shared/model/object";
@@ -29,8 +31,6 @@ import {
 } from "eez-studio-shared/model/store";
 import { ITreeObjectAdapter } from "eez-studio-shared/model/objectAdapter";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
-
-import { SnapLines } from "eez-studio-designer/select-tool";
 
 import { getPageContext, IDataContext } from "eez-studio-page-editor/page-context";
 import { Page } from "eez-studio-page-editor/page";
@@ -507,7 +507,7 @@ export class PageEditor extends React.Component<
 
             const transform = this.pageEditorContext.viewState.transform;
 
-            const p = transform.clientToModelPoint({
+            const p = transform.clientToPagePoint({
                 x: event.nativeEvent.clientX - (widget.rect.width * transform.scale) / 2,
                 y: event.nativeEvent.clientY - (widget.rect.height * transform.scale) / 2
             });

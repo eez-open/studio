@@ -1306,7 +1306,10 @@ export class SelectWidget extends Widget {
                 }
             }
 
-            if (this._lastSelectedIndexInSelectWidget !== undefined) {
+            if (
+                this._lastSelectedIndexInSelectWidget !== undefined &&
+                this._lastSelectedIndexInSelectWidget < this.widgets._array.length
+            ) {
                 return this._lastSelectedIndexInSelectWidget;
             }
 
@@ -1322,7 +1325,10 @@ export class SelectWidget extends Widget {
                 return this._lastSelectedIndexInSelectWidget;
             }
         } else {
-            if (this._lastSelectedIndexInSelectWidget !== undefined) {
+            if (
+                this._lastSelectedIndexInSelectWidget !== undefined &&
+                this._lastSelectedIndexInSelectWidget < this.widgets._array.length
+            ) {
                 return this._lastSelectedIndexInSelectWidget;
             }
 

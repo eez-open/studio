@@ -53,13 +53,18 @@ let cacheMap: Map<string, HTMLCanvasElement> = new Map<string, HTMLCanvasElement
 
 function drawFromCache(
     section: string,
-    id: string,
+    id: string | null,
     w: number,
     h: number,
     callback: (ctx: CanvasRenderingContext2D) => void
 ) {
-    id = section + "." + id;
-    let canvas = cacheMap.get(id);
+    let canvas;
+
+    if (id != null) {
+        id = section + "." + id;
+        canvas = cacheMap.get(id);
+    }
+
     if (!canvas) {
         canvas = document.createElement("canvas");
 
@@ -70,14 +75,17 @@ function drawFromCache(
 
         callback(ctx);
 
-        if (cache.length == MAX_DRAW_CACHE_SIZE) {
-            let cacheKey = cache.shift();
-            if (cacheKey) {
-                cacheMap.delete(cacheKey);
+        if (id != null) {
+            if (cache.length == MAX_DRAW_CACHE_SIZE) {
+                let cacheKey = cache.shift();
+                if (cacheKey) {
+                    cacheMap.delete(cacheKey);
+                }
             }
+
+            cache.push(id);
+            cacheMap.set(id, canvas);
         }
-        cache.push(id);
-        cacheMap.set(id, canvas);
 
         //let fs = EEZStudio.electron.remote.require('fs');
         //fs.writeFileSync('C:\\Users\\martin\\temp\\' + id.replace(/[^a-zA-Z_0-9]/g, '_') + '.png', canvas.toDataURL().substring("data:image/png;base64,".length), 'base64');
@@ -734,17 +742,7 @@ export function drawScaleWidget(widget: Widget.Widget, rect: Rect) {
     return drawFromCache(
         "drawScaleWidget",
 
-        getCacheId(style) +
-            "." +
-            scaleWidget.data +
-            "." +
-            scaleWidget.needlePosition +
-            "." +
-            scaleWidget.needleHeight +
-            "." +
-            rect.width +
-            "." +
-            rect.height,
+        null,
 
         rect.width,
         rect.height,
@@ -797,25 +795,7 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
     return drawFromCache(
         "drawBarGraphWidget",
 
-        getCacheId(style) +
-            "." +
-            barGraphWidget.data +
-            "." +
-            barGraphWidget.orientation +
-            "." +
-            barGraphWidget.textStyle +
-            "." +
-            barGraphWidget.line1Data +
-            "." +
-            barGraphWidget.line1Style +
-            "." +
-            barGraphWidget.line2Data +
-            "." +
-            barGraphWidget.line2Style +
-            "." +
-            rect.width +
-            "." +
-            rect.height,
+        null,
 
         rect.width,
         rect.height,
@@ -943,17 +923,7 @@ export function drawYTGraphWidget(widget: Widget.Widget, rect: Rect) {
     return drawFromCache(
         "drawYTGraphWidget",
 
-        getCacheId(style) +
-            "." +
-            ytGraphWidget.y1Style +
-            "." +
-            ytGraphWidget.y2Data +
-            "." +
-            ytGraphWidget.y2Style +
-            "." +
-            rect.width +
-            "." +
-            rect.height,
+        null,
 
         rect.width,
         rect.height,
@@ -989,16 +959,7 @@ export function drawUpDownWidget(widget: Widget.Widget, rect: Rect) {
     return drawFromCache(
         "drawUpDownWidget",
 
-        getCacheId(style) +
-            "." +
-            upDownWidget.data +
-            "." +
-            rect.width +
-            "." +
-            rect.height +
-            getCacheId(buttonsStyle) +
-            upDownWidget.downButtonText +
-            upDownWidget.upButtonText,
+        null,
 
         rect.width,
         rect.height,
@@ -1049,25 +1010,7 @@ export function drawListGraphWidget(widget: Widget.Widget, rect: Rect) {
     return drawFromCache(
         "drawListGraphWidget",
 
-        getCacheId(style) +
-            "." +
-            listGraphWidget.dwellData +
-            "." +
-            listGraphWidget.y1Data +
-            "." +
-            listGraphWidget.y1Style +
-            "." +
-            listGraphWidget.y2Data +
-            "." +
-            listGraphWidget.y2Style +
-            "." +
-            listGraphWidget.cursorData +
-            "." +
-            listGraphWidget.cursorStyle +
-            "." +
-            rect.width +
-            "." +
-            rect.height,
+        null,
 
         rect.width,
         rect.height,

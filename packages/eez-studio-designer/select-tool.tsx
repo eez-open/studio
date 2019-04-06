@@ -1,17 +1,8 @@
 import React from "react";
-import { observable, action, runInAction } from "mobx";
-
-import { BoundingRectBuilder } from "eez-studio-shared/geometry";
+import { observable, runInAction } from "mobx";
 
 import { closestByClass } from "eez-studio-shared/dom";
-import {
-    Point,
-    Rect,
-    pointInRect,
-    rectEqual,
-    rectClone,
-    Transform
-} from "eez-studio-shared/geometry";
+import { Point, Rect, pointInRect, rectEqual, rectClone } from "eez-studio-shared/geometry";
 import {
     ISnapLines,
     findSnapLines,
@@ -26,11 +17,15 @@ import {
     IDesignerContext,
     IToolHandler,
     IMouseHandler,
-    IBaseObject,
-    IViewState
+    IBaseObject
 } from "eez-studio-designer/designer-interfaces";
+import { Transform } from "eez-studio-designer/transform";
 import { MouseHandler } from "eez-studio-designer/mouse-handler";
 import { Selection } from "eez-studio-designer/selection";
+import {
+    getObjectBoundingRect,
+    getSelectedObjectsBoundingRect
+} from "eez-studio-designer/bounding-rects";
 
 const SNAP_LINES_DRAW_THEME = {
     lineColor: "rgba(128, 128, 128, 1)",
@@ -45,123 +40,6 @@ const CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME = 300;
 // - rubber band selection
 // - move selection
 // - resize selection
-
-class BoundingRects {
-    @observable map = new Map<string, Rect>();
-
-    constructor() {
-        this.updateBoundingRects();
-    }
-
-    @action.bound
-    updateBoundingRects() {
-        const $divs = $(`[data-designer-object-id]`);
-
-        const map = new Map<string, Rect>();
-
-        for (let i = 0; i < $divs.length; ++i) {
-            const div = $divs[i];
-            const id = div.getAttribute("data-designer-object-id")!;
-            const rect = div.getBoundingClientRect();
-            map.set(id, rect);
-        }
-
-        for (const key of this.map.keys()) {
-            if (!map.has(key)) {
-                this.map.delete(key);
-            }
-        }
-
-        for (const key of map.keys()) {
-            const r1 = map.get(key)!;
-            const r2 = this.map.get(key);
-            if (
-                !r2 ||
-                r2.left != r1.left ||
-                r2.top != r1.top ||
-                r2.width != r1.width ||
-                r2.height != r1.height
-            ) {
-                this.map.set(key, r1);
-            }
-        }
-
-        window.requestAnimationFrame(this.updateBoundingRects);
-    }
-
-    static boundigRectToModalRect(rect?: Rect, viewState?: IViewState) {
-        if (!rect) {
-            return {
-                left: 0,
-                top: 0,
-                width: 1,
-                height: 1
-            };
-        }
-
-        if (!viewState) {
-            return rect;
-        }
-
-        const modelRect = viewState.transform.clientToModelRect(rect);
-
-        const right = modelRect.left + modelRect.width;
-        const bottom = modelRect.top + modelRect.height;
-
-        modelRect.left = modelRect.left;
-        modelRect.top = modelRect.top;
-
-        modelRect.width = right - modelRect.left;
-        modelRect.height = bottom - modelRect.top;
-
-        return modelRect;
-    }
-
-    getBoundingRectFromId(id: string, viewState?: IViewState) {
-        return BoundingRects.boundigRectToModalRect(this.map.get(id), viewState);
-    }
-
-    getBoundingRect(object: IBaseObject, viewState: IViewState) {
-        return BoundingRects.boundigRectToModalRect(this.map.get(object.id), viewState);
-    }
-
-    getObjectIdFromPoint(viewState: IViewState, point: Point) {
-        let foundId: string | undefined;
-        point = viewState.transform.modelToClientPoint(point);
-        for (const key of this.map.keys()) {
-            if (pointInRect(point, this.map.get(key)!)) {
-                if (!foundId || key.length > foundId.length) {
-                    foundId = key;
-                }
-            }
-        }
-        return foundId;
-    }
-}
-
-const boundingRects = new BoundingRects();
-
-export function getObjectBoundingRectFromId(id: string, viewState?: IViewState) {
-    return boundingRects.getBoundingRectFromId(id, viewState);
-}
-
-export function getObjectBoundingRect(object: IBaseObject, viewState: IViewState) {
-    return boundingRects.getBoundingRect(object, viewState);
-}
-
-export function getSelectedObjectsBoundingRect(viewState: IViewState) {
-    let boundingRectBuilder = new BoundingRectBuilder();
-
-    for (const object of viewState.selectedObjects) {
-        boundingRectBuilder.addRect(getObjectBoundingRect(object, viewState));
-    }
-
-    return boundingRectBuilder.getRect();
-}
-
-export function getObjectIdFromPoint(viewState: IViewState, point: Point) {
-    return boundingRects.getObjectIdFromPoint(viewState, point);
-}
 
 export const selectToolHandler: IToolHandler = {
     render(context: IDesignerContext, mouseHandler: IMouseHandler | undefined) {
@@ -250,7 +128,7 @@ export const selectToolHandler: IToolHandler = {
             return new DragMouseHandler();
         }
 
-        let point = context.viewState.transform.mouseEventToModelPoint(event);
+        let point = context.viewState.transform.mouseEventToPagePoint(event);
         let object = context.document.objectFromPoint(point);
         if (object && (object.isSelectable === undefined || object.isSelectable)) {
             if (!context.viewState.isObjectSelected(object)) {
@@ -312,7 +190,7 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
 
         context.viewState.selectObjects(
             context.document.getObjectsInsideRect(
-                context.viewState.transform.offsetToModelRect(rubberBendRect)
+                context.viewState.transform.offsetToPageRect(rubberBendRect)
             )
         );
     }
@@ -406,7 +284,7 @@ export class SnapLines {
             this.lines,
             selectionRect,
             (pos: number, horizontal: boolean, closest: boolean) => {
-                const point = transform.modelToOffsetPoint({
+                const point = transform.pageToOffsetPoint({
                     x: pos,
                     y: pos
                 });

@@ -12,11 +12,11 @@ import {
     IMouseHandler,
     IViewState
 } from "eez-studio-designer/designer-interfaces";
+import { RubberBandSelectionMouseHandler } from "eez-studio-designer/select-tool";
 import {
-    RubberBandSelectionMouseHandler,
     getObjectBoundingRect,
     getSelectedObjectsBoundingRect
-} from "eez-studio-designer/select-tool";
+} from "eez-studio-designer/bounding-rects";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +59,7 @@ class SelectedObject extends React.Component<
     {}
 > {
     render() {
-        const rect = this.props.viewState.transform.modelToOffsetRect(
+        const rect = this.props.viewState.transform.pageToOffsetRect(
             getObjectBoundingRect(this.props.object, this.props.viewState)
         );
 
@@ -166,7 +166,7 @@ export class Selection extends React.Component<
             ));
 
             //
-            let boundingRect = transform.modelToOffsetRect(
+            let boundingRect = transform.pageToOffsetRect(
                 getSelectedObjectsBoundingRect(this.props.context.viewState)
             );
 

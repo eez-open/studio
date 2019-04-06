@@ -58,7 +58,7 @@ export { showGenericDialog } from "eez-studio-ui/generic-dialog";
 export { CodeEditor } from "eez-studio-ui/code-editor";
 
 export { IResizeHandler } from "eez-studio-designer/designer-interfaces";
-export { getObjectBoundingRectFromId } from "eez-studio-designer/select-tool";
+export { getObjectBoundingRectFromId } from "eez-studio-designer/bounding-rects";
 
 export { PageEditor } from "eez-studio-page-editor/editor";
 export {

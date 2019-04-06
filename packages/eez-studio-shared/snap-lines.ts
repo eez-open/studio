@@ -1,7 +1,7 @@
 import { Rect } from "eez-studio-shared/geometry";
 
 import { IDesignerContext } from "eez-studio-designer/designer-interfaces";
-import { getObjectBoundingRectFromId } from "eez-studio-designer/select-tool";
+import { getObjectBoundingRectFromId } from "eez-studio-designer/bounding-rects";
 
 ////////////////////////////////////////////////////////////////////////////////
 

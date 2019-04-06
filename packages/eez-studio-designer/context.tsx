@@ -9,8 +9,6 @@ import {
 } from "mobx";
 import stringify from "json-stable-stringify";
 
-import { Transform } from "eez-studio-shared/geometry";
-
 import {
     IBaseObject,
     IDocument,
@@ -20,6 +18,7 @@ import {
     IDesignerOptions,
     IResizeHandler
 } from "eez-studio-designer/designer-interfaces";
+import { Transform } from "eez-studio-designer/transform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
