@@ -1,9 +1,9 @@
 import React from "react";
+import { runInAction } from "mobx";
 
 import { Rect } from "eez-studio-shared/geometry";
 
 import { EezObject, isObjectInstanceOf } from "eez-studio-shared/model/object";
-import { objectToJS } from "eez-studio-shared/model/serialization";
 
 import { getDefaultStyle } from "eez-studio-page-editor/style";
 
@@ -792,6 +792,8 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
     let barGraphWidget = widget as Widget.BarGraphWidget;
     let style = barGraphWidget.style;
 
+    console.log("drawBarGraphWidget");
+
     return drawFromCache(
         "drawBarGraphWidget",
 
@@ -803,13 +805,11 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
         (ctx: CanvasRenderingContext2D) => {
             let min = (barGraphWidget.data && data.getMin(barGraphWidget.data)) || 0;
             let max = (barGraphWidget.data && data.getMax(barGraphWidget.data)) || 0;
-
             let valueText = (barGraphWidget.data && data.get(barGraphWidget.data)) || "0";
             let value = parseFloat(valueText);
             if (isNaN(value)) {
                 value = 0;
             }
-
             let horizontal =
                 barGraphWidget.orientation == "left-right" ||
                 barGraphWidget.orientation == "right-left";
@@ -832,25 +832,21 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
             if (barGraphWidget.orientation == "left-right") {
                 lcd.setColor(getStyleProperty(style, "color"));
                 lcd.fillRect(ctx, 0, 0, pos - 1, rect.height - 1);
-
                 lcd.setColor(getStyleProperty(style, "backgroundColor"));
                 lcd.fillRect(ctx, pos, 0, rect.width - 1, rect.height - 1);
             } else if (barGraphWidget.orientation == "right-left") {
                 lcd.setColor(getStyleProperty(style, "backgroundColor"));
                 lcd.fillRect(ctx, 0, 0, rect.width - pos - 1, rect.height - 1);
-
                 lcd.setColor(getStyleProperty(style, "color"));
                 lcd.fillRect(ctx, rect.width - pos, 0, rect.width - 1, rect.height - 1);
             } else if (barGraphWidget.orientation == "top-bottom") {
                 lcd.setColor(getStyleProperty(style, "color"));
                 lcd.fillRect(ctx, 0, 0, rect.width - 1, pos - 1);
-
                 lcd.setColor(getStyleProperty(style, "backgroundColor"));
                 lcd.fillRect(ctx, 0, pos, rect.width - 1, rect.height - 1);
             } else {
                 lcd.setColor(getStyleProperty(style, "backgroundColor"));
                 lcd.fillRect(ctx, 0, 0, rect.width - 1, rect.height - pos - 1);
-
                 lcd.setColor(getStyleProperty(style, "color"));
                 lcd.fillRect(ctx, 0, rect.height - pos, rect.width - 1, rect.height - 1);
             }
@@ -860,30 +856,28 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
                 const font = styleGetFont(textStyle);
                 if (font) {
                     let w = lcd.measureStr(valueText, font, rect.width);
-
                     let padding = getStyleProperty(textStyle, "paddingHorizontal");
                     w += padding;
 
-                    let modifiedTextStyle: Style = objectToJS(textStyle);
-
-                    let x: number;
-                    if (pos + w <= rect.width) {
-                        modifiedTextStyle.backgroundColor = getStyleProperty(
-                            style,
-                            "backgroundColor"
-                        );
-                        x = pos;
-                    } else {
-                        modifiedTextStyle.backgroundColor = getStyleProperty(style, "color");
-                        x = pos - w - padding;
-                    }
-
                     if (w > 0 && rect.height > 0) {
-                        ctx.drawImage(
-                            drawText(valueText, w, rect.height, modifiedTextStyle, false),
-                            x,
-                            0
-                        );
+                        const savedBackgroundColor = textStyle.backgroundColor;
+
+                        let backgroundColor: string;
+                        let x: number;
+
+                        if (pos + w <= rect.width) {
+                            backgroundColor = getStyleProperty(style, "backgroundColor");
+                            x = pos;
+                        } else {
+                            backgroundColor = getStyleProperty(style, "color");
+                            x = pos - w - padding;
+                        }
+
+                        runInAction(() => (textStyle.backgroundColor = backgroundColor));
+
+                        ctx.drawImage(drawText(valueText, w, rect.height, textStyle, false), x, 0);
+
+                        runInAction(() => (textStyle.backgroundColor = savedBackgroundColor));
                     }
                 }
             }
@@ -897,7 +891,6 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
                 if (pos == d) {
                     pos = d - 1;
                 }
-
                 lcd.setColor(getStyleProperty(lineStyle, "color"));
                 if (barGraphWidget.orientation == "left-right") {
                     lcd.drawVLine(ctx, pos, 0, rect.height - 1);
