@@ -878,11 +878,13 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
                         x = pos - w - padding;
                     }
 
-                    ctx.drawImage(
-                        drawText(valueText, w, rect.height, modifiedTextStyle, false),
-                        x,
-                        0
-                    );
+                    if (w > 0 && rect.height > 0) {
+                        ctx.drawImage(
+                            drawText(valueText, w, rect.height, modifiedTextStyle, false),
+                            x,
+                            0
+                        );
+                    }
                 }
             }
 

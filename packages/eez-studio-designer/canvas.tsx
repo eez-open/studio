@@ -78,9 +78,6 @@ export class Canvas extends React.Component<{
     scrollLeft: number;
     scrollTop: number;
 
-    @observable isScrolling: any;
-    _last: any;
-
     @computed
     get documentBoundingRect() {
         const rect = getDocumentBoundingRect(this.designerContext.viewState);
@@ -102,24 +99,11 @@ export class Canvas extends React.Component<{
         const transform = this.designerContext.viewState.transform;
         const builder = new BoundingRectBuilder();
         builder.addRect(transform.pageToOffsetRect(this.documentBoundingRect));
-        builder.addRect(transform.clientToOffsetRect(transform.clientRect));
-        const rect = builder.getRect()!;
-        if (this.isScrolling) {
-            return {
-                left: -this.div.scrollLeft,
-                top: -this.div.scrollTop,
-                width: rect.width,
-                height: rect.height
-            };
-        }
-        return rect;
+        builder.addRect((this._last = transform.clientToOffsetRect(transform.clientRect)));
+        return builder.getRect()!;
     }
 
     updateScroll() {
-        if (this.isScrolling) {
-            return;
-        }
-
         const boundingRect = this.boundingOffsetRect;
 
         this.div.scrollLeft = -boundingRect.left;
@@ -199,10 +183,6 @@ export class Canvas extends React.Component<{
 
     @bind
     onWheel(event: WheelEvent) {
-        if (this.isScrolling) {
-            return;
-        }
-
         if (event.buttons === 4) {
             // do nothing if mouse wheel is pressed, i.e. pan will be activated in onMouseDown
             return;
@@ -256,10 +236,6 @@ export class Canvas extends React.Component<{
 
     @action.bound
     onDragStart(event: PointerEvent) {
-        if (this.isScrolling) {
-            return;
-        }
-
         this.buttonsAtDown = event.buttons;
 
         if (this.mouseHandler) {
