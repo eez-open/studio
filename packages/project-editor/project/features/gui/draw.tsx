@@ -1,5 +1,4 @@
 import React from "react";
-import { runInAction } from "mobx";
 
 import { Rect } from "eez-studio-shared/geometry";
 
@@ -130,7 +129,14 @@ function getCacheId(obj: EezObject) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawText(text: string, w: number, h: number, style: Style, inverse: boolean) {
+export function drawText(
+    text: string,
+    w: number,
+    h: number,
+    style: Style,
+    inverse: boolean,
+    overrideBackgroundColor?: string
+) {
     return drawFromCache(
         "drawText",
         getCacheId(style) + "." + text + "." + w + "." + h + "." + inverse,
@@ -183,18 +189,22 @@ export function drawText(text: string, w: number, h: number, style: Style, inver
                 y_offset = Math.floor(y1 + (y2 - y1 + 1 - height) / 2);
             }
 
-            let backgroundColor = inverse
-                ? getStyleProperty(style, "color")
-                : getStyleProperty(style, "backgroundColor");
+            const styleColor = getStyleProperty(style, "color");
+            const styleBackgroundColor =
+                overrideBackgroundColor !== undefined
+                    ? overrideBackgroundColor
+                    : getStyleProperty(style, "backgroundColor");
+
+            let backgroundColor = inverse ? styleColor : styleBackgroundColor;
             lcd.setColor(backgroundColor);
             lcd.fillRect(ctx, x1, y1, x2, y2);
 
             if (inverse) {
-                lcd.setBackColor(getStyleProperty(style, "color"));
-                lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                lcd.setBackColor(styleColor);
+                lcd.setColor(styleBackgroundColor);
             } else {
-                lcd.setBackColor(getStyleProperty(style, "backgroundColor"));
-                lcd.setColor(getStyleProperty(style, "color"));
+                lcd.setBackColor(styleBackgroundColor);
+                lcd.setColor(styleColor);
             }
             lcd.drawStr(ctx, text, x_offset, y_offset, font);
         }
@@ -860,8 +870,6 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
                     w += padding;
 
                     if (w > 0 && rect.height > 0) {
-                        const savedBackgroundColor = textStyle.backgroundColor;
-
                         let backgroundColor: string;
                         let x: number;
 
@@ -873,11 +881,11 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
                             x = pos - w - padding;
                         }
 
-                        runInAction(() => (textStyle.backgroundColor = backgroundColor));
-
-                        ctx.drawImage(drawText(valueText, w, rect.height, textStyle, false), x, 0);
-
-                        runInAction(() => (textStyle.backgroundColor = savedBackgroundColor));
+                        ctx.drawImage(
+                            drawText(valueText, w, rect.height, textStyle, false, backgroundColor),
+                            x,
+                            0
+                        );
                     }
                 }
             }
