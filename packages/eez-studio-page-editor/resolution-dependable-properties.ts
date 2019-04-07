@@ -78,66 +78,75 @@ export function withResolutionDependableProperties(aClass: EezClass) {
             [name: string]: any;
         } = {};
 
-        propertyNames.forEach(propertyName => {
-            let dependableProperty;
+        if (getPageContext().allResolutions.length > 0) {
+            propertyNames.forEach(propertyName => {
+                let dependableProperty;
 
-            if (jsObject[propertyName] !== undefined) {
-                // migration
-                dependableProperty = [jsObject[propertyName]];
-                delete jsObject[propertyName];
-            } else if (jsObject[propertyName + "_"] !== undefined) {
-                dependableProperty = jsObject[propertyName + "_"];
-                delete jsObject[propertyName + "_"];
-            } else {
-                dependableProperty = [];
-            }
+                if (jsObject[propertyName] !== undefined) {
+                    // migration
+                    dependableProperty = [jsObject[propertyName]];
+                    delete jsObject[propertyName];
+                } else if (jsObject[propertyName + "_"] !== undefined) {
+                    dependableProperty = jsObject[propertyName + "_"];
+                    delete jsObject[propertyName + "_"];
+                } else {
+                    dependableProperty = [];
+                }
 
-            dependableProperties[propertyName + "_"] = dependableProperty;
-        });
+                dependableProperties[propertyName + "_"] = dependableProperty;
+            });
+        } else {
+            propertyNames.forEach(propertyName => {
+                if (jsObject[propertyName + "_"] !== undefined) {
+                    if (jsObject[propertyName + "_"].length > 0) {
+                        jsObject[propertyName] = jsObject[propertyName + "_"][0];
+                    }
+                    delete jsObject[propertyName + "_"];
+                }
+
+                dependableProperties[propertyName] = jsObject[propertyName];
+            });
+        }
 
         extendObservable(object, dependableProperties);
     };
 
-    const oldUpdateObjectValueHook = aClass.classInfo.updateObjectValueHook;
+    if (getPageContext().allResolutions.length > 0) {
+        const oldUpdateObjectValueHook = aClass.classInfo.updateObjectValueHook;
 
-    aClass.classInfo.updateObjectValueHook = (
-        object: EezObject,
-        propertyName: string,
-        value: any
-    ) => {
-        if (oldUpdateObjectValueHook) {
-            const result = oldUpdateObjectValueHook(object, propertyName, value);
-            if (result) {
-                return result;
+        aClass.classInfo.updateObjectValueHook = (
+            object: EezObject,
+            propertyName: string,
+            value: any
+        ) => {
+            if (oldUpdateObjectValueHook) {
+                const result = oldUpdateObjectValueHook(object, propertyName, value);
+                if (result) {
+                    return result;
+                }
             }
-        }
 
-        if (propertyNames.indexOf(propertyName) === -1) {
-            return undefined;
-        }
+            if (propertyNames.indexOf(propertyName) === -1) {
+                return undefined;
+            }
 
-        return {
-            oldValue: [getPageContext().resolution, (object as any)[propertyName]],
-            newValue: [getPageContext().resolution, value]
+            return {
+                oldValue: [getPageContext().resolution, (object as any)[propertyName]],
+                newValue: [getPageContext().resolution, value]
+            };
         };
-    };
 
-    aClass.classInfo.properties.forEach(propertyInfo => {
-        if (propertyNames.indexOf(propertyInfo.name) !== -1) {
-            propertyInfo.resolutionDependable = true;
-        }
-    });
-
-    propertyNames.forEach(propertyName => {
-        Object.defineProperty(aClass.prototype, propertyName, {
-            get() {
-                return getProperty(this, propertyName);
-            },
-            set(value) {
-                setProperty(this, propertyName, value);
-            }
+        propertyNames.forEach(propertyName => {
+            Object.defineProperty(aClass.prototype, propertyName, {
+                get() {
+                    return getProperty(this, propertyName);
+                },
+                set(value) {
+                    setProperty(this, propertyName, value);
+                }
+            });
         });
-    });
+    }
 
     return aClass;
 }
