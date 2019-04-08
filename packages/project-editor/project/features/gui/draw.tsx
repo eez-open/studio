@@ -802,8 +802,6 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
     let barGraphWidget = widget as Widget.BarGraphWidget;
     let style = barGraphWidget.style;
 
-    console.log("drawBarGraphWidget");
-
     return drawFromCache(
         "drawBarGraphWidget",
 

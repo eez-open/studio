@@ -36,7 +36,8 @@ import {
     DocumentStore,
     IMenuItem,
     UIElementsFactory,
-    NavigationStore
+    NavigationStore,
+    IContextMenuContext
 } from "eez-studio-shared/model/store";
 import * as output from "eez-studio-shared/model/output";
 
@@ -549,14 +550,21 @@ export class Widget extends EezObject {
         return messages;
     }
 
-    extendContextMenu(objects: EezObject[], menuItems: IMenuItem[]): void {
+    extendContextMenu(
+        context: IContextMenuContext,
+        objects: EezObject[],
+        menuItems: IMenuItem[]
+    ): void {
         var additionalMenuItems: IMenuItem[] = [];
 
         if (objects.length === 1) {
             additionalMenuItems.push(
                 UIElementsFactory.createMenuItem({
                     label: "Put in Select",
-                    click: () => (objects[0] as Widget).putInSelect()
+                    click: () => {
+                        const selectWidget = (objects[0] as Widget).putInSelect();
+                        context.selectObject(selectWidget);
+                    }
                 })
             );
         }
@@ -565,14 +573,22 @@ export class Widget extends EezObject {
             additionalMenuItems.push(
                 UIElementsFactory.createMenuItem({
                     label: "Put in Container",
-                    click: () => Widget.putInContainer(objects as Widget[])
+                    click: () => {
+                        const containerWidget = Widget.putInContainer(objects as Widget[]);
+                        context.selectObject(containerWidget);
+                    }
                 })
             );
 
             additionalMenuItems.push(
                 UIElementsFactory.createMenuItem({
                     label: `Create ${getPageContext().layoutConceptName}`,
-                    click: () => Widget.createLayout(objects as Widget[])
+                    click: async () => {
+                        const layoutWidget = await Widget.createLayout(objects as Widget[]);
+                        if (layoutWidget) {
+                            context.selectObject(layoutWidget);
+                        }
+                    }
                 })
             );
         }
@@ -584,7 +600,12 @@ export class Widget extends EezObject {
                 additionalMenuItems.push(
                     UIElementsFactory.createMenuItem({
                         label: "Replace with Container",
-                        click: () => object.replaceWithContainer()
+                        click: () => {
+                            const widget = object.replaceWithContainer();
+                            if (widget) {
+                                context.selectObject(widget);
+                            }
+                        }
                     })
                 );
             }
@@ -594,7 +615,12 @@ export class Widget extends EezObject {
                 additionalMenuItems.push(
                     UIElementsFactory.createMenuItem({
                         label: "Replace Parent",
-                        click: () => (object as Widget).replaceParent()
+                        click: () => {
+                            const widget = (object as Widget).replaceParent();
+                            if (widget) {
+                                context.selectObject(widget);
+                            }
+                        }
                     })
                 );
             }
@@ -628,7 +654,10 @@ export class Widget extends EezObject {
 
         selectWidgetJsObject.widgets = [thisWidgetJsObject];
 
-        DocumentStore.replaceObject(this, loadObject(this._parent, selectWidgetJsObject, Widget));
+        return DocumentStore.replaceObject(
+            this,
+            loadObject(this._parent, selectWidgetJsObject, Widget)
+        );
     }
 
     static createWidgets(fromWidgets: Widget[]) {
@@ -680,7 +709,7 @@ export class Widget extends EezObject {
         containerWidgetJsObject.width = createWidgetsResult.width;
         containerWidgetJsObject.height = createWidgetsResult.height;
 
-        DocumentStore.replaceObjects(
+        return DocumentStore.replaceObjects(
             fromWidgets,
             loadObject(fromWidgets[0]._parent, containerWidgetJsObject, Widget)
         );
@@ -726,7 +755,7 @@ export class Widget extends EezObject {
                 )
             );
 
-            DocumentStore.replaceObjects(
+            return DocumentStore.replaceObjects(
                 fromWidgets,
                 loadObject(
                     fromWidgets[0]._parent,
@@ -743,6 +772,7 @@ export class Widget extends EezObject {
             );
         } catch (error) {
             console.error(error);
+            return undefined;
         }
     }
 
@@ -751,9 +781,13 @@ export class Widget extends EezObject {
         if (parent) {
             let selectWidget = parent._parent;
             if (selectWidget instanceof SelectWidget) {
-                DocumentStore.replaceObject(selectWidget, cloneObject(selectWidget._parent, this));
+                return DocumentStore.replaceObject(
+                    selectWidget,
+                    cloneObject(selectWidget._parent, this)
+                );
             }
         }
+        return undefined;
     }
 
     draw(rect: Rect, dataContext: IDataContext): HTMLCanvasElement | undefined {
@@ -1492,11 +1526,12 @@ export class LayoutViewWidget extends Widget {
             containerWidgetJsObject.width = this.width;
             containerWidgetJsObject.height = this.height;
 
-            DocumentStore.replaceObject(
+            return DocumentStore.replaceObject(
                 this,
                 loadObject(this._parent, containerWidgetJsObject, Widget)
             );
         }
+        return undefined;
     }
 }
 

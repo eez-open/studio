@@ -77,67 +77,72 @@ export const selectToolHandler: IToolHandler = {
     drop() {},
 
     createMouseHandler(context: IDesignerContext, event: MouseEvent) {
-        if (closestByClass(event.target, "EezStudio_DesignerSelection_ResizeHandle")) {
-            const cursor = (event.target as HTMLElement).style.cursor;
-            if (
-                cursor === "nw-resize" ||
-                cursor === "n-resize" ||
-                cursor === "ne-resize" ||
-                cursor === "w-resize" ||
-                cursor === "e-resize" ||
-                cursor === "sw-resize" ||
-                cursor === "s-resize" ||
-                cursor === "se-resize"
-            ) {
-                return new ResizeMouseHandler(cursor);
-            } else if (cursor === "col-resize") {
-                if (context.viewState.selectedObjects.length === 1) {
-                    const selectedObject = context.viewState.selectedObjects[0];
-                    if (selectedObject.resizeColumn) {
-                        const dataColumnIndex = (event.target as HTMLElement).getAttribute(
-                            "data-column-index"
-                        );
-                        if (dataColumnIndex) {
-                            const columnIndex = parseInt(dataColumnIndex);
-                            if (!Number.isNaN(columnIndex)) {
-                                return new ColumnResizeMouseHandler(selectedObject, columnIndex);
+        if (!event.altKey) {
+            if (closestByClass(event.target, "EezStudio_DesignerSelection_ResizeHandle")) {
+                const cursor = (event.target as HTMLElement).style.cursor;
+                if (
+                    cursor === "nw-resize" ||
+                    cursor === "n-resize" ||
+                    cursor === "ne-resize" ||
+                    cursor === "w-resize" ||
+                    cursor === "e-resize" ||
+                    cursor === "sw-resize" ||
+                    cursor === "s-resize" ||
+                    cursor === "se-resize"
+                ) {
+                    return new ResizeMouseHandler(cursor);
+                } else if (cursor === "col-resize") {
+                    if (context.viewState.selectedObjects.length === 1) {
+                        const selectedObject = context.viewState.selectedObjects[0];
+                        if (selectedObject.resizeColumn) {
+                            const dataColumnIndex = (event.target as HTMLElement).getAttribute(
+                                "data-column-index"
+                            );
+                            if (dataColumnIndex) {
+                                const columnIndex = parseInt(dataColumnIndex);
+                                if (!Number.isNaN(columnIndex)) {
+                                    return new ColumnResizeMouseHandler(
+                                        selectedObject,
+                                        columnIndex
+                                    );
+                                }
+                            }
+                        }
+                    }
+                } else if (cursor === "row-resize") {
+                    if (context.viewState.selectedObjects.length === 1) {
+                        const selectedObject = context.viewState.selectedObjects[0];
+                        if (selectedObject.resizeRow) {
+                            const dataRowIndex = (event.target as HTMLElement).getAttribute(
+                                "data-row-index"
+                            );
+                            if (dataRowIndex) {
+                                const rowIndex = parseInt(dataRowIndex);
+                                if (!Number.isNaN(rowIndex)) {
+                                    return new RowResizeMouseHandler(selectedObject, rowIndex);
+                                }
                             }
                         }
                     }
                 }
-            } else if (cursor === "row-resize") {
-                if (context.viewState.selectedObjects.length === 1) {
-                    const selectedObject = context.viewState.selectedObjects[0];
-                    if (selectedObject.resizeRow) {
-                        const dataRowIndex = (event.target as HTMLElement).getAttribute(
-                            "data-row-index"
-                        );
-                        if (dataRowIndex) {
-                            const rowIndex = parseInt(dataRowIndex);
-                            if (!Number.isNaN(rowIndex)) {
-                                return new RowResizeMouseHandler(selectedObject, rowIndex);
-                            }
-                        }
+                return undefined;
+            }
+
+            if (closestByClass(event.target, "EezStudio_DesignerSelection")) {
+                return new DragMouseHandler();
+            }
+
+            let point = context.viewState.transform.mouseEventToPagePoint(event);
+            let object = context.document.objectFromPoint(point);
+            if (object && (object.isSelectable === undefined || object.isSelectable)) {
+                if (!context.viewState.isObjectSelected(object)) {
+                    if (!event.ctrlKey && !event.shiftKey) {
+                        context.viewState.deselectAllObjects();
                     }
+                    context.viewState.selectObject(object);
                 }
+                return new DragMouseHandler();
             }
-            return undefined;
-        }
-
-        if (closestByClass(event.target, "EezStudio_DesignerSelection")) {
-            return new DragMouseHandler();
-        }
-
-        let point = context.viewState.transform.mouseEventToPagePoint(event);
-        let object = context.document.objectFromPoint(point);
-        if (object && (object.isSelectable === undefined || object.isSelectable)) {
-            if (!context.viewState.isObjectSelected(object)) {
-                if (!event.ctrlKey && !event.shiftKey) {
-                    context.viewState.deselectAllObjects();
-                }
-                context.viewState.selectObject(object);
-            }
-            return new DragMouseHandler();
         }
 
         return new RubberBandSelectionMouseHandler();

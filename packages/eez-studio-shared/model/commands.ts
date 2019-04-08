@@ -102,8 +102,6 @@ export let addObject = action(
             }
         });
 
-        context.selectionManager.setSelection([object]);
-
         return object;
     }
 );
@@ -115,7 +113,7 @@ export let addObjects = action(
 
         context.undoManager.executeCommand({
             execute: action(() => {
-                asArray(parentObject).push.apply(parentObject, objects);
+                asArray(parentObject).push(...objects);
                 onObjectModified(parentObject);
             }),
 
@@ -133,7 +131,7 @@ export let addObjects = action(
             }
         });
 
-        context.selectionManager.setSelection(objects);
+        return objects;
     }
 );
 
@@ -158,7 +156,7 @@ export let insertObject = action(
             }
         });
 
-        context.selectionManager.setSelection([object]);
+        return object;
     }
 );
 
@@ -271,16 +269,6 @@ export let deleteObject = action((context: ICommandContext, object: any) => {
                 return "Deleted: " + getHumanReadableObjectPath(object);
             }
         });
-
-        if (array.length > 0) {
-            if (index == array.length) {
-                context.selectionManager.setSelection([array[index - 1]]);
-            } else {
-                context.selectionManager.setSelection([array[index]]);
-            }
-        } else {
-            context.selectionManager.setSelection([parent]);
-        }
     } else {
         updateObject(context, object, {
             [object._key as string]: undefined
@@ -356,13 +344,13 @@ export let replaceObject = action(
                     return "Replaced: " + getHumanReadableObjectPath(object);
                 }
             });
-
-            context.selectionManager.setSelection([replaceWithObject]);
         } else {
             updateObject(context, parent as any, {
                 [object._key!]: replaceWithObject
             });
         }
+
+        return replaceWithObject;
     }
 );
 
@@ -405,7 +393,7 @@ export let replaceObjects = action(
             }
         });
 
-        context.selectionManager.setSelection([replaceWithObject]);
+        return replaceWithObject;
     }
 );
 
@@ -419,7 +407,7 @@ export function insertObjectBefore(
     const parent = object._parent!;
     const array = asArray(parent);
     const index = array.indexOf(object);
-    insertObject(context, parent, index, objectToInsert);
+    return insertObject(context, parent, index, objectToInsert);
 }
 
 export function insertObjectAfter(
@@ -430,5 +418,5 @@ export function insertObjectAfter(
     const parent = object._parent!;
     const array = asArray(parent);
     const index = array.indexOf(object);
-    insertObject(context, parent, index + 1, objectToInsert);
+    return insertObject(context, parent, index + 1, objectToInsert);
 }

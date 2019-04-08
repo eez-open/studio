@@ -1,6 +1,12 @@
 import { observable, action } from "mobx";
 
-import { BoundingRectBuilder, Point, Rect, pointInRect } from "eez-studio-shared/geometry";
+import {
+    BoundingRectBuilder,
+    Point,
+    Rect,
+    pointInRect,
+    isRectInsideRect
+} from "eez-studio-shared/geometry";
 
 import { IBaseObject, IViewState } from "eez-studio-designer/designer-interfaces";
 
@@ -85,6 +91,17 @@ class BoundingRects {
         });
         return BoundingRects.boundigRectToPageRect(boundingRectBuilder.getRect(), viewState);
     }
+
+    getObjectIdsInsideRect(viewState: IViewState, rect: Rect) {
+        const ids: string[] = [];
+        this.map.forEach((boundingRect: Rect, id: string) => {
+            const pageRect = BoundingRects.boundigRectToPageRect(boundingRect, viewState);
+            if (isRectInsideRect(pageRect, rect)) {
+                ids.push(id);
+            }
+        });
+        return ids;
+    }
 }
 
 const boundingRects = new BoundingRects();
@@ -111,4 +128,8 @@ export function getDocumentBoundingRect(viewState: IViewState) {
 
 export function getObjectIdFromPoint(viewState: IViewState, point: Point) {
     return boundingRects.getObjectIdFromPoint(viewState, point);
+}
+
+export function getObjectIdsInsideRect(viewState: IViewState, rect: Rect) {
+    return boundingRects.getObjectIdsInsideRect(viewState, rect);
 }

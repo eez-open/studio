@@ -675,10 +675,20 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
     pasteSelection() {
         if (this.canPaste()) {
+            let aNewObject;
+
             if (this.selectedItems.length == 0) {
-                pasteItem(this.object);
+                aNewObject = pasteItem(this.object);
             } else {
-                pasteItem(this.selectedItems[0].object);
+                aNewObject = pasteItem(this.selectedItems[0].object);
+            }
+
+            if (aNewObject) {
+                if (Array.isArray(aNewObject)) {
+                    this.selectObjects(aNewObject);
+                } else {
+                    this.selectObject(aNewObject);
+                }
             }
         }
     }
@@ -706,7 +716,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
     createSelectionContextMenu() {
         if (this.selectedItems.length == 1) {
-            return createContextMenu(this.selectedItems[0].object);
+            return createContextMenu(this, this.selectedItems[0].object);
         }
 
         let menuItems: IMenuItem[] = [];
@@ -785,7 +795,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 }
             }
             if (i == selectedObjects.length) {
-                extendContextMenu(selectedObjects[0], selectedObjects, menuItems);
+                extendContextMenu(this, selectedObjects[0], selectedObjects, menuItems);
             }
         }
 
@@ -985,6 +995,22 @@ export class TreeAdapter implements ITreeAdapter {
         this.rootItem.selectItems([item]);
     }
 
+    selectObject(object: EezObject) {
+        const item = this.getItemFromId(object._id);
+        if (item) {
+            this.selectItem(item);
+        }
+    }
+
+    selectObjects(objects: EezObject[]) {
+        objects.forEach(object => {
+            const item = this.getItemFromId(object._id);
+            if (item) {
+                this.selectItem(item);
+            }
+        });
+    }
+
     toggleSelected(item: ITreeObjectAdapter): void {
         this.rootItem.toggleSelected(item);
     }
@@ -998,15 +1024,15 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     copySelection() {
-        this.rootItem.cutSelection();
+        this.rootItem.copySelection();
     }
 
     pasteSelection() {
-        this.rootItem.cutSelection();
+        this.rootItem.pasteSelection();
     }
 
     deleteSelection() {
-        this.rootItem.cutSelection();
+        this.rootItem.deleteSelection();
     }
 
     get collapsableAdapter() {
@@ -1079,14 +1105,16 @@ export class TreeAdapter implements ITreeAdapter {
         DragAndDropManager.deleteDragItem();
 
         if (DragAndDropManager.dragObject) {
-            let object = objectToJson(DragAndDropManager.dragObject);
+            let object = JSON.parse(objectToJson(DragAndDropManager.dragObject));
 
             let dropItem = DragAndDropManager.dropObject as ITreeObjectAdapter;
 
+            let aNewObject: EezObject | undefined;
+
             if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
-                DocumentStore.insertObjectBefore(dropItem.object, object);
+                aNewObject = DocumentStore.insertObjectBefore(dropItem.object, object);
             } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
-                DocumentStore.insertObjectAfter(dropItem.object, object);
+                aNewObject = DocumentStore.insertObjectAfter(dropItem.object, object);
             } else if (dropPosition == DropPosition.DROP_POSITION_INSIDE) {
                 let dropPlace = findPastePlaceInside(
                     dropItem.object,
@@ -1095,13 +1123,17 @@ export class TreeAdapter implements ITreeAdapter {
                 );
                 if (dropPlace) {
                     if (isArray(dropPlace as EezObject)) {
-                        DocumentStore.addObject(dropPlace as EezObject, object);
+                        aNewObject = DocumentStore.addObject(dropPlace as EezObject, object);
                     } else {
                         DocumentStore.updateObject(dropItem.object, {
                             [(dropPlace as PropertyInfo).name]: object
                         });
                     }
                 }
+            }
+
+            if (aNewObject) {
+                this.selectObject(aNewObject);
             }
         }
 
@@ -1306,12 +1338,28 @@ export class ListAdapter implements ITreeAdapter {
         }
     }
 
+    selectObject(object: EezObject): void {
+        const item = this.getItemFromId(object._id);
+        if (item) {
+            this.selectItem(item);
+        }
+    }
+
+    selectObjects(objects: EezObject[]): void {
+        objects.forEach(object => {
+            const item = this.getItemFromId(object._id);
+            if (item) {
+                this.selectItem(item);
+            }
+        });
+    }
+
     toggleSelected(item: ListItem): void {
         this.selectItem(item);
     }
 
     showSelectionContextMenu(position: IMenuAnchorPosition): void {
-        showContextMenu(this.object, position);
+        showContextMenu(this, this.object, position);
     }
 
     cutSelection() {
@@ -1328,7 +1376,14 @@ export class ListAdapter implements ITreeAdapter {
 
     pasteSelection() {
         if (this.selectedItem) {
-            pasteItem(this.selectedItem.object);
+            const aNewObject = pasteItem(this.selectedItem.object);
+            if (aNewObject) {
+                if (Array.isArray(aNewObject)) {
+                    this.selectObjects(aNewObject);
+                } else {
+                    this.selectObject(aNewObject);
+                }
+            }
         }
     }
 

@@ -88,11 +88,15 @@ export class SortableTitle extends React.Component<{
 
 @observer
 export class AddButton extends React.Component<{
+    listAdapter: ListAdapter;
     navigationObject: EezObject | undefined;
 }> {
-    onAdd() {
+    async onAdd() {
         if (this.props.navigationObject) {
-            addItem(this.props.navigationObject);
+            const aNewItem = await addItem(this.props.navigationObject);
+            if (aNewItem) {
+                this.props.listAdapter.selectObject(aNewItem);
+            }
         }
     }
 
@@ -219,7 +223,13 @@ export class ListNavigation extends React.Component<ListNavigationProps, {}> {
             buttons.push(...this.props.additionalButtons);
         }
 
-        buttons.push(<AddButton key="add" navigationObject={this.props.navigationObject} />);
+        buttons.push(
+            <AddButton
+                key="add"
+                listAdapter={this.listAdapter}
+                navigationObject={this.props.navigationObject}
+            />
+        );
         buttons.push(<DeleteButton key="delete" navigationObject={this.props.navigationObject} />);
 
         return (

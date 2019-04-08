@@ -158,6 +158,14 @@ class NavigationStoreClass {
 
         let object = selection[0];
 
+        for (let ancestor = object._parent; ancestor; ancestor = ancestor._parent) {
+            let navigationItem = this.getNavigationSelectedItem(ancestor);
+            if (navigationItem && !(navigationItem instanceof EezObject)) {
+                navigationItem.selectObjects(selection);
+                return;
+            }
+        }
+
         let iterObject = object;
         let parent = iterObject._parent;
         while (iterObject && parent) {
@@ -165,7 +173,7 @@ class NavigationStoreClass {
             if (!isArray(grandparent)) {
                 let navigationItem = this.getNavigationSelectedItem(parent);
                 if (navigationItem && !(navigationItem instanceof EezObject)) {
-                    navigationItem.selectObject(object);
+                    navigationItem.selectObjects(selection);
                 } else {
                     this.setNavigationSelectedItem(parent, iterObject);
                 }
@@ -1040,10 +1048,13 @@ class DocumentStoreClass {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function extendContextMenu(object: EezObject, objects: EezObject[], menuItems: IMenuItem[]) {
-    if ((object as any).extendContextMenu) {
-        return (object as any).extendContextMenu(objects, menuItems);
-    }
+export function extendContextMenu(
+    context: IContextMenuContext,
+    object: EezObject,
+    objects: EezObject[],
+    menuItems: IMenuItem[]
+) {
+    return object.extendContextMenu(context, objects, menuItems);
 }
 
 export function canAdd(object: EezObject) {
@@ -1146,12 +1157,12 @@ export function pasteItem(object: EezObject) {
                 });
             } else {
                 if (c.serializedData.object) {
-                    DocumentStore.addObject(
+                    return DocumentStore.addObject(
                         c.pastePlace as EezObject,
                         objectToJS(c.serializedData.object)
                     );
                 } else if (c.serializedData.objects) {
-                    DocumentStore.addObjects(
+                    return DocumentStore.addObjects(
                         c.pastePlace as EezObject,
                         objectToJS(c.serializedData.objects)
                     );
@@ -1161,6 +1172,7 @@ export function pasteItem(object: EezObject) {
     } catch (e) {
         console.error(e);
     }
+    return undefined;
 }
 
 export function deleteItem(object: EezObject) {
@@ -1181,18 +1193,26 @@ export function copyItem(object: EezObject) {
 
 function duplicateItem(object: EezObject) {
     let parent = object._parent as EezObject;
-    DocumentStore.addObject(parent, toJS(object));
+    return DocumentStore.addObject(parent, toJS(object));
 }
 
-export function createContextMenu(object: EezObject) {
+export interface IContextMenuContext {
+    selectObject(object: EezObject): void;
+    selectObjects(objects: EezObject[]): void;
+}
+
+export function createContextMenu(context: IContextMenuContext, object: EezObject) {
     let menuItems: IMenuItem[] = [];
 
     if (canAdd(object)) {
         menuItems.push(
             UIElementsFactory.createMenuItem({
                 label: "Add",
-                click: () => {
-                    addItem(object);
+                click: async () => {
+                    const aNewObject = await addItem(object);
+                    if (aNewObject) {
+                        context.selectObject(aNewObject);
+                    }
                 }
             })
         );
@@ -1203,7 +1223,10 @@ export function createContextMenu(object: EezObject) {
             UIElementsFactory.createMenuItem({
                 label: "Duplicate",
                 click: () => {
-                    duplicateItem(object);
+                    const aNewObject = duplicateItem(object);
+                    if (aNewObject) {
+                        context.selectObject(aNewObject);
+                    }
                 }
             })
         );
@@ -1257,7 +1280,14 @@ export function createContextMenu(object: EezObject) {
             UIElementsFactory.createMenuItem({
                 label: "Paste",
                 click: () => {
-                    pasteItem(object);
+                    const aNewObject = pasteItem(object);
+                    if (aNewObject) {
+                        if (Array.isArray(aNewObject)) {
+                            context.selectObjects(aNewObject);
+                        } else {
+                            context.selectObject(aNewObject);
+                        }
+                    }
                 }
             })
         );
@@ -1293,7 +1323,7 @@ export function createContextMenu(object: EezObject) {
         );
     }
 
-    extendContextMenu(object, [object], menuItems);
+    extendContextMenu(context, object, [object], menuItems);
 
     if (menuItems.length > 0) {
         const menu = UIElementsFactory.createMenu();
@@ -1304,8 +1334,12 @@ export function createContextMenu(object: EezObject) {
     return undefined;
 }
 
-export function showContextMenu(object: EezObject, position: IMenuAnchorPosition) {
-    const menu = createContextMenu(object);
+export function showContextMenu(
+    context: IContextMenuContext,
+    object: EezObject,
+    position: IMenuAnchorPosition
+) {
+    const menu = createContextMenu(context, object);
 
     if (menu) {
         menu.popup({}, position);

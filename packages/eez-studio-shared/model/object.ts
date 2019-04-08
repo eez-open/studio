@@ -5,6 +5,7 @@ import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
 import { loadObject, objectToJson } from "eez-studio-shared/model/serialization";
+import { IContextMenuContext, IMenuItem } from "eez-studio-shared/model/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -287,6 +288,12 @@ export class EezObject {
         }
         return this._classInfo.editorComponent;
     }
+
+    extendContextMenu(
+        context: IContextMenuContext,
+        objects: EezObject[],
+        menuItems: IMenuItem[]
+    ): void {}
 }
 
 export class EezArrayObject<T> extends EezObject {

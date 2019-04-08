@@ -31,9 +31,12 @@ export class AddButton extends React.Component<
     },
     {}
 > {
-    onAdd() {
+    async onAdd() {
         if (this.props.objectAdapter.selectedObject) {
-            addItem(this.props.objectAdapter.selectedObject);
+            const aNewItem = await addItem(this.props.objectAdapter.selectedObject);
+            if (aNewItem) {
+                this.props.objectAdapter.selectObject(aNewItem);
+            }
         }
     }
 

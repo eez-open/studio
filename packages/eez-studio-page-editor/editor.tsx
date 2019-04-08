@@ -18,10 +18,10 @@ import { ITransform } from "eez-studio-designer/transform";
 import { DesignerContext } from "eez-studio-designer/context";
 import { Canvas } from "eez-studio-designer/canvas";
 import { selectToolHandler, SnapLines } from "eez-studio-designer/select-tool";
-import { getObjectIdFromPoint } from "eez-studio-designer/bounding-rects";
+import { getObjectIdFromPoint, getObjectIdsInsideRect } from "eez-studio-designer/bounding-rects";
 import styled from "eez-studio-ui/styled-components";
 
-import { isObjectInstanceOf, isAncestor } from "eez-studio-shared/model/object";
+import { EezObject, isObjectInstanceOf, isAncestor } from "eez-studio-shared/model/object";
 import {
     DocumentStore,
     NavigationStore,
@@ -285,7 +285,32 @@ class PageDocument implements IDocument {
     }
 
     getObjectsInsideRect(rect: Rect) {
-        return [];
+        const ids = getObjectIdsInsideRect(this.pageEditorContext.viewState, rect);
+
+        const editorObjectsGroupedByParent = new Map<EezObject, EditorObject[]>();
+        let maxLengthGroup: EditorObject[] | undefined;
+
+        ids.forEach(id => {
+            const editorObject = this.findObjectById(id);
+            if (editorObject) {
+                const parent = editorObject.object._parent!;
+
+                let group = editorObjectsGroupedByParent.get(parent);
+
+                if (!group) {
+                    group = [editorObject];
+                    editorObjectsGroupedByParent.set(parent, group);
+                } else {
+                    group.push(editorObject);
+                }
+
+                if (!maxLengthGroup || group.length > maxLengthGroup.length) {
+                    maxLengthGroup = group;
+                }
+            }
+        });
+
+        return maxLengthGroup ? maxLengthGroup : [];
     }
 
     createContextMenu(objects: IBaseObject[]) {
