@@ -152,6 +152,19 @@ export class EditorObject implements IBaseObject {
 
         return undefined;
     }
+
+    findObjectParent(editorObject: EditorObject): EditorObject | undefined {
+        for (const child of this.children) {
+            if (child.object === editorObject.object) {
+                return this;
+            }
+            const parent = child.findObjectParent(editorObject);
+            if (parent !== undefined) {
+                return parent;
+            }
+        }
+        return undefined;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -257,6 +270,13 @@ class PageDocument implements IDocument {
 
     findObjectById(id: string) {
         return this.rootObject.findObjectById(id);
+    }
+
+    findObjectParent(object: EditorObject) {
+        if (object.object === this.rootObject.object) {
+            return undefined;
+        }
+        return this.rootObject.findObjectParent(object);
     }
 
     createObject(params: any) {

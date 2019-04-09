@@ -49,8 +49,12 @@ class WorkbenchDocument implements IDocument {
         return this.objects;
     }
 
-    findObjectById(id: string): IBaseObject | undefined {
+    findObjectById(id: string) {
         return this.objects.find(object => object.id === id);
+    }
+
+    findObjectParent(object: IBaseObject) {
+        return undefined;
     }
 
     getObjectsInsideRect(rect: Rect) {

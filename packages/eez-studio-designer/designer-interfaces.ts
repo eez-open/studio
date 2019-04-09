@@ -20,6 +20,7 @@ export interface IDocument {
     rootObjects: IBaseObject[];
 
     findObjectById(id: string): IBaseObject | undefined;
+    findObjectParent(object: IBaseObject): IBaseObject | undefined;
 
     // modify
     createObject(params: any): void;
