@@ -36,7 +36,7 @@ const SelectionDiv = styled.div`
 
     .EezStudio_DesignerSelection_SelectedObjectsParent {
         pointer-events: none;
-        border: 2px dotted red;
+        border: 2px dotted magenta;
     }
 
     .EezStudio_DesignerSelection_RubberBend {
