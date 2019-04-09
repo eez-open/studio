@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import { computed } from "mobx";
 
 import { addAlphaToColor } from "eez-studio-shared/color";
-import { Rect } from "eez-studio-shared/geometry";
+import { Rect, rectExpand } from "eez-studio-shared/geometry";
 
 import styled from "eez-studio-ui/styled-components";
 
@@ -36,8 +36,7 @@ const SelectionDiv = styled.div`
 
     .EezStudio_DesignerSelection_SelectedObjectsParent {
         pointer-events: none;
-        outline: 2px dashed #878787;
-        box-shadow: 0 0 0 2px #a7a7a7;
+        border: 2px dotted red;
     }
 
     .EezStudio_DesignerSelection_RubberBend {
@@ -64,13 +63,16 @@ class SelectedObject extends React.Component<
     {}
 > {
     render() {
-        const rect = this.props.viewState.transform.pageToOffsetRect(
-            getObjectBoundingRect(this.props.object, this.props.viewState)
-        );
+        const { object, viewState, className } = this.props;
+        let rect = viewState.transform.pageToOffsetRect(getObjectBoundingRect(object, viewState));
+
+        if (className === "EezStudio_DesignerSelection_SelectedObjectsParent") {
+            rect = rectExpand(rect, 2);
+        }
 
         return (
             <div
-                className={this.props.className}
+                className={className}
                 style={{
                     position: "absolute",
                     left: rect.left + "px",
