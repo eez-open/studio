@@ -427,6 +427,35 @@ export class Widget extends EezObject {
         };
     }
 
+    @computed
+    get isMoveable() {
+        if (this.position === "static") {
+            return false;
+        }
+
+        let left = parseInt(this.left);
+        if (isNaN(left)) {
+            return false;
+        }
+
+        let top = parseInt(this.top);
+        if (isNaN(top)) {
+            return false;
+        }
+
+        let width = parseInt(this.width);
+        if (isNaN(width)) {
+            return false;
+        }
+
+        let height = parseInt(this.height);
+        if (isNaN(height)) {
+            return false;
+        }
+
+        return true;
+    }
+
     get contentRect() {
         return this.rect;
     }

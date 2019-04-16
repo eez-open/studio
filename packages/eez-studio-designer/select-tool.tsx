@@ -41,6 +41,10 @@ const CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME = 300;
 // - move selection
 // - resize selection
 
+export function isSelectionMoveable(context: IDesignerContext) {
+    return !context.viewState.selectedObjects.find(object => !object.isMoveable);
+}
+
 export const selectToolHandler: IToolHandler = {
     render(context: IDesignerContext, mouseHandler: IMouseHandler | undefined) {
         return <Selection context={context} mouseHandler={mouseHandler} />;
@@ -56,7 +60,7 @@ export const selectToolHandler: IToolHandler = {
             context.viewState.deselectAllObjects();
 
             let object = context.document.objectFromPoint(point);
-            if (!object || (object.isSelectable !== undefined && !object.isSelectable)) {
+            if (!object) {
                 return;
             }
 
@@ -128,20 +132,22 @@ export const selectToolHandler: IToolHandler = {
                 return undefined;
             }
 
-            if (closestByClass(event.target, "EezStudio_DesignerSelection")) {
-                return new DragMouseHandler();
-            }
+            const isMoveable = isSelectionMoveable(context);
 
-            let point = context.viewState.transform.mouseEventToPagePoint(event);
-            let object = context.document.objectFromPoint(point);
-            if (object && (object.isSelectable === undefined || object.isSelectable)) {
-                if (!context.viewState.isObjectSelected(object)) {
-                    if (!event.ctrlKey && !event.shiftKey) {
-                        context.viewState.deselectAllObjects();
+            if (closestByClass(event.target, "EezStudio_DesignerSelection")) {
+                return isMoveable ? new DragMouseHandler() : undefined;
+            } else {
+                let point = context.viewState.transform.mouseEventToPagePoint(event);
+                let object = context.document.objectFromPoint(point);
+                if (object) {
+                    if (!context.viewState.isObjectSelected(object)) {
+                        if (!event.ctrlKey && !event.shiftKey) {
+                            context.viewState.deselectAllObjects();
+                        }
+                        context.viewState.selectObject(object);
                     }
-                    context.viewState.selectObject(object);
+                    return isMoveable ? new DragMouseHandler() : undefined;
                 }
-                return new DragMouseHandler();
             }
         }
 

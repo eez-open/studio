@@ -13,7 +13,10 @@ import {
     IMouseHandler,
     IViewState
 } from "eez-studio-designer/designer-interfaces";
-import { RubberBandSelectionMouseHandler } from "eez-studio-designer/select-tool";
+import {
+    RubberBandSelectionMouseHandler,
+    isSelectionMoveable
+} from "eez-studio-designer/select-tool";
 import {
     getObjectBoundingRect,
     getSelectedObjectsBoundingRect
@@ -227,13 +230,16 @@ export class Selection extends React.Component<
             }
         }
 
+        const style: React.CSSProperties = {
+            pointerEvents: isSelectedObjectWidgetPaletteItem ? "none" : undefined
+        };
+
+        if (!isSelectionMoveable(this.props.context)) {
+            style.cursor = "default";
+        }
+
         return (
-            <SelectionDiv
-                className="EezStudio_DesignerSelection"
-                style={{
-                    pointerEvents: isSelectedObjectWidgetPaletteItem ? "none" : undefined
-                }}
-            >
+            <SelectionDiv className="EezStudio_DesignerSelection" style={style}>
                 {isSelectionVisible && (
                     <React.Fragment>
                         {selectedObjectsParentElement}

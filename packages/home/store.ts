@@ -17,6 +17,7 @@ import { IActivityLogEntryInfo } from "eez-studio-shared/extensions/extension";
 import { tabs } from "home/tabs-store";
 
 import { instrumentStore } from "instrument/instrument-object";
+import { IWorkbenchObject } from "home/designer/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,7 +28,7 @@ export interface IWorkbenchObjectProps {
     rect: Rect;
 }
 
-export class WorkbenchObject {
+export class WorkbenchObject implements IWorkbenchObject {
     constructor(props: IWorkbenchObjectProps) {
         this.id = props.id;
         this.type = props.type;
@@ -85,6 +86,10 @@ export class WorkbenchObject {
         if (this.isEditable) {
             this.openEditor("default");
         }
+    }
+
+    get isMoveable() {
+        return true;
     }
 
     get isEditable() {

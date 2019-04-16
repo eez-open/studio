@@ -98,7 +98,10 @@ export class EditorObject implements IBaseObject {
         return _map(childrenObjects, (object: ITreeObjectAdapter) => this.transformer(object));
     }
 
-    get isSelectable() {
+    get isMoveable() {
+        if (this.object instanceof Widget) {
+            return this.object.isMoveable;
+        }
         return true;
     }
 

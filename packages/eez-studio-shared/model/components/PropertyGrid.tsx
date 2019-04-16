@@ -641,6 +641,13 @@ class Property extends React.Component<PropertyProps> {
 
         this._value = newValue;
 
+        const pageContext = getPageContext();
+        if (pageContext.onChangeValueInPropertyGrid) {
+            if (pageContext.onChangeValueInPropertyGrid(newValue, this.props)) {
+                return;
+            }
+        }
+
         if (this.props.propertyInfo.type === PropertyType.Number) {
             newValue = filterNumber(newValue);
             if (isNaN(newValue)) {
@@ -715,6 +722,14 @@ class Property extends React.Component<PropertyProps> {
     @bind
     onGenerateGuid() {
         this.changeValue(guid());
+    }
+
+    @bind
+    onKeyDown(event: React.KeyboardEvent) {
+        const pageContext = getPageContext();
+        if (pageContext.onKeyDownInPropertyGrid) {
+            pageContext.onKeyDownInPropertyGrid(this._value, event, this.props);
+        }
     }
 
     render() {
@@ -932,6 +947,7 @@ class Property extends React.Component<PropertyProps> {
                     className="form-control"
                     value={this.value}
                     onChange={this.onChange}
+                    onKeyDown={this.onKeyDown}
                 />
             );
         } else if (propertyInfo.type === PropertyType.Number) {
@@ -942,6 +958,7 @@ class Property extends React.Component<PropertyProps> {
                     className="form-control"
                     value={this.value}
                     onChange={this.onChange}
+                    onKeyDown={this.onKeyDown}
                 />
             );
         } else if (propertyInfo.type === PropertyType.Color) {

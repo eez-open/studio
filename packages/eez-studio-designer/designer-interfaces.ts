@@ -7,7 +7,7 @@ export interface IBaseObject {
     id: string;
     rect: Rect;
     children: IBaseObject[];
-    isSelectable?: boolean;
+    isMoveable: boolean;
     getResizeHandlers?: () => IResizeHandler[] | undefined | false;
     getColumnWidth?: (columnIndex: number) => number;
     resizeColumn?: (columnIndex: number, savedColumnWidth: number, offset: number) => void;

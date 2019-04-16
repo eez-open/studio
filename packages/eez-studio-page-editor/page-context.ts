@@ -1,4 +1,6 @@
 import { EezArrayObject } from "eez-studio-shared/model/object";
+import { PropertyProps } from "eez-studio-shared/model/components/PropertyGrid";
+export { PropertyProps } from "eez-studio-shared/model/components/PropertyGrid";
 
 import { Page } from "eez-studio-page-editor/page";
 import { Style } from "eez-studio-page-editor/style";
@@ -47,6 +49,9 @@ export interface IPageContext {
 
     findStyle(styleName: any): Style | undefined;
     findFont(fontName: any): any;
+
+    onChangeValueInPropertyGrid?(newValue: any, props: PropertyProps): boolean;
+    onKeyDownInPropertyGrid?(event: React.KeyboardEvent, newValue: any, props: PropertyProps): void;
 }
 
 let PageContext: IPageContext;

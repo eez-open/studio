@@ -10,8 +10,10 @@ import {
     getProperty
 } from "eez-studio-shared/model/object";
 import * as output from "eez-studio-shared/model/output";
+import { filterNumber } from "eez-studio-shared/model/validation";
 
-import { setPageContext } from "eez-studio-page-editor/page-context";
+import { Widget } from "eez-studio-page-editor/widget";
+import { setPageContext, PropertyProps } from "eez-studio-page-editor/page-context";
 
 import {
     dataContext,
@@ -63,7 +65,52 @@ setPageContext({
     findLayout: findPage,
 
     findStyle,
-    findFont
+    findFont,
+
+    onChangeValueInPropertyGrid(newValue: any, props: PropertyProps) {
+        if (props.object instanceof Widget) {
+            if (
+                props.propertyInfo.name === "top" ||
+                props.propertyInfo.name === "left" ||
+                props.propertyInfo.name === "width" ||
+                props.propertyInfo.name === "height"
+            ) {
+                if (filterNumber(newValue)) {
+                    props.updateObject({
+                        [props.propertyInfo.name]: newValue
+                    });
+                }
+                return true;
+            }
+        }
+        return false;
+    },
+
+    onKeyDownInPropertyGrid(newValue: any, event: React.KeyboardEvent, props: PropertyProps) {
+        if (event.keyCode === 13) {
+            if (props.object instanceof Widget) {
+                if (
+                    props.propertyInfo.name === "top" ||
+                    props.propertyInfo.name === "left" ||
+                    props.propertyInfo.name === "width" ||
+                    props.propertyInfo.name === "height"
+                ) {
+                    try {
+                        var mexp = require("math-expression-evaluator");
+                        const value = (props.object as any)[props.propertyInfo.name];
+                        newValue = mexp.eval(newValue);
+                        if (newValue !== undefined && newValue !== value) {
+                            props.updateObject({
+                                [props.propertyInfo.name]: newValue
+                            });
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+            }
+        }
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////

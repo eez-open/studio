@@ -105,6 +105,7 @@
     "lodash": "^4.17.11",
     "lz4": "^0.6.0",
     "marked": "^0.4.0",
+    "math-expression-evaluator": "^1.2.17",
     "mobx": "^5.9.0",
     "mobx-react": "^5.4.3",
     "mobx-utils": "^5.1.0",
