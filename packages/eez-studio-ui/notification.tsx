@@ -1,51 +1,44 @@
 import React from "react";
 import { observable, runInAction } from "mobx";
 
-import * as ToastModule from "react-toastify";
+import { ToastContainer, toast, ToastPosition, UpdateOptions } from "react-toastify";
 
 // lazy notifications, i.e. do not load react-toastify module until needed
 
-let toastModule: typeof ToastModule | undefined = undefined;
-
 function getToast() {
-    if (!toastModule) {
-        toastModule = require("react-toastify") as typeof ToastModule;
+    runInAction(() => {
+        container.set(
+            <ToastContainer
+                position={ToastPosition.TOP_RIGHT}
+                autoClose={5000}
+                hideProgressBar={true}
+                newestOnTop={false}
+                closeOnClick
+                pauseOnHover
+            />
+        );
+    });
 
-        const ToastContainer = toastModule.ToastContainer;
-        runInAction(() => {
-            container.set(
-                <ToastContainer
-                    position={ToastModule.ToastPosition.TOP_RIGHT}
-                    autoClose={5000}
-                    hideProgressBar={true}
-                    newestOnTop={false}
-                    closeOnClick
-                    pauseOnHover
-                />
-            );
-        });
-    }
-
-    return toastModule.toast;
+    return toast;
 }
 
-export function info(message: string, options?: ToastModule.UpdateOptions) {
+export function info(message: string, options?: UpdateOptions) {
     return getToast().info(message, options);
 }
 
-export function success(message: string, options?: ToastModule.UpdateOptions) {
+export function success(message: string, options?: UpdateOptions) {
     return getToast().success(message, options);
 }
 
-export function warn(message: string, options?: ToastModule.UpdateOptions) {
+export function warn(message: string, options?: UpdateOptions) {
     return getToast().warn(message, options);
 }
 
-export function error(message: string, options?: ToastModule.UpdateOptions) {
+export function error(message: string, options?: UpdateOptions) {
     return getToast().error(message, options);
 }
 
-export function update(toastId: number, options: ToastModule.UpdateOptions) {
+export function update(toastId: number, options: UpdateOptions) {
     return getToast().update(toastId, options);
 }
 
@@ -55,7 +48,7 @@ export function dismiss(toastId: number) {
 
 export const container = observable.box<JSX.Element | undefined>(undefined, { deep: false });
 
-export const INFO = ToastModule.toast.TYPE.INFO;
-export const SUCCESS = ToastModule.toast.TYPE.SUCCESS;
-export const WARNING = ToastModule.toast.TYPE.WARNING;
-export const ERROR = ToastModule.toast.TYPE.ERROR;
+export const INFO = toast.TYPE.INFO;
+export const SUCCESS = toast.TYPE.SUCCESS;
+export const WARNING = toast.TYPE.WARNING;
+export const ERROR = toast.TYPE.ERROR;

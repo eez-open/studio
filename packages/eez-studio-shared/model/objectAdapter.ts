@@ -46,11 +46,7 @@ import {
     DocumentStore,
     NavigationStore
 } from "eez-studio-shared/model/store";
-import {
-    objectToClipboardData,
-    setClipboardData,
-    findPastePlaceInside
-} from "eez-studio-shared/model/clipboard";
+import { objectToClipboardData, setClipboardData, findPastePlaceInside } from "eez-studio-shared/model/clipboard";
 import { DragAndDropManager } from "eez-studio-shared/model/dd";
 import { objectToJson } from "eez-studio-shared/model/serialization";
 
@@ -136,10 +132,7 @@ export function getDisplayItemFromObjectId(item: DisplayItem, id: string): Displ
     return undefined;
 }
 
-export function reduceUntilCommonParent(
-    rootItem: DisplayItem,
-    items: DisplayItem[]
-): DisplayItem[] {
+export function reduceUntilCommonParent(rootItem: DisplayItem, items: DisplayItem[]): DisplayItem[] {
     let objects = reduceObjectsUntilCommonParent(items.map(item => item.object));
     let parentItems = objects.map(object => getDisplayItemFromObjectId(rootItem, object._id));
     return parentItems.filter(item => item !== undefined) as DisplayItem[];
@@ -149,9 +142,7 @@ export function reduceUntilCommonParent(
 
 export type TreeObjectAdapterChildrenArray = ITreeObjectAdapter[];
 export type TreeObjectAdapterChildrenObject = { [key: string]: ITreeObjectAdapter };
-export type TreeObjectAdapterChildren =
-    | TreeObjectAdapterChildrenArray
-    | TreeObjectAdapterChildrenObject;
+export type TreeObjectAdapterChildren = TreeObjectAdapterChildrenArray | TreeObjectAdapterChildrenObject;
 
 export interface ITreeObjectAdapter extends DisplayItem, DisplayItemSelection, IEditorState {
     object: EezObject;
@@ -173,11 +164,7 @@ export interface ITreeObjectAdapter extends DisplayItem, DisplayItemSelection, I
     loadState(state: any): void;
     saveState(): void;
     getObjectAdapter(
-        objectAdapterOrObjectOrObjectId:
-            | ITreeObjectAdapter
-            | EezObject
-            | EezArrayObject<EezObject>
-            | string
+        objectAdapterOrObjectOrObjectId: ITreeObjectAdapter | EezObject | EezArrayObject<EezObject> | string
     ): ITreeObjectAdapter | undefined;
     getAncestorObjectAdapter(object: EezObject): ITreeObjectAdapter | undefined;
     getParent(item: ITreeObjectAdapter): ITreeObjectAdapter | undefined;
@@ -200,11 +187,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
     @observable selected: boolean;
     @observable expanded: boolean;
 
-    constructor(
-        public object: EezObject,
-        transformer?: (object: EezObject) => ITreeObjectAdapter,
-        expanded?: boolean
-    ) {
+    constructor(public object: EezObject, transformer?: (object: EezObject) => ITreeObjectAdapter, expanded?: boolean) {
         if (transformer) {
             this.transformer = transformer;
         } else {
@@ -295,8 +278,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
         let properties = this.object._classInfo.properties.filter(
             propertyInfo =>
-                (propertyInfo.type === PropertyType.Object ||
-                    propertyInfo.type === PropertyType.Array) &&
+                (propertyInfo.type === PropertyType.Object || propertyInfo.type === PropertyType.Array) &&
                 isPropertyEnumerable(this.object, propertyInfo) &&
                 getProperty(this.object, propertyInfo.name)
         );
@@ -306,9 +288,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             properties[0].type === PropertyType.Array &&
             !(properties[0].showOnlyChildrenInTree === false)
         ) {
-            return asArray(getProperty(this.object, properties[0].name)).map(child =>
-                this.transformer(child)
-            );
+            return asArray(getProperty(this.object, properties[0].name)).map(child => this.transformer(child));
         }
 
         if (
@@ -325,10 +305,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 const childObject = getProperty(this.object, propertyInfo.name);
 
                 if (isArray(childObject)) {
-                    children[propertyInfo.name] = new TreeObjectAdapter(
-                        childObject,
-                        this.transformer
-                    );
+                    children[propertyInfo.name] = new TreeObjectAdapter(childObject, this.transformer);
                 } else {
                     children[propertyInfo.name] = this.transformer(childObject);
                 }
@@ -456,49 +433,57 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
     @action
     loadState(state: any) {
-        this.expanded = true;
-        this.selected = state.$selected;
-
-        _each(state, (value: any, key: any) => {
-            if (typeof key == "string" && key.startsWith("$")) {
+        function loadState(treeObjectAdapter: TreeObjectAdapter, state: any) {
+            if (!state) {
                 return;
             }
 
-            let child = (this.children as any)[key];
-            if (child) {
-                child.loadState(value);
-            }
-        });
+            treeObjectAdapter.expanded = true;
+            treeObjectAdapter.selected = state.$selected;
+
+            _each(state, (value: any, key: any) => {
+                if (typeof key == "string" && key.startsWith("$")) {
+                    return;
+                }
+
+                let child = (treeObjectAdapter.children as any)[key];
+                if (child) {
+                    loadState(child, value);
+                }
+            });
+        }
+
+        loadState(this, state);
     }
 
     saveState() {
-        let state: any = {};
+        function saveState(treeObjectAdapter: TreeObjectAdapter) {
+            let state: any = {};
 
-        if (this.selected) {
-            state.$selected = true;
+            if (treeObjectAdapter.selected) {
+                state.$selected = true;
+            }
+
+            if (treeObjectAdapter.expanded) {
+                _each(
+                    _pickBy(
+                        treeObjectAdapter.children,
+                        (childItem: ITreeObjectAdapter) => childItem.selected || childItem.expanded
+                    ),
+                    (childItem: any, i: any) => {
+                        state[i] = saveState(childItem);
+                    }
+                );
+            }
+
+            return state;
         }
 
-        if (this.expanded) {
-            _each(
-                _pickBy(
-                    this.children,
-                    (childItem: ITreeObjectAdapter) => childItem.selected || childItem.expanded
-                ),
-                (childItem: any, i: any) => {
-                    state[i] = childItem.saveState();
-                }
-            );
-        }
-
-        return state;
+        return saveState(this);
     }
 
     getObjectAdapter(
-        objectAdapterOrObjectOrObjectId:
-            | ITreeObjectAdapter
-            | EezObject
-            | EezArrayObject<EezObject>
-            | string
+        objectAdapterOrObjectOrObjectId: ITreeObjectAdapter | EezObject | EezArrayObject<EezObject> | string
     ): ITreeObjectAdapter | undefined {
         function getObjectAdapterFromObjectId(
             objectAdapter: ITreeObjectAdapter,
@@ -913,13 +898,9 @@ export class TreeAdapter implements ITreeAdapter {
             let itemChildren = _map(item.children, childItem => childItem) as ITreeObjectAdapter[];
 
             if (sortDirection === "asc") {
-                itemChildren = itemChildren.sort((a, b) =>
-                    stringCompare(a.object._label, b.object._label)
-                );
+                itemChildren = itemChildren.sort((a, b) => stringCompare(a.object._label, b.object._label));
             } else if (sortDirection === "desc") {
-                itemChildren = itemChildren.sort((a, b) =>
-                    stringCompare(b.object._label, a.object._label)
-                );
+                itemChildren = itemChildren.sort((a, b) => stringCompare(b.object._label, a.object._label));
             }
 
             return itemChildren;
@@ -1116,11 +1097,7 @@ export class TreeAdapter implements ITreeAdapter {
             } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
                 aNewObject = DocumentStore.insertObjectAfter(dropItem.object, object);
             } else if (dropPosition == DropPosition.DROP_POSITION_INSIDE) {
-                let dropPlace = findPastePlaceInside(
-                    dropItem.object,
-                    DragAndDropManager.dragObject._classInfo,
-                    true
-                );
+                let dropPlace = findPastePlaceInside(dropItem.object, DragAndDropManager.dragObject._classInfo, true);
                 if (dropPlace) {
                     if (isArray(dropPlace as EezObject)) {
                         aNewObject = DocumentStore.addObject(dropPlace as EezObject, object);
@@ -1158,12 +1135,7 @@ export class TreeAdapter implements ITreeAdapter {
         }
 
         // check: can't drop object if parent can't accept it
-        if (
-            !(
-                isArrayElement(dropItem.object) &&
-                isObjectInstanceOf(dragObject, dropItem.object._parent!._classInfo)
-            )
-        ) {
+        if (!(isArrayElement(dropItem.object) && isObjectInstanceOf(dragObject, dropItem.object._parent!._classInfo))) {
             return false;
         }
 
@@ -1190,11 +1162,7 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     canDropInside(dropItem: ITreeObjectAdapter) {
-        return !!findPastePlaceInside(
-            dropItem.object,
-            DragAndDropManager.dragObject!._classInfo,
-            true
-        );
+        return !!findPastePlaceInside(dropItem.object, DragAndDropManager.dragObject!._classInfo, true);
     }
 
     get dropItem(): ITreeObjectAdapter | undefined {

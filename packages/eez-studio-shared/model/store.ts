@@ -236,9 +236,7 @@ class NavigationStoreClass {
         return navigationItem;
     }
 
-    getNavigationSelectedItemAsObjectAdapter(
-        navigationObject: EezObject
-    ): ITreeObjectAdapter | undefined {
+    getNavigationSelectedItemAsObjectAdapter(navigationObject: EezObject): ITreeObjectAdapter | undefined {
         let navigationItem = this.getNavigationSelectedItem(navigationObject);
         if (navigationItem && navigationItem instanceof EezObject) {
             console.error("TreeObjectAdapter is expected");
@@ -264,9 +262,7 @@ class NavigationStoreClass {
                 setTimeout(() => {
                     if (editor && editor.state) {
                         editor.state.selectObject(
-                            isValue(objectToShow)
-                                ? (objectToShow._parent as EezObject)
-                                : objectToShow
+                            isValue(objectToShow) ? (objectToShow._parent as EezObject) : objectToShow
                         );
                     }
                 }, 0);
@@ -935,8 +931,7 @@ class DocumentStoreClass {
                     if (propertyInfo.computed !== true) {
                         const value = inputValues[propertyName];
                         if (
-                            (propertyInfo.type === PropertyType.Object ||
-                                propertyInfo.type === PropertyType.Array) &&
+                            (propertyInfo.type === PropertyType.Object || propertyInfo.type === PropertyType.Array) &&
                             value !== undefined &&
                             !(value instanceof EezObject)
                         ) {
@@ -1157,15 +1152,9 @@ export function pasteItem(object: EezObject) {
                 });
             } else {
                 if (c.serializedData.object) {
-                    return DocumentStore.addObject(
-                        c.pastePlace as EezObject,
-                        objectToJS(c.serializedData.object)
-                    );
+                    return DocumentStore.addObject(c.pastePlace as EezObject, objectToJS(c.serializedData.object));
                 } else if (c.serializedData.objects) {
-                    return DocumentStore.addObjects(
-                        c.pastePlace as EezObject,
-                        objectToJS(c.serializedData.objects)
-                    );
+                    return DocumentStore.addObjects(c.pastePlace as EezObject, objectToJS(c.serializedData.objects));
                 }
             }
         }
@@ -1334,11 +1323,7 @@ export function createContextMenu(context: IContextMenuContext, object: EezObjec
     return undefined;
 }
 
-export function showContextMenu(
-    context: IContextMenuContext,
-    object: EezObject,
-    position: IMenuAnchorPosition
-) {
+export function showContextMenu(context: IContextMenuContext, object: EezObject, position: IMenuAnchorPosition) {
     const menu = createContextMenu(context, object);
 
     if (menu) {

@@ -148,6 +148,7 @@ export class Widget extends EezObject {
     @observable activeStyle: Style;
     @observable data?: string;
     @observable action?: string;
+    @observable onClick: string;
 
     // resolution dependandable properties
     display: string;
@@ -336,6 +337,7 @@ export class Widget extends EezObject {
             resizingProperty,
             makeDataPropertyInfo("data"),
             makeActionPropertyInfo("action"),
+            makeActionPropertyInfo("onClick"),
             makeStylePropertyInfo("style", "Normal style"),
             makeStylePropertyInfo("activeStyle"),
             {

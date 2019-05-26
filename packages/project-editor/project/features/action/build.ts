@@ -23,6 +23,18 @@ function buildActionsEnum(projectActions: Action[]) {
     return `enum ActionsEnum {\n${actions.join(",\n")}\n};`;
 }
 
+function buildActionsFuncsDecl(projectActions: Action[]) {
+    let actions = projectActions.map(action => {
+        return `void ${projectBuild.getName(
+            "action_",
+            action.name,
+            projectBuild.NamingConvention.UnderscoreLowerCase
+        )}();`;
+    });
+
+    return actions.join("\n");
+}
+
 function buildActionsFuncsDef(projectActions: Action[]) {
     let actions = projectActions.map(action => {
         let implementationCode = action.implementationCode;
@@ -65,10 +77,7 @@ function buildActionsArrayDef(projectActions: Action[]) {
     )}\n};`;
 }
 
-export function build(
-    project: Project,
-    sectionNames: string[] | undefined
-): Promise<BuildResult> {
+export function build(project: Project, sectionNames: string[] | undefined): Promise<BuildResult> {
     return new Promise((resolve, reject) => {
         const result: any = {};
 
@@ -81,6 +90,10 @@ export function build(
 
         if (!sectionNames || sectionNames.indexOf("ACTIONS_ENUM") !== -1) {
             result.ACTIONS_ENUM = buildActionsEnum(projectActions);
+        }
+
+        if (!sectionNames || sectionNames.indexOf("ACTIONS_FUNCS_DECL") !== -1) {
+            result.ACTIONS_FUNCS_DECL = buildActionsFuncsDecl(projectActions);
         }
 
         if (!sectionNames || sectionNames.indexOf("ACTIONS_FUNCS_DEF") !== -1) {

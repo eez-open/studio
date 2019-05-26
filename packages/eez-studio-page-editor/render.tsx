@@ -92,13 +92,7 @@ export class WidgetComponent extends React.Component<{
             const canvas = widget.draw(rect, dataContext);
             if (canvas) {
                 style.imageRendering = "pixelated";
-                return (
-                    <img
-                        data-designer-object-id={dataDesignerObjectId}
-                        style={style}
-                        src={canvas.toDataURL()}
-                    />
-                );
+                return <img data-designer-object-id={dataDesignerObjectId} style={style} src={canvas.toDataURL()} />;
             }
         }
 
@@ -108,11 +102,21 @@ export class WidgetComponent extends React.Component<{
             style.overflow = "visible";
             widget.styleHook(style, designerContext);
 
+            let onClick;
+            if (widget instanceof Widget && widget.onClick) {
+                onClick = (event: React.MouseEvent) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dataContext.executeAction(widget.onClick);
+                };
+            }
+
             return (
                 <widget.Div
                     data-designer-object-id={dataDesignerObjectId}
                     className={className}
                     style={style}
+                    onClick={onClick}
                 >
                     {widget.render(rect, dataContext, designerContext)}
                 </widget.Div>

@@ -65,9 +65,7 @@ export class StaticProperty extends React.Component<
         return (
             <PropertyEnclosure advanced={this.props.advanced || false}>
                 <td className="PropertyName">{this.props.name}</td>
-                <td className="StaticPropertyValue">
-                    {(this.props.value && this.props.value.toString()) || ""}
-                </td>
+                <td className="StaticPropertyValue">{(this.props.value && this.props.value.toString()) || ""}</td>
             </PropertyEnclosure>
         );
     }
@@ -158,11 +156,7 @@ export class InputProperty extends React.Component<
         if (this.props.name) {
             content = [
                 <td key="name">
-                    <label
-                        className="PropertyName col-form-label"
-                        htmlFor={id}
-                        title={this.props.title}
-                    >
+                    <label className="PropertyName col-form-label" htmlFor={id} title={this.props.title}>
                         {this.props.name}
                     </label>
                 </td>,
@@ -270,13 +264,7 @@ export class NumberInputProperty extends React.Component<
     {}
 > {
     render() {
-        return (
-            <InputProperty
-                {...this.props}
-                type="number"
-                onChange={value => this.props.onChange(parseInt(value))}
-            />
-        );
+        return <InputProperty {...this.props} type="number" onChange={value => this.props.onChange(parseInt(value))} />;
     }
 }
 
@@ -301,7 +289,10 @@ export class RichTextProperty extends React.Component<
     quill: any;
 
     componentDidMount() {
-        const Quill = require("quill");
+        let Quill = (window as any).Quill;
+        if (!Quill && (window as any).require) {
+            Quill = (window as any).require("quill");
+        }
 
         this.quill = new Quill(this.refs.div, {
             theme: "snow"
@@ -353,7 +344,10 @@ export class StaticRichTextProperty extends React.Component<
     quill: any;
 
     componentDidMount() {
-        const Quill = require("quill");
+        let Quill = (window as any).Quill;
+        if (!Quill && (window as any).require) {
+            Quill = (window as any).require("quill");
+        }
 
         this.quill = new Quill(this.refs.div, {
             modules: {
@@ -609,11 +603,7 @@ export class KeybindingProperty extends React.Component<
                 <div className="input-group">
                     {input}
                     <div className="input-group-append">
-                        <button
-                            className="btn btn-secondary"
-                            title="Clear"
-                            onClick={this.onDeleteKeybinding}
-                        >
+                        <button className="btn btn-secondary" title="Clear" onClick={this.onDeleteKeybinding}>
                             &times;
                         </button>
                     </div>
@@ -661,10 +651,7 @@ export class ColorInputProperty extends React.Component<
 }
 
 @observer
-export class PropertyList extends React.Component<
-    { className?: string; withAdvancedProperties?: boolean },
-    {}
-> {
+export class PropertyList extends React.Component<{ className?: string; withAdvancedProperties?: boolean }, {}> {
     @observable
     showAdvanced = false;
 
@@ -691,9 +678,7 @@ export class PropertyList extends React.Component<
                         <tr>
                             <td colSpan={2}>
                                 <a href="#" onClick={this.toggleShowAdvanced}>
-                                    {this.showAdvanced
-                                        ? "< Hide advanced properties"
-                                        : "Show advanced properties >"}
+                                    {this.showAdvanced ? "< Hide advanced properties" : "Show advanced properties >"}
                                 </a>
                             </td>
                         </tr>
@@ -775,12 +760,6 @@ export class RangeProperty extends React.Component<
     {}
 > {
     render() {
-        return (
-            <InputProperty
-                {...this.props}
-                type="range"
-                onChange={value => this.props.onChange(parseInt(value))}
-            />
-        );
+        return <InputProperty {...this.props} type="range" onChange={value => this.props.onChange(parseInt(value))} />;
     }
 }
