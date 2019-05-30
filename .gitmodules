@@ -7,3 +7,6 @@
 [submodule "packages/eez-studio-shared"]
 	path = packages/eez-studio-shared
 	url = git@github.com:eez-open/eez-studio-shared.git
+[submodule "packages/eez-studio-ui"]
+	path = packages/eez-studio-ui
+	url = git@github.com:eez-open/eez-studio-ui.git
