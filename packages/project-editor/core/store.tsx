@@ -467,7 +467,7 @@ setUIElementsFactory({
                                             properties: ["openDirectory"]
                                         },
                                         filePaths => {
-                                            if (filePaths[0]) {
+                                            if (filePaths && filePaths[0]) {
                                                 onChange(
                                                     ProjectStore.getFolderPathRelativeToProjectPath(
                                                         filePaths[0]
@@ -517,7 +517,7 @@ setUIElementsFactory({
                                             ]
                                         },
                                         filePaths => {
-                                            if (filePaths[0]) {
+                                            if (filePaths && filePaths[0]) {
                                                 onChange(
                                                     ProjectStore.getFilePathRelativeToProjectPath(
                                                         filePaths[0]

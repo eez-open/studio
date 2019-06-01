@@ -443,7 +443,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
         return (
             <ProjectEditorContainer>
                 {mainContent}
-                {notification.container.get()}
+                {notification.container}
                 {devTools}
             </ProjectEditorContainer>
         );

@@ -1192,7 +1192,7 @@ export class ImportScpiDocDialog extends React.Component<
                 "click",
                 action((event: any) => {
                     if (this.selectedChanges[section].length == 0) {
-                        this.selectedChanges[section] = this.changes[section].slice();
+                        (this.selectedChanges as any)[section] = this.changes[section].slice();
                     } else {
                         this.selectedChanges[section] = [];
                     }
@@ -1470,7 +1470,7 @@ export class ImportScpiDocDialog extends React.Component<
 
         return (
             <ImportScpiDocDialogDiv
-                ref={ref => (this.dialog = ref!)}
+                ref={(ref: any) => (this.dialog = ref!)}
                 className={"modal fade"}
                 tabIndex={-1}
                 role="dialog"

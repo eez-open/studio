@@ -665,7 +665,7 @@ async function finishInstall(extensionZipPackageData: any) {
 
 export function downloadAndInstallExtension(
     extensionToInstall: IExtension,
-    progressToastId: number
+    progressToastId: notification.ToastId
 ) {
     return new Promise<IExtension | undefined>((resolve, reject) => {
         var req = new XMLHttpRequest();

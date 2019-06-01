@@ -1,3 +1,5 @@
+import path from "path";
+import url from "url";
 import { BrowserWindow, ipcMain, app } from "electron";
 import { action, observable, runInAction } from "mobx";
 
@@ -35,13 +37,21 @@ export function setForceQuit() {
 }
 
 export function createWindow(params: IWindowParams) {
-    let url = params.url;
-    if (!url.startsWith("file://")) {
-        url = `file://${__dirname}/../${url}`;
+    let windowUrl = params.url;
+    if (!windowUrl.startsWith("file://")) {
+        // windowUrl = `file://${__dirname}/../${windowUrl}`;
+
+        windowUrl = url.format({
+            pathname: path.join(__dirname, path.join("..", windowUrl)), // important
+            protocol: "file:",
+            slashes: true
+            // baseUrl: 'dist'
+        });
     }
 
     var windowContructorParams: Electron.BrowserWindowConstructorOptions = {
         webPreferences: {
+            nodeIntegration: true,
             // experimentalCanvasFeatures: true,
             // webSecurity: false,
             // allowRunningInsecureContent: true,
@@ -76,7 +86,7 @@ export function createWindow(params: IWindowParams) {
 
     settingsRegisterWindow(params.url, browserWindow);
 
-    browserWindow.loadURL(url);
+    browserWindow.loadURL(windowUrl);
 
     browserWindow.show();
 

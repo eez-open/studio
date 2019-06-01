@@ -8,7 +8,12 @@ import { stringCompare } from "eez-studio-shared/string";
 import { _flatten } from "eez-studio-shared/algorithm";
 import { db } from "eez-studio-shared/db";
 import { IStore } from "eez-studio-shared/store";
-import { IActivityLogEntry, activityLogStore, logGet, loadData } from "eez-studio-shared/activity-log";
+import {
+    IActivityLogEntry,
+    activityLogStore,
+    logGet,
+    loadData
+} from "eez-studio-shared/activity-log";
 
 import { DropdownIconAction, DropdownItem } from "eez-studio-ui/action";
 import * as notification from "eez-studio-ui/notification";
@@ -113,7 +118,7 @@ function doExport(
     store: IStore,
     itemsToExport: IActivityLogEntry[],
     filePath: string,
-    progressToastId: number
+    progressToastId: notification.ToastId
 ) {
     return new Promise((resolve, reject) => {
         const fs = EEZStudio.electron.remote.require("fs") as typeof fsModule;
