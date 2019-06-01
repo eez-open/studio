@@ -99,9 +99,7 @@ class Input extends React.Component<
     },
     {}
 > {
-    refs: {
-        input: HTMLInputElement;
-    };
+    input: HTMLInputElement;
 
     constructor(props: any) {
         super(props);
@@ -128,13 +126,12 @@ class Input extends React.Component<
     moveCursorToTheEnd: boolean;
 
     componentDidMount() {
-        this.refs.input.focus();
+        this.input.focus();
     }
 
     componentDidUpdate() {
         if (this.moveCursorToTheEnd) {
-            this.refs.input.selectionStart = this.refs.input.selectionEnd =
-                terminalState.command.length;
+            this.input.selectionStart = this.input.selectionEnd = terminalState.command.length;
             this.moveCursorToTheEnd = false;
         }
     }
@@ -237,7 +234,7 @@ class Input extends React.Component<
                 </div>
                 <div>
                     <input
-                        ref="input"
+                        ref={(ref: any) => (this.input = ref)}
                         className="mousetrap"
                         type="text"
                         onKeyDown={this.handleKeyDown}

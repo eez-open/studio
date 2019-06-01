@@ -51,10 +51,8 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
         this.applyConnectionParameters(this.props.connectionParameters);
     }
 
-    refs: {
-        div: HTMLDivElement;
-        form: HTMLFormElement;
-    };
+    div: HTMLDivElement;
+    form: HTMLFormElement;
 
     @observable iface: string;
     @observable ethernetAddress: string;
@@ -92,10 +90,10 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
             }
         }
 
-        $(this.refs.div).modal();
+        $(this.div).modal();
 
-        $(this.refs.div).on("hidden.bs.modal", () => {
-            (this.refs.div.parentElement as HTMLElement).remove();
+        $(this.div).on("hidden.bs.modal", () => {
+            (this.div.parentElement as HTMLElement).remove();
         });
 
         this.disposer = reaction(

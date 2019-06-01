@@ -57,7 +57,6 @@ export class ConfigurationReferencesPropertyValue extends React.Component<
                                     <div key={configuration.name} className="checkbox">
                                         <label>
                                             <input
-                                                ref="input"
                                                 type="checkbox"
                                                 checked={
                                                     this.props.value!.indexOf(

@@ -1,5 +1,3 @@
-import path from "path";
-import url from "url";
 import { BrowserWindow, ipcMain, app } from "electron";
 import { action, observable, runInAction } from "mobx";
 
@@ -39,14 +37,7 @@ export function setForceQuit() {
 export function createWindow(params: IWindowParams) {
     let windowUrl = params.url;
     if (!windowUrl.startsWith("file://")) {
-        // windowUrl = `file://${__dirname}/../${windowUrl}`;
-
-        windowUrl = url.format({
-            pathname: path.join(__dirname, path.join("..", windowUrl)), // important
-            protocol: "file:",
-            slashes: true
-            // baseUrl: 'dist'
-        });
+        windowUrl = `file://${__dirname}/../${windowUrl}`;
     }
 
     var windowContructorParams: Electron.BrowserWindowConstructorOptions = {

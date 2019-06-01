@@ -448,13 +448,7 @@ setUIElementsFactory({
 
             return (
                 <div className="input-group">
-                    <input
-                        ref="input"
-                        type="text"
-                        className="form-control"
-                        value={value}
-                        readOnly
-                    />
+                    <input type="text" className="form-control" value={value} readOnly />
                     <div className="input-group-append">
                         {clearButton}
                         <button
@@ -493,13 +487,7 @@ setUIElementsFactory({
             return (
                 <div>
                     <div className="input-group">
-                        <input
-                            ref="input"
-                            type="text"
-                            className="form-control"
-                            value={value}
-                            readOnly
-                        />
+                        <input type="text" className="form-control" value={value} readOnly />
                         <div className="input-group-append">
                             <button
                                 className="btn btn-secondary"
