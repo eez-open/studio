@@ -21,7 +21,7 @@ import { Section, Type } from "eez-studio-shared/model/output";
 
 import { ProjectStore } from "project-editor/core/store";
 
-import { BuildFile } from "project-editor/project/project";
+import { BuildFile, BuildConfiguration } from "project-editor/project/project";
 import {
     extensionDefinitionAnythingToBuild,
     extensionDefinitionBuild
@@ -107,7 +107,10 @@ class BuildException {
     constructor(public message: string, public object?: EezObject | undefined) {}
 }
 
-async function getBuildResults(sectionNames: string[] | undefined) {
+async function getBuildResults(
+    sectionNames: string[] | undefined,
+    buildConfiguration: BuildConfiguration | undefined
+) {
     const project = ProjectStore.project;
 
     let buildResults: BuildResult[] = [];
@@ -124,7 +127,8 @@ async function getBuildResults(sectionNames: string[] | undefined) {
             buildResults.push(
                 await projectFeature.eezStudioExtension.implementation.projectFeature.build(
                     project,
-                    sectionNames
+                    sectionNames,
+                    buildConfiguration
                 )
             );
         }
@@ -150,22 +154,51 @@ function getSectionNames(): string[] {
     return sectionNames;
 }
 
-async function doBuild(destinationFolderPath: string, buildResults: BuildResult[]) {
-    const project = ProjectStore.project;
+async function generateFile(buildResults: BuildResult[], buildFile: BuildFile, filePath: string) {
+    let parts: any = {};
+    for (const buildResult of buildResults) {
+        parts = Object.assign(parts, buildResult);
+    }
 
-    if (project.settings.build.files._array.length > 0) {
-        let parts: any = {};
-        for (let i = 0; i < buildResults.length; i++) {
-            parts = Object.assign(parts, buildResults[i]);
+    let buildFileContent = buildFile.template.replace(sectionNamesRegexp, (_1, part) => {
+        return parts[part];
+    });
+
+    await writeTextFile(filePath, buildFileContent);
+
+    OutputSectionsStore.write(Section.OUTPUT, Type.INFO, `File "${filePath}" builded`);
+}
+
+async function generateFiles(
+    destinationFolderPath: string,
+    configurationBuildResults: {
+        [configurationName: string]: BuildResult[];
+    }
+) {
+    const build = ProjectStore.project.settings.build;
+
+    for (const buildFile of build.files._array) {
+        if (buildFile.fileName.indexOf("<configuration>") !== -1) {
+            for (const configuration of build.configurations._array) {
+                await generateFile(
+                    configurationBuildResults[configuration.name],
+                    buildFile,
+                    destinationFolderPath +
+                        "/" +
+                        buildFile.fileName.replace("<configuration>", configuration.name)
+                );
+            }
+        } else {
+            generateFile(
+                configurationBuildResults[
+                    ProjectStore.selectedBuildConfiguration
+                        ? ProjectStore.selectedBuildConfiguration.name
+                        : "default"
+                ],
+                buildFile,
+                destinationFolderPath + "/" + buildFile.fileName
+            );
         }
-
-        await project.settings.build.files._array.forEach(async (buildFile: BuildFile) => {
-            let buildFileContent = buildFile.template.replace(sectionNamesRegexp, (_1, part) => {
-                return parts[part];
-            });
-
-            await writeTextFile(destinationFolderPath + "/" + buildFile.fileName, buildFileContent);
-        });
     }
 }
 
@@ -200,7 +233,28 @@ export async function build(onlyCheck: boolean) {
             sectionNames = getSectionNames();
         }
 
-        let buildResults = await getBuildResults(sectionNames);
+        let configurationBuildResuts: {
+            [configurationName: string]: BuildResult[];
+        } = {};
+
+        if (ProjectStore.project.settings.build.configurations._array.length > 0) {
+            for (const configuration of ProjectStore.project.settings.build.configurations._array) {
+                OutputSectionsStore.write(
+                    Section.OUTPUT,
+                    Type.INFO,
+                    `Building ${configuration.name} configuration`
+                );
+                configurationBuildResuts[configuration.name] = await getBuildResults(
+                    sectionNames,
+                    configuration
+                );
+            }
+        } else {
+            configurationBuildResuts["default"] = await getBuildResults(
+                sectionNames,
+                ProjectStore.selectedBuildConfiguration
+            );
+        }
 
         showCheckResult();
 
@@ -208,7 +262,7 @@ export async function build(onlyCheck: boolean) {
             return;
         }
 
-        await doBuild(destinationFolderPath, buildResults);
+        generateFiles(destinationFolderPath, configurationBuildResuts);
 
         await extensionDefinitionBuild();
 

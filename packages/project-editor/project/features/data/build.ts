@@ -1,7 +1,6 @@
 import { BuildResult } from "project-editor/core/extensions";
 
-import { ProjectStore } from "project-editor/core/store";
-import { Project } from "project-editor/project/project";
+import { Project, BuildConfiguration } from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
 
 import { DataItem } from "project-editor/project/features/data/data";
@@ -56,16 +55,17 @@ function buildDataArrayDef(projectDataItems: DataItem[]) {
 
 export function build(
     project: Project,
-    sectionNames: string[] | undefined
+    sectionNames: string[] | undefined,
+    buildConfiguration: BuildConfiguration | undefined
 ): Promise<BuildResult> {
     return new Promise((resolve, reject) => {
         const result: any = {};
 
         const projectDataItems = project.data._array.filter(
             dataItem =>
-                !ProjectStore.selectedBuildConfiguration ||
+                !buildConfiguration ||
                 !dataItem.usedIn ||
-                dataItem.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
+                dataItem.usedIn.indexOf(buildConfiguration.name) !== -1
         );
 
         if (!sectionNames || sectionNames.indexOf("DATA_ENUM") !== -1) {

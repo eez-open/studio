@@ -121,9 +121,9 @@ export class Action extends EezObject {
     check() {
         let messages: Message[] = [];
 
-        if (!this.implementationCode) {
-            messages.push(new Message(Type.WARNING, "Action is not implemented.", this));
-        }
+        // if (!this.implementationCode) {
+        //     messages.push(new Message(Type.WARNING, "Action is not implemented.", this));
+        // }
 
         return messages;
     }

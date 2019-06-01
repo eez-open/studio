@@ -1,7 +1,6 @@
 import { BuildResult } from "project-editor/core/extensions";
 
-import { ProjectStore } from "project-editor/core/store";
-import { Project } from "project-editor/project/project";
+import { Project, BuildConfiguration } from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
 
 import { Action } from "project-editor/project/features/action/action";
@@ -77,15 +76,19 @@ function buildActionsArrayDef(projectActions: Action[]) {
     )}\n};`;
 }
 
-export function build(project: Project, sectionNames: string[] | undefined): Promise<BuildResult> {
+export function build(
+    project: Project,
+    sectionNames: string[] | undefined,
+    buildConfiguration: BuildConfiguration | undefined
+): Promise<BuildResult> {
     return new Promise((resolve, reject) => {
         const result: any = {};
 
         const projectActions = project.actions._array.filter(
             action =>
-                !ProjectStore.selectedBuildConfiguration ||
+                !buildConfiguration ||
                 !action.usedIn ||
-                action.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
+                action.usedIn.indexOf(buildConfiguration.name) !== -1
         );
 
         if (!sectionNames || sectionNames.indexOf("ACTIONS_ENUM") !== -1) {

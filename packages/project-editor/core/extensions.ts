@@ -1,6 +1,6 @@
 import { EezObject, EezClass, PropertyType } from "eez-studio-shared/model/object";
 import { Message } from "eez-studio-shared/model/output";
-import { Project } from "project-editor/project/project";
+import { Project, BuildConfiguration } from "project-editor/project/project";
 
 let fs = EEZStudio.electron.remote.require("fs");
 let path = EEZStudio.electron.remote.require("path");
@@ -18,7 +18,11 @@ interface ExtensionImplementation {
         typeClass: EezClass;
         create: () => any;
         check?: (object: EezObject) => Message[];
-        build?: (project: Project, sectionNames: string[] | undefined) => Promise<BuildResult>;
+        build?: (
+            project: Project,
+            sectionNames: string[] | undefined,
+            buildConfiguration: BuildConfiguration | undefined
+        ) => Promise<BuildResult>;
         collectExtensionDefinitions?: (
             project: Project,
             extensionDefinition: ExtensionDefinition,

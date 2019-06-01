@@ -2,11 +2,10 @@ import { getProperty } from "eez-studio-shared/model/object";
 import { OutputSectionsStore } from "eez-studio-shared/model/store";
 import * as output from "eez-studio-shared/model/output";
 
-import { ProjectStore } from "project-editor/core/store";
 import { BuildResult } from "project-editor/core/extensions";
 
 import * as projectBuild from "project-editor/project/build";
-import { Project } from "project-editor/project/project";
+import { Project, BuildConfiguration } from "project-editor/project/project";
 
 import { DataItem } from "project-editor/project/features/data/data";
 import { Action } from "project-editor/project/features/action/action";
@@ -1195,26 +1194,26 @@ class Assets {
     fonts: Font[] = [];
     bitmaps: Bitmap[] = [];
 
-    constructor(public project: Project) {
+    constructor(public project: Project, buildConfiguration: BuildConfiguration | undefined) {
         this.dataItems = (project.data._array as DataItem[]).filter(
             dataItem =>
-                !ProjectStore.selectedBuildConfiguration ||
+                !buildConfiguration ||
                 !dataItem.usedIn ||
-                dataItem.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
+                dataItem.usedIn.indexOf(buildConfiguration.name) !== -1
         );
 
         this.actions = (project.actions._array as Action[]).filter(
             action =>
-                !ProjectStore.selectedBuildConfiguration ||
+                !buildConfiguration ||
                 !action.usedIn ||
-                action.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
+                action.usedIn.indexOf(buildConfiguration.name) !== -1
         );
 
         this.pages = (getProperty(project, "gui") as Gui).pages._array.filter(
             page =>
-                !ProjectStore.selectedBuildConfiguration ||
+                !buildConfiguration ||
                 !page.usedIn ||
-                page.usedIn.indexOf(ProjectStore.selectedBuildConfiguration.name) !== -1
+                page.usedIn.indexOf(buildConfiguration.name) !== -1
         );
 
         this.styles = (getProperty(project, "gui") as Gui).styles._array.filter(
@@ -1430,11 +1429,12 @@ class Assets {
 
 export async function build(
     project: Project,
-    sectionNames: string[] | undefined
+    sectionNames: string[] | undefined,
+    buildConfiguration: BuildConfiguration | undefined
 ): Promise<BuildResult> {
     const result: any = {};
 
-    const assets = new Assets(project);
+    const assets = new Assets(project, buildConfiguration);
 
     assets.reportUnusedAssets();
 
