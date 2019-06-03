@@ -4,7 +4,8 @@ import { stringCompare } from "eez-studio-shared/string";
 
 import { validators } from "eez-studio-shared/model/validation";
 import * as output from "eez-studio-shared/model/output";
-import { isReferenced } from "eez-studio-shared/model/search";
+
+//import { isReferenced } from "eez-studio-shared/model/search";
 
 import { showGenericDialog, EnumItems } from "eez-studio-ui/generic-dialog";
 
@@ -159,11 +160,12 @@ export class ScpiEnum extends EezObject {
     check() {
         const messages: output.Message[] = [];
 
-        if (!isReferenced(this)) {
-            messages.push(
-                new output.Message(output.Type.WARNING, "enum not used in the project", this)
-            );
-        }
+        // TODO this check is removed because it is too slow
+        // if (!isReferenced(this)) {
+        //     messages.push(
+        //         new output.Message(output.Type.WARNING, "enum not used in the project", this)
+        //     );
+        // }
 
         return messages;
     }

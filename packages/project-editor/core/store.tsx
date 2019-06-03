@@ -55,11 +55,15 @@ class ProjectStoreClass {
     constructor() {
         autorun(() => {
             this.updateProjectWindowState();
+        });
 
+        autorun(() => {
             if (this.filePath) {
                 this.updateMruFilePath();
             }
+        });
 
+        autorun(() => {
             // check the project in the background
             if (this.project && this.backgroundCheckEnabled) {
                 backgroundCheck();
