@@ -399,7 +399,7 @@ export function drawBitmap(bitmap: Bitmap, w: number, h: number, style: Style, i
                 lcd.setColor(getStyleProperty(style, "color"));
             }
 
-            lcd.setColor(getStyleProperty(bitmap && bitmap.style, "backgroundColor"));
+            lcd.setColor(bitmap.backgroundColor || "transparent");
             lcd.fillRect(ctx, x_offset, y_offset, x_offset + width - 1, y_offset + height - 1);
 
             lcd.drawBitmap(ctx, imageElement, x_offset, y_offset, width, height);

@@ -491,7 +491,12 @@ setUIElementsFactory({
             return (
                 <div>
                     <div className="input-group">
-                        <input type="text" className="form-control" value={value} readOnly />
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={propertyInfo.embeddedImage ? "<embedded image>" : value}
+                            readOnly
+                        />
                         <div className="input-group-append">
                             <button
                                 className="btn btn-secondary"
@@ -510,11 +515,27 @@ setUIElementsFactory({
                                         },
                                         filePaths => {
                                             if (filePaths && filePaths[0]) {
-                                                onChange(
-                                                    ProjectStore.getFilePathRelativeToProjectPath(
-                                                        filePaths[0]
-                                                    )
-                                                );
+                                                if (propertyInfo.embeddedImage) {
+                                                    fs.readFile(
+                                                        ProjectStore.getAbsoluteFilePath(
+                                                            filePaths[0]
+                                                        ),
+                                                        "base64",
+                                                        (err: any, data: any) => {
+                                                            if (!err) {
+                                                                onChange(
+                                                                    "data:image/png;base64," + data
+                                                                );
+                                                            }
+                                                        }
+                                                    );
+                                                } else {
+                                                    onChange(
+                                                        ProjectStore.getFilePathRelativeToProjectPath(
+                                                            filePaths[0]
+                                                        )
+                                                    );
+                                                }
                                             }
                                         }
                                     );
@@ -524,9 +545,13 @@ setUIElementsFactory({
                             </button>
                         </div>
                     </div>
-                    {value && (
+                    {value && !propertyInfo.embeddedImage && (
                         <img
-                            src={ProjectStore.getAbsoluteFilePath(value)}
+                            src={
+                                value.startsWith("data:image/")
+                                    ? value
+                                    : ProjectStore.getAbsoluteFilePath(value)
+                            }
                             style={{
                                 display: "block",
                                 maxWidth: "100%",

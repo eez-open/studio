@@ -18,7 +18,6 @@ import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
 
 import { BitmapEditor } from "project-editor/project/features/gui/BitmapEditor";
-import { getStyleProperty } from "project-editor/project/features/gui/style";
 
 let fs = EEZStudio.electron.remote.require("fs");
 
@@ -32,7 +31,7 @@ export class Bitmap extends EezObject {
     @observable
     bpp: number;
     @observable
-    style?: string;
+    backgroundColor?: string;
     @observable
     alwaysBuild: boolean;
 
@@ -50,8 +49,8 @@ export class Bitmap extends EezObject {
             {
                 name: "image",
                 type: PropertyType.Image,
-                hideInPropertyGrid: true,
-                skipSearch: true
+                skipSearch: true,
+                embeddedImage: true
             },
             {
                 name: "bpp",
@@ -60,9 +59,8 @@ export class Bitmap extends EezObject {
                 defaultValue: 16
             },
             {
-                name: "style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                name: "backgroundColor",
+                type: PropertyType.Color
             },
             {
                 name: "alwaysBuild",
@@ -166,7 +164,7 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
             if (bitmap.bpp === 32) {
                 ctx.clearRect(0, 0, image.width, image.height);
             } else {
-                ctx.fillStyle = getStyleProperty(bitmap.style, "backgroundColor");
+                ctx.fillStyle = bitmap.backgroundColor || "transparent";
                 ctx.fillRect(0, 0, image.width, image.height);
             }
 

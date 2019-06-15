@@ -6,7 +6,6 @@ import styled from "eez-studio-ui/styled-components";
 import { EditorComponent } from "eez-studio-shared/model/object";
 
 import { Bitmap } from "project-editor/project/features/gui/bitmap";
-import { getStyleProperty } from "project-editor/project/features/gui/style";
 
 const BitmapEditorContainer = styled.div`
     flex-grow: 1;
@@ -21,10 +20,7 @@ export class BitmapEditor extends EditorComponent {
         const bitmap = this.props.editor.object as Bitmap;
 
         const style = {
-            backgroundColor:
-                bitmap.bpp === 32
-                    ? "transparent"
-                    : getStyleProperty(bitmap.style, "backgroundColor"),
+            backgroundColor: bitmap.bpp === 32 ? "transparent" : bitmap.backgroundColor,
             width: "100%"
         };
 

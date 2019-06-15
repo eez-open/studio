@@ -75,7 +75,7 @@ setPageContext({
                 props.propertyInfo.name === "width" ||
                 props.propertyInfo.name === "height"
             ) {
-                if (filterNumber(newValue)) {
+                if (Number.isFinite(filterNumber(newValue))) {
                     props.updateObject({
                         [props.propertyInfo.name]: newValue
                     });
