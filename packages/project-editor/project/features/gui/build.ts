@@ -20,7 +20,6 @@ import { Font } from "project-editor/project/features/gui/font";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const STYLE_FLAGS_BORDER = 1 << 0;
 const STYLE_FLAGS_HORZ_ALIGN_LEFT = 0 << 1;
 const STYLE_FLAGS_HORZ_ALIGN_RIGHT = 1 << 1;
 const STYLE_FLAGS_HORZ_ALIGN_CENTER = 2 << 1;
@@ -435,10 +434,6 @@ function buildGuiStylesData(assets: Assets) {
 
         // flags
         let flags = 0;
-        let styleBorderSize = style.borderSizeProperty;
-        if (styleBorderSize == 1) {
-            flags |= STYLE_FLAGS_BORDER;
-        }
 
         let styleAlignHorizontal = style.alignHorizontalProperty;
         if (styleAlignHorizontal == "left") {
@@ -479,6 +474,9 @@ function buildGuiStylesData(assets: Assets) {
         }
         result.addField(new UInt16(color16));
         colors.add(color16);
+
+        result.addField(new UInt16(style.borderSize || 0));
+        result.addField(new UInt16(style.borderRadius || 0));
 
         let borderColor16 = style.borderColor16;
         if (isNaN(borderColor16)) {

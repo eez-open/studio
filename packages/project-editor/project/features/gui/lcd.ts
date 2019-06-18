@@ -1,4 +1,4 @@
-import { blendColor } from "eez-studio-shared/color";
+import { getColorRGB, blendColor } from "eez-studio-shared/color";
 
 import { Font } from "project-editor/project/features/gui/font";
 
@@ -22,7 +22,7 @@ export function drawRect(
     y2: number
 ) {
     ctx.beginPath();
-    ctx.rect(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
+    ctx.rect(x1 + 0.5, y1 + 0.5, x2 - x1 + 1, y2 - y1 + 1);
     ctx.strokeStyle = fgColor;
     ctx.lineWidth = 1;
     ctx.stroke();
@@ -33,35 +33,71 @@ export function fillRect(
     x1: number,
     y1: number,
     x2: number,
-    y2: number
+    y2: number,
+    r: number = 0
 ) {
-    ctx.beginPath();
-    ctx.rect(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
-    ctx.fillStyle = fgColor;
-    ctx.fill();
+    if (r == 0) {
+        ctx.beginPath();
+        ctx.rect(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
+        ctx.fillStyle = fgColor;
+        ctx.fill();
+    } else {
+        // draw rounded rect
+        fillRect(ctx, x1 + r, y1, x2 - r, y1 + r - 1);
+        fillRect(ctx, x1, y1 + r, x1 + r - 1, y2 - r);
+        fillRect(ctx, x2 + 1 - r, y1 + r, x2, y2 - r);
+        fillRect(ctx, x1 + r, y2 - r + 1, x2 - r, y2);
+        fillRect(ctx, x1 + r, y1 + r, x2 - r, y2 - r);
+
+        for (let ry = 0; ry <= r; ry++) {
+            let rx = Math.round(Math.sqrt(r * r - ry * ry));
+            drawHLine(ctx, x2 - r, y2 - r + ry, rx);
+            drawHLine(ctx, x1 + r - rx, y2 - r + ry, rx);
+            drawHLine(ctx, x2 - r, y1 + r - ry, rx);
+            drawHLine(ctx, x1 + r - rx, y1 + r - ry, rx);
+        }
+    }
 }
 
 export function drawHLine(ctx: CanvasRenderingContext2D, x: number, y: number, l: number) {
     ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + l, y);
+    ctx.moveTo(x + 0.5, y + 0.5);
+    ctx.lineTo(x + 0.5 + l, y + 0.5);
     ctx.strokeStyle = fgColor;
     ctx.stroke();
 }
 
 export function drawVLine(ctx: CanvasRenderingContext2D, x: number, y: number, l: number) {
     ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x, y + l);
+    ctx.moveTo(x + 0.5, y + 0.5);
+    ctx.lineTo(x + 0.5, y + l + 0.5);
     ctx.strokeStyle = fgColor;
     ctx.stroke();
 }
 
+let pixelCtx: CanvasRenderingContext2D;
+let pixelImageData: ImageData;
+let pixelData: Uint8ClampedArray;
+let pixelColor: string;
+
 function setPixel(ctx: CanvasRenderingContext2D, color: string) {
-    ctx.beginPath();
-    ctx.rect(x, y, 1, 1);
-    ctx.fillStyle = color;
-    ctx.fill();
+    if (pixelCtx != ctx) {
+        pixelCtx = ctx;
+        pixelImageData = ctx.createImageData(1, 1);
+        pixelData = pixelImageData.data;
+        pixelData[3] = 255;
+        pixelColor = "";
+    }
+
+    if (color != pixelColor) {
+        pixelColor = color;
+        const rgb = getColorRGB(pixelColor);
+        pixelData[0] = rgb.r;
+        pixelData[1] = rgb.g;
+        pixelData[2] = rgb.b;
+    }
+
+    ctx.putImageData(pixelImageData, x, y);
 
     if (++x > x2) {
         x = x1;
@@ -134,7 +170,9 @@ function drawGlyph(
                 if (font.bpp === 8) {
                     setPixel(ctx, blendColor(fgColor, bgColor, glyph.getPixel(x, y) / 255));
                 } else {
-                    setPixel(ctx, glyph.getPixel(x, y) ? fgColor : bgColor);
+                    if (glyph.getPixel(x, y)) {
+                        setPixel(ctx, fgColor);
+                    }
                 }
             }
         }
@@ -164,5 +202,5 @@ export function drawBitmap(
     width: number,
     height: number
 ) {
-    ctx.drawImage(bitmap, x, y, width, height);
+    ctx.drawImage(bitmap, x + 0.5, y + 0.5, width, height);
 }

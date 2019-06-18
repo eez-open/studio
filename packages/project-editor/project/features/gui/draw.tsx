@@ -20,8 +20,12 @@ const MAX_DRAW_CACHE_SIZE = 1000;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function styleHasBorder(style: Style) {
-    return getStyleProperty(style, "borderSize") == 1;
+function styleGetBorderSize(style: Style) {
+    return getStyleProperty(style, "borderSize");
+}
+
+function styleGetBorderRadius(style: Style) {
+    return getStyleProperty(style, "borderRadius");
 }
 
 function styleIsHorzAlignLeft(style: Style) {
@@ -148,14 +152,27 @@ export function drawText(
             let x2 = w - 1;
             let y2 = h - 1;
 
-            if (styleHasBorder(style)) {
+            const borderSize = styleGetBorderSize(style) || 0;
+            let borderRadius = styleGetBorderRadius(style) || 0;
+            if (borderSize > 0) {
                 lcd.setColor(getStyleProperty(style, "borderColor"));
-                lcd.drawRect(ctx, x1, y1, x2, y2);
-                x1++;
-                y1++;
-                x2--;
-                y2--;
+                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                x1 += borderSize;
+                y1 += borderSize;
+                x2 -= borderSize;
+                y2 -= borderSize;
+                borderRadius = Math.max(borderRadius - borderSize, 0);
             }
+
+            const styleColor = getStyleProperty(style, "color");
+            const styleBackgroundColor =
+                overrideBackgroundColor !== undefined
+                    ? overrideBackgroundColor
+                    : getStyleProperty(style, "backgroundColor");
+
+            let backgroundColor = inverse ? styleColor : styleBackgroundColor;
+            lcd.setColor(backgroundColor);
+            lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
 
             const font = styleGetFont(style);
             if (!font) {
@@ -189,16 +206,6 @@ export function drawText(
                 y_offset = Math.floor(y1 + (y2 - y1 + 1 - height) / 2);
             }
 
-            const styleColor = getStyleProperty(style, "color");
-            const styleBackgroundColor =
-                overrideBackgroundColor !== undefined
-                    ? overrideBackgroundColor
-                    : getStyleProperty(style, "backgroundColor");
-
-            let backgroundColor = inverse ? styleColor : styleBackgroundColor;
-            lcd.setColor(backgroundColor);
-            lcd.fillRect(ctx, x1, y1, x2, y2);
-
             if (inverse) {
                 lcd.setBackColor(styleColor);
                 lcd.setColor(styleBackgroundColor);
@@ -229,20 +236,23 @@ export function drawMultilineText(
             let x2 = w - 1;
             let y2 = h - 1;
 
-            if (styleHasBorder(style)) {
+            const borderSize = styleGetBorderSize(style) || 0;
+            let borderRadius = styleGetBorderRadius(style) || 0;
+            if (borderSize > 0) {
                 lcd.setColor(getStyleProperty(style, "borderColor"));
-                lcd.drawRect(ctx, x1, y1, x2, y2);
-                x1++;
-                y1++;
-                x2--;
-                y2--;
+                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                x1 += borderSize;
+                y1 += borderSize;
+                x2 -= borderSize;
+                y2 -= borderSize;
+                borderRadius = Math.max(borderRadius - borderSize, 0);
             }
 
             let backgroundColor = inverse
                 ? getStyleProperty(style, "color")
                 : getStyleProperty(style, "backgroundColor");
             lcd.setColor(backgroundColor);
-            lcd.fillRect(ctx, x1, y1, x2, y2);
+            lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
 
             const font = styleGetFont(style);
             if (!font) {
@@ -349,20 +359,23 @@ export function drawBitmap(bitmap: Bitmap, w: number, h: number, style: Style, i
             let x2 = w - 1;
             let y2 = h - 1;
 
-            if (styleHasBorder(style)) {
+            const borderSize = styleGetBorderSize(style) || 0;
+            let borderRadius = styleGetBorderRadius(style) || 0;
+            if (borderSize > 0) {
                 lcd.setColor(getStyleProperty(style, "borderColor"));
-                lcd.drawRect(ctx, x1, y1, x2, y2);
-                x1++;
-                y1++;
-                x2--;
-                y2--;
+                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                x1 += borderSize;
+                y1 += borderSize;
+                x2 -= borderSize;
+                y2 -= borderSize;
+                borderRadius = Math.max(borderRadius - borderSize, 0);
             }
 
             let backgroundColor = inverse
                 ? getStyleProperty(style, "color")
                 : getStyleProperty(style, "backgroundColor");
             lcd.setColor(backgroundColor);
-            lcd.fillRect(ctx, x1, y1, x2, y2);
+            lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
 
             let width = imageElement.width;
             let height = imageElement.height;
@@ -422,13 +435,16 @@ export function drawRectangle(w: number, h: number, style: Style, inverse: boole
                 let x2 = w - 1;
                 let y2 = h - 1;
 
-                if (styleHasBorder(style)) {
+                const borderSize = styleGetBorderSize(style) || 0;
+                let borderRadius = styleGetBorderRadius(style) || 0;
+                if (borderSize > 0) {
                     lcd.setColor(getStyleProperty(style, "borderColor"));
-                    lcd.drawRect(ctx, x1, y1, x2, y2);
-                    x1++;
-                    y1++;
-                    x2--;
-                    y2--;
+                    lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                    x1 += borderSize;
+                    y1 += borderSize;
+                    x2 -= borderSize;
+                    y2 -= borderSize;
+                    borderRadius = Math.max(borderRadius - borderSize, 0);
                 }
 
                 lcd.setColor(
@@ -436,7 +452,7 @@ export function drawRectangle(w: number, h: number, style: Style, inverse: boole
                         ? getStyleProperty(style, "backgroundColor")
                         : getStyleProperty(style, "color")
                 );
-                lcd.fillRect(ctx, x1, y1, x2, y2);
+                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
             }
         );
     }
@@ -935,17 +951,20 @@ export function drawYTGraphWidget(widget: Widget.Widget, rect: Rect) {
             let x2 = rect.width - 1;
             let y2 = rect.height - 1;
 
-            if (styleHasBorder(style)) {
+            const borderSize = styleGetBorderSize(style) || 0;
+            let borderRadius = styleGetBorderRadius(style) || 0;
+            if (borderSize > 0) {
                 lcd.setColor(getStyleProperty(style, "borderColor"));
-                lcd.drawRect(ctx, x1, y1, x2, y2);
-                x1++;
-                y1++;
-                x2--;
-                y2--;
+                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                x1 += borderSize;
+                y1 += borderSize;
+                x2 -= borderSize;
+                y2 -= borderSize;
+                borderRadius = Math.max(borderRadius - borderSize, 0);
             }
 
             lcd.setColor(getStyleProperty(style, "backgroundColor"));
-            lcd.fillRect(ctx, x1, y1, x2, y2);
+            lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
         }
     );
 }
@@ -1022,17 +1041,20 @@ export function drawListGraphWidget(widget: Widget.Widget, rect: Rect) {
             let x2 = rect.width - 1;
             let y2 = rect.height - 1;
 
-            if (styleHasBorder(style)) {
+            const borderSize = styleGetBorderSize(style) || 0;
+            let borderRadius = styleGetBorderRadius(style) || 0;
+            if (borderSize > 0) {
                 lcd.setColor(getStyleProperty(style, "borderColor"));
-                lcd.drawRect(ctx, x1, y1, x2, y2);
-                x1++;
-                y1++;
-                x2--;
-                y2--;
+                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                x1 += borderSize;
+                y1 += borderSize;
+                x2 -= borderSize;
+                y2 -= borderSize;
+                borderRadius = Math.max(borderRadius - borderSize, 0);
             }
 
             lcd.setColor(getStyleProperty(style, "backgroundColor"));
-            lcd.fillRect(ctx, x1, y1, x2, y2);
+            lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
         }
     );
 }
