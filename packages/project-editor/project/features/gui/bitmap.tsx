@@ -1,27 +1,70 @@
 import { observable, action } from "mobx";
+import React from "react";
+import { observer } from "mobx-react";
+import styled from "eez-studio-ui/styled-components";
 
-import { validators } from "eez-studio-shared/model/validation";
-
-import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-
-import { ProjectStore } from "project-editor/core/store";
 import {
+    EditorComponent,
     ClassInfo,
     EezObject,
     registerClass,
     PropertyType,
     asArray
 } from "eez-studio-shared/model/object";
+import { validators } from "eez-studio-shared/model/validation";
 
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+
+import { ProjectStore } from "project-editor/core/store";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
-
 import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
-
-import { BitmapEditor } from "project-editor/project/features/gui/BitmapEditor";
 
 let fs = EEZStudio.electron.remote.require("fs");
 
-export class Bitmap extends EezObject {
+////////////////////////////////////////////////////////////////////////////////
+
+const BitmapEditorContainer = styled.div`
+    flex-grow: 1;
+    display: flex;
+    justify-content: center; /* align horizontal */
+    align-items: center; /* align vertical */
+`;
+
+@observer
+class BitmapEditor extends EditorComponent {
+    render() {
+        const bitmap = this.props.editor.object as Bitmap;
+
+        const style = {
+            backgroundColor: bitmap.bpp === 32 ? "transparent" : bitmap.backgroundColor,
+            width: "100%"
+        };
+
+        return (
+            <BitmapEditorContainer>
+                <div>
+                    <div>
+                        <img src={bitmap.image} style={style} />
+                    </div>
+                    {bitmap.imageElement && (
+                        <h4>
+                            Dimension: {bitmap.imageElement.width} x {bitmap.imageElement.height}
+                        </h4>
+                    )}
+                </div>
+            </BitmapEditorContainer>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface IBitmap {
+    name: string;
+    image: string;
+}
+
+export class Bitmap extends EezObject implements IBitmap {
     @observable
     name: string;
     @observable
@@ -96,7 +139,7 @@ export class Bitmap extends EezObject {
                 },
                 values: {}
             }).then(result => {
-                return new Promise<Bitmap>((resolve, reject) => {
+                return new Promise<IBitmap>((resolve, reject) => {
                     fs.readFile(
                         ProjectStore.getAbsoluteFilePath(result.values.imageFilePath),
                         "base64",
@@ -104,12 +147,10 @@ export class Bitmap extends EezObject {
                             if (err) {
                                 reject(err);
                             } else {
-                                let newBitmap: Bitmap = <any>{
+                                resolve({
                                     name: result.values.name,
-                                    image: "data:image/png;base64," + data
-                                };
-
-                                resolve(newBitmap);
+                                    image: "data:image/png;base64,"
+                                });
                             }
                         }
                     );
@@ -141,6 +182,8 @@ export class Bitmap extends EezObject {
 
 registerClass(Bitmap);
 
+////////////////////////////////////////////////////////////////////////////////
+
 export interface BitmapData {
     width: number;
     height: number;
@@ -159,7 +202,11 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
             canvas.width = image.width;
             canvas.height = image.height;
 
-            let ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
+            let ctx = canvas.getContext("2d");
+            if (ctx == null) {
+                reject();
+                return;
+            }
 
             if (bitmap.bpp === 32) {
                 ctx.clearRect(0, 0, image.width, image.height);

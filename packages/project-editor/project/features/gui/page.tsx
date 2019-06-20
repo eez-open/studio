@@ -1,22 +1,38 @@
 import React from "react";
-import { computed } from "mobx";
+import { computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { Splitter } from "eez-studio-ui/splitter";
+import { _find } from "eez-studio-shared/algorithm";
 
-import { EditorComponent } from "eez-studio-shared/model/object";
-import { TreeAdapter } from "eez-studio-shared/model/objectAdapter";
+import {
+    EezObject,
+    IEditorState,
+    hidePropertiesInPropertyGrid,
+    EditorComponent
+} from "eez-studio-shared/model/object";
+import {
+    TreeObjectAdapter,
+    ITreeObjectAdapter,
+    TreeAdapter
+} from "eez-studio-shared/model/objectAdapter";
 import { NavigationStore } from "eez-studio-shared/model/store";
-
 import { Tree } from "eez-studio-shared/model/components/Tree";
 import { Panel } from "eez-studio-shared/model/components/Panel";
+
+import { Splitter } from "eez-studio-ui/splitter";
 
 import { WidgetPalette } from "eez-studio-page-editor/components/WidgetPalette";
 import { PageEditor as StudioPageEditor } from "eez-studio-page-editor/editor";
 import { getPageContext } from "eez-studio-page-editor/page-context";
 
-import { Page, PageTabState } from "project-editor/project/features/gui/page";
+import { Page } from "project-editor/project/features/gui/page";
+
+import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
+
+////////////////////////////////////////////////////////////////////////////////
+
+export { Page } from "eez-studio-page-editor/page";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -82,5 +98,55 @@ export class PageEditor extends EditorComponent {
                 </Splitter>
             </Splitter>
         );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Page.classInfo.editorComponent = PageEditor;
+Page.classInfo.navigationComponent = ListNavigationWithContent;
+
+hidePropertiesInPropertyGrid(Page, [
+    "display",
+    "position",
+    "right",
+    "bottom",
+    "windowWidth",
+    "windowHeight",
+    "scrollable",
+    "css",
+    "className"
+]);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class PageTabState implements IEditorState {
+    page: Page;
+    widgetContainerDisplayItem: ITreeObjectAdapter;
+
+    constructor(object: EezObject) {
+        this.page = object as Page;
+        this.widgetContainerDisplayItem = new TreeObjectAdapter(this.page);
+    }
+
+    @computed
+    get selectedObject(): EezObject | undefined {
+        return this.widgetContainerDisplayItem.selectedObject || this.page;
+    }
+
+    loadState(state: any) {
+        this.widgetContainerDisplayItem.loadState(state);
+    }
+
+    saveState() {
+        return this.widgetContainerDisplayItem.saveState();
+    }
+
+    @action
+    selectObject(object: EezObject) {
+        let item = this.widgetContainerDisplayItem.getObjectAdapter(object);
+        if (item) {
+            this.widgetContainerDisplayItem.selectItems([item]);
+        }
     }
 }

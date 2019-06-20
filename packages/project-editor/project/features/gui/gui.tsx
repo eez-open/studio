@@ -1,4 +1,6 @@
+import React from "react";
 import { observable } from "mobx";
+import { observer } from "mobx-react";
 
 import {
     ClassInfo,
@@ -7,7 +9,8 @@ import {
     EezArrayObject,
     PropertyType,
     asArray,
-    getProperty
+    getProperty,
+    NavigationComponent
 } from "eez-studio-shared/model/object";
 import * as output from "eez-studio-shared/model/output";
 import { filterNumber } from "eez-studio-shared/model/validation";
@@ -26,13 +29,16 @@ import * as draw from "project-editor/project/features/gui/draw";
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
+import { MenuNavigation } from "project-editor/project/ui/MenuNavigation";
+
 import { Page } from "project-editor/project/features/gui/page";
 import { Style } from "project-editor/project/features/gui/style";
 import { Font } from "project-editor/project/features/gui/font";
 import { Bitmap } from "project-editor/project/features/gui/bitmap";
+import { Theme } from "project-editor/project/features/gui/theme";
+
 import { build } from "project-editor/project/features/gui/build";
 import { metrics } from "project-editor/project/features/gui/metrics";
-import { GuiNavigation } from "project-editor/project/features/gui/GuiNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -115,6 +121,21 @@ setPageContext({
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@observer
+export class GuiNavigation extends NavigationComponent {
+    render() {
+        return (
+            <MenuNavigation
+                id={this.props.id}
+                navigationObject={getProperty(ProjectStore.project, "gui")}
+                content={this.props.content}
+            />
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class Gui extends EezObject {
     @observable
     pages: EezArrayObject<Page>;
@@ -127,6 +148,9 @@ export class Gui extends EezObject {
 
     @observable
     bitmaps: EezArrayObject<Bitmap>;
+
+    @observable
+    themes: EezArrayObject<Theme>;
 
     static classInfo: ClassInfo = {
         label: () => "GUI",
@@ -195,6 +219,12 @@ export class Gui extends EezObject {
 
                     return messages;
                 }
+            },
+            {
+                name: "themes",
+                type: PropertyType.Array,
+                typeClass: Theme,
+                hideInPropertyGrid: true
             }
         ],
         navigationComponent: GuiNavigation,
