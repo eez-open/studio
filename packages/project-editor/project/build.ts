@@ -218,6 +218,10 @@ export async function build(onlyCheck: boolean) {
         return;
     }
 
+    OutputSectionsStore.setLoading(Section.OUTPUT, true);
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     try {
         let sectionNames: string[] | undefined = undefined;
 
@@ -262,7 +266,7 @@ export async function build(onlyCheck: boolean) {
             return;
         }
 
-        generateFiles(destinationFolderPath, configurationBuildResuts);
+        await generateFiles(destinationFolderPath, configurationBuildResuts);
 
         await extensionDefinitionBuild();
 
@@ -275,6 +279,8 @@ export async function build(onlyCheck: boolean) {
         }
 
         showCheckResult();
+    } finally {
+        OutputSectionsStore.setLoading(Section.OUTPUT, false);
     }
 }
 

@@ -15,7 +15,7 @@
         "build-src": "tsc && gulp release",
         "build-extensions": "cd extensions && tsc",
         "build-css": "npm run build-shared-css",
-        "build-shared-css": "lessc --clean-css packages/eez-studio-ui/_stylesheets/main.less packages/eez-studio-ui/_stylesheets/main.css",
+        "build-shared-css": "lessc --clean-css packages/eez-studio-ui/_stylesheets/main.less dist/eez-studio-ui/_stylesheets/main.css",
         "watch-all": "concurrently \"npm run watch\" \"npm run watch-less\"",
         "watch": "gulp debug && tsc --project tsconfig.dev.json",
         "watch-less": "node watch-less.js",

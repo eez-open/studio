@@ -15,7 +15,8 @@ import {
     isArray,
     objectToString,
     findPropertyByChildObject,
-    isValue
+    isValue,
+    getProperty
 } from "eez-studio-shared/model/object";
 import {
     UndoManager,
@@ -39,6 +40,8 @@ import { Output } from "eez-studio-shared/model/components/Output";
 import { MenuNavigation } from "project-editor/project/ui/MenuNavigation";
 import { BuildConfiguration } from "project-editor/project/project";
 
+import { ThemesSideView } from "project-editor/project/features/gui/theme";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const ToolbarNav = styled.nav`
@@ -47,7 +50,7 @@ const ToolbarNav = styled.nav`
     border-bottom: 1px solid ${props => props.theme.borderColor};
 
     .btn-group:not(:last-child) {
-        margin-right: 5px;
+        margin-right: 10px;
     }
 
     select {
@@ -157,6 +160,26 @@ class Toolbar extends React.Component<
                             onClick={() => ProjectStore.build()}
                         />
                     </div>
+
+                    {NavigationStore.getNavigationSelectedItem(ProjectStore.project) ===
+                        getProperty(ProjectStore.project, "gui") && (
+                        <div className="btn-group" role="group">
+                            <IconAction
+                                title={
+                                    UIStateStore.viewOptions.themesVisible
+                                        ? "Hide Themes Side View"
+                                        : "Show Themes Side View"
+                                }
+                                icon="material:palette"
+                                onClick={action(
+                                    () =>
+                                        (UIStateStore.viewOptions.themesVisible = !UIStateStore
+                                            .viewOptions.themesVisible)
+                                )}
+                                selected={UIStateStore.viewOptions.themesVisible}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div>
@@ -286,6 +309,20 @@ class Content extends React.Component<{}, {}> {
                 {properties}
             </Splitter>
         );
+
+        if (UIStateStore.viewOptions.themesVisible) {
+            content = (
+                <Splitter
+                    type="horizontal"
+                    persistId="project-editor/main-content-themes"
+                    sizes={`100%|240px`}
+                    childrenOverflow="hidden"
+                >
+                    {content}
+                    <ThemesSideView />
+                </Splitter>
+            );
+        }
 
         if (UIStateStore.viewOptions.navigationVisible) {
             return (

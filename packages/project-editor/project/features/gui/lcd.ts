@@ -6,8 +6,16 @@ let fgColor: string;
 let bgColor: string;
 let x: number, y: number, x1: number, y1: number, x2: number, y2: number;
 
+export function getColor() {
+    return fgColor;
+}
+
 export function setColor(color: string) {
     fgColor = color;
+}
+
+export function getBackColor() {
+    return bgColor;
 }
 
 export function setBackColor(color: string) {

@@ -345,8 +345,19 @@ export async function load(filePath: string) {
 }
 
 export function save(filePath: string) {
+    const toJsHook = (jsObject: any) => {
+        let projectFeatures = getExtensionsByCategory("project-feature");
+        for (let projectFeature of projectFeatures) {
+            if (projectFeature.eezStudioExtension.implementation.projectFeature.toJsHook) {
+                projectFeature.eezStudioExtension.implementation.projectFeature.toJsHook(jsObject);
+            }
+        }
+    };
+
+    const json = objectToJson(ProjectStore.project, 2, toJsHook);
+
     return new Promise((resolve, reject) => {
-        fs.writeFile(filePath, objectToJson(ProjectStore.project, 2), "utf8", (err: any) => {
+        fs.writeFile(filePath, json, "utf8", (err: any) => {
             if (err) {
                 reject(err);
             } else {

@@ -15,6 +15,8 @@ import { validators } from "eez-studio-shared/model/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
+import { getPageContext } from "eez-studio-page-editor/page-context";
+
 import { ProjectStore } from "project-editor/core/store";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
@@ -36,7 +38,10 @@ class BitmapEditor extends EditorComponent {
         const bitmap = this.props.editor.object as Bitmap;
 
         const style = {
-            backgroundColor: bitmap.bpp === 32 ? "transparent" : bitmap.backgroundColor,
+            backgroundColor:
+                bitmap.bpp === 32
+                    ? "transparent"
+                    : getPageContext().getThemedColor(bitmap.backgroundColor),
             width: "100%"
         };
 
@@ -103,7 +108,8 @@ export class Bitmap extends EezObject implements IBitmap {
             },
             {
                 name: "backgroundColor",
-                type: PropertyType.Color
+                type: PropertyType.ThemedColor,
+                referencedObjectCollectionPath: ["gui", "colors"]
             },
             {
                 name: "alwaysBuild",
@@ -211,7 +217,9 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
             if (bitmap.bpp === 32) {
                 ctx.clearRect(0, 0, image.width, image.height);
             } else {
-                ctx.fillStyle = bitmap.backgroundColor || "transparent";
+                ctx.fillStyle = bitmap.backgroundColor
+                    ? getPageContext().getThemedColor(bitmap.backgroundColor)
+                    : "transparent";
                 ctx.fillRect(0, 0, image.width, image.height);
             }
 

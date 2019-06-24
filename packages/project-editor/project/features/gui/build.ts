@@ -1,3 +1,5 @@
+import { strToColor16 } from "eez-studio-shared/color";
+
 import { getProperty } from "eez-studio-shared/model/object";
 import { OutputSectionsStore } from "eez-studio-shared/model/store";
 import * as output from "eez-studio-shared/model/output";
@@ -13,10 +15,11 @@ import { Action } from "project-editor/project/features/action/action";
 import { Gui, findStyle, findFont, findBitmap } from "project-editor/project/features/gui/gui";
 import { getData as getFontData } from "project-editor/project/features/gui/font";
 import { getData as getBitmapData, Bitmap } from "project-editor/project/features/gui/bitmap";
-import { Style } from "project-editor/project/features/gui/style";
+import { Style, getStyleProperty } from "project-editor/project/features/gui/style";
 import * as Widget from "project-editor/project/features/gui/widget";
 import { Page } from "project-editor/project/features/gui/page";
 import { Font } from "project-editor/project/features/gui/font";
+import { Theme } from "project-editor/project/features/gui/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -254,6 +257,22 @@ class String extends ObjectField {
     }
 }
 
+class Color extends ObjectField {
+    constructor(public value: number) {
+        super();
+        this.value = value;
+        this.objectSize = 2;
+    }
+
+    pack(): number[] {
+        return packUInt32(this.objectOffset);
+    }
+
+    packObject(): number[] {
+        return packUInt16(this.value);
+    }
+}
+
 class UInt8 extends Field {
     constructor(public value: number) {
         super();
@@ -461,29 +480,26 @@ function buildGuiStylesData(assets: Assets) {
         result.addField(new UInt16(flags));
 
         // colors
-        let backgroundColor16 = style.backgroundColor16;
-        if (isNaN(backgroundColor16)) {
-            backgroundColor16 = 0;
+        let backgroundColor = assets.getColorIndex(style, "backgroundColor");
+        if (isNaN(backgroundColor)) {
+            backgroundColor = 0;
         }
-        result.addField(new UInt16(backgroundColor16));
-        colors.add(backgroundColor16);
+        result.addField(new UInt16(backgroundColor));
 
-        let color16 = style.color16;
-        if (isNaN(color16)) {
-            color16 = 0;
+        let color = assets.getColorIndex(style, "color");
+        if (isNaN(color)) {
+            color = 0;
         }
-        result.addField(new UInt16(color16));
-        colors.add(color16);
+        result.addField(new UInt16(color));
 
         result.addField(new UInt16(style.borderSize || 0));
         result.addField(new UInt16(style.borderRadius || 0));
 
-        let borderColor16 = style.borderColor16;
-        if (isNaN(borderColor16)) {
-            borderColor16 = 0;
+        let borderColor = assets.getColorIndex(style, "borderColor");
+        if (isNaN(borderColor)) {
+            borderColor = 0;
         }
-        result.addField(new UInt16(borderColor16));
-        colors.add(borderColor16);
+        result.addField(new UInt16(borderColor));
 
         // font
         let fontIndex = style.fontName ? assets.getFontIndex(style.fontName) : 0;
@@ -529,8 +545,6 @@ function buildGuiStylesData(assets: Assets) {
 
         return objects;
     }
-
-    let colors = new Set<number>();
 
     let document = new Struct();
     build();
@@ -1135,12 +1149,83 @@ function buildGuiDocumentData(assets: Assets) {
     return data;
 }
 
+function buildGuiColors(assets: Assets) {
+    function buildTheme(theme: Theme) {
+        let result = new Struct();
+
+        result.addField(new String(theme.name));
+
+        // widgets
+        let colors = new ObjectList();
+        theme.colors.forEach(color => {
+            colors.addItem(buildColor(color));
+        });
+
+        result.addField(colors);
+
+        return result;
+    }
+
+    function buildColor(color: string) {
+        return new Color(strToColor16(color));
+    }
+
+    function build() {
+        let themes = new ObjectList();
+
+        let gui = getProperty(assets.project, "gui") as Gui;
+
+        gui.themes._array.forEach(theme => {
+            themes.addItem(buildTheme(theme));
+        });
+
+        document.addField(themes);
+
+        let colors = new ObjectList();
+
+        assets.colors.forEach(color => {
+            colors.addItem(buildColor(color));
+        });
+
+        document.addField(colors);
+    }
+
+    function finish() {
+        let objects: ObjectField[] = [];
+        let newObjects: ObjectField[] = [document];
+        while (newObjects.length > 0) {
+            objects = objects.concat(newObjects);
+            let temp: ObjectField[] = [];
+            newObjects.forEach(object => object.enumObjects(temp));
+            newObjects = temp.filter(object => objects.indexOf(object) == -1);
+        }
+
+        objects.forEach(object => object.finish());
+
+        let objectOffset = 0;
+        objects.forEach(object => {
+            object.objectOffset = objectOffset;
+            objectOffset += object.objectSize;
+        });
+
+        return objects;
+    }
+
+    let document = new Struct();
+    build();
+    let objects = finish();
+    let data = pack(objects);
+
+    return data;
+}
+
 async function buildGuiAssetsData(assets: Assets) {
     const inputArray = packRegions([
         buildGuiDocumentData(assets),
         buildGuiStylesData(assets),
         buildGuiFontsData(assets),
-        await buildGuiBitmapsData(assets)
+        await buildGuiBitmapsData(assets),
+        buildGuiColors(assets)
     ]);
 
     const LZ4 = require("lz4");
@@ -1191,6 +1276,7 @@ class Assets {
     styles: Style[] = [];
     fonts: Font[] = [];
     bitmaps: Bitmap[] = [];
+    colors: string[] = [];
 
     constructor(public project: Project, buildConfiguration: BuildConfiguration | undefined) {
         this.dataItems = (project.data._array as DataItem[]).filter(
@@ -1372,6 +1458,29 @@ class Assets {
         }
 
         return 0;
+    }
+
+    getColorIndex(style: Style, propertyName: "color" | "backgroundColor" | "borderColor") {
+        let color = getStyleProperty(style, propertyName, false);
+
+        let gui = getProperty(this.project, "gui") as Gui;
+        let colors = gui.colors;
+
+        for (let i = 0; i < colors._array.length; i++) {
+            if (colors._array[i].name === color) {
+                return i;
+            }
+        }
+
+        for (let i = 0; i < this.colors.length; i++) {
+            if (this.colors[i] == color) {
+                return colors._array.length + i;
+            }
+        }
+
+        this.colors.push(color);
+
+        return colors._array.length + this.colors.length - 1;
     }
 
     reportUnusedAssets() {

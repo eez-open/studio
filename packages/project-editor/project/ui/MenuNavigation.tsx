@@ -83,13 +83,15 @@ class Menu extends React.Component<
     }
 
     render() {
-        let items = getChildren(this.props.navigationObject).map(item => (
-            <NavigationMenuItem
-                key={item._id}
-                navigationObject={this.props.navigationObject}
-                item={item}
-            />
-        ));
+        let items = getChildren(this.props.navigationObject)
+            .filter(item => item._classInfo.icon)
+            .map(item => (
+                <NavigationMenuItem
+                    key={item._id}
+                    navigationObject={this.props.navigationObject}
+                    item={item}
+                />
+            ));
         return (
             <MenuContainer tabIndex={0} onFocus={this.onFocus.bind(this)}>
                 {items}

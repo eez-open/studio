@@ -23,6 +23,7 @@ class HomeTab implements IHomeTab {
 
     permanent: boolean = true;
     @observable active: boolean = false;
+    loading: boolean = false;
 
     id = "home";
     title = (
@@ -55,6 +56,8 @@ class ObjectEditorTab implements IHomeTab {
 
     permanent: boolean = true;
     @observable _active: boolean = false;
+
+    loading = false;
 
     get active() {
         return this._active;

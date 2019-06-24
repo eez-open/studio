@@ -10,7 +10,8 @@ import { styled } from "eez-studio-ui/styled-components";
 import {
     EezObject,
     NavigationComponentProps,
-    objectToString
+    objectToString,
+    isPartOfNavigation
 } from "eez-studio-shared/model/object";
 import { ListAdapter, SortDirectionType } from "eez-studio-shared/model/objectAdapter";
 import {
@@ -139,7 +140,7 @@ export class DeleteButton extends React.Component<{
                 icon="material:delete"
                 iconSize={16}
                 onClick={this.onDelete.bind(this)}
-                enabled={selectedItem && canDelete(selectedItem)}
+                enabled={selectedItem != undefined && canDelete(selectedItem)}
             />
         );
     }
@@ -153,6 +154,8 @@ interface ListNavigationProps {
     navigationObject: EezObject;
     onDoubleClickItem?: (item: EezObject) => void;
     additionalButtons?: JSX.Element[];
+    onEditItem?: (itemId: string) => void;
+    renderItem?: (itemId: string) => React.ReactNode;
 }
 
 @observer
@@ -203,10 +206,13 @@ export class ListNavigation extends React.Component<ListNavigationProps, {}> {
     }
 
     onFocus() {
-        NavigationStore.setSelectedPanel(this);
+        if (isPartOfNavigation(this.props.navigationObject)) {
+            NavigationStore.setSelectedPanel(this);
+        }
     }
 
     render() {
+        const { onEditItem, renderItem } = this.props;
         const title = (
             <SortableTitle
                 title={this.props.title || objectToString(this.props.navigationObject)}
@@ -230,6 +236,7 @@ export class ListNavigation extends React.Component<ListNavigationProps, {}> {
                 navigationObject={this.props.navigationObject}
             />
         );
+
         buttons.push(<DeleteButton key="delete" navigationObject={this.props.navigationObject} />);
 
         return (
@@ -242,6 +249,8 @@ export class ListNavigation extends React.Component<ListNavigationProps, {}> {
                         listAdapter={this.listAdapter}
                         tabIndex={0}
                         onFocus={this.onFocus.bind(this)}
+                        onEditItem={onEditItem}
+                        renderItem={renderItem}
                     />
                 }
             />
@@ -255,15 +264,19 @@ interface ListNavigationWithContentProps extends NavigationComponentProps {
     title?: string;
     onDoubleClickItem?: (item: EezObject) => void;
     additionalButtons?: JSX.Element[];
+    orientation?: "horizontal" | "vertical";
+    onEditItem?: (itemId: string) => void;
+    renderItem?: (itemId: string) => React.ReactNode;
 }
 
 @observer
 export class ListNavigationWithContent extends React.Component<ListNavigationWithContentProps, {}> {
     render() {
+        const { onEditItem, renderItem } = this.props;
         if (UIStateStore.viewOptions.navigationVisible) {
             return (
                 <Splitter
-                    type="horizontal"
+                    type={this.props.orientation || "horizontal"}
                     persistId={`project-editor/navigation-${this.props.id}`}
                     sizes={`240px|100%`}
                     childrenOverflow="hidden"
@@ -274,6 +287,8 @@ export class ListNavigationWithContent extends React.Component<ListNavigationWit
                         navigationObject={this.props.navigationObject}
                         onDoubleClickItem={this.props.onDoubleClickItem}
                         additionalButtons={this.props.additionalButtons}
+                        onEditItem={onEditItem}
+                        renderItem={renderItem}
                     />
                     {this.props.content}
                 </Splitter>
