@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed } from "mobx";
+import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 
 import { guid } from "eez-studio-shared/guid";
@@ -78,13 +78,25 @@ class ColorItem extends React.Component<{
         return this.selectedTheme.colors[this.colorIndex];
     }
 
-    onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const colors = this.selectedTheme.colors.slice();
-        colors[this.colorIndex] = event.target.value;
-        DocumentStore.updateObject(this.selectedTheme, {
-            colors
-        });
-    };
+    @observable
+    changedThemeColor: string | undefined;
+
+    onChangeTimeout: any;
+
+    onChange = action((event: React.ChangeEvent<HTMLInputElement>) => {
+        this.changedThemeColor = event.target.value;
+        if (this.onChangeTimeout) {
+            clearTimeout(this.onChangeTimeout);
+        }
+        this.onChangeTimeout = setTimeout(action(() => {
+            const colors = this.selectedTheme.colors.slice();
+            colors[this.colorIndex] = this.changedThemeColor!;
+            this.changedThemeColor = undefined;
+            DocumentStore.updateObject(this.selectedTheme, {
+                colors
+            });
+        }), 100)
+    });
 
     render() {
         return (
@@ -99,7 +111,7 @@ class ColorItem extends React.Component<{
                         <input
                             type="color"
                             hidden
-                            value={this.themeColor}
+                            value={this.changedThemeColor !== undefined ? this.changedThemeColor : this.themeColor}
                             onChange={this.onChange}
                             tabIndex={0}
                         />
