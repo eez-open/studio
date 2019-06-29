@@ -44,8 +44,8 @@ function getIgnore() {
         "^/packages",
 
         "^/node_modules/better-sqlite3/build/Release/.*",
-        "^/node_modules/usb/build/Release/.*",
-        "^/node_modules/@serial-port/bindings/build/Release/.*",
+        //        "^/node_modules/usb/build/Release/.*",
+        //        "^/node_modules/@serial-port/bindings/build/Release/.*",
 
         "^/node_modules/lzz-gyp/lzz-compiled/linux",
         "^/node_modules/lzz-gyp/lzz-compiled/osx",
