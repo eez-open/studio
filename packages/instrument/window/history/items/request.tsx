@@ -14,6 +14,9 @@ import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/
 const RequestHistoryItemDiv = styled(HistoryItemDiv)`
     background-color: beige;
     max-width: 100%;
+    pre {
+        user-select: text;
+    }
 `;
 
 @observer

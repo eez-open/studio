@@ -16,6 +16,9 @@ const AnswerHistoryItemDiv = styled(HistoryItemDiv)`
     background-color: lightblue;
     margin-left: 40px;
     max-width: calc(100% - 40px);
+    pre {
+        user-select: text;
+    }
 `;
 
 @observer
