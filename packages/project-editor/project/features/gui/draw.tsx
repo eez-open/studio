@@ -190,32 +190,34 @@ export function drawText(
         let width = lcd.measureStr(text, font, x2 - x1 + 1);
         let height = font.height;
 
-        let x_offset: number;
-        if (styleIsHorzAlignLeft(style)) {
-            x_offset = x1 + getStyleProperty(style, "paddingHorizontal");
-        } else if (styleIsHorzAlignRight(style)) {
-            x_offset = x2 - getStyleProperty(style, "paddingHorizontal") - width;
-        } else {
-            x_offset = Math.floor(x1 + (x2 - x1 + 1 - width) / 2);
-        }
+        if (width > 0 && height > 0) {
+            let x_offset: number;
+            if (styleIsHorzAlignLeft(style)) {
+                x_offset = x1 + getStyleProperty(style, "paddingHorizontal");
+            } else if (styleIsHorzAlignRight(style)) {
+                x_offset = x2 - getStyleProperty(style, "paddingHorizontal") - width;
+            } else {
+                x_offset = Math.floor(x1 + (x2 - x1 + 1 - width) / 2);
+            }
 
-        let y_offset: number;
-        if (styleIsVertAlignTop(style)) {
-            y_offset = y1 + getStyleProperty(style, "paddingVertical");
-        } else if (styleIsVertAlignBottom(style)) {
-            y_offset = y2 - getStyleProperty(style, "paddingVertical") - height;
-        } else {
-            y_offset = Math.floor(y1 + (y2 - y1 + 1 - height) / 2);
-        }
+            let y_offset: number;
+            if (styleIsVertAlignTop(style)) {
+                y_offset = y1 + getStyleProperty(style, "paddingVertical");
+            } else if (styleIsVertAlignBottom(style)) {
+                y_offset = y2 - getStyleProperty(style, "paddingVertical") - height;
+            } else {
+                y_offset = Math.floor(y1 + (y2 - y1 + 1 - height) / 2);
+            }
 
-        if (inverse) {
-            lcd.setBackColor(styleColor);
-            lcd.setColor(styleBackgroundColor);
-        } else {
-            lcd.setBackColor(styleBackgroundColor);
-            lcd.setColor(styleColor);
+            if (inverse) {
+                lcd.setBackColor(styleColor);
+                lcd.setColor(styleBackgroundColor);
+            } else {
+                lcd.setBackColor(styleBackgroundColor);
+                lcd.setColor(styleColor);
+            }
+            textDrawingInBackground.drawStr(ctx, text, x_offset, y_offset, width, height, font);
         }
-        textDrawingInBackground.drawStr(ctx, text, x_offset, y_offset, width, height, font);
     });
 }
 
@@ -296,17 +298,27 @@ export function drawMultilineText(
                 break;
             }
 
-            if (inverse) {
-                lcd.setBackColor(getStyleProperty(style, "color"));
-                lcd.setColor(getStyleProperty(style, "backgroundColor"));
-            } else {
-                lcd.setBackColor(getStyleProperty(style, "backgroundColor"));
-                lcd.setColor(getStyleProperty(style, "color"));
+            if (width > 0 && height > 0) {
+                if (inverse) {
+                    lcd.setBackColor(getStyleProperty(style, "color"));
+                    lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                } else {
+                    lcd.setBackColor(getStyleProperty(style, "backgroundColor"));
+                    lcd.setColor(getStyleProperty(style, "color"));
+                }
+
+                textDrawingInBackground.drawStr(
+                    ctx,
+                    text.substr(j, i - j),
+                    x,
+                    y,
+                    width,
+                    height,
+                    font
+                );
+
+                x += width;
             }
-
-            textDrawingInBackground.drawStr(ctx, text.substr(j, i - j), x, y, width, height, font);
-
-            x += width;
 
             while (text[i] == " ") {
                 x += spaceWidth;
