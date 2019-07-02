@@ -4,7 +4,7 @@ import React from "react";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { ProjectStore } from "project-editor/core/store";
-import { PropertyGrid } from "project-editor/model/components/PropertyGrid";
+import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { ScpiSubsystem, ScpiCommand } from "project-editor/features/scpi/scpi";
 
 @observer

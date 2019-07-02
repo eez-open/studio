@@ -3,9 +3,9 @@ import { observable } from "mobx";
 import { stringCompare } from "eez-studio-shared/string";
 
 import { validators } from "eez-studio-shared/validation";
-import * as output from "project-editor/model/output";
+import * as output from "project-editor/core/output";
 
-//import { isReferenced } from "project-editor/model/search";
+//import { isReferenced } from "project-editor/core/search";
 
 import { showGenericDialog, EnumItems } from "eez-studio-ui/generic-dialog";
 
@@ -16,7 +16,7 @@ import {
     PropertyType,
     asArray,
     getChildOfObject
-} from "project-editor/model/object";
+} from "project-editor/core/object";
 
 import { ProjectStore } from "project-editor/core/store";
 

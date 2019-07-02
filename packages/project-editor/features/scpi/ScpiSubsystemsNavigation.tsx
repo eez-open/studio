@@ -10,15 +10,15 @@ import {
     getProperty,
     getAncestorOfType,
     EezArrayObject
-} from "project-editor/model/object";
-import { NavigationStore } from "project-editor/model/store";
+} from "project-editor/core/object";
+import { NavigationStore } from "project-editor/core/store";
 
 import { ProjectStore } from "project-editor/core/store";
 
 import {
     ListNavigation,
     ListNavigationWithContent
-} from "project-editor/ui/ListNavigation";
+} from "project-editor/components/ListNavigation";
 
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
 import { ScpiCommand, ScpiSubsystem, Scpi } from "project-editor/features/scpi/scpi";

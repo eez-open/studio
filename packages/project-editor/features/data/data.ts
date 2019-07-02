@@ -10,13 +10,13 @@ import {
     EezObject,
     PropertyType,
     asArray
-} from "project-editor/model/object";
-import * as output from "project-editor/model/output";
+} from "project-editor/core/object";
+import * as output from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
-import { ListNavigationWithContent } from "project-editor/ui/ListNavigation";
+import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
 
 import { build } from "project-editor/features/data/build";
 import { metrics } from "project-editor/features/data/metrics";

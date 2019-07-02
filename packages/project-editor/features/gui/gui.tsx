@@ -12,13 +12,13 @@ import {
     asArray,
     getProperty,
     NavigationComponent
-} from "project-editor/model/object";
-import * as output from "project-editor/model/output";
+} from "project-editor/core/object";
+import * as output from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
-import { MenuNavigation } from "project-editor/ui/MenuNavigation";
+import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
 import { Page } from "project-editor/features/gui/page";
 import { Style } from "project-editor/features/gui/style";

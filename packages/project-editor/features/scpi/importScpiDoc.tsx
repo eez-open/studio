@@ -9,9 +9,9 @@ import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 
-import { EezObject, EezArrayObject, getProperty } from "project-editor/model/object";
-import { objectToJS } from "project-editor/model/serialization";
-import { DocumentStore, UndoManager, NavigationStore } from "project-editor/model/store";
+import { EezObject, EezArrayObject, getProperty } from "project-editor/core/object";
+import { objectToJS } from "project-editor/core/serialization";
+import { DocumentStore, UndoManager, NavigationStore } from "project-editor/core/store";
 
 import { IParameter, IParameterType, IEnum } from "instrument/scpi";
 

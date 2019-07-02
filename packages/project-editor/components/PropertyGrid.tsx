@@ -9,9 +9,10 @@ import { humanize, stringCompare } from "eez-studio-shared/string";
 import { isDark } from "eez-studio-shared/color";
 
 import { validators, filterNumber } from "eez-studio-shared/validation";
-import { IPropertyGridGroupDefinition } from "project-editor/model/object";
-import { NavigationStore } from "project-editor/model/store";
-import { getEezStudioDataFromDragEvent } from "project-editor/model/clipboard";
+import { IPropertyGridGroupDefinition } from "project-editor/core/object";
+import { NavigationStore, UndoManager, DocumentStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/core/store";
+import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
 
 import styled from "eez-studio-ui/styled-components";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -34,16 +35,17 @@ import {
     getInheritedValue,
     getPropertyAsString,
     isProperAncestor
-} from "project-editor/model/object";
-import {
-    UndoManager,
-    DocumentStore,
-    UIElementsFactory,
-    IMenuItem
-} from "project-editor/model/store";
-import { replaceObjectReference } from "project-editor/model/search";
+} from "project-editor/core/object";
+import { replaceObjectReference } from "project-editor/core/search";
 
 import { getThemedColor } from "project-editor/features/gui/theme";
+
+import { info } from "project-editor/core/util";
+
+import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
+
+const { Menu, MenuItem } = EEZStudio.electron.remote;
+const fs = EEZStudio.electron.remote.require("fs");
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -93,19 +95,19 @@ class PropertyMenu extends React.Component<PropertyProps> {
 
     @bind
     onClicked(event: React.MouseEvent) {
-        let menuItems: IMenuItem[] = [];
+        let menuItems: Electron.MenuItem[] = [];
 
         if (this.sourceInfo.source === "modified") {
             if (menuItems.length > 0) {
                 menuItems.push(
-                    UIElementsFactory.createMenuItem({
+                    new MenuItem({
                         type: "separator"
                     })
                 );
             }
 
             menuItems.push(
-                UIElementsFactory.createMenuItem({
+                new MenuItem({
                     label: "Reset",
                     click: () => {
                         this.props.updateObject({
@@ -117,15 +119,9 @@ class PropertyMenu extends React.Component<PropertyProps> {
         }
 
         if (menuItems.length > 0) {
-            const menu = UIElementsFactory.createMenu();
+            const menu = new Menu();
             menuItems.forEach(menuItem => menu.append(menuItem));
-            menu.popup(
-                {},
-                {
-                    left: event.clientX,
-                    top: event.clientY
-                }
-            );
+            menu.popup({});
         }
     }
 
@@ -974,9 +970,136 @@ class Property extends React.Component<PropertyProps> {
             return <ThemedColorInput value={this.value} onChange={this.changeValue} />;
         } else if (propertyInfo.type === PropertyType.Array) {
             return <ArrayProperty {...this.props} />;
-        } else {
-            return UIElementsFactory.renderProperty(propertyInfo, this.value, value =>
-                this.changeValue(value)
+        } else if (propertyInfo.type === PropertyType.ConfigurationReference) {
+            return (
+                <ConfigurationReferencesPropertyValue value={this.value} onChange={this.onChange} />
+            );
+        } else if (propertyInfo.type === PropertyType.RelativeFolder) {
+            let clearButton: JSX.Element | undefined;
+
+            if (this.value !== undefined) {
+                clearButton = (
+                    <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={() => this.onChange(undefined)}
+                    >
+                        <Icon icon="material:close" size={14} />
+                    </button>
+                );
+            }
+
+            return (
+                <div className="input-group">
+                    <input type="text" className="form-control" value={this.value} readOnly />
+                    <div className="input-group-append">
+                        {clearButton}
+                        <button
+                            className="btn btn-secondary"
+                            type="button"
+                            onClick={() => {
+                                if (ProjectStore.filePath) {
+                                    EEZStudio.electron.remote.dialog.showOpenDialog(
+                                        {
+                                            properties: ["openDirectory"]
+                                        },
+                                        filePaths => {
+                                            if (filePaths && filePaths[0]) {
+                                                this.onChange(
+                                                    ProjectStore.getFolderPathRelativeToProjectPath(
+                                                        filePaths[0]
+                                                    )
+                                                );
+                                            }
+                                        }
+                                    );
+                                } else {
+                                    info(
+                                        "Project not saved.",
+                                        "To be able to select folder you need to save the project first."
+                                    );
+                                }
+                            }}
+                        >
+                            &hellip;
+                        </button>
+                    </div>
+                </div>
+            );
+        } else if (propertyInfo.type === PropertyType.Image) {
+            return (
+                <div>
+                    <div className="input-group">
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={propertyInfo.embeddedImage ? "<embedded image>" : this.value}
+                            readOnly
+                        />
+                        <div className="input-group-append">
+                            <button
+                                className="btn btn-secondary"
+                                type="button"
+                                onClick={() => {
+                                    EEZStudio.electron.remote.dialog.showOpenDialog(
+                                        {
+                                            properties: ["openFile"],
+                                            filters: [
+                                                {
+                                                    name: "Image files",
+                                                    extensions: ["png", "jpg", "jpeg"]
+                                                },
+                                                { name: "All Files", extensions: ["*"] }
+                                            ]
+                                        },
+                                        filePaths => {
+                                            if (filePaths && filePaths[0]) {
+                                                if (propertyInfo.embeddedImage) {
+                                                    fs.readFile(
+                                                        ProjectStore.getAbsoluteFilePath(
+                                                            filePaths[0]
+                                                        ),
+                                                        "base64",
+                                                        (err: any, data: any) => {
+                                                            if (!err) {
+                                                                this.onChange(
+                                                                    "data:image/png;base64," + data
+                                                                );
+                                                            }
+                                                        }
+                                                    );
+                                                } else {
+                                                    this.onChange(
+                                                        ProjectStore.getFilePathRelativeToProjectPath(
+                                                            filePaths[0]
+                                                        )
+                                                    );
+                                                }
+                                            }
+                                        }
+                                    );
+                                }}
+                            >
+                                &hellip;
+                            </button>
+                        </div>
+                    </div>
+                    {this.value && !propertyInfo.embeddedImage && (
+                        <img
+                            src={
+                                this.value.startsWith("data:image/")
+                                    ? this.value
+                                    : ProjectStore.getAbsoluteFilePath(this.value)
+                            }
+                            style={{
+                                display: "block",
+                                maxWidth: "100%",
+                                margin: "auto",
+                                paddingTop: "5px"
+                            }}
+                        />
+                    )}
+                </div>
             );
         }
         return null;
@@ -993,19 +1116,11 @@ class GroupMenu extends React.Component<{
         const { group, object } = this.props;
         const groupMenu = group.menu!(object)!;
 
-        const menu = UIElementsFactory.createMenu();
+        const menu = new Menu();
 
-        groupMenu.forEach(groupMenuItem =>
-            menu.append(UIElementsFactory.createMenuItem(groupMenuItem))
-        );
+        groupMenu.forEach(groupMenuItem => menu.append(new MenuItem(groupMenuItem)));
 
-        menu.popup(
-            {},
-            {
-                left: event.clientX,
-                top: event.clientY
-            }
-        );
+        menu.popup({});
     }
 
     render() {

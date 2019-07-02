@@ -4,8 +4,8 @@ import { observable } from "mobx";
 import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
-import { loadObject, objectToJson } from "project-editor/model/serialization";
-import { IContextMenuContext, IMenuItem } from "project-editor/model/store";
+import { loadObject, objectToJson } from "project-editor/core/serialization";
+import { IContextMenuContext } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -308,7 +308,7 @@ export class EezObject {
     extendContextMenu(
         context: IContextMenuContext,
         objects: EezObject[],
-        menuItems: IMenuItem[]
+        menuItems: Electron.MenuItem[]
     ): void {}
 }
 

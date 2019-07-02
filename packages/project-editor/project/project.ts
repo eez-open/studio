@@ -9,9 +9,9 @@ import {
     EezArrayObject,
     PropertyType,
     getProperty
-} from "project-editor/model/object";
-import { loadObject, objectToJson } from "project-editor/model/serialization";
-import * as output from "project-editor/model/output";
+} from "project-editor/core/object";
+import { loadObject, objectToJson } from "project-editor/core/serialization";
+import * as output from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/core/store";
 
@@ -23,7 +23,7 @@ import "project-editor/project/builtInFeatures";
 import { Action } from "project-editor/features/action/action";
 import { DataItem } from "project-editor/features/data/data";
 
-import { MenuNavigation } from "project-editor/ui/MenuNavigation";
+import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
 let fs = EEZStudio.electron.remote.require("fs");
 

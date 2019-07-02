@@ -5,16 +5,16 @@ import React from "react";
 import { Splitter } from "eez-studio-ui/splitter";
 import styled from "eez-studio-ui/styled-components";
 
-import { NavigationComponent, EezObject, getProperty } from "project-editor/model/object";
-import { loadObject } from "project-editor/model/serialization";
-import { DocumentStore, NavigationStore, UIStateStore } from "project-editor/model/store";
+import { NavigationComponent, EezObject, getProperty } from "project-editor/core/object";
+import { loadObject } from "project-editor/core/serialization";
+import { DocumentStore, NavigationStore, UIStateStore } from "project-editor/core/store";
 
 import { ProjectStore } from "project-editor/core/store";
 import { confirm } from "project-editor/core/util";
 import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
 
-import { TreeNavigationPanel } from "project-editor/ui/TreeNavigation";
-import { PropertyGrid } from "project-editor/model/components/PropertyGrid";
+import { TreeNavigationPanel } from "project-editor/components/TreeNavigation";
+import { PropertyGrid } from "project-editor/components/PropertyGrid";
 
 ////////////////////////////////////////////////////////////////////////////////
 

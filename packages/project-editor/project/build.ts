@@ -15,9 +15,9 @@ import {
     getProperty,
     checkObject,
     IMessage
-} from "project-editor/model/object";
-import { OutputSectionsStore } from "project-editor/model/store";
-import { Section, Type } from "project-editor/model/output";
+} from "project-editor/core/object";
+import { OutputSectionsStore } from "project-editor/core/store";
+import { Section, Type } from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/core/store";
 

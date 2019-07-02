@@ -8,13 +8,6 @@ import { humanize } from "eez-studio-shared/string";
 
 import { extensionsToolbarButtons } from "eez-studio-shared/extensions/extensions";
 
-import {
-    IMenu,
-    IMenuItem,
-    IMenuPopupOptions,
-    IMenuAnchorPosition
-} from "project-editor/model/store";
-
 import { IBaseObject, IDocument } from "home/designer/designer-interfaces";
 
 import { store, workbenchObjects, deleteWorkbenchObject, WorkbenchObject } from "home/store";
@@ -112,7 +105,7 @@ class WorkbenchDocument implements IDocument {
         }
     }
 
-    createContextMenu(objects: IWorkbenchObject[]): IMenu {
+    createContextMenu(objects: IWorkbenchObject[]): Electron.Menu {
         const menu = new Menu();
 
         if (objects.length === 1) {
@@ -170,15 +163,7 @@ class WorkbenchDocument implements IDocument {
             );
         }
 
-        return {
-            append(menuItem: IMenuItem) {
-                menu.append(new MenuItem(menuItem));
-            },
-
-            popup(options: IMenuPopupOptions, position: IMenuAnchorPosition) {
-                menu.popup(options);
-            }
-        };
+        return menu;
     }
 }
 

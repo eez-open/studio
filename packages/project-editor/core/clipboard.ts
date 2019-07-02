@@ -7,9 +7,9 @@ import {
     isSubclassOf,
     getChildOfObject,
     PropertyType
-} from "project-editor/model/object";
-import { loadObject, objectToJson } from "project-editor/model/serialization";
-import { DocumentStore, UIElementsFactory } from "project-editor/model/store";
+} from "project-editor/core/object";
+import { loadObject, objectToJson } from "project-editor/core/serialization";
+import { DocumentStore } from "project-editor/core/store";
 
 export interface SerializedData {
     objectClassName: string;
@@ -131,7 +131,7 @@ export function findPastePlaceInsideAndOutside(object: EezObject, serializedData
 }
 
 export function checkClipboard(object: EezObject) {
-    let text = UIElementsFactory.pasteFromClipboard();
+    let text = pasteFromClipboard();
     if (text) {
         let serializedData = clipboardDataToObject(text);
         if (serializedData) {
@@ -145,4 +145,14 @@ export function checkClipboard(object: EezObject) {
         }
     }
     return undefined;
+}
+
+export function copyToClipboard(text: string) {
+    EEZStudio.electron.remote.clipboard.write({
+        text
+    });
+}
+
+export function pasteFromClipboard(): string | undefined {
+    return EEZStudio.electron.remote.clipboard.readText();
 }

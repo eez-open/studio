@@ -12,8 +12,8 @@ import {
     NavigationComponentProps,
     objectToString,
     isPartOfNavigation
-} from "project-editor/model/object";
-import { ListAdapter, SortDirectionType } from "project-editor/model/objectAdapter";
+} from "project-editor/core/object";
+import { ListAdapter, SortDirectionType } from "project-editor/core/objectAdapter";
 import {
     NavigationStore,
     EditorsStore,
@@ -22,10 +22,10 @@ import {
     deleteItem,
     canAdd,
     canDelete
-} from "project-editor/model/store";
-import { List } from "project-editor/model/components/List";
+} from "project-editor/core/store";
+import { List } from "project-editor/components/List";
 
-import { Panel } from "project-editor/model/components/Panel";
+import { Panel } from "project-editor/components/Panel";
 
 ////////////////////////////////////////////////////////////////////////////////
 

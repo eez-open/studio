@@ -9,8 +9,8 @@ import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/heade
 import { IShortcut } from "shortcuts/interfaces";
 import { Shortcuts as ShortcutsComponent, ShortcutsToolbarButtons } from "shortcuts/shortcuts";
 
-import { NavigationComponent, getProperty } from "project-editor/model/object";
-import { NavigationStore, DocumentStore } from "project-editor/model/store";
+import { NavigationComponent, getProperty } from "project-editor/core/object";
+import { NavigationStore, DocumentStore } from "project-editor/core/store";
 
 import { ProjectStore } from "project-editor/core/store";
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";

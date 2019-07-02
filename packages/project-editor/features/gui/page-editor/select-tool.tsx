@@ -11,8 +11,6 @@ import {
     drawSnapLinesGeneric
 } from "eez-studio-shared/snap-lines";
 
-import { IMenu } from "project-editor/model/store";
-
 import {
     IDesignerContext,
     IToolHandler,
@@ -52,7 +50,11 @@ export const selectToolHandler: IToolHandler = {
 
     onClick(context: IDesignerContext, point: Point) {},
 
-    onContextMenu(context: IDesignerContext, point: Point, showContextMenu: (menu: IMenu) => void) {
+    onContextMenu(
+        context: IDesignerContext,
+        point: Point,
+        showContextMenu: (menu: Electron.Menu) => void
+    ) {
         if (
             context.viewState.selectedObjects.length === 0 ||
             !pointInRect(point, getSelectedObjectsBoundingRect(context.viewState))

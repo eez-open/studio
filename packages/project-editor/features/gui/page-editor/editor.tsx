@@ -27,16 +27,16 @@ import {
 } from "project-editor/features/gui/page-editor/bounding-rects";
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, isObjectInstanceOf, isAncestor } from "project-editor/model/object";
+import { EezObject, isObjectInstanceOf, isAncestor } from "project-editor/core/object";
 import {
     DocumentStore,
     NavigationStore,
     deleteItems,
     UndoManager,
     UIStateStore
-} from "project-editor/model/store";
-import { ITreeObjectAdapter } from "project-editor/model/objectAdapter";
-import { DragAndDropManager } from "project-editor/model/dd";
+} from "project-editor/core/store";
+import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import { DragAndDropManager } from "project-editor/core/dd";
 
 import { Page } from "project-editor/features/gui/page";
 import { Widget } from "project-editor/features/gui/widget";

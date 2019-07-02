@@ -6,7 +6,8 @@ import bind from "bind-decorator";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
-import { UIElementsFactory } from "project-editor/model/store";
+
+import { BootstrapDialog } from "project-editor/components/ui-elements";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -121,10 +122,8 @@ export class Dialog extends React.Component<
             });
         }
 
-        const DialogImplementation = UIElementsFactory.Dialog;
-
         return (
-            <DialogImplementation
+            <BootstrapDialog
                 open={this.open && (this.props.open === undefined || this.props.open)}
                 size={this.props.size}
                 title={this.props.title}
@@ -135,7 +134,7 @@ export class Dialog extends React.Component<
                 buttons={buttons}
             >
                 {this.props.children}
-            </DialogImplementation>
+            </BootstrapDialog>
         );
     }
 }

@@ -1,4 +1,4 @@
-import { EezArrayObject, getProperty } from "project-editor/model/object";
+import { EezArrayObject, getProperty } from "project-editor/core/object";
 import { Project } from "project-editor/project/project";
 
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";

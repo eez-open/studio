@@ -21,17 +21,17 @@ import {
     geometryGroup,
     styleGroup,
     EditorComponent
-} from "project-editor/model/object";
+} from "project-editor/core/object";
 import {
     TreeObjectAdapter,
     ITreeObjectAdapter,
     TreeAdapter
-} from "project-editor/model/objectAdapter";
-import { NavigationStore } from "project-editor/model/store";
-import { Tree } from "project-editor/model/components/Tree";
-import { Panel } from "project-editor/model/components/Panel";
+} from "project-editor/core/objectAdapter";
+import { NavigationStore } from "project-editor/core/store";
+import { Tree } from "project-editor/components/Tree";
+import { Panel } from "project-editor/components/Panel";
 
-import { ListNavigationWithContent } from "project-editor/ui/ListNavigation";
+import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
 
 import {
     IResizeHandler,

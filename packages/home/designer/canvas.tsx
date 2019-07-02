@@ -5,16 +5,10 @@ import { bind } from "bind-decorator";
 
 import { Point, pointDistance, Rect, BoundingRectBuilder } from "eez-studio-shared/geometry";
 
-import { IMenu } from "project-editor/model/store";
-
 import { Draggable } from "eez-studio-ui/draggable";
 import styled from "eez-studio-ui/styled-components";
 
-import {
-    IToolHandler,
-    IMouseHandler,
-    IDesignerContext
-} from "home/designer/designer-interfaces";
+import { IToolHandler, IMouseHandler, IDesignerContext } from "home/designer/designer-interfaces";
 import { PanMouseHandler } from "home/designer/mouse-handler";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -306,22 +300,17 @@ export class Canvas extends React.Component<{
         } else {
             this.lastMouseUpTime = undefined;
 
-            const anchorPosition = {
-                left: event.clientX,
-                top: event.clientY
-            };
-
             if (!preventContextMenu && this.props.toolHandler && this.buttonsAtDown === 2) {
                 this.props.toolHandler.onContextMenu(
                     this.designerContext,
                     transform.mouseEventToPagePoint(event),
-                    (menu: IMenu) => {
+                    (menu: Electron.Menu) => {
                         if (this.mouseHandler) {
                             this.mouseHandler.up(this.designerContext);
                             this.mouseHandler = undefined;
                         }
 
-                        menu.popup({}, anchorPosition);
+                        menu.popup({});
                     }
                 );
             }

@@ -12,16 +12,16 @@ import {
     PropertyType,
     asArray,
     getObjectFromObjectId
-} from "project-editor/model/object";
-import { NavigationStore, DocumentStore, UndoManager } from "project-editor/model/store";
+} from "project-editor/core/object";
+import { NavigationStore, DocumentStore, UndoManager } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
-import { replaceObjectReference } from "project-editor/model/search";
+import { replaceObjectReference } from "project-editor/core/search";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import styled from "eez-studio-ui/styled-components";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { ListNavigation } from "project-editor/ui/ListNavigation";
+import { ListNavigation } from "project-editor/components/ListNavigation";
 
 import { ProjectStore } from "project-editor/core/store";
 import { Gui } from "project-editor/features/gui/gui";

@@ -7,10 +7,10 @@ import { Icon } from "eez-studio-ui/icon";
 import { TabsView } from "eez-studio-ui/tabs";
 import styled from "eez-studio-ui/styled-components";
 
-import { UIStateStore, OutputSectionsStore, NavigationStore } from "project-editor/model/store";
-import { Message as OutputMessage, Type as MessageType } from "project-editor/model/output";
+import { UIStateStore, OutputSectionsStore, NavigationStore } from "project-editor/core/store";
+import { Message as OutputMessage, Type as MessageType } from "project-editor/core/output";
 
-import { ObjectPath } from "project-editor/model/components/ObjectPath";
+import { ObjectPath } from "project-editor/components/ObjectPath";
 
 const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 1000;
 

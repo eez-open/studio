@@ -10,7 +10,7 @@ import { hasClass } from "eez-studio-shared/dom";
 import { Icon } from "eez-studio-ui/icon";
 import styled from "eez-studio-ui/styled-components";
 
-import { ITreeAdapter, ITreeItem, DropPosition } from "project-editor/model/objectAdapter";
+import { ITreeAdapter, ITreeItem, DropPosition } from "project-editor/core/objectAdapter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -206,17 +206,12 @@ class TreeRow extends React.Component<TreeRowProps, {}> {
             event.preventDefault();
             event.stopPropagation();
 
-            const position = {
-                left: event.clientX,
-                top: event.clientY
-            };
-
             if (!this.props.treeAdapter.isSelected(this.props.item)) {
                 this.props.treeAdapter.selectItem(this.props.item);
             }
 
             setTimeout(() => {
-                this.props.treeAdapter.showSelectionContextMenu(position);
+                this.props.treeAdapter.showSelectionContextMenu();
             });
         }
     }

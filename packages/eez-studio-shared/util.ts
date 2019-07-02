@@ -2,7 +2,7 @@ import MobXModule from "mobx";
 import MomentModule from "moment";
 
 import * as GeometryModule from "eez-studio-shared/geometry";
-import * as ModelObjectModule from "project-editor/model/object";
+import * as ModelObjectModule from "project-editor/core/object";
 
 import * as I10nModule from "eez-studio-shared/i10n";
 
@@ -55,7 +55,7 @@ export function formatTransferSpeed(speed: number) {
 
 export function objectClone<T>(a: T) {
     const { toJS } = require("mobx") as typeof MobXModule;
-    const { EezObject } = require("project-editor/model/object") as typeof ModelObjectModule;
+    const { EezObject } = require("project-editor/core/object") as typeof ModelObjectModule;
 
     if (a instanceof EezObject) {
         return JSON.parse(

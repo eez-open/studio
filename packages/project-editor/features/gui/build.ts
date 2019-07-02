@@ -1,8 +1,8 @@
 import { strToColor16 } from "eez-studio-shared/color";
 
-import { getProperty } from "project-editor/model/object";
-import { OutputSectionsStore } from "project-editor/model/store";
-import * as output from "project-editor/model/output";
+import { getProperty } from "project-editor/core/object";
+import { OutputSectionsStore } from "project-editor/core/store";
+import * as output from "project-editor/core/output";
 
 import { BuildResult } from "project-editor/core/extensions";
 

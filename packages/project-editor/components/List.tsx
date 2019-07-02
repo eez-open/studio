@@ -1,8 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
 
-import { ListAdapter } from "project-editor/model/objectAdapter";
-import { Tree } from "project-editor/model/components/Tree";
+import { ListAdapter } from "project-editor/core/objectAdapter";
+import { Tree } from "project-editor/components/Tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -5,10 +5,10 @@ import classNames from "classnames";
 
 import { humanize } from "eez-studio-shared/string";
 
-import { EezObject, EezClass, getClassesDerivedFrom } from "project-editor/model/object";
-import { loadObject } from "project-editor/model/serialization";
-import { objectToClipboardData, setClipboardData } from "project-editor/model/clipboard";
-import { DragAndDropManager } from "project-editor/model/dd";
+import { EezObject, EezClass, getClassesDerivedFrom } from "project-editor/core/object";
+import { loadObject } from "project-editor/core/serialization";
+import { objectToClipboardData, setClipboardData } from "project-editor/core/clipboard";
+import { DragAndDropManager } from "project-editor/core/dd";
 
 import { Widget } from "project-editor/features/gui/widget";
 

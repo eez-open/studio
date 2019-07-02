@@ -5,22 +5,22 @@ import { bind } from "bind-decorator";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { EezObject, NavigationComponent, objectToString } from "project-editor/model/object";
+import { EezObject, NavigationComponent, objectToString } from "project-editor/core/object";
 import {
     EditorsStore,
     NavigationStore,
     UIStateStore,
     addItem,
     canAdd
-} from "project-editor/model/store";
+} from "project-editor/core/store";
 import {
     TreeObjectAdapter,
     ITreeObjectAdapter,
     TreeAdapter
-} from "project-editor/model/objectAdapter";
+} from "project-editor/core/objectAdapter";
 
-import { Panel } from "project-editor/model/components/Panel";
-import { Tree } from "project-editor/model/components/Tree";
+import { Panel } from "project-editor/components/Panel";
+import { Tree } from "project-editor/components/Tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 

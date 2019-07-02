@@ -11,10 +11,10 @@ import {
     MessageType,
     getChildOfObject,
     humanizePropertyName
-} from "project-editor/model/object";
-import { OutputSectionsStore, UIStateStore } from "project-editor/model/store";
+} from "project-editor/core/object";
+import { OutputSectionsStore, UIStateStore } from "project-editor/core/store";
 
-export { MessageType as Type } from "project-editor/model/object";
+export { MessageType as Type } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 

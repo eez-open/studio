@@ -10,10 +10,10 @@ import {
     getObjectPath,
     objectToString,
     getObjectPropertyAsObject
-} from "project-editor/model/object";
-import { DocumentStore, OutputSectionsStore } from "project-editor/model/store";
+} from "project-editor/core/object";
+import { DocumentStore, OutputSectionsStore } from "project-editor/core/store";
 
-import { Section, Type } from "project-editor/model/output";
+import { Section, Type } from "project-editor/core/output";
 
 ////////////////////////////////////////////////////////////////////////////////
 

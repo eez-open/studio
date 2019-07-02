@@ -7,15 +7,15 @@ import {
     EezObject,
     PropertyType,
     asArray
-} from "project-editor/model/object";
-import { Message, Type } from "project-editor/model/output";
+} from "project-editor/core/object";
+import { Message, Type } from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { ListNavigationWithContent } from "project-editor/ui/ListNavigation";
+import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
 
 import { ActionEditor } from "project-editor/features/action/ActionEditor";
 

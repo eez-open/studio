@@ -25,8 +25,8 @@ import {
     isArrayElement,
     isObjectInstanceOf,
     isPartOfNavigation
-} from "project-editor/model/object";
-import { objectsToClipboardData } from "project-editor/model/clipboard";
+} from "project-editor/core/object";
+import { objectsToClipboardData } from "project-editor/core/clipboard";
 import {
     canCut,
     canPaste,
@@ -39,21 +39,20 @@ import {
     deleteItems,
     createContextMenu,
     showContextMenu,
-    IMenu,
-    IMenuItem,
-    UIElementsFactory,
-    IMenuAnchorPosition,
     canContainChildren,
     DocumentStore,
     NavigationStore
-} from "project-editor/model/store";
+} from "project-editor/core/store";
 import {
     objectToClipboardData,
     setClipboardData,
-    findPastePlaceInside
-} from "project-editor/model/clipboard";
-import { DragAndDropManager } from "project-editor/model/dd";
-import { objectToJson } from "project-editor/model/serialization";
+    findPastePlaceInside,
+    copyToClipboard
+} from "project-editor/core/clipboard";
+import { DragAndDropManager } from "project-editor/core/dd";
+import { objectToJson } from "project-editor/core/serialization";
+
+const { Menu, MenuItem } = EEZStudio.electron.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -115,7 +114,7 @@ export interface DisplayItemSelection extends DisplayItem {
     canDelete(): boolean;
     deleteSelection(): void;
 
-    showSelectionContextMenu(position: IMenuAnchorPosition): void;
+    showSelectionContextMenu(position: Electron.PopupOptions): void;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -191,8 +190,8 @@ export interface ITreeObjectAdapter extends DisplayItem, DisplayItemSelection, I
     pasteSelection(): void;
     canDelete(): boolean;
     deleteSelection(): void;
-    createSelectionContextMenu(): IMenu | undefined;
-    showSelectionContextMenu(position: IMenuAnchorPosition): void;
+    createSelectionContextMenu(): Electron.Menu | undefined;
+    showSelectionContextMenu(): void;
 }
 
 export class TreeObjectAdapter implements ITreeObjectAdapter {
@@ -637,7 +636,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 let objects = this.selectedItems.map(item => item.object);
                 let cliboardText = objectsToClipboardData(objects);
                 deleteItems(objects, () => {
-                    UIElementsFactory.copyToClipboard(cliboardText);
+                    copyToClipboard(cliboardText);
                 });
             }
         }
@@ -663,7 +662,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 copyItem(this.selectedItems[0].object);
             } else {
                 let objects = this.selectedItems.map(item => item.object);
-                UIElementsFactory.copyToClipboard(objectsToClipboardData(objects));
+                copyToClipboard(objectsToClipboardData(objects));
             }
         }
     }
@@ -732,13 +731,13 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             return createContextMenu(this, this.selectedItems[0].object);
         }
 
-        let menuItems: IMenuItem[] = [];
+        let menuItems: Electron.MenuItem[] = [];
 
-        let clipboardMenuItems: IMenuItem[] = [];
+        let clipboardMenuItems: Electron.MenuItem[] = [];
 
         if (this.canCut()) {
             clipboardMenuItems.push(
-                UIElementsFactory.createMenuItem({
+                new MenuItem({
                     label: "Cut",
                     click: () => {
                         this.cutSelection();
@@ -749,7 +748,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
         if (this.canCopy()) {
             clipboardMenuItems.push(
-                UIElementsFactory.createMenuItem({
+                new MenuItem({
                     label: "Copy",
                     click: () => {
                         this.copySelection();
@@ -760,7 +759,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
         if (this.canPaste()) {
             clipboardMenuItems.push(
-                UIElementsFactory.createMenuItem({
+                new MenuItem({
                     label: "Paste",
                     click: () => {
                         this.pasteSelection();
@@ -772,7 +771,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         if (clipboardMenuItems.length > 0) {
             if (menuItems.length > 0) {
                 menuItems.push(
-                    UIElementsFactory.createMenuItem({
+                    new MenuItem({
                         type: "separator"
                     })
                 );
@@ -783,14 +782,14 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         if (this.canDelete()) {
             if (menuItems.length > 0) {
                 menuItems.push(
-                    UIElementsFactory.createMenuItem({
+                    new MenuItem({
                         type: "separator"
                     })
                 );
             }
 
             menuItems.push(
-                UIElementsFactory.createMenuItem({
+                new MenuItem({
                     label: "Delete",
                     click: () => {
                         this.deleteSelection();
@@ -813,7 +812,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
 
         if (menuItems.length > 0) {
-            const menu = UIElementsFactory.createMenu();
+            const menu = new Menu();
             menuItems.forEach(menuItem => menu.append(menuItem));
             return menu;
         }
@@ -821,11 +820,11 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         return undefined;
     }
 
-    showSelectionContextMenu(position: IMenuAnchorPosition) {
+    showSelectionContextMenu() {
         let menu = this.createSelectionContextMenu();
 
         if (menu) {
-            menu.popup({}, position);
+            menu.popup({});
         }
     }
 }
@@ -879,7 +878,7 @@ export interface ITreeAdapter {
     isSelected(item: ITreeItem): boolean;
     selectItem(item: ITreeItem): void;
     toggleSelected(item: ITreeItem): void;
-    showSelectionContextMenu(position: IMenuAnchorPosition): void;
+    showSelectionContextMenu(): void;
     cutSelection(): void;
     copySelection(): void;
     pasteSelection(): void;
@@ -1028,8 +1027,8 @@ export class TreeAdapter implements ITreeAdapter {
         this.rootItem.toggleSelected(item);
     }
 
-    showSelectionContextMenu(position: IMenuAnchorPosition) {
-        this.rootItem.showSelectionContextMenu(position);
+    showSelectionContextMenu() {
+        this.rootItem.showSelectionContextMenu();
     }
 
     cutSelection() {
@@ -1375,8 +1374,8 @@ export class ListAdapter implements ITreeAdapter {
         this.selectItem(item);
     }
 
-    showSelectionContextMenu(position: IMenuAnchorPosition): void {
-        showContextMenu(this, this.selectedItem ? this.selectedItem.object : this.object, position);
+    showSelectionContextMenu(): void {
+        showContextMenu(this, this.selectedItem ? this.selectedItem.object : this.object);
     }
 
     cutSelection() {

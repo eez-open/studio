@@ -19,11 +19,11 @@ import {
     getChildOfObject,
     MessageType,
     EditorComponent
-} from "project-editor/model/object";
-import { loadObject } from "project-editor/model/serialization";
-import * as output from "project-editor/model/output";
+} from "project-editor/core/object";
+import { loadObject } from "project-editor/core/serialization";
+import * as output from "project-editor/core/output";
 
-import { ListNavigationWithContent } from "project-editor/ui/ListNavigation";
+import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
 
 import { findStyle, findFont } from "project-editor/features/gui/gui";
 import { drawText } from "project-editor/features/gui/draw";

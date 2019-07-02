@@ -31,16 +31,10 @@ import {
     dataGroup,
     actionsGroup,
     getProperty
-} from "project-editor/model/object";
-import { loadObject, objectToJS } from "project-editor/model/serialization";
-import {
-    DocumentStore,
-    IMenuItem,
-    UIElementsFactory,
-    NavigationStore,
-    IContextMenuContext
-} from "project-editor/model/store";
-import * as output from "project-editor/model/output";
+} from "project-editor/core/object";
+import { loadObject, objectToJS } from "project-editor/core/serialization";
+import { DocumentStore, NavigationStore, IContextMenuContext } from "project-editor/core/store";
+import * as output from "project-editor/core/output";
 
 import {
     IResizeHandler,
@@ -52,7 +46,7 @@ import {
 } from "project-editor/features/gui/page-editor/render";
 import { EditorObject } from "project-editor/features/gui/page-editor/editor";
 
-import { PropertyProps } from "project-editor/model/components/PropertyGrid";
+import { PropertyProps } from "project-editor/components/PropertyGrid";
 
 import { ProjectStore } from "project-editor/core/store";
 
@@ -75,6 +69,10 @@ import {
     textDrawingInBackground
 } from "project-editor/features/gui/draw";
 import * as lcd from "project-editor/features/gui/lcd";
+
+import { BootstrapButton } from "project-editor/components/ui-elements";
+
+const { MenuItem } = EEZStudio.electron.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -430,13 +428,13 @@ export class Widget extends EezObject {
     extendContextMenu(
         context: IContextMenuContext,
         objects: EezObject[],
-        menuItems: IMenuItem[]
+        menuItems: Electron.MenuItem[]
     ): void {
-        var additionalMenuItems: IMenuItem[] = [];
+        var additionalMenuItems: Electron.MenuItem[] = [];
 
         if (objects.length === 1) {
             additionalMenuItems.push(
-                UIElementsFactory.createMenuItem({
+                new MenuItem({
                     label: "Put in Select",
                     click: () => {
                         const selectWidget = (objects[0] as Widget).putInSelect();
@@ -448,7 +446,7 @@ export class Widget extends EezObject {
 
         if (areAllChildrenOfTheSameParent(objects)) {
             additionalMenuItems.push(
-                UIElementsFactory.createMenuItem({
+                new MenuItem({
                     label: "Put in Container",
                     click: () => {
                         const containerWidget = Widget.putInContainer(objects as Widget[]);
@@ -458,7 +456,7 @@ export class Widget extends EezObject {
             );
 
             additionalMenuItems.push(
-                UIElementsFactory.createMenuItem({
+                new MenuItem({
                     label: "Create Layout",
                     click: async () => {
                         const layoutWidget = await Widget.createLayout(objects as Widget[]);
@@ -475,7 +473,7 @@ export class Widget extends EezObject {
 
             if (object instanceof LayoutViewWidget) {
                 additionalMenuItems.push(
-                    UIElementsFactory.createMenuItem({
+                    new MenuItem({
                         label: "Replace with Container",
                         click: () => {
                             const widget = object.replaceWithContainer();
@@ -490,7 +488,7 @@ export class Widget extends EezObject {
             let parent = object._parent;
             if (parent && parent._parent instanceof SelectWidget) {
                 additionalMenuItems.push(
-                    UIElementsFactory.createMenuItem({
+                    new MenuItem({
                         label: "Replace Parent",
                         click: () => {
                             const widget = (object as Widget).replaceParent();
@@ -505,7 +503,7 @@ export class Widget extends EezObject {
 
         if (additionalMenuItems.length > 0) {
             additionalMenuItems.push(
-                UIElementsFactory.createMenuItem({
+                new MenuItem({
                     type: "separator"
                 })
             );
@@ -1224,21 +1222,15 @@ registerClass(SelectWidget);
 @observer
 class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
     @bind
-    showLayout(after: boolean) {
+    showLayout() {
         (this.props.object as LayoutViewWidget).open();
     }
 
     render() {
         return (
-            <UIElementsFactory.Button
-                variant="contained"
-                color="primary"
-                size="small"
-                onClick={this.showLayout}
-                style={{ margin: 5 }}
-            >
+            <BootstrapButton color="primary" size="small" onClick={this.showLayout}>
                 Show Layout
-            </UIElementsFactory.Button>
+            </BootstrapButton>
         );
     }
 }

@@ -1,5 +1,4 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
-import { IMenu } from "project-editor/model/store";
 
 import { ITransform, Transform } from "project-editor/features/gui/page-editor/transform";
 
@@ -32,7 +31,7 @@ export interface IDocument {
     resetTransform?(transform: ITransform): void;
 
     // misc.
-    createContextMenu(objects: IBaseObject[]): IMenu | undefined;
+    createContextMenu(objects: IBaseObject[]): Electron.Menu | undefined;
 
     // events
     onDragStart(op: "move" | "resize" | "col-resize" | "row-resize"): void;
@@ -128,7 +127,7 @@ export interface IToolHandler {
     onContextMenu(
         context: IDesignerContext,
         point: Point,
-        showContextMenu: (menu: IMenu) => void
+        showContextMenu: (menu: Electron.Menu) => void
     ): void;
 
     cursor: string;

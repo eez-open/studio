@@ -10,8 +10,8 @@ import {
     getHumanReadableObjectPath,
     isArrayElement,
     findPropertyByName
-} from "project-editor/model/object";
-import { loadObject } from "project-editor/model/serialization";
+} from "project-editor/core/object";
+import { loadObject } from "project-editor/core/serialization";
 
 ////////////////////////////////////////////////////////////////////////////////
 

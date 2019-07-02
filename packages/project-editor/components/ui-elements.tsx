@@ -3,8 +3,6 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import classNames from "classnames";
 
-import { PropertyInfo } from "project-editor/model/object";
-
 import { IDialogComponentProps } from "eez-studio-ui/dialog";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,75 +136,4 @@ export class BootstrapButton extends React.Component<{
             </button>
         );
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const DefaultUIElementsFactory: IUIElementsFactory = {
-    Dialog: BootstrapDialog,
-
-    Button: BootstrapButton,
-
-    createMenuItem(config: IMenuItemConfig) {
-        // todo
-        return {};
-    },
-    createMenu() {
-        // todo
-        return {
-            append(menuItem: IMenuItem) {},
-            popup(options: IMenuPopupOptions) {}
-        };
-    },
-    confirm(message: string, detail: string | undefined, callback: () => void) {
-        // todo
-    },
-    renderProperty(propertyInfo: PropertyInfo, value: any, onChange: (value: any) => void) {
-        return null;
-    },
-    copyToClipboard(text: string) {},
-    pasteFromClipboard(): string | undefined {
-        return undefined;
-    }
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-export type IMenuItemConfig =
-    | {
-          label: string;
-          click?: () => void;
-          checked?: boolean;
-      }
-    | {
-          type: "separator";
-      };
-
-export interface IMenuItem {}
-
-export interface IMenuPopupOptions {}
-
-export interface IMenuAnchorPosition {
-    left: number;
-    top: number;
-}
-
-export interface IMenu {
-    append(menuItem: IMenuItem): void;
-    popup(options: IMenuPopupOptions, position: IMenuAnchorPosition): void;
-}
-
-export interface IUIElementsFactory {
-    Dialog: typeof React.Component;
-    Button: typeof React.Component;
-    createMenuItem(menuItemConfig: IMenuItemConfig): IMenuItem;
-    createMenu(): IMenu;
-    confirm(message: string, detail: string | undefined, callback: () => void): void;
-    renderProperty(
-        propertyInfo: PropertyInfo,
-        value: any,
-        onChange: (value: any) => void
-    ): React.ReactNode;
-    copyToClipboard(text: string): void;
-    pasteFromClipboard(): string | undefined;
 }

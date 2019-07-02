@@ -12,8 +12,8 @@ import {
     PropertyType,
     getProperty,
     asArray
-} from "project-editor/model/object";
-import * as output from "project-editor/model/output";
+} from "project-editor/core/object";
+import * as output from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";

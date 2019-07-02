@@ -28,12 +28,12 @@ import {
     asArray,
     EditorComponent,
     cloneObject
-} from "project-editor/model/object";
-import { DocumentStore, NavigationStore } from "project-editor/model/store";
-import { loadObject, objectToJS } from "project-editor/model/serialization";
+} from "project-editor/core/object";
+import { DocumentStore, NavigationStore } from "project-editor/core/store";
+import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { ProjectStore } from "project-editor/core/store";
 
-import { ListNavigationWithContent } from "project-editor/ui/ListNavigation";
+import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
 
 import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";

@@ -4,13 +4,13 @@ import { observer } from "mobx-react";
 
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { NavigationComponent, getProperty } from "project-editor/model/object";
-import { NavigationStore } from "project-editor/model/store";
-import { PropertyGrid } from "project-editor/model/components/PropertyGrid";
+import { NavigationComponent, getProperty } from "project-editor/core/object";
+import { NavigationStore } from "project-editor/core/store";
+import { PropertyGrid } from "project-editor/components/PropertyGrid";
 
 import { ProjectStore } from "project-editor/core/store";
 
-import { ListNavigation } from "project-editor/ui/ListNavigation";
+import { ListNavigation } from "project-editor/components/ListNavigation";
 
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
 import { Scpi } from "project-editor/features/scpi/scpi";

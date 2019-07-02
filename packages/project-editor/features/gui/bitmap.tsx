@@ -10,7 +10,7 @@ import {
     registerClass,
     PropertyType,
     asArray
-} from "project-editor/model/object";
+} from "project-editor/core/object";
 import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -19,7 +19,7 @@ import { getThemedColor } from "project-editor/features/gui/theme";
 
 import { ProjectStore } from "project-editor/core/store";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
-import { ListNavigationWithContent } from "project-editor/ui/ListNavigation";
+import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
 
 let fs = EEZStudio.electron.remote.require("fs");
 

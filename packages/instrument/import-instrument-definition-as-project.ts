@@ -4,7 +4,7 @@ import {
     getFolderName,
     localPathToFileUrl
 } from "eez-studio-shared/util-electron";
-import { objectToJS } from "project-editor/model/serialization";
+import { objectToJS } from "project-editor/core/serialization";
 import { importExtensionToFolder } from "eez-studio-shared/extensions/extensions";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 

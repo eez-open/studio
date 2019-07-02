@@ -7,8 +7,8 @@ import {
     EezArrayObject,
     PropertyType,
     getProperty
-} from "project-editor/model/object";
-import { objectToJS } from "project-editor/model/serialization";
+} from "project-editor/core/object";
+import { objectToJS } from "project-editor/core/serialization";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";

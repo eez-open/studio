@@ -6,10 +6,10 @@ import {
     buildInstrumentExtension,
     IdfProperties as InstrumentIdfProperties
 } from "instrument/export";
-import { EezArrayObject, getProperty } from "project-editor/model/object";
-import { objectToJS } from "project-editor/model/serialization";
-import { OutputSectionsStore } from "project-editor/model/store";
-import { Section, Type } from "project-editor/model/output";
+import { EezArrayObject, getProperty } from "project-editor/core/object";
+import { objectToJS } from "project-editor/core/serialization";
+import { OutputSectionsStore } from "project-editor/core/store";
+import { Section, Type } from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/core/store";
 import { getExtensionsByCategory } from "project-editor/core/extensions";
