@@ -61,17 +61,24 @@ import * as data from "project-editor/features/data/data";
 import { Page } from "project-editor/features/gui/page";
 import { Gui, findPage, findBitmap } from "project-editor/features/gui/gui";
 import { Style, getStyleProperty } from "project-editor/features/gui/style";
-import {
-    findDataItem,
-    findDataItemIndex,
-    dataContext
-} from "project-editor/features/data/data";
+import { findDataItem, findDataItemIndex, dataContext } from "project-editor/features/data/data";
 import { findActionIndex } from "project-editor/features/action/action";
-import * as draw from "project-editor/features/gui/draw";
+import {
+    draw,
+    drawText,
+    styleGetBorderRadius,
+    styleIsHorzAlignLeft,
+    styleIsHorzAlignRight,
+    styleIsVertAlignTop,
+    styleIsVertAlignBottom,
+    styleGetFont,
+    textDrawingInBackground
+} from "project-editor/features/gui/draw";
+import * as lcd from "project-editor/features/gui/lcd";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function makeDataPropertyInfo(
+function makeDataPropertyInfo(
     name: string,
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition
@@ -85,7 +92,7 @@ export function makeDataPropertyInfo(
     };
 }
 
-export function makeActionPropertyInfo(
+function makeActionPropertyInfo(
     name: string,
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition
@@ -99,7 +106,7 @@ export function makeActionPropertyInfo(
     };
 }
 
-export function makeStylePropertyInfo(name: string, displayName?: string): PropertyInfo {
+function makeStylePropertyInfo(name: string, displayName?: string): PropertyInfo {
     return {
         name,
         displayName,
@@ -110,8 +117,6 @@ export function makeStylePropertyInfo(name: string, displayName?: string): Prope
         enumerable: false
     };
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 function htmlEncode(value: string) {
     const el = document.createElement("div");
@@ -124,16 +129,12 @@ function htmlEncode(value: string) {
 export type WidgetParent = Page | Widget;
 
 interface IWidget {
-    type: "Container";
+    type: string;
 
     left: string;
     top: string;
-    right?: string;
-    bottom?: string;
     width: string;
     height: string;
-
-    layout?: "free";
 }
 
 export class Widget extends EezObject {
@@ -799,9 +800,7 @@ export class ContainerWidget extends Widget {
             layout: "free"
         } as IContainerWidget,
 
-        // eez-studio-page-editor\_images\Container.png
-        icon:
-            "data:image/png;base64,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"
+        icon: "_images/widgets/Container.png"
     });
 
     check() {
@@ -869,9 +868,7 @@ export class ListWidget extends Widget {
             height: 32
         },
 
-        // eez-studio-page-editor\_images\List.png
-        icon:
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMS41ZEdYUgAAAyhJREFUeF7t2AENACEMBMFKQ8AjE528ARzsXDIWNk1nrXWBJgGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAsNn7O0DTmJmZWXGvswBo8ASEMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAsNn7O0DTmJmZWXGvswBo8ASEMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGAMAGArHV/IgVNuqJc7fsAAAAASUVORK5CYII="
+        icon: "_images/widgets/List.png"
     });
 
     check() {
@@ -961,9 +958,7 @@ export class GridWidget extends Widget {
             height: 64
         },
 
-        // eez-studio-page-editor\_images\Grid.png
-        icon:
-            "data:image/png;base64,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"
+        icon: "_images/widgets/Grid.png"
     });
 
     check() {
@@ -1071,9 +1066,7 @@ export class SelectWidget extends Widget {
             height: 32
         },
 
-        // eez-studio-page-editor\_images\Select.png
-        icon:
-            "data:image/png;base64,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"
+        icon: "_images/widgets/Select.png"
     });
 
     check() {
@@ -1288,9 +1281,7 @@ export class LayoutViewWidget extends Widget {
             height: 32
         },
 
-        // eez-studio-page-editor\_images\LayoutView.png
-        icon:
-            "data:image/png;base64,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"
+        icon: "_images/widgets/LayoutView.png"
     });
 
     check() {
@@ -1401,7 +1392,8 @@ export class DisplayDataWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawDisplayDataWidget(this, rect);
+        let text = (this.data && (data.get(this.data) as string)) || "";
+        return drawText(text, rect.width, rect.height, this.style, false);
     }
 }
 
@@ -1470,7 +1462,8 @@ export class TextWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawTextWidget(this, rect);
+        let text = (this.data ? (data.get(this.data) as string) : this.text) || "";
+        return drawText(text, rect.width, rect.height, this.style, false);
     }
 }
 
@@ -1523,7 +1516,144 @@ export class MultilineTextWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawMultilineTextWidget(this, rect);
+        let text = (this.data ? (data.get(this.data) as string) : this.text) || "";
+
+        const w = rect.width;
+        const h = rect.height;
+        const style = this.style;
+        const inverse = false;
+
+        return draw(w, h, (ctx: CanvasRenderingContext2D) => {
+            let x1 = 0;
+            let y1 = 0;
+            let x2 = w - 1;
+            let y2 = h - 1;
+
+            const borderSize = style.borderSizeRect;
+            let borderRadius = styleGetBorderRadius(style) || 0;
+            if (
+                borderSize.top > 0 ||
+                borderSize.right > 0 ||
+                borderSize.bottom > 0 ||
+                borderSize.left > 0
+            ) {
+                lcd.setColor(getStyleProperty(style, "borderColor"));
+                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                x1 += borderSize.left;
+                y1 += borderSize.top;
+                x2 -= borderSize.right;
+                y2 -= borderSize.bottom;
+                borderRadius = Math.max(
+                    borderRadius -
+                        Math.max(
+                            borderSize.top,
+                            borderSize.right,
+                            borderSize.bottom,
+                            borderSize.left
+                        ),
+                    0
+                );
+            }
+
+            let backgroundColor = inverse
+                ? getStyleProperty(style, "color")
+                : getStyleProperty(style, "backgroundColor");
+            lcd.setColor(backgroundColor);
+            lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+
+            const font = styleGetFont(style);
+            if (!font) {
+                return;
+            }
+
+            try {
+                text = JSON.parse('"' + text + '"');
+            } catch (e) {
+                console.log(e, text);
+            }
+
+            let height = Math.floor(0.9 * font.height);
+
+            x1 += style.paddingRect.left;
+            x2 -= style.paddingRect.right;
+            y1 += style.paddingRect.top;
+            y2 -= style.paddingRect.bottom;
+
+            const spaceGlyph = font.glyphs._array.find(glyph => glyph.encoding == 32);
+            const spaceWidth = (spaceGlyph && spaceGlyph.dx) || 0;
+
+            let x = x1;
+            let y = y1;
+
+            let i = 0;
+            while (true) {
+                let j = i;
+                while (i < text.length && text[i] != " " && text[i] != "\n") {
+                    i++;
+                }
+
+                let width = lcd.measureStr(text.substr(j, i - j), font, 0);
+
+                while (width > x2 - x + 1) {
+                    y += height;
+                    if (y + height > y2) {
+                        break;
+                    }
+
+                    x = x1;
+                }
+
+                if (y + height > y2) {
+                    break;
+                }
+
+                if (width > 0 && height > 0) {
+                    if (inverse) {
+                        lcd.setBackColor(getStyleProperty(style, "color"));
+                        lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                    } else {
+                        lcd.setBackColor(getStyleProperty(style, "backgroundColor"));
+                        lcd.setColor(getStyleProperty(style, "color"));
+                    }
+
+                    textDrawingInBackground.drawStr(
+                        ctx,
+                        text.substr(j, i - j),
+                        x,
+                        y,
+                        width,
+                        height,
+                        font
+                    );
+
+                    x += width;
+                }
+
+                while (text[i] == " ") {
+                    x += spaceWidth;
+                    i++;
+                }
+
+                if (i == text.length || text[i] == "\n") {
+                    y += height;
+
+                    if (i == text.length) {
+                        break;
+                    }
+
+                    i++;
+
+                    let extraHeightBetweenParagraphs = Math.floor(0.2 * height);
+
+                    y += extraHeightBetweenParagraphs;
+
+                    if (y + height > y2) {
+                        break;
+                    }
+                    x = x1;
+                }
+            }
+        });
     }
 }
 
@@ -1580,7 +1710,53 @@ export class RectangleWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawRectangleWidget(this, rect);
+        const w = rect.width;
+        const h = rect.height;
+        const style = this.style;
+        const inverse = this.invertColors;
+
+        if (w > 0 && h > 0) {
+            return draw(w, h, (ctx: CanvasRenderingContext2D) => {
+                let x1 = 0;
+                let y1 = 0;
+                let x2 = w - 1;
+                let y2 = h - 1;
+
+                const borderSize = style.borderSizeRect;
+                let borderRadius = styleGetBorderRadius(style) || 0;
+                if (
+                    borderSize.top > 0 ||
+                    borderSize.right > 0 ||
+                    borderSize.bottom > 0 ||
+                    borderSize.left > 0
+                ) {
+                    lcd.setColor(getStyleProperty(style, "borderColor"));
+                    lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                    x1 += borderSize.left;
+                    y1 += borderSize.top;
+                    x2 -= borderSize.right;
+                    y2 -= borderSize.bottom;
+                    borderRadius = Math.max(
+                        borderRadius -
+                            Math.max(
+                                borderSize.top,
+                                borderSize.right,
+                                borderSize.bottom,
+                                borderSize.left
+                            ),
+                        0
+                    );
+                }
+
+                lcd.setColor(
+                    inverse
+                        ? getStyleProperty(style, "backgroundColor")
+                        : getStyleProperty(style, "color")
+                );
+                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+            });
+        }
+        return undefined;
     }
 }
 
@@ -1646,7 +1822,105 @@ export class BitmapWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawBitmapWidget(this, rect);
+        const w = rect.width;
+        const h = rect.height;
+        const style = this.style;
+
+        const bitmap = this.bitmap
+            ? findBitmap(this.bitmap)
+            : this.data
+            ? findBitmap(data.get(this.data) as string)
+            : undefined;
+
+        const inverse = false;
+
+        if (bitmap) {
+            const imageElement = bitmap.imageElement;
+            if (!imageElement) {
+                return undefined;
+            }
+
+            return draw(w, h, (ctx: CanvasRenderingContext2D) => {
+                let x1 = 0;
+                let y1 = 0;
+                let x2 = w - 1;
+                let y2 = h - 1;
+
+                const borderSize = style.borderSizeRect;
+                let borderRadius = styleGetBorderRadius(style) || 0;
+                if (
+                    borderSize.top > 0 ||
+                    borderSize.right > 0 ||
+                    borderSize.bottom > 0 ||
+                    borderSize.left > 0
+                ) {
+                    lcd.setColor(getStyleProperty(style, "borderColor"));
+                    lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                    x1 += borderSize.left;
+                    y1 += borderSize.top;
+                    x2 -= borderSize.right;
+                    y2 -= borderSize.bottom;
+                    borderRadius = Math.max(
+                        borderRadius -
+                            Math.max(
+                                borderSize.top,
+                                borderSize.right,
+                                borderSize.bottom,
+                                borderSize.left
+                            ),
+                        0
+                    );
+                }
+
+                let backgroundColor = inverse
+                    ? getStyleProperty(style, "color")
+                    : getStyleProperty(style, "backgroundColor");
+                lcd.setColor(backgroundColor);
+                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+
+                let width = imageElement.width;
+                let height = imageElement.height;
+
+                let x_offset: number;
+                if (styleIsHorzAlignLeft(style)) {
+                    x_offset = x1 + style.paddingRect.left;
+                } else if (styleIsHorzAlignRight(style)) {
+                    x_offset = x2 - style.paddingRect.right - width;
+                } else {
+                    x_offset = Math.floor(x1 + (x2 - x1 - width) / 2);
+                }
+
+                let y_offset: number;
+                if (styleIsVertAlignTop(style)) {
+                    y_offset = y1 + style.paddingRect.top;
+                } else if (styleIsVertAlignBottom(style)) {
+                    y_offset = y2 - style.paddingRect.bottom - height;
+                } else {
+                    y_offset = Math.floor(y1 + (y2 - y1 - height) / 2);
+                }
+
+                backgroundColor = inverse
+                    ? getStyleProperty(style, "color")
+                    : getStyleProperty(style, "backgroundColor");
+                lcd.setColor(backgroundColor);
+                lcd.fillRect(ctx, x1, y1, x2, y2);
+
+                if (inverse) {
+                    lcd.setBackColor(getStyleProperty(style, "color"));
+                    lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                } else {
+                    lcd.setBackColor(getStyleProperty(style, "backgroundColor"));
+                    lcd.setColor(getStyleProperty(style, "color"));
+                }
+
+                lcd.setColor(bitmap.backgroundColor || "transparent");
+                lcd.fillRect(ctx, x_offset, y_offset, x_offset + width - 1, y_offset + height - 1);
+
+                lcd.drawBitmap(ctx, imageElement, x_offset, y_offset, width, height);
+            });
+        }
+
+        return undefined;
     }
 }
 
@@ -1713,7 +1987,12 @@ export class ButtonWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawButtonWidget(this, rect);
+        let text = this.data && data.get(this.data);
+        if (!text) {
+            text = this.text;
+        }
+        let style = this.enabled && data.getBool(this.enabled) ? this.style : this.disabledStyle;
+        return drawText(text, rect.width, rect.height, style, false);
     }
 }
 
@@ -1769,7 +2048,7 @@ export class ToggleButtonWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawToggleButtonWidget(this, rect);
+        return drawText(this.text1 || "", rect.width, rect.height, this.style, false);
     }
 }
 
@@ -1801,7 +2080,61 @@ export class ButtonGroupWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawButtonGroupWidget(this, rect);
+        let buttonLabels = (this.data && data.getValueList(this.data)) || [];
+        let selectedButton = (this.data && data.get(this.data)) || 0;
+        let style = this.style;
+
+        return draw(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+            let x = 0;
+            let y = 0;
+            let w = rect.width;
+            let h = rect.height;
+
+            if (w > h) {
+                // horizontal orientation
+                let buttonWidth = Math.floor(w / buttonLabels.length);
+                x += Math.floor((w - buttonWidth * buttonLabels.length) / 2);
+                let buttonHeight = h;
+                for (let i = 0; i < buttonLabels.length; i++) {
+                    ctx.drawImage(
+                        drawText(
+                            buttonLabels[i],
+                            buttonWidth,
+                            buttonHeight,
+                            style,
+                            i == selectedButton
+                        ),
+                        x,
+                        y
+                    );
+                    x += buttonWidth;
+                }
+            } else {
+                // vertical orientation
+                let buttonWidth = w;
+                let buttonHeight = Math.floor(h / buttonLabels.length);
+
+                y += Math.floor((h - buttonHeight * buttonLabels.length) / 2);
+
+                let labelHeight = Math.min(buttonWidth, buttonHeight);
+                let yOffset = Math.floor((buttonHeight - labelHeight) / 2);
+
+                for (let i = 0; i < buttonLabels.length; i++) {
+                    ctx.drawImage(
+                        drawText(
+                            buttonLabels[i],
+                            buttonWidth,
+                            labelHeight,
+                            style,
+                            i == selectedButton
+                        ),
+                        x,
+                        y + yOffset
+                    );
+                    y += buttonHeight;
+                }
+            }
+        });
     }
 }
 
@@ -1871,8 +2204,208 @@ export class ScaleWidget extends Widget {
         return super.check().concat(messages);
     }
 
+    drawScale(
+        ctx: CanvasRenderingContext2D,
+        rect: Rect,
+        y_from: number,
+        y_to: number,
+        y_min: number,
+        y_max: number,
+        y_value: number,
+        f: number,
+        d: number
+    ) {
+        let vertical = this.needlePosition == "left" || this.needlePosition == "right";
+        let flip = this.needlePosition == "left" || this.needlePosition == "top";
+
+        let needleSize: number;
+
+        let x1: number, l1: number, x2: number, l2: number;
+        if (vertical) {
+            needleSize = this.needleHeight || 0;
+
+            if (flip) {
+                x1 = this.needleWidth + 2;
+                l1 = rect.width - (this.needleWidth + 2);
+                x2 = 0;
+                l2 = this.needleWidth || 0;
+            } else {
+                x1 = 0;
+                l1 = rect.width - (this.needleWidth + 2);
+                x2 = rect.width - this.needleWidth;
+                l2 = this.needleWidth || 0;
+            }
+        } else {
+            needleSize = this.needleWidth || 0;
+
+            if (flip) {
+                x1 = this.needleHeight + 2;
+                l1 = rect.height - (this.needleHeight + 2);
+                x2 = 0;
+                l2 = this.needleHeight || 0;
+            } else {
+                x1 = 0;
+                l1 = rect.height - this.needleHeight - 2;
+                x2 = rect.height - this.needleHeight;
+                l2 = this.needleHeight || 0;
+            }
+        }
+
+        let s = (10 * f) / d;
+
+        let y_offset: number;
+        if (vertical) {
+            y_offset = Math.floor(rect.height - 1 - (rect.height - (y_max - y_min)) / 2);
+        } else {
+            y_offset = Math.floor((rect.width - (y_max - y_min)) / 2);
+        }
+
+        let style = this.style;
+
+        for (let y_i = y_from; y_i <= y_to; y_i++) {
+            let y: number;
+
+            if (vertical) {
+                y = y_offset - y_i;
+            } else {
+                y = y_offset + y_i;
+            }
+
+            // draw ticks
+            if (y_i >= y_min && y_i <= y_max) {
+                if (y_i % s == 0) {
+                    lcd.setColor(getStyleProperty(style, "borderColor"));
+                    if (vertical) {
+                        lcd.drawHLine(ctx, x1, y, l1);
+                    } else {
+                        lcd.drawVLine(ctx, y, x1, l1);
+                    }
+                } else if (y_i % (s / 2) == 0) {
+                    lcd.setColor(getStyleProperty(style, "borderColor"));
+                    if (vertical) {
+                        if (flip) {
+                            lcd.drawHLine(ctx, x1 + l1 / 2, y, l1 / 2);
+                        } else {
+                            lcd.drawHLine(ctx, x1, y, l1 / 2);
+                        }
+                    } else {
+                        if (flip) {
+                            lcd.drawVLine(ctx, y, x1 + l1 / 2, l1 / 2);
+                        } else {
+                            lcd.drawVLine(ctx, y, x1, l1 / 2);
+                        }
+                    }
+                } else if (y_i % (s / 10) == 0) {
+                    lcd.setColor(getStyleProperty(style, "borderColor"));
+                    if (vertical) {
+                        if (flip) {
+                            lcd.drawHLine(ctx, x1 + l1 - l1 / 4, y, l1 / 4);
+                        } else {
+                            lcd.drawHLine(ctx, x1, y, l1 / 4);
+                        }
+                    } else {
+                        if (flip) {
+                            lcd.drawVLine(ctx, y, x1 + l1 - l1 / 4, l1 / 4);
+                        } else {
+                            lcd.drawVLine(ctx, y, x1, l1 / 4);
+                        }
+                    }
+                } else {
+                    lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                    if (vertical) {
+                        lcd.drawHLine(ctx, x1, y, l1);
+                    } else {
+                        lcd.drawVLine(ctx, y, x1, l1);
+                    }
+                }
+            }
+
+            let d = Math.abs(y_i - y_value);
+            if (d <= Math.floor(needleSize / 2)) {
+                // draw thumb
+                lcd.setColor(getStyleProperty(style, "color"));
+                if (vertical) {
+                    if (flip) {
+                        lcd.drawHLine(ctx, x2, y, l2 - d);
+                    } else {
+                        lcd.drawHLine(ctx, x2 + d, y, l2 - d);
+                    }
+                } else {
+                    if (flip) {
+                        lcd.drawVLine(ctx, y, x2, l2 - d);
+                    } else {
+                        lcd.drawVLine(ctx, y, x2 + d, l2 - d);
+                    }
+                }
+
+                if (y_i != y_value) {
+                    lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                    if (vertical) {
+                        if (flip) {
+                            lcd.drawHLine(ctx, x2 + l2 - d, y, d);
+                        } else {
+                            lcd.drawHLine(ctx, x2, y, d);
+                        }
+                    } else {
+                        if (flip) {
+                            lcd.drawVLine(ctx, y, x2 + l2 - d, d);
+                        } else {
+                            lcd.drawVLine(ctx, y, x2, d);
+                        }
+                    }
+                }
+            } else {
+                // erase
+                lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                if (vertical) {
+                    lcd.drawHLine(ctx, x2, y, l2);
+                } else {
+                    lcd.drawVLine(ctx, y, x2, l2);
+                }
+            }
+        }
+    }
+
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawScaleWidget(this, rect);
+        let style = this.style;
+
+        return draw(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+            let value = 0;
+            let min = (this.data && data.getMin(this.data)) || 0;
+            let max = (this.data && data.getMax(this.data)) || 0;
+
+            lcd.setColor(getStyleProperty(style, "backgroundColor"));
+            lcd.fillRect(ctx, 0, 0, rect.width - 1, rect.height - 1);
+
+            let vertical = this.needlePosition == "left" || this.needlePosition == "right";
+
+            let needleSize: number;
+            let f: number;
+            if (vertical) {
+                needleSize = this.needleHeight || 0;
+                f = Math.floor((rect.height - needleSize) / max);
+            } else {
+                needleSize = this.needleWidth || 0;
+                f = Math.floor((rect.width - needleSize) / max);
+            }
+
+            let d: number;
+            if (max > 10) {
+                d = 1;
+            } else {
+                f = 10 * (f / 10);
+                d = 10;
+            }
+
+            let y_min = Math.round(min * f);
+            let y_max = Math.round(max * f);
+            let y_value = Math.round(value * f);
+
+            let y_from_min = y_min - Math.floor(needleSize / 2);
+            let y_from_max = y_max + Math.floor(needleSize / 2);
+
+            this.drawScale(ctx, rect, y_from_min, y_from_max, y_min, y_max, y_value, f, d);
+        });
     }
 }
 
@@ -1992,7 +2525,110 @@ export class BarGraphWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawBarGraphWidget(this, rect);
+        let barGraphWidget = this;
+        let style = barGraphWidget.style;
+
+        return draw(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+            let min = (barGraphWidget.data && data.getMin(barGraphWidget.data)) || 0;
+            let max = (barGraphWidget.data && data.getMax(barGraphWidget.data)) || 0;
+            let valueText = (barGraphWidget.data && data.get(barGraphWidget.data)) || "0";
+            let value = parseFloat(valueText);
+            if (isNaN(value)) {
+                value = 0;
+            }
+            let horizontal =
+                barGraphWidget.orientation == "left-right" ||
+                barGraphWidget.orientation == "right-left";
+
+            let d = horizontal ? rect.width : rect.height;
+
+            function calcPos(value: number) {
+                let pos = Math.round((value * d) / (max - min));
+                if (pos < 0) {
+                    pos = 0;
+                }
+                if (pos > d) {
+                    pos = d;
+                }
+                return pos;
+            }
+
+            let pos = calcPos(value);
+
+            if (barGraphWidget.orientation == "left-right") {
+                lcd.setColor(getStyleProperty(style, "color"));
+                lcd.fillRect(ctx, 0, 0, pos - 1, rect.height - 1);
+                lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                lcd.fillRect(ctx, pos, 0, rect.width - 1, rect.height - 1);
+            } else if (barGraphWidget.orientation == "right-left") {
+                lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                lcd.fillRect(ctx, 0, 0, rect.width - pos - 1, rect.height - 1);
+                lcd.setColor(getStyleProperty(style, "color"));
+                lcd.fillRect(ctx, rect.width - pos, 0, rect.width - 1, rect.height - 1);
+            } else if (barGraphWidget.orientation == "top-bottom") {
+                lcd.setColor(getStyleProperty(style, "color"));
+                lcd.fillRect(ctx, 0, 0, rect.width - 1, pos - 1);
+                lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                lcd.fillRect(ctx, 0, pos, rect.width - 1, rect.height - 1);
+            } else {
+                lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                lcd.fillRect(ctx, 0, 0, rect.width - 1, rect.height - pos - 1);
+                lcd.setColor(getStyleProperty(style, "color"));
+                lcd.fillRect(ctx, 0, rect.height - pos, rect.width - 1, rect.height - 1);
+            }
+
+            if (horizontal) {
+                let textStyle = barGraphWidget.textStyle;
+                const font = styleGetFont(textStyle);
+                if (font) {
+                    let w = lcd.measureStr(valueText, font, rect.width);
+                    w += style.paddingRect.left;
+
+                    if (w > 0 && rect.height > 0) {
+                        let backgroundColor: string;
+                        let x: number;
+
+                        if (pos + w <= rect.width) {
+                            backgroundColor = getStyleProperty(style, "backgroundColor");
+                            x = pos;
+                        } else {
+                            backgroundColor = getStyleProperty(style, "color");
+                            x = pos - w - style.paddingRect.right;
+                        }
+
+                        ctx.drawImage(
+                            drawText(valueText, w, rect.height, textStyle, false, backgroundColor),
+                            x,
+                            0
+                        );
+                    }
+                }
+            }
+
+            function drawLine(lineData: string | undefined, lineStyle: Style) {
+                let value = (lineData && parseFloat(data.get(lineData))) || 0;
+                if (isNaN(value)) {
+                    value = 0;
+                }
+                let pos = calcPos(value);
+                if (pos == d) {
+                    pos = d - 1;
+                }
+                lcd.setColor(getStyleProperty(lineStyle, "color"));
+                if (barGraphWidget.orientation == "left-right") {
+                    lcd.drawVLine(ctx, pos, 0, rect.height - 1);
+                } else if (barGraphWidget.orientation == "right-left") {
+                    lcd.drawVLine(ctx, rect.width - pos, 0, rect.height - 1);
+                } else if (barGraphWidget.orientation == "top-bottom") {
+                    lcd.drawHLine(ctx, 0, pos, rect.width - 1);
+                } else {
+                    lcd.drawHLine(ctx, 0, rect.height - pos, rect.width - 1);
+                }
+            }
+
+            drawLine(barGraphWidget.line1Data, barGraphWidget.line1Style);
+            drawLine(barGraphWidget.line2Data, barGraphWidget.line2Style);
+        });
     }
 }
 
@@ -2065,7 +2701,44 @@ export class YTGraphWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawYTGraphWidget(this, rect);
+        let ytGraphWidget = this;
+        let style = ytGraphWidget.style;
+
+        return draw(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+            let x1 = 0;
+            let y1 = 0;
+            let x2 = rect.width - 1;
+            let y2 = rect.height - 1;
+
+            const borderSize = style.borderSizeRect;
+            let borderRadius = styleGetBorderRadius(style) || 0;
+            if (
+                borderSize.top > 0 ||
+                borderSize.right > 0 ||
+                borderSize.bottom > 0 ||
+                borderSize.left > 0
+            ) {
+                lcd.setColor(getStyleProperty(style, "borderColor"));
+                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                x1 += borderSize.left;
+                y1 += borderSize.top;
+                x2 -= borderSize.right;
+                y2 -= borderSize.bottom;
+                borderRadius = Math.max(
+                    borderRadius -
+                        Math.max(
+                            borderSize.top,
+                            borderSize.right,
+                            borderSize.bottom,
+                            borderSize.left
+                        ),
+                    0
+                );
+            }
+
+            lcd.setColor(getStyleProperty(style, "backgroundColor"));
+            lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+        });
     }
 }
 
@@ -2131,7 +2804,44 @@ export class UpDownWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawUpDownWidget(this, rect);
+        let upDownWidget = this;
+        let style = upDownWidget.style;
+        let buttonsStyle = upDownWidget.buttonsStyle;
+
+        return draw(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+            const buttonsFont = styleGetFont(buttonsStyle);
+            if (!buttonsFont) {
+                return;
+            }
+
+            let downButtonCanvas = drawText(
+                upDownWidget.downButtonText || "<",
+                buttonsFont.height,
+                rect.height,
+                buttonsStyle,
+                false
+            );
+            ctx.drawImage(downButtonCanvas, 0, 0);
+
+            let text = upDownWidget.data ? (data.get(upDownWidget.data) as string) : "";
+            let textCanvas = drawText(
+                text,
+                rect.width - 2 * buttonsFont.height,
+                rect.height,
+                style,
+                false
+            );
+            ctx.drawImage(textCanvas, buttonsFont.height, 0);
+
+            let upButonCanvas = drawText(
+                upDownWidget.upButtonText || ">",
+                buttonsFont.height,
+                rect.height,
+                buttonsStyle,
+                false
+            );
+            ctx.drawImage(upButonCanvas, rect.width - buttonsFont.height, 0);
+        });
     }
 }
 
@@ -2269,7 +2979,44 @@ export class ListGraphWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        return draw.drawListGraphWidget(this, rect);
+        let listGraphWidget = this;
+        let style = listGraphWidget.style;
+
+        return draw(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+            let x1 = 0;
+            let y1 = 0;
+            let x2 = rect.width - 1;
+            let y2 = rect.height - 1;
+
+            const borderSize = style.borderSizeRect;
+            let borderRadius = styleGetBorderRadius(style) || 0;
+            if (
+                borderSize.top > 0 ||
+                borderSize.right > 0 ||
+                borderSize.bottom > 0 ||
+                borderSize.left > 0
+            ) {
+                lcd.setColor(getStyleProperty(style, "borderColor"));
+                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                x1 += borderSize.left;
+                y1 += borderSize.top;
+                x2 -= borderSize.right;
+                y2 -= borderSize.bottom;
+                borderRadius = Math.max(
+                    borderRadius -
+                        Math.max(
+                            borderSize.top,
+                            borderSize.right,
+                            borderSize.bottom,
+                            borderSize.left
+                        ),
+                    0
+                );
+            }
+
+            lcd.setColor(getStyleProperty(style, "backgroundColor"));
+            lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+        });
     }
 }
 
@@ -2317,13 +3064,3 @@ export class AppViewWidget extends Widget {
 }
 
 registerClass(AppViewWidget);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function getWidgetType(widgetClass: typeof EezObject) {
-    if (widgetClass.name.endsWith("Widget")) {
-        return widgetClass.name.substring(0, widgetClass.name.length - "Widget".length);
-    }
-
-    return widgetClass.name;
-}

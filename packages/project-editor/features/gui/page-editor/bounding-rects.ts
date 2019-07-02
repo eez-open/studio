@@ -109,10 +109,6 @@ class BoundingRects {
 
 const boundingRects = new BoundingRects();
 
-export function getObjectBoundingRectFromId(id: string, viewState?: IViewState) {
-    return boundingRects.getBoundingRectFromId(id, viewState);
-}
-
 export function getObjectBoundingRect(object: IBaseObject, viewState: IViewState) {
     return boundingRects.getBoundingRect(object, viewState);
 }
@@ -123,10 +119,6 @@ export function getSelectedObjectsBoundingRect(viewState: IViewState) {
         boundingRectBuilder.addRect(getObjectBoundingRect(object, viewState));
     }
     return boundingRectBuilder.getRect();
-}
-
-export function getDocumentBoundingRect(viewState: IViewState) {
-    return boundingRects.getDocumentBoundingRect(viewState);
 }
 
 export function getObjectIdFromPoint(viewState: IViewState, point: Point) {

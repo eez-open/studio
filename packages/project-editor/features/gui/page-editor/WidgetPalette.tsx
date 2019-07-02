@@ -5,14 +5,24 @@ import classNames from "classnames";
 
 import { humanize } from "eez-studio-shared/string";
 
-import { EezClass, getClassesDerivedFrom } from "project-editor/model/object";
+import { EezObject, EezClass, getClassesDerivedFrom } from "project-editor/model/object";
 import { loadObject } from "project-editor/model/serialization";
 import { objectToClipboardData, setClipboardData } from "project-editor/model/clipboard";
 import { DragAndDropManager } from "project-editor/model/dd";
 
-import { Widget, getWidgetType } from "project-editor/features/gui/widget";
+import { Widget } from "project-editor/features/gui/widget";
 
 import styled from "eez-studio-ui/styled-components";
+
+////////////////////////////////////////////////////////////////////////////////
+
+function getWidgetType(widgetClass: typeof EezObject) {
+    if (widgetClass.name.endsWith("Widget")) {
+        return widgetClass.name.substring(0, widgetClass.name.length - "Widget".length);
+    }
+
+    return widgetClass.name;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
