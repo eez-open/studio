@@ -7,7 +7,7 @@ import bind from "bind-decorator";
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
 
-import { BootstrapDialog } from "project-editor/components/ui-elements";
+import { BootstrapDialog } from "project-editor/components/BootstrapDialog";
 
 ////////////////////////////////////////////////////////////////////////////////
 

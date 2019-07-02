@@ -70,7 +70,7 @@ import {
 } from "project-editor/features/gui/draw";
 import * as lcd from "project-editor/features/gui/lcd";
 
-import { BootstrapButton } from "project-editor/components/ui-elements";
+import { BootstrapButton } from "project-editor/components/BootstrapButton";
 
 const { MenuItem } = EEZStudio.electron.remote;
 
