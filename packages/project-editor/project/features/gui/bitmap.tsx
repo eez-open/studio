@@ -10,12 +10,12 @@ import {
     registerClass,
     PropertyType,
     asArray
-} from "eez-studio-shared/model/object";
-import { validators } from "eez-studio-shared/model/validation";
+} from "project-editor/model/object";
+import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { getPageContext } from "eez-studio-page-editor/page-context";
+import { getPageContext } from "project-editor/project/features/gui/page-editor/page-context";
 
 import { ProjectStore } from "project-editor/core/store";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";

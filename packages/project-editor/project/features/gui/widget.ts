@@ -12,8 +12,8 @@ import {
     getChildOfObject,
     hidePropertiesInPropertyGrid,
     IPropertyGridGroupDefinition
-} from "eez-studio-shared/model/object";
-import * as output from "eez-studio-shared/model/output";
+} from "project-editor/model/object";
+import * as output from "project-editor/model/output";
 
 import {
     Widget,
@@ -22,9 +22,9 @@ import {
     makeStylePropertyInfo,
     SelectWidget as BaseSelectWidget,
     LayoutViewWidget
-} from "eez-studio-page-editor/widget";
-import { Style } from "eez-studio-page-editor/style";
-import { getPageContext, IDataContext } from "eez-studio-page-editor/page-context";
+} from "project-editor/project/features/gui/page-editor/widget";
+import { Style } from "project-editor/project/features/gui/page-editor/style";
+import { getPageContext, IDataContext } from "project-editor/project/features/gui/page-editor/page-context";
 
 import * as data from "project-editor/project/features/data/data";
 
@@ -41,7 +41,7 @@ export {
     ListWidget,
     GridWidget,
     LayoutViewWidget
-} from "eez-studio-page-editor/widget";
+} from "project-editor/project/features/gui/page-editor/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
 

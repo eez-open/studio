@@ -1,8 +1,8 @@
 import { strToColor16 } from "eez-studio-shared/color";
 
-import { getProperty } from "eez-studio-shared/model/object";
-import { OutputSectionsStore } from "eez-studio-shared/model/store";
-import * as output from "eez-studio-shared/model/output";
+import { getProperty } from "project-editor/model/object";
+import { OutputSectionsStore } from "project-editor/model/store";
+import * as output from "project-editor/model/output";
 
 import { BuildResult } from "project-editor/core/extensions";
 
@@ -492,12 +492,11 @@ function buildGuiStylesData(assets: Assets) {
         }
         result.addField(new UInt16(color));
 
-        const borderSize =
-            (style.borderSizeRect.top << 12) |
-            (style.borderSizeRect.right << 8) |
-            (style.borderSizeRect.bottom << 4) |
-            style.borderSizeRect.left;
-        result.addField(new UInt16(borderSize));
+        result.addField(new UInt8(style.borderSizeRect.top));
+        result.addField(new UInt8(style.borderSizeRect.right));
+        result.addField(new UInt8(style.borderSizeRect.bottom));
+        result.addField(new UInt8(style.borderSizeRect.left));
+
         result.addField(new UInt16(style.borderRadius || 0));
 
         let borderColor = assets.getColorIndex(style, "borderColor");
@@ -514,12 +513,10 @@ function buildGuiStylesData(assets: Assets) {
         result.addField(new UInt8(style.opacityProperty));
 
         // padding
-        const padding =
-            (style.paddingRect.top << 12) |
-            (style.paddingRect.right << 8) |
-            (style.paddingRect.bottom << 4) |
-            style.paddingRect.left;
-        result.addField(new UInt16(padding));
+        result.addField(new UInt8(style.paddingRect.top));
+        result.addField(new UInt8(style.paddingRect.right));
+        result.addField(new UInt8(style.paddingRect.bottom));
+        result.addField(new UInt8(style.paddingRect.left));
 
         return result;
     }

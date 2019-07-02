@@ -7,7 +7,7 @@ import {
     VALIDATION_MESSAGE_REQUIRED,
     filterInteger,
     filterNumber
-} from "eez-studio-shared/model/validation";
+} from "eez-studio-shared/validation";
 
 import styled from "eez-studio-ui/styled-components";
 import { IListNode, List } from "eez-studio-ui/list";

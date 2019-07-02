@@ -7,7 +7,7 @@ import {
     makeValidator,
     validators,
     VALIDATION_MESSAGE_REQUIRED
-} from "eez-studio-shared/model/validation";
+} from "eez-studio-shared/validation";
 import { Dialog, showDialog, IDialogButton } from "eez-studio-ui/dialog";
 import {
     PropertyList,

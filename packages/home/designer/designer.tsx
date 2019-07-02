@@ -16,10 +16,10 @@ import {
     IToolbarButton,
     IDesignerContext,
     IViewStatePersistantState
-} from "eez-studio-designer/designer-interfaces";
-import { DesignerContext } from "eez-studio-designer/context";
-import { Canvas } from "eez-studio-designer/canvas";
-import { selectToolHandler } from "eez-studio-designer/select-tool";
+} from "home/designer/designer-interfaces";
+import { DesignerContext } from "home/designer/context";
+import { Canvas } from "home/designer/canvas";
+import { selectToolHandler } from "home/designer/select-tool";
 
 import { HistorySection } from "home/history";
 

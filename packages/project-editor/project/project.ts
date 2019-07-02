@@ -9,9 +9,9 @@ import {
     EezArrayObject,
     PropertyType,
     getProperty
-} from "eez-studio-shared/model/object";
-import { loadObject, objectToJson } from "eez-studio-shared/model/serialization";
-import * as output from "eez-studio-shared/model/output";
+} from "project-editor/model/object";
+import { loadObject, objectToJson } from "project-editor/model/serialization";
+import * as output from "project-editor/model/output";
 
 import { ProjectStore } from "project-editor/core/store";
 

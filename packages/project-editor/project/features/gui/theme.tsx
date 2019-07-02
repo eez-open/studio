@@ -12,10 +12,10 @@ import {
     PropertyType,
     asArray,
     getObjectFromObjectId
-} from "eez-studio-shared/model/object";
-import { NavigationStore, DocumentStore, UndoManager } from "eez-studio-shared/model/store";
-import { validators } from "eez-studio-shared/model/validation";
-import { replaceObjectReference } from "eez-studio-shared/model/search";
+} from "project-editor/model/object";
+import { NavigationStore, DocumentStore, UndoManager } from "project-editor/model/store";
+import { validators } from "eez-studio-shared/validation";
+import { replaceObjectReference } from "project-editor/model/search";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import styled from "eez-studio-ui/styled-components";

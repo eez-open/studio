@@ -12,7 +12,7 @@ import { IUnit, SAMPLING_RATE_UNIT, UNITS } from "eez-studio-shared/units";
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 import { Point } from "eez-studio-shared/geometry";
 
-import { makeValidator, validators } from "eez-studio-shared/model/validation";
+import { makeValidator, validators } from "eez-studio-shared/validation";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { PropertyList, TextInputProperty, SelectProperty } from "eez-studio-ui/properties";

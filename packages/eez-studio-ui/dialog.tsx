@@ -6,7 +6,7 @@ import bind from "bind-decorator";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
-import { UIElementsFactory } from "eez-studio-shared/model/store";
+import { UIElementsFactory } from "project-editor/model/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

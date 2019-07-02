@@ -10,7 +10,7 @@ import { isRenderer } from "eez-studio-shared/util-electron";
 import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 
-import { IDesignerContext } from "eez-studio-designer/designer-interfaces";
+import { IDesignerContext } from "home/designer/designer-interfaces";
 
 import { loadInstrumentExtension } from "instrument/import";
 import { instrumentStore, instruments } from "instrument/instrument-object";

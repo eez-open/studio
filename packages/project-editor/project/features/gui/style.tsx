@@ -2,16 +2,16 @@ import { observer } from "mobx-react";
 import React from "react";
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, EditorComponent } from "eez-studio-shared/model/object";
+import { EezObject, EditorComponent } from "project-editor/model/object";
 
-import { Style, isWidgetParentOfStyle } from "eez-studio-page-editor/style";
+import { Style, isWidgetParentOfStyle } from "project-editor/project/features/gui/page-editor/style";
 
 import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";
 import { drawText } from "project-editor/project/features/gui/draw";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export { Style, getStyleProperty } from "eez-studio-page-editor/style";
+export { Style, getStyleProperty } from "project-editor/project/features/gui/page-editor/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 

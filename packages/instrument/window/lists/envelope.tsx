@@ -9,7 +9,7 @@ import { Point, pointDistance, closestPointOnSegment } from "eez-studio-shared/g
 import { capitalize } from "eez-studio-shared/string";
 import { IUnit, TIME_UNIT } from "eez-studio-shared/units";
 
-import { validators } from "eez-studio-shared/model/validation";
+import { validators } from "eez-studio-shared/validation";
 
 import styled from "eez-studio-ui/styled-components";
 import { VerticalHeaderWithBody, Body } from "eez-studio-ui/header-with-body";

@@ -17,7 +17,7 @@ import {
     findPropertyByChildObject,
     isValue,
     getProperty
-} from "eez-studio-shared/model/object";
+} from "project-editor/model/object";
 import {
     UndoManager,
     DocumentStore,
@@ -25,17 +25,17 @@ import {
     EditorsStore,
     NavigationStore,
     OutputSectionsStore
-} from "eez-studio-shared/model/store";
-import { startSearch } from "eez-studio-shared/model/search";
-import { Section } from "eez-studio-shared/model/output";
+} from "project-editor/model/store";
+import { startSearch } from "project-editor/model/search";
+import { Section } from "project-editor/model/output";
 
 import { ProjectStore } from "project-editor/core/store";
 import { Debug } from "project-editor/core/debug";
 
 import { IconAction } from "eez-studio-ui/action";
-import { Panel } from "eez-studio-shared/model/components/Panel";
-import { PropertyGrid } from "eez-studio-shared/model/components/PropertyGrid";
-import { Output } from "eez-studio-shared/model/components/Output";
+import { Panel } from "project-editor/model/components/Panel";
+import { PropertyGrid } from "project-editor/model/components/PropertyGrid";
+import { Output } from "project-editor/model/components/Output";
 
 import { MenuNavigation } from "project-editor/project/ui/MenuNavigation";
 import { BuildConfiguration } from "project-editor/project/project";

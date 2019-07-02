@@ -16,7 +16,7 @@ import {
 } from "eez-studio-shared/units";
 import { Point } from "eez-studio-shared/geometry";
 
-import { validators } from "eez-studio-shared/model/validation";
+import { validators } from "eez-studio-shared/validation";
 
 import { theme } from "eez-studio-ui/theme";
 import styled from "eez-studio-ui/styled-components";

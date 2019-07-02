@@ -1,7 +1,7 @@
 import { UNITS } from "eez-studio-shared/units";
 import { IStore } from "eez-studio-shared/store";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log-interfaces";
-import { IToolbarButton } from "eez-studio-designer/designer-interfaces";
+import { IToolbarButton } from "home/designer/designer-interfaces";
 
 import { IShortcut } from "shortcuts/interfaces";
 

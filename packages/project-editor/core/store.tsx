@@ -2,7 +2,7 @@ import React from "react";
 import { observable, computed, action, autorun } from "mobx";
 
 import { confirmSave } from "eez-studio-shared/util";
-import { PropertyInfo, PropertyType } from "eez-studio-shared/model/object";
+import { PropertyInfo, PropertyType } from "project-editor/model/object";
 import {
     DocumentStore,
     UndoManager,
@@ -13,8 +13,8 @@ import {
     IMenuItem,
     IMenuPopupOptions,
     IMenuAnchorPosition
-} from "eez-studio-shared/model/store";
-import { BootstrapDialog, BootstrapButton } from "eez-studio-shared/model/ui-elements-factory";
+} from "project-editor/model/store";
+import { BootstrapDialog, BootstrapButton } from "project-editor/model/ui-elements-factory";
 
 import { showGenericDialog, TableField } from "eez-studio-ui/generic-dialog";
 

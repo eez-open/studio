@@ -14,7 +14,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { confirm } from "eez-studio-ui/dialog-electron";
 import * as notification from "eez-studio-ui/notification";
 
-import { validators } from "eez-studio-shared/model/validation";
+import { validators } from "eez-studio-shared/validation";
 
 import { remapReferencedItemIds } from "instrument/window/history/item-factory";
 

@@ -8,7 +8,7 @@ import { formatDateTimeLong } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { log, logUpdate, logDelete } from "eez-studio-shared/activity-log";
 
-import { validators } from "eez-studio-shared/model/validation";
+import { validators } from "eez-studio-shared/validation";
 
 import styled from "eez-studio-ui/styled-components";
 import { IconAction } from "eez-studio-ui/action";

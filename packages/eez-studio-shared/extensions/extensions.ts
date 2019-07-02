@@ -21,7 +21,7 @@ import { registerSource, sendMessage, watch } from "eez-studio-shared/notify";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import * as notification from "eez-studio-ui/notification";
-import { IToolbarButton } from "eez-studio-designer/designer-interfaces";
+import { IToolbarButton } from "home/designer/designer-interfaces";
 
 import { IExtension, IObject, IExtensionProperties } from "eez-studio-shared/extensions/extension";
 

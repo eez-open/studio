@@ -6,7 +6,7 @@ import { humanize } from "eez-studio-shared/string";
 import { _map } from "eez-studio-shared/algorithm";
 import { UNITS } from "eez-studio-shared/units";
 
-import { Rule, validators } from "eez-studio-shared/model/validation";
+import { Rule, validators } from "eez-studio-shared/validation";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import {

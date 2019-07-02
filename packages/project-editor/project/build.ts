@@ -15,9 +15,9 @@ import {
     getProperty,
     checkObject,
     IMessage
-} from "eez-studio-shared/model/object";
-import { OutputSectionsStore } from "eez-studio-shared/model/store";
-import { Section, Type } from "eez-studio-shared/model/output";
+} from "project-editor/model/object";
+import { OutputSectionsStore } from "project-editor/model/store";
+import { Section, Type } from "project-editor/model/output";
 
 import { ProjectStore } from "project-editor/core/store";
 

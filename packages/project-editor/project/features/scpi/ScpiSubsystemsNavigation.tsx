@@ -10,8 +10,8 @@ import {
     getProperty,
     getAncestorOfType,
     EezArrayObject
-} from "eez-studio-shared/model/object";
-import { NavigationStore } from "eez-studio-shared/model/store";
+} from "project-editor/model/object";
+import { NavigationStore } from "project-editor/model/store";
 
 import { ProjectStore } from "project-editor/core/store";
 

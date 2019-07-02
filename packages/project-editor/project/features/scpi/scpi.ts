@@ -2,8 +2,8 @@ import { observable, computed } from "mobx";
 
 import { humanize } from "eez-studio-shared/string";
 
-import { validators } from "eez-studio-shared/model/validation";
-import * as output from "eez-studio-shared/model/output";
+import { validators } from "eez-studio-shared/validation";
+import * as output from "project-editor/model/output";
 
 import styled from "eez-studio-ui/styled-components";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -17,7 +17,7 @@ import {
     PropertyInfo,
     asArray,
     getChildOfObject
-} from "eez-studio-shared/model/object";
+} from "project-editor/model/object";
 
 import { IParameterType, ParameterTypeType, ResponseType } from "instrument/scpi";
 

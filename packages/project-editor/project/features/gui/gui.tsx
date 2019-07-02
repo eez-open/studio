@@ -12,12 +12,12 @@ import {
     asArray,
     getProperty,
     NavigationComponent
-} from "eez-studio-shared/model/object";
-import * as output from "eez-studio-shared/model/output";
-import { filterNumber } from "eez-studio-shared/model/validation";
+} from "project-editor/model/object";
+import * as output from "project-editor/model/output";
+import { filterNumber } from "eez-studio-shared/validation";
 
-import { Widget } from "eez-studio-page-editor/widget";
-import { setPageContext, PropertyProps } from "eez-studio-page-editor/page-context";
+import { Widget } from "project-editor/project/features/gui/page-editor/widget";
+import { setPageContext, PropertyProps } from "project-editor/project/features/gui/page-editor/page-context";
 
 import {
     dataContext,

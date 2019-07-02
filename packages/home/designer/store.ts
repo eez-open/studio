@@ -13,9 +13,9 @@ import {
     IMenuItem,
     IMenuPopupOptions,
     IMenuAnchorPosition
-} from "eez-studio-shared/model/store";
+} from "project-editor/model/store";
 
-import { IBaseObject, IDocument } from "eez-studio-designer/designer-interfaces";
+import { IBaseObject, IDocument } from "home/designer/designer-interfaces";
 
 import { store, workbenchObjects, deleteWorkbenchObject, WorkbenchObject } from "home/store";
 

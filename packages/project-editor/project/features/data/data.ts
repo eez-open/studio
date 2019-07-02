@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import { validators } from "eez-studio-shared/model/validation";
+import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
@@ -10,8 +10,8 @@ import {
     EezObject,
     PropertyType,
     asArray
-} from "eez-studio-shared/model/object";
-import * as output from "eez-studio-shared/model/output";
+} from "project-editor/model/object";
+import * as output from "project-editor/model/output";
 
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";

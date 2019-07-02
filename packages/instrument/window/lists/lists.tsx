@@ -13,7 +13,7 @@ import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { _range } from "eez-studio-shared/algorithm";
 
-import { validators } from "eez-studio-shared/model/validation";
+import { validators } from "eez-studio-shared/validation";
 
 import styled from "eez-studio-ui/styled-components";
 import { Icon } from "eez-studio-ui/icon";

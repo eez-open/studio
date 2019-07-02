@@ -4,9 +4,9 @@ import { observer } from "mobx-react";
 
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { NavigationComponent, getProperty } from "eez-studio-shared/model/object";
-import { NavigationStore } from "eez-studio-shared/model/store";
-import { PropertyGrid } from "eez-studio-shared/model/components/PropertyGrid";
+import { NavigationComponent, getProperty } from "project-editor/model/object";
+import { NavigationStore } from "project-editor/model/store";
+import { PropertyGrid } from "project-editor/model/components/PropertyGrid";
 
 import { ProjectStore } from "project-editor/core/store";
 

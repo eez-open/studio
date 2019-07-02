@@ -2,7 +2,7 @@ import React from "react";
 import { observable, action, values } from "mobx";
 import { observer } from "mobx-react";
 
-import { makeValidator, validators } from "eez-studio-shared/model/validation";
+import { makeValidator, validators } from "eez-studio-shared/validation";
 import { PropertyList, TextInputProperty } from "eez-studio-ui/properties";
 import { Dialog } from "eez-studio-ui/dialog";
 

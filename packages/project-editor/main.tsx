@@ -11,7 +11,7 @@ import {
     IPropertyGridGroupDefinition,
     dataGroup,
     actionsGroup
-} from "eez-studio-shared/model/object";
+} from "project-editor/model/object";
 
 configure({ enforceActions: "observed" });
 
@@ -40,7 +40,7 @@ EEZStudio.electron.ipcRenderer.on("reload", async () => {
     try {
         // this must be executed before GUI widgets initialization,
         // makeDataPropertyInfo will not work without this
-        const contextModule = await import("eez-studio-page-editor/page-init-context");
+        const contextModule = await import("project-editor/project/features/gui/page-editor/page-init-context");
         contextModule.setPageInitContext({
             makeDataPropertyInfo(
                 name: string,

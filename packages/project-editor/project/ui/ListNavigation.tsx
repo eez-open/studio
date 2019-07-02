@@ -12,8 +12,8 @@ import {
     NavigationComponentProps,
     objectToString,
     isPartOfNavigation
-} from "eez-studio-shared/model/object";
-import { ListAdapter, SortDirectionType } from "eez-studio-shared/model/objectAdapter";
+} from "project-editor/model/object";
+import { ListAdapter, SortDirectionType } from "project-editor/model/objectAdapter";
 import {
     NavigationStore,
     EditorsStore,
@@ -22,10 +22,10 @@ import {
     deleteItem,
     canAdd,
     canDelete
-} from "eez-studio-shared/model/store";
-import { List } from "eez-studio-shared/model/components/List";
+} from "project-editor/model/store";
+import { List } from "project-editor/model/components/List";
 
-import { Panel } from "eez-studio-shared/model/components/Panel";
+import { Panel } from "project-editor/model/components/Panel";
 
 ////////////////////////////////////////////////////////////////////////////////
 

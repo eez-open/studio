@@ -6,7 +6,7 @@ import { bind } from "bind-decorator";
 import { formatNumber } from "eez-studio-shared/util";
 import { Rect } from "eez-studio-shared/geometry";
 import { _minBy, _maxBy } from "eez-studio-shared/algorithm";
-import { validators } from "eez-studio-shared/model/validation";
+import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import * as notification from "eez-studio-ui/notification";
@@ -28,9 +28,9 @@ import {
     asArray,
     EditorComponent,
     cloneObject
-} from "eez-studio-shared/model/object";
-import { DocumentStore, NavigationStore } from "eez-studio-shared/model/store";
-import { loadObject, objectToJS } from "eez-studio-shared/model/serialization";
+} from "project-editor/model/object";
+import { DocumentStore, NavigationStore } from "project-editor/model/store";
+import { loadObject, objectToJS } from "project-editor/model/serialization";
 import { ProjectStore } from "project-editor/core/store";
 
 import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigation";

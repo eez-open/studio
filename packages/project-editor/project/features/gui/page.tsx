@@ -10,21 +10,21 @@ import {
     IEditorState,
     hidePropertiesInPropertyGrid,
     EditorComponent
-} from "eez-studio-shared/model/object";
+} from "project-editor/model/object";
 import {
     TreeObjectAdapter,
     ITreeObjectAdapter,
     TreeAdapter
-} from "eez-studio-shared/model/objectAdapter";
-import { NavigationStore } from "eez-studio-shared/model/store";
-import { Tree } from "eez-studio-shared/model/components/Tree";
-import { Panel } from "eez-studio-shared/model/components/Panel";
+} from "project-editor/model/objectAdapter";
+import { NavigationStore } from "project-editor/model/store";
+import { Tree } from "project-editor/model/components/Tree";
+import { Panel } from "project-editor/model/components/Panel";
 
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { WidgetPalette } from "eez-studio-page-editor/components/WidgetPalette";
-import { PageEditor as StudioPageEditor } from "eez-studio-page-editor/editor";
-import { getPageContext } from "eez-studio-page-editor/page-context";
+import { WidgetPalette } from "project-editor/project/features/gui/page-editor/components/WidgetPalette";
+import { PageEditor as StudioPageEditor } from "project-editor/project/features/gui/page-editor/editor";
+import { getPageContext } from "project-editor/project/features/gui/page-editor/page-context";
 
 import { Page } from "project-editor/project/features/gui/page";
 
@@ -32,7 +32,7 @@ import { ListNavigationWithContent } from "project-editor/project/ui/ListNavigat
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export { Page } from "eez-studio-page-editor/page";
+export { Page } from "project-editor/project/features/gui/page-editor/page";
 
 ////////////////////////////////////////////////////////////////////////////////
 

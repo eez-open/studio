@@ -4,8 +4,8 @@ import { bind } from "bind-decorator";
 
 import { CodeEditor } from "eez-studio-ui/code-editor";
 
-import { EditorComponent } from "eez-studio-shared/model/object";
-import { DocumentStore, UndoManager } from "eez-studio-shared/model/store";
+import { EditorComponent } from "project-editor/model/object";
+import { DocumentStore, UndoManager } from "project-editor/model/store";
 
 import { Action } from "project-editor/project/features/action/action";
 

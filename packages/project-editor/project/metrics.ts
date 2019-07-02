@@ -1,4 +1,4 @@
-import { getProperty } from "eez-studio-shared/model/object";
+import { getProperty } from "project-editor/model/object";
 import { ProjectStore } from "project-editor/core/store";
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 

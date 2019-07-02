@@ -14,7 +14,7 @@ import { List as ListComponent } from "eez-studio-ui/list";
 import { confirm } from "eez-studio-ui/dialog-electron";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { validators } from "eez-studio-shared/model/validation";
+import { validators } from "eez-studio-shared/validation";
 
 import {
     IAppStore,

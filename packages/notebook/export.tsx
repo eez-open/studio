@@ -19,7 +19,7 @@ import { DropdownIconAction, DropdownItem } from "eez-studio-ui/action";
 import * as notification from "eez-studio-ui/notification";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { validators } from "eez-studio-shared/model/validation";
+import { validators } from "eez-studio-shared/validation";
 
 import { IActivityLogController } from "eez-studio-shared/extensions/extension";
 

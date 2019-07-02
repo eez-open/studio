@@ -11,7 +11,7 @@ import {
     isValidPath
 } from "eez-studio-shared/util-electron";
 
-import { makeValidator, validators } from "eez-studio-shared/model/validation";
+import { makeValidator, validators } from "eez-studio-shared/validation";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import {

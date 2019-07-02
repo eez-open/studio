@@ -11,7 +11,7 @@ import * as NotificationModule from "eez-studio-ui/notification";
 import { info, confirm } from "eez-studio-ui/dialog-electron";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { validators } from "eez-studio-shared/model/validation";
+import { validators } from "eez-studio-shared/validation";
 
 import { run as runScpi } from "eez-studio-shared/script-engines/scpi";
 import { run as runJavaScript } from "eez-studio-shared/script-engines/javascript";

@@ -200,7 +200,7 @@ export function drawText(
             if (styleIsHorzAlignLeft(style)) {
                 x_offset = x1 + style.paddingRect.left;
             } else if (styleIsHorzAlignRight(style)) {
-                x_offset = x2 - style.paddingRect.right;
+                x_offset = x2 - style.paddingRect.right - width;
             } else {
                 x_offset = Math.floor(x1 + (x2 - x1 + 1 - width) / 2);
             }
@@ -409,7 +409,7 @@ export function drawBitmap(bitmap: Bitmap, w: number, h: number, style: Style, i
         if (styleIsHorzAlignLeft(style)) {
             x_offset = x1 + style.paddingRect.left;
         } else if (styleIsHorzAlignRight(style)) {
-            x_offset = x2 - style.paddingRect.right;
+            x_offset = x2 - style.paddingRect.right - width;
         } else {
             x_offset = Math.floor(x1 + (x2 - x1 - width) / 2);
         }
@@ -418,7 +418,7 @@ export function drawBitmap(bitmap: Bitmap, w: number, h: number, style: Style, i
         if (styleIsVertAlignTop(style)) {
             y_offset = y1 + style.paddingRect.top;
         } else if (styleIsVertAlignBottom(style)) {
-            y_offset = y2 - style.paddingRect.bottom;
+            y_offset = y2 - style.paddingRect.bottom - height;
         } else {
             y_offset = Math.floor(y1 + (y2 - y1 - height) / 2);
         }

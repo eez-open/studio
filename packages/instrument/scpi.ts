@@ -1,4 +1,4 @@
-import { filterFloat } from "eez-studio-shared/model/validation";
+import { filterFloat } from "eez-studio-shared/validation";
 
 export interface IEnumMember {
     name: string;
