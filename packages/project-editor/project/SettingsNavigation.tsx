@@ -13,7 +13,7 @@ import { ProjectStore } from "project-editor/core/store";
 import { confirm } from "project-editor/core/util";
 import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
 
-import { TreeNavigationPanel } from "project-editor/project/ui/TreeNavigation";
+import { TreeNavigationPanel } from "project-editor/ui/TreeNavigation";
 import { PropertyGrid } from "project-editor/model/components/PropertyGrid";
 
 ////////////////////////////////////////////////////////////////////////////////

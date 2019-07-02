@@ -25,7 +25,7 @@ import { BuildFile, BuildConfiguration } from "project-editor/project/project";
 import {
     extensionDefinitionAnythingToBuild,
     extensionDefinitionBuild
-} from "project-editor/project/features/extension-definitions/build";
+} from "project-editor/features/extension-definitions/build";
 
 const fs = EEZStudio.electron.remote.require("fs");
 

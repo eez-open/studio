@@ -5,7 +5,7 @@ import { Project, BuildConfiguration } from "project-editor/project/project";
 let fs = EEZStudio.electron.remote.require("fs");
 let path = EEZStudio.electron.remote.require("path");
 
-import { ExtensionDefinition } from "project-editor/project/features/extension-definitions/extension-definitions";
+import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
 export type BuildResult = { [key: string]: string };
 
@@ -155,7 +155,7 @@ export function loadExtensions(): Promise<void> {
             }
         }
 
-        let extensionsFolder = __dirname + "/../extensions";
+        let extensionsFolder = __dirname + "/../features";
         fs.readdir(extensionsFolder, function(err: any, files: any) {
             if (err) {
                 reject("Failed to load extensions!");

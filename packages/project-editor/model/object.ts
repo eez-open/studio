@@ -115,7 +115,6 @@ export interface PropertyInfo {
     check?: (object: EezObject) => IMessage[];
     interceptAddObject?: (parentObject: EezObject, object: EezObject) => EezObject;
     downloadFileName?: (object: EezObject, propertyInfo: PropertyInfo) => string;
-    resolutionDependable?: boolean;
     embeddedImage?: boolean;
     partOfNavigation?: boolean;
 }
@@ -201,6 +200,19 @@ export interface ClassInfo {
     afterUpdateObjectHook?: (object: EezObject, changedProperties: any, oldValues: any) => void;
 
     creatableFromPalette?: boolean;
+
+    onChangeValueInPropertyGridHook?: (
+        value: any,
+        propertyInfo: PropertyInfo,
+        updateObject: (propertyValues: Object) => void
+    ) => any;
+    onKeyDownInPropertyGridHook?: (
+        event: React.KeyboardEvent,
+        object: EezObject,
+        value: any,
+        propertyInfo: PropertyInfo,
+        updateObject: (propertyValues: Object) => void
+    ) => any;
 }
 
 export function makeDerivedClassInfo(
@@ -889,18 +901,6 @@ export function checkObject(object: EezObject): IMessage[] {
         }
     }
     return [];
-}
-
-export function hidePropertiesInPropertyGrid(
-    aClass: EezClass,
-    properties: string[],
-    callback?: (object: EezObject, propertyInfo: PropertyInfo) => boolean
-) {
-    aClass.classInfo.properties.forEach(propertyInfo => {
-        if (properties.indexOf(propertyInfo.name) !== -1) {
-            propertyInfo.hideInPropertyGrid = callback || true;
-        }
-    });
 }
 
 export function isShowOnlyChildrenInTree(object: EezObject) {

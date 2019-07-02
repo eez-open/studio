@@ -43,12 +43,7 @@ import {
 } from "project-editor/model/store";
 import { replaceObjectReference } from "project-editor/model/search";
 
-import { getPageContext } from "project-editor/project/features/gui/page-editor/page-context";
-import {
-    getPropertyValueForAllResolutions,
-    unsetResolutionDependablePropertyForCurrentResolution,
-    unsetResolutionDependablePropertyForLowerResolutions
-} from "project-editor/project/features/gui/page-editor/resolution-dependable-properties";
+import { getThemedColor } from "project-editor/features/gui/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -100,75 +95,25 @@ class PropertyMenu extends React.Component<PropertyProps> {
     onClicked(event: React.MouseEvent) {
         let menuItems: IMenuItem[] = [];
 
-        if (this.props.propertyInfo.resolutionDependable) {
-            const allValues = getPropertyValueForAllResolutions(
-                this.props.object,
-                this.props.propertyInfo.name
+        if (this.sourceInfo.source === "modified") {
+            if (menuItems.length > 0) {
+                menuItems.push(
+                    UIElementsFactory.createMenuItem({
+                        type: "separator"
+                    })
+                );
+            }
+
+            menuItems.push(
+                UIElementsFactory.createMenuItem({
+                    label: "Reset",
+                    click: () => {
+                        this.props.updateObject({
+                            [this.props.propertyInfo.name]: undefined
+                        });
+                    }
+                })
             );
-
-            for (let i = 0; i < getPageContext().allResolutions.length; ++i) {
-                const value = i < allValues.length ? allValues[i] : null;
-                menuItems.push(
-                    UIElementsFactory.createMenuItem({
-                        label: `${getPageContext().allResolutions[i].shortName}: ${
-                            value != null ? value : "undefined"
-                        }`,
-                        checked: getPageContext().resolution === i
-                    })
-                );
-            }
-
-            if (getPageContext().resolution > 0 && allValues[getPageContext().resolution] != null) {
-                menuItems.push(
-                    UIElementsFactory.createMenuItem({
-                        label: "Unset",
-                        click: () => {
-                            unsetResolutionDependablePropertyForCurrentResolution(
-                                this.props.object,
-                                this.props.propertyInfo.name
-                            );
-                        }
-                    })
-                );
-            }
-
-            if (
-                getPageContext().resolution < getPageContext().allResolutions.length - 1 &&
-                allValues.slice(getPageContext().resolution + 1).find((value: any) => value != null)
-            ) {
-                menuItems.push(
-                    UIElementsFactory.createMenuItem({
-                        label: "Unset for lower resolutions",
-                        click: () => {
-                            unsetResolutionDependablePropertyForLowerResolutions(
-                                this.props.object,
-                                this.props.propertyInfo.name
-                            );
-                        }
-                    })
-                );
-            }
-        } else {
-            if (this.sourceInfo.source === "modified") {
-                if (menuItems.length > 0) {
-                    menuItems.push(
-                        UIElementsFactory.createMenuItem({
-                            type: "separator"
-                        })
-                    );
-                }
-
-                menuItems.push(
-                    UIElementsFactory.createMenuItem({
-                        label: "Reset",
-                        click: () => {
-                            this.props.updateObject({
-                                [this.props.propertyInfo.name]: undefined
-                            });
-                        }
-                    })
-                );
-            }
         }
 
         if (menuItems.length > 0) {
@@ -308,7 +253,7 @@ class ThemedColorInput extends React.Component<{
     render() {
         const { value } = this.props;
 
-        const color = getPageContext().getThemedColor(value);
+        const color = getThemedColor(value);
 
         return (
             <label
@@ -688,11 +633,13 @@ class Property extends React.Component<PropertyProps> {
 
         this._value = newValue;
 
-        const pageContext = getPageContext();
-        if (pageContext.onChangeValueInPropertyGrid) {
-            if (pageContext.onChangeValueInPropertyGrid(newValue, this.props)) {
-                return;
-            }
+        if (this.props.object._classInfo.onChangeValueInPropertyGridHook) {
+            this.props.object._classInfo.onChangeValueInPropertyGridHook(
+                newValue,
+                this.props.propertyInfo,
+                this.props.updateObject
+            );
+            return;
         }
 
         if (this.props.propertyInfo.type === PropertyType.Number) {
@@ -773,9 +720,14 @@ class Property extends React.Component<PropertyProps> {
 
     @bind
     onKeyDown(event: React.KeyboardEvent) {
-        const pageContext = getPageContext();
-        if (pageContext.onKeyDownInPropertyGrid) {
-            pageContext.onKeyDownInPropertyGrid(this._value, event, this.props);
+        if (this.props.object._classInfo.onKeyDownInPropertyGridHook) {
+            this.props.object._classInfo.onKeyDownInPropertyGridHook(
+                event,
+                this.props.object,
+                this._value,
+                this.props.propertyInfo,
+                this.props.updateObject
+            );
         }
     }
 
@@ -1316,10 +1268,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                     propertyInfo.propertyGridCollapsable;
 
                 let propertyMenuEnabled =
-                    !propertyInfo.readOnlyInPropertyGrid &&
-                    (propertyInfo.inheritable ||
-                        (propertyInfo.resolutionDependable &&
-                            getPageContext().allResolutions.length > 0));
+                    !propertyInfo.readOnlyInPropertyGrid && propertyInfo.inheritable;
 
                 let property;
                 if (colSpan) {

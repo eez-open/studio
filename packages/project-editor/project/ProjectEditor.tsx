@@ -37,10 +37,10 @@ import { Panel } from "project-editor/model/components/Panel";
 import { PropertyGrid } from "project-editor/model/components/PropertyGrid";
 import { Output } from "project-editor/model/components/Output";
 
-import { MenuNavigation } from "project-editor/project/ui/MenuNavigation";
+import { MenuNavigation } from "project-editor/ui/MenuNavigation";
 import { BuildConfiguration } from "project-editor/project/project";
 
-import { ThemesSideView } from "project-editor/project/features/gui/theme";
+import { ThemesSideView } from "project-editor/features/gui/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
 

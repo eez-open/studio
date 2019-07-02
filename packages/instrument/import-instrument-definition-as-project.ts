@@ -11,8 +11,8 @@ import { IExtension } from "eez-studio-shared/extensions/extension";
 import * as notification from "eez-studio-ui/notification";
 
 import { getNewProject } from "project-editor/project/project";
-import { ExtensionDefinition } from "project-editor/project/features/extension-definitions/extension-definitions";
-import { Scpi } from "project-editor/project/features/scpi/scpi";
+import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
+import { Scpi } from "project-editor/features/scpi/scpi";
 
 import { getProjectWindowParams } from "main/project-editor-window-params";
 

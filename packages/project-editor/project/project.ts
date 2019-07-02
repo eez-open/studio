@@ -20,10 +20,10 @@ import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
 
 import "project-editor/project/builtInFeatures";
 
-import { Action } from "project-editor/project/features/action/action";
-import { DataItem } from "project-editor/project/features/data/data";
+import { Action } from "project-editor/features/action/action";
+import { DataItem } from "project-editor/features/data/data";
 
-import { MenuNavigation } from "project-editor/project/ui/MenuNavigation";
+import { MenuNavigation } from "project-editor/ui/MenuNavigation";
 
 let fs = EEZStudio.electron.remote.require("fs");
 

@@ -1,0 +1,12 @@
+{
+    "name": "eezstudio-project-feature-action",
+    "version": "0.1.0",
+    "description": "Project actions",
+    "author": "EEZ",
+    "authorLogo": "../eez-studio-ui/_images/eez_logo.png",
+    "eezStudioExtension": {
+        "displayName": "Action",
+        "category": "project-feature",
+        "implementation": "eez-studio://project/features/action"
+    }
+}

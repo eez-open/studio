@@ -6,13 +6,6 @@ import ReactDOM from "react-dom";
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
 
-import {
-    PropertyType,
-    IPropertyGridGroupDefinition,
-    dataGroup,
-    actionsGroup
-} from "project-editor/model/object";
-
 configure({ enforceActions: "observed" });
 
 EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
@@ -38,41 +31,6 @@ EEZStudio.electron.ipcRenderer.on("reload", async () => {
 
 (async () => {
     try {
-        // this must be executed before GUI widgets initialization,
-        // makeDataPropertyInfo will not work without this
-        const contextModule = await import("project-editor/project/features/gui/page-editor/page-init-context");
-        contextModule.setPageInitContext({
-            makeDataPropertyInfo(
-                name: string,
-                displayName?: string,
-                propertyGridGroup?: IPropertyGridGroupDefinition
-            ) {
-                return {
-                    name,
-                    displayName,
-                    type: PropertyType.ObjectReference,
-                    referencedObjectCollectionPath: ["data"],
-                    propertyGridGroup: propertyGridGroup || dataGroup
-                };
-            },
-
-            makeActionPropertyInfo(
-                name: string,
-                displayName?: string,
-                propertyGridGroup?: IPropertyGridGroupDefinition
-            ) {
-                return {
-                    name,
-                    displayName,
-                    type: PropertyType.ObjectReference,
-                    referencedObjectCollectionPath: ["actions"],
-                    propertyGridGroup: propertyGridGroup || actionsGroup
-                };
-            },
-
-            layoutCollectionPath: ["gui", "pages"]
-        });
-
         const storeModule = await import("project-editor/core/store");
 
         const extensionsModule = await import("project-editor/core/extensions");
