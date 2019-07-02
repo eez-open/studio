@@ -492,7 +492,12 @@ function buildGuiStylesData(assets: Assets) {
         }
         result.addField(new UInt16(color));
 
-        result.addField(new UInt16(style.borderSize || 0));
+        const borderSize =
+            (style.borderSizeRect.top << 12) |
+            (style.borderSizeRect.right << 8) |
+            (style.borderSizeRect.bottom << 4) |
+            style.borderSizeRect.left;
+        result.addField(new UInt16(borderSize));
         result.addField(new UInt16(style.borderRadius || 0));
 
         let borderColor = assets.getColorIndex(style, "borderColor");
@@ -509,8 +514,12 @@ function buildGuiStylesData(assets: Assets) {
         result.addField(new UInt8(style.opacityProperty));
 
         // padding
-        result.addField(new UInt8(style.paddingHorizontalProperty || 0));
-        result.addField(new UInt8(style.paddingVerticalProperty || 0));
+        const padding =
+            (style.paddingRect.top << 12) |
+            (style.paddingRect.right << 8) |
+            (style.paddingRect.bottom << 4) |
+            style.paddingRect.left;
+        result.addField(new UInt16(padding));
 
         return result;
     }

@@ -14,10 +14,6 @@ import { Font } from "project-editor/project/features/gui/font";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function styleGetBorderSize(style: Style) {
-    return getStyleProperty(style, "borderSize");
-}
-
 function styleGetBorderRadius(style: Style) {
     return getStyleProperty(style, "borderRadius");
 }
@@ -154,16 +150,25 @@ export function drawText(
         let x2 = w - 1;
         let y2 = h - 1;
 
-        const borderSize = styleGetBorderSize(style) || 0;
+        const borderSize = style.borderSizeRect;
         let borderRadius = styleGetBorderRadius(style) || 0;
-        if (borderSize > 0) {
+        if (
+            borderSize.top > 0 ||
+            borderSize.right > 0 ||
+            borderSize.bottom > 0 ||
+            borderSize.left > 0
+        ) {
             lcd.setColor(getStyleProperty(style, "borderColor"));
             lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-            x1 += borderSize;
-            y1 += borderSize;
-            x2 -= borderSize;
-            y2 -= borderSize;
-            borderRadius = Math.max(borderRadius - borderSize, 0);
+            x1 += borderSize.left;
+            y1 += borderSize.top;
+            x2 -= borderSize.right;
+            y2 -= borderSize.bottom;
+            borderRadius = Math.max(
+                borderRadius -
+                    Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
+                0
+            );
         }
 
         const styleColor = getStyleProperty(style, "color");
@@ -193,18 +198,18 @@ export function drawText(
         if (width > 0 && height > 0) {
             let x_offset: number;
             if (styleIsHorzAlignLeft(style)) {
-                x_offset = x1 + getStyleProperty(style, "paddingHorizontal");
+                x_offset = x1 + style.paddingRect.left;
             } else if (styleIsHorzAlignRight(style)) {
-                x_offset = x2 - getStyleProperty(style, "paddingHorizontal") - width;
+                x_offset = x2 - style.paddingRect.right;
             } else {
                 x_offset = Math.floor(x1 + (x2 - x1 + 1 - width) / 2);
             }
 
             let y_offset: number;
             if (styleIsVertAlignTop(style)) {
-                y_offset = y1 + getStyleProperty(style, "paddingVertical");
+                y_offset = y1 + style.paddingRect.top;
             } else if (styleIsVertAlignBottom(style)) {
-                y_offset = y2 - getStyleProperty(style, "paddingVertical") - height;
+                y_offset = y2 - style.paddingRect.bottom - height;
             } else {
                 y_offset = Math.floor(y1 + (y2 - y1 + 1 - height) / 2);
             }
@@ -234,16 +239,25 @@ export function drawMultilineText(
         let x2 = w - 1;
         let y2 = h - 1;
 
-        const borderSize = styleGetBorderSize(style) || 0;
+        const borderSize = style.borderSizeRect;
         let borderRadius = styleGetBorderRadius(style) || 0;
-        if (borderSize > 0) {
+        if (
+            borderSize.top > 0 ||
+            borderSize.right > 0 ||
+            borderSize.bottom > 0 ||
+            borderSize.left > 0
+        ) {
             lcd.setColor(getStyleProperty(style, "borderColor"));
             lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-            x1 += borderSize;
-            y1 += borderSize;
-            x2 -= borderSize;
-            y2 -= borderSize;
-            borderRadius = Math.max(borderRadius - borderSize, 0);
+            x1 += borderSize.left;
+            y1 += borderSize.top;
+            x2 -= borderSize.right;
+            y2 -= borderSize.bottom;
+            borderRadius = Math.max(
+                borderRadius -
+                    Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
+                0
+            );
         }
 
         let backgroundColor = inverse
@@ -265,10 +279,10 @@ export function drawMultilineText(
 
         let height = Math.floor(0.9 * font.height);
 
-        x1 += getStyleProperty(style, "paddingHorizontal");
-        x2 -= getStyleProperty(style, "paddingHorizontal");
-        y1 += getStyleProperty(style, "paddingVertical");
-        y2 -= getStyleProperty(style, "paddingVertical");
+        x1 += style.paddingRect.left;
+        x2 -= style.paddingRect.right;
+        y1 += style.paddingRect.top;
+        y2 -= style.paddingRect.bottom;
 
         const spaceGlyph = font.glyphs._array.find(glyph => glyph.encoding == 32);
         const spaceWidth = (spaceGlyph && spaceGlyph.dx) || 0;
@@ -361,16 +375,25 @@ export function drawBitmap(bitmap: Bitmap, w: number, h: number, style: Style, i
         let x2 = w - 1;
         let y2 = h - 1;
 
-        const borderSize = styleGetBorderSize(style) || 0;
+        const borderSize = style.borderSizeRect;
         let borderRadius = styleGetBorderRadius(style) || 0;
-        if (borderSize > 0) {
+        if (
+            borderSize.top > 0 ||
+            borderSize.right > 0 ||
+            borderSize.bottom > 0 ||
+            borderSize.left > 0
+        ) {
             lcd.setColor(getStyleProperty(style, "borderColor"));
             lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-            x1 += borderSize;
-            y1 += borderSize;
-            x2 -= borderSize;
-            y2 -= borderSize;
-            borderRadius = Math.max(borderRadius - borderSize, 0);
+            x1 += borderSize.left;
+            y1 += borderSize.top;
+            x2 -= borderSize.right;
+            y2 -= borderSize.bottom;
+            borderRadius = Math.max(
+                borderRadius -
+                    Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
+                0
+            );
         }
 
         let backgroundColor = inverse
@@ -384,18 +407,18 @@ export function drawBitmap(bitmap: Bitmap, w: number, h: number, style: Style, i
 
         let x_offset: number;
         if (styleIsHorzAlignLeft(style)) {
-            x_offset = x1 + getStyleProperty(style, "paddingHorizontal");
+            x_offset = x1 + style.paddingRect.left;
         } else if (styleIsHorzAlignRight(style)) {
-            x_offset = x2 - getStyleProperty(style, "paddingHorizontal") - width;
+            x_offset = x2 - style.paddingRect.right;
         } else {
             x_offset = Math.floor(x1 + (x2 - x1 - width) / 2);
         }
 
         let y_offset: number;
         if (styleIsVertAlignTop(style)) {
-            y_offset = y1 + getStyleProperty(style, "paddingVertical");
+            y_offset = y1 + style.paddingRect.top;
         } else if (styleIsVertAlignBottom(style)) {
-            y_offset = y2 - getStyleProperty(style, "paddingVertical") - height;
+            y_offset = y2 - style.paddingRect.bottom;
         } else {
             y_offset = Math.floor(y1 + (y2 - y1 - height) / 2);
         }
@@ -431,16 +454,30 @@ export function drawRectangle(w: number, h: number, style: Style, inverse: boole
             let x2 = w - 1;
             let y2 = h - 1;
 
-            const borderSize = styleGetBorderSize(style) || 0;
+            const borderSize = style.borderSizeRect;
             let borderRadius = styleGetBorderRadius(style) || 0;
-            if (borderSize > 0) {
+            if (
+                borderSize.top > 0 ||
+                borderSize.right > 0 ||
+                borderSize.bottom > 0 ||
+                borderSize.left > 0
+            ) {
                 lcd.setColor(getStyleProperty(style, "borderColor"));
                 lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-                x1 += borderSize;
-                y1 += borderSize;
-                x2 -= borderSize;
-                y2 -= borderSize;
-                borderRadius = Math.max(borderRadius - borderSize, 0);
+                x1 += borderSize.left;
+                y1 += borderSize.top;
+                x2 -= borderSize.right;
+                y2 -= borderSize.bottom;
+                borderRadius = Math.max(
+                    borderRadius -
+                        Math.max(
+                            borderSize.top,
+                            borderSize.right,
+                            borderSize.bottom,
+                            borderSize.left
+                        ),
+                    0
+                );
             }
 
             lcd.setColor(
@@ -835,8 +872,7 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
             const font = styleGetFont(textStyle);
             if (font) {
                 let w = lcd.measureStr(valueText, font, rect.width);
-                let padding = getStyleProperty(textStyle, "paddingHorizontal");
-                w += padding;
+                w += style.paddingRect.left;
 
                 if (w > 0 && rect.height > 0) {
                     let backgroundColor: string;
@@ -847,7 +883,7 @@ export function drawBarGraphWidget(widget: Widget.Widget, rect: Rect) {
                         x = pos;
                     } else {
                         backgroundColor = getStyleProperty(style, "color");
-                        x = pos - w - padding;
+                        x = pos - w - style.paddingRect.right;
                     }
 
                     ctx.drawImage(
@@ -897,16 +933,25 @@ export function drawYTGraphWidget(widget: Widget.Widget, rect: Rect) {
         let x2 = rect.width - 1;
         let y2 = rect.height - 1;
 
-        const borderSize = styleGetBorderSize(style) || 0;
+        const borderSize = style.borderSizeRect;
         let borderRadius = styleGetBorderRadius(style) || 0;
-        if (borderSize > 0) {
+        if (
+            borderSize.top > 0 ||
+            borderSize.right > 0 ||
+            borderSize.bottom > 0 ||
+            borderSize.left > 0
+        ) {
             lcd.setColor(getStyleProperty(style, "borderColor"));
             lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-            x1 += borderSize;
-            y1 += borderSize;
-            x2 -= borderSize;
-            y2 -= borderSize;
-            borderRadius = Math.max(borderRadius - borderSize, 0);
+            x1 += borderSize.left;
+            y1 += borderSize.top;
+            x2 -= borderSize.right;
+            y2 -= borderSize.bottom;
+            borderRadius = Math.max(
+                borderRadius -
+                    Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
+                0
+            );
         }
 
         lcd.setColor(getStyleProperty(style, "backgroundColor"));
@@ -969,16 +1014,25 @@ export function drawListGraphWidget(widget: Widget.Widget, rect: Rect) {
         let x2 = rect.width - 1;
         let y2 = rect.height - 1;
 
-        const borderSize = styleGetBorderSize(style) || 0;
+        const borderSize = style.borderSizeRect;
         let borderRadius = styleGetBorderRadius(style) || 0;
-        if (borderSize > 0) {
+        if (
+            borderSize.top > 0 ||
+            borderSize.right > 0 ||
+            borderSize.bottom > 0 ||
+            borderSize.left > 0
+        ) {
             lcd.setColor(getStyleProperty(style, "borderColor"));
             lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-            x1 += borderSize;
-            y1 += borderSize;
-            x2 -= borderSize;
-            y2 -= borderSize;
-            borderRadius = Math.max(borderRadius - borderSize, 0);
+            x1 += borderSize.left;
+            y1 += borderSize.top;
+            x2 -= borderSize.right;
+            y2 -= borderSize.bottom;
+            borderRadius = Math.max(
+                borderRadius -
+                    Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
+                0
+            );
         }
 
         lcd.setColor(getStyleProperty(style, "backgroundColor"));
