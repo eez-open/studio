@@ -42,7 +42,7 @@ async function setupExtensions(
 
         try {
             const extension = await installExtension(filePath, {
-                notFound() {},
+                notFound() { },
                 async confirmReplaceNewerVersion(
                     newExtension: IExtension,
                     existingExtension: IExtension
@@ -130,6 +130,9 @@ export async function setup() {
         }
 
         let win = new BrowserWindow({
+            webPreferences: {
+                nodeIntegration: true
+            },
             width: 600,
             height: 200,
             backgroundColor: "#333",

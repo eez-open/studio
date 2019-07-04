@@ -95,6 +95,9 @@ export function detectFileType(data: string | Buffer, fileName?: string) {
 export function convertBmpToPng(data: string) {
     return new Promise<string>((resolve, reject) => {
         let browserWindow = new BrowserWindow({
+            webPreferences: {
+                nodeIntegration: true
+            },
             show: false
         });
 

@@ -106,7 +106,7 @@
         "lz4": "^0.6.2",
         "marked": "^0.6.2",
         "math-expression-evaluator": "^1.2.17",
-        "mobx": "^5.9.4",
+        "mobx": "5.10.1",
         "mobx-react": "^6.0.2",
         "mobx-utils": "^5.4.0",
         "moment": "^2.24.0",
