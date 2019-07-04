@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { ILineController, globalViewOptions } from "eez-studio-ui/chart/chart";
 
@@ -26,7 +25,8 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
     @observable waveformLineController = this.props.waveformLineController;
 
     nextJob: IWaveformRenderJobSpecification | undefined;
-    canvas: HTMLCanvasElement | null;
+    canvas: HTMLCanvasElement | undefined;
+    @observable chartImage: string | undefined;
     continuation: any;
     requestAnimationFrameId: any;
 
@@ -62,24 +62,30 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
     }
 
     componentDidMount() {
-        if (this.canvas) {
-            this.draw();
-        }
+        this.draw();
     }
 
     componentDidUpdate() {
-        if (this.canvas) {
-            this.draw();
-        }
+        this.draw();
     }
 
-    @bind
+    @action.bound
     drawStep() {
-        this.continuation = renderWaveformPath(this.canvas!, this.nextJob!, this.continuation);
+        if (!this.canvas) {
+            const chartsController = this.props.waveformLineController.yAxisController
+                .chartsController;
+            this.canvas = document.createElement("canvas");
+            this.canvas.width = chartsController.chartWidth;
+            this.canvas.height = chartsController.chartHeight;
+        }
+
+        this.continuation = renderWaveformPath(this.canvas, this.nextJob!, this.continuation);
         if (this.continuation) {
             this.requestAnimationFrameId = window.requestAnimationFrame(this.drawStep);
         } else {
             this.requestAnimationFrameId = undefined;
+            this.chartImage = this.canvas.toDataURL();
+            this.canvas = undefined;
         }
     }
 
@@ -105,18 +111,15 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
         if (!this.nextJob) {
             return null;
         }
-
         const chartsController = this.props.waveformLineController.yAxisController.chartsController;
-
         return (
-            <foreignObject x={chartsController.chartLeft} y={chartsController.chartTop}>
-                <canvas
-                    ref={ref => (this.canvas = ref)}
-                    width={chartsController.chartWidth}
-                    height={chartsController.chartHeight}
-                    style={{ pointerEvents: "none" }}
-                />
-            </foreignObject>
+            <image
+                x={chartsController.chartLeft}
+                y={chartsController.chartTop}
+                width={chartsController.chartWidth}
+                height={chartsController.chartHeight}
+                href={this.chartImage}
+            />
         );
     }
 }

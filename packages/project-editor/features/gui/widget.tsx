@@ -236,7 +236,9 @@ export class Widget extends EezObject {
                         [propertyInfo.name]: value
                     });
                 }
+                return true;
             }
+            return false;
         },
 
         onKeyDownInPropertyGridHook(
@@ -1248,7 +1250,6 @@ export class LayoutViewWidget extends Widget {
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "pages"]
             },
-            makeDataPropertyInfo("dataContext"),
             {
                 name: "customUI",
                 type: PropertyType.Any,
@@ -1305,27 +1306,50 @@ export class LayoutViewWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    render(rect: Rect): React.ReactNode {
-        const layout = findPage(this.layout);
-        if (!layout || isAncestor(this, layout)) {
+    get layoutPage() {
+        let layout;
+
+        if (this.data) {
+            const layoutName = dataContext.get(this.data);
+            if (layoutName) {
+                layout = findPage(layoutName);
+            }
+        }
+
+        if (!layout) {
+            layout = findPage(this.layout);
+        }
+
+        if (!layout) {
             return null;
         }
-        return <WidgetComponent widget={layout} />;
+
+        if (isAncestor(this, layout)) {
+            // prevent cyclic referencing
+            return null;
+        }
+
+        return layout;
+    }
+
+    render(rect: Rect): React.ReactNode {
+        if (!this.layoutPage) {
+            return null;
+        }
+        return <WidgetComponent widget={this.layoutPage} />;
     }
 
     open() {
-        const layout = findPage(this.layout);
-        if (layout) {
-            NavigationStore.showObject(layout);
+        if (this.layoutPage) {
+            NavigationStore.showObject(this.layoutPage);
         }
     }
 
     replaceWithContainer() {
-        const layout = findPage(this.layout);
-        if (layout) {
+        if (this.layoutPage) {
             var containerWidgetJsObject = Object.assign({}, ContainerWidget.classInfo.defaultValue);
 
-            containerWidgetJsObject.widgets = layout.widgets._array.map(widget =>
+            containerWidgetJsObject.widgets = this.layoutPage.widgets._array.map(widget =>
                 objectToJS(widget)
             );
 

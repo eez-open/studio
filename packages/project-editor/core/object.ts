@@ -205,7 +205,7 @@ export interface ClassInfo {
         value: any,
         propertyInfo: PropertyInfo,
         updateObject: (propertyValues: Object) => void
-    ) => any;
+    ) => boolean;
     onKeyDownInPropertyGridHook?: (
         event: React.KeyboardEvent,
         object: EezObject,

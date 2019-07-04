@@ -630,12 +630,15 @@ class Property extends React.Component<PropertyProps> {
         this._value = newValue;
 
         if (this.props.object._classInfo.onChangeValueInPropertyGridHook) {
-            this.props.object._classInfo.onChangeValueInPropertyGridHook(
-                newValue,
-                this.props.propertyInfo,
-                this.props.updateObject
-            );
-            return;
+            if (
+                this.props.object._classInfo.onChangeValueInPropertyGridHook(
+                    newValue,
+                    this.props.propertyInfo,
+                    this.props.updateObject
+                )
+            ) {
+                return;
+            }
         }
 
         if (this.props.propertyInfo.type === PropertyType.Number) {
