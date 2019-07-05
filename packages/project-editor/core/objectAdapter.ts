@@ -886,6 +886,7 @@ export interface ITreeAdapter {
 
     isSelected(item: ITreeItem): boolean;
     selectItem(item: ITreeItem): void;
+    selectItems(items: ITreeItem[]): void;
     toggleSelected(item: ITreeItem): void;
     showSelectionContextMenu(): void;
     cutSelection(): void;
@@ -1014,6 +1015,10 @@ export class TreeAdapter implements ITreeAdapter {
 
     selectItem(item: ITreeObjectAdapter) {
         this.rootItem.selectItems([item]);
+    }
+
+    selectItems(items: ITreeObjectAdapter[]) {
+        this.rootItem.selectItems(items);
     }
 
     selectObject(object: EezObject) {
@@ -1360,6 +1365,13 @@ export class ListAdapter implements ITreeAdapter {
         selectedItem = this.selectedItem;
         if (selectedItem) {
             selectedItem.selected = true;
+        }
+    }
+
+    @action
+    selectItems(items: ListItem[]): void {
+        if (items[0]) {
+            this.selectItem(items[0]);
         }
     }
 

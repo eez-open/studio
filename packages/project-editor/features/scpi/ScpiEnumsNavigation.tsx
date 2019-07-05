@@ -43,7 +43,7 @@ export class ScpiEnumsNavigation extends NavigationComponent {
                 childrenOverflow="hidden"
             >
                 <ListNavigation id={this.props.id} navigationObject={enums} />
-                <PropertyGrid object={selectedScpiEnum} />
+                <PropertyGrid objects={[selectedScpiEnum]} />
             </Splitter>
         );
     }

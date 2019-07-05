@@ -242,25 +242,26 @@ class Editors extends React.Component<{}, {}> {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class Properties extends React.Component<{ object: EezObject | undefined }, {}> {
+class Properties extends React.Component<{ objects: EezObject[] }, {}> {
     render() {
         let propertyGrid: JSX.Element | undefined;
 
-        let object = this.props.object;
-        if (object) {
-            if (isValue(object)) {
+        let objects = this.props.objects;
+        if (objects.length === 1) {
+            if (isValue(objects[0])) {
+                const object = objects[0];
                 const childObject = object._parent!;
                 const parent = childObject._parent;
                 if (parent) {
                     const propertyInfo = findPropertyByChildObject(parent, childObject);
                     if (propertyInfo && !propertyInfo.hideInPropertyGrid) {
-                        object = parent;
+                        objects = [parent];
                     }
                 }
             }
-
-            propertyGrid = <PropertyGrid object={object} />;
         }
+
+        propertyGrid = <PropertyGrid objects={objects} />;
 
         return <Panel id="properties" title="Properties" body={propertyGrid} />;
     }
@@ -295,7 +296,20 @@ class Content extends React.Component<{}, {}> {
 
         let properties: JSX.Element | undefined;
         if (UIStateStore.viewOptions.propertiesVisible) {
-            properties = <Properties object={this.object} />;
+            let objects: EezObject[];
+
+            if (
+                NavigationStore.selectedPanel &&
+                NavigationStore.selectedPanel.selectedObjects !== undefined
+            ) {
+                objects = NavigationStore.selectedPanel.selectedObjects;
+            } else if (this.object) {
+                objects = [this.object];
+            } else {
+                objects = [];
+            }
+
+            properties = <Properties objects={objects} />;
         }
 
         let content = (

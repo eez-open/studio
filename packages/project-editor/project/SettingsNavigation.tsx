@@ -152,13 +152,13 @@ export class SettingsEditor extends React.Component<{ object: EezObject | undefi
 
             return (
                 <SettingsEditorDiv>
-                    {this.props.object && <PropertyGrid object={this.props.object} />}
+                    {this.props.object && <PropertyGrid objects={[this.props.object]} />}
                     <h3>Project features</h3>
                     {projectFeatures}
                 </SettingsEditorDiv>
             );
         } else {
-            return <PropertyGrid object={this.props.object} />;
+            return <PropertyGrid objects={[this.props.object]} />;
         }
     }
 }

@@ -21,7 +21,7 @@ export class ExtensionDefinitionsNavigation extends NavigationComponent {
     }
 
     render() {
-        let content = <PropertyGrid object={this.object} />;
+        let content = <PropertyGrid objects={this.object ? [this.object] : []} />;
 
         if (UIStateStore.viewOptions.navigationVisible) {
             return (

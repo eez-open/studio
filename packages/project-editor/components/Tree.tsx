@@ -227,7 +227,55 @@ class TreeRow extends React.Component<TreeRowProps, {}> {
 
     @bind
     onClick(e: React.MouseEvent<HTMLDivElement>) {
-        if (e.ctrlKey) {
+        if (e.shiftKey) {
+            const $treeDiv = $(this.row).parent();
+            const $selectedItems = $treeDiv.find(".tree-row.selected");
+            if ($selectedItems.length > 0) {
+                let $rows = $treeDiv.find(".tree-row");
+
+                let iFirst = $rows.index($selectedItems.first());
+                let iLast = $rows.index($selectedItems.last());
+                let iThisItem = $rows.index(
+                    $treeDiv.find(
+                        `.tree-row[data-object-id="${this.props.treeAdapter.getItemId(
+                            this.props.item
+                        )}"]`
+                    )
+                );
+
+                let iFrom;
+                let iTo;
+                if (iThisItem <= iFirst) {
+                    iFrom = iThisItem;
+                    iTo = iLast;
+                } else if (iThisItem >= iLast) {
+                    iFrom = iFirst;
+                    iTo = iThisItem;
+                } else if (iThisItem - iFirst > iLast - iThisItem) {
+                    iFrom = iFirst;
+                    iTo = iThisItem;
+                } else {
+                    iFrom = iThisItem;
+                    iTo = iLast;
+                }
+
+                const items: ITreeItem[] = [];
+                for (let i = iFrom; i <= iTo; i++) {
+                    const id = $($rows.get(i)).attr("data-object-id");
+                    if (id) {
+                        const item = this.props.treeAdapter.getItemFromId(id);
+                        if (item) {
+                            items.push(item);
+                        }
+                    }
+                }
+
+                this.props.treeAdapter.selectItems(items);
+                return;
+            } else {
+                this.props.treeAdapter.selectItem(this.props.item);
+            }
+        } else if (e.ctrlKey) {
             this.props.treeAdapter.toggleSelected(this.props.item);
         } else {
             this.props.treeAdapter.selectItem(this.props.item);

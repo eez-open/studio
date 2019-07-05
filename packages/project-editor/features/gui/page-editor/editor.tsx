@@ -458,6 +458,13 @@ export class PageEditor extends React.Component<
         return undefined;
     }
 
+    @computed
+    get selectedObjects() {
+        return this.pageEditorContext.viewState.selectedObjects.map(
+            selectedObject => selectedObject.object
+        );
+    }
+
     cutSelection() {
         console.error("TODO cutSelection");
     }

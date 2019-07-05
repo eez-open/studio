@@ -19,8 +19,6 @@ export enum PropertyType {
     StringArray,
     MultilineText,
     JSON,
-    JavaScript,
-    CSS,
     Number,
     NumberArray,
     Array,

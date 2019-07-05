@@ -39,7 +39,7 @@ export class ScpiSubsystemOrCommandEditor extends React.Component<
                     persistId="project-editor/ScpiSubsystemOrCommandEditor"
                     sizes={`240px|100%`}
                 >
-                    <PropertyGrid object={this.props.object} />
+                    <PropertyGrid objects={[this.props.object]} />
                     <iframe
                         src={src}
                         style={{
@@ -52,7 +52,7 @@ export class ScpiSubsystemOrCommandEditor extends React.Component<
                 </Splitter>
             );
         } else {
-            return <PropertyGrid object={this.props.object} />;
+            return <PropertyGrid objects={[this.props.object]} />;
         }
     }
 }

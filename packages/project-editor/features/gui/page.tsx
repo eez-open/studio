@@ -71,6 +71,12 @@ export class PageEditor extends EditorComponent {
         return pageTabState.selectedObject;
     }
 
+    @computed
+    get selectedObjects() {
+        let pageTabState = this.props.editor.state as PageTabState;
+        return pageTabState.selectedObjects;
+    }
+
     cutSelection() {
         this.treeAdapter.cutSelection();
     }
@@ -132,6 +138,11 @@ export class PageTabState implements IEditorState {
     @computed
     get selectedObject(): EezObject | undefined {
         return this.widgetContainerDisplayItem.selectedObject || this.page;
+    }
+
+    @computed
+    get selectedObjects() {
+        return this.widgetContainerDisplayItem.selectedObjects;
     }
 
     loadState(state: any) {

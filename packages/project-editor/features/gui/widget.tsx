@@ -1225,10 +1225,13 @@ registerClass(SelectWidget);
 class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
     @bind
     showLayout() {
-        (this.props.object as LayoutViewWidget).open();
+        (this.props.objects[0] as LayoutViewWidget).open();
     }
 
     render() {
+        if (this.props.objects.length > 1) {
+            return null;
+        }
         return (
             <BootstrapButton color="primary" size="small" onClick={this.showLayout}>
                 Show Layout
