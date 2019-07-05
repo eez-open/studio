@@ -588,8 +588,8 @@ export class PageEditor
                 widget.rect.height
             );
 
-            widget.left = Math.round(left - page.rect.left).toString();
-            widget.top = Math.round(top - page.rect.top).toString();
+            widget.left = Math.round(left - page.rect.left);
+            widget.top = Math.round(top - page.rect.top);
         }
     }
 

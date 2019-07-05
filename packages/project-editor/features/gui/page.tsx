@@ -172,10 +172,10 @@ export class Page extends EezObject {
     @observable usedIn: string[] | undefined;
     @observable scrollable: boolean;
 
-    @observable left: string;
-    @observable top: string;
-    @observable width: string;
-    @observable height: string;
+    @observable left: number;
+    @observable top: number;
+    @observable width: number;
+    @observable height: number;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -192,22 +192,22 @@ export class Page extends EezObject {
             },
             {
                 name: "left",
-                type: PropertyType.String,
+                type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
             },
             {
                 name: "top",
-                type: PropertyType.String,
+                type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
             },
             {
                 name: "width",
-                type: PropertyType.String,
+                type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
             },
             {
                 name: "height",
-                type: PropertyType.String,
+                type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
             },
             {
@@ -279,31 +279,11 @@ export class Page extends EezObject {
 
     @computed
     get rect() {
-        let left = parseInt(this.left);
-        if (isNaN(left)) {
-            left = 0;
-        }
-
-        let top = parseInt(this.top);
-        if (isNaN(top)) {
-            top = 0;
-        }
-
-        let width = parseInt(this.width);
-        if (isNaN(width)) {
-            width = 0;
-        }
-
-        let height = parseInt(this.height);
-        if (isNaN(height)) {
-            height = 0;
-        }
-
         return {
-            left,
-            top,
-            width,
-            height
+            left: this.left,
+            top: this.top,
+            width: this.width,
+            height: this.height
         };
     }
 

@@ -6,7 +6,7 @@ import { bind } from "bind-decorator";
 import { _find, _range } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
-import { validators, filterNumber } from "eez-studio-shared/validation";
+import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
@@ -129,10 +129,10 @@ export type WidgetParent = Page | Widget;
 interface IWidget {
     type: string;
 
-    left: string;
-    top: string;
-    width: string;
-    height: string;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
 }
 
 export class Widget extends EezObject {
@@ -142,10 +142,10 @@ export class Widget extends EezObject {
     @observable data?: string;
     @observable action?: string;
 
-    @observable left: string;
-    @observable top: string;
-    @observable width: string;
-    @observable height: string;
+    @observable left: number;
+    @observable top: number;
+    @observable width: number;
+    @observable height: number;
 
     get label() {
         return this.type;
@@ -172,22 +172,22 @@ export class Widget extends EezObject {
             },
             {
                 name: "left",
-                type: PropertyType.String,
+                type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
             },
             {
                 name: "top",
-                type: PropertyType.String,
+                type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
             },
             {
                 name: "width",
-                type: PropertyType.String,
+                type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
             },
             {
                 name: "height",
-                type: PropertyType.String,
+                type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
             },
             makeDataPropertyInfo("data"),
@@ -207,6 +207,22 @@ export class Widget extends EezObject {
                 delete jsObject["y"];
             }
 
+            if (typeof jsObject.left === "string") {
+                jsObject.left = parseInt(jsObject.left);
+            }
+
+            if (typeof jsObject.top === "string") {
+                jsObject.top = parseInt(jsObject.top);
+            }
+
+            if (typeof jsObject.width === "string") {
+                jsObject.width = parseInt(jsObject.width);
+            }
+
+            if (typeof jsObject.height === "string") {
+                jsObject.height = parseInt(jsObject.height);
+            }
+
             if (typeof jsObject["style"] === "string") {
                 jsObject["style"] = {
                     inheritFrom: jsObject["style"]
@@ -220,86 +236,16 @@ export class Widget extends EezObject {
             }
         },
 
-        onChangeValueInPropertyGridHook(
-            value: any,
-            propertyInfo: PropertyInfo,
-            updateObject: (propertyValues: Object) => void
-        ): any {
-            if (
-                propertyInfo.name === "top" ||
-                propertyInfo.name === "left" ||
-                propertyInfo.name === "width" ||
-                propertyInfo.name === "height"
-            ) {
-                if (Number.isFinite(filterNumber(value))) {
-                    updateObject({
-                        [propertyInfo.name]: value
-                    });
-                }
-                return true;
-            }
-            return false;
-        },
-
-        onKeyDownInPropertyGridHook(
-            event: React.KeyboardEvent,
-            object: EezObject,
-            value: any,
-            propertyInfo: PropertyInfo,
-            updateObject: (propertyValues: Object) => void
-        ) {
-            if (event.keyCode === 13) {
-                if (
-                    propertyInfo.name === "top" ||
-                    propertyInfo.name === "left" ||
-                    propertyInfo.name === "width" ||
-                    propertyInfo.name === "height"
-                ) {
-                    try {
-                        var mexp = require("math-expression-evaluator");
-                        const newValue = mexp.eval(value);
-                        if (newValue !== undefined && newValue !== value) {
-                            updateObject({
-                                [propertyInfo.name]: newValue
-                            });
-                        }
-                    } catch (err) {
-                        console.error(err);
-                    }
-                }
-            }
-        },
-
         isPropertyMenuSupported: true
     };
 
     @computed
     get rect() {
-        let left = parseInt(this.left);
-        if (isNaN(left)) {
-            left = 0;
-        }
-
-        let top = parseInt(this.top);
-        if (isNaN(top)) {
-            top = 0;
-        }
-
-        let width = parseInt(this.width);
-        if (isNaN(width)) {
-            width = 0;
-        }
-
-        let height = parseInt(this.height);
-        if (isNaN(height)) {
-            height = 0;
-        }
-
         return {
-            left,
-            top,
-            width,
-            height
+            left: this.left,
+            top: this.top,
+            width: this.width,
+            height: this.height
         };
     }
 
@@ -340,31 +286,12 @@ export class Widget extends EezObject {
     check() {
         let messages: output.Message[] = [];
 
-        const x = parseInt(this.left);
-        if (isNaN(x)) {
-            messages.push(output.propertyNotSetMessage(this, "x"));
-        }
-
-        const y = parseInt(this.top);
-        if (isNaN(y)) {
-            messages.push(output.propertyNotSetMessage(this, "y"));
-        }
-
-        const width = parseInt(this.width);
-        if (isNaN(width)) {
-            messages.push(output.propertyNotSetMessage(this, "width"));
-        }
-
-        const height = parseInt(this.height);
-        if (isNaN(height)) {
-            messages.push(output.propertyNotSetMessage(this, "height"));
-        }
-
         if (
-            x < 0 ||
-            y < 0 ||
+            this.rect.left < 0 ||
+            this.rect.top < 0 ||
             (this.parent &&
-                (x + width > this.parent.rect.width || y + height > this.parent.rect.height))
+                (this.rect.left + this.rect.width > this.parent.rect.width ||
+                    this.rect.top + this.rect.height > this.parent.rect.height))
         ) {
             messages.push(
                 new output.Message(output.Type.ERROR, "Widget is outside of its parent", this)
@@ -567,10 +494,10 @@ export class Widget extends EezObject {
 
         return {
             widgets,
-            left: x1.toString(),
-            top: y1.toString(),
-            width: (x2 - x1).toString(),
-            height: (y2 - y1).toString()
+            left: x1,
+            top: y1,
+            width: x2 - x1,
+            height: y2 - y1
         };
     }
 
@@ -793,11 +720,10 @@ export class ContainerWidget extends Widget {
         defaultValue: {
             type: "Container",
             widgets: [],
-            left: "0",
-            top: "0",
-            width: "64",
-            height: "32",
-            layout: "free"
+            left: 0,
+            top: 0,
+            width: 64,
+            height: 32
         } as IContainerWidget,
 
         icon: "_images/widgets/Container.png"
@@ -1048,8 +974,8 @@ export class SelectWidget extends Widget {
                 },
 
                 interceptAddObject: (widgets: EezArrayObject<Widget>, object: Widget) => {
-                    object.left = "0";
-                    object.top = "0";
+                    object.left = 0;
+                    object.top = 0;
                     object.width = (widgets._parent as SelectWidget).width;
                     object.height = (widgets._parent as SelectWidget).height;
                     return object;

@@ -198,19 +198,6 @@ export interface ClassInfo {
     afterUpdateObjectHook?: (object: EezObject, changedProperties: any, oldValues: any) => void;
 
     creatableFromPalette?: boolean;
-
-    onChangeValueInPropertyGridHook?: (
-        value: any,
-        propertyInfo: PropertyInfo,
-        updateObject: (propertyValues: Object) => void
-    ) => boolean;
-    onKeyDownInPropertyGridHook?: (
-        event: React.KeyboardEvent,
-        object: EezObject,
-        value: any,
-        propertyInfo: PropertyInfo,
-        updateObject: (propertyValues: Object) => void
-    ) => any;
 }
 
 export function makeDerivedClassInfo(

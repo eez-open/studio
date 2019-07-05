@@ -711,18 +711,6 @@ class Property extends React.Component<PropertyProps> {
 
         this._value = newValue;
 
-        if (this.props.objects[0]._classInfo.onChangeValueInPropertyGridHook) {
-            if (
-                this.props.objects[0]._classInfo.onChangeValueInPropertyGridHook(
-                    newValue,
-                    this.props.propertyInfo,
-                    this.props.updateObject
-                )
-            ) {
-                return;
-            }
-        }
-
         if (this.props.propertyInfo.type === PropertyType.Number) {
             newValue = filterNumber(newValue);
             if (isNaN(newValue)) {
@@ -801,14 +789,20 @@ class Property extends React.Component<PropertyProps> {
 
     @bind
     onKeyDown(event: React.KeyboardEvent) {
-        if (this.props.objects[0]._classInfo.onKeyDownInPropertyGridHook) {
-            this.props.objects[0]._classInfo.onKeyDownInPropertyGridHook(
-                event,
-                this.props.objects[0],
-                this._value,
-                this.props.propertyInfo,
-                this.props.updateObject
-            );
+        if (event.keyCode === 13) {
+            if (this.props.propertyInfo.type === PropertyType.Number) {
+                try {
+                    var mexp = require("math-expression-evaluator");
+                    const newValue = mexp.eval(this._value);
+                    if (newValue !== undefined && newValue !== this._value) {
+                        this.props.updateObject({
+                            [this.props.propertyInfo.name]: newValue
+                        });
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
         }
     }
 
