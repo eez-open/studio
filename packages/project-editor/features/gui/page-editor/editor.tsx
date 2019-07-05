@@ -30,7 +30,8 @@ import {
     NavigationStore,
     deleteItems,
     UndoManager,
-    UIStateStore
+    UIStateStore,
+    IPanel
 } from "project-editor/core/store";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -376,12 +377,14 @@ interface PageEditorProps {
 }
 
 @observer
-export class PageEditor extends React.Component<
-    PageEditorProps,
-    {
-        hasError: boolean;
-    }
-> {
+export class PageEditor
+    extends React.Component<
+        PageEditorProps,
+        {
+            hasError: boolean;
+        }
+    >
+    implements IPanel {
     pageEditorContext: PageEditorDesignerContext = new PageEditorDesignerContext();
 
     @observable

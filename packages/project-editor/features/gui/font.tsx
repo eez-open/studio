@@ -29,7 +29,7 @@ import {
     EditorComponent,
     cloneObject
 } from "project-editor/core/object";
-import { DocumentStore, NavigationStore } from "project-editor/core/store";
+import { DocumentStore, NavigationStore, IPanel } from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { ProjectStore } from "project-editor/core/store";
 
@@ -1386,7 +1386,7 @@ class GlyphEditor extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class FontEditor extends EditorComponent {
+export class FontEditor extends EditorComponent implements IPanel {
     get glyphs() {
         let font = this.props.editor.object as Font;
         return font.glyphs;

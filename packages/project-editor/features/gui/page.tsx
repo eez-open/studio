@@ -27,7 +27,7 @@ import {
     ITreeObjectAdapter,
     TreeAdapter
 } from "project-editor/core/objectAdapter";
-import { NavigationStore } from "project-editor/core/store";
+import { NavigationStore, IPanel } from "project-editor/core/store";
 import { Tree } from "project-editor/components/Tree";
 import { Panel } from "project-editor/components/Panel";
 
@@ -49,7 +49,7 @@ import { getThemedColor } from "project-editor/features/gui/theme";
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class PageEditor extends EditorComponent {
+export class PageEditor extends EditorComponent implements IPanel {
     get page() {
         return this.props.editor.object as Page;
     }

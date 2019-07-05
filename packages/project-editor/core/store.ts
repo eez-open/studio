@@ -70,7 +70,7 @@ const fs = EEZStudio.electron.remote.require("fs");
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface IPanel {
+export interface IPanel {
     selectedObject: EezObject | undefined;
     selectedObjects?: EezObject[];
     cutSelection(): void;

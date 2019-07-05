@@ -72,12 +72,9 @@ const MenuContainer = styled.div`
 `;
 
 @observer
-class Menu extends React.Component<
-    {
-        navigationObject: EezObject;
-    },
-    {}
-> {
+class Menu extends React.Component<{
+    navigationObject: EezObject;
+}> {
     onFocus() {
         NavigationStore.setSelectedPanel(undefined);
     }

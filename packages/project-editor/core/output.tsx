@@ -12,7 +12,7 @@ import {
     getChildOfObject,
     humanizePropertyName
 } from "project-editor/core/object";
-import { OutputSectionsStore, UIStateStore } from "project-editor/core/store";
+import { OutputSectionsStore, UIStateStore, IPanel } from "project-editor/core/store";
 
 export { MessageType as Type } from "project-editor/core/object";
 
@@ -31,7 +31,7 @@ export class Message implements IMessage {
     constructor(public type: MessageType, public text: string, public object?: EezObject) {}
 }
 
-export class OutputSection {
+export class OutputSection implements IPanel {
     @observable active: boolean;
     permanent: boolean = true;
 

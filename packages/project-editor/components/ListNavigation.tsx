@@ -21,7 +21,8 @@ import {
     addItem,
     deleteItem,
     canAdd,
-    canDelete
+    canDelete,
+    IPanel
 } from "project-editor/core/store";
 import { List } from "project-editor/components/List";
 
@@ -159,7 +160,7 @@ interface ListNavigationProps {
 }
 
 @observer
-export class ListNavigation extends React.Component<ListNavigationProps, {}> {
+export class ListNavigation extends React.Component<ListNavigationProps> implements IPanel {
     @observable sortDirection: SortDirectionType = "none";
 
     constructor(props: any) {
