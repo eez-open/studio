@@ -1,10 +1,13 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
 
+import { EezObject } from "project-editor/core/object";
+
 import { ITransform, Transform } from "project-editor/features/gui/page-editor/transform";
 
 export interface IBaseObject {
     id: string;
     rect: Rect;
+    object: EezObject;
     children: IBaseObject[];
     isMoveable: boolean;
     getResizeHandlers?: () => IResizeHandler[] | undefined | false;
@@ -82,6 +85,10 @@ export interface IViewState {
     selectObject(object: IBaseObject): void;
     selectObjects(objects: IBaseObject[]): void;
     deselectAllObjects(): void;
+
+    moveSelection(
+        where: "left" | "up" | "right" | "down" | "home-x" | "end-x" | "home-y" | "end-y"
+    ): void;
 
     persistentState: IViewStatePersistantState;
 }

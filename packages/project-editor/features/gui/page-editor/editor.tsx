@@ -17,10 +17,7 @@ import {
 import { ITransform } from "project-editor/features/gui/page-editor/transform";
 import { DesignerContext } from "project-editor/features/gui/page-editor/context";
 import { Canvas } from "project-editor/features/gui/page-editor/canvas";
-import {
-    selectToolHandler,
-    SnapLines
-} from "project-editor/features/gui/page-editor/select-tool";
+import { selectToolHandler, SnapLines } from "project-editor/features/gui/page-editor/select-tool";
 import {
     getObjectIdFromPoint,
     getObjectIdsInsideRect
@@ -461,6 +458,22 @@ export class PageEditor extends React.Component<
         return undefined;
     }
 
+    cutSelection() {
+        console.error("TODO cutSelection");
+    }
+
+    copySelection() {
+        console.error("TODO copySelection");
+    }
+
+    pasteSelection() {
+        console.error("TODO pasteSelection");
+    }
+
+    deleteSelection() {
+        console.error("TODO deleteSelection");
+    }
+
     @bind
     focusHander() {
         NavigationStore.setSelectedPanel(this);
@@ -607,12 +620,47 @@ export class PageEditor extends React.Component<
 
     @bind
     onKeyDown(event: React.KeyboardEvent) {
-        if (event.keyCode == 46) {
+        if (event.altKey) {
+        } else if (event.shiftKey) {
+            if (event.keyCode == 36) {
+                // home
+                this.pageEditorContext.viewState.moveSelection("home-y");
+            } else if (event.keyCode == 35) {
+                // end
+                this.pageEditorContext.viewState.moveSelection("end-y");
+            }
+        } else if (event.ctrlKey) {
+            if (event.keyCode == "X".charCodeAt(0)) {
+                this.props.widgetContainer.cutSelection();
+            } else if (event.keyCode == "C".charCodeAt(0)) {
+                this.props.widgetContainer.copySelection();
+            } else if (event.keyCode == "V".charCodeAt(0)) {
+                this.props.widgetContainer.pasteSelection();
+            }
+        } else if (event.keyCode == 46) {
             // delete
             this.props.widgetContainer.deleteSelection();
         } else if (event.keyCode == 27) {
             // esc
             this.pageEditorContext.viewState.deselectAllObjects();
+        } else if (event.keyCode == 37) {
+            // left
+            this.pageEditorContext.viewState.moveSelection("left");
+        } else if (event.keyCode == 38) {
+            // up
+            this.pageEditorContext.viewState.moveSelection("up");
+        } else if (event.keyCode == 39) {
+            // right
+            this.pageEditorContext.viewState.moveSelection("right");
+        } else if (event.keyCode == 40) {
+            // down
+            this.pageEditorContext.viewState.moveSelection("down");
+        } else if (event.keyCode == 36) {
+            // home
+            this.pageEditorContext.viewState.moveSelection("home-x");
+        } else if (event.keyCode == 35) {
+            // end
+            this.pageEditorContext.viewState.moveSelection("end-x");
         }
     }
 

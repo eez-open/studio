@@ -1413,6 +1413,22 @@ export class FontEditor extends EditorComponent {
         return this.selectedGlyph;
     }
 
+    cutSelection() {
+        // TODO
+    }
+
+    copySelection() {
+        // TODO
+    }
+
+    pasteSelection() {
+        // TODO
+    }
+
+    deleteSelection() {
+        // TODO
+    }
+
     focusHander() {
         NavigationStore.setSelectedPanel(this);
     }

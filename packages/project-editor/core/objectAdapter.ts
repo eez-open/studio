@@ -682,6 +682,15 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             return false;
         }
 
+        const allObjectsAreFromTheSameParent = !this.selectedItems.find(
+            selectedItem => selectedItem.object._parent !== this.selectedItems[0].object._parent
+        );
+        if (allObjectsAreFromTheSameParent) {
+            if (canPaste(this.selectedItems[0].object)) {
+                return true;
+            }
+        }
+
         return false;
     }
 

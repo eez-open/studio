@@ -72,6 +72,10 @@ const fs = EEZStudio.electron.remote.require("fs");
 
 interface IPanel {
     selectedObject: EezObject | undefined;
+    cutSelection(): void;
+    copySelection(): void;
+    pasteSelection(): void;
+    deleteSelection(): void;
 }
 
 type NavigationItem = EezObject | ITreeObjectAdapter;
@@ -1721,10 +1725,22 @@ export function init() {
     EEZStudio.electron.ipcRenderer.on("undo", () => UndoManager.undo());
     EEZStudio.electron.ipcRenderer.on("redo", () => UndoManager.redo());
 
-    // EEZStudio.electron.ipcRenderer.on('cut', () => ProjectStore.selection.cutSelection());
-    // EEZStudio.electron.ipcRenderer.on('copy', () => ProjectStore.selection.copySelection());
-    // EEZStudio.electron.ipcRenderer.on('paste', () => ProjectStore.selection.pasteSelection());
-    // EEZStudio.electron.ipcRenderer.on('delete', () => ProjectStore.selection.deleteSelection());
+    EEZStudio.electron.ipcRenderer.on(
+        "cut",
+        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.cutSelection()
+    );
+    EEZStudio.electron.ipcRenderer.on(
+        "copy",
+        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.copySelection()
+    );
+    EEZStudio.electron.ipcRenderer.on(
+        "paste",
+        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.pasteSelection()
+    );
+    EEZStudio.electron.ipcRenderer.on(
+        "delete",
+        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.deleteSelection()
+    );
 
     // EEZStudio.electron.ipcRenderer.on('goBack', () => ProjectStore.selection.selectionGoBack());
     // EEZStudio.electron.ipcRenderer.on('goForward', () => ProjectStore.selection.selectionGoForward());

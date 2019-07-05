@@ -9,6 +9,10 @@ import {
 } from "mobx";
 import stringify from "json-stable-stringify";
 
+import { BoundingRectBuilder } from "eez-studio-shared/geometry";
+
+import { UndoManager, DocumentStore } from "project-editor/core/store";
+
 import {
     IBaseObject,
     IDocument,
@@ -19,6 +23,8 @@ import {
     IResizeHandler
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 import { Transform } from "project-editor/features/gui/page-editor/transform";
+
+import { Widget } from "project-editor/features/gui/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -214,6 +220,83 @@ class ViewState implements IViewState {
         }
 
         this._selectedObjects = [];
+    }
+
+    moveSelection(
+        where: "left" | "up" | "right" | "down" | "home-x" | "end-x" | "home-y" | "end-y"
+    ) {
+        const widgets = this._selectedObjects
+            .map(editorObject => editorObject.object)
+            .filter(object => object instanceof Widget) as Widget[];
+
+        if (widgets.length === 0) {
+            return;
+        }
+
+        const builder = new BoundingRectBuilder();
+        widgets.forEach(widget => {
+            builder.addRect({
+                left: parseInt(widget.left),
+                top: parseInt(widget.top),
+                width: parseInt(widget.width),
+                height: parseInt(widget.height)
+            });
+        });
+        const boundingRect = builder.getRect();
+
+        const allWidgetsAreFromTheSameParent = !widgets.find(
+            widget => widget.parent !== widgets[0].parent
+        );
+
+        UndoManager.setCombineCommands(true);
+
+        widgets.forEach(widget => {
+            if (where === "left") {
+                DocumentStore.updateObject(widget, {
+                    left: parseInt(widget.left) - 1
+                });
+            } else if (where === "up") {
+                DocumentStore.updateObject(widget, {
+                    top: parseInt(widget.top) - 1
+                });
+            } else if (where === "right") {
+                DocumentStore.updateObject(widget, {
+                    left: parseInt(widget.left) + 1
+                });
+            } else if (where === "down") {
+                DocumentStore.updateObject(widget, {
+                    top: parseInt(widget.top) + 1
+                });
+            } else if (allWidgetsAreFromTheSameParent) {
+                if (where === "home-x") {
+                    DocumentStore.updateObject(widget, {
+                        left: 0 + parseInt(widget.left) - boundingRect.left
+                    });
+                } else if (where === "end-x") {
+                    DocumentStore.updateObject(widget, {
+                        left:
+                            parseInt(widget.parent.width) -
+                            boundingRect.width +
+                            parseInt(widget.left) -
+                            boundingRect.left
+                    });
+                } else if (where === "home-y") {
+                    DocumentStore.updateObject(widget, {
+                        top: 0 + parseInt(widget.top) - boundingRect.top
+                    });
+                } else if (where === "end-y") {
+                    DocumentStore.updateObject(widget, {
+                        top:
+                            parseInt(widget.parent.height) -
+                            boundingRect.height +
+                            parseInt(widget.top) -
+                            boundingRect.top
+                    });
+                }
+            }
+        });
+
+        UndoManager.setCombineCommands(false);
     }
 
     destroy() {

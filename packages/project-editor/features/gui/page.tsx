@@ -60,9 +60,31 @@ export class PageEditor extends EditorComponent {
     }
 
     @computed
+    get treeAdapter() {
+        let pageTabState = this.props.editor.state as PageTabState;
+        return new TreeAdapter(pageTabState.widgetContainerDisplayItem, undefined, undefined, true);
+    }
+
+    @computed
     get selectedObject() {
         let pageTabState = this.props.editor.state as PageTabState;
         return pageTabState.selectedObject;
+    }
+
+    cutSelection() {
+        this.treeAdapter.cutSelection();
+    }
+
+    copySelection() {
+        this.treeAdapter.copySelection();
+    }
+
+    pasteSelection() {
+        this.treeAdapter.pasteSelection();
+    }
+
+    deleteSelection() {
+        this.treeAdapter.deleteSelection();
     }
 
     render() {
@@ -70,19 +92,7 @@ export class PageEditor extends EditorComponent {
 
         let editor = <StudioPageEditor widgetContainer={pageTabState.widgetContainerDisplayItem} />;
 
-        let pageStructure = (
-            <Tree
-                treeAdapter={
-                    new TreeAdapter(
-                        pageTabState.widgetContainerDisplayItem,
-                        undefined,
-                        undefined,
-                        true
-                    )
-                }
-                tabIndex={0}
-            />
-        );
+        let pageStructure = <Tree treeAdapter={this.treeAdapter} tabIndex={0} />;
 
         return (
             <Splitter
@@ -148,7 +158,6 @@ export class Page extends EezObject {
     @observable description?: string;
     @observable style?: string;
     @observable widgets: EezArrayObject<Widget>;
-    @observable closePageIfTouchedOutside: boolean;
     @observable usedIn: string[] | undefined;
     @observable scrollable: boolean;
 
@@ -203,11 +212,6 @@ export class Page extends EezObject {
                 hideInPropertyGrid: true
             },
             {
-                name: "closePageIfTouchedOutside",
-                type: PropertyType.Boolean,
-                propertyGridGroup: generalGroup
-            },
-            {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 propertyGridGroup: generalGroup
@@ -242,8 +246,7 @@ export class Page extends EezObject {
                 top: 0,
                 width: 480,
                 height: 272,
-                widgets: [],
-                closePageIfTouchedOutside: false
+                widgets: []
             });
         },
         createEditorState: (object: EezObject) => new PageTabState(object),

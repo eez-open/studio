@@ -196,6 +196,22 @@ export class ListNavigation extends React.Component<ListNavigationProps, {}> {
         return selectedItem || NavigationStore.selectedObject;
     }
 
+    cutSelection() {
+        this.listAdapter.cutSelection();
+    }
+
+    copySelection() {
+        this.listAdapter.copySelection();
+    }
+
+    pasteSelection() {
+        this.listAdapter.pasteSelection();
+    }
+
+    deleteSelection() {
+        this.listAdapter.deleteSelection();
+    }
+
     @computed
     get listAdapter() {
         return new ListAdapter(

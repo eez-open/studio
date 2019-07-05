@@ -113,6 +113,22 @@ export class OutputSection {
             : undefined;
     }
 
+    cutSelection() {
+        // TODO
+    }
+
+    copySelection() {
+        // TODO
+    }
+
+    pasteSelection() {
+        // TODO
+    }
+
+    deleteSelection() {
+        // TODO
+    }
+
     @action
     selectMessage(message: Message) {
         if (this.selectedMessage !== message) {

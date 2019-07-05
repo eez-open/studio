@@ -178,6 +178,13 @@ const paddingProperty: PropertyInfo = {
     inheritable: true
 };
 
+const marginProperty: PropertyInfo = {
+    name: "margin",
+    type: PropertyType.String,
+    defaultValue: "0",
+    inheritable: true
+};
+
 const opacityProperty: PropertyInfo = {
     name: "opacity",
     type: PropertyType.Number,
@@ -213,6 +220,7 @@ const properties = [
     borderRadiusProperty,
     borderColorProperty,
     paddingProperty,
+    marginProperty,
     opacityProperty,
     blinkProperty,
     alwaysBuildProperty
@@ -276,6 +284,7 @@ export class Style extends EezObject {
     @observable borderRadius?: number;
     @observable borderColor?: string;
     @observable padding?: string;
+    @observable margin?: string;
     @observable opacity: number;
     @observable blink?: boolean;
     @observable alwaysBuild: boolean;
@@ -283,16 +292,21 @@ export class Style extends EezObject {
     static classInfo: ClassInfo = {
         properties,
         beforeLoadHook(object: Style, jsObject: any) {
-            const paddingHorizontal = jsObject.paddingHorizontal || 0;
-            const paddingVertical = jsObject.paddingVertical || 0;
+            if (
+                jsObject.paddingHorizontal !== undefined ||
+                jsObject.paddingVertical !== undefined
+            ) {
+                const paddingHorizontal = jsObject.paddingHorizontal || 0;
+                const paddingVertical = jsObject.paddingVertical || 0;
 
-            delete jsObject.paddingHorizontal;
-            delete jsObject.paddingVertical;
+                delete jsObject.paddingHorizontal;
+                delete jsObject.paddingVertical;
 
-            if (paddingHorizontal !== paddingVertical) {
-                jsObject.padding = paddingVertical + " " + paddingHorizontal;
-            } else {
-                jsObject.padding = paddingHorizontal;
+                if (paddingHorizontal !== paddingVertical) {
+                    jsObject.padding = paddingVertical + " " + paddingHorizontal;
+                } else {
+                    jsObject.padding = paddingHorizontal;
+                }
             }
         },
         isPropertyMenuSupported: true,
@@ -541,6 +555,16 @@ export class Style extends EezObject {
     }
 
     @computed
+    get marginProperty(): string {
+        return getStyleProperty(this, "margin");
+    }
+
+    @computed
+    get marginRect() {
+        return Style.getRect(this.marginProperty).rect;
+    }
+
+    @computed
     get opacityProperty(): number {
         const opacity = getStyleProperty(this, "opacity");
         if (isNaN(opacity)) {
@@ -608,8 +632,19 @@ export class Style extends EezObject {
             messages.push(
                 new output.Message(
                     MessageType.ERROR,
-                    `"Padding": ${borderSizeError}.`,
+                    `"Padding": ${paddingError}.`,
                     getChildOfObject(this, "padding")
+                )
+            );
+        }
+
+        let marginError = Style.getRect(this.marginProperty).error;
+        if (marginError) {
+            messages.push(
+                new output.Message(
+                    MessageType.ERROR,
+                    `"Margin": ${marginError}.`,
+                    getChildOfObject(this, "margin")
                 )
             );
         }
@@ -628,6 +663,7 @@ export class Style extends EezObject {
             this.borderRadiusProperty === otherStyle.borderRadiusProperty &&
             this.borderColorProperty === otherStyle.borderColorProperty &&
             this.paddingProperty === otherStyle.paddingProperty &&
+            this.marginProperty === otherStyle.marginProperty &&
             this.opacityProperty === otherStyle.opacityProperty &&
             this.blinkProperty === otherStyle.blinkProperty
         );
@@ -660,6 +696,7 @@ export function getDefaultStyle(): Style {
                 borderRadius: borderRadiusProperty.defaultValue,
                 borderColor: borderColorProperty.defaultValue,
                 padding: paddingProperty.defaultValue,
+                margin: marginProperty.defaultValue,
                 opacity: opacityProperty.defaultValue,
                 blink: blinkProperty.defaultValue
             },

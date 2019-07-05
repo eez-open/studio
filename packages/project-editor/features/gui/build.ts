@@ -518,6 +518,12 @@ function buildGuiStylesData(assets: Assets) {
         result.addField(new UInt8(style.paddingRect.bottom));
         result.addField(new UInt8(style.paddingRect.left));
 
+        // margin
+        result.addField(new UInt8(style.marginRect.top));
+        result.addField(new UInt8(style.marginRect.right));
+        result.addField(new UInt8(style.marginRect.bottom));
+        result.addField(new UInt8(style.marginRect.left));
+
         return result;
     }
 
@@ -690,12 +696,6 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         }
 
         specific.addField(childWidgets);
-
-        if (object instanceof Page) {
-            specific.addField(
-                new UInt8((object._parent as Page).closePageIfTouchedOutside ? 1 : 0)
-            );
-        }
     } else if (type == WIDGET_TYPE_SELECT) {
         let widget = object as Widget.SelectWidget;
         specific = new Struct();

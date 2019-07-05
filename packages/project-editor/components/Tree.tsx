@@ -500,7 +500,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                 }
 
                 event.preventDefault();
-            } else if (event.keyCode == 37) {
+            } else if (event.keyCode == 37 || event.keyCode == 39) {
                 // left
                 let $rows = $focusedItem.parent().find(".tree-row");
                 if ($rows.length == 1) {
@@ -515,23 +515,6 @@ export class Tree extends React.Component<TreeProps, {}> {
                     }
                 } else {
                     $focusedItem.find(".tree-row-triangle").trigger("click");
-                }
-
-                event.preventDefault();
-            } else if (event.keyCode == 39) {
-                // right
-                let $rows = $focusedItem.parent().find(".tree-row");
-                let index = $rows.index($focusedItem);
-
-                if (index == 0) {
-                    if ($rows.length > 1) {
-                        let newFocusedItemId = $($rows[1]).attr("data-object-id");
-                        if (newFocusedItemId) {
-                            this.onSelect(newFocusedItemId);
-                        }
-                    } else {
-                        $focusedItem.find(".tree-row-triangle").trigger("click");
-                    }
                 }
 
                 event.preventDefault();
