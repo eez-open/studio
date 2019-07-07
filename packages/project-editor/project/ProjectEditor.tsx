@@ -454,23 +454,31 @@ export class ProjectEditor extends React.Component<{}, {}> {
             outputPanel = <Output />;
         }
 
-        let mainContent = (
-            <MainContent>
-                <Toolbar />
-                <Splitter
-                    type="vertical"
-                    persistId={
-                        outputPanel ? "project-editor/with-output" : "project-editor/without-output"
-                    }
-                    sizes={outputPanel ? "100%|240px" : "100%"}
-                    childrenOverflow="hidden"
-                >
-                    <Content />
-                    {outputPanel}
-                </Splitter>
-                {statusBar}
-            </MainContent>
-        );
+        let mainContent;
+
+        if (UIStateStore.viewOptions.experimentalLayout) {
+            mainContent = <div>TODO...</div>;
+        } else {
+            mainContent = (
+                <MainContent>
+                    <Toolbar />
+                    <Splitter
+                        type="vertical"
+                        persistId={
+                            outputPanel
+                                ? "project-editor/with-output"
+                                : "project-editor/without-output"
+                        }
+                        sizes={outputPanel ? "100%|240px" : "100%"}
+                        childrenOverflow="hidden"
+                    >
+                        <Content />
+                        {outputPanel}
+                    </Splitter>
+                    {statusBar}
+                </MainContent>
+            );
+        }
 
         if (UIStateStore.viewOptions.debugVisible) {
             mainContent = (

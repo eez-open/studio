@@ -551,6 +551,9 @@ export class ViewOptions {
     @observable
     themesVisible: boolean = false;
 
+    @observable
+    experimentalLayout: boolean = false;
+
     @action
     load(viewOptions: any) {
         if (viewOptions) {
@@ -559,12 +562,14 @@ export class ViewOptions {
             this.propertiesVisible = viewOptions.propertiesVisible;
             this.debugVisible = viewOptions.debugVisible;
             this.themesVisible = viewOptions.themesVisible;
+            this.experimentalLayout = viewOptions.experimentalLayout;
         } else {
             this.navigationVisible = true;
             this.outputVisible = true;
             this.propertiesVisible = true;
             this.debugVisible = false;
             this.themesVisible = false;
+            this.experimentalLayout = false;
         }
     }
 
@@ -1772,6 +1777,14 @@ export function init() {
         "toggleDebug",
         action(
             () => (UIStateStore.viewOptions.debugVisible = !UIStateStore.viewOptions.debugVisible)
+        )
+    );
+    EEZStudio.electron.ipcRenderer.on(
+        "toggleExperimentalLayout",
+        action(
+            () =>
+                (UIStateStore.viewOptions.experimentalLayout = !UIStateStore.viewOptions
+                    .experimentalLayout)
         )
     );
 

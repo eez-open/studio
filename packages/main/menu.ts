@@ -452,7 +452,7 @@ function buildViewMenu(windowType: WindowType) {
     if (windowType === "project") {
         viewSubmenu.push(
             {
-                label: "Navigation",
+                label: "Toggle Navigation",
                 accelerator: "Ctrl+Shift+N",
                 click: function(item, focusedWindow) {
                     if (focusedWindow) {
@@ -461,7 +461,7 @@ function buildViewMenu(windowType: WindowType) {
                 }
             },
             {
-                label: "Output",
+                label: "Toggle Output",
                 accelerator: "Ctrl+Shift+O",
                 click: function(item, focusedWindow) {
                     if (focusedWindow) {
@@ -470,7 +470,7 @@ function buildViewMenu(windowType: WindowType) {
                 }
             },
             {
-                label: "Properties",
+                label: "Toggle Properties",
                 accelerator: "Ctrl+Shift+P",
                 click: function(item, focusedWindow) {
                     if (focusedWindow) {
@@ -479,10 +479,18 @@ function buildViewMenu(windowType: WindowType) {
                 }
             },
             {
-                label: "Debug",
+                label: "Toggle Debug",
                 click: function(item, focusedWindow) {
                     if (focusedWindow) {
                         focusedWindow.webContents.send("toggleDebug");
+                    }
+                }
+            },
+            {
+                label: "Toggle Experimental Layout",
+                click: function(item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("toggleExperimentalLayout");
                     }
                 }
             },
