@@ -22,14 +22,15 @@ import {
     isArray,
     getChildOfObject,
     cloneObject,
-    geometryGroup,
-    styleGroup,
-    IPropertyGridGroupDefinition,
-    areAllChildrenOfTheSameParent,
-    isAncestor,
     generalGroup,
     dataGroup,
     actionsGroup,
+    geometryGroup,
+    styleGroup,
+    specificGroup,
+    IPropertyGridGroupDefinition,
+    areAllChildrenOfTheSameParent,
+    isAncestor,
     getProperty
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
@@ -674,11 +675,6 @@ registerClass(Widget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const containerPropertiesGroup: IPropertyGridGroupDefinition = {
-    id: "containerProperties",
-    title: "Container properties"
-};
-
 interface IContainerWidget extends IWidget {
     widgets: IWidget[];
 }
@@ -709,11 +705,6 @@ export class ContainerWidget extends Widget {
                 name: "name",
                 type: PropertyType.String,
                 propertyGridGroup: generalGroup
-            },
-            {
-                name: "scrollable",
-                type: PropertyType.Boolean,
-                propertyGridGroup: containerPropertiesGroup
             }
         ],
 
@@ -759,6 +750,7 @@ export class ListWidget extends Widget {
             {
                 name: "listType",
                 type: PropertyType.Enum,
+                propertyGridGroup: specificGroup,
                 enumItems: [
                     {
                         id: "vertical"
@@ -1177,11 +1169,13 @@ export class LayoutViewWidget extends Widget {
             {
                 name: "layout",
                 type: PropertyType.ObjectReference,
+                propertyGridGroup: specificGroup,
                 referencedObjectCollectionPath: ["gui", "pages"]
             },
             {
                 name: "customUI",
                 type: PropertyType.Any,
+                propertyGridGroup: specificGroup,
                 computed: true,
                 propertyGridComponent: LayoutViewPropertyGridUI
             }
@@ -1346,11 +1340,6 @@ registerClass(DisplayDataWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const textPropertiesGroup: IPropertyGridGroupDefinition = {
-    id: "text",
-    title: "Text properties"
-};
-
 export class TextWidget extends Widget {
     @observable
     text?: string;
@@ -1374,13 +1363,13 @@ export class TextWidget extends Widget {
             {
                 name: "text",
                 type: PropertyType.String,
-                propertyGridGroup: textPropertiesGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
                 defaultValue: false,
-                propertyGridGroup: textPropertiesGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -1416,11 +1405,6 @@ registerClass(TextWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const multilineTextPropertiesGroup: IPropertyGridGroupDefinition = {
-    id: "multilineText",
-    title: "Multiline text properties"
-};
-
 export class MultilineTextWidget extends Widget {
     @observable
     text?: string;
@@ -1434,7 +1418,7 @@ export class MultilineTextWidget extends Widget {
             {
                 name: "text",
                 type: PropertyType.String,
-                propertyGridGroup: multilineTextPropertiesGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -1606,11 +1590,6 @@ registerClass(MultilineTextWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const rectanglePropertiesGroup: IPropertyGridGroupDefinition = {
-    id: "multilineText",
-    title: "Rectangle properties"
-};
-
 export class RectangleWidget extends Widget {
     @observable
     ignoreLuminocity: boolean;
@@ -1622,13 +1601,13 @@ export class RectangleWidget extends Widget {
             {
                 name: "invertColors",
                 type: PropertyType.Boolean,
-                propertyGridGroup: rectanglePropertiesGroup,
+                propertyGridGroup: specificGroup,
                 defaultValue: false
             },
             {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
-                propertyGridGroup: rectanglePropertiesGroup,
+                propertyGridGroup: specificGroup,
                 defaultValue: false
             }
         ],
@@ -1709,11 +1688,6 @@ registerClass(RectangleWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const bitmapPropertiesGroup: IPropertyGridGroupDefinition = {
-    id: "bitmap",
-    title: "Bitmap properties"
-};
-
 export class BitmapWidget extends Widget {
     @observable
     bitmap?: string;
@@ -1728,7 +1702,7 @@ export class BitmapWidget extends Widget {
                 name: "bitmap",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "bitmaps"],
-                propertyGridGroup: bitmapPropertiesGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -1885,7 +1859,8 @@ export class ButtonWidget extends Widget {
         properties: [
             {
                 name: "text",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             },
             makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("disabledStyle")
@@ -1955,11 +1930,13 @@ export class ToggleButtonWidget extends Widget {
         properties: [
             {
                 name: "text1",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             },
             {
                 name: "text2",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -2100,6 +2077,7 @@ export class ScaleWidget extends Widget {
             {
                 name: "needlePosition",
                 type: PropertyType.Enum,
+                propertyGridGroup: specificGroup,
                 enumItems: [
                     {
                         id: "left"
@@ -2117,10 +2095,12 @@ export class ScaleWidget extends Widget {
             },
             {
                 name: "needleWidth",
+                propertyGridGroup: specificGroup,
                 type: PropertyType.Number
             },
             {
                 name: "needleHeight",
+                propertyGridGroup: specificGroup,
                 type: PropertyType.Number
             }
         ],
@@ -2371,6 +2351,7 @@ export class BarGraphWidget extends Widget {
             {
                 name: "orientation",
                 type: PropertyType.Enum,
+                propertyGridGroup: specificGroup,
                 enumItems: [
                     {
                         id: "left-right"
@@ -2701,11 +2682,13 @@ export class UpDownWidget extends Widget {
             makeStylePropertyInfo("buttonsStyle"),
             {
                 name: "downButtonText",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             },
             {
                 name: "upButtonText",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             }
         ],
 

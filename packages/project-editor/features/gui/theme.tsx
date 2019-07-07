@@ -36,11 +36,21 @@ const ColorItemSpan = styled.span`
         flex-direction: row;
         justify-content: space-between;
 
+        & > span {
+            flex-grow: 1;
+            flex-shrink: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         & > label {
             cursor: pointer;
+            flex-grow: 0;
+            flex-shrink: 0;
             width: 30px;
             height: 15px;
-            margin: 3px 10px;
+            margin: 3px 0 3px 5px;
         }
     }
 `;
@@ -105,7 +115,7 @@ class ColorItem extends React.Component<{
         return (
             <ColorItemSpan className="tree-row-label">
                 <span>
-                    <span>{this.colorObject.name}</span>
+                    <span title={this.colorObject.name}>{this.colorObject.name}</span>
                     <label
                         className="form-control"
                         style={{ backgroundColor: this.themeColor }}

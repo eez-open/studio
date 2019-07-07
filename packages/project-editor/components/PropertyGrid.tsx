@@ -1040,7 +1040,7 @@ class Property extends React.Component<PropertyProps> {
                     ref={(ref: any) => (this.input = ref)}
                     type="text"
                     className="form-control"
-                    value={this._value || ""}
+                    value={this._value}
                     onChange={this.onChange}
                     onKeyDown={this.onKeyDown}
                 />
@@ -1227,17 +1227,71 @@ class GroupMenu extends React.Component<{
     }
 }
 
+class GroupCollapsedStore {
+    @observable map: {
+        [key: string]: boolean;
+    } = {};
+
+    constructor() {
+        const savedState = localStorage.getItem("GroupCollapsedStore");
+        if (savedState) {
+            this.map = JSON.parse(savedState);
+        }
+    }
+
+    isCollapsed(group: IPropertyGridGroupDefinition) {
+        const collapsed = this.map[group.id];
+        if (collapsed !== undefined) {
+            return collapsed;
+        }
+        return false;
+    }
+
+    @action
+    toggleColapsed(group: IPropertyGridGroupDefinition) {
+        this.map[group.id] = !this.isCollapsed(group);
+        localStorage.setItem("GroupCollapsedStore", JSON.stringify(this.map));
+    }
+}
+
+const groupCollapsedStore = new GroupCollapsedStore();
+
+@observer
 class GroupTitle extends React.Component<{
     group: IPropertyGridGroupDefinition;
     object: EezObject;
 }> {
+    @bind
+    toggleCollapsed() {
+        groupCollapsedStore.toggleColapsed(this.props.group);
+    }
+
     render() {
         const { group, object } = this.props;
+
+        const collapsed = groupCollapsedStore.isCollapsed(group);
+
         return (
             <tr>
                 <td colSpan={3} className="group-cell">
-                    <div className="group-container">
-                        <div className="group-title">{group.title}</div>
+                    <div
+                        className={classNames("group-container", {
+                            collapsed
+                        })}
+                        onClick={this.toggleCollapsed}
+                    >
+                        <div className="group-title">
+                            <Icon
+                                icon={
+                                    collapsed
+                                        ? "material:keyboard_arrow_right"
+                                        : "material:keyboard_arrow_down"
+                                }
+                                size={18}
+                                className="triangle"
+                            />
+                            {group.title}
+                        </div>
                         {group.menu && group.menu(object) && (
                             <GroupMenu group={group} object={object} />
                         )}
@@ -1250,23 +1304,9 @@ class GroupTitle extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class GroupBorder extends React.Component {
-    render() {
-        return (
-            <tr>
-                <td className="group-border" colSpan={3}>
-                    <div />
-                </td>
-            </tr>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 const PropertyGridDiv = styled.div`
     flex-grow: 1;
-    padding: 10px;
+    padding: 10px 10px 10px 5px;
     overflow: auto;
 
     & > table {
@@ -1285,10 +1325,14 @@ const PropertyGridDiv = styled.div`
                     padding-bottom: 5px;
                 }
 
+                & > td:first-child {
+                    padding-left: 20px;
+                    padding-right: 10px;
+                }
+
                 & > td.property-name {
                     white-space: nowrap;
                     vertical-align: baseline;
-                    padding-right: 10px;
                     transform: translateY(7px);
                 }
 
@@ -1296,15 +1340,8 @@ const PropertyGridDiv = styled.div`
                     width: 100%;
                 }
 
-                & > td.group-border {
-                    padding-top: 10px;
-                    padding-bottom: 10px;
-                    & > div {
-                        border-bottom: 1px solid ${props => props.theme.darkBorderColor};
-                    }
-                }
-
                 & > td.group-cell {
+                    padding-left: 0;
                     padding-bottom: 5px;
                     & > div.group-container {
                         display: flex;
@@ -1315,12 +1352,16 @@ const PropertyGridDiv = styled.div`
                             text-transform: uppercase;
                             font-weight: bold;
                         }
+
+                        cursor: pointer;
+                        &:hover {
+                            background-color: #eee;
+                        }
                     }
                 }
 
-                & > td.embedded-property-grid-cell {
-                    transform: translateY(0);
-                    padding-right: 0;
+                & > td.embedded-property-cell {
+                    padding-left: 10px;
                 }
             }
         }
@@ -1528,7 +1569,12 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             let property;
             if (colSpan) {
                 property = (
-                    <td colSpan={propertyInfo.propertyGridCollapsable ? 3 : 2}>
+                    <td
+                        className={classNames({
+                            "embedded-property-cell": propertyInfo.type === PropertyType.Object
+                        })}
+                        colSpan={propertyInfo.propertyGridCollapsable ? 3 : 2}
+                    >
                         <Property
                             propertyInfo={propertyInfo}
                             objects={objects}
@@ -1628,7 +1674,8 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 return (
                     <React.Fragment key={groupProperties.group.id}>
                         <GroupTitle group={groupProperties.group} object={objects[0]} />
-                        {groupProperties.properties}
+                        {!groupCollapsedStore.isCollapsed(groupProperties.group) &&
+                            groupProperties.properties}
                     </React.Fragment>
                 );
             } else {
@@ -1639,10 +1686,6 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 );
             }
         });
-
-        for (let i = 1; i < rows.length; i += 2) {
-            rows.splice(i, 0, <GroupBorder key={`border${i}`} />);
-        }
 
         return (
             <PropertyGridDiv ref={(ref: any) => (this.div = ref)} className={this.props.className}>

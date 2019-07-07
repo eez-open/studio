@@ -49,7 +49,9 @@ export interface IMessage {
 
 export interface IPropertyGridGroupDefinition {
     id: string;
-    title?: string;
+    title: string;
+    position?: number;
+
     menu?: (
         object: EezObject
     ) =>
@@ -58,30 +60,38 @@ export interface IPropertyGridGroupDefinition {
               click: () => void;
           }[]
         | undefined;
-    position?: 0;
 }
 
 export const generalGroup: IPropertyGridGroupDefinition = {
     id: "general",
+    title: "General",
     position: 0
 };
 
 export const geometryGroup: IPropertyGridGroupDefinition = {
     id: "geometry",
-    title: "Position and size"
-};
-
-export const styleGroup: IPropertyGridGroupDefinition = {
-    id: "style",
-    title: "Style"
+    title: "Position and size",
+    position: 1
 };
 
 export const dataGroup: IPropertyGridGroupDefinition = {
-    id: "data"
+    id: "data",
+    title: "Data and actions",
+    position: 2
 };
 
-export const actionsGroup: IPropertyGridGroupDefinition = {
-    id: "actions"
+export const actionsGroup = dataGroup;
+
+export const styleGroup: IPropertyGridGroupDefinition = {
+    id: "style",
+    title: "Style",
+    position: 3
+};
+
+export const specificGroup: IPropertyGridGroupDefinition = {
+    id: "specific",
+    title: "Specific",
+    position: 4
 };
 
 export interface PropertyInfo {
