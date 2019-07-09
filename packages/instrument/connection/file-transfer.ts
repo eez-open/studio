@@ -91,7 +91,7 @@ export abstract class FileTransfer {
         let time = new Date().getTime();
         if (this.lastTransferSpeed !== undefined) {
             let timeSpan = time - this.lastTime;
-            if (timeSpan >= 1000) {
+            if (timeSpan >= 100) {
                 this.lastTransferSpeed =
                     (1000 * (state.dataLength - this.lastDataLength)) / timeSpan;
                 this.lastDataLength = state.dataLength;
