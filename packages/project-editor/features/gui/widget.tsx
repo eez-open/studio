@@ -1765,37 +1765,13 @@ export class BitmapWidget extends Widget {
                 let x2 = w - 1;
                 let y2 = h - 1;
 
-                const borderSize = style.borderSizeRect;
-                let borderRadius = styleGetBorderRadius(style) || 0;
-                if (
-                    borderSize.top > 0 ||
-                    borderSize.right > 0 ||
-                    borderSize.bottom > 0 ||
-                    borderSize.left > 0
-                ) {
-                    lcd.setColor(getStyleProperty(style, "borderColor"));
-                    lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-                    x1 += borderSize.left;
-                    y1 += borderSize.top;
-                    x2 -= borderSize.right;
-                    y2 -= borderSize.bottom;
-                    borderRadius = Math.max(
-                        borderRadius -
-                            Math.max(
-                                borderSize.top,
-                                borderSize.right,
-                                borderSize.bottom,
-                                borderSize.left
-                            ),
-                        0
-                    );
+                if (bitmap.bpp !== 32) {
+                    let backgroundColor = inverse
+                        ? getStyleProperty(style, "color")
+                        : getStyleProperty(style, "backgroundColor");
+                    lcd.setColor(backgroundColor);
+                    lcd.fillRect(ctx, x1, y1, x2, y2, 0);
                 }
-
-                let backgroundColor = inverse
-                    ? getStyleProperty(style, "color")
-                    : getStyleProperty(style, "backgroundColor");
-                lcd.setColor(backgroundColor);
-                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
 
                 let width = imageElement.width;
                 let height = imageElement.height;
@@ -1818,12 +1794,6 @@ export class BitmapWidget extends Widget {
                     y_offset = Math.floor(y1 + (y2 - y1 - height) / 2);
                 }
 
-                backgroundColor = inverse
-                    ? getStyleProperty(style, "color")
-                    : getStyleProperty(style, "backgroundColor");
-                lcd.setColor(backgroundColor);
-                lcd.fillRect(ctx, x1, y1, x2, y2);
-
                 if (inverse) {
                     lcd.setBackColor(getStyleProperty(style, "color"));
                     lcd.setColor(getStyleProperty(style, "backgroundColor"));
@@ -1831,9 +1801,6 @@ export class BitmapWidget extends Widget {
                     lcd.setBackColor(getStyleProperty(style, "backgroundColor"));
                     lcd.setColor(getStyleProperty(style, "color"));
                 }
-
-                lcd.setColor(bitmap.backgroundColor || "transparent");
-                lcd.fillRect(ctx, x_offset, y_offset, x_offset + width - 1, y_offset + height - 1);
 
                 lcd.drawBitmap(ctx, imageElement, x_offset, y_offset, width, height);
             });
