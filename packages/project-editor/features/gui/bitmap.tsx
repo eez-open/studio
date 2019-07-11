@@ -15,6 +15,8 @@ import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
+import { getThemedColor } from "project-editor/features/gui/theme";
+
 import { ProjectStore } from "project-editor/core/store";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
@@ -69,6 +71,7 @@ export class Bitmap extends EezObject implements IBitmap {
     @observable description?: string;
     @observable image: string;
     @observable bpp: number;
+    @observable backgroundColor?: string;
     @observable alwaysBuild: boolean;
 
     static classInfo: ClassInfo = {
@@ -93,6 +96,12 @@ export class Bitmap extends EezObject implements IBitmap {
                 type: PropertyType.Enum,
                 enumItems: [{ id: 16 }, { id: 32 }],
                 defaultValue: 16
+            },
+            {
+                name: "backgroundColor",
+                type: PropertyType.ThemedColor,
+                referencedObjectCollectionPath: ["gui", "colors"],
+                hideInPropertyGrid: (bitmap: Bitmap) => bitmap.bpp != 16
             },
             {
                 name: "alwaysBuild",
@@ -197,7 +206,15 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
                 return;
             }
 
-            ctx.clearRect(0, 0, image.width, image.height);
+            if (bitmap.bpp === 32) {
+                ctx.clearRect(0, 0, image.width, image.height);
+            } else {
+                ctx.fillStyle = bitmap.backgroundColor
+                    ? getThemedColor(bitmap.backgroundColor)
+                    : "#000000";
+                ctx.fillRect(0, 0, image.width, image.height);
+            }
+
             ctx.drawImage(image, 0, 0);
 
             let imageData = ctx.getImageData(0, 0, image.width, image.height).data;
