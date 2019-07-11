@@ -680,6 +680,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
     if (type == WIDGET_TYPE_CONTAINER) {
         specific = new Struct();
 
+        // widgets
         let widgets: Widget.Widget[] | undefined;
         if (object instanceof Page) {
             widgets = object.widgets._array;
@@ -687,7 +688,6 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
             widgets = (object as Widget.ContainerWidget).widgets._array;
         }
 
-        // widgets
         let childWidgets = new ObjectList();
         if (widgets) {
             widgets.forEach(childWidget => {
@@ -696,6 +696,11 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         }
 
         specific.addField(childWidgets);
+
+        // closePageIfTouchedOutside
+        if (object instanceof Page) {
+            specific.addField(new UInt8(object.closePageIfTouchedOutside ? 1 : 0));
+        }
     } else if (type == WIDGET_TYPE_SELECT) {
         let widget = object as Widget.SelectWidget;
         specific = new Struct();

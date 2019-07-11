@@ -20,6 +20,7 @@ import {
     generalGroup,
     geometryGroup,
     styleGroup,
+    specificGroup,
     EditorComponent
 } from "project-editor/core/object";
 import {
@@ -170,7 +171,7 @@ export class Page extends EezObject {
     @observable style?: string;
     @observable widgets: EezArrayObject<Widget>;
     @observable usedIn: string[] | undefined;
-    @observable scrollable: boolean;
+    @observable closePageIfTouchedOutside: boolean;
 
     @observable left: number;
     @observable top: number;
@@ -226,6 +227,11 @@ export class Page extends EezObject {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 propertyGridGroup: generalGroup
+            },
+            {
+                name: "closePageIfTouchedOutside",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
             }
         ],
         beforeLoadHook: (object: EezObject, jsObject: any) => {
@@ -312,7 +318,6 @@ export class Page extends EezObject {
     }
 
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
-        style.overflow = designerContext ? "visible" : this.scrollable ? "auto" : "visible";
         if (this.style) {
             const pageStyle = findStyle(this.style);
             if (pageStyle && pageStyle.backgroundColor) {
