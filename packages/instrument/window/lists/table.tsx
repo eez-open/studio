@@ -73,12 +73,9 @@ export function createEmptyTableListData() {
 }
 
 export class TableListData extends BaseListData {
-    @observable
-    dwell: number[];
-    @observable
-    voltage: number[];
-    @observable
-    current: number[];
+    @observable dwell: number[];
+    @observable voltage: number[];
+    @observable current: number[];
 
     constructor(list: BaseList, props: any) {
         super(list, props);
@@ -88,6 +85,14 @@ export class TableListData extends BaseListData {
         this.current = props.current || TABLE_LIST_DATA_DEFAULTS.current;
 
         this.timeAxisModel = new TableListTimeAxisModel(list as TableList);
+    }
+
+    toJS() {
+        return Object.assign({}, super.toJS(), {
+            dwell: toJS(this.dwell),
+            voltage: toJS(this.voltage),
+            current: toJS(this.current)
+        });
     }
 
     applyChanges(changes: any) {
@@ -108,8 +113,7 @@ export class TableListData extends BaseListData {
 }
 
 export class TableList extends BaseList {
-    @observable
-    data: TableListData;
+    @observable data: TableListData;
 
     constructor(props: any, appStore: InstrumentAppStore, instrument: InstrumentObject) {
         super(props, appStore, instrument);

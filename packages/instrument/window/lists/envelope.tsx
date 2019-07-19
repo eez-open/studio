@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, runInAction, values } from "mobx";
+import { observable, computed, action, runInAction, values, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -94,15 +94,10 @@ export interface IEnvelopePoint {
 }
 
 export class EnvelopeListData extends BaseListData {
-    @observable
-    duration: number;
-    @observable
-    numSamples: number;
-
-    @observable
-    voltage: IEnvelopePoint[];
-    @observable
-    current: IEnvelopePoint[];
+    @observable duration: number;
+    @observable numSamples: number;
+    @observable voltage: IEnvelopePoint[];
+    @observable current: IEnvelopePoint[];
 
     constructor(list: BaseList, props: any) {
         super(list, props);
@@ -116,6 +111,15 @@ export class EnvelopeListData extends BaseListData {
         this.current = props.current || defaultEnvelopeListData.current;
 
         this.timeAxisModel = new EnveloperListTimeAxisModel(list as EnvelopeList);
+    }
+
+    toJS() {
+        return Object.assign({}, super.toJS(), {
+            duration: this.duration,
+            numSamples: this.numSamples,
+            voltage: toJS(this.voltage),
+            current: toJS(this.current)
+        });
     }
 
     applyChanges(changes: any) {
@@ -140,8 +144,7 @@ export class EnvelopeListData extends BaseListData {
 }
 
 export class EnvelopeList extends BaseList {
-    @observable
-    data: EnvelopeListData;
+    @observable data: EnvelopeListData;
 
     constructor(props: any, appStore: InstrumentAppStore, instrument: InstrumentObject) {
         super(props, appStore, instrument);

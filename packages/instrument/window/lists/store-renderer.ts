@@ -1,4 +1,4 @@
-import { observable, action, runInAction } from "mobx";
+import { observable, action, runInAction, toJS } from "mobx";
 
 import { capitalize } from "eez-studio-shared/string";
 import { IUnit, VOLTAGE_UNIT, CURRENT_UNIT, POWER_UNIT } from "eez-studio-shared/units";
@@ -104,8 +104,7 @@ export function checkPower(power: number, instrument: InstrumentObject) {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ListViewOptions implements IViewOptions {
-    @observable
-    axesLines: IViewOptionsAxesLines = {
+    @observable axesLines: IViewOptionsAxesLines = {
         type: "dynamic",
         steps: {
             x: [0.01, 0.1, 1, 10],
@@ -122,9 +121,7 @@ class ListViewOptions implements IViewOptions {
         snapToGrid: true,
         defaultZoomMode: "default"
     };
-
     @observable showAxisLabels: boolean = true;
-
     @observable showZoomButtons: boolean = true;
 
     constructor(private $eez_noser_list: BaseList, props: any) {
@@ -133,6 +130,14 @@ class ListViewOptions implements IViewOptions {
             this.showAxisLabels = props.showAxisLabels;
             this.showZoomButtons = props.showZoomButtons;
         }
+    }
+
+    toJS() {
+        return {
+            axesLines: toJS(this.axesLines),
+            showAxisLabels: this.showAxisLabels,
+            showZoomButtons: this.showZoomButtons
+        };
     }
 
     applyChanges(changes: any) {
@@ -433,6 +438,12 @@ export class BaseListData {
         this.currentAxisModel = new ListAxisModel(list, CURRENT_UNIT);
     }
 
+    toJS() {
+        return {
+            viewOptions: this.viewOptions.toJS()
+        };
+    }
+
     applyChanges(changes: any) {
         if ("viewOptions" in changes) {
             this.viewOptions.applyChanges(changes.viewOptions);
@@ -468,6 +479,16 @@ export abstract class BaseList {
         this.id = props.id;
         this.name = props.name;
         this.description = props.description;
+    }
+
+    toJS() {
+        return {
+            id: this.id,
+            name: this.name,
+            description: this.description,
+            type: this.type,
+            data: this.data.toJS()
+        };
     }
 
     applyChanges(changes: any) {

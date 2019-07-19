@@ -199,7 +199,7 @@ class MasterView extends React.Component<
     removeList() {
         confirm("Are you sure?", undefined, () => {
             beginTransaction("Remove instrument list");
-            this.props.appStore.instrumentListStore.deleteObject(toJS(this.props.selectedList));
+            this.props.appStore.instrumentListStore.deleteObject(this.props.selectedList!.toJS());
             commitTransaction();
         });
     }
@@ -455,7 +455,7 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
 
                             beginTransaction("Import instrument list");
                             let listId = this.props.appStore.instrumentListStore.createObject(
-                                toJS(list)
+                                list.toJS()
                             );
                             commitTransaction();
 
@@ -544,7 +544,7 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                 tableList.description = result.values.description;
 
                 beginTransaction("Get instrument list");
-                let listId = this.props.appStore.instrumentListStore.createObject(toJS(tableList));
+                let listId = this.props.appStore.instrumentListStore.createObject(tableList.toJS());
                 commitTransaction();
 
                 runInAction(() => (this.props.appStore.navigationStore.selectedListId = listId));
