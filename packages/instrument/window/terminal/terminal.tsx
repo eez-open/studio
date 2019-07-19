@@ -315,40 +315,43 @@ export class Terminal extends React.Component<{ appStore: InstrumentAppStore }, 
             }
         }
 
+        const terminal = (
+            <TerminalBodyContainer>
+                <TerminalBody>
+                    <HistoryView
+                        appStore={this.props.appStore}
+                        persistId={"instrument/window/history"}
+                    />
+                </TerminalBody>
+                <Input
+                    appStore={appStore}
+                    sendCommand={() => {
+                        instrument.connection.send(terminalState.command);
+                        terminalState.command = "";
+                    }}
+                    handleSendFileClick={handleSendFileClick}
+                />
+                <ShortcutsToolbar
+                    appStore={appStore}
+                    executeShortcut={shortcut => {
+                        executeShortcut(this.props.appStore, shortcut);
+                    }}
+                />
+            </TerminalBodyContainer>
+        );
+
+        if (!appStore.helpVisible) {
+            return terminal;
+        }
+
         return (
             <Splitter
                 type="vertical"
-                sizes={appStore.helpVisible ? "50%|50%" : "100%"}
-                persistId={
-                    appStore.helpVisible ? "instrument/window/terminal/splitter1" : undefined
-                }
+                sizes={"50%|50%"}
+                persistId={"instrument/window/terminal/splitter"}
             >
-                <TerminalBodyContainer>
-                    <TerminalBody>
-                        <HistoryView
-                            appStore={this.props.appStore}
-                            persistId={"instrument/window/history"}
-                        />
-                    </TerminalBody>
-                    <Input
-                        appStore={appStore}
-                        sendCommand={() => {
-                            instrument.connection.send(terminalState.command);
-                            terminalState.command = "";
-                        }}
-                        handleSendFileClick={handleSendFileClick}
-                    />
-                    <ShortcutsToolbar
-                        appStore={appStore}
-                        executeShortcut={shortcut => {
-                            executeShortcut(this.props.appStore, shortcut);
-                        }}
-                    />
-                </TerminalBodyContainer>
-
-                {appStore.helpVisible && (
-                    <CommandsBrowser appStore={this.props.appStore} host={terminalState} />
-                )}
+                {terminal}
+                <CommandsBrowser appStore={this.props.appStore} host={terminalState} />
             </Splitter>
         );
     }
