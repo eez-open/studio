@@ -40,7 +40,7 @@ export class OutputSection implements IPanel {
     @observable messages: Message[] = [];
     @observable selectedMessage: Message | undefined;
 
-    constructor(public id: number, public name: string) {}
+    constructor(public id: number, public name: string, public scrollToBottom: boolean) {}
 
     @computed
     get title(): string | JSX.Element {
@@ -152,9 +152,9 @@ export class OutputSections {
     @observable activeSection: OutputSection;
 
     constructor() {
-        this.sections[Section.CHECKS] = new OutputSection(Section.CHECKS, "Checks");
-        this.sections[Section.OUTPUT] = new OutputSection(Section.OUTPUT, "Output");
-        this.sections[Section.SEARCH] = new OutputSection(Section.SEARCH, "Search results");
+        this.sections[Section.CHECKS] = new OutputSection(Section.CHECKS, "Checks", false);
+        this.sections[Section.OUTPUT] = new OutputSection(Section.OUTPUT, "Output", true);
+        this.sections[Section.SEARCH] = new OutputSection(Section.SEARCH, "Search results", false);
         this.activeSection = this.sections[Section.CHECKS];
         this.activeSection.active = true;
     }

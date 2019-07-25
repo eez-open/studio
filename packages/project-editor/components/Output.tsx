@@ -106,7 +106,7 @@ class Messages extends React.Component {
     }
 
     scrollToBottom() {
-        if (this.divRef.current) {
+        if (this.divRef.current && OutputSectionsStore.activeSection.scrollToBottom) {
             const div: HTMLDivElement = this.divRef.current;
             div.scrollTop = div.scrollHeight;
         }
