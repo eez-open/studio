@@ -1161,14 +1161,14 @@ class Property extends React.Component<PropertyProps> {
                                                         "base64",
                                                         (err: any, data: any) => {
                                                             if (!err) {
-                                                                this.onChange(
+                                                                this.changeValue(
                                                                     "data:image/png;base64," + data
                                                                 );
                                                             }
                                                         }
                                                     );
                                                 } else {
-                                                    this.onChange(
+                                                    this.changeValue(
                                                         ProjectStore.getFilePathRelativeToProjectPath(
                                                             filePaths[0]
                                                         )
