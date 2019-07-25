@@ -9,6 +9,7 @@ import { confirm } from "project-editor/core/util";
 
 import {
     EezObject,
+    EezArrayObject,
     PropertyInfo,
     PropertyType,
     IEditorState,
@@ -1195,10 +1196,21 @@ export function pasteItem(object: EezObject) {
                 });
             } else {
                 if (c.serializedData.object) {
-                    return DocumentStore.addObject(
-                        c.pastePlace as EezObject,
-                        objectToJS(c.serializedData.object)
-                    );
+                    if (
+                        isArray(c.pastePlace as EezObject) &&
+                        object._parent === (c.pastePlace as EezObject)
+                    ) {
+                        return DocumentStore.insertObject(
+                            c.pastePlace as EezObject,
+                            (c.pastePlace as EezArrayObject<any>)._array.indexOf(object) + 1,
+                            objectToJS(c.serializedData.object)
+                        );
+                    } else {
+                        return DocumentStore.addObject(
+                            c.pastePlace as EezObject,
+                            objectToJS(c.serializedData.object)
+                        );
+                    }
                 } else if (c.serializedData.objects) {
                     return DocumentStore.addObjects(
                         c.pastePlace as EezObject,
