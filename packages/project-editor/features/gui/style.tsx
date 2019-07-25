@@ -581,7 +581,7 @@ export class Style extends EezObject {
     check() {
         let messages: output.Message[] = [];
 
-        if (!this.fontObject) {
+        if (!this.fontName) {
             messages.push(output.propertyNotFoundMessage(this, "font"));
         }
 

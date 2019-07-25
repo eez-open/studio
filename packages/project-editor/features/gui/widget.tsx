@@ -123,6 +123,20 @@ function htmlEncode(value: string) {
     return el.innerHTML;
 }
 
+function migrateStyleProperty(jsObject: any, propertyName: string) {
+    if (jsObject[propertyName] === undefined) {
+        jsObject[propertyName] = {
+            inheritFrom: "default"
+        };
+    } else if (typeof jsObject[propertyName] === "string") {
+        jsObject[propertyName] = {
+            inheritFrom: jsObject[propertyName]
+        };
+    } else if (!jsObject[propertyName].inheritFrom) {
+        jsObject[propertyName].inheritFrom = "default";
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export type WidgetParent = Page | Widget;
@@ -224,17 +238,8 @@ export class Widget extends EezObject {
                 jsObject.height = parseInt(jsObject.height);
             }
 
-            if (typeof jsObject["style"] === "string") {
-                jsObject["style"] = {
-                    inheritFrom: jsObject["style"]
-                };
-            }
-
-            if (typeof jsObject["activeStyle"] === "string") {
-                jsObject["activeStyle"] = {
-                    inheritFrom: jsObject["activeStyle"]
-                };
-            }
+            migrateStyleProperty(jsObject, "style");
+            migrateStyleProperty(jsObject, "activeStyle");
         },
 
         isPropertyMenuSupported: true
@@ -1366,11 +1371,7 @@ export class DisplayDataWidget extends Widget {
         ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
-            if (typeof jsObject["focusStyle"] === "string") {
-                jsObject["focusStyle"] = {
-                    inheritFrom: jsObject["focusStyle"]
-                };
-            }
+            migrateStyleProperty(jsObject, "focusStyle");
         },
 
         defaultValue: {
@@ -1955,11 +1956,7 @@ export class ButtonWidget extends Widget {
         ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
-            if (typeof jsObject["disabledStyle"] === "string") {
-                jsObject["disabledStyle"] = {
-                    inheritFrom: jsObject["disabledStyle"]
-                };
-            }
+            migrateStyleProperty(jsObject, "disabledStyle");
         },
 
         defaultValue: { type: "Button", left: 0, top: 0, width: 32, height: 32 },
@@ -2463,23 +2460,9 @@ export class BarGraphWidget extends Widget {
         ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
-            if (typeof jsObject["textStyle"] === "string") {
-                jsObject["textStyle"] = {
-                    inheritFrom: jsObject["textStyle"]
-                };
-            }
-
-            if (typeof jsObject["line1Style"] === "string") {
-                jsObject["line1Style"] = {
-                    inheritFrom: jsObject["line1Style"]
-                };
-            }
-
-            if (typeof jsObject["line2Style"] === "string") {
-                jsObject["line2Style"] = {
-                    inheritFrom: jsObject["line2Style"]
-                };
-            }
+            migrateStyleProperty(jsObject, "textStyle");
+            migrateStyleProperty(jsObject, "line1Style");
+            migrateStyleProperty(jsObject, "line2Style");
         },
 
         defaultValue: {
@@ -2663,17 +2646,8 @@ export class YTGraphWidget extends Widget {
         ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
-            if (typeof jsObject["y1Style"] === "string") {
-                jsObject["y1Style"] = {
-                    inheritFrom: jsObject["y1Style"]
-                };
-            }
-
-            if (typeof jsObject["y2Style"] === "string") {
-                jsObject["y2Style"] = {
-                    inheritFrom: jsObject["y2Style"]
-                };
-            }
+            migrateStyleProperty(jsObject, "y1Style");
+            migrateStyleProperty(jsObject, "y2Style");
         },
 
         defaultValue: {
@@ -2781,11 +2755,7 @@ export class UpDownWidget extends Widget {
         ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
-            if (typeof jsObject["buttonsStyle"] === "string") {
-                jsObject["buttonsStyle"] = {
-                    inheritFrom: jsObject["buttonsStyle"]
-                };
-            }
+            migrateStyleProperty(jsObject, "buttonStyle");
         },
 
         defaultValue: {
@@ -2886,23 +2856,9 @@ export class ListGraphWidget extends Widget {
         ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
-            if (typeof jsObject["y1Style"] === "string") {
-                jsObject["y1Style"] = {
-                    inheritFrom: jsObject["y1Style"]
-                };
-            }
-
-            if (typeof jsObject["y2Style"] === "string") {
-                jsObject["y2Style"] = {
-                    inheritFrom: jsObject["y2Style"]
-                };
-            }
-
-            if (typeof jsObject["cursorStyle"] === "string") {
-                jsObject["cursorStyle"] = {
-                    inheritFrom: jsObject["cursorStyle"]
-                };
-            }
+            migrateStyleProperty(jsObject, "y1Style");
+            migrateStyleProperty(jsObject, "y2Style");
+            migrateStyleProperty(jsObject, "cursorStyle");
         },
 
         defaultValue: {
