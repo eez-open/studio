@@ -250,8 +250,9 @@ export let updateObject = action((context: ICommandContext, object: EezObject, v
 });
 
 export let deleteObject = action((context: ICommandContext, object: any) => {
+    const parent = object._parent!;
+
     if (isArrayElement(object)) {
-        const parent = object._parent!;
         const array = asArray(parent);
         const index = array.indexOf(object);
 
@@ -271,8 +272,8 @@ export let deleteObject = action((context: ICommandContext, object: any) => {
             }
         });
     } else {
-        updateObject(context, object, {
-            [object._key as string]: undefined
+        updateObject(context, parent, {
+            [object._key!]: undefined
         });
     }
 });
