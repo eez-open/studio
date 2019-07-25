@@ -401,6 +401,20 @@ export class Widget extends EezObject {
         if (objects.length === 1) {
             const object = objects[0];
 
+            if (object instanceof TextWidget) {
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Convert to DisplayData",
+                        click: () => {
+                            const widget = object.convertToDisplayData();
+                            if (widget) {
+                                context.selectObject(widget);
+                            }
+                        }
+                    })
+                );
+            }
+
             if (object instanceof LayoutViewWidget) {
                 additionalMenuItems.push(
                     new MenuItem({
@@ -720,16 +734,6 @@ export class ContainerWidget extends Widget {
         icon: "_images/widgets/Container.png"
     });
 
-    check() {
-        let messages: output.Message[] = [];
-
-        if (this.data) {
-            messages.push(output.propertySetButNotUsedMessage(this, "data"));
-        }
-
-        return super.check().concat(messages);
-    }
-
     render(rect: Rect) {
         return <WidgetContainerComponent containerWidget={this} widgets={this.widgets._array} />;
     }
@@ -740,13 +744,19 @@ registerClass(ContainerWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ListWidget extends Widget {
-    @observable
-    itemWidget?: Widget;
-    @observable
-    listType?: string;
+    @observable itemWidget?: Widget;
+    @observable listType?: string;
+    @observable gap?: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
+            {
+                name: "itemWidget",
+                type: PropertyType.Object,
+                typeClass: Widget,
+                hideInPropertyGrid: true,
+                isOptional: true
+            },
             {
                 name: "listType",
                 type: PropertyType.Enum,
@@ -761,17 +771,14 @@ export class ListWidget extends Widget {
                 ]
             },
             {
-                name: "itemWidget",
-                type: PropertyType.Object,
-                typeClass: Widget,
-                hideInPropertyGrid: true,
-                isOptional: true
+                name: "gap",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
             }
         ],
 
         defaultValue: {
             type: "List",
-            listType: "vertical",
             itemWidget: {
                 type: "Container",
                 widgets: [],
@@ -783,7 +790,9 @@ export class ListWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32
+            height: 32,
+            listType: "vertical",
+            gap: 0
         },
 
         icon: "_images/widgets/List.png"
@@ -819,10 +828,12 @@ export class ListWidget extends Widget {
             let xListItem = 0;
             let yListItem = 0;
 
+            const gap = this.gap || 0;
+
             if (this.listType === "horizontal") {
-                xListItem += i * itemRect.width;
+                xListItem += i * (itemRect.width + gap);
             } else {
-                yListItem += i * itemRect.height;
+                yListItem += i * (itemRect.height + gap);
             }
 
             return (
@@ -1161,8 +1172,8 @@ class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LayoutViewWidget extends Widget {
-    @observable
-    layout: string;
+    @observable layout: string;
+    @observable context?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
@@ -1172,6 +1183,7 @@ export class LayoutViewWidget extends Widget {
                 propertyGridGroup: specificGroup,
                 referencedObjectCollectionPath: ["gui", "pages"]
             },
+            makeDataPropertyInfo("context"),
             {
                 name: "customUI",
                 type: PropertyType.Any,
@@ -1223,6 +1235,21 @@ export class LayoutViewWidget extends Widget {
                 if (!layout) {
                     messages.push(output.propertyNotFoundMessage(this, "layout"));
                 }
+            }
+        }
+
+        if (this.context) {
+            let contextDataIndex = findDataItemIndex(this.context);
+            if (contextDataIndex == -1) {
+                messages.push(output.propertyNotFoundMessage(this, "context"));
+            } else if (contextDataIndex >= 65535) {
+                messages.push(
+                    new output.Message(
+                        output.Type.ERROR,
+                        "Context data ignored",
+                        getChildOfObject(this, "contet")
+                    )
+                );
             }
         }
 
@@ -1294,11 +1321,49 @@ registerClass(LayoutViewWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum DisplayOption {
+    All = 0,
+    Integer = 1,
+    FractionAndUnit = 2,
+    Fraction = 3,
+    Unit = 4
+}
+
 export class DisplayDataWidget extends Widget {
     @observable focusStyle: Style;
+    @observable displayOption: DisplayOption;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: [makeStylePropertyInfo("focusStyle")],
+        properties: [
+            makeStylePropertyInfo("focusStyle"),
+            {
+                name: "displayOption",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: DisplayOption.All,
+                        label: "All"
+                    },
+                    {
+                        id: DisplayOption.Integer,
+                        label: "Integer part"
+                    },
+                    {
+                        id: DisplayOption.FractionAndUnit,
+                        label: "Fractional and unit part"
+                    },
+                    {
+                        id: DisplayOption.Fraction,
+                        label: "Fractional part"
+                    },
+                    {
+                        id: DisplayOption.Unit,
+                        label: "Unit part"
+                    }
+                ],
+                propertyGridGroup: specificGroup
+            }
+        ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
             if (typeof jsObject["focusStyle"] === "string") {
@@ -1314,7 +1379,8 @@ export class DisplayDataWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32
+            height: 32,
+            displayOption: 0
         },
 
         icon: "_images/widgets/Data.png"
@@ -1327,11 +1393,50 @@ export class DisplayDataWidget extends Widget {
             messages.push(output.propertyNotSetMessage(this, "data"));
         }
 
+        if (this.displayOption === undefined) {
+            messages.push(output.propertyNotSetMessage(this, "displayOption"));
+        }
+
         return super.check().concat(messages);
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
         let text = (this.data && (data.get(this.data) as string)) || "";
+
+        function findStartOfB() {
+            let i;
+            for (i = 0; text[i] && (text[i] == "-" || (text[i] >= "0" && text[i] <= "9")); i++);
+            return i;
+        }
+
+        function findStartOfD(i: number) {
+            for (
+                i = 0;
+                text[i] && (text[i] == "-" || (text[i] >= "0" && text[i] <= "9") || text[i] == ".");
+                i++
+            );
+            return i;
+        }
+
+        if (this.displayOption === DisplayOption.Integer) {
+            let i = findStartOfB();
+            text = text.substr(0, i);
+        } else if (this.displayOption === DisplayOption.FractionAndUnit) {
+            let i = findStartOfB();
+            text = text.substr(i);
+        } else if (this.displayOption === DisplayOption.Fraction) {
+            let i = findStartOfB();
+            let k = findStartOfD(i);
+            if (i < k) {
+                text = text.substring(i, k);
+            } else {
+                text = ".00";
+            }
+        } else if (this.displayOption === DisplayOption.Unit) {
+            let i = findStartOfD(0);
+            text = text.substr(i);
+        }
+
         return drawText(text, rect.width, rect.height, this.style, false);
     }
 }
@@ -1398,6 +1503,22 @@ export class TextWidget extends Widget {
     draw(rect: Rect): HTMLCanvasElement | undefined {
         let text = (this.data ? (data.get(this.data) as string) : this.text) || "";
         return drawText(text, rect.width, rect.height, this.style, false);
+    }
+
+    convertToDisplayData() {
+        var displayDataWidgetJsObject = Object.assign(
+            {},
+            DisplayDataWidget.classInfo.defaultValue,
+            objectToJS(this),
+            {
+                type: DisplayDataWidget.classInfo.defaultValue.type
+            }
+        );
+
+        return DocumentStore.replaceObject(
+            this,
+            loadObject(this._parent, displayDataWidgetJsObject, Widget)
+        );
     }
 }
 

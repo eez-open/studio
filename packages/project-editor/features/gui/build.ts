@@ -732,6 +732,9 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         }
 
         specific.addField(new ObjectPtr(itemWidget));
+
+        // gap
+        specific.addField(new UInt8(widget.gap || 0));
     } else if (type == WIDGET_TYPE_GRID) {
         let widget = object as Widget.GridWidget;
         specific = new Struct();
@@ -761,6 +764,9 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         }
 
         specific.addField(new UInt16(focusStyle));
+
+        // displayOption
+        specific.addField(new UInt8(widget.displayOption || 0));
     } else if (type == WIDGET_TYPE_TEXT) {
         let widget = object as Widget.TextWidget;
         specific = new Struct();
@@ -1083,13 +1089,20 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         let widget = object as Widget.LayoutViewWidget;
         specific = new Struct();
 
-        // bitmap
+        // layout
         let layout: number = -1;
         if (widget.layout) {
             layout = assets.getPageIndex(widget.layout);
         }
 
         specific.addField(new Int16(layout));
+
+        // context
+        let context = 0;
+        if (widget.context) {
+            context = assets.getDataItemIndex(widget, "context");
+        }
+        specific.addField(new UInt16(context));
     } else if (type == WIDGET_TYPE_APP_VIEW) {
         // no specific fields
     }

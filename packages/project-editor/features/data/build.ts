@@ -31,7 +31,7 @@ function buildDataFuncsDecl(projectDataItems: DataItem[]) {
         )}(DataOperationEnum operation, Cursor &cursor, Value &value);`;
     });
 
-    return dataItems.join("\n");
+    return ["void data_none(DataOperationEnum operation, Cursor &cursor, Value &value);"].concat(dataItems).join("\n");
 }
 
 function buildDataArrayDecl() {
@@ -50,7 +50,7 @@ function buildDataArrayDef(projectDataItems: DataItem[]) {
 
     return `DataOperationsFunction g_dataOperationsFunctions[] = {\n${
         projectBuild.TAB
-    }0,\n${dataItems.join(",\n")}\n};`;
+    }data_none,\n${dataItems.join(",\n")}\n};`;
 }
 
 export function build(
