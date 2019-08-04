@@ -511,13 +511,12 @@ class HistoryNavigator {
     firstHistoryItemTime: number;
     lastHistoryItemTime: number;
 
-    @observable
-    hasOlder = false;
-    @observable
-    hasNewer = false;
+    @observable hasOlder = false;
+    @observable hasNewer = false;
 
     constructor(public history: History) {}
 
+    @action
     update() {
         if (this.firstHistoryItem) {
             this.firstHistoryItemTime = this.firstHistoryItem.date.getTime();
@@ -533,9 +532,7 @@ class HistoryNavigator {
                 )
                 .get(this.firstHistoryItemTime);
 
-            runInAction(() => {
-                this.hasOlder = result && result.count.toNumber() > 0;
-            });
+            this.hasOlder = result && result.count.toNumber() > 0;
         } else {
             this.hasOlder = false;
         }
@@ -554,14 +551,10 @@ class HistoryNavigator {
                 )
                 .get(this.lastHistoryItemTime);
 
-            runInAction(() => {
-                this.hasNewer = result && result.count.toNumber() > 0;
-            });
+            this.hasNewer = result && result.count.toNumber() > 0;
         } else {
             this.hasNewer = false;
         }
-
-        this.history.selection.selectItems([]);
     }
 
     @computed
@@ -924,13 +917,11 @@ export class History {
         return undefined;
     }
 
+    @computed
     get numLoadedHistoryItems() {
         let counter = 0;
         for (let i = 0; i < this.blocks.length; i++) {
-            const historyItems = this.blocks[i];
-            for (let j = 0; j < historyItems.length; j++) {
-                counter++;
-            }
+            counter += this.blocks[i].length;
         }
         return counter;
     }
@@ -940,16 +931,30 @@ export class History {
         const numLoadedHistoryItems = this.numLoadedHistoryItems;
         if (numLoadedHistoryItems > CONF_MAX_NUM_OF_LOADED_ITEMS) {
             let toBeRemoved = numLoadedHistoryItems - CONF_MAX_NUM_OF_LOADED_ITEMS;
-            while (true) {
-                const historyItems = this.blocks[0];
-
-                if (toBeRemoved < historyItems.length) {
-                    historyItems.splice(0, toBeRemoved);
+            let removed = 0;
+            while (removed < toBeRemoved) {
+                if (this.blocks.length === 0) {
                     break;
                 }
 
-                this.blocks.splice(0, 1);
-                toBeRemoved -= historyItems.length;
+                const block = this.blocks[0];
+
+                if (block.length === 0) {
+                    this.blocks.splice(0, 1);
+                    continue;
+                }
+
+                const nextHistoryItemToRemove = block[0];
+                if (nextHistoryItemToRemove.selected) {
+                    break;
+                }
+
+                block.splice(0, 1);
+                if (block.length === 0) {
+                    this.blocks.splice(0, 1);
+                }
+
+                ++removed;
             }
         }
     }
@@ -959,16 +964,30 @@ export class History {
         const numLoadedHistoryItems = this.numLoadedHistoryItems;
         if (numLoadedHistoryItems > CONF_MAX_NUM_OF_LOADED_ITEMS) {
             let toBeRemoved = numLoadedHistoryItems - CONF_MAX_NUM_OF_LOADED_ITEMS;
-            while (true) {
-                const historyItems = this.blocks[this.blocks.length - 1];
-
-                if (toBeRemoved < historyItems.length) {
-                    historyItems.splice(historyItems.length - toBeRemoved, toBeRemoved);
+            let removed = 0;
+            while (removed < toBeRemoved) {
+                if (this.blocks.length === 0) {
                     break;
                 }
 
-                this.blocks.splice(this.blocks.length - 1, 1);
-                toBeRemoved -= historyItems.length;
+                const block = this.blocks[this.blocks.length - 1];
+
+                if (block.length === 0) {
+                    this.blocks.splice(this.blocks.length - 1, 1);
+                    continue;
+                }
+
+                const nextHistoryItemToRemove = block[block.length - 1];
+                if (nextHistoryItemToRemove.selected) {
+                    break;
+                }
+
+                block.splice(block.length - 1, 1);
+                if (block.length === 0) {
+                    this.blocks.splice(this.blocks.length - 1, 1);
+                }
+
+                ++removed;
             }
         }
     }
@@ -1229,6 +1248,16 @@ export class History {
             commitTransaction();
 
             this.selection.selectItems([]);
+
+            setTimeout(() => {
+                if (this.numLoadedHistoryItems < CONF_BLOCK_SIZE) {
+                    if (this.navigator.hasOlder) {
+                        this.navigator.loadOlder();
+                    } else {
+                        this.navigator.loadNewer();
+                    }
+                }
+            }, 100);
         }
     }
 

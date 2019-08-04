@@ -488,7 +488,7 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         // when we load older items, we don't want scroll position to change
 
         // find first item above scrollTop
-        let firstItem: HTMLDivElement;
+        let firstItem: HTMLDivElement | undefined;
 
         const items = this.div.children[0].children;
         for (let i = 0; i < items.length; ++i) {
@@ -502,17 +502,21 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
             }
         }
 
-        // remember offset of the firstItem from scrollTop
-        let offset = firstItem!.offsetTop - this.div.scrollTop;
+        if (firstItem) {
+            // remember offset of the firstItem from scrollTop
+            let offset = firstItem.offsetTop - this.div.scrollTop;
 
-        await this.props.history.navigator.loadOlder();
+            await this.props.history.navigator.loadOlder();
 
-        window.requestAnimationFrame(() => {
-            // make sure firstItem is again at the same offset
-            this.div.scrollTop = firstItem!.offsetTop - offset;
+            window.requestAnimationFrame(() => {
+                // make sure firstItem is again at the same offset
+                this.div.scrollTop = firstItem!.offsetTop - offset;
 
-            this.autoReloadEnabled = true;
-        });
+                this.autoReloadEnabled = true;
+            });
+        } else {
+            await this.props.history.navigator.loadOlder();
+        }
     }
 
     @bind
