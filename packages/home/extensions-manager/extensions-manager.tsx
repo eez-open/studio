@@ -342,79 +342,77 @@ class MasterView extends React.Component {
     @observable
     isUpdatingAll: boolean = false;
 
-    installExtension() {
-        EEZStudio.electron.remote.dialog.showOpenDialog(
-            {
-                properties: ["openFile"],
-                filters: [
-                    { name: "Extensions", extensions: ["zip"] },
-                    { name: "All Files", extensions: ["*"] }
-                ]
-            },
-            async function(filePaths) {
-                if (filePaths && filePaths[0]) {
-                    try {
-                        let filePath = filePaths[0];
+    async installExtension() {
+        const result = await EEZStudio.electron.remote.dialog.showOpenDialog({
+            properties: ["openFile"],
+            filters: [
+                { name: "Extensions", extensions: ["zip"] },
+                { name: "All Files", extensions: ["*"] }
+            ]
+        });
 
-                        const extension = await installExtension(filePath, {
-                            notFound() {
-                                info("This is not a valid extension package file.", undefined);
-                            },
-                            async confirmReplaceNewerVersion(
-                                newExtension: IExtension,
-                                existingExtension: IExtension
-                            ) {
-                                return (
-                                    (await confirmWithButtons(
-                                        confirmMessage(newExtension),
-                                        `The newer version ${
-                                            existingExtension.version
-                                        } is already installed.${BUTTON_INSTRUCTIONS}`,
-                                        BUTTONS
-                                    )) === 0
-                                );
-                            },
-                            async confirmReplaceOlderVersion(
-                                newExtension: IExtension,
-                                existingExtension: IExtension
-                            ) {
-                                return (
-                                    (await confirmWithButtons(
-                                        confirmMessage(newExtension),
-                                        `The older version ${
-                                            existingExtension.version
-                                        } is already installed.${BUTTON_INSTRUCTIONS}`,
-                                        BUTTONS
-                                    )) === 0
-                                );
-                            },
-                            async confirmReplaceTheSameVersion(
-                                newExtension: IExtension,
-                                existingExtension: IExtension
-                            ) {
-                                return (
-                                    (await confirmWithButtons(
-                                        confirmMessage(newExtension),
-                                        `That version is already installed.${BUTTON_INSTRUCTIONS}`,
-                                        BUTTONS
-                                    )) === 0
-                                );
-                            }
-                        });
+        const filePaths = result.filePaths;
+        if (filePaths && filePaths[0]) {
+            try {
+                let filePath = filePaths[0];
 
-                        if (extension) {
-                            notification.success(
-                                `Extension "${extension.displayName || extension.name}" installed`
-                            );
-
-                            extensionsManagerStore.selectExtensionById(extension.id);
-                        }
-                    } catch (err) {
-                        notification.error(err.toString());
+                const extension = await installExtension(filePath, {
+                    notFound() {
+                        info("This is not a valid extension package file.", undefined);
+                    },
+                    async confirmReplaceNewerVersion(
+                        newExtension: IExtension,
+                        existingExtension: IExtension
+                    ) {
+                        return (
+                            (await confirmWithButtons(
+                                confirmMessage(newExtension),
+                                `The newer version ${
+                                    existingExtension.version
+                                } is already installed.${BUTTON_INSTRUCTIONS}`,
+                                BUTTONS
+                            )) === 0
+                        );
+                    },
+                    async confirmReplaceOlderVersion(
+                        newExtension: IExtension,
+                        existingExtension: IExtension
+                    ) {
+                        return (
+                            (await confirmWithButtons(
+                                confirmMessage(newExtension),
+                                `The older version ${
+                                    existingExtension.version
+                                } is already installed.${BUTTON_INSTRUCTIONS}`,
+                                BUTTONS
+                            )) === 0
+                        );
+                    },
+                    async confirmReplaceTheSameVersion(
+                        newExtension: IExtension,
+                        existingExtension: IExtension
+                    ) {
+                        return (
+                            (await confirmWithButtons(
+                                confirmMessage(newExtension),
+                                `That version is already installed.${BUTTON_INSTRUCTIONS}`,
+                                BUTTONS
+                            )) === 0
+                        );
                     }
+                });
+
+                if (extension) {
+                    notification.success(
+                        `Extension "${extension.displayName || extension.name}" installed`
+                    );
+
+                    extensionsManagerStore.selectExtensionById(extension.id);
                 }
+            } catch (err) {
+                notification.error(err.toString());
             }
-        );
+        }
     }
 
     async updateCatalog() {
@@ -895,7 +893,7 @@ export class DetailsView extends React.Component {
     }
 
     @bind
-    handleExport() {
+    async handleExport() {
         if (!this.extensionVersions) {
             return;
         }
@@ -905,7 +903,7 @@ export class DetailsView extends React.Component {
             return;
         }
 
-        EEZStudio.electron.remote.dialog.showSaveDialog(
+        const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
             EEZStudio.electron.remote.getCurrentWindow(),
             {
                 filters: [
@@ -913,24 +911,24 @@ export class DetailsView extends React.Component {
                     { name: "All Files", extensions: ["*"] }
                 ],
                 defaultPath: getValidFileNameFromFileName(extension.name + ".zip")
-            },
-            async filePath => {
-                if (filePath) {
-                    try {
-                        const tempFilePath = await getTempFilePath();
-                        await exportExtension(extension, tempFilePath);
-                        await copyFile(tempFilePath, filePath);
-                        notification.success(`Saved to "${filePath}"`);
-                    } catch (err) {
-                        notification.error(err.toString());
-                    }
-                }
             }
         );
+
+        const filePath = result.filePath;
+        if (filePath) {
+            try {
+                const tempFilePath = await getTempFilePath();
+                await exportExtension(extension, tempFilePath);
+                await copyFile(tempFilePath, filePath);
+                notification.success(`Saved to "${filePath}"`);
+            } catch (err) {
+                notification.error(err.toString());
+            }
+        }
     }
 
     @bind
-    handleChangeImage() {
+    async handleChangeImage() {
         if (!this.extensionVersions) {
             return;
         }
@@ -940,7 +938,7 @@ export class DetailsView extends React.Component {
             return;
         }
 
-        EEZStudio.electron.remote.dialog.showOpenDialog(
+        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
             EEZStudio.electron.remote.getCurrentWindow(),
             {
                 properties: ["openFile"],
@@ -948,13 +946,12 @@ export class DetailsView extends React.Component {
                     { name: "Image files", extensions: ["png", "jpg", "jpeg"] },
                     { name: "All Files", extensions: ["*"] }
                 ]
-            },
-            filePaths => {
-                if (filePaths && filePaths[0]) {
-                    changeExtensionImage(extension, filePaths[0]);
-                }
             }
         );
+        const filePaths = result.filePaths;
+        if (filePaths && filePaths[0]) {
+            changeExtensionImage(extension, filePaths[0]);
+        }
     }
 
     static getFullDescription(extension: IExtension): React.ReactNode {

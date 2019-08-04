@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, values } from "mobx";
+import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 
 import { makeValidator, validators } from "eez-studio-shared/validation";
@@ -32,7 +32,7 @@ export class GroupDialog extends React.Component<
             validators.required,
             () => {
                 if (
-                    values(this.props.groupsStore.groups).find(
+                    Array.from(this.props.groupsStore.groups.values()).find(
                         group => group.name === this.group.name && group.id !== this.group.id
                     )
                 ) {
@@ -44,7 +44,7 @@ export class GroupDialog extends React.Component<
     });
 
     async handleSubmit() {
-        if (!await this.validator.checkValidity(this.group)) {
+        if (!(await this.validator.checkValidity(this.group))) {
             return false;
         }
         this.props.callback(this.group);

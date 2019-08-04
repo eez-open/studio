@@ -15,7 +15,8 @@
         "baseUrl": "./packages",
         "sourceMap": false,
         "pretty": false,
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "skipLibCheck": true
     },
     "include": ["./packages"]
 }

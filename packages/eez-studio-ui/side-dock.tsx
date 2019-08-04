@@ -121,7 +121,12 @@ export class DockablePanels extends React.Component<{
     }
 
     render() {
-        return <div ref={ref => (this.containerDiv = ref)} style={{ overflow: "visible" }} />;
+        return (
+            <div
+                ref={ref => (this.containerDiv = ref)}
+                style={{ position: "absolute", overflow: "visible" }}
+            />
+        );
     }
 }
 

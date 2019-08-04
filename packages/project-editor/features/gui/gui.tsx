@@ -220,14 +220,16 @@ registerFeatureImplementation("gui", {
         }) => {
             const gui = getProperty(ProjectStore.project, "gui") as Gui;
 
-            jsObject.gui.colors._array.forEach((color: any) => delete color.id);
+            if (gui) {
+                jsObject.gui.colors._array.forEach((color: any) => delete color.id);
 
-            jsObject.gui.themes._array.forEach((theme: any, i: number) => {
-                delete theme.id;
-                theme.colors = gui.themes._array[i].colors;
-            });
+                jsObject.gui.themes._array.forEach((theme: any, i: number) => {
+                    delete theme.id;
+                    theme.colors = gui.themes._array[i].colors;
+                });
 
-            delete jsObject.gui.themeColors;
+                delete jsObject.gui.themeColors;
+            }
         }
     }
 });

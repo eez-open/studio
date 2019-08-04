@@ -247,7 +247,7 @@ export function mnemonicLabel(label: string): string {
     return label.replace(/&&/g, "&");
 }
 
-export function confirmSave({
+export async function confirmSave({
     saveCallback,
     dontSaveCallback,
     cancelCallback
@@ -294,20 +294,19 @@ export function confirmSave({
         opts.defaultId = 2;
     }
 
-    EEZStudio.electron.remote.dialog.showMessageBox(
+    const result = await EEZStudio.electron.remote.dialog.showMessageBox(
         EEZStudio.electron.remote.getCurrentWindow(),
-        opts,
-        (buttonIndex: any) => {
-            let choice = buttons[buttonIndex].result;
-            if (choice == ConfirmResult.SAVE) {
-                saveCallback();
-            } else if (choice == ConfirmResult.DONT_SAVE) {
-                dontSaveCallback();
-            } else {
-                cancelCallback();
-            }
-        }
+        opts
     );
+    const buttonIndex = result.response;
+    let choice = buttons[buttonIndex].result;
+    if (choice == ConfirmResult.SAVE) {
+        saveCallback();
+    } else if (choice == ConfirmResult.DONT_SAVE) {
+        dontSaveCallback();
+    } else {
+        cancelCallback();
+    }
 }
 
 export async function delay(time: number) {

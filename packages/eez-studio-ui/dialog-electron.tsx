@@ -20,13 +20,13 @@ export function error(message: string, detail: string | undefined) {
     });
 }
 
-export function confirm(
+export async function confirm(
     message: string,
     detail: string | undefined,
     callback: () => void,
     cancelCallback?: () => void
 ) {
-    EEZStudio.electron.remote.dialog.showMessageBox(
+    const result = await EEZStudio.electron.remote.dialog.showMessageBox(
         EEZStudio.electron.remote.getCurrentWindow(),
         {
             type: "question",
@@ -36,33 +36,32 @@ export function confirm(
             noLink: true,
             buttons: ["Yes", "No"],
             cancelId: 1
-        },
-        (buttonIndex: number) => {
-            if (buttonIndex == 0) {
-                callback();
-            } else if (cancelCallback) {
-                cancelCallback();
-            }
         }
     );
+    const buttonIndex = result.response;
+    if (buttonIndex == 0) {
+        callback();
+    } else if (cancelCallback) {
+        cancelCallback();
+    }
 }
 
-export function confirmWithButtons(message: string, detail: string | undefined, buttons: string[]) {
-    return new Promise<number>(resolve => {
-        EEZStudio.electron.remote.dialog.showMessageBox(
-            EEZStudio.electron.remote.getCurrentWindow(),
-            {
-                type: "question",
-                title: "EEZ Studio",
-                message: message,
-                detail: detail,
-                noLink: true,
-                buttons: buttons || ["Yes", "No"],
-                cancelId: 1
-            },
-            (buttonIndex: number) => {
-                resolve(buttonIndex);
-            }
-        );
-    });
+export async function confirmWithButtons(
+    message: string,
+    detail: string | undefined,
+    buttons: string[]
+) {
+    const result = await EEZStudio.electron.remote.dialog.showMessageBox(
+        EEZStudio.electron.remote.getCurrentWindow(),
+        {
+            type: "question",
+            title: "EEZ Studio",
+            message: message,
+            detail: detail,
+            noLink: true,
+            buttons: buttons || ["Yes", "No"],
+            cancelId: 1
+        }
+    );
+    return result.response;
 }

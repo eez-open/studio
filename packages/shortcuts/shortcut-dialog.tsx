@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, values } from "mobx";
+import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 
 import { objectClone, isReserverdKeybinding } from "eez-studio-shared/util";
@@ -63,7 +63,7 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
             () => {
                 if (
                     this.shortcut.name !== this.props.shortcut.name &&
-                    values(this.props.shortcutsStore.shortcuts).find(
+                    Array.from(this.props.shortcutsStore.shortcuts.values()).find(
                         shortcut =>
                             shortcut.name === this.shortcut.name &&
                             (shortcut.id !== this.shortcut.id &&
@@ -302,7 +302,7 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
                             errors={this.validator.errors.groupName}
                         >
                             <option key="" value="" />
-                            {values(this.props.groupsStore.groups).map(group => (
+                            {Array.from(this.props.groupsStore.groups.values()).map(group => (
                                 <option key={group.id} value={group.name}>
                                     {group.name}
                                 </option>

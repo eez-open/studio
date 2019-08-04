@@ -12,20 +12,15 @@ export class RelativeFileInput extends FieldComponent {
         this.props.onChange(undefined);
     }
 
-    onSelect() {
-        EEZStudio.electron.remote.dialog.showOpenDialog(
-            {
-                properties: ["openFile"],
-                filters: this.props.fieldProperties.options.filters
-            },
-            filePaths => {
-                if (filePaths && filePaths[0]) {
-                    this.props.onChange(
-                        ProjectStore.getFilePathRelativeToProjectPath(filePaths[0])
-                    );
-                }
-            }
-        );
+    async onSelect() {
+        const result = await EEZStudio.electron.remote.dialog.showOpenDialog({
+            properties: ["openFile"],
+            filters: this.props.fieldProperties.options.filters
+        });
+
+        if (result.filePaths && result.filePaths[0]) {
+            this.props.onChange(ProjectStore.getFilePathRelativeToProjectPath(result.filePaths[0]));
+        }
     }
 
     render() {

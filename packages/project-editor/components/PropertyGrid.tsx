@@ -1094,22 +1094,22 @@ class Property extends React.Component<PropertyProps> {
                         <button
                             className="btn btn-secondary"
                             type="button"
-                            onClick={() => {
+                            onClick={async () => {
                                 if (ProjectStore.filePath) {
-                                    EEZStudio.electron.remote.dialog.showOpenDialog(
+                                    const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
                                         {
                                             properties: ["openDirectory"]
-                                        },
-                                        filePaths => {
-                                            if (filePaths && filePaths[0]) {
-                                                this.onChange(
-                                                    ProjectStore.getFolderPathRelativeToProjectPath(
-                                                        filePaths[0]
-                                                    )
-                                                );
-                                            }
                                         }
                                     );
+
+                                    const filePaths = result.filePaths;
+                                    if (filePaths && filePaths[0]) {
+                                        this.onChange(
+                                            ProjectStore.getFolderPathRelativeToProjectPath(
+                                                filePaths[0]
+                                            )
+                                        );
+                                    }
                                 } else {
                                     info(
                                         "Project not saved.",
@@ -1139,8 +1139,8 @@ class Property extends React.Component<PropertyProps> {
                             <button
                                 className="btn btn-secondary"
                                 type="button"
-                                onClick={() => {
-                                    EEZStudio.electron.remote.dialog.showOpenDialog(
+                                onClick={async () => {
+                                    const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
                                         {
                                             properties: ["openFile"],
                                             filters: [
@@ -1150,33 +1150,30 @@ class Property extends React.Component<PropertyProps> {
                                                 },
                                                 { name: "All Files", extensions: ["*"] }
                                             ]
-                                        },
-                                        filePaths => {
-                                            if (filePaths && filePaths[0]) {
-                                                if (propertyInfo.embeddedImage) {
-                                                    fs.readFile(
-                                                        ProjectStore.getAbsoluteFilePath(
-                                                            filePaths[0]
-                                                        ),
-                                                        "base64",
-                                                        (err: any, data: any) => {
-                                                            if (!err) {
-                                                                this.changeValue(
-                                                                    "data:image/png;base64," + data
-                                                                );
-                                                            }
-                                                        }
-                                                    );
-                                                } else {
-                                                    this.changeValue(
-                                                        ProjectStore.getFilePathRelativeToProjectPath(
-                                                            filePaths[0]
-                                                        )
-                                                    );
-                                                }
-                                            }
                                         }
                                     );
+                                    const filePaths = result.filePaths;
+                                    if (filePaths && filePaths[0]) {
+                                        if (propertyInfo.embeddedImage) {
+                                            fs.readFile(
+                                                ProjectStore.getAbsoluteFilePath(filePaths[0]),
+                                                "base64",
+                                                (err: any, data: any) => {
+                                                    if (!err) {
+                                                        this.changeValue(
+                                                            "data:image/png;base64," + data
+                                                        );
+                                                    }
+                                                }
+                                            );
+                                        } else {
+                                            this.changeValue(
+                                                ProjectStore.getFilePathRelativeToProjectPath(
+                                                    filePaths[0]
+                                                )
+                                            );
+                                        }
+                                    }
                                 }}
                             >
                                 &hellip;

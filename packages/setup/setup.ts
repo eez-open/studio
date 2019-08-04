@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { BrowserWindow, ipcMain, Event, WebContents } from "electron";
+import { BrowserWindow, ipcMain, WebContents } from "electron";
 
 import * as ExtensionsModule from "eez-studio-shared/extensions/extensions";
 import { IExtension } from "eez-studio-shared/extensions/extension";
@@ -42,7 +42,7 @@ async function setupExtensions(
 
         try {
             const extension = await installExtension(filePath, {
-                notFound() { },
+                notFound() {},
                 async confirmReplaceNewerVersion(
                     newExtension: IExtension,
                     existingExtension: IExtension
@@ -144,7 +144,7 @@ export async function setup() {
 
         win.show();
 
-        ipcMain.on("startSetup", async (event: Event) => {
+        ipcMain.on("startSetup", async event => {
             await doSetup(event.sender);
             win.close();
             resolve();

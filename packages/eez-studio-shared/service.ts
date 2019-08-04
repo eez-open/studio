@@ -141,7 +141,7 @@ if (isRenderer()) {
     browserWindow.loadURL(`file://${__dirname}/../eez-studio-shared/service.html`);
 
     // waiting for the new task
-    ipcMain.on(NEW_TASK_CHANNEL, (event: Electron.Event, task: ITask) => {
+    ipcMain.on(NEW_TASK_CHANNEL, (event: Electron.IpcMainEvent, task: ITask) => {
         function send(taskResult: ITaskResult) {
             // send result back to calling process
             event.sender.send(TASK_DONE_CHANNEL + task.taskId, taskResult);

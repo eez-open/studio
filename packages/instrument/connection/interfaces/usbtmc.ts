@@ -913,7 +913,7 @@ export class Instrument {
         }
     }
 
-    async write(message: string, encoding: string = "binary") {
+    async write(message: string, encoding: BufferEncoding = "binary") {
         await this.write_raw(Buffer.from(message, encoding));
     }
 
@@ -929,7 +929,7 @@ export class Instrument {
         })).toString("binary");
     }
 
-    async ask(message: string, num: number = -1, encoding: string = "binary") {
+    async ask(message: string, num: number = -1, encoding: BufferEncoding = "binary") {
         // Write then read string
         // Advantest/ADCMT hardware won't respond to a command unless it's in Local Lockout mode
         const was_locked = this.advantest_locked;

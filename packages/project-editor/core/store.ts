@@ -1580,19 +1580,21 @@ class ProjectStoreClass {
         }
     }
 
-    saveToFile(saveAs: boolean, callback: (() => void) | undefined) {
+    async saveToFile(saveAs: boolean, callback: (() => void) | undefined) {
         if (this.project) {
             if (!this.filePath || saveAs) {
-                EEZStudio.electron.remote.dialog.showSaveDialog(
+                const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
                     EEZStudio.electron.remote.getCurrentWindow(),
                     {
                         filters: [
                             { name: "EEZ Project", extensions: ["eez-project"] },
                             { name: "All Files", extensions: ["*"] }
                         ]
-                    },
-                    (filePath: any) => this.savedAsFilePath(filePath, callback)
+                    }
                 );
+                if (result.filePath) {
+                    this.savedAsFilePath(result.filePath, callback);
+                }
             } else {
                 this.doSave(callback);
             }

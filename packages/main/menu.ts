@@ -89,21 +89,18 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
     {
         label: "Open...",
         accelerator: "CmdOrCtrl+O",
-        click: function(item: any, focusedWindow: any) {
-            dialog.showOpenDialog(
-                {
-                    properties: ["openFile"],
-                    filters: [
-                        { name: "EEZ Project", extensions: ["eez-project"] },
-                        { name: "All Files", extensions: ["*"] }
-                    ]
-                },
-                function(filePaths) {
-                    if (filePaths && filePaths[0]) {
-                        openFile(filePaths[0]);
-                    }
-                }
-            );
+        click: async function(item: any, focusedWindow: any) {
+            const result = await dialog.showOpenDialog({
+                properties: ["openFile"],
+                filters: [
+                    { name: "EEZ Project", extensions: ["eez-project"] },
+                    { name: "All Files", extensions: ["*"] }
+                ]
+            });
+            const filePaths = result.filePaths;
+            if (filePaths && filePaths[0]) {
+                openFile(filePaths[0]);
+            }
         }
     },
     fileRecentSubmenu,
@@ -224,21 +221,18 @@ const homeFileMenu: Electron.MenuItemConstructorOptions = {
         [
             {
                 label: "Import Instrument Definition...",
-                click: function(item: any, focusedWindow: any) {
-                    dialog.showOpenDialog(
-                        {
-                            properties: ["openFile"],
-                            filters: [
-                                { name: "Instrument Definition Files", extensions: ["zip"] },
-                                { name: "All Files", extensions: ["*"] }
-                            ]
-                        },
-                        function(filePaths) {
-                            if (filePaths && filePaths[0]) {
-                                importInstrumentDefinitionFile(filePaths[0]);
-                            }
-                        }
-                    );
+                click: async function(item: any, focusedWindow: any) {
+                    const result = await dialog.showOpenDialog({
+                        properties: ["openFile"],
+                        filters: [
+                            { name: "Instrument Definition Files", extensions: ["zip"] },
+                            { name: "All Files", extensions: ["*"] }
+                        ]
+                    });
+                    const filePaths = result.filePaths;
+                    if (filePaths && filePaths[0]) {
+                        importInstrumentDefinitionFile(filePaths[0]);
+                    }
                 }
             },
             {

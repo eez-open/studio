@@ -1,5 +1,5 @@
-export function confirm(message: string, detail: string | undefined, callback: () => void) {
-    EEZStudio.electron.remote.dialog.showMessageBox(
+export async function confirm(message: string, detail: string | undefined, callback: () => void) {
+    const result = await EEZStudio.electron.remote.dialog.showMessageBox(
         EEZStudio.electron.remote.getCurrentWindow(),
         {
             type: "question",
@@ -9,13 +9,12 @@ export function confirm(message: string, detail: string | undefined, callback: (
             noLink: true,
             buttons: ["Yes", "No"],
             cancelId: 1
-        },
-        function(buttonIndex) {
-            if (buttonIndex == 0) {
-                callback();
-            }
         }
     );
+    const buttonIndex = result.response;
+    if (buttonIndex == 0) {
+        callback();
+    }
 }
 
 export function info(message: string, detail?: string) {

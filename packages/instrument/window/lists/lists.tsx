@@ -354,32 +354,27 @@ function getCsvDataColumnDefinitions(instrument: InstrumentObject) {
     ];
 }
 
-export function saveTableListData(
+export async function saveTableListData(
     instrument: InstrumentObject,
     listName: string,
     tableListData: ITableListData
 ) {
-    EEZStudio.electron.remote.dialog.showSaveDialog(
+    const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
         EEZStudio.electron.remote.getCurrentWindow(),
         {
             defaultPath: getValidFileNameFromFileName(listName) + ".csv",
             filters: [{ name: "CSV Files", extensions: ["csv"] }]
-        },
-        async filePath => {
-            if (filePath) {
-                try {
-                    await writeCsvFile(
-                        filePath,
-                        tableListData,
-                        getCsvDataColumnDefinitions(instrument)
-                    );
-                    notification.success(`List exported to "${filePath}".`);
-                } catch (err) {
-                    error("Failed to write CSV file.", err.toString());
-                }
-            }
         }
     );
+    const filePath = result.filePath;
+    if (filePath) {
+        try {
+            await writeCsvFile(filePath, tableListData, getCsvDataColumnDefinitions(instrument));
+            notification.success(`List exported to "${filePath}".`);
+        } catch (err) {
+            error("Failed to write CSV file.", err.toString());
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -396,8 +391,8 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
     }
 
     @bind
-    import() {
-        EEZStudio.electron.remote.dialog.showOpenDialog(
+    async import() {
+        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
             EEZStudio.electron.remote.getCurrentWindow(),
             {
                 properties: ["openFile"],
@@ -405,77 +400,70 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                     { name: "CSV Files", extensions: ["csv"] },
                     { name: "All Files", extensions: ["*"] }
                 ]
-            },
-            async filePaths => {
-                if (filePaths && filePaths[0]) {
-                    let data = await readCsvFile(
-                        filePaths[0],
-                        getCsvDataColumnDefinitions(this.props.appStore.instrument!)
-                    );
-
-                    if (!data) {
-                        error("Failed to load CSV file.", undefined);
-                        return;
-                    }
-
-                    showGenericDialog({
-                        dialogDefinition: {
-                            fields: [
-                                {
-                                    name: "name",
-                                    type: "string",
-                                    validators: [
-                                        validators.required,
-                                        validators.unique(
-                                            {},
-                                            values(this.props.appStore.instrumentLists)
-                                        )
-                                    ]
-                                },
-                                {
-                                    name: "description",
-                                    type: "string"
-                                }
-                            ]
-                        },
-
-                        values: {
-                            name: "",
-                            description: ""
-                        }
-                    })
-                        .then(result => {
-                            let list = createTableListFromData(
-                                data,
-                                this.props.appStore,
-                                this.props.appStore.instrument!
-                            );
-                            list.name = result.values.name;
-                            list.description = result.values.description;
-
-                            beginTransaction("Import instrument list");
-                            let listId = this.props.appStore.instrumentListStore.createObject(
-                                list.toJS()
-                            );
-                            commitTransaction();
-
-                            runInAction(
-                                () => (this.props.appStore.navigationStore.selectedListId = listId)
-                            );
-
-                            setTimeout(() => {
-                                let element = document.querySelector(
-                                    `.EezStudio_InstrumentList_${listId}`
-                                );
-                                if (element) {
-                                    element.scrollIntoView();
-                                }
-                            }, 10);
-                        })
-                        .catch(() => {});
-                }
             }
         );
+
+        const filePaths = result.filePaths;
+        if (filePaths && filePaths[0]) {
+            let data = await readCsvFile(
+                filePaths[0],
+                getCsvDataColumnDefinitions(this.props.appStore.instrument!)
+            );
+
+            if (!data) {
+                error("Failed to load CSV file.", undefined);
+                return;
+            }
+
+            showGenericDialog({
+                dialogDefinition: {
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, values(this.props.appStore.instrumentLists))
+                            ]
+                        },
+                        {
+                            name: "description",
+                            type: "string"
+                        }
+                    ]
+                },
+
+                values: {
+                    name: "",
+                    description: ""
+                }
+            })
+                .then(result => {
+                    let list = createTableListFromData(
+                        data,
+                        this.props.appStore,
+                        this.props.appStore.instrument!
+                    );
+                    list.name = result.values.name;
+                    list.description = result.values.description;
+
+                    beginTransaction("Import instrument list");
+                    let listId = this.props.appStore.instrumentListStore.createObject(list.toJS());
+                    commitTransaction();
+
+                    runInAction(
+                        () => (this.props.appStore.navigationStore.selectedListId = listId)
+                    );
+
+                    setTimeout(() => {
+                        let element = document.querySelector(`.EezStudio_InstrumentList_${listId}`);
+                        if (element) {
+                            element.scrollIntoView();
+                        }
+                    }, 10);
+                })
+                .catch(() => {});
+        }
     }
 
     @bind

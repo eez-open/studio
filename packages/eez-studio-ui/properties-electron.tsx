@@ -23,21 +23,21 @@ export class FileInputProperty extends React.Component<
         this.onSelectFile = this.onSelectFile.bind(this);
     }
 
-    onSelectFile(event: any) {
+    async onSelectFile(event: any) {
         event.preventDefault();
 
-        EEZStudio.electron.remote.dialog.showOpenDialog(
+        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
             EEZStudio.electron.remote.getCurrentWindow(),
             {
                 properties: ["openFile"],
                 filters: [{ name: "All Files", extensions: ["*"] }]
-            },
-            filePaths => {
-                if (filePaths && filePaths[0]) {
-                    this.props.onChange(filePaths[0]);
-                }
             }
         );
+
+        const filePaths = result.filePaths;
+        if (filePaths && filePaths[0]) {
+            this.props.onChange(filePaths[0]);
+        }
     }
 
     render() {

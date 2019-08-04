@@ -132,11 +132,11 @@ export function importInstrumentDefinition(instrumentDefinitionFilePath: string)
             sessionName: name
         }
     })
-        .then(result => {
+        .then(async result => {
             if (result.values.importAs === "extension") {
                 importInstrumentDefinitionAsExtension(instrumentDefinitionFilePath);
             } else {
-                EEZStudio.electron.remote.dialog.showSaveDialog(
+                const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
                     EEZStudio.electron.remote.getCurrentWindow(),
                     {
                         defaultPath:
@@ -146,14 +146,15 @@ export function importInstrumentDefinition(instrumentDefinitionFilePath: string)
                             { name: "EEZ Project", extensions: ["eez-project"] },
                             { name: "All Files", extensions: ["*"] }
                         ]
-                    },
-                    (projectFilePath: any) => {
-                        importInstrumentDefinitionAsProject(
-                            instrumentDefinitionFilePath,
-                            projectFilePath
-                        );
                     }
                 );
+                const projectFilePath = result.filePath;
+                if (projectFilePath) {
+                    importInstrumentDefinitionAsProject(
+                        instrumentDefinitionFilePath,
+                        projectFilePath
+                    );
+                }
             }
         })
         .catch(() => {});

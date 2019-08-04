@@ -16,7 +16,8 @@
         "sourceMap": true,
         "pretty": true,
         "watch": true,
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "skipLibCheck": true
     },
     "include": ["./packages"]
 }

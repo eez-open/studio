@@ -254,7 +254,7 @@ export class FileHistoryItemComponent extends React.Component<
     }
 
     @bind
-    onSave() {
+    async onSave() {
         let filters = [];
 
         let fileExtension = this.props.historyItem.fileExtension;
@@ -275,16 +275,15 @@ export class FileHistoryItemComponent extends React.Component<
             options.defaultPath = getFileName(this.props.historyItem.sourceFilePath);
         }
 
-        EEZStudio.electron.remote.dialog.showSaveDialog(
+        const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
             EEZStudio.electron.remote.getCurrentWindow(),
-            options,
-            async (filePath: any) => {
-                if (filePath) {
-                    await writeBinaryData(filePath, this.props.historyItem.data);
-                    notification.success(`Saved to "${filePath}"`);
-                }
-            }
+            options
         );
+        const filePath = result.filePath;
+        if (filePath) {
+            await writeBinaryData(filePath, this.props.historyItem.data);
+            notification.success(`Saved to "${filePath}"`);
+        }
     }
 
     @bind

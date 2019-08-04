@@ -207,45 +207,46 @@ function doExport(
     });
 }
 
-export function exportActivityLogItems(store: IStore, items: IActivityLogEntry[]) {
-    EEZStudio.electron.remote.dialog.showSaveDialog(
+export async function exportActivityLogItems(store: IStore, items: IActivityLogEntry[]) {
+    const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
         EEZStudio.electron.remote.getCurrentWindow(),
         {
             filters: [
                 { name: "EEZ Notebook files", extensions: ["eez-notebook"] },
                 { name: "All Files", extensions: ["*"] }
             ]
-        },
-        (filePath: any) => {
-            if (filePath) {
-                const progressToastId = notification.info("Exporting...", {
-                    autoClose: false
-                });
-
-                doExport(store, items, filePath, progressToastId)
-                    .then(() => {
-                        notification.update(progressToastId, {
-                            render: (
-                                <div>
-                                    <p>Export succeeded!</p>
-                                    <button
-                                        className="btn btn-sm"
-                                        onClick={() => {
-                                            EEZStudio.electron.shell.showItemInFolder(filePath);
-                                        }}
-                                    >
-                                        Show in Folder
-                                    </button>
-                                </div>
-                            ),
-                            type: notification.SUCCESS,
-                            autoClose: 8000
-                        });
-                    })
-                    .catch(() => {});
-            }
         }
     );
+
+    const filePath = result.filePath;
+
+    if (filePath) {
+        const progressToastId = notification.info("Exporting...", {
+            autoClose: false
+        });
+
+        doExport(store, items, filePath, progressToastId)
+            .then(() => {
+                notification.update(progressToastId, {
+                    render: (
+                        <div>
+                            <p>Export succeeded!</p>
+                            <button
+                                className="btn btn-sm"
+                                onClick={() => {
+                                    EEZStudio.electron.shell.showItemInFolder(filePath);
+                                }}
+                            >
+                                Show in Folder
+                            </button>
+                        </div>
+                    ),
+                    type: notification.SUCCESS,
+                    autoClose: 8000
+                });
+            })
+            .catch(() => {});
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

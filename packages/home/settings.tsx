@@ -146,21 +146,20 @@ class SettingsController {
     }
 
     @bind
-    createNewDatabase() {
-        EEZStudio.electron.remote.dialog.showSaveDialog(
+    async createNewDatabase() {
+        const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
             EEZStudio.electron.remote.getCurrentWindow(),
-            {},
-            (filePath: any) => {
-                if (filePath) {
-                    try {
-                        createEmptyFile(filePath);
-                        notification.success(`New database created`);
-                    } catch (error) {
-                        notification.error(error.toString());
-                    }
-                }
-            }
+            {}
         );
+        const filePath = result.filePath;
+        if (filePath) {
+            try {
+                createEmptyFile(filePath);
+                notification.success(`New database created`);
+            } catch (error) {
+                notification.error(error.toString());
+            }
+        }
     }
 
     @bind

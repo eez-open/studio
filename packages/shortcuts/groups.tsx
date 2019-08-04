@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, runInAction, IObservableValue, values } from "mobx";
+import { observable, computed, action, runInAction, IObservableValue } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
@@ -246,14 +246,14 @@ export class Groups extends React.Component<{
     @computed
     get numShortcuts() {
         return _countBy(
-            values(this.props.shortcutsStore.shortcuts),
+            Array.from(this.props.shortcutsStore.shortcuts.values()),
             shortcut => shortcut.groupName
         );
     }
 
     @computed
     get rows() {
-        return values(this.props.groupsStore.groups).map(
+        return Array.from(this.props.groupsStore.groups.values()).map(
             group =>
                 new GroupRow({
                     groupsStore: this.props.groupsStore,

@@ -151,8 +151,8 @@ class MasterView extends React.Component {
     }
 
     @bind
-    importNotebook() {
-        EEZStudio.electron.remote.dialog.showOpenDialog(
+    async importNotebook() {
+        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
             EEZStudio.electron.remote.getCurrentWindow(),
             {
                 properties: ["openFile"],
@@ -160,13 +160,12 @@ class MasterView extends React.Component {
                     { name: "EEZ Notebook files", extensions: ["eez-notebook"] },
                     { name: "All Files", extensions: ["*"] }
                 ]
-            },
-            filePaths => {
-                if (filePaths && filePaths[0]) {
-                    importNotebook(filePaths[0], { showNotebook: true });
-                }
             }
         );
+        const filePaths = result.filePaths;
+        if (filePaths && filePaths[0]) {
+            importNotebook(filePaths[0], { showNotebook: true });
+        }
     }
 
     @bind

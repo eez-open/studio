@@ -54,88 +54,86 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
     }
 
     @bind
-    attachFile() {
-        EEZStudio.electron.remote.dialog.showOpenDialog(
-            {
-                properties: ["openFile", "multiSelections"],
-                filters: [{ name: "All Files", extensions: ["*"] }]
-            },
-            filePaths => {
-                if (filePaths) {
-                    filePaths.forEach(async filePath => {
-                        let data = await readBinaryFile(filePath);
+    async attachFile() {
+        const result = await EEZStudio.electron.remote.dialog.showOpenDialog({
+            properties: ["openFile", "multiSelections"],
+            filters: [{ name: "All Files", extensions: ["*"] }]
+        });
 
-                        let message;
+        const filePaths = result.filePaths;
+        if (filePaths) {
+            filePaths.forEach(async filePath => {
+                let data = await readBinaryFile(filePath);
 
-                        if (filePath.toLowerCase().endsWith(".csv")) {
-                            const result = extractColumnFromCSVHeuristically(data);
-                            if (result) {
-                                data = result.data;
+                let message;
 
-                                message = {
-                                    state: "success",
-                                    fileType: { mime: "application/eez-raw" },
-                                    waveformDefinition: {
-                                        samplingRate: result.samplingRate,
-                                        format: 7, // FLOATS_64BIT
-                                        unitName: result.unitName,
-                                        color: result.color,
-                                        colorInverse: result.colorInverse,
-                                        label: result.label,
-                                        offset: 0,
-                                        scale: 1
-                                    },
-                                    viewOptions: {
-                                        axesLines: {
-                                            type: "dynamic",
-                                            steps: {
-                                                x: [],
-                                                y: []
-                                            },
-                                            majorSubdivision: {
-                                                horizontal: 24,
-                                                vertical: 8
-                                            },
-                                            minorSubdivision: {
-                                                horizontal: 5,
-                                                vertical: 5
-                                            },
-                                            snapToGrid: true,
-                                            defaultZoomMode: "all"
-                                        }
-                                    },
-                                    dataLength: data.length
-                                };
-                            }
-                        }
+                if (filePath.toLowerCase().endsWith(".csv")) {
+                    const result = extractColumnFromCSVHeuristically(data);
+                    if (result) {
+                        data = result.data;
 
-                        if (!message) {
-                            message = {
-                                sourceFilePath: filePath,
-                                state: "success",
-                                fileType: detectFileType(data, filePath),
-                                dataLength: data.length
-                            };
-                        }
-
-                        beginTransaction("Attach file");
-                        log(
-                            this.props.appStore.history.options.store,
-                            {
-                                oid: this.props.appStore.history.oid,
-                                type: "instrument/file-attachment",
-                                message: JSON.stringify(message),
-                                data: data
+                        message = {
+                            state: "success",
+                            fileType: { mime: "application/eez-raw" },
+                            waveformDefinition: {
+                                samplingRate: result.samplingRate,
+                                format: 7, // FLOATS_64BIT
+                                unitName: result.unitName,
+                                color: result.color,
+                                colorInverse: result.colorInverse,
+                                label: result.label,
+                                offset: 0,
+                                scale: 1
                             },
-                            {
-                                undoable: true
-                            }
-                        );
-                        commitTransaction();
-                    });
+                            viewOptions: {
+                                axesLines: {
+                                    type: "dynamic",
+                                    steps: {
+                                        x: [],
+                                        y: []
+                                    },
+                                    majorSubdivision: {
+                                        horizontal: 24,
+                                        vertical: 8
+                                    },
+                                    minorSubdivision: {
+                                        horizontal: 5,
+                                        vertical: 5
+                                    },
+                                    snapToGrid: true,
+                                    defaultZoomMode: "all"
+                                }
+                            },
+                            dataLength: data.length
+                        };
+                    }
                 }
-            }
-        );
+
+                if (!message) {
+                    message = {
+                        sourceFilePath: filePath,
+                        state: "success",
+                        fileType: detectFileType(data, filePath),
+                        dataLength: data.length
+                    };
+                }
+
+                beginTransaction("Attach file");
+                log(
+                    this.props.appStore.history.options.store,
+                    {
+                        oid: this.props.appStore.history.oid,
+                        type: "instrument/file-attachment",
+                        message: JSON.stringify(message),
+                        data: data
+                    },
+                    {
+                        undoable: true
+                    }
+                );
+                commitTransaction();
+            });
+        }
     }
 
     @bind
