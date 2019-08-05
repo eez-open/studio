@@ -18,13 +18,16 @@ export async function confirm(message: string, detail: string | undefined, callb
 }
 
 export function info(message: string, detail?: string) {
-    EEZStudio.electron.remote.dialog.showMessageBox(EEZStudio.electron.remote.getCurrentWindow(), {
-        type: "info",
-        title: "Project Editor - EEZ Studio",
-        message: message,
-        detail: detail,
-        noLink: true,
-        buttons: ["OK"],
-        cancelId: 1
-    });
+    return EEZStudio.electron.remote.dialog.showMessageBox(
+        EEZStudio.electron.remote.getCurrentWindow(),
+        {
+            type: "info",
+            title: "Project Editor - EEZ Studio",
+            message: message,
+            detail: detail,
+            noLink: true,
+            buttons: ["OK"],
+            cancelId: 1
+        }
+    );
 }

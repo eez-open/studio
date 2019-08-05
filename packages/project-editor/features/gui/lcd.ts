@@ -1,4 +1,4 @@
-import { getColorRGB, blendColor } from "eez-studio-shared/color";
+import { getColorRGB, blendColor, to16bitsColor } from "eez-studio-shared/color";
 
 import { Font } from "project-editor/features/gui/font";
 
@@ -11,7 +11,7 @@ export function getColor() {
 }
 
 export function setColor(color: string) {
-    fgColor = color;
+    fgColor = to16bitsColor(color);
 }
 
 export function getBackColor() {
@@ -19,7 +19,7 @@ export function getBackColor() {
 }
 
 export function setBackColor(color: string) {
-    bgColor = color;
+    bgColor = to16bitsColor(color);
 }
 
 export function drawRect(

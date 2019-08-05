@@ -7,12 +7,7 @@ import classNames from "classnames";
 import { guid } from "eez-studio-shared/guid";
 import { humanize, stringCompare } from "eez-studio-shared/string";
 import { isDark } from "eez-studio-shared/color";
-
 import { validators, filterNumber } from "eez-studio-shared/validation";
-import { IPropertyGridGroupDefinition } from "project-editor/core/object";
-import { NavigationStore, UndoManager, DocumentStore } from "project-editor/core/store";
-import { ProjectStore } from "project-editor/core/store";
-import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
 
 import styled from "eez-studio-ui/styled-components";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -20,6 +15,11 @@ import { CodeEditor, CodeEditorMode } from "eez-studio-ui/code-editor";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
+
+import { IPropertyGridGroupDefinition } from "project-editor/core/object";
+import { NavigationStore, UndoManager, DocumentStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/core/store";
+import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
 
 import {
     EezObject,
@@ -334,8 +334,16 @@ class ThemedColorInput extends React.Component<{
     }
 
     @bind
-    onChange(event: React.ChangeEvent<HTMLInputElement>) {
-        this.props.onChange(event.target.value);
+    async onChange(event: React.ChangeEvent<HTMLInputElement>) {
+        const color = event.target.value;
+        // const color16bits = to16bitsColor(color);
+        // if (!compareColors(color, color16bits)) {
+        //     await info(
+        //         "Selected color is using more then 16 bits (i.e. 5-6-5 RGB color scheme).",
+        //         "It will be saved as is but it will be truncated to 16 bits before displaying and building."
+        //     );
+        // }
+        this.props.onChange(color);
     }
 
     render() {

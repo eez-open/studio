@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _find } from "eez-studio-shared/algorithm";
+import { to16bitsColor } from "eez-studio-shared/color";
 import { Rect } from "eez-studio-shared/geometry";
 
 import { Splitter } from "eez-studio-ui/splitter";
@@ -321,7 +322,7 @@ export class Page extends EezObject {
         if (this.style) {
             const pageStyle = findStyle(this.style);
             if (pageStyle && pageStyle.backgroundColor) {
-                style.backgroundColor = getThemedColor(pageStyle.backgroundColor);
+                style.backgroundColor = to16bitsColor(getThemedColor(pageStyle.backgroundColor));
             }
         }
     }

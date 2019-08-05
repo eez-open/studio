@@ -1,23 +1,29 @@
 export function info(message: string, detail: string | undefined) {
-    EEZStudio.electron.remote.dialog.showMessageBox(EEZStudio.electron.remote.getCurrentWindow(), {
-        type: "info",
-        title: "EEZ Studio",
-        message: message,
-        detail: detail,
-        noLink: true,
-        buttons: ["OK"]
-    });
+    return EEZStudio.electron.remote.dialog.showMessageBox(
+        EEZStudio.electron.remote.getCurrentWindow(),
+        {
+            type: "info",
+            title: "EEZ Studio",
+            message: message,
+            detail: detail,
+            noLink: true,
+            buttons: ["OK"]
+        }
+    );
 }
 
 export function error(message: string, detail: string | undefined) {
-    EEZStudio.electron.remote.dialog.showMessageBox(EEZStudio.electron.remote.getCurrentWindow(), {
-        type: "error",
-        title: "EEZ Studio",
-        message: message,
-        detail: detail,
-        noLink: true,
-        buttons: ["OK"]
-    });
+    return EEZStudio.electron.remote.dialog.showMessageBox(
+        EEZStudio.electron.remote.getCurrentWindow(),
+        {
+            type: "error",
+            title: "EEZ Studio",
+            message: message,
+            detail: detail,
+            noLink: true,
+            buttons: ["OK"]
+        }
+    );
 }
 
 export async function confirm(

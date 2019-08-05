@@ -37,24 +37,26 @@ export function blendColor(fgColor: string, bgColor: string, alpha: number) {
 }
 
 export function strToColor16(colorStr: string) {
-    let color24: any;
-
-    if (colorStr && colorStr[0] == "#") {
-        color24 = parseInt(colorStr.substring(1), 16);
-    }
-
-    if (color24 === undefined || isNaN(color24)) {
-        return NaN;
-    }
-
-    const r = (color24 & 0xff0000) >> 16;
-    const g = (color24 & 0x00ff00) >> 8;
-    const b = color24 & 0x0000ff;
-
+    const rgb = tinycolor(colorStr).toRgb();
     // rrrrrggggggbbbbb
-    let color16 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
-
+    let color16 = ((rgb.r >> 3) << 11) | ((rgb.g >> 2) << 5) | (rgb.b >> 3);
     return color16;
+}
+
+export function to16bitsColor(colorStr: string) {
+    const rgb = tinycolor(colorStr).toRgb();
+    const r = rgb.r & 0b11111000;
+    const g = rgb.g & 0b11111100;
+    const b = rgb.b & 0b11111000;
+    return tinycolor({ r, g, b }).toHexString();
+}
+
+export function compareColors(color1: string, color2: string) {
+    const color1rgb = tinycolor(color1).toRgb();
+    const color2rgb = tinycolor(color2).toRgb();
+    return (
+        color1rgb.r === color2rgb.r && color1rgb.g === color2rgb.g && color1rgb.b === color2rgb.b
+    );
 }
 
 export function isDark(color: string) {

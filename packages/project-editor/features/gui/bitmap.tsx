@@ -3,6 +3,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import styled from "eez-studio-ui/styled-components";
 
+import { to16bitsColor } from "eez-studio-shared/color";
 import {
     EditorComponent,
     ClassInfo,
@@ -210,7 +211,7 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
                 ctx.clearRect(0, 0, image.width, image.height);
             } else {
                 ctx.fillStyle = bitmap.backgroundColor
-                    ? getThemedColor(bitmap.backgroundColor)
+                    ? to16bitsColor(getThemedColor(bitmap.backgroundColor))
                     : "#000000";
                 ctx.fillRect(0, 0, image.width, image.height);
             }
