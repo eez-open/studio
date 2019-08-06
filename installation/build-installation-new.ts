@@ -1,5 +1,8 @@
-import { build, Platform } from "electron-builder";
+import { build } from "electron-builder";
+import { Platform } from "electron-builder";
 const fs = require("fs");
+
+const packageJson = require("../package.json");
 
 async function getExtraResource() {
     return new Promise<string[]>((resolve, reject) => {
@@ -14,12 +17,17 @@ async function getExtraResource() {
 }
 
 (async () => {
+    const productName = "EEZ Studio";
+
     // Promise is returned
     build({
         targets: Platform.current().createTarget(),
+
         config: {
             appId: "hr.envox.eez.studio",
             copyright: "Copyright © 2018-present Envox d.o.o.",
+            productName,
+
             directories: {
                 output: "builder-output"
             },
@@ -37,12 +45,12 @@ async function getExtraResource() {
                 "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
                 "!**/node_modules/*.d.ts",
                 "!**/node_modules/.bin",
-                "!**/node_modules/better-sqlite3/build/Release",
-                "!**/node_modules/usb/build/Release",
-                "!**/node_modules/@serial-port/bindings/build/Release",
-                "!**/node_modules/lzz-gyp/lzz-compiled/linux",
-                "!**/node_modules/lzz-gyp/lzz-compiled/osx",
-                "!**/node_modules/lzz-gyp/lzz-compiled/bsd",
+                // "!**/node_modules/better-sqlite3/build/Release",
+                // "!**/node_modules/usb/build/Release",
+                // "!**/node_modules/@serial-port/bindings/build/Release",
+                // "!**/node_modules/lzz-gyp/lzz-compiled/linux",
+                // "!**/node_modules/lzz-gyp/lzz-compiled/osx",
+                // "!**/node_modules/lzz-gyp/lzz-compiled/bsd",
 
                 "!**/*.js.map"
             ],
@@ -53,16 +61,19 @@ async function getExtraResource() {
                 {
                     ext: "eez-project",
                     name: "EEZ Studio Project",
-                    role: "Editor"
+                    role: "Editor",
+                    mimeType: "application/x-eez-project"
                 }
             ],
 
             mac: {
                 target: ["dmg", "pkg", "zip"],
                 category: "public.app-category.utilities",
+                bundleVersion: packageJson.version,
                 icon: "./icon.icns",
                 type: "distribution"
             },
+
             dmg: {
                 background: "dist/eez-studio-ui/_images/background.png",
                 iconSize: 160,
@@ -85,32 +96,35 @@ async function getExtraResource() {
                     }
                 ]
             },
+
             pkg: {
                 license: "LICENSE.TXT"
             },
+
             win: {
-                target: ["nsis" /*, "portable", "zip"*/],
+                target: ["nsis"], // [, "squirrel", "portable", "zip"],
                 icon: "./icon.ico"
             },
+
             nsis: {
                 installerIcon: "./icon.ico",
                 license: "LICENSE.TXT",
-                warningsAsErrors: false
+                warningsAsErrors: false,
+                shortcutName: productName
             },
+
             linux: {
-                target: ["AppImage", "deb", "rpm", "snap"],
-                icon: "dist/eez-studio-ui/_images/eez_logo.png",
-                category: "Utility"
+                target: ["deb", "rpm", "AppImage", "snap"],
+                icon: "./icon.icns",
+                category: "Utility",
+                synopsis: packageJson.description,
+                description:
+                    "The EEZ Studio is an open source cross-platform modular visual tool aimed to address various programming and management tasks for EEZ H24005 programmable power supply, EEZ Bench Box 3 and other test and measurement instruments that support SCPI.",
+                mimeTypes: ["application/x-eez-project"]
             },
+
             snap: {
-                grade: "stable",
-                summary: "Cross-platform visual development tool and SCPI instrument controller."
-            },
-            publish: {
-                provider: "github",
-                owner: "notable",
-                releaseType: "release",
-                publishAutoUpdate: true
+                grade: "devel"
             }
         }
     })

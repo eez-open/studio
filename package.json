@@ -1,6 +1,6 @@
 {
     "name": "eezstudio",
-    "author": "Envox",
+    "author": "Envox <eez@envox.hr>",
     "description": "Cross-platform visual development tool and SCPI instrument controller",
     "homepage": "https://github.com/eez-open/studio",
     "version": "0.9.6",
@@ -9,9 +9,9 @@
     "repository": "https://github.com/eez-open/psu-firmware",
     "main": "dist/main/main.js",
     "scripts": {
-        "postinstall": "electron-rebuild",
+        "postinstall": "electron-builder install-app-deps",
         "start": "electron .",
-        "build": "npm install && electron-rebuild && npm run build-src && npm run build-css",
+        "build": "npm install && npm run postinstall && npm run build-src && npm run build-css",
         "build-src": "tsc && gulp release",
         "build-extensions": "cd extensions && tsc",
         "build-css": "npm run build-shared-css",
@@ -65,7 +65,6 @@
         "electron": "6.0.0",
         "electron-builder": "^21.2.0",
         "electron-packager": "^14.0.4",
-        "electron-rebuild": "^1.8.5",
         "globby": "^10.0.1",
         "gulp": "^4.0.2",
         "gulp-cli": "^2.2.0",
