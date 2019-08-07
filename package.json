@@ -43,7 +43,6 @@
         "@types/classnames": "^2.2.9",
         "@types/debug": "^4.1.4",
         "@types/decompress": "^4.2.3",
-        "@types/electron-builder": "^2.8.0",
         "@types/electron-packager": "^14.0.0",
         "@types/jquery": "^3.3.30",
         "@types/json-stable-stringify": "^1.0.32",

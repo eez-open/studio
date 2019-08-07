@@ -1,6 +1,7 @@
 import { build } from "electron-builder";
 import { Platform } from "electron-builder";
-const fs = require("fs");
+import * as fs from "fs";
+import * as path from "path";
 
 const packageJson = require("../package.json");
 
@@ -10,7 +11,12 @@ async function getExtraResource() {
             if (err) {
                 reject(err);
             } else {
-                resolve(JSON.parse(data));
+                resolve(
+                    JSON.parse(data).map((extraResourcePath: string) => ({
+                        from: extraResourcePath,
+                        to: path.basename(extraResourcePath)
+                    }))
+                );
             }
         });
     });
@@ -18,6 +24,33 @@ async function getExtraResource() {
 
 (async () => {
     const productName = "EEZ Studio";
+
+    let files = [
+        "dist/**",
+        "libs/**",
+
+        "icon.icns",
+        "icon.ico",
+        "LICENSE.TXT",
+
+        "node_modules/**",
+        "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+        "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+        "!**/node_modules/*.d.ts",
+        "!**/node_modules/.bin",
+        "!**/*.js.map"
+    ];
+
+    // if (Platform.current() === Platform.WINDOWS) {
+    //     files = files.concat([
+    //         "!**/node_modules/better-sqlite3/build/Release",
+    //         "!**/node_modules/usb/build/Release",
+    //         "!**/node_modules/@serial-port/bindings/build/Release",
+    //         "!**/node_modules/lzz-gyp/lzz-compiled/linux",
+    //         "!**/node_modules/lzz-gyp/lzz-compiled/osx",
+    //         "!**/node_modules/lzz-gyp/lzz-compiled/bsd"
+    //     ]);
+    // }
 
     // Promise is returned
     build({
@@ -32,28 +65,10 @@ async function getExtraResource() {
                 output: "builder-output"
             },
 
-            files: [
-                "dist/**",
-                "libs/**",
+            nodeGypRebuild: false,
+            npmRebuild: false,
 
-                "icon.icns",
-                "icon.ico",
-                "LICENSE.TXT",
-
-                "node_modules/**",
-                "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
-                "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
-                "!**/node_modules/*.d.ts",
-                "!**/node_modules/.bin",
-                // "!**/node_modules/better-sqlite3/build/Release",
-                // "!**/node_modules/usb/build/Release",
-                // "!**/node_modules/@serial-port/bindings/build/Release",
-                // "!**/node_modules/lzz-gyp/lzz-compiled/linux",
-                // "!**/node_modules/lzz-gyp/lzz-compiled/osx",
-                // "!**/node_modules/lzz-gyp/lzz-compiled/bsd",
-
-                "!**/*.js.map"
-            ],
+            files,
 
             extraResources: await getExtraResource(),
 
