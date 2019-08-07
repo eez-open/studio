@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
+import {to16bitsColor} from "eez-studio-shared/color";
 import { humanize } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
 import { validators } from "eez-studio-shared/validation";
@@ -686,7 +687,7 @@ export class Widget extends EezObject {
 
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
         const backgroundColor = getStyleProperty(this.style, "backgroundColor");
-        style.backgroundColor = backgroundColor;
+        style.backgroundColor = to16bitsColor(backgroundColor);
     }
 }
 
