@@ -1071,7 +1071,7 @@ class Property extends React.Component<PropertyProps> {
             return (
                 <ConfigurationReferencesPropertyValue
                     value={this._value || ""}
-                    onChange={this.onChange}
+                    onChange={this.changeValue}
                 />
             );
         } else if (propertyInfo.type === PropertyType.RelativeFolder) {
