@@ -66,7 +66,7 @@ class TextDrawingInBackground {
         this.requestAnimationFrameId = undefined;
         const beginTime = new Date().getTime();
         while (true) {
-            const task = this.tasks.pop();
+            const task = this.tasks.shift();
             if (!task) {
                 return;
             }

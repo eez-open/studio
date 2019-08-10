@@ -147,11 +147,11 @@ registerFeatureImplementation("data", {
         check: (object: EezObject) => {
             let messages: output.Message[] = [];
 
-            if (asArray(object).length >= 65534) {
+            if (asArray(object).length >= 65535) {
                 messages.push(
                     new output.Message(
                         output.Type.ERROR,
-                        "Max. 254 data items are supported",
+                        "Max. 65535 data items are supported",
                         object
                     )
                 );
@@ -167,22 +167,7 @@ registerFeatureImplementation("data", {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findDataItem(dataItemName: string) {
-    for (const dataItem of ProjectStore.project.data._array) {
-        if (dataItem.name == dataItemName) {
-            return dataItem;
-        }
-    }
-    return undefined;
-}
-
-export function findDataItemIndex(dataItemName: string) {
-    let dataItems = ProjectStore.project.data._array;
-    for (let i = 0; i < dataItems.length; i++) {
-        if (dataItems[i].name == dataItemName) {
-            return i;
-        }
-    }
-    return -1;
+    return ProjectStore.project.dataItemsMap.get(dataItemName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

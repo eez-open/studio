@@ -4,7 +4,6 @@ import { Font } from "project-editor/features/gui/font";
 
 let fgColor: string;
 let bgColor: string;
-let x: number, y: number, x1: number, y1: number, x2: number, y2: number;
 
 export function getColor() {
     return fgColor;
@@ -83,48 +82,6 @@ export function drawVLine(ctx: CanvasRenderingContext2D, x: number, y: number, l
     ctx.stroke();
 }
 
-let pixelCtx: CanvasRenderingContext2D;
-let pixelImageData: ImageData;
-let pixelData: Uint8ClampedArray;
-let pixelColor: string;
-
-function setPixel(ctx: CanvasRenderingContext2D, color: string) {
-    if (pixelCtx != ctx) {
-        pixelCtx = ctx;
-        pixelImageData = ctx.createImageData(1, 1);
-        pixelData = pixelImageData.data;
-        pixelData[3] = 255;
-        pixelColor = "";
-    }
-
-    if (color != pixelColor) {
-        pixelColor = color;
-        const rgb = getColorRGB(pixelColor);
-        pixelData[0] = rgb.r;
-        pixelData[1] = rgb.g;
-        pixelData[2] = rgb.b;
-    }
-
-    ctx.putImageData(pixelImageData, x, y);
-
-    if (++x > x2) {
-        x = x1;
-        if (++y > y2) {
-            y = y1;
-        }
-    }
-}
-
-function setXY(x1_: number, y1_: number, x2_: number, y2_: number) {
-    x1 = x1_;
-    y1 = y1_;
-    x2 = x2_;
-    y2 = y2_;
-
-    x = x1;
-    y = y1;
-}
-
 function getGlyph(font: Font, encoding: number) {
     return font && font.glyphs._array.find(glyph => glyph.encoding == encoding);
 }
@@ -153,6 +110,11 @@ export function measureStr(text: string, font: Font, maxWidth: number): number {
     return width;
 }
 
+let MAX_GLYPH_WIDTH = 256;
+let MAX_GLYPH_HEIGHT = 256;
+let pixelImageData: ImageData;
+let pixelData: Uint8ClampedArray;
+
 function drawGlyph(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -172,14 +134,27 @@ function drawGlyph(
     let height = glyph.height;
 
     if (width > 0 && height > 0) {
-        setXY(x_glyph, y_glyph, x_glyph + width - 1, y_glyph + height - 1);
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                if (font.bpp === 8) {
-                    setPixel(ctx, blendColor(fgColor, bgColor, glyph.getPixel(x, y) / 255));
-                } else {
+        if (font.bpp === 8) {
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const color = blendColor(fgColor, bgColor, glyph.getPixel(x, y) / 255);
+                    const i = (y * MAX_GLYPH_WIDTH + x) * 4;
+                    pixelData[i + 0] = color[0];
+                    pixelData[i + 1] = color[1];
+                    pixelData[i + 2] = color[2];
+                }
+            }
+
+            ctx.putImageData(pixelImageData, x_glyph, y_glyph, 0, 0, width, height);
+        } else {
+            const color = getColorRGB(fgColor);
+            pixelData[0] = color.r;
+            pixelData[1] = color.g;
+            pixelData[2] = color.b;
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
                     if (glyph.getPixel(x, y)) {
-                        setPixel(ctx, fgColor);
+                        ctx.putImageData(pixelImageData, x_glyph + x, y_glyph + y);
                     }
                 }
             }
@@ -196,6 +171,12 @@ export function drawStr(
     y: number,
     font: Font
 ) {
+    if (!pixelImageData) {
+        pixelImageData = ctx.createImageData(MAX_GLYPH_WIDTH, MAX_GLYPH_HEIGHT);
+        pixelData = pixelImageData.data;
+        pixelData.fill(255);
+    }
+
     for (let i = 0; i < text.length; i++) {
         let encoding = text.charCodeAt(i);
         x += drawGlyph(ctx, x, y, encoding, font);

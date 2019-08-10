@@ -33,7 +33,7 @@ export function blendColor(fgColor: string, bgColor: string, alpha: number) {
         (added[2] * added[3]) / mix[3] + (base[2] * base[3] * (1 - added[3])) / mix[3]
     ); // blue
 
-    return "rgba(" + mix.join(",") + ")";
+    return mix;
 }
 
 export function strToColor16(colorStr: string) {

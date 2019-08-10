@@ -1,4 +1,4 @@
-import { observable, extendObservable } from "mobx";
+import { observable, computed, extendObservable } from "mobx";
 
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 import {
@@ -286,8 +286,22 @@ export class Project extends EezObject {
     @observable
     data: EezArrayObject<DataItem>;
 
+    @computed
+    get dataItemsMap() {
+        const map = new Map<String, DataItem>();
+        this.data._array.forEach(dataItem => map.set(dataItem.name, dataItem));
+        return map;
+    }
+
     @observable
     actions: EezArrayObject<Action>;
+
+    @computed
+    get actionsMap() {
+        const map = new Map<String, Action>();
+        this.actions._array.forEach(action => map.set(action.name, action));
+        return map;
+    }
 
     static get classInfo(): ClassInfo {
         return getProjectClassInfo();
@@ -334,9 +348,11 @@ export async function load(filePath: string) {
             if (err) {
                 reject(err);
             } else {
+                console.time("load");
                 let projectJs = JSON.parse(data);
 
                 let project = loadObject(undefined, projectJs, Project) as Project;
+                console.timeEnd("load");
 
                 resolve(project);
             }
@@ -354,7 +370,9 @@ export function save(filePath: string) {
         }
     };
 
+    console.time("save");
     const json = objectToJson(ProjectStore.project, 2, toJsHook);
+    console.timeEnd("save");
 
     return new Promise((resolve, reject) => {
         fs.writeFile(filePath, json, "utf8", (err: any) => {

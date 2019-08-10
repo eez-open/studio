@@ -89,11 +89,11 @@ export class Gui extends EezObject {
                 check: (object: EezObject) => {
                     let messages: output.Message[] = [];
 
-                    if (asArray(object).length >= 255) {
+                    if (asArray(object).length > 255) {
                         messages.push(
                             new output.Message(
                                 output.Type.ERROR,
-                                "Max. 254 fonts are supported",
+                                "Max. 255 fonts are supported",
                                 object
                             )
                         );
@@ -110,11 +110,11 @@ export class Gui extends EezObject {
                 check: (object: EezObject) => {
                     let messages: output.Message[] = [];
 
-                    if (asArray(object).length >= 255) {
+                    if (asArray(object).length > 255) {
                         messages.push(
                             new output.Message(
                                 output.Type.ERROR,
-                                "Max. 254 bitmaps are supported",
+                                "Max. 255 bitmaps are supported",
                                 object
                             )
                         );

@@ -8,13 +8,11 @@ import { underscore } from "eez-studio-shared/string";
 import { getExtensionsByCategory, BuildResult } from "project-editor/core/extensions";
 import {
     EezObject,
-    PropertyInfo,
-    PropertyType,
     isArray,
     asArray,
     getProperty,
-    checkObject,
-    IMessage
+    IMessage,
+    getArrayAndObjectProperties
 } from "project-editor/core/object";
 import { OutputSectionsStore } from "project-editor/core/store";
 import { Section, Type } from "project-editor/core/output";
@@ -286,40 +284,64 @@ export async function build(onlyCheck: boolean) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+var enumTransformer: (object: EezObject) => EezObject[] = createTransformer(
+    (object: EezObject): EezObject[] => {
+        const objects = [object];
+
+        if (isArray(object)) {
+            // check array elements
+            for (const childObject of asArray(object)) {
+                objects.push(...enumTransformer(childObject));
+            }
+        } else {
+            // check all child array and object properties
+            for (const propertyInfo of getArrayAndObjectProperties(object)) {
+                const childObject = (object as any)[propertyInfo.name];
+                if (childObject) {
+                    objects.push(...enumTransformer(childObject));
+                }
+            }
+        }
+
+        return objects;
+    }
+);
+
 var checkTransformer: (object: EezObject) => IMessage[] = createTransformer(
     (object: EezObject): IMessage[] => {
-        const children = object._classInfo.properties.filter(
-            propertyInfo =>
-                (propertyInfo.type === PropertyType.Array ||
-                    propertyInfo.type === PropertyType.Object) &&
-                getProperty(object, propertyInfo.name)
-        );
+        let messages: IMessage[] = [];
 
-        const childrenMessages = children.reduce(
-            (result: IMessage[], propertyInfo: PropertyInfo) => {
-                const childObject = getProperty(object, propertyInfo.name);
+        // call check method of the object
+        if ((object as any).check) {
+            messages = messages.concat((object as any).check());
+        }
 
-                let childrenMessages: IMessage[];
-                if (isArray(childObject)) {
-                    childrenMessages = asArray(childObject).reduce<IMessage[]>(
-                        (result: IMessage[], object: EezObject) => {
-                            return result.concat(checkTransformer(object));
-                        },
-                        [] as IMessage[]
-                    );
-                } else {
-                    childrenMessages = checkTransformer(childObject);
+        // call check from property definition
+        if (object._propertyInfo && object._propertyInfo.check) {
+            messages = messages.concat(object._propertyInfo.check(object));
+        }
+
+        if (isArray(object)) {
+            // check array elements
+            for (const childObject of asArray(object)) {
+                messages = messages.concat(checkTransformer(childObject));
+            }
+        } else {
+            // check all child array and object properties
+            for (const propertyInfo of getArrayAndObjectProperties(object)) {
+                const childObject = (object as any)[propertyInfo.name];
+                if (childObject) {
+                    messages = messages.concat(checkTransformer(childObject));
                 }
+            }
+        }
 
-                return result.concat(childrenMessages);
-            },
-            []
-        );
-
-        return checkObject(object).concat(childrenMessages);
+        return messages;
     }
 );
 
 export function backgroundCheck() {
+    console.time("backgroundCheck");
     OutputSectionsStore.setMessages(Section.CHECKS, checkTransformer(ProjectStore.project));
+    console.timeEnd("backgroundCheck");
 }

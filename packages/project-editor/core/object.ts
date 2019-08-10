@@ -162,6 +162,8 @@ export type InheritedValue =
 export interface ClassInfo {
     properties: PropertyInfo[];
 
+    _arrayAndObjectProperties?: PropertyInfo[];
+
     // optional properties
     getClass?: (jsObject: any, aClass: EezClass) => any;
     label?: (object: EezObject) => string;
@@ -884,20 +886,6 @@ export function cloneObject(parent: EezObject | undefined, obj: EezObject) {
     return loadObject(parent, objectToJson(obj), obj._class);
 }
 
-export function checkObject(object: EezObject): IMessage[] {
-    if (isArray(object)) {
-        const check = object._propertyInfo!.check;
-        if (check) {
-            return check(object);
-        }
-    } else {
-        if ((object as any).check) {
-            return (object as any).check();
-        }
-    }
-    return [];
-}
-
 export function isShowOnlyChildrenInTree(object: EezObject) {
     if (!object._parent || !object._key) {
         return true;
@@ -928,4 +916,16 @@ export function isPartOfNavigation(object: EezObject) {
         }
     }
     return true;
+}
+
+export function getArrayAndObjectProperties(object: EezObject) {
+    if (!object._classInfo._arrayAndObjectProperties) {
+        object._classInfo._arrayAndObjectProperties = object._classInfo.properties.filter(
+            propertyInfo =>
+                (propertyInfo.type === PropertyType.Array ||
+                    propertyInfo.type === PropertyType.Object) &&
+                getProperty(object, propertyInfo.name)
+        );
+    }
+    return object._classInfo._arrayAndObjectProperties;
 }

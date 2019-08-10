@@ -117,16 +117,6 @@ export class Action extends EezObject {
 
         return implementationCode;
     }
-
-    check() {
-        let messages: Message[] = [];
-
-        // if (!this.implementationCode) {
-        //     messages.push(new Message(Type.WARNING, "Action is not implemented.", this));
-        // }
-
-        return messages;
-    }
 }
 
 registerClass(Action);
@@ -144,7 +134,7 @@ registerFeatureImplementation("action", {
             let messages: Message[] = [];
 
             if (asArray(object).length >= 65535) {
-                messages.push(new Message(Type.ERROR, "Max. 65534 actions are supported", object));
+                messages.push(new Message(Type.ERROR, "Max. 65535 actions are supported", object));
             }
 
             return messages;
@@ -157,20 +147,5 @@ registerFeatureImplementation("action", {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findAction(actionName: string) {
-    for (const action of ProjectStore.project.actions._array) {
-        if (action.name == actionName) {
-            return action;
-        }
-    }
-    return undefined;
-}
-
-export function findActionIndex(actionName: string) {
-    let actions = ProjectStore.project.actions._array;
-    for (let i = 0; i < actions.length; i++) {
-        if (actions[i].name == actionName) {
-            return i;
-        }
-    }
-    return -1;
+    return ProjectStore.project.actionsMap.get(actionName);
 }

@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
-import {to16bitsColor} from "eez-studio-shared/color";
+import { to16bitsColor } from "eez-studio-shared/color";
 import { humanize } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
 import { validators } from "eez-studio-shared/validation";
@@ -21,7 +21,6 @@ import {
     makeDerivedClassInfo,
     findClass,
     isArray,
-    getChildOfObject,
     cloneObject,
     generalGroup,
     dataGroup,
@@ -54,11 +53,11 @@ import { ProjectStore } from "project-editor/core/store";
 
 import * as data from "project-editor/features/data/data";
 
-import { Page } from "project-editor/features/gui/page";
+import { Page, lazyLoadPageWidgets } from "project-editor/features/gui/page";
 import { Gui, findPage, findBitmap } from "project-editor/features/gui/gui";
 import { Style, getStyleProperty } from "project-editor/features/gui/style";
-import { findDataItem, findDataItemIndex, dataContext } from "project-editor/features/data/data";
-import { findActionIndex } from "project-editor/features/action/action";
+import { findDataItem, dataContext } from "project-editor/features/data/data";
+import { findAction } from "project-editor/features/action/action";
 import {
     draw,
     drawText,
@@ -329,32 +328,14 @@ export class Widget extends EezObject {
         }
 
         if (this.data) {
-            let dataIndex = findDataItemIndex(this.data);
-            if (dataIndex == -1) {
+            if (!findDataItem(this.data)) {
                 messages.push(output.propertyNotFoundMessage(this, "data"));
-            } else if (dataIndex >= 65535) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Data ignored",
-                        getChildOfObject(this, "data")
-                    )
-                );
             }
         }
 
         if (this.action) {
-            let actionIndex = findActionIndex(this.action);
-            if (actionIndex == -1) {
+            if (!findAction(this.action)) {
                 messages.push(output.propertyNotFoundMessage(this, "action"));
-            } else if (actionIndex >= 65535) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Action ignored",
-                        getChildOfObject(this, "action")
-                    )
-                );
             }
         }
 
@@ -1013,7 +994,6 @@ export class SelectWidget extends Widget {
             let dataItem = findDataItem(this.data);
             if (dataItem) {
                 let enumItems: string[] = [];
-
                 if (dataItem.type == "enum") {
                     try {
                         enumItems = JSON.parse(dataItem.enumItems || "[]");
@@ -1023,7 +1003,6 @@ export class SelectWidget extends Widget {
                 } else if (dataItem.type == "boolean") {
                     enumItems = ["0", "1"];
                 }
-
                 if (enumItems.length > this.widgets._array.length) {
                     messages.push(
                         new output.Message(
@@ -1245,17 +1224,8 @@ export class LayoutViewWidget extends Widget {
         }
 
         if (this.context) {
-            let contextDataIndex = findDataItemIndex(this.context);
-            if (contextDataIndex == -1) {
+            if (!findDataItem(this.context)) {
                 messages.push(output.propertyNotFoundMessage(this, "context"));
-            } else if (contextDataIndex >= 65535) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Context data ignored",
-                        getChildOfObject(this, "contet")
-                    )
-                );
             }
         }
 
@@ -1292,6 +1262,9 @@ export class LayoutViewWidget extends Widget {
         if (!this.layoutPage) {
             return null;
         }
+
+        lazyLoadPageWidgets.prioritizePage(this.layoutPage);
+
         return <WidgetComponent widget={this.layoutPage} />;
     }
 
@@ -1407,7 +1380,7 @@ export class DisplayDataWidget extends Widget {
 
         function findStartOfB() {
             let i;
-            for (i = 0; text[i] && (text[i] == "-" || (text[i] >= "0" && text[i] <= "9")); i++);
+            for (i = 0; text[i] && (text[i] == "-" || (text[i] >= "0" && text[i] <= "9")); i++) {}
             return i;
         }
 
@@ -1416,7 +1389,7 @@ export class DisplayDataWidget extends Widget {
                 i = 0;
                 text[i] && (text[i] == "-" || (text[i] >= "0" && text[i] <= "9") || text[i] == ".");
                 i++
-            );
+            ) {}
             return i;
         }
 
@@ -1973,17 +1946,8 @@ export class ButtonWidget extends Widget {
         }
 
         if (this.enabled) {
-            let dataIndex = data.findDataItemIndex(this.enabled);
-            if (dataIndex == -1) {
+            if (!data.findDataItem(this.enabled)) {
                 messages.push(output.propertyNotFoundMessage(this, "enabled"));
-            } else if (dataIndex >= 65535) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Enabled ignored",
-                        getChildOfObject(this, "enabled")
-                    )
-                );
             }
         } else {
             messages.push(output.propertyNotSetMessage(this, "enabled"));
@@ -2486,34 +2450,16 @@ export class BarGraphWidget extends Widget {
         }
 
         if (this.line1Data) {
-            let dataIndex = data.findDataItemIndex(this.line1Data);
-            if (dataIndex == -1) {
+            if (!findDataItem(this.line1Data)) {
                 messages.push(output.propertyNotFoundMessage(this, "line1Data"));
-            } else if (dataIndex >= 65535) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Line 1 data ignored",
-                        getChildOfObject(this, "line1Data")
-                    )
-                );
             }
         } else {
             messages.push(output.propertyNotSetMessage(this, "line1Data"));
         }
 
         if (this.line2Data) {
-            let dataIndex = data.findDataItemIndex(this.line2Data);
-            if (dataIndex == -1) {
+            if (!findDataItem(this.line2Data)) {
                 messages.push(output.propertyNotFoundMessage(this, "line2Data"));
-            } else if (dataIndex >= 65535) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Line 1 data ignored",
-                        getChildOfObject(this, "line2Data")
-                    )
-                );
             }
         } else {
             messages.push(output.propertyNotSetMessage(this, "line2Data"));
@@ -2670,17 +2616,8 @@ export class YTGraphWidget extends Widget {
         }
 
         if (this.y2Data) {
-            let dataIndex = data.findDataItemIndex(this.y2Data);
-            if (dataIndex == -1) {
+            if (!findDataItem(this.y2Data)) {
                 messages.push(output.propertyNotFoundMessage(this, "y2Data"));
-            } else if (dataIndex >= 65535) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Y2 data ignored",
-                        getChildOfObject(this, "y2Data")
-                    )
-                );
             }
         } else {
             messages.push(output.propertyNotSetMessage(this, "y2Data"));
@@ -2881,68 +2818,32 @@ export class ListGraphWidget extends Widget {
         }
 
         if (this.dwellData) {
-            let dataIndex = data.findDataItemIndex(this.dwellData);
-            if (dataIndex == -1) {
+            if (!findDataItem(this.dwellData)) {
                 messages.push(output.propertyNotFoundMessage(this, "dwellData"));
-            } else if (dataIndex >= 65535) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Dwell data ignored",
-                        getChildOfObject(this, "dwellData")
-                    )
-                );
             }
         } else {
             messages.push(output.propertyNotSetMessage(this, "dwellData"));
         }
 
         if (this.y1Data) {
-            let dataIndex = data.findDataItemIndex(this.y1Data);
-            if (dataIndex == -1) {
+            if (!data.findDataItem(this.y1Data)) {
                 messages.push(output.propertyNotFoundMessage(this, "y1Data"));
-            } else if (dataIndex >= 65535) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Y1 data ignored",
-                        getChildOfObject(this, "y1Data")
-                    )
-                );
             }
         } else {
             messages.push(output.propertyNotSetMessage(this, "y1Data"));
         }
 
         if (this.y2Data) {
-            let dataIndex = data.findDataItemIndex(this.y2Data);
-            if (dataIndex == -1) {
+            if (!findDataItem(this.y2Data)) {
                 messages.push(output.propertyNotFoundMessage(this, "y2Data"));
-            } else if (dataIndex >= 65535) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Y2 data ignored",
-                        getChildOfObject(this, "y2Data")
-                    )
-                );
             }
         } else {
             messages.push(output.propertyNotSetMessage(this, "y2Data"));
         }
 
         if (this.cursorData) {
-            let dataIndex = data.findDataItemIndex(this.cursorData);
-            if (dataIndex == -1) {
+            if (!data.findDataItem(this.cursorData)) {
                 messages.push(output.propertyNotFoundMessage(this, "cursorData"));
-            } else if (dataIndex >= 65535) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Cursor data ignored",
-                        getChildOfObject(this, "cursorData")
-                    )
-                );
             }
         } else {
             messages.push(output.propertyNotSetMessage(this, "cursorData"));

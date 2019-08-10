@@ -1122,6 +1122,7 @@ class Glyphs extends React.Component<
         onRebuildGlyphs?: () => void;
         onAddGlyph?: () => void;
         onDeleteGlyph?: () => void;
+        onCreateShadow?: () => void;
     },
     {
         searchValue: string;
@@ -1211,6 +1212,18 @@ class Glyphs extends React.Component<
             );
         }
 
+        let createShadowButton: JSX.Element | undefined;
+        if (this.props.onCreateShadow) {
+            createShadowButton = (
+                <IconAction
+                    title="Create Shadow"
+                    icon="material:grid_on"
+                    iconSize={16}
+                    onClick={this.props.onCreateShadow}
+                />
+            );
+        }
+
         return (
             <GlyphsDiv>
                 <GlyphsFilterDiv>
@@ -1226,6 +1239,7 @@ class Glyphs extends React.Component<
                         {rebuildGlyphsButton}
                         {addGlyphButton}
                         {deleteGlyphButton}
+                        {createShadowButton}
                     </Toolbar>
                 </GlyphsFilterDiv>
                 <GlyphsContentDiv>
@@ -1472,6 +1486,123 @@ export class FontEditor extends EditorComponent implements IPanel {
         }
     }
 
+    @bind
+    async onCreateShadow() {
+        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
+            EEZStudio.electron.remote.getCurrentWindow(),
+            {
+                properties: ["openFile"],
+                filters: [
+                    { name: "Image files", extensions: ["png", "jpg", "jpeg"] },
+                    { name: "All Files", extensions: ["*"] }
+                ]
+            }
+        );
+
+        const filePaths = result.filePaths;
+
+        if (filePaths && filePaths[0]) {
+            let image = new Image();
+            image.src = filePaths[0];
+            image.onload = action(() => {
+                let canvas = document.createElement("canvas");
+
+                canvas.width = image.width;
+                canvas.height = image.height;
+
+                let ctx = canvas.getContext("2d");
+                if (ctx == null) {
+                    return;
+                }
+
+                ctx.clearRect(0, 0, image.width, image.height);
+                ctx.drawImage(image, 0, 0);
+
+                let imageData = ctx.getImageData(0, 0, image.width, image.height).data;
+
+                const font = this.props.editor.object as Font;
+
+                console.log(font.glyphs);
+
+                let glyphWidth = font.glyphs._array[0].width;
+                let glyphHeight = font.glyphs._array[0].height;
+
+                const darkest =
+                    imageData[
+                        (Math.round(image.width / 2) * image.width + Math.round(image.height / 2)) *
+                            4 +
+                            2
+                    ];
+
+                function getPixelArray(left: number, top: number) {
+                    const pixelArray = [];
+                    for (let y = 0; y < glyphHeight; y++) {
+                        for (let x = 0; x < glyphWidth; x++) {
+                            const blue = imageData[((top + y) * image.width + left + x) * 4 + 2];
+                            const shadow = ((255 - blue) / (255 - darkest)) * 255;
+                            pixelArray.push(Math.max(Math.min(255, Math.round(shadow)), 0));
+                        }
+                    }
+                    return pixelArray;
+                }
+
+                font.glyphs._array[0].glyphBitmap = {
+                    pixelArray: getPixelArray(0, 0),
+                    width: glyphWidth,
+                    height: glyphHeight
+                };
+
+                font.glyphs._array[1].glyphBitmap = {
+                    pixelArray: getPixelArray(Math.round((image.width - glyphWidth) / 2), 0),
+                    width: glyphWidth,
+                    height: glyphHeight
+                };
+
+                font.glyphs._array[2].glyphBitmap = {
+                    pixelArray: getPixelArray(image.width - glyphWidth, 0),
+                    width: glyphWidth,
+                    height: glyphHeight
+                };
+
+                font.glyphs._array[3].glyphBitmap = {
+                    pixelArray: getPixelArray(0, (image.height - glyphHeight) / 2),
+                    width: glyphWidth,
+                    height: glyphHeight
+                };
+
+                font.glyphs._array[4].glyphBitmap = {
+                    pixelArray: getPixelArray(
+                        image.width - glyphWidth,
+                        (image.height - glyphHeight) / 2
+                    ),
+                    width: glyphWidth,
+                    height: glyphHeight
+                };
+
+                font.glyphs._array[5].glyphBitmap = {
+                    pixelArray: getPixelArray(0, image.height - glyphHeight),
+                    width: glyphWidth,
+                    height: glyphHeight
+                };
+
+                font.glyphs._array[6].glyphBitmap = {
+                    pixelArray: getPixelArray(
+                        Math.round((image.width - glyphWidth) / 2),
+                        image.height - glyphHeight
+                    ),
+                    width: glyphWidth,
+                    height: glyphHeight
+                };
+
+                font.glyphs._array[7].glyphBitmap = {
+                    pixelArray: getPixelArray(image.width - glyphWidth, image.height - glyphHeight),
+                    width: glyphWidth,
+                    height: glyphHeight
+                };
+            });
+        }
+    }
+
     render() {
         let font = this.props.editor.object as Font;
 
@@ -1499,6 +1630,7 @@ export class FontEditor extends EditorComponent implements IPanel {
                     onRebuildGlyphs={this.onRebuildGlyphs}
                     onAddGlyph={this.onAddGlyph}
                     onDeleteGlyph={onDeleteGlyph}
+                    onCreateShadow={this.onCreateShadow}
                 />
                 <GlyphEditor glyph={this.selectedGlyph} />
             </Splitter>

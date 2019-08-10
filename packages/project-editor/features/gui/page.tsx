@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
+import { observable, computed, runInAction, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -29,6 +29,7 @@ import {
     ITreeObjectAdapter,
     TreeAdapter
 } from "project-editor/core/objectAdapter";
+import { loadObject } from "project-editor/core/serialization";
 import { NavigationStore, IPanel } from "project-editor/core/store";
 import { Tree } from "project-editor/components/Tree";
 import { Panel } from "project-editor/components/Panel";
@@ -52,10 +53,6 @@ import { getThemedColor } from "project-editor/features/gui/theme";
 
 @observer
 export class PageEditor extends EditorComponent implements IPanel {
-    get page() {
-        return this.props.editor.object as Page;
-    }
-
     @bind
     focusHandler() {
         NavigationStore.setSelectedPanel(this);
@@ -166,6 +163,63 @@ export class PageTabState implements IEditorState {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// We will not load all widgets for all pages at once, since it could take several seconds
+// for large project, and during that time application will be blocked. Therefore, we are
+// lazy loading, one page at a time.
+
+export const lazyLoadPageWidgets = (function() {
+    const pageWidgets = new Map<Page, any>();
+    const priority: Page[] = [];
+
+    function setPageWidgets(page: Page, widgets: any) {
+        pageWidgets.set(page, widgets);
+
+        if (pageWidgets.size == 1) {
+            setTimeout(loadNextPage, 1000);
+        }
+    }
+
+    function loadPageWidgets(page: Page) {
+        const widgets = pageWidgets.get(page);
+        if (widgets) {
+            pageWidgets.delete(page);
+            runInAction(
+                () =>
+                    (page.widgets = loadObject(page, widgets, Widget, "widgets") as EezArrayObject<
+                        Widget
+                    >)
+            );
+        }
+    }
+
+    function loadNextPage() {
+        if (pageWidgets.size > 0) {
+            let page = priority.shift();
+            if (!page) {
+                page = pageWidgets.keys().next().value;
+            }
+            loadPageWidgets(page);
+
+            if (pageWidgets.size > 0) {
+                setTimeout(loadNextPage);
+            }
+        }
+    }
+
+    return {
+        setPageWidgets,
+
+        // this method is exported, so app can load some page widgets in advance if required
+        prioritizePage(page: Page) {
+            if (pageWidgets.has(page)) {
+                priority.push(page);
+            }
+        }
+    };
+})();
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class Page extends EezObject {
     @observable name: string;
     @observable description?: string;
@@ -235,7 +289,7 @@ export class Page extends EezObject {
                 propertyGridGroup: specificGroup
             }
         ],
-        beforeLoadHook: (object: EezObject, jsObject: any) => {
+        beforeLoadHook: (page: Page, jsObject: any) => {
             if (jsObject["x"] !== undefined) {
                 jsObject["left"] = jsObject["x"];
                 delete jsObject["x"];
@@ -255,6 +309,9 @@ export class Page extends EezObject {
                 jsObject["top_"] = jsObject["y_"];
                 delete jsObject["y_"];
             }
+
+            lazyLoadPageWidgets.setPageWidgets(page, jsObject.widgets);
+            jsObject.widgets = [];
         },
         isPropertyMenuSupported: true,
         newItem: (parent: EezObject) => {
@@ -267,7 +324,11 @@ export class Page extends EezObject {
                 widgets: []
             });
         },
-        createEditorState: (object: EezObject) => new PageTabState(object),
+        createEditorState: (page: Page) => {
+            // make sure widgets are loaded for this page to be ready for editor
+            lazyLoadPageWidgets.prioritizePage(page);
+            return new PageTabState(page);
+        },
         navigationComponentId: "pages",
         findPastePlaceInside: (
             object: EezObject,
