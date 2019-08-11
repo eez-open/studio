@@ -11,13 +11,13 @@ import {
     EezObject,
     NavigationComponentProps,
     objectToString,
-    isPartOfNavigation
+    isPartOfNavigation,
+    NavigationComponent
 } from "project-editor/core/object";
 import { ListAdapter, SortDirectionType } from "project-editor/core/objectAdapter";
 import {
     NavigationStore,
     EditorsStore,
-    UIStateStore,
     addItem,
     deleteItem,
     canAdd,
@@ -25,8 +25,9 @@ import {
     IPanel
 } from "project-editor/core/store";
 import { List } from "project-editor/components/List";
-
 import { Panel } from "project-editor/components/Panel";
+
+import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -89,7 +90,7 @@ export class SortableTitle extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class AddButton extends React.Component<{
+class AddButton extends React.Component<{
     listAdapter: ListAdapter;
     navigationObject: EezObject | undefined;
 }> {
@@ -118,7 +119,7 @@ export class AddButton extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class DeleteButton extends React.Component<{
+class DeleteButton extends React.Component<{
     navigationObject: EezObject | undefined;
 }> {
     onDelete() {
@@ -278,6 +279,7 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
 ////////////////////////////////////////////////////////////////////////////////
 
 interface ListNavigationWithContentProps extends NavigationComponentProps {
+    content: React.ReactNode;
     title?: string;
     onDoubleClickItem?: (item: EezObject) => void;
     additionalButtons?: JSX.Element[];
@@ -290,28 +292,51 @@ interface ListNavigationWithContentProps extends NavigationComponentProps {
 export class ListNavigationWithContent extends React.Component<ListNavigationWithContentProps, {}> {
     render() {
         const { onEditItem, renderItem } = this.props;
-        if (UIStateStore.viewOptions.navigationVisible) {
-            return (
-                <Splitter
-                    type={this.props.orientation || "horizontal"}
-                    persistId={`project-editor/navigation-${this.props.id}`}
-                    sizes={`240px|100%`}
-                    childrenOverflow="hidden"
-                >
-                    <ListNavigation
-                        id={this.props.id}
-                        title={this.props.title}
-                        navigationObject={this.props.navigationObject}
-                        onDoubleClickItem={this.props.onDoubleClickItem}
-                        additionalButtons={this.props.additionalButtons}
-                        onEditItem={onEditItem}
-                        renderItem={renderItem}
-                    />
-                    {this.props.content}
-                </Splitter>
-            );
-        } else {
-            return this.props.content;
-        }
+        return (
+            <Splitter
+                type={this.props.orientation || "horizontal"}
+                persistId={`project-editor/navigation-${this.props.id}`}
+                sizes={`240px|100%`}
+                childrenOverflow="hidden"
+            >
+                <ListNavigation
+                    id={this.props.id}
+                    title={this.props.title}
+                    navigationObject={this.props.navigationObject}
+                    onDoubleClickItem={this.props.onDoubleClickItem}
+                    additionalButtons={this.props.additionalButtons}
+                    onEditItem={onEditItem}
+                    renderItem={renderItem}
+                />
+                {this.props.content}
+            </Splitter>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class ListNavigationWithProperties extends NavigationComponent {
+    @computed
+    get object() {
+        return (
+            (NavigationStore.selectedPanel && NavigationStore.selectedPanel.selectedObject) ||
+            NavigationStore.selectedObject
+        );
+    }
+
+    render() {
+        return (
+            <Splitter
+                type="horizontal"
+                persistId={`project-editor/navigation-${this.props.id}`}
+                sizes={`240px|100%`}
+                childrenOverflow="hidden"
+            >
+                <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
+                <PropertiesPanel object={this.object} />
+            </Splitter>
+        );
     }
 }

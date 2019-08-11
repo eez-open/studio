@@ -446,29 +446,11 @@ function buildViewMenu(windowType: WindowType) {
     if (windowType === "project") {
         viewSubmenu.push(
             {
-                label: "Toggle Navigation",
-                accelerator: "Ctrl+Shift+N",
-                click: function(item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("toggleNavigation");
-                    }
-                }
-            },
-            {
                 label: "Toggle Output",
                 accelerator: "Ctrl+Shift+O",
                 click: function(item, focusedWindow) {
                     if (focusedWindow) {
                         focusedWindow.webContents.send("toggleOutput");
-                    }
-                }
-            },
-            {
-                label: "Toggle Properties",
-                accelerator: "Ctrl+Shift+P",
-                click: function(item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("toggleProperties");
                     }
                 }
             },

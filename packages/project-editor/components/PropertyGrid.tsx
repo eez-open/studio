@@ -864,6 +864,8 @@ class Property extends React.Component<PropertyProps> {
             );
         } else if (propertyInfo.type === PropertyType.JSON) {
             return <CodeEditorProperty {...this.props} mode="json" />;
+        } else if (propertyInfo.type === PropertyType.Cpp) {
+            return <CodeEditorProperty {...this.props} mode="c_cpp" />;
         } else if (
             propertyInfo.type === PropertyType.Object ||
             (propertyInfo.type === PropertyType.Array && this.props.propertyInfo.onSelect)
@@ -1566,6 +1568,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 propertyInfo.type === PropertyType.Boolean ||
                 propertyInfo.type === PropertyType.Any ||
                 propertyInfo.type === PropertyType.JSON ||
+                propertyInfo.type === PropertyType.Cpp ||
                 propertyInfo.propertyGridCollapsable;
 
             let propertyMenuEnabled =

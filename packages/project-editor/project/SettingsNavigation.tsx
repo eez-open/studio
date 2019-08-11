@@ -7,14 +7,17 @@ import styled from "eez-studio-ui/styled-components";
 
 import { NavigationComponent, EezObject, getProperty } from "project-editor/core/object";
 import { loadObject } from "project-editor/core/serialization";
-import { DocumentStore, NavigationStore, UIStateStore } from "project-editor/core/store";
+import { DocumentStore, NavigationStore } from "project-editor/core/store";
 
 import { ProjectStore } from "project-editor/core/store";
 import { confirm } from "project-editor/core/util";
 import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
 
+import { BuildFile } from "project-editor/project/project";
+import { Panel } from "project-editor/components/Panel";
 import { TreeNavigationPanel } from "project-editor/components/TreeNavigation";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
+import { BuildFileEditor } from "project-editor/project/BuildFileEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -129,6 +132,8 @@ class ProjectFeature extends React.Component<
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 const SettingsEditorDiv = styled.div`
     padding: 10px;
     overflow: auto;
@@ -158,7 +163,28 @@ export class SettingsEditor extends React.Component<{ object: EezObject | undefi
                 </SettingsEditorDiv>
             );
         } else {
-            return <PropertyGrid objects={[this.props.object]} />;
+            const properties = (
+                <Panel
+                    id="properties"
+                    title="Properties"
+                    body={<PropertyGrid objects={this.props.object ? [this.props.object] : []} />}
+                />
+            );
+            if (this.props.object._parent === ProjectStore.project.settings.build.files) {
+                return (
+                    <Splitter
+                        type="horizontal"
+                        persistId={`project-editor/build-file`}
+                        sizes={`100%|240px`}
+                        childrenOverflow="hidden"
+                    >
+                        <BuildFileEditor buildFile={this.props.object as BuildFile} />
+                        {properties}
+                    </Splitter>
+                );
+            } else {
+                return properties;
+            }
         }
     }
 }
@@ -174,27 +200,16 @@ export class SettingsNavigation extends NavigationComponent {
     }
 
     render() {
-        let content = this.props.content;
-        if (this.object && this.object.editorComponent) {
-            content = this.props.content;
-        } else {
-            content = <SettingsEditor object={this.object} />;
-        }
-
-        if (UIStateStore.viewOptions.navigationVisible) {
-            return (
-                <Splitter
-                    type="horizontal"
-                    persistId={`project-editor/navigation-${this.props.id}`}
-                    sizes={`240px|100%`}
-                    childrenOverflow="hidden"
-                >
-                    <TreeNavigationPanel navigationObject={this.props.navigationObject} />
-                    {content}
-                </Splitter>
-            );
-        } else {
-            return content;
-        }
+        return (
+            <Splitter
+                type="horizontal"
+                persistId={`project-editor/navigation-${this.props.id}`}
+                sizes={`240px|100%`}
+                childrenOverflow="hidden"
+            >
+                <TreeNavigationPanel navigationObject={this.props.navigationObject} />
+                <SettingsEditor object={this.object} />
+            </Splitter>
+        );
     }
 }

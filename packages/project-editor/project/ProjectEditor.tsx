@@ -2,9 +2,6 @@ import React from "react";
 import { computed, action } from "mobx";
 import { observer } from "mobx-react";
 
-// import DevTools from "mobx-react-devtools";
-// import { isDev } from "eez-studio-shared/util";
-
 import styled from "eez-studio-ui/styled-components";
 import { TabsView } from "eez-studio-ui/tabs";
 import * as notification from "eez-studio-ui/notification";
@@ -15,8 +12,7 @@ import {
     isArray,
     objectToString,
     findPropertyByChildObject,
-    isValue,
-    getProperty
+    isValue
 } from "project-editor/core/object";
 import {
     UndoManager,
@@ -39,8 +35,6 @@ import { Output } from "project-editor/components/Output";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 import { BuildConfiguration } from "project-editor/project/project";
-
-import { ThemesSideView } from "project-editor/features/gui/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -153,33 +147,15 @@ class Toolbar extends React.Component<
                             title="Check"
                             icon="material:check"
                             onClick={() => ProjectStore.check()}
+                            enabled={ProjectStore.project.allGuiPagesLoaded}
                         />
                         <IconAction
                             title="Build"
                             icon="material:build"
                             onClick={() => ProjectStore.build()}
+                            enabled={ProjectStore.project.allGuiPagesLoaded}
                         />
                     </div>
-
-                    {NavigationStore.getNavigationSelectedItem(ProjectStore.project) ===
-                        getProperty(ProjectStore.project, "gui") && (
-                        <div className="btn-group" role="group">
-                            <IconAction
-                                title={
-                                    UIStateStore.viewOptions.themesVisible
-                                        ? "Hide Themes Side View"
-                                        : "Show Themes Side View"
-                                }
-                                icon="material:palette"
-                                onClick={action(
-                                    () =>
-                                        (UIStateStore.viewOptions.themesVisible = !UIStateStore
-                                            .viewOptions.themesVisible)
-                                )}
-                                selected={UIStateStore.viewOptions.themesVisible}
-                            />
-                        </div>
-                    )}
                 </div>
 
                 <div>
@@ -226,7 +202,7 @@ const EditorsDiv = styled.div`
 `;
 
 @observer
-class Editors extends React.Component<{}, {}> {
+export class Editors extends React.Component<{}, {}> {
     render() {
         return (
             <EditorsDiv>
@@ -242,11 +218,21 @@ class Editors extends React.Component<{}, {}> {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class Properties extends React.Component<{ objects: EezObject[] }, {}> {
+export class PropertiesPanel extends React.Component<{ object: EezObject | undefined }, {}> {
     render() {
-        let propertyGrid: JSX.Element | undefined;
+        let objects: EezObject[];
 
-        let objects = this.props.objects;
+        if (
+            NavigationStore.selectedPanel &&
+            NavigationStore.selectedPanel.selectedObjects !== undefined
+        ) {
+            objects = NavigationStore.selectedPanel.selectedObjects;
+        } else if (this.props.object) {
+            objects = [this.props.object];
+        } else {
+            objects = [];
+        }
+
         if (objects.length === 1) {
             if (isValue(objects[0])) {
                 const object = objects[0];
@@ -261,9 +247,9 @@ class Properties extends React.Component<{ objects: EezObject[] }, {}> {
             }
         }
 
-        propertyGrid = <PropertyGrid objects={objects} />;
-
-        return <Panel id="properties" title="Properties" body={propertyGrid} />;
+        return (
+            <Panel id="properties" title="Properties" body={<PropertyGrid objects={objects} />} />
+        );
     }
 }
 
@@ -293,62 +279,7 @@ class Content extends React.Component<{}, {}> {
         if (!ProjectStore.project) {
             return <div />;
         }
-
-        let properties: JSX.Element | undefined;
-        if (UIStateStore.viewOptions.propertiesVisible) {
-            let objects: EezObject[];
-
-            if (
-                NavigationStore.selectedPanel &&
-                NavigationStore.selectedPanel.selectedObjects !== undefined
-            ) {
-                objects = NavigationStore.selectedPanel.selectedObjects;
-            } else if (this.object) {
-                objects = [this.object];
-            } else {
-                objects = [];
-            }
-
-            properties = <Properties objects={objects} />;
-        }
-
-        let content = (
-            <Splitter
-                type="horizontal"
-                persistId="project-editor/content"
-                sizes={`100%|400px`}
-                childrenOverflow="hidden"
-            >
-                <Editors />
-                {properties}
-            </Splitter>
-        );
-
-        if (UIStateStore.viewOptions.themesVisible) {
-            content = (
-                <Splitter
-                    type="horizontal"
-                    persistId="project-editor/main-content-themes"
-                    sizes={`100%|240px`}
-                    childrenOverflow="hidden"
-                >
-                    {content}
-                    <ThemesSideView />
-                </Splitter>
-            );
-        }
-
-        if (UIStateStore.viewOptions.navigationVisible) {
-            return (
-                <MenuNavigation
-                    id="project"
-                    navigationObject={ProjectStore.project}
-                    content={content}
-                />
-            );
-        } else {
-            return content;
-        }
+        return <MenuNavigation id="project" navigationObject={ProjectStore.project} />;
     }
 }
 
@@ -358,7 +289,6 @@ const StatusBarItemSpan = styled.span`
     display: inline-block;
     padding: 4px 8px;
     cursor: pointer;
-    border-top: 1px solid ${props => props.theme.borderColor};
 `;
 
 @observer
@@ -380,6 +310,7 @@ class StatusBarItem extends React.Component<
 
 const StatusBarDiv = styled.div`
     background-color: ${props => props.theme.panelHeaderColor};
+    border-top: 1px solid ${props => props.theme.borderColor};
 `;
 
 @observer
@@ -456,29 +387,23 @@ export class ProjectEditor extends React.Component<{}, {}> {
 
         let mainContent;
 
-        if (UIStateStore.viewOptions.experimentalLayout) {
-            mainContent = <div>TODO...</div>;
-        } else {
-            mainContent = (
-                <MainContent>
-                    <Toolbar />
-                    <Splitter
-                        type="vertical"
-                        persistId={
-                            outputPanel
-                                ? "project-editor/with-output"
-                                : "project-editor/without-output"
-                        }
-                        sizes={outputPanel ? "100%|240px" : "100%"}
-                        childrenOverflow="hidden"
-                    >
-                        <Content />
-                        {outputPanel}
-                    </Splitter>
-                    {statusBar}
-                </MainContent>
-            );
-        }
+        mainContent = (
+            <MainContent>
+                <Toolbar />
+                <Splitter
+                    type="vertical"
+                    persistId={
+                        outputPanel ? "project-editor/with-output" : "project-editor/without-output"
+                    }
+                    sizes={outputPanel ? "100%|240px" : "100%"}
+                    childrenOverflow="hidden|hidden"
+                >
+                    <Content />
+                    {outputPanel}
+                </Splitter>
+                {statusBar}
+            </MainContent>
+        );
 
         if (UIStateStore.viewOptions.debugVisible) {
             mainContent = (
@@ -494,16 +419,10 @@ export class ProjectEditor extends React.Component<{}, {}> {
             );
         }
 
-        let devTools: JSX.Element | undefined;
-        // if (isDev) {
-        //     devTools = <DevTools />;
-        // }
-
         return (
             <ProjectEditorContainer>
                 {mainContent}
                 {notification.container}
-                {devTools}
             </ProjectEditorContainer>
         );
     }

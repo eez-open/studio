@@ -4,18 +4,19 @@ import { bind } from "bind-decorator";
 
 import { CodeEditor } from "eez-studio-ui/code-editor";
 
-import { EditorComponent } from "project-editor/core/object";
 import { DocumentStore, UndoManager } from "project-editor/core/store";
 
 import { BuildFile } from "project-editor/project/project";
 
 @observer
-export class BuildFileEditor extends EditorComponent {
+export class BuildFileEditor extends React.Component<{
+    buildFile: BuildFile;
+}> {
     codeEditor: CodeEditor;
 
     @bind
     onChange(value: string) {
-        DocumentStore.updateObject(this.props.editor.object, {
+        DocumentStore.updateObject(this.props.buildFile, {
             template: value
         });
     }
@@ -39,7 +40,7 @@ export class BuildFileEditor extends EditorComponent {
     }
 
     render() {
-        let buildFile = this.props.editor.object as BuildFile;
+        const { buildFile } = this.props;
         return (
             <CodeEditor
                 ref={ref => (this.codeEditor = ref!)}

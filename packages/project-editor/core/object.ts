@@ -19,6 +19,7 @@ export enum PropertyType {
     StringArray,
     MultilineText,
     JSON,
+    Cpp,
     Number,
     NumberArray,
     Array,
@@ -130,7 +131,6 @@ export interface PropertyInfo {
 export interface NavigationComponentProps {
     id: string;
     navigationObject: EezObject;
-    content: JSX.Element;
 }
 
 export class NavigationComponent extends React.Component<NavigationComponentProps, {}> {}

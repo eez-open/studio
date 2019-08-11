@@ -15,9 +15,7 @@ import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
-
-import { ActionEditor } from "project-editor/features/action/ActionEditor";
+import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 
 import { build } from "project-editor/features/action/build";
 import { metrics } from "project-editor/features/action/metrics";
@@ -92,8 +90,7 @@ export class Action extends EezObject {
                 });
             });
         },
-        editorComponent: ActionEditor,
-        navigationComponent: ListNavigationWithContent,
+        navigationComponent: ListNavigationWithProperties,
         navigationComponentId: "actions",
         icon: "code"
     };

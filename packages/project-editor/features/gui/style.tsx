@@ -18,16 +18,18 @@ import {
     findClass,
     getChildOfObject,
     MessageType,
-    EditorComponent
+    NavigationComponent
 } from "project-editor/core/object";
+import { NavigationStore } from "project-editor/core/store";
 import { loadObject } from "project-editor/core/serialization";
 import * as output from "project-editor/core/output";
-
-import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
+import { ListNavigation } from "project-editor/components/ListNavigation";
+import { Splitter } from "eez-studio-ui/splitter";
+import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 import { findStyle, findFont } from "project-editor/features/gui/gui";
 import { drawText } from "project-editor/features/gui/draw";
-import { getThemedColor } from "project-editor/features/gui/theme";
+import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,14 +59,43 @@ const Image = styled.img`
 `;
 
 @observer
-export class StyleEditor extends EditorComponent {
+export class StyleEditor extends React.Component<{ style: Style }> {
     render() {
         let canvas = document.createElement("canvas");
         canvas.width = 240;
         canvas.height = 320;
-        drawStylePreview(canvas, this.props.editor.object as Style);
+        drawStylePreview(canvas, this.props.style);
 
         return <Image src={canvas.toDataURL()} />;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class StylesNavigation extends NavigationComponent {
+    @computed
+    get object() {
+        if (NavigationStore.selectedPanel) {
+            return NavigationStore.selectedPanel.selectedObject;
+        }
+        return NavigationStore.selectedObject;
+    }
+
+    render() {
+        return (
+            <Splitter
+                type="horizontal"
+                persistId={`project-editor/styles1`}
+                sizes={`240px|100%|400px|240px`}
+                childrenOverflow="hidden|hidden|hidden"
+            >
+                <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
+                {this.object ? <StyleEditor style={this.object as Style} /> : <div />}
+                <PropertiesPanel object={this.object} />
+                <ThemesSideView />
+            </Splitter>
+        );
     }
 }
 
@@ -319,8 +350,7 @@ export class Style extends EezObject {
             getInheritedValue(styleObject, propertyName, false),
         navigationComponentId: "styles",
         isEditorSupported: (object: EezObject) => !isWidgetParentOfStyle(object),
-        editorComponent: StyleEditor,
-        navigationComponent: ListNavigationWithContent,
+        navigationComponent: StylesNavigation,
         icon: "format_color_fill",
         defaultValue: {}
     };

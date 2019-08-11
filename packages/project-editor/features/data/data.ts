@@ -16,7 +16,7 @@ import * as output from "project-editor/core/output";
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
-import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
+import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 
 import { build } from "project-editor/features/data/build";
 import { metrics } from "project-editor/features/data/metrics";
@@ -125,7 +125,7 @@ export class DataItem extends EezObject {
                 });
             });
         },
-        navigationComponent: ListNavigationWithContent,
+        navigationComponent: ListNavigationWithProperties,
         navigationComponentId: "data-items",
         icon: "dns"
     };

@@ -84,9 +84,8 @@ class Message extends React.Component<
 
 const MessagesDiv = styled.div`
     flex-grow: 1;
-
     overflow: auto;
-
+    height: 100%;
     table {
         width: 100%;
 
@@ -148,6 +147,7 @@ const OutputDiv = styled.div`
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    height: 100%;
 
     &:focus {
         .message-item {

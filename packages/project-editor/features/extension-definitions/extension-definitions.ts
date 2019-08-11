@@ -18,7 +18,8 @@ import * as output from "project-editor/core/output";
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
-import { ExtensionDefinitionsNavigation } from "project-editor/features/extension-definitions/navigation";
+import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
+
 import { metrics } from "project-editor/features/extension-definitions/metrics";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,7 +187,7 @@ export class ExtensionDefinition extends EezObject {
                 });
             });
         },
-        navigationComponent: ExtensionDefinitionsNavigation,
+        navigationComponent: ListNavigationWithProperties,
         hideInProperties: true,
         navigationComponentId: "extension-definitions",
         icon: "extension"

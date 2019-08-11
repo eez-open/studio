@@ -15,7 +15,6 @@ import * as output from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/core/store";
 
-import { BuildFileEditor } from "project-editor/project/BuildFileEditor";
 import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
 
 import "project-editor/project/builtInFeatures";
@@ -114,7 +113,7 @@ export class BuildFile extends EezObject {
                 template: ""
             });
         },
-        editorComponent: BuildFileEditor
+        showInNavigation: true
     };
 }
 
@@ -280,11 +279,10 @@ function getProjectClassInfo() {
 }
 
 export class Project extends EezObject {
-    @observable
-    settings: Settings;
-
-    @observable
-    data: EezArrayObject<DataItem>;
+    @observable settings: Settings;
+    @observable data: EezArrayObject<DataItem>;
+    @observable actions: EezArrayObject<Action>;
+    @observable allGuiPagesLoaded = false;
 
     @computed
     get dataItemsMap() {
@@ -292,9 +290,6 @@ export class Project extends EezObject {
         this.data._array.forEach(dataItem => map.set(dataItem.name, dataItem));
         return map;
     }
-
-    @observable
-    actions: EezArrayObject<Action>;
 
     @computed
     get actionsMap() {
@@ -348,11 +343,10 @@ export async function load(filePath: string) {
             if (err) {
                 reject(err);
             } else {
-                console.time("load");
+                //console.time("load");
                 let projectJs = JSON.parse(data);
-
                 let project = loadObject(undefined, projectJs, Project) as Project;
-                console.timeEnd("load");
+                //console.timeEnd("load");
 
                 resolve(project);
             }
@@ -370,9 +364,9 @@ export function save(filePath: string) {
         }
     };
 
-    console.time("save");
+    //console.time("save");
     const json = objectToJson(ProjectStore.project, 2, toJsHook);
-    console.timeEnd("save");
+    //console.timeEnd("save");
 
     return new Promise((resolve, reject) => {
         fs.writeFile(filePath, json, "utf8", (err: any) => {

@@ -538,39 +538,19 @@ class EditorsStoreClass {
 
 export class ViewOptions {
     @observable
-    navigationVisible: boolean = true;
-
-    @observable
     outputVisible: boolean = true;
-
-    @observable
-    propertiesVisible: boolean = true;
 
     @observable
     debugVisible: boolean = false;
 
-    @observable
-    themesVisible: boolean = false;
-
-    @observable
-    experimentalLayout: boolean = false;
-
     @action
     load(viewOptions: any) {
         if (viewOptions) {
-            this.navigationVisible = viewOptions.navigationVisible;
             this.outputVisible = viewOptions.outputVisible;
-            this.propertiesVisible = viewOptions.propertiesVisible;
             this.debugVisible = viewOptions.debugVisible;
-            this.themesVisible = viewOptions.themesVisible;
-            this.experimentalLayout = viewOptions.experimentalLayout;
         } else {
-            this.navigationVisible = true;
             this.outputVisible = true;
-            this.propertiesVisible = true;
             this.debugVisible = false;
-            this.themesVisible = false;
-            this.experimentalLayout = false;
         }
     }
 
@@ -1766,39 +1746,15 @@ export function init() {
     // EEZStudio.electron.ipcRenderer.on('goForward', () => ProjectStore.selection.selectionGoForward());
 
     EEZStudio.electron.ipcRenderer.on(
-        "toggleNavigation",
-        action(
-            () =>
-                (UIStateStore.viewOptions.navigationVisible = !UIStateStore.viewOptions
-                    .navigationVisible)
-        )
-    );
-    EEZStudio.electron.ipcRenderer.on(
         "toggleOutput",
         action(
             () => (UIStateStore.viewOptions.outputVisible = !UIStateStore.viewOptions.outputVisible)
         )
     );
     EEZStudio.electron.ipcRenderer.on(
-        "toggleProperties",
-        action(
-            () =>
-                (UIStateStore.viewOptions.propertiesVisible = !UIStateStore.viewOptions
-                    .propertiesVisible)
-        )
-    );
-    EEZStudio.electron.ipcRenderer.on(
         "toggleDebug",
         action(
             () => (UIStateStore.viewOptions.debugVisible = !UIStateStore.viewOptions.debugVisible)
-        )
-    );
-    EEZStudio.electron.ipcRenderer.on(
-        "toggleExperimentalLayout",
-        action(
-            () =>
-                (UIStateStore.viewOptions.experimentalLayout = !UIStateStore.viewOptions
-                    .experimentalLayout)
         )
     );
 

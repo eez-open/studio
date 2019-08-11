@@ -3,16 +3,9 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-ui/action";
-import { Splitter } from "eez-studio-ui/splitter";
 
-import { EezObject, NavigationComponent, objectToString } from "project-editor/core/object";
-import {
-    EditorsStore,
-    NavigationStore,
-    UIStateStore,
-    addItem,
-    canAdd
-} from "project-editor/core/store";
+import { EezObject, objectToString } from "project-editor/core/object";
+import { EditorsStore, NavigationStore, addItem, canAdd } from "project-editor/core/store";
 import {
     TreeObjectAdapter,
     ITreeObjectAdapter,
@@ -25,7 +18,7 @@ import { Tree } from "project-editor/components/Tree";
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class AddButton extends React.Component<
+class AddButton extends React.Component<
     {
         objectAdapter: ITreeObjectAdapter;
     },
@@ -59,7 +52,7 @@ export class AddButton extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class DeleteButton extends React.Component<
+class DeleteButton extends React.Component<
     {
         objectAdapter: ITreeObjectAdapter;
     },
@@ -160,28 +153,5 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
                 }
             />
         );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class TreeNavigation extends NavigationComponent {
-    render() {
-        if (UIStateStore.viewOptions.navigationVisible) {
-            return (
-                <Splitter
-                    type="horizontal"
-                    persistId={`project-editor/navigation-${this.props.id}`}
-                    sizes={`240px|100%`}
-                    childrenOverflow="hidden"
-                >
-                    <TreeNavigationPanel navigationObject={this.props.navigationObject} />
-                    {this.props.content}
-                </Splitter>
-            );
-        } else {
-            return this.props.content;
-        }
     }
 }

@@ -4,7 +4,7 @@ import React from "react";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { ProjectStore } from "project-editor/core/store";
-import { PropertyGrid } from "project-editor/components/PropertyGrid";
+import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 import { ScpiSubsystem, ScpiCommand } from "project-editor/features/scpi/scpi";
 
 @observer
@@ -13,6 +13,8 @@ export class ScpiSubsystemOrCommandEditor extends React.Component<
     {}
 > {
     render() {
+        const properties = <PropertiesPanel object={this.props.object} />;
+
         if (
             this.props.object &&
             this.props.object.helpLink &&
@@ -39,7 +41,7 @@ export class ScpiSubsystemOrCommandEditor extends React.Component<
                     persistId="project-editor/ScpiSubsystemOrCommandEditor"
                     sizes={`240px|100%`}
                 >
-                    <PropertyGrid objects={[this.props.object]} />
+                    {properties}
                     <iframe
                         src={src}
                         style={{
@@ -52,7 +54,7 @@ export class ScpiSubsystemOrCommandEditor extends React.Component<
                 </Splitter>
             );
         } else {
-            return <PropertyGrid objects={[this.props.object]} />;
+            return properties;
         }
     }
 }

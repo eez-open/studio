@@ -110,7 +110,6 @@ export class MenuNavigation extends React.Component<
     {
         id: string;
         navigationObject: EezObject;
-        content: JSX.Element;
     },
     {}
 > {
@@ -126,7 +125,6 @@ export class MenuNavigation extends React.Component<
                     <NavigationComponent
                         id={selectedItem._classInfo.navigationComponentId || this.props.id}
                         navigationObject={selectedItem}
-                        content={this.props.content}
                     />
                 );
             }
@@ -135,7 +133,7 @@ export class MenuNavigation extends React.Component<
         return (
             <MenuNavigationContainer>
                 <Menu navigationObject={this.props.navigationObject} />
-                {subNavigation || this.props.content}
+                {subNavigation}
             </MenuNavigationContainer>
         );
     }

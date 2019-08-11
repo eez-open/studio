@@ -2,6 +2,7 @@ import React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
+const LZ4 = require("lz4");
 
 import { formatNumber } from "eez-studio-shared/util";
 import { Rect } from "eez-studio-shared/geometry";
@@ -26,14 +27,14 @@ import {
     PropertyType,
     getProperty,
     asArray,
-    EditorComponent,
-    cloneObject
+    cloneObject,
+    NavigationComponent
 } from "project-editor/core/object";
 import { DocumentStore, NavigationStore, IPanel } from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { ProjectStore } from "project-editor/core/store";
-
-import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
+import { ListNavigation } from "project-editor/components/ListNavigation";
+import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";
@@ -273,6 +274,8 @@ export interface EditorImageHitTestResult {
     rect: Rect;
 }
 
+var outputBuffer = new Buffer(1000000);
+
 export class Glyph extends EezObject {
     @observable
     encoding: number;
@@ -331,7 +334,17 @@ export class Glyph extends EezObject {
                 hideInPropertyGrid: true,
                 skipSearch: true
             }
-        ]
+        ],
+        beforeLoadHook(object: EezObject, jsObject: any) {
+            if (jsObject.glyphBitmap && jsObject.glyphBitmap.pixelArrayCompressed) {
+                var inputBuffer = Buffer.from(jsObject.glyphBitmap.pixelArrayCompressed);
+                delete jsObject.glyphBitmap.pixelArrayCompressed;
+
+                var uncompressedSize = LZ4.decodeBlock(inputBuffer, outputBuffer);
+
+                jsObject.glyphBitmap.pixelArray = [...outputBuffer.slice(0, uncompressedSize)];
+            }
+        }
     };
 
     @computed
@@ -1214,14 +1227,14 @@ class Glyphs extends React.Component<
 
         let createShadowButton: JSX.Element | undefined;
         if (this.props.onCreateShadow) {
-            createShadowButton = (
-                <IconAction
-                    title="Create Shadow"
-                    icon="material:grid_on"
-                    iconSize={16}
-                    onClick={this.props.onCreateShadow}
-                />
-            );
+            // createShadowButton = (
+            //     <IconAction
+            //         title="Create Shadow"
+            //         icon="material:grid_on"
+            //         iconSize={16}
+            //         onClick={this.props.onCreateShadow}
+            //     />
+            // );
         }
 
         return (
@@ -1400,9 +1413,13 @@ class GlyphEditor extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class FontEditor extends EditorComponent implements IPanel {
+export class FontEditor
+    extends React.Component<{
+        font: Font;
+    }>
+    implements IPanel {
     get glyphs() {
-        let font = this.props.editor.object as Font;
+        let font = this.props.font;
         return font.glyphs;
     }
 
@@ -1443,14 +1460,10 @@ export class FontEditor extends EditorComponent implements IPanel {
         // TODO
     }
 
-    focusHander() {
-        NavigationStore.setSelectedPanel(this);
-    }
-
     @action.bound
     async onRebuildGlyphs() {
         try {
-            const font = this.props.editor.object as Font;
+            const font = this.props.font;
 
             const newFont = await rebuildFont({
                 font: objectToJS(font),
@@ -1467,7 +1480,7 @@ export class FontEditor extends EditorComponent implements IPanel {
 
     @action.bound
     onAddGlyph() {
-        let font = this.props.editor.object as Font;
+        const font = this.props.font;
         let newGlyph = cloneObject(
             undefined,
             font.glyphs._array[font.glyphs._array.length - 1]
@@ -1479,7 +1492,7 @@ export class FontEditor extends EditorComponent implements IPanel {
 
     @action.bound
     onDeleteGlyph() {
-        let font = this.props.editor.object as Font;
+        const font = this.props.font;
         let selectedGlyph = this.selectedGlyph;
         if (selectedGlyph && font.glyphs._array[font.glyphs._array.length - 1] == selectedGlyph) {
             DocumentStore.deleteObject(selectedGlyph);
@@ -1520,7 +1533,7 @@ export class FontEditor extends EditorComponent implements IPanel {
 
                 let imageData = ctx.getImageData(0, 0, image.width, image.height).data;
 
-                const font = this.props.editor.object as Font;
+                const font = this.props.font;
 
                 console.log(font.glyphs);
 
@@ -1604,7 +1617,7 @@ export class FontEditor extends EditorComponent implements IPanel {
     }
 
     render() {
-        let font = this.props.editor.object as Font;
+        const font = this.props.font;
 
         let onDeleteGlyph: (() => void) | undefined;
         if (
@@ -1620,7 +1633,6 @@ export class FontEditor extends EditorComponent implements IPanel {
                 persistId="project-editor/font-editor"
                 sizes={`50%|50%`}
                 tabIndex={0}
-                onFocus={this.focusHander.bind(this)}
             >
                 <Glyphs
                     glyphs={this.glyphs._array}
@@ -1633,6 +1645,44 @@ export class FontEditor extends EditorComponent implements IPanel {
                     onCreateShadow={this.onCreateShadow}
                 />
                 <GlyphEditor glyph={this.selectedGlyph} />
+            </Splitter>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class FontsNavigation extends NavigationComponent {
+    @computed
+    get object() {
+        if (NavigationStore.selectedPanel) {
+            return NavigationStore.selectedPanel.selectedObject;
+        }
+        return NavigationStore.selectedObject;
+    }
+
+    @computed
+    get font() {
+        for (let font = this.object; font; font = font._parent) {
+            if (font instanceof Font) {
+                return font;
+            }
+        }
+        return undefined;
+    }
+
+    render() {
+        return (
+            <Splitter
+                type="horizontal"
+                persistId={`project-editor/fonts1`}
+                sizes={`240px|100%|240px`}
+                childrenOverflow="hidden|hidden|hidden"
+            >
+                <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
+                {this.font ? <FontEditor font={this.font} /> : <div />}
+                <PropertiesPanel object={this.object} />
             </Splitter>
         );
     }
@@ -1875,8 +1925,7 @@ export class Font extends EezObject {
                     return false;
                 });
         },
-        editorComponent: FontEditor,
-        navigationComponent: ListNavigationWithContent,
+        navigationComponent: FontsNavigation,
         navigationComponentId: "fonts",
         icon: "font_download"
     };

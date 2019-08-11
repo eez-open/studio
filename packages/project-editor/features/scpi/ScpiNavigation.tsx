@@ -14,7 +14,6 @@ export class ScpiNavigation extends NavigationComponent {
             <MenuNavigation
                 id={this.props.id}
                 navigationObject={getProperty(ProjectStore.project, "scpi")}
-                content={this.props.content}
             />
         );
     }

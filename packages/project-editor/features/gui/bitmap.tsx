@@ -1,26 +1,30 @@
-import { observable, action } from "mobx";
+import { computed, observable, action } from "mobx";
 import React from "react";
 import { observer } from "mobx-react";
 import styled from "eez-studio-ui/styled-components";
 
 import { to16bitsColor } from "eez-studio-shared/color";
 import {
-    EditorComponent,
     ClassInfo,
     EezObject,
     registerClass,
     PropertyType,
-    asArray
+    asArray,
+    NavigationComponent
 } from "project-editor/core/object";
+import { NavigationStore } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { getThemedColor } from "project-editor/features/gui/theme";
+import { ListNavigation } from "project-editor/components/ListNavigation";
+import { Splitter } from "eez-studio-ui/splitter";
+
+import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
 
 import { ProjectStore } from "project-editor/core/store";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
-import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
+import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 let fs = EEZStudio.electron.remote.require("fs");
 
@@ -34,9 +38,9 @@ const BitmapEditorContainer = styled.div`
 `;
 
 @observer
-class BitmapEditor extends EditorComponent {
+class BitmapEditor extends React.Component<{ bitmap: Bitmap }> {
     render() {
-        const bitmap = this.props.editor.object as Bitmap;
+        const bitmap = this.props.bitmap;
 
         const style = {
             backgroundColor: "transparent",
@@ -56,6 +60,35 @@ class BitmapEditor extends EditorComponent {
                     )}
                 </div>
             </BitmapEditorContainer>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class BitmapsNavigation extends NavigationComponent {
+    @computed
+    get object() {
+        if (NavigationStore.selectedPanel) {
+            return NavigationStore.selectedPanel.selectedObject;
+        }
+        return NavigationStore.selectedObject;
+    }
+
+    render() {
+        return (
+            <Splitter
+                type="horizontal"
+                persistId={`project-editor/bitmaps1`}
+                sizes={`240px|100%|400px|240px`}
+                childrenOverflow="hidden|hidden|hidden"
+            >
+                <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
+                {this.object ? <BitmapEditor bitmap={this.object as Bitmap} /> : <div />}
+                <PropertiesPanel object={this.object} />
+                <ThemesSideView />
+            </Splitter>
         );
     }
 }
@@ -156,8 +189,7 @@ export class Bitmap extends EezObject implements IBitmap {
                 });
             });
         },
-        editorComponent: BitmapEditor,
-        navigationComponent: ListNavigationWithContent,
+        navigationComponent: BitmapsNavigation,
         navigationComponentId: "bitmaps",
         icon: "image"
     };

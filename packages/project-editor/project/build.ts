@@ -341,7 +341,7 @@ var checkTransformer: (object: EezObject) => IMessage[] = createTransformer(
 );
 
 export function backgroundCheck() {
-    console.time("backgroundCheck");
+    //console.time("backgroundCheck");
     OutputSectionsStore.setMessages(Section.CHECKS, checkTransformer(ProjectStore.project));
-    console.timeEnd("backgroundCheck");
+    //console.timeEnd("backgroundCheck");
 }

@@ -1,6 +1,7 @@
 import React from "react";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
+const LZ4 = require("lz4");
 
 import { guid } from "eez-studio-shared/guid";
 import {
@@ -38,7 +39,6 @@ export class GuiNavigation extends NavigationComponent {
             <MenuNavigation
                 id={this.props.id}
                 navigationObject={getProperty(ProjectStore.project, "gui")}
-                content={this.props.content}
             />
         );
     }
@@ -216,11 +216,24 @@ registerFeatureImplementation("gui", {
                     }[];
                 };
                 themeColors: any;
+                fonts: {
+                    _array: {
+                        glyphs: {
+                            _array: {
+                                glyphBitmap?: {
+                                    pixelArray: number[];
+                                    pixelArrayCompressed: number[];
+                                };
+                            }[];
+                        };
+                    }[];
+                };
             };
         }) => {
             const gui = getProperty(ProjectStore.project, "gui") as Gui;
 
             if (gui) {
+                //
                 jsObject.gui.colors._array.forEach((color: any) => delete color.id);
 
                 jsObject.gui.themes._array.forEach((theme: any, i: number) => {
@@ -229,6 +242,26 @@ registerFeatureImplementation("gui", {
                 });
 
                 delete jsObject.gui.themeColors;
+
+                ///
+                const fontsArray = jsObject.gui.fonts._array;
+                for (let fontIndex = 0; fontIndex < fontsArray.length; fontIndex++) {
+                    const glyphsArray = fontsArray[fontIndex].glyphs._array;
+                    for (let glyphIndex = 0; glyphIndex < glyphsArray.length; glyphIndex++) {
+                        const glyph = glyphsArray[glyphIndex];
+                        if (glyph.glyphBitmap) {
+                            var inputBuffer = Buffer.from(glyph.glyphBitmap.pixelArray);
+
+                            var outputBuffer = Buffer.alloc(LZ4.encodeBound(inputBuffer.length));
+                            var compressedSize = LZ4.encodeBlock(inputBuffer, outputBuffer);
+
+                            delete glyph.glyphBitmap.pixelArray;
+                            glyph.glyphBitmap.pixelArrayCompressed = [
+                                ...outputBuffer.slice(0, compressedSize)
+                            ];
+                        }
+                    }
+                }
             }
         }
     }

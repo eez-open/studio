@@ -22,7 +22,8 @@ import {
     geometryGroup,
     styleGroup,
     specificGroup,
-    EditorComponent
+    EditorComponent,
+    NavigationComponent
 } from "project-editor/core/object";
 import {
     TreeObjectAdapter,
@@ -30,11 +31,10 @@ import {
     TreeAdapter
 } from "project-editor/core/objectAdapter";
 import { loadObject } from "project-editor/core/serialization";
-import { NavigationStore, IPanel } from "project-editor/core/store";
+import { ProjectStore, NavigationStore, EditorsStore, IPanel } from "project-editor/core/store";
+import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Tree } from "project-editor/components/Tree";
 import { Panel } from "project-editor/components/Panel";
-
-import { ListNavigationWithContent } from "project-editor/components/ListNavigation";
 
 import {
     IResizeHandler,
@@ -44,10 +44,12 @@ import { PageEditor as StudioPageEditor } from "project-editor/features/gui/page
 import { WidgetPalette } from "project-editor/features/gui/page-editor/WidgetPalette";
 import { WidgetContainerComponent } from "project-editor/features/gui/page-editor/render";
 
+import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
+
 import { Widget } from "project-editor/features/gui/widget";
 
 import { findStyle } from "project-editor/features/gui/gui";
-import { getThemedColor } from "project-editor/features/gui/theme";
+import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,32 +96,7 @@ export class PageEditor extends EditorComponent implements IPanel {
 
     render() {
         let pageTabState = this.props.editor.state as PageTabState;
-
-        let editor = <StudioPageEditor widgetContainer={pageTabState.widgetContainerDisplayItem} />;
-
-        let pageStructure = <Tree treeAdapter={this.treeAdapter} tabIndex={0} />;
-
-        return (
-            <Splitter
-                type="horizontal"
-                persistId="page-editor/horizontal"
-                sizes={`100%|240px`}
-                tabIndex={0}
-                onFocus={this.focusHandler}
-                childrenOverflow="hidden"
-            >
-                {editor}
-                <Splitter
-                    type="vertical"
-                    persistId="page-editor/vertical"
-                    sizes={`100%|240px`}
-                    childrenOverflow="hidden"
-                >
-                    <Panel id="page-structure" title="Page Structure" body={pageStructure} />
-                    <Panel id="widgets" title="Widget Palette" body={<WidgetPalette />} />
-                </Splitter>
-            </Splitter>
-        );
+        return <StudioPageEditor widgetContainer={pageTabState.widgetContainerDisplayItem} />;
     }
 }
 
@@ -202,8 +179,11 @@ export const lazyLoadPageWidgets = (function() {
 
             if (pageWidgets.size > 0) {
                 setTimeout(loadNextPage);
+                return;
             }
         }
+
+        runInAction(() => (ProjectStore.project.allGuiPagesLoaded = true));
     }
 
     return {
@@ -217,6 +197,74 @@ export const lazyLoadPageWidgets = (function() {
         }
     };
 })();
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class PagesNavigation extends NavigationComponent {
+    @computed
+    get object() {
+        if (NavigationStore.selectedPanel) {
+            return NavigationStore.selectedPanel.selectedObject;
+        }
+        return NavigationStore.selectedObject;
+    }
+
+    @computed
+    get treeAdapter() {
+        if (!EditorsStore.activeEditor) {
+            return null;
+        }
+        let pageTabState = EditorsStore.activeEditor.state as PageTabState;
+        return new TreeAdapter(pageTabState.widgetContainerDisplayItem, undefined, undefined, true);
+    }
+
+    render() {
+        const navigation = this.treeAdapter ? (
+            <Splitter
+                type="vertical"
+                persistId="page-editor/properties-widgets-palette"
+                sizes={`50%|50%`}
+                childrenOverflow="hidden|hidden"
+            >
+                <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
+                <Panel
+                    id="page-structure"
+                    title="Page Structure"
+                    body={<Tree treeAdapter={this.treeAdapter} tabIndex={0} />}
+                />
+            </Splitter>
+        ) : (
+            <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
+        );
+
+        const properties = (
+            <Splitter
+                type="vertical"
+                persistId="page-editor/properties-widgets-palette"
+                sizes={`100%|200px`}
+                childrenOverflow="hidden|hidden"
+            >
+                <PropertiesPanel object={this.object} />
+                <Panel id="widgets" title="Widgets Palette" body={<WidgetPalette />} />
+            </Splitter>
+        );
+
+        return (
+            <Splitter
+                type="horizontal"
+                persistId={`project-editor/styles1`}
+                sizes={`240px|100%|400px|240px`}
+                childrenOverflow="hidden|hidden|hidden"
+            >
+                {navigation}
+                <Editors />
+                {properties}
+                <ThemesSideView />
+            </Splitter>
+        );
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -341,7 +389,7 @@ export class Page extends EezObject {
             return undefined;
         },
         editorComponent: PageEditor,
-        navigationComponent: ListNavigationWithContent,
+        navigationComponent: PagesNavigation,
         icon: "filter_none"
     };
 
