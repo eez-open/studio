@@ -104,7 +104,9 @@ class TextDrawingInBackground {
     ) {
         const color = lcd.getColor();
         const backColor = lcd.getBackColor();
-        const id = `${text},${color},${backColor},${font._id},${font._modificationTime}`;
+        const id = `${text},${color},${backColor},${font._id},${
+            font._modificationTime
+        },${width},${height}`;
         const canvas = this.cacheMap.get(id);
         if (canvas) {
             ctx.drawImage(canvas, x, y);

@@ -151,7 +151,25 @@ export class Splitter extends React.Component<SplitterProps, {}> {
             }
         }
 
-        this.sizes[0] += availableSize;
+        if (availableSize > 0) {
+            for (let i = 0; i < this.sizes.length; i++) {
+                if (!this.childIsFixed[i]) {
+                    this.sizes[i] += availableSize;
+                    availableSize = 0;
+                    break;
+                }
+            }
+        }
+
+        if (availableSize > 0) {
+            for (let i = 0; i < this.sizes.length; i++) {
+                if (this.childIsFixed[i]) {
+                    this.sizes[i] += availableSize;
+                    availableSize = 0;
+                    break;
+                }
+            }
+        }
 
         this.offsets[0] = 0;
         for (let i = 1; i < this.sizes.length; i++) {
@@ -179,6 +197,8 @@ export class Splitter extends React.Component<SplitterProps, {}> {
                 return;
             }
         }
+
+        size2 = this.sizes[iSplitter + 1] + this.sizes[iSplitter] - size1;
 
         // compute new sizes
         this.sizes[iSplitter] = size1;

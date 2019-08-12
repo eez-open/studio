@@ -1676,7 +1676,7 @@ export class FontsNavigation extends NavigationComponent {
         return (
             <Splitter
                 type="horizontal"
-                persistId={`project-editor/fonts1`}
+                persistId={`project-editor/fonts`}
                 sizes={`240px|100%|240px`}
                 childrenOverflow="hidden|hidden|hidden"
             >

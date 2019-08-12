@@ -208,6 +208,8 @@ function anythingToBuild() {
 }
 
 export async function build(onlyCheck: boolean) {
+    const timeStart = new Date().getTime();
+
     OutputSectionsStore.setActiveSection(Section.OUTPUT);
     OutputSectionsStore.clear(Section.OUTPUT);
 
@@ -280,6 +282,8 @@ export async function build(onlyCheck: boolean) {
     } finally {
         OutputSectionsStore.setLoading(Section.OUTPUT, false);
     }
+
+    console.log("Build time:", new Date().getTime() - timeStart);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

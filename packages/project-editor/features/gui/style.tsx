@@ -86,9 +86,9 @@ export class StylesNavigation extends NavigationComponent {
         return (
             <Splitter
                 type="horizontal"
-                persistId={`project-editor/styles1`}
+                persistId={`project-editor/styles`}
                 sizes={`240px|100%|400px|240px`}
-                childrenOverflow="hidden|hidden|hidden"
+                childrenOverflow="hidden|hidden|hidden|hidden"
             >
                 <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
                 {this.object ? <StyleEditor style={this.object as Style} /> : <div />}

@@ -449,7 +449,7 @@ function buildGuiStylesEnum(assets: Assets) {
     return `enum StylesEnum {\n${styles.join(",\n")}\n};`;
 }
 
-function buildGuiStylesData(assets: Assets) {
+function buildGuiStylesData(assets: Assets, packData: boolean = true) {
     function buildStyle(style: Style) {
         let result = new Struct();
 
@@ -562,9 +562,12 @@ function buildGuiStylesData(assets: Assets) {
 
     let document = new Struct();
     build();
-    let objects = finish();
-    let data = pack(objects);
-    return data;
+    if (packData) {
+        let objects = finish();
+        let data = pack(objects);
+        return data;
+    }
+    return [];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1131,7 +1134,7 @@ function buildGuiPagesEnum(assets: Assets) {
     return `enum PagesEnum {\n${pages}\n};`;
 }
 
-function buildGuiDocumentData(assets: Assets) {
+function buildGuiDocumentData(assets: Assets, packData: boolean = true) {
     function buildPage(page: Page) {
         return buildWidget(page, assets);
     }
@@ -1169,10 +1172,12 @@ function buildGuiDocumentData(assets: Assets) {
 
     let document = new Struct();
     build();
-    let objects = finish();
-    let data = pack(objects);
-
-    return data;
+    if (packData) {
+        let objects = finish();
+        let data = pack(objects);
+        return data;
+    }
+    return [];
 }
 
 function buildGuiColors(assets: Assets) {
@@ -1300,43 +1305,39 @@ class Assets {
     colors: string[] = [];
 
     constructor(public project: Project, buildConfiguration: BuildConfiguration | undefined) {
-        this.dataItems = (project.data._array as DataItem[]).filter(
+        this.dataItems = project.data._array.filter(
             dataItem =>
                 !buildConfiguration ||
                 !dataItem.usedIn ||
                 dataItem.usedIn.indexOf(buildConfiguration.name) !== -1
         );
 
-        this.actions = (project.actions._array as Action[]).filter(
+        this.actions = project.actions._array.filter(
             action =>
                 !buildConfiguration ||
                 !action.usedIn ||
                 action.usedIn.indexOf(buildConfiguration.name) !== -1
         );
 
-        this.pages = (getProperty(project, "gui") as Gui).pages._array.filter(
+        const gui = getProperty(project, "gui") as Gui;
+
+        this.pages = gui.pages._array.filter(
             page =>
                 !buildConfiguration ||
                 !page.usedIn ||
                 page.usedIn.indexOf(buildConfiguration.name) !== -1
         );
 
-        this.styles = (getProperty(project, "gui") as Gui).styles._array.filter(
-            style => style.alwaysBuild
-        );
+        this.styles = gui.styles._array.filter(style => style.alwaysBuild);
 
-        this.fonts = (getProperty(project, "gui") as Gui).fonts._array.filter(
-            bitmap => bitmap.alwaysBuild
-        );
+        this.fonts = gui.fonts._array.filter(bitmap => bitmap.alwaysBuild);
 
-        this.bitmaps = (getProperty(project, "gui") as Gui).bitmaps._array.filter(
-            font => font.alwaysBuild
-        );
+        this.bitmaps = gui.bitmaps._array.filter(font => font.alwaysBuild);
 
         while (true) {
             const n = this.totalGuiAssets;
-            buildGuiDocumentData(this);
-            buildGuiStylesData(this);
+            buildGuiDocumentData(this, false);
+            buildGuiStylesData(this, false);
             if (n === this.totalGuiAssets) {
                 break;
             }
@@ -1378,20 +1379,6 @@ class Assets {
 
     get totalGuiAssets() {
         return this.pages.length + this.styles.length + this.fonts.length + this.bitmaps.length;
-    }
-
-    add(object: Style | Font | Bitmap) {
-        if (object instanceof Style && this.styles.indexOf(object) === -1) {
-            this.styles.push(object);
-        }
-
-        if (object instanceof Font && this.fonts.indexOf(object) === -1) {
-            this.fonts.push(object);
-        }
-
-        if (object instanceof Bitmap && this.bitmaps.indexOf(object) === -1) {
-            this.bitmaps.push(object);
-        }
     }
 
     getPageIndex(pageName: string) {

@@ -80,9 +80,9 @@ export class BitmapsNavigation extends NavigationComponent {
         return (
             <Splitter
                 type="horizontal"
-                persistId={`project-editor/bitmaps1`}
+                persistId={`project-editor/bitmaps`}
                 sizes={`240px|100%|400px|240px`}
-                childrenOverflow="hidden|hidden|hidden"
+                childrenOverflow="hidden|hidden|hidden|hidden"
             >
                 <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
                 {this.object ? <BitmapEditor bitmap={this.object as Bitmap} /> : <div />}

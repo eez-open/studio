@@ -1,7 +1,7 @@
 import React from "react";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
-const LZ4 = require("lz4");
+//const LZ4 = require("lz4");
 
 import { guid } from "eez-studio-shared/guid";
 import {
@@ -244,24 +244,25 @@ registerFeatureImplementation("gui", {
                 delete jsObject.gui.themeColors;
 
                 ///
-                const fontsArray = jsObject.gui.fonts._array;
-                for (let fontIndex = 0; fontIndex < fontsArray.length; fontIndex++) {
-                    const glyphsArray = fontsArray[fontIndex].glyphs._array;
-                    for (let glyphIndex = 0; glyphIndex < glyphsArray.length; glyphIndex++) {
-                        const glyph = glyphsArray[glyphIndex];
-                        if (glyph.glyphBitmap) {
-                            var inputBuffer = Buffer.from(glyph.glyphBitmap.pixelArray);
 
-                            var outputBuffer = Buffer.alloc(LZ4.encodeBound(inputBuffer.length));
-                            var compressedSize = LZ4.encodeBlock(inputBuffer, outputBuffer);
+                // const fontsArray = jsObject.gui.fonts._array;
+                // for (let fontIndex = 0; fontIndex < fontsArray.length; fontIndex++) {
+                //     const glyphsArray = fontsArray[fontIndex].glyphs._array;
+                //     for (let glyphIndex = 0; glyphIndex < glyphsArray.length; glyphIndex++) {
+                //         const glyph = glyphsArray[glyphIndex];
+                //         if (glyph.glyphBitmap) {
+                //             var inputBuffer = Buffer.from(glyph.glyphBitmap.pixelArray);
 
-                            delete glyph.glyphBitmap.pixelArray;
-                            glyph.glyphBitmap.pixelArrayCompressed = [
-                                ...outputBuffer.slice(0, compressedSize)
-                            ];
-                        }
-                    }
-                }
+                //             var outputBuffer = Buffer.alloc(LZ4.encodeBound(inputBuffer.length));
+                //             var compressedSize = LZ4.encodeBlock(inputBuffer, outputBuffer);
+
+                //             delete glyph.glyphBitmap.pixelArray;
+                //             glyph.glyphBitmap.pixelArrayCompressed = [
+                //                 ...outputBuffer.slice(0, compressedSize)
+                //             ];
+                //         }
+                //     }
+                // }
             }
         }
     }

@@ -10,11 +10,12 @@ import {
 
 import {
     IBaseObject,
+    IDocument,
     IViewState
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 
 class BoundingRects {
-    @observable map = new Map<string, Rect>();
+    @observable map = new Map<string, Rect[]>();
 
     constructor() {
         this.updateBoundingRects();
@@ -24,13 +25,19 @@ class BoundingRects {
     updateBoundingRects() {
         const $divs = $(`[data-designer-object-id]`);
 
-        const map = new Map<string, Rect>();
+        const map = new Map<string, Rect[]>();
 
         for (let i = 0; i < $divs.length; ++i) {
             const div = $divs[i];
             const id = div.getAttribute("data-designer-object-id")!;
             const rect = div.getBoundingClientRect();
-            map.set(id, rect);
+
+            const rects = map.get(id);
+            if (rects) {
+                map.set(id, rects.concat([rect]));
+            } else {
+                map.set(id, [rect]);
+            }
         }
 
         for (const key of this.map.keys()) {
@@ -44,10 +51,19 @@ class BoundingRects {
             const r2 = this.map.get(key);
             if (
                 !r2 ||
-                r2.left != r1.left ||
-                r2.top != r1.top ||
-                r2.width != r1.width ||
-                r2.height != r1.height
+                r1.length !== r2.length ||
+                (r1.length == 1 &&
+                    (r1[0].left != r2[0].left ||
+                        r1[0].top != r2[0].top ||
+                        r1[0].width != r2[0].width ||
+                        r1[0].height != r2[0].height)) ||
+                r1.find(
+                    (r, i) =>
+                        r.left != r2[i].left ||
+                        r.top != r2[i].top ||
+                        r.width != r2[i].width ||
+                        r.height != r2[i].height
+                )
             ) {
                 this.map.set(key, r1);
             }
@@ -56,31 +72,34 @@ class BoundingRects {
         window.requestAnimationFrame(this.updateBoundingRects);
     }
 
-    static boundigRectToPageRect(rect?: Rect, viewState?: IViewState) {
-        if (!rect) {
+    static boundigRectToPageRect(boundingRect?: Rect, viewState?: IViewState) {
+        if (!boundingRect) {
             return { left: 0, top: 0, width: 1, height: 1 };
         }
         if (!viewState) {
-            return rect;
+            return boundingRect;
         }
-        return viewState.transform.clientToPageRect(rect);
+        return viewState.transform.clientToPageRect(boundingRect);
     }
 
     getBoundingRectFromId(id: string, viewState?: IViewState) {
-        return BoundingRects.boundigRectToPageRect(this.map.get(id), viewState);
+        const boundingRects = this.map.get(id);
+        return BoundingRects.boundigRectToPageRect(boundingRects && boundingRects[0], viewState);
     }
 
     getBoundingRect(object: IBaseObject, viewState: IViewState) {
-        return BoundingRects.boundigRectToPageRect(this.map.get(object.id), viewState);
+        return this.getBoundingRectFromId(object.id, viewState);
     }
 
-    getObjectIdFromPoint(viewState: IViewState, point: Point) {
+    getObjectIdFromPoint(document: IDocument, viewState: IViewState, point: Point) {
         let foundId: string | undefined;
         point = viewState.transform.pageToClientPoint(point);
-        for (const key of this.map.keys()) {
-            if (pointInRect(point, this.map.get(key)!)) {
-                if (!foundId || key.length > foundId.length) {
-                    foundId = key;
+        for (const [id, boundingRects] of this.map.entries()) {
+            for (const boundingRect of boundingRects) {
+                if (pointInRect(point, boundingRect) && document.findObjectById(id)) {
+                    if (!foundId || id.length > foundId.length) {
+                        foundId = id;
+                    }
                 }
             }
         }
@@ -89,20 +108,24 @@ class BoundingRects {
 
     getDocumentBoundingRect(viewState: IViewState) {
         let boundingRectBuilder = new BoundingRectBuilder();
-        this.map.forEach(rect => {
-            boundingRectBuilder.addRect(rect);
+        this.map.forEach(boundingRects => {
+            for (const boundingRect of boundingRects) {
+                boundingRectBuilder.addRect(boundingRect);
+            }
         });
         return BoundingRects.boundigRectToPageRect(boundingRectBuilder.getRect(), viewState);
     }
 
     getObjectIdsInsideRect(viewState: IViewState, rect: Rect) {
         const ids: string[] = [];
-        this.map.forEach((boundingRect: Rect, id: string) => {
-            const pageRect = BoundingRects.boundigRectToPageRect(boundingRect, viewState);
-            if (isRectInsideRect(pageRect, rect)) {
-                ids.push(id);
+        for (const [id, boundingRects] of this.map.entries()) {
+            for (const boundingRect of boundingRects) {
+                const pageRect = BoundingRects.boundigRectToPageRect(boundingRect, viewState);
+                if (isRectInsideRect(pageRect, rect)) {
+                    ids.push(id);
+                }
             }
-        });
+        }
         return ids;
     }
 }
@@ -121,8 +144,8 @@ export function getSelectedObjectsBoundingRect(viewState: IViewState) {
     return boundingRectBuilder.getRect();
 }
 
-export function getObjectIdFromPoint(viewState: IViewState, point: Point) {
-    return boundingRects.getObjectIdFromPoint(viewState, point);
+export function getObjectIdFromPoint(document: IDocument, viewState: IViewState, point: Point) {
+    return boundingRects.getObjectIdFromPoint(document, viewState, point);
 }
 
 export function getObjectIdsInsideRect(viewState: IViewState, rect: Rect) {

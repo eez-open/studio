@@ -183,7 +183,7 @@ export const lazyLoadPageWidgets = (function() {
             }
         }
 
-        runInAction(() => (ProjectStore.project.allGuiPagesLoaded = true));
+        runInAction(() => (ProjectStore.project._allGuiPagesLoaded = true));
     }
 
     return {
@@ -253,9 +253,9 @@ export class PagesNavigation extends NavigationComponent {
         return (
             <Splitter
                 type="horizontal"
-                persistId={`project-editor/styles1`}
+                persistId={`project-editor/pages`}
                 sizes={`240px|100%|400px|240px`}
-                childrenOverflow="hidden|hidden|hidden"
+                childrenOverflow="hidden|hidden|hidden|hidden"
             >
                 {navigation}
                 <Editors />

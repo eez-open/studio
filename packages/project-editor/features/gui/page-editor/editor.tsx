@@ -285,7 +285,7 @@ class PageDocument implements IDocument {
     }
 
     objectFromPoint(point: Point) {
-        const id = getObjectIdFromPoint(this.pageEditorContext.viewState, point);
+        const id = getObjectIdFromPoint(this, this.pageEditorContext.viewState, point);
         if (!id) {
             return undefined;
         }

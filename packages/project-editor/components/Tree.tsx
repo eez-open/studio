@@ -88,8 +88,6 @@ class DropMark extends React.Component<DropMarkProps, {}> {
 
 const TreeRowDiv = styled.div`
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 
     &.drag-source {
         background-color: ${props => props.theme.dragSourceBackgroundColor};
@@ -401,6 +399,11 @@ const TreeDiv = styled.div`
     border: 2px dashed transparent;
     height: 100%;
     position: relative;
+
+    & > div {
+        position: absolute;
+        min-width: calc(100% - 10px);
+    }
 
     &.zero-level .tree-row-label {
         margin-left: 0 !important;

@@ -102,7 +102,7 @@ export function measureStr(text: string, font: Font, maxWidth: number): number {
         let encoding = text.charCodeAt(i);
         let glyph_width = measureGlyph(encoding, font);
         if (maxWidth > 0 && width + glyph_width > maxWidth) {
-            break;
+            return maxWidth;
         }
         width += glyph_width;
     }
