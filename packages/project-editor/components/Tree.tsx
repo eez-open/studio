@@ -21,7 +21,8 @@ const DropMarkDiv = styled.div`
 
 const DropHorizontalMarkDiv = styled.div`
     position: relative;
-    top: 5px;
+    left: -2px;
+    top: 0;
     height: 2px;
     border-top: 2px solid ${props => props.theme.dropPlaceColor};
 `;
