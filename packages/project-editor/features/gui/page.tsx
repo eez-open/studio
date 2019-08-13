@@ -213,7 +213,7 @@ export class PagesNavigation extends NavigationComponent {
     @computed
     get widgetContainerDisplayItem() {
         if (!EditorsStore.activeEditor) {
-            return null;
+            return undefined;
         }
         let pageTabState = EditorsStore.activeEditor.state as PageTabState;
         return pageTabState.widgetContainerDisplayItem;
@@ -244,7 +244,7 @@ export class PagesNavigation extends NavigationComponent {
     }
 
     get selectedObject() {
-        return this.widgetContainerDisplayItem!.selectedObject;
+        return this.widgetContainerDisplayItem && this.widgetContainerDisplayItem.selectedObject;
     }
 
     @bind
