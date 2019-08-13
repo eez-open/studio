@@ -924,7 +924,7 @@ class Property extends React.Component<PropertyProps> {
                 <select
                     ref={(ref: any) => (this.select = ref)}
                     className="form-control"
-                    value={this._value || ""}
+                    value={this._value !== undefined ? this._value : ""}
                     onChange={this.onChange}
                 >
                     {options}
