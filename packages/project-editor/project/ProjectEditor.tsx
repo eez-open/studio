@@ -224,7 +224,8 @@ export class PropertiesPanel extends React.Component<{ object: EezObject | undef
 
         if (
             NavigationStore.selectedPanel &&
-            NavigationStore.selectedPanel.selectedObjects !== undefined
+            NavigationStore.selectedPanel.selectedObjects !== undefined &&
+            NavigationStore.selectedPanel.selectedObjects.length > 0
         ) {
             objects = NavigationStore.selectedPanel.selectedObjects;
         } else if (this.props.object) {

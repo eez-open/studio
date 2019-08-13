@@ -211,12 +211,45 @@ export class PagesNavigation extends NavigationComponent {
     }
 
     @computed
-    get treeAdapter() {
+    get widgetContainerDisplayItem() {
         if (!EditorsStore.activeEditor) {
             return null;
         }
         let pageTabState = EditorsStore.activeEditor.state as PageTabState;
-        return new TreeAdapter(pageTabState.widgetContainerDisplayItem, undefined, undefined, true);
+        return pageTabState.widgetContainerDisplayItem;
+    }
+
+    @computed
+    get treeAdapter() {
+        if (!this.widgetContainerDisplayItem) {
+            return null;
+        }
+        return new TreeAdapter(this.widgetContainerDisplayItem, undefined, undefined, true);
+    }
+
+    cutSelection() {
+        this.treeAdapter!.cutSelection();
+    }
+
+    copySelection() {
+        this.treeAdapter!.copySelection();
+    }
+
+    pasteSelection() {
+        this.treeAdapter!.pasteSelection();
+    }
+
+    deleteSelection() {
+        this.treeAdapter!.deleteSelection();
+    }
+
+    get selectedObject() {
+        return this.widgetContainerDisplayItem!.selectedObject;
+    }
+
+    @bind
+    onFocus() {
+        NavigationStore.setSelectedPanel(this);
     }
 
     render() {
@@ -231,7 +264,9 @@ export class PagesNavigation extends NavigationComponent {
                 <Panel
                     id="page-structure"
                     title="Page Structure"
-                    body={<Tree treeAdapter={this.treeAdapter} tabIndex={0} />}
+                    body={
+                        <Tree treeAdapter={this.treeAdapter} tabIndex={0} onFocus={this.onFocus} />
+                    }
                 />
             </Splitter>
         ) : (
@@ -245,7 +280,7 @@ export class PagesNavigation extends NavigationComponent {
                 sizes={`100%|200px`}
                 childrenOverflow="hidden|hidden"
             >
-                <PropertiesPanel object={this.object} />
+                <PropertiesPanel object={this.selectedObject} />
                 <Panel id="widgets" title="Widgets Palette" body={<WidgetPalette />} />
             </Splitter>
         );
