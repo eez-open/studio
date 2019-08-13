@@ -149,6 +149,11 @@ Built Snap package is located in `installation/linux`.
 ### Build Linux installation using Docker
 
 ```
+rm -rf node_modules
+rm -rf builder-output
+```
+
+```
 docker run --rm -ti \
  --env-file <(env | grep -iE 'DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|CIRCLE|TRAVIS_TAG|TRAVIS|TRAVIS_REPO_|TRAVIS_BUILD_|TRAVIS_BRANCH|TRAVIS_PULL_REQUEST_|APPVEYOR_|CSC_|GH_|GITHUB_|BT_|AWS_|STRIP|BUILD_') \
  --env ELECTRON_CACHE="/root/.cache/electron" \
@@ -165,6 +170,7 @@ Execute this inside docker container:
 ```
 apt-get update
 apt-get install libudev-dev libxss1 libasound2
+yarn build
 yarn build2
 ```
 
