@@ -1413,11 +1413,7 @@ class GlyphEditor extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class FontEditor
-    extends React.Component<{
-        font: Font;
-    }>
-    implements IPanel {
+export class FontEditor extends React.Component<{ font: Font }> implements IPanel {
     get glyphs() {
         let font = this.props.font;
         return font.glyphs;
@@ -1441,7 +1437,11 @@ export class FontEditor
     }
 
     get selectedObject() {
-        return this.selectedGlyph;
+        if (this.selectedGlyph && this.selectedGlyph._parent == this.props.font.glyphs) {
+            return this.selectedGlyph;
+        } else {
+            return this.props.font;
+        }
     }
 
     cutSelection() {
@@ -1616,6 +1616,11 @@ export class FontEditor
         }
     }
 
+    @bind
+    onFocus() {
+        NavigationStore.setSelectedPanel(this);
+    }
+
     render() {
         const font = this.props.font;
 
@@ -1633,6 +1638,7 @@ export class FontEditor
                 persistId="project-editor/font-editor"
                 sizes={`50%|50%`}
                 tabIndex={0}
+                onFocus={this.onFocus}
             >
                 <Glyphs
                     glyphs={this.glyphs._array}
