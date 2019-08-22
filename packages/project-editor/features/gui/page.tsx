@@ -244,7 +244,33 @@ export class PagesNavigation extends NavigationComponent {
     }
 
     get selectedObject() {
-        return this.widgetContainerDisplayItem && this.widgetContainerDisplayItem.selectedObject;
+        const selectedObject =
+            this.widgetContainerDisplayItem && this.widgetContainerDisplayItem.selectedObject;
+        if (selectedObject) {
+            return selectedObject;
+        }
+
+        if (EditorsStore.activeEditor) {
+            let pageTabState = EditorsStore.activeEditor.state as PageTabState;
+            return pageTabState.page;
+        }
+
+        return undefined;
+    }
+
+    get selectedObjects() {
+        const selectedObjects =
+            this.widgetContainerDisplayItem && this.widgetContainerDisplayItem.selectedObjects;
+        if (selectedObjects && selectedObjects.length > 0) {
+            return selectedObjects;
+        }
+
+        if (EditorsStore.activeEditor) {
+            let pageTabState = EditorsStore.activeEditor.state as PageTabState;
+            return pageTabState.page;
+        }
+
+        return undefined;
     }
 
     @bind
