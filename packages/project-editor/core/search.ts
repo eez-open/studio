@@ -1,4 +1,5 @@
 import { _isEqual } from "eez-studio-shared/algorithm";
+import { humanize } from "eez-studio-shared/string";
 
 import {
     EezObject,
@@ -79,11 +80,23 @@ type SearchResult = EezValueObject | null;
 function* searchForPattern(
     root: EezObject,
     pattern: string,
+    matchCase: boolean,
+    matchWholeWord: boolean,
     withPause: boolean
 ): IterableIterator<SearchResult> {
     let v = withPause ? visitWithPause(root) : visitWithoutPause(root);
 
-    pattern = pattern.toLowerCase();
+    if (!matchCase) {
+        pattern = pattern.toLowerCase();
+    }
+
+    const [namePattern, valuePattern] = pattern.split("=").map(pattern => {
+        pattern = pattern.trim();
+        if (!matchCase) {
+            pattern = pattern.toLowerCase();
+        }
+        return pattern;
+    });
 
     while (true) {
         let visitResult = v.next();
@@ -93,14 +106,36 @@ function* searchForPattern(
 
         if (visitResult.value) {
             let valueObject = visitResult.value;
-            if (
-                valueObject.value &&
-                valueObject.value
-                    .toString()
-                    .toLowerCase()
-                    .indexOf(pattern) != -1
-            ) {
-                yield valueObject;
+            if (valueObject.value) {
+                let name = humanize(valueObject.propertyInfo.name);
+                let value = valueObject.value.toString();
+
+                if (!matchCase) {
+                    name = name.toLowerCase();
+                    value = value.toLowerCase();
+                }
+
+                if (matchWholeWord) {
+                    if (
+                        value == pattern ||
+                        (namePattern &&
+                            valuePattern &&
+                            name === namePattern &&
+                            value === valuePattern)
+                    ) {
+                        yield valueObject;
+                    }
+                } else {
+                    if (
+                        value.indexOf(pattern) != -1 ||
+                        (namePattern &&
+                            valuePattern &&
+                            name.indexOf(namePattern) != -1 &&
+                            value.indexOf(valuePattern) != -1)
+                    ) {
+                        yield valueObject;
+                    }
+                }
             }
         } else if (withPause) {
             // pause
@@ -192,7 +227,12 @@ function* searchForReference(
 class CurrentSearch {
     interval: any;
 
-    startNewSearch(root: EezObject, patternOrObject: string | EezObject) {
+    startNewSearch(
+        root: EezObject,
+        patternOrObject: string | EezObject,
+        matchCase: boolean,
+        matchWholeWord: boolean
+    ) {
         OutputSectionsStore.clear(Section.SEARCH);
 
         if (this.interval) {
@@ -207,7 +247,7 @@ class CurrentSearch {
         ) {
             let searchResultsGenerator =
                 typeof patternOrObject == "string"
-                    ? searchForPattern(root, patternOrObject, true)
+                    ? searchForPattern(root, patternOrObject, matchCase, matchWholeWord, true)
                     : searchForReference(root, patternOrObject, true);
 
             this.interval = setInterval(() => {
@@ -244,18 +284,23 @@ class CurrentSearch {
 
 let theCurrentSearch = new CurrentSearch();
 
-function startNewSearch(root: EezObject, patternOrObject: string | EezObject) {
-    theCurrentSearch.startNewSearch(root, patternOrObject);
+function startNewSearch(
+    root: EezObject,
+    patternOrObject: string | EezObject,
+    matchCase: boolean,
+    matchWholeWord: boolean
+) {
+    theCurrentSearch.startNewSearch(root, patternOrObject, matchCase, matchWholeWord);
 }
 
-export function startSearch(pattern: string) {
+export function startSearch(pattern: string, matchCase: boolean, matchWholeWord: boolean) {
     OutputSectionsStore.setActiveSection(Section.SEARCH);
-    startNewSearch(DocumentStore.document, pattern);
+    startNewSearch(DocumentStore.document, pattern, matchCase, matchWholeWord);
 }
 
 export function findAllReferences(object: EezObject) {
     OutputSectionsStore.setActiveSection(Section.SEARCH);
-    startNewSearch(DocumentStore.document, object);
+    startNewSearch(DocumentStore.document, object, true, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

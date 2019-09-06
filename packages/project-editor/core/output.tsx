@@ -75,6 +75,10 @@ export class OutputSection implements IPanel {
             );
         }
 
+        if (this.id == Section.SEARCH && UIStateStore.searchPattern) {
+            return `${this.name} (${this.messages.length})`;
+        }
+
         return this.name;
     }
 
