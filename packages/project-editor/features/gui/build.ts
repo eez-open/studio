@@ -670,7 +670,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
     }
     result.addField(new UInt16(style));
 
-    // style
+    // active style
     let activeStyle: number;
     if (object instanceof Widget.Widget && object.activeStyle) {
         activeStyle = assets.getStyleIndex(object.activeStyle);
@@ -1263,9 +1263,9 @@ async function buildGuiAssetsData(assets: Assets) {
     var outputBuffer = Buffer.alloc(LZ4.encodeBound(inputBuffer.length));
     var compressedSize = LZ4.encodeBlock(inputBuffer, outputBuffer);
 
-    const data = Buffer.alloc(4 + compressedSize);
-    data.writeUInt32LE(inputBuffer.length, 0); // write uncomprresed size at the beginning
-    outputBuffer.copy(data, 4, 0, compressedSize);
+    const compressedData = Buffer.alloc(4 + compressedSize);
+    compressedData.writeUInt32LE(inputBuffer.length, 0); // write uncomprresed size at the beginning
+    outputBuffer.copy(compressedData, 4, 0, compressedSize);
 
     OutputSectionsStore.write(
         output.Section.OUTPUT,
@@ -1279,7 +1279,7 @@ async function buildGuiAssetsData(assets: Assets) {
         "Compressed size: " + compressedSize
     );
 
-    return data;
+    return [inputBuffer, compressedData];
 }
 
 function buildGuiAssetsDecl(data: Buffer) {
@@ -1571,15 +1571,34 @@ export async function build(
     }
 
     const buildAssetsDecl = !sectionNames || sectionNames.indexOf("GUI_ASSETS_DECL") !== -1;
+    const buildAssetsDeclCompressed =
+        !sectionNames || sectionNames.indexOf("GUI_ASSETS_DECL_COMPRESSED") !== -1;
     const buildAssetsDef = !sectionNames || sectionNames.indexOf("GUI_ASSETS_DEF") !== -1;
-    if (buildAssetsDecl || buildAssetsDef) {
+    const buildAssetsDefCompressed =
+        !sectionNames || sectionNames.indexOf("GUI_ASSETS_DEF_COMPRESSED") !== -1;
+    if (
+        buildAssetsDecl ||
+        buildAssetsDeclCompressed ||
+        buildAssetsDef ||
+        buildAssetsDefCompressed
+    ) {
         // build all assets as single data chunk
-        const assetsData = await buildGuiAssetsData(assets);
+        const [assetsData, compressedAssetsData] = await buildGuiAssetsData(assets);
+
         if (buildAssetsDecl) {
             result.GUI_ASSETS_DECL = buildGuiAssetsDecl(assetsData);
         }
+
+        if (buildAssetsDeclCompressed) {
+            result.GUI_ASSETS_DECL_COMPRESSED = buildGuiAssetsDecl(compressedAssetsData);
+        }
+
         if (buildAssetsDef) {
             result.GUI_ASSETS_DEF = await buildGuiAssetsDef(assetsData);
+        }
+
+        if (buildAssetsDefCompressed) {
+            result.GUI_ASSETS_DEF_COMPRESSED = await buildGuiAssetsDef(compressedAssetsData);
         }
     }
 
