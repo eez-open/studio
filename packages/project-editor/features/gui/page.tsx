@@ -131,9 +131,13 @@ export class PageTabState implements IEditorState {
 
     @action
     selectObject(object: EezObject) {
-        let item = this.widgetContainerDisplayItem.getObjectAdapter(object);
-        if (item) {
-            this.widgetContainerDisplayItem.selectItems([item]);
+        let ancestor: EezObject | undefined;
+        for (ancestor = object; ancestor; ancestor = object._parent) {
+            let item = this.widgetContainerDisplayItem.getObjectAdapter(ancestor);
+            if (item) {
+                this.widgetContainerDisplayItem.selectItems([item]);
+                return;
+            }
         }
     }
 }

@@ -141,7 +141,7 @@ class NavigationStoreClass {
         this.selectedPanel = selectedPanel;
     }
 
-    //@computed
+    @computed
     get selectedObject(): EezObject | undefined {
         let object: EezObject = DocumentStore.document;
         if (!object) {
@@ -267,11 +267,11 @@ class NavigationStoreClass {
 
     @action
     setNavigationSelectedItem(navigationObject: EezObject, navigationSelectedItem: NavigationItem) {
-        this.navigationMap.set(navigationObject._id, navigationSelectedItem);
-
         if (!isPartOfNavigation(navigationObject)) {
             return;
         }
+
+        this.navigationMap.set(navigationObject._id, navigationSelectedItem);
 
         let parent = navigationObject._parent;
         if (parent) {
@@ -577,6 +577,15 @@ class UIStateStoreClass {
 
     @observable
     savedState: any;
+
+    @observable
+    searchPattern: string;
+
+    @observable
+    searchMatchCase: boolean;
+
+    @observable
+    searchMatchWholeWord: boolean;
 
     constructor() {
         autorun(() => {
