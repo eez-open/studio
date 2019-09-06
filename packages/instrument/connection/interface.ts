@@ -37,6 +37,7 @@ export interface CommunicationInterfaceHost {
 
 export interface CommunicationInterface {
     connect(): void;
+    isConnected(): boolean;
     write(data: string): void;
     disconnect(): void;
 }

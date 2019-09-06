@@ -326,6 +326,10 @@ export class Connection extends ConnectionBase implements CommunicationInterface
             this.longOperationDone();
             this.data = dataSurplus;
         }
+
+        if (!(this.communicationInterface && this.communicationInterface.isConnected())) {
+            this.disconnect();
+        }
     }
 
     onData(data: string) {

@@ -60,9 +60,15 @@ export class SerialInterface implements CommunicationInterface {
         });
     }
 
+    isConnected() {
+        return this.port && this.port.isOpen;
+    }
+
     destroy() {
         if (this.port) {
-            this.port.close();
+            if (this.port.isOpen) {
+                this.port.close();
+            }
             this.port = undefined;
         }
         this.host.disconnected();

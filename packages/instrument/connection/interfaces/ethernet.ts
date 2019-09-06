@@ -68,6 +68,10 @@ export class EthernetInterface implements CommunicationInterface {
         }
     }
 
+    isConnected() {
+        return !!this.socket;
+    }
+
     destroy() {
         if (this.socket) {
             this.socket.destroy();

@@ -1140,6 +1140,10 @@ export class UsbTmcInterface implements CommunicationInterface {
 
     connect() {}
 
+    isConnected() {
+        return !!this.instrument;
+    }
+
     destroy() {
         if (this.instrument) {
             this.instrument.close();
