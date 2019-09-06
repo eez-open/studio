@@ -34,29 +34,6 @@ function buildActionsFuncsDecl(projectActions: Action[]) {
     return actions.join("\n");
 }
 
-function buildActionsFuncsDef(projectActions: Action[]) {
-    let actions = projectActions.map(action => {
-        let implementationCode = action.implementationCode;
-
-        if (implementationCode) {
-            implementationCode = implementationCode
-                .split("\n")
-                .map(line => projectBuild.TAB + line)
-                .join("\n");
-        } else {
-            implementationCode = "";
-        }
-
-        return `void ${projectBuild.getName(
-            "action_",
-            action.name,
-            projectBuild.NamingConvention.UnderscoreLowerCase
-        )}() {\n${implementationCode}\n}\n`;
-    });
-
-    return actions.join("\n");
-}
-
 function buildActionsArrayDecl() {
     return "extern ActionExecFunc g_actionExecFunctions[];";
 }
@@ -97,10 +74,6 @@ export function build(
 
         if (!sectionNames || sectionNames.indexOf("ACTIONS_FUNCS_DECL") !== -1) {
             result.ACTIONS_FUNCS_DECL = buildActionsFuncsDecl(projectActions);
-        }
-
-        if (!sectionNames || sectionNames.indexOf("ACTIONS_FUNCS_DEF") !== -1) {
-            result.ACTIONS_FUNCS_DEF = buildActionsFuncsDef(projectActions);
         }
 
         if (!sectionNames || sectionNames.indexOf("ACTIONS_ARRAY_DECL") !== -1) {

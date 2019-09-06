@@ -1,4 +1,4 @@
-import { observable, computed } from "mobx";
+import { observable } from "mobx";
 
 import { validators } from "eez-studio-shared/validation";
 import {
@@ -28,8 +28,6 @@ export class Action extends EezObject {
     @observable
     description?: string;
     @observable
-    implementationType: "graphical" | "native";
-    @observable
     implementation?: string;
     @observable
     usedIn: string[] | undefined;
@@ -44,18 +42,6 @@ export class Action extends EezObject {
             {
                 name: "description",
                 type: PropertyType.MultilineText
-            },
-            {
-                name: "implementationType",
-                type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "graphical"
-                    },
-                    {
-                        id: "native"
-                    }
-                ]
             },
             {
                 name: "implementation",
@@ -85,8 +71,7 @@ export class Action extends EezObject {
                 values: {}
             }).then(result => {
                 return Promise.resolve({
-                    name: result.values.name,
-                    implementationType: "native"
+                    name: result.values.name
                 });
             });
         },
@@ -94,26 +79,6 @@ export class Action extends EezObject {
         navigationComponentId: "actions",
         icon: "code"
     };
-
-    @computed
-    get implementationCode() {
-        let implementationCode: string | undefined;
-
-        if (this.implementationType == "graphical") {
-            // TODO convert graphical implementation to native
-        } else {
-            if (this.implementation) {
-                // remove empty lines
-                let lines = this.implementation.split("\n").filter(line => line.trim() != "");
-                implementationCode = lines.join("\n");
-                if (implementationCode.length == 0) {
-                    implementationCode = undefined;
-                }
-            }
-        }
-
-        return implementationCode;
-    }
 }
 
 registerClass(Action);
