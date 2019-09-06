@@ -1305,7 +1305,8 @@ enum DisplayOption {
     Integer = 1,
     FractionAndUnit = 2,
     Fraction = 3,
-    Unit = 4
+    Unit = 4,
+    IntegerAndFraction = 5
 }
 
 export class DisplayDataWidget extends Widget {
@@ -1325,19 +1326,23 @@ export class DisplayDataWidget extends Widget {
                     },
                     {
                         id: DisplayOption.Integer,
-                        label: "Integer part"
+                        label: "Integer"
                     },
                     {
                         id: DisplayOption.FractionAndUnit,
-                        label: "Fractional and unit part"
+                        label: "Fraction and unit"
                     },
                     {
                         id: DisplayOption.Fraction,
-                        label: "Fractional part"
+                        label: "Fraction"
                     },
                     {
                         id: DisplayOption.Unit,
-                        label: "Unit part"
+                        label: "Unit"
+                    },
+                    {
+                        id: DisplayOption.IntegerAndFraction,
+                        label: "Integer and fraction"
                     }
                 ],
                 propertyGridGroup: specificGroup
@@ -1378,13 +1383,13 @@ export class DisplayDataWidget extends Widget {
     draw(rect: Rect): HTMLCanvasElement | undefined {
         let text = (this.data && (data.get(this.data) as string)) || "";
 
-        function findStartOfB() {
+        function findStartOfFraction() {
             let i;
             for (i = 0; text[i] && (text[i] == "-" || (text[i] >= "0" && text[i] <= "9")); i++) {}
             return i;
         }
 
-        function findStartOfD(i: number) {
+        function findStartOfUnit(i: number) {
             for (
                 i = 0;
                 text[i] && (text[i] == "-" || (text[i] >= "0" && text[i] <= "9") || text[i] == ".");
@@ -1394,22 +1399,25 @@ export class DisplayDataWidget extends Widget {
         }
 
         if (this.displayOption === DisplayOption.Integer) {
-            let i = findStartOfB();
+            let i = findStartOfFraction();
             text = text.substr(0, i);
         } else if (this.displayOption === DisplayOption.FractionAndUnit) {
-            let i = findStartOfB();
+            let i = findStartOfFraction();
             text = text.substr(i);
         } else if (this.displayOption === DisplayOption.Fraction) {
-            let i = findStartOfB();
-            let k = findStartOfD(i);
+            let i = findStartOfFraction();
+            let k = findStartOfUnit(i);
             if (i < k) {
                 text = text.substring(i, k);
             } else {
                 text = ".00";
             }
         } else if (this.displayOption === DisplayOption.Unit) {
-            let i = findStartOfD(0);
+            let i = findStartOfUnit(0);
             text = text.substr(i);
+        } else if (this.displayOption === DisplayOption.IntegerAndFraction) {
+            let i = findStartOfUnit(0);
+            text = text.substr(0, i);
         }
 
         return drawText(text, rect.width, rect.height, this.style, false);
