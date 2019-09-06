@@ -244,18 +244,7 @@ export class PagesNavigation extends NavigationComponent {
     }
 
     get selectedObject() {
-        const selectedObject =
-            this.widgetContainerDisplayItem && this.widgetContainerDisplayItem.selectedObject;
-        if (selectedObject) {
-            return selectedObject;
-        }
-
-        if (EditorsStore.activeEditor) {
-            let pageTabState = EditorsStore.activeEditor.state as PageTabState;
-            return pageTabState.page;
-        }
-
-        return undefined;
+        return this.selectedObjects[0];
     }
 
     get selectedObjects() {
@@ -267,10 +256,10 @@ export class PagesNavigation extends NavigationComponent {
 
         if (EditorsStore.activeEditor) {
             let pageTabState = EditorsStore.activeEditor.state as PageTabState;
-            return pageTabState.page;
+            return [pageTabState.page];
         }
 
-        return undefined;
+        return [];
     }
 
     @bind
@@ -419,8 +408,10 @@ export class Page extends EezObject {
                 delete jsObject["y_"];
             }
 
-            lazyLoadPageWidgets.setPageWidgets(page, jsObject.widgets);
-            jsObject.widgets = [];
+            if (!(ProjectStore.project && ProjectStore.project._allGuiPagesLoaded)) {
+                lazyLoadPageWidgets.setPageWidgets(page, jsObject.widgets);
+                jsObject.widgets = [];
+            }
         },
         isPropertyMenuSupported: true,
         newItem: (parent: EezObject) => {

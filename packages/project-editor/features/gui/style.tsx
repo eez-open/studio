@@ -82,6 +82,14 @@ export class StylesNavigation extends NavigationComponent {
         return NavigationStore.selectedObject;
     }
 
+    @computed
+    get style() {
+        if (this.object instanceof Style) {
+            return this.object;
+        }
+        return undefined;
+    }
+
     render() {
         return (
             <Splitter
@@ -91,7 +99,7 @@ export class StylesNavigation extends NavigationComponent {
                 childrenOverflow="hidden|hidden|hidden|hidden"
             >
                 <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
-                {this.object ? <StyleEditor style={this.object as Style} /> : <div />}
+                {this.style ? <StyleEditor style={this.style} /> : <div />}
                 <PropertiesPanel object={this.object} />
                 <ThemesSideView />
             </Splitter>
