@@ -132,7 +132,7 @@ export class PageTabState implements IEditorState {
     @action
     selectObject(object: EezObject) {
         let ancestor: EezObject | undefined;
-        for (ancestor = object; ancestor; ancestor = object._parent) {
+        for (ancestor = object; ancestor; ancestor = ancestor._parent) {
             let item = this.widgetContainerDisplayItem.getObjectAdapter(ancestor);
             if (item) {
                 this.widgetContainerDisplayItem.selectItems([item]);
@@ -275,7 +275,7 @@ export class PagesNavigation extends NavigationComponent {
         const navigation = this.treeAdapter ? (
             <Splitter
                 type="vertical"
-                persistId="page-editor/properties-widgets-palette"
+                persistId="page-editor/navigation-structure"
                 sizes={`50%|50%`}
                 childrenOverflow="hidden|hidden"
             >

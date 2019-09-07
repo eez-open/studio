@@ -195,6 +195,12 @@ class Toolbar extends React.Component {
                                 selected={UIStateStore.searchMatchWholeWord}
                                 onClick={this.toggleMatchWholeWord}
                             />
+                            <IconAction
+                                title="Refresh search results"
+                                icon="material:refresh"
+                                enabled={true}
+                                onClick={() => this.startSearch()}
+                            />
                         </div>
                     </div>
                 </div>

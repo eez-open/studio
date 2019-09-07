@@ -267,11 +267,11 @@ class NavigationStoreClass {
 
     @action
     setNavigationSelectedItem(navigationObject: EezObject, navigationSelectedItem: NavigationItem) {
+        this.navigationMap.set(navigationObject._id, navigationSelectedItem);
+
         if (!isPartOfNavigation(navigationObject)) {
             return;
         }
-
-        this.navigationMap.set(navigationObject._id, navigationSelectedItem);
 
         let parent = navigationObject._parent;
         if (parent) {

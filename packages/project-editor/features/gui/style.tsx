@@ -619,72 +619,76 @@ export class Style extends EezObject {
     check() {
         let messages: output.Message[] = [];
 
-        if (!this.fontName) {
-            messages.push(output.propertyNotFoundMessage(this, "font"));
-        }
+        if (this.inheritFrom && !findStyle(this.inheritFrom)) {
+            messages.push(output.propertyNotFoundMessage(this, "inheritFrom"));
+        } else {
+            if (!this.fontName) {
+                messages.push(output.propertyNotFoundMessage(this, "font"));
+            }
 
-        let borderSizeError = Style.getRect(this.borderSizeProperty).error;
-        if (borderSizeError) {
-            messages.push(
-                new output.Message(
-                    MessageType.ERROR,
-                    `"Border size": ${borderSizeError}.`,
-                    getChildOfObject(this, "borderSize")
-                )
-            );
-        }
+            let borderSizeError = Style.getRect(this.borderSizeProperty).error;
+            if (borderSizeError) {
+                messages.push(
+                    new output.Message(
+                        MessageType.ERROR,
+                        `"Border size": ${borderSizeError}.`,
+                        getChildOfObject(this, "borderSize")
+                    )
+                );
+            }
 
-        let borderRadius = this.borderRadiusProperty;
-        if (borderRadius < 0) {
-            messages.push(output.propertyInvalidValueMessage(this, "borderRadius"));
-        }
+            let borderRadius = this.borderRadiusProperty;
+            if (borderRadius < 0) {
+                messages.push(output.propertyInvalidValueMessage(this, "borderRadius"));
+            }
 
-        let alignHorizontal = this.alignHorizontalProperty;
-        if (
-            alignHorizontal != "left" &&
-            alignHorizontal != "center" &&
-            alignHorizontal != "right"
-        ) {
-            messages.push(output.propertyInvalidValueMessage(this, "alignHorizontal"));
-        }
+            let alignHorizontal = this.alignHorizontalProperty;
+            if (
+                alignHorizontal != "left" &&
+                alignHorizontal != "center" &&
+                alignHorizontal != "right"
+            ) {
+                messages.push(output.propertyInvalidValueMessage(this, "alignHorizontal"));
+            }
 
-        let alignVertical = this.alignVerticalProperty;
-        if (alignVertical != "top" && alignVertical != "center" && alignVertical != "bottom") {
-            messages.push(output.propertyInvalidValueMessage(this, "alignVertical"));
-        }
+            let alignVertical = this.alignVerticalProperty;
+            if (alignVertical != "top" && alignVertical != "center" && alignVertical != "bottom") {
+                messages.push(output.propertyInvalidValueMessage(this, "alignVertical"));
+            }
 
-        if (isNaN(this.color16)) {
-            messages.push(output.propertyInvalidValueMessage(this, "color"));
-        }
+            if (isNaN(this.color16)) {
+                messages.push(output.propertyInvalidValueMessage(this, "color"));
+            }
 
-        if (isNaN(this.backgroundColor16)) {
-            messages.push(output.propertyInvalidValueMessage(this, "backgroundColor"));
-        }
+            if (isNaN(this.backgroundColor16)) {
+                messages.push(output.propertyInvalidValueMessage(this, "backgroundColor"));
+            }
 
-        if (isNaN(this.borderColor16)) {
-            messages.push(output.propertyInvalidValueMessage(this, "borderColor"));
-        }
+            if (isNaN(this.borderColor16)) {
+                messages.push(output.propertyInvalidValueMessage(this, "borderColor"));
+            }
 
-        let paddingError = Style.getRect(this.paddingProperty).error;
-        if (paddingError) {
-            messages.push(
-                new output.Message(
-                    MessageType.ERROR,
-                    `"Padding": ${paddingError}.`,
-                    getChildOfObject(this, "padding")
-                )
-            );
-        }
+            let paddingError = Style.getRect(this.paddingProperty).error;
+            if (paddingError) {
+                messages.push(
+                    new output.Message(
+                        MessageType.ERROR,
+                        `"Padding": ${paddingError}.`,
+                        getChildOfObject(this, "padding")
+                    )
+                );
+            }
 
-        let marginError = Style.getRect(this.marginProperty).error;
-        if (marginError) {
-            messages.push(
-                new output.Message(
-                    MessageType.ERROR,
-                    `"Margin": ${marginError}.`,
-                    getChildOfObject(this, "margin")
-                )
-            );
+            let marginError = Style.getRect(this.marginProperty).error;
+            if (marginError) {
+                messages.push(
+                    new output.Message(
+                        MessageType.ERROR,
+                        `"Margin": ${marginError}.`,
+                        getChildOfObject(this, "margin")
+                    )
+                );
+            }
         }
 
         return messages;
