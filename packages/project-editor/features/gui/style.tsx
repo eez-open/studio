@@ -18,18 +18,25 @@ import {
     findClass,
     getChildOfObject,
     MessageType,
-    NavigationComponent
+    NavigationComponent,
+    PropertyProps,
+    isAnyPropertyModified,
+    asArray
 } from "project-editor/core/object";
-import { NavigationStore } from "project-editor/core/store";
+import { NavigationStore, DocumentStore, UndoManager } from "project-editor/core/store";
+import { validators } from "eez-studio-shared/validation";
 import { loadObject } from "project-editor/core/serialization";
 import * as output from "project-editor/core/output";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Splitter } from "eez-studio-ui/splitter";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
-import { findStyle, findFont } from "project-editor/features/gui/gui";
+import { getGui, findStyle, findFont } from "project-editor/features/gui/gui";
 import { drawText } from "project-editor/features/gui/draw";
 import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
+
+const { MenuItem } = EEZStudio.electron.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -125,7 +132,113 @@ const descriptionProperty: PropertyInfo = {
 const inheritFromProperty: PropertyInfo = {
     name: "inheritFrom",
     type: PropertyType.ObjectReference,
-    referencedObjectCollectionPath: ["gui", "styles"]
+    referencedObjectCollectionPath: ["gui", "styles"],
+    propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
+        let menuItems: Electron.MenuItem[] = [];
+
+        if (isAnyPropertyModified(props)) {
+            menuItems.push(
+                new MenuItem({
+                    label: "Reset All Modifications",
+                    click: () => {
+                        const propertyValues: any = {};
+                        properties.forEach(propertyInfo => {
+                            if (propertyInfo.inheritable) {
+                                propertyValues[propertyInfo.name] = undefined;
+                            }
+                        });
+                        props.updateObject(propertyValues);
+                    }
+                })
+            );
+
+            if (props.objects.length === 1) {
+                const object = props.objects[0] as Style;
+
+                menuItems.push(
+                    new MenuItem({
+                        label: "Create New Style",
+                        click: () => {
+                            return showGenericDialog({
+                                dialogDefinition: {
+                                    title: "New Style",
+                                    fields: [
+                                        {
+                                            name: "name",
+                                            type: "string",
+                                            validators: [
+                                                validators.required,
+                                                validators.unique({}, asArray(getGui().styles))
+                                            ]
+                                        }
+                                    ]
+                                },
+                                values: {}
+                            }).then(result => {
+                                UndoManager.setCombineCommands(true);
+
+                                const stylePropertyValues: any = {};
+                                const objectPropertyValues: any = {};
+
+                                properties.forEach(propertyInfo => {
+                                    stylePropertyValues[propertyInfo.name] = getProperty(
+                                        object,
+                                        propertyInfo.name
+                                    );
+
+                                    objectPropertyValues[propertyInfo.name] = undefined;
+                                });
+
+                                stylePropertyValues.name = result.values.name;
+
+                                objectPropertyValues.inheritFrom = result.values.name;
+
+                                DocumentStore.addObject(getGui().styles, stylePropertyValues);
+                                DocumentStore.updateObject(object, objectPropertyValues);
+
+                                UndoManager.setCombineCommands(false);
+                            });
+                        }
+                    })
+                );
+
+                const style = findStyle((props.objects[0] as Style).inheritFrom);
+                if (style) {
+                    menuItems.push(
+                        new MenuItem({
+                            label: "Update Style",
+                            click: () => {
+                                UndoManager.setCombineCommands(true);
+
+                                const stylePropertyValues: any = {};
+                                const objectPropertyValues: any = {};
+                                properties.forEach(propertyInfo => {
+                                    if (
+                                        propertyInfo.inheritable &&
+                                        getProperty(object, propertyInfo.name) !== undefined
+                                    ) {
+                                        stylePropertyValues[propertyInfo.name] = getProperty(
+                                            object,
+                                            propertyInfo.name
+                                        );
+
+                                        objectPropertyValues[propertyInfo.name] = undefined;
+                                    }
+                                });
+
+                                DocumentStore.updateObject(style, stylePropertyValues);
+                                DocumentStore.updateObject(object, objectPropertyValues);
+
+                                UndoManager.setCombineCommands(false);
+                            }
+                        })
+                    );
+                }
+            }
+        }
+
+        return menuItems;
+    }
 };
 
 const fontProperty: PropertyInfo = {

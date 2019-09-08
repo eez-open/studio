@@ -26,7 +26,6 @@ import {
     getObjectFromStringPath,
     getObjectFromObjectId,
     isPropertyEnumerable,
-    EezBrowsableObject,
     isPartOfNavigation
 } from "project-editor/core/object";
 import {
@@ -1109,9 +1108,6 @@ function isOptional(object: EezObject) {
 }
 
 export function canDelete(object: EezObject) {
-    if (object instanceof EezBrowsableObject) {
-        return false;
-    }
     return isArrayElement(object) || isOptional(object);
 }
 

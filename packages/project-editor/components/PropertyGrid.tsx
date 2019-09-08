@@ -28,14 +28,19 @@ import {
     PropertyType,
     isPropertyHidden,
     getProperty,
-    isArray,
     asArray,
     isValue,
     objectToString,
     getInheritedValue,
     getPropertyAsString,
-    isProperAncestor
+    isProperAncestor,
+    findPropertyByName,
+    PropertyProps,
+    getCommonProperties,
+    getPropertySourceInfo,
+    isAnyPropertyModified
 } from "project-editor/core/object";
+
 import { replaceObjectReference } from "project-editor/core/search";
 
 import { getThemedColor } from "project-editor/features/gui/theme";
@@ -49,11 +54,7 @@ const fs = EEZStudio.electron.remote.require("fs");
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface PropertyProps {
-    propertyInfo: PropertyInfo;
-    objects: EezObject[];
-    updateObject: (propertyValues: Object) => void;
-}
+export { PropertyProps } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -131,81 +132,39 @@ function getPropertyValueAsString(objects: EezObject[], propertyInfo: PropertyIn
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface PropertyValueSourceInfo {
-    source: "default" | "modified" | "inherited";
-    inheritedFrom?: EezObject;
-}
-
 @observer
 class PropertyMenu extends React.Component<PropertyProps> {
-    get sourceInfo(): PropertyValueSourceInfo {
-        function getSourceInfo(
-            object: EezObject,
-            propertyInfo: PropertyInfo
-        ): PropertyValueSourceInfo {
-            let value = (object as any)[propertyInfo.name];
-
-            if (propertyInfo.inheritable) {
-                if (value === undefined) {
-                    let inheritedValue = getInheritedValue(object, propertyInfo.name);
-                    if (inheritedValue) {
-                        return {
-                            source: "inherited",
-                            inheritedFrom: inheritedValue.source
-                        };
-                    }
-                }
-            }
-
-            if (value !== undefined) {
-                return {
-                    source: "modified"
-                };
-            }
-
-            return {
-                source: "default"
-            };
-        }
-
-        const sourceInfoArray = this.props.objects.map(object =>
-            getSourceInfo(object, this.props.propertyInfo)
-        );
-
-        for (let i = 1; i < sourceInfoArray.length; i++) {
-            if (sourceInfoArray[i].source !== sourceInfoArray[0].source) {
-                return {
-                    source: "modified"
-                };
-            }
-        }
-
-        return sourceInfoArray[0];
+    get sourceInfo() {
+        return getPropertySourceInfo(this.props);
     }
 
     @bind
     onClicked(event: React.MouseEvent) {
         let menuItems: Electron.MenuItem[] = [];
 
-        if (this.sourceInfo.source === "modified") {
-            if (menuItems.length > 0) {
+        if (this.props.propertyInfo.propertyMenu) {
+            menuItems = this.props.propertyInfo.propertyMenu(this.props);
+        } else {
+            if (this.sourceInfo.source === "modified") {
+                if (menuItems.length > 0) {
+                    menuItems.push(
+                        new MenuItem({
+                            type: "separator"
+                        })
+                    );
+                }
+
                 menuItems.push(
                     new MenuItem({
-                        type: "separator"
+                        label: "Reset",
+                        click: () => {
+                            this.props.updateObject({
+                                [this.props.propertyInfo.name]: undefined
+                            });
+                        }
                     })
                 );
             }
-
-            menuItems.push(
-                new MenuItem({
-                    label: "Reset",
-                    click: () => {
-                        this.props.updateObject({
-                            [this.props.propertyInfo.name]: undefined
-                        });
-                    }
-                })
-            );
         }
 
         if (menuItems.length > 0) {
@@ -567,29 +526,29 @@ class PropertyCollapsedStore {
         [key: string]: boolean;
     } = {};
 
-    // constructor() {
-    //     const savedState = localStorage.getItem("PropertyCollapsedStore");
-    //     if (savedState) {
-    //         this.map = JSON.parse(savedState);
-    //     }
-    // }
+    constructor() {
+        const savedState = localStorage.getItem("PropertyCollapsedStore");
+        if (savedState) {
+            this.map = JSON.parse(savedState);
+        }
+    }
 
-    getKey({ propertyInfo }: PropertyProps) {
+    getKey(propertyInfo: PropertyInfo) {
         return propertyInfo.name;
     }
 
-    isCollapsed(props: PropertyProps) {
-        const collapsed = this.map[this.getKey(props)];
+    isCollapsed(propertyInfo: PropertyInfo) {
+        const collapsed = this.map[this.getKey(propertyInfo)];
         if (collapsed !== undefined) {
             return collapsed;
         }
-        return !(props.propertyInfo.name === "style");
+        return !(propertyInfo.name === "style");
     }
 
     @action
-    toggleColapsed(props: PropertyProps) {
-        this.map[this.getKey(props)] = !this.isCollapsed(props);
-        //localStorage.setItem("PropertyCollapsedStore", JSON.stringify(this.map));
+    toggleColapsed(propertyInfo: PropertyInfo) {
+        this.map[this.getKey(propertyInfo)] = !this.isCollapsed(propertyInfo);
+        localStorage.setItem("PropertyCollapsedStore", JSON.stringify(this.map));
     }
 }
 
@@ -601,40 +560,119 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
 
     @bind
     toggleCollapsed() {
-        propertyCollapsedStore.toggleColapsed(this.props);
+        propertyCollapsedStore.toggleColapsed(this.props.propertyInfo);
+    }
+
+    @bind
+    updateObject(propertyValues: Object) {
+        UndoManager.setCombineCommands(true);
+        this.props.objects.forEach(object => {
+            object = (object as any)[this.props.propertyInfo.name];
+            DocumentStore.updateObject(object, propertyValues);
+        });
+        UndoManager.setCombineCommands(false);
     }
 
     render() {
         const { propertyInfo } = this.props;
 
-        const collapsed = propertyCollapsedStore.isCollapsed(this.props);
+        if (!propertyInfo.propertyGridCollapsable) {
+            return (
+                <PropertyGrid
+                    objects={this.props.objects.map(object => (object as any)[propertyInfo.name])}
+                />
+            );
+        }
+
+        const collapsed = propertyCollapsedStore.isCollapsed(this.props.propertyInfo);
+        if (collapsed) {
+            if (propertyInfo.propertyGridCollapsableDefaultPropertyName) {
+                const defaultPropertyInfo = findPropertyByName(
+                    propertyInfo.typeClass!.classInfo,
+                    propertyInfo.propertyGridCollapsableDefaultPropertyName
+                )!;
+                return (
+                    <Property
+                        propertyInfo={defaultPropertyInfo}
+                        objects={this.props.objects.map(
+                            object => (object as any)[propertyInfo.name]
+                        )}
+                        updateObject={this.updateObject}
+                    />
+                );
+            } else {
+                return (
+                    <div className="embedded-property-grid collapsable collapsed">
+                        <div onClick={this.toggleCollapsed}>
+                            <Icon
+                                icon={
+                                    collapsed
+                                        ? "material:keyboard_arrow_right"
+                                        : "material:keyboard_arrow_down"
+                                }
+                                size={18}
+                                className="triangle"
+                            />
+                            {propertyInfo.displayName || humanize(propertyInfo.name)}
+                        </div>
+                    </div>
+                );
+            }
+        }
 
         return (
-            <div
-                className={classNames("embedded-property-grid", {
-                    collapsable: propertyInfo.propertyGridCollapsable,
-                    collapsed
-                })}
-            >
-                {propertyInfo.propertyGridCollapsable && (
-                    <div onClick={this.toggleCollapsed}>
-                        <Icon
-                            icon={
-                                collapsed
-                                    ? "material:keyboard_arrow_right"
-                                    : "material:keyboard_arrow_down"
-                            }
-                            size={18}
-                            className="triangle"
-                        />
-                        {propertyInfo.displayName || humanize(propertyInfo.name)}
-                    </div>
-                )}
+            <div className="embedded-property-grid collapsable">
+                <div onClick={this.toggleCollapsed}>
+                    <Icon icon="material:keyboard_arrow_down" size={18} className="triangle" />
+                    {propertyInfo.displayName || humanize(propertyInfo.name)}
+                </div>
                 <PropertyGrid
                     objects={this.props.objects.map(object => (object as any)[propertyInfo.name])}
                 />
             </div>
         );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+class PropertyName extends React.Component<PropertyProps> {
+    @observable collapsed = true;
+
+    @bind
+    toggleCollapsed() {
+        propertyCollapsedStore.toggleColapsed(this.props.propertyInfo);
+    }
+
+    render() {
+        const { propertyInfo } = this.props;
+
+        if (propertyInfo.propertyGridCollapsable) {
+            const collapsed = propertyCollapsedStore.isCollapsed(this.props.propertyInfo);
+            return (
+                <div className="collapsable" onClick={this.toggleCollapsed}>
+                    <Icon
+                        icon={
+                            collapsed
+                                ? "material:keyboard_arrow_right"
+                                : "material:keyboard_arrow_down"
+                        }
+                        size={18}
+                        className="triangle"
+                    />
+                    {propertyInfo.displayName || humanize(propertyInfo.name)}
+                    {isAnyPropertyModified({
+                        ...this.props,
+                        objects: this.props.objects.map(
+                            object => (object as any)[propertyInfo.name]
+                        )
+                    }) && " ●"}
+                </div>
+            );
+        } else {
+            return propertyInfo.displayName || humanize(propertyInfo.name);
+        }
     }
 }
 
@@ -1341,6 +1379,14 @@ const PropertyGridDiv = styled.div`
                     white-space: nowrap;
                     vertical-align: baseline;
                     transform: translateY(7px);
+
+                    & > .collapsable {
+                        transform: translateX(-10px);
+                        cursor: pointer;
+                        &:hover {
+                            background-color: #eee;
+                        }
+                    }
                 }
 
                 & > td:nth-child(2) {
@@ -1431,6 +1477,7 @@ const PropertyGridDiv = styled.div`
     }
 
     .embedded-property-grid {
+        transform: translateY(7px);
         border: 1px solid ${props => props.theme.borderColor};
         &.collapsable {
             border: none;
@@ -1539,29 +1586,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             object => !object._classInfo.isPropertyMenuSupported
         );
 
-        let properties = objects[0]._classInfo.properties;
-
-        properties = properties.filter(
-            propertyInfo =>
-                !objects.find(object => isArray(object) || isPropertyHidden(object, propertyInfo))
-        );
-
-        if (objects.length > 1) {
-            // some property types are not supported in multi-objects property grid
-            properties = properties.filter(
-                propertyInfo =>
-                    propertyInfo.type !== PropertyType.Array &&
-                    !(propertyInfo.type === PropertyType.String && propertyInfo.unique === true)
-            );
-
-            // show only common properties
-            properties = properties.filter(
-                propertyInfo =>
-                    !objects.find(
-                        object => !object._classInfo.properties.find(pi => pi === propertyInfo)
-                    )
-            );
-        }
+        let properties = getCommonProperties(objects);
 
         for (let propertyInfo of properties) {
             const colSpan =
@@ -1569,10 +1594,17 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 propertyInfo.type === PropertyType.Any ||
                 propertyInfo.type === PropertyType.JSON ||
                 propertyInfo.type === PropertyType.Cpp ||
-                propertyInfo.propertyGridCollapsable;
+                (propertyInfo.propertyGridCollapsable &&
+                    (!propertyCollapsedStore.isCollapsed(propertyInfo) ||
+                        !propertyInfo.propertyGridCollapsableDefaultPropertyName));
+
+            const propertyProps = { propertyInfo, objects, updateObject: this.updateObject };
 
             let propertyMenuEnabled =
-                !propertyInfo.readOnlyInPropertyGrid && propertyInfo.inheritable;
+                !propertyInfo.readOnlyInPropertyGrid &&
+                (propertyInfo.inheritable ||
+                    (propertyInfo.propertyMenu &&
+                        propertyInfo.propertyMenu(propertyProps).length > 0));
 
             let property;
             if (colSpan) {
@@ -1583,25 +1615,18 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                         })}
                         colSpan={propertyInfo.propertyGridCollapsable ? 3 : 2}
                     >
-                        <Property
-                            propertyInfo={propertyInfo}
-                            objects={objects}
-                            updateObject={this.updateObject}
-                        />
+                        <Property {...propertyProps} />
                     </td>
                 );
             } else {
                 property = (
                     <React.Fragment>
                         <td className="property-name">
-                            {propertyInfo.displayName || humanize(propertyInfo.name)}
+                            <PropertyName {...propertyProps} />
                         </td>
+
                         <td>
-                            <Property
-                                propertyInfo={propertyInfo}
-                                objects={objects}
-                                updateObject={this.updateObject}
-                            />
+                            <Property {...propertyProps} />
                         </td>
                     </React.Fragment>
                 );

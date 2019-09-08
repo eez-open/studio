@@ -18,7 +18,6 @@ import {
     getRootObject,
     getObjectFromObjectId,
     isPropertyEnumerable,
-    EezBrowsableObject,
     objectToString,
     isShowOnlyChildrenInTree,
     PropertyInfo,
@@ -215,80 +214,8 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         this.expanded = expanded || false;
     }
 
-    browsableObjectChildren(browsableObject: EezBrowsableObject) {
-        if (
-            !browsableObject.value ||
-            typeof browsableObject.value !== "object" ||
-            browsableObject.value instanceof Date
-        ) {
-            return [];
-        }
-
-        let browsableObjectValue = browsableObject.value;
-
-        // prevent cycle
-        for (
-            let ancestor = this.object._parent;
-            ancestor !== undefined && ancestor instanceof EezBrowsableObject;
-            ancestor = ancestor._parent
-        ) {
-            if (ancestor.value === browsableObjectValue) {
-                return [];
-            }
-        }
-
-        if (Array.isArray(browsableObjectValue)) {
-            if (browsableObjectValue.length === 0) {
-                return [];
-            }
-            browsableObjectValue = browsableObjectValue[0];
-        }
-
-        const children = [];
-        const propertyNames = getPropertyNames(browsableObjectValue);
-        for (var propertyName of propertyNames) {
-            if (propertyName.startsWith("_")) {
-                continue;
-            }
-
-            if (
-                [
-                    "constructor",
-                    "hasOwnProperty",
-                    "isPrototypeOf",
-                    "propertyIsEnumerable",
-                    "toString",
-                    "valueOf",
-                    "toLocaleString"
-                ].indexOf(propertyName) !== -1
-            ) {
-                continue;
-            }
-
-            const childValue = browsableObjectValue[propertyName];
-            const childBrowsableObject = EezBrowsableObject.create(
-                browsableObject,
-                {
-                    name:
-                        propertyName +
-                        (Array.isArray(childValue) ? "[]" : "") +
-                        (typeof childValue === "function" ? "()" : ""),
-                    type: PropertyType.Object,
-                    typeClass: EezBrowsableObject
-                },
-                childValue
-            );
-            children.push(new TreeObjectAdapter(childBrowsableObject, this.transformer, false));
-        }
-        return children;
-    }
-
     @computed
     get children(): TreeObjectAdapterChildren {
-        if (this.object instanceof EezBrowsableObject) {
-            return this.browsableObjectChildren(this.object);
-        }
-
         if (isArray(this.object)) {
             return asArray(this.object).map(child => this.transformer(child));
         }
@@ -309,15 +236,6 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             return asArray(getProperty(this.object, properties[0].name)).map(child =>
                 this.transformer(child)
             );
-        }
-
-        if (
-            properties.length === 1 &&
-            properties[0].type === PropertyType.Object &&
-            properties[0].typeClass === EezBrowsableObject
-        ) {
-            const browsableObject = getProperty(this.object, properties[0].name);
-            return this.browsableObjectChildren(browsableObject);
         }
 
         return properties.reduce(

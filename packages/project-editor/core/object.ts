@@ -95,6 +95,12 @@ export const specificGroup: IPropertyGridGroupDefinition = {
     position: 4
 };
 
+export interface PropertyProps {
+    propertyInfo: PropertyInfo;
+    objects: EezObject[];
+    updateObject: (propertyValues: Object) => void;
+}
+
 export interface PropertyInfo {
     name: string;
     type: PropertyType;
@@ -113,11 +119,13 @@ export interface PropertyInfo {
     propertyGridGroup?: IPropertyGridGroupDefinition;
     propertyGridComponent?: typeof React.Component;
     propertyGridCollapsable?: boolean;
+    propertyGridCollapsableDefaultPropertyName?: string;
     enumerable?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
     showOnlyChildrenInTree?: boolean;
     isOptional?: boolean;
     defaultValue?: any;
     inheritable?: boolean;
+    propertyMenu?: (props: PropertyProps) => Electron.MenuItem[];
     unique?: boolean;
     skipSearch?: boolean;
     childLabel?: (childObject: EezObject, childLabel: string) => string;
@@ -365,31 +373,6 @@ registerClass(EezValueObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class EezBrowsableObject extends EezObject {
-    propertyInfo: any;
-    value: any;
-
-    static classInfo: ClassInfo = {
-        label: (object: EezBrowsableObject) => object.propertyInfo.name,
-        properties: []
-    };
-
-    static create(object: EezObject, propertyInfo: PropertyInfo, value: any) {
-        const browsableObject = new EezBrowsableObject();
-
-        browsableObject._id = object._id + "." + propertyInfo.name;
-        browsableObject._key = propertyInfo.name;
-        browsableObject._parent = object;
-
-        browsableObject.propertyInfo = propertyInfo;
-        browsableObject.value = value;
-
-        return browsableObject;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 export function findClass(className: string) {
     return classes.get(className);
 }
@@ -546,8 +529,10 @@ export function isArrayElement(object: EezObject) {
     return object._parent instanceof EezArrayObject;
 }
 
-export function findPropertyByName(object: EezObject, propertyName: string) {
-    return object._classInfo.properties.find(propertyInfo => propertyInfo.name == propertyName);
+export function findPropertyByName(objectOrClassInfo: EezObject | ClassInfo, propertyName: string) {
+    const classInfo =
+        objectOrClassInfo instanceof EezObject ? objectOrClassInfo._classInfo : objectOrClassInfo;
+    return classInfo.properties.find(propertyInfo => propertyInfo.name == propertyName);
 }
 
 export function findPropertyByChildObject(object: EezObject, childObject: EezObject) {
@@ -928,4 +913,94 @@ export function getArrayAndObjectProperties(object: EezObject) {
         );
     }
     return object._classInfo._arrayAndObjectProperties;
+}
+
+export interface PropertyValueSourceInfo {
+    source: "" | "default" | "modified" | "inherited";
+    inheritedFrom?: EezObject;
+}
+
+export function getCommonProperties(objects: EezObject[]) {
+    let properties = objects[0]._classInfo.properties;
+
+    properties = properties.filter(
+        propertyInfo =>
+            !objects.find(object => isArray(object) || isPropertyHidden(object, propertyInfo))
+    );
+
+    if (objects.length > 1) {
+        // some property types are not supported in multi-objects property grid
+        properties = properties.filter(
+            propertyInfo =>
+                propertyInfo.type !== PropertyType.Array &&
+                !(propertyInfo.type === PropertyType.String && propertyInfo.unique === true)
+        );
+
+        // show only common properties
+        properties = properties.filter(
+            propertyInfo =>
+                !objects.find(
+                    object => !object._classInfo.properties.find(pi => pi === propertyInfo)
+                )
+        );
+    }
+
+    return properties;
+}
+
+export function getPropertySourceInfo(props: PropertyProps): PropertyValueSourceInfo {
+    function getSourceInfo(object: EezObject, propertyInfo: PropertyInfo): PropertyValueSourceInfo {
+        if (props.propertyInfo.propertyMenu) {
+            return {
+                source: ""
+            };
+        }
+
+        let value = (object as any)[propertyInfo.name];
+
+        if (propertyInfo.inheritable) {
+            if (value === undefined) {
+                let inheritedValue = getInheritedValue(object, propertyInfo.name);
+                if (inheritedValue) {
+                    return {
+                        source: "inherited",
+                        inheritedFrom: inheritedValue.source
+                    };
+                }
+            }
+        }
+
+        if (value !== undefined) {
+            return {
+                source: "modified"
+            };
+        }
+
+        return {
+            source: "default"
+        };
+    }
+
+    const sourceInfoArray = props.objects.map(object => getSourceInfo(object, props.propertyInfo));
+
+    for (let i = 1; i < sourceInfoArray.length; i++) {
+        if (sourceInfoArray[i].source !== sourceInfoArray[0].source) {
+            return {
+                source: "modified"
+            };
+        }
+    }
+
+    return sourceInfoArray[0];
+}
+
+export function isAnyPropertyModified(props: PropertyProps) {
+    const properties = getCommonProperties(props.objects);
+    for (let propertyInfo of properties) {
+        const sourceInfo = getPropertySourceInfo({ ...props, propertyInfo });
+        if (sourceInfo.source === "modified") {
+            return true;
+        }
+    }
+    return false;
 }
