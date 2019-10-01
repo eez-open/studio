@@ -206,6 +206,12 @@ export class Widget extends EezObject {
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
             },
+            {
+                name: "absolutePosition",
+                type: PropertyType.String,
+                propertyGridGroup: geometryGroup,
+                computed: true
+            },
             makeDataPropertyInfo("data"),
             makeActionPropertyInfo("action"),
             makeStylePropertyInfo("style", "Normal style"),
@@ -245,6 +251,23 @@ export class Widget extends EezObject {
 
         isPropertyMenuSupported: true
     };
+
+    @computed
+    get absolutePosition() {
+        let x = this.left;
+        let y = this.top;
+
+        for (
+            let parent = this.parent;
+            parent && !(parent instanceof Page);
+            parent = parent.parent
+        ) {
+            x += parent.left;
+            y += parent.top;
+        }
+
+        return `${x}, ${y}`;
+    }
 
     @computed
     get rect() {
@@ -1510,6 +1533,12 @@ registerClass(TextWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const indentationGroup: IPropertyGridGroupDefinition = {
+    id: "indentation",
+    title: "Indentation",
+    position: 5
+};
+
 export class MultilineTextWidget extends Widget {
     @observable
     text?: string;
@@ -1524,6 +1553,16 @@ export class MultilineTextWidget extends Widget {
                 name: "text",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
+            },
+            {
+                name: "firsLine",
+                type: PropertyType.Number,
+                propertyGridGroup: indentationGroup
+            },
+            {
+                name: "hanging",
+                type: PropertyType.Number,
+                propertyGridGroup: indentationGroup
             }
         ],
 
@@ -1533,7 +1572,9 @@ export class MultilineTextWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32
+            height: 32,
+            firstLine: 0,
+            hanging: 0
         },
 
         icon: "_images/widgets/MultilineText.png"

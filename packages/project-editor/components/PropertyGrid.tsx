@@ -1080,6 +1080,7 @@ class Property extends React.Component<PropertyProps> {
                     value={this._value || ""}
                     onChange={this.onChange}
                     onKeyDown={this.onKeyDown}
+                    readOnly={propertyInfo.computed}
                 />
             );
         } else if (propertyInfo.type === PropertyType.Number) {
