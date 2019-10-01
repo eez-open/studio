@@ -30,7 +30,8 @@
         "tslint": "tslint --project ./tsconfig.json 'packages/**/*.{ts,tsx}'",
         "tsc-version": "tsc --version",
         "electron-version": "electron --version",
-        "build2": "npm run build-extra-resource-json && node installation/build-installation-new.js"
+        "build2": "node installation/build-installation-new.js",
+        "build-all": "npm run build && npm run build-extra-resource-json && npm run build2"
     },
     "prettier": {
         "printWidth": 100,

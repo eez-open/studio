@@ -148,31 +148,7 @@ Built Snap package is located in `installation/linux`.
 
 ### Build Linux installation using Docker
 
-```
-rm -rf node_modules
-rm -rf builder-output
-```
-
-```
-docker run --rm -ti \
- --env-file <(env | grep -iE 'DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|CIRCLE|TRAVIS_TAG|TRAVIS|TRAVIS_REPO_|TRAVIS_BUILD_|TRAVIS_BRANCH|TRAVIS_PULL_REQUEST_|APPVEYOR_|CSC_|GH_|GITHUB_|BT_|AWS_|STRIP|BUILD_') \
- --env ELECTRON_CACHE="/root/.cache/electron" \
- --env ELECTRON_BUILDER_CACHE="/root/.cache/electron-builder" \
- -v ${PWD}:/project \
- -v ${PWD##*/}-node-modules:/project/node_modules \
- -v ~/.cache/electron:/root/.cache/electron \
- -v ~/.cache/electron-builder:/root/.cache/electron-builder \
- electronuserland/builder
-```
-
-Execute this inside docker container:
-
-```
-apt-get update
-apt-get install libudev-dev libxss1 libasound2
-yarn build
-yarn build2
-```
+Execute `./docker_start.sh` first, then execute `./docker-build.sh` inside docker container.
 
 Installation packages are located inside `builder-output` folder.
 

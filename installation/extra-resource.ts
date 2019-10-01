@@ -127,15 +127,15 @@ async function getExtraResource() {
             throw "Invalid hash for the extension zip file:" + extensionZipFileName;
         }
 
-        extensions.push(extensionZipFilePath);
+        extensions.push("./installation/extra-resources/" + extensionZipFileName);
     }
 
     db.close();
 
     const extraResource = [
-        __dirname + "/init_storage.db",
-        extraResourcesPath + "/catalog-version.json",
-        extraResourcesPath + "/catalog.json"
+        "./installation/init_storage.db",
+        "./installation/extra-resources/catalog-version.json",
+        "./installation/extra-resources/catalog.json"
     ].concat(extensions);
 
     return extraResource;
