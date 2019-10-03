@@ -30,10 +30,20 @@ let fs = EEZStudio.electron.remote.require("fs");
 ////////////////////////////////////////////////////////////////////////////////
 
 const BitmapEditorContainer = styled.div`
+    flex-shrink: 1;
     flex-grow: 1;
     display: flex;
+    flex-direction: column;
     justify-content: center; /* align horizontal */
     align-items: center; /* align vertical */
+    max-height: 100%;
+
+    & > img {
+        background-color: transparent;
+        max-width: 100%;
+        max-height: calc(100% - 50px);
+        padding-bottom: 25px;
+    }
 `;
 
 @observer
@@ -41,23 +51,16 @@ class BitmapEditor extends React.Component<{ bitmap: Bitmap }> {
     render() {
         const bitmap = this.props.bitmap;
 
-        const style = {
-            backgroundColor: "transparent",
-            width: "100%"
-        };
+        if (!bitmap.imageElement) {
+            return null;
+        }
 
         return (
             <BitmapEditorContainer>
-                <div>
-                    <div>
-                        <img src={bitmap.image} style={style} />
-                    </div>
-                    {bitmap.imageElement && (
-                        <h4>
-                            Dimension: {bitmap.imageElement.width} x {bitmap.imageElement.height}
-                        </h4>
-                    )}
-                </div>
+                <img src={bitmap.image} />
+                <h4>
+                    Dimension: {bitmap.imageElement.width} x {bitmap.imageElement.height}
+                </h4>
             </BitmapEditorContainer>
         );
     }
@@ -68,11 +71,18 @@ class BitmapEditor extends React.Component<{ bitmap: Bitmap }> {
 @observer
 export class BitmapsNavigation extends NavigationComponent {
     @computed
-    get object() {
+    get bitmap() {
         if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
+            if (NavigationStore.selectedPanel.selectedObject instanceof Bitmap) {
+                return NavigationStore.selectedPanel.selectedObject;
+            }
         }
-        return NavigationStore.selectedObject;
+
+        if (NavigationStore.selectedObject instanceof Bitmap) {
+            return NavigationStore.selectedObject;
+        }
+
+        return undefined;
     }
 
     render() {
@@ -84,8 +94,8 @@ export class BitmapsNavigation extends NavigationComponent {
                 childrenOverflow="hidden|hidden|hidden|hidden"
             >
                 <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
-                {this.object ? <BitmapEditor bitmap={this.object as Bitmap} /> : <div />}
-                <PropertiesPanel object={this.object} />
+                {this.bitmap ? <BitmapEditor bitmap={this.bitmap} /> : <div />}
+                <PropertiesPanel object={this.bitmap} />
                 <ThemesSideView />
             </Splitter>
         );

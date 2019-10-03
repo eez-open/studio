@@ -1661,20 +1661,29 @@ export class FontEditor extends React.Component<{ font: Font }> implements IPane
 @observer
 export class FontsNavigation extends NavigationComponent {
     @computed
-    get object() {
-        if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
-        }
-        return NavigationStore.selectedObject;
-    }
-
-    @computed
     get font() {
-        for (let font = this.object; font; font = font._parent) {
-            if (font instanceof Font) {
+        function getFont(object: EezObject | undefined) {
+            while (object) {
+                if (object instanceof Font) {
+                    return object;
+                }
+                object = object._parent;
+            }
+            return undefined;
+        }
+
+        if (NavigationStore.selectedPanel) {
+            const font = getFont(NavigationStore.selectedPanel.selectedObject);
+            if (font) {
                 return font;
             }
         }
+
+        const font = getFont(NavigationStore.selectedObject);
+        if (font) {
+            return font;
+        }
+
         return undefined;
     }
 
@@ -1688,7 +1697,7 @@ export class FontsNavigation extends NavigationComponent {
             >
                 <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
                 {this.font ? <FontEditor font={this.font} /> : <div />}
-                <PropertiesPanel object={this.object} />
+                <PropertiesPanel object={this.font} />
             </Splitter>
         );
     }

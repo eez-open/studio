@@ -82,18 +82,17 @@ export class StyleEditor extends React.Component<{ style: Style }> {
 @observer
 export class StylesNavigation extends NavigationComponent {
     @computed
-    get object() {
-        if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
-        }
-        return NavigationStore.selectedObject;
-    }
-
-    @computed
     get style() {
-        if (this.object instanceof Style) {
-            return this.object;
+        if (NavigationStore.selectedPanel) {
+            if (NavigationStore.selectedPanel.selectedObject instanceof Style) {
+                return NavigationStore.selectedPanel.selectedObject;
+            }
         }
+
+        if (NavigationStore.selectedObject instanceof Style) {
+            return NavigationStore.selectedObject;
+        }
+
         return undefined;
     }
 
@@ -107,7 +106,7 @@ export class StylesNavigation extends NavigationComponent {
             >
                 <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
                 {this.style ? <StyleEditor style={this.style} /> : <div />}
-                <PropertiesPanel object={this.object} />
+                <PropertiesPanel object={this.style} />
                 <ThemesSideView />
             </Splitter>
         );
