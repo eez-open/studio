@@ -3,7 +3,6 @@ import React from "react";
 import { observer } from "mobx-react";
 import styled from "eez-studio-ui/styled-components";
 
-import { to16bitsColor } from "eez-studio-shared/color";
 import {
     ClassInfo,
     EezObject,
@@ -20,7 +19,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
+import { ThemesSideView } from "project-editor/features/gui/theme";
 
 import { ProjectStore } from "project-editor/core/store";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
@@ -98,6 +97,7 @@ export class BitmapsNavigation extends NavigationComponent {
 interface IBitmap {
     name: string;
     image: string;
+    bpp: number;
 }
 
 export class Bitmap extends EezObject implements IBitmap {
@@ -105,7 +105,6 @@ export class Bitmap extends EezObject implements IBitmap {
     @observable description?: string;
     @observable image: string;
     @observable bpp: number;
-    @observable backgroundColor?: string;
     @observable alwaysBuild: boolean;
 
     static classInfo: ClassInfo = {
@@ -127,15 +126,10 @@ export class Bitmap extends EezObject implements IBitmap {
             },
             {
                 name: "bpp",
+                displayName: "Bits per pixel",
                 type: PropertyType.Enum,
                 enumItems: [{ id: 16 }, { id: 32 }],
                 defaultValue: 16
-            },
-            {
-                name: "backgroundColor",
-                type: PropertyType.ThemedColor,
-                referencedObjectCollectionPath: ["gui", "colors"],
-                hideInPropertyGrid: (bitmap: Bitmap) => bitmap.bpp != 16
             },
             {
                 name: "alwaysBuild",
@@ -166,10 +160,18 @@ export class Bitmap extends EezObject implements IBitmap {
                                     { name: "All Files", extensions: ["*"] }
                                 ]
                             }
+                        },
+                        {
+                            name: "bpp",
+                            displayName: "Bits per pixel",
+                            type: "enum",
+                            enumItems: [16, 32]
                         }
                     ]
                 },
-                values: {}
+                values: {
+                    bpp: 32
+                }
             }).then(result => {
                 return new Promise<IBitmap>((resolve, reject) => {
                     fs.readFile(
@@ -181,7 +183,8 @@ export class Bitmap extends EezObject implements IBitmap {
                             } else {
                                 resolve({
                                     name: result.values.name,
-                                    image: "data:image/png;base64,"
+                                    image: "data:image/png;base64," + data,
+                                    bpp: result.values.bpp
                                 });
                             }
                         }
@@ -194,19 +197,25 @@ export class Bitmap extends EezObject implements IBitmap {
         icon: "image"
     };
 
-    private _imageElementLoading: boolean = false;
     @observable
     private _imageElement: HTMLImageElement | null = null;
+    private _imageElementImage: string;
 
+    @computed
     get imageElement() {
-        if (!this._imageElement && !this._imageElementLoading) {
-            this._imageElementLoading = true;
+        if (!this.image) {
+            return null;
+        }
+
+        if (this.image !== this._imageElementImage) {
             let imageElement = new Image();
             imageElement.src = this.image;
             imageElement.onload = action(() => {
                 this._imageElement = imageElement;
+                this._imageElementImage = this.image;
             });
         }
+
         return this._imageElement;
     }
 }
@@ -239,14 +248,7 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
                 return;
             }
 
-            if (bitmap.bpp === 32) {
-                ctx.clearRect(0, 0, image.width, image.height);
-            } else {
-                ctx.fillStyle = bitmap.backgroundColor
-                    ? to16bitsColor(getThemedColor(bitmap.backgroundColor))
-                    : "#000000";
-                ctx.fillRect(0, 0, image.width, image.height);
-            }
+            ctx.clearRect(0, 0, image.width, image.height);
 
             ctx.drawImage(image, 0, 0);
 

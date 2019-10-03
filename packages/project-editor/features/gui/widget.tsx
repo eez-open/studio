@@ -1834,6 +1834,45 @@ registerClass(RectangleWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@observer
+class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
+    get bitmapWidget() {
+        return this.props.objects[0] as BitmapWidget;
+    }
+
+    @bind
+    resizeToFitBitmap() {
+        DocumentStore.updateObject(this.props.objects[0], {
+            width: this.bitmapWidget.bitmapObject!.imageElement!.width,
+            height: this.bitmapWidget.bitmapObject!.imageElement!.height
+        });
+    }
+
+    render() {
+        if (this.props.objects.length > 1) {
+            return null;
+        }
+
+        const bitmapObject = this.bitmapWidget.bitmapObject;
+        if (!bitmapObject) {
+            return null;
+        }
+
+        const imageElement = bitmapObject.imageElement;
+        if (!imageElement) {
+            return null;
+        }
+
+        return (
+            <BootstrapButton color="primary" size="small" onClick={this.resizeToFitBitmap}>
+                Resize to Fit Bitmap
+            </BootstrapButton>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class BitmapWidget extends Widget {
     @observable
     bitmap?: string;
@@ -1849,6 +1888,13 @@ export class BitmapWidget extends Widget {
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: ["gui", "bitmaps"],
                 propertyGridGroup: specificGroup
+            },
+            {
+                name: "customUI",
+                type: PropertyType.Any,
+                propertyGridGroup: specificGroup,
+                computed: true,
+                propertyGridComponent: BitmapWidgetPropertyGridUI
             }
         ],
 
@@ -1886,16 +1932,21 @@ export class BitmapWidget extends Widget {
         return super.check().concat(messages);
     }
 
+    @computed
+    get bitmapObject() {
+        return this.bitmap
+            ? findBitmap(this.bitmap)
+            : this.data
+            ? findBitmap(data.get(this.data) as string)
+            : undefined;
+    }
+
     draw(rect: Rect): HTMLCanvasElement | undefined {
         const w = rect.width;
         const h = rect.height;
         const style = this.style;
 
-        const bitmap = this.bitmap
-            ? findBitmap(this.bitmap)
-            : this.data
-            ? findBitmap(data.get(this.data) as string)
-            : undefined;
+        const bitmap = this.bitmapObject;
 
         const inverse = false;
 
