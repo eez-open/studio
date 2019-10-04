@@ -572,6 +572,23 @@ function buildGuiStylesData(assets: Assets, packData: boolean = true) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function buildGuiColorsEnum(assets: Assets) {
+    let gui = getProperty(assets.project, "gui") as Gui;
+
+    let colors = gui.colors._array.map(
+        (color, i) =>
+            `${projectBuild.TAB}${projectBuild.getName(
+                "COLOR_ID_",
+                color.name,
+                projectBuild.NamingConvention.UnderscoreUpperCase
+            )} = ${i}`
+    );
+
+    return `enum ColorsEnum {\n${colors.join(",\n")}\n};`;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 function buildWidget(object: Widget.Widget | Page, assets: Assets) {
     let result = new Struct();
 
@@ -1568,6 +1585,10 @@ export async function build(
 
     if (!sectionNames || sectionNames.indexOf("GUI_BITMAPS_ENUM") !== -1) {
         result.GUI_BITMAPS_ENUM = buildGuiBitmapsEnum(assets);
+    }
+
+    if (!sectionNames || sectionNames.indexOf("GUI_COLORS_ENUM") !== -1) {
+        result.GUI_COLORS_ENUM = buildGuiColorsEnum(assets);
     }
 
     const buildAssetsDecl = !sectionNames || sectionNames.indexOf("GUI_ASSETS_DECL") !== -1;
