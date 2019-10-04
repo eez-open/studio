@@ -289,8 +289,8 @@ export class TableLineView extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 function executeCommand(list: TableList, modificator: (data: TableListData) => void) {
-    let oldData = toJS(list.data);
-    let newData = toJS(list.data);
+    let oldData = objectClone(list.data);
+    let newData = objectClone(list.data);
 
     runInAction(() => {
         modificator(newData);

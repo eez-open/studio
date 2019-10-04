@@ -53,9 +53,16 @@ export function formatTransferSpeed(speed: number) {
     return `${Math.round(rate * 10) / 10} ${ordinals[ordinal]}b/s`;
 }
 
-export function objectClone<T>(a: T) {
+export function objectClone(obj: any) {
     const { toJS } = require("mobx") as typeof MobXModule;
     const { EezObject } = require("project-editor/core/object") as typeof ModelObjectModule;
+
+    let a: any = {};
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key) && !key.startsWith("$eez_noser")) {
+            a[key] = obj[key];
+        }
+    }
 
     if (a instanceof EezObject) {
         return JSON.parse(
