@@ -565,54 +565,60 @@ export class Glyph extends EezObject {
                     }
                 }
             }
+            ctx.globalAlpha = 1;
         }
 
-        // draw measure SnapLines
+        // draw measure lines
         const MEASURE_LINE_OFFSET = 20;
         const MEASURE_LINE_ARROW_WIDTH = 12;
         const MEASURE_LINE_ARROW_HEIGHT = 6;
         const MEASURE_LINE_COLOR = "#aaa";
+        const MEASURE_LINE_LABEL_COLOR = "#999";
         const MEASURE_LINE_LABEL_FONT_SIZE = 12;
         const MEASURE_LINE_LABEL_FONT = MEASURE_LINE_LABEL_FONT_SIZE + "px Arial";
 
         ctx.strokeStyle = MEASURE_LINE_COLOR;
-        ctx.fillStyle = MEASURE_LINE_COLOR;
+        ctx.fillStyle = MEASURE_LINE_LABEL_COLOR;
         ctx.font = MEASURE_LINE_LABEL_FONT;
 
-        const drawLeftArrow = (x: number, y: number) => {
+        const beginDrawArrow = (x: number, y: number) => {
             ctx.beginPath();
             ctx.moveTo(x, y);
+        };
+
+        const endDrawArrow = () => {
+            ctx.closePath();
+            ctx.fillStyle = MEASURE_LINE_COLOR;
+            ctx.fill();
+            ctx.fillStyle = MEASURE_LINE_LABEL_COLOR;
+        };
+
+        const drawLeftArrow = (x: number, y: number) => {
+            beginDrawArrow(x, y);
             ctx.lineTo(x + MEASURE_LINE_ARROW_WIDTH, y - MEASURE_LINE_ARROW_HEIGHT / 2);
             ctx.lineTo(x + MEASURE_LINE_ARROW_WIDTH, y + MEASURE_LINE_ARROW_HEIGHT / 2);
-            ctx.closePath();
-            ctx.fill();
+            endDrawArrow();
         };
 
         const drawRightArrow = (x: number, y: number) => {
-            ctx.beginPath();
-            ctx.moveTo(x, y);
+            beginDrawArrow(x, y);
             ctx.lineTo(x - MEASURE_LINE_ARROW_WIDTH, y - MEASURE_LINE_ARROW_HEIGHT / 2);
             ctx.lineTo(x - MEASURE_LINE_ARROW_WIDTH, y + MEASURE_LINE_ARROW_HEIGHT / 2);
-            ctx.closePath();
-            ctx.fill();
+            endDrawArrow();
         };
 
         const drawTopArrow = (x: number, y: number) => {
-            ctx.beginPath();
-            ctx.moveTo(x, y);
+            beginDrawArrow(x, y);
             ctx.lineTo(x - MEASURE_LINE_ARROW_HEIGHT / 2, y + MEASURE_LINE_ARROW_WIDTH);
             ctx.lineTo(x + MEASURE_LINE_ARROW_HEIGHT / 2, y + MEASURE_LINE_ARROW_WIDTH);
-            ctx.closePath();
-            ctx.fill();
+            endDrawArrow();
         };
 
         const drawBottomArrow = (x: number, y: number) => {
-            ctx.beginPath();
-            ctx.moveTo(x, y);
+            beginDrawArrow(x, y);
             ctx.lineTo(x - MEASURE_LINE_ARROW_HEIGHT / 2, y - MEASURE_LINE_ARROW_WIDTH);
             ctx.lineTo(x + MEASURE_LINE_ARROW_HEIGHT / 2, y - MEASURE_LINE_ARROW_WIDTH);
-            ctx.closePath();
-            ctx.fill();
+            endDrawArrow();
         };
 
         const drawHorizontalMeasureLine = (
@@ -1660,26 +1666,43 @@ export class FontEditor extends React.Component<{ font: Font }> implements IPane
 
 @observer
 export class FontsNavigation extends NavigationComponent {
-    @computed
-    get font() {
-        function getFont(object: EezObject | undefined) {
-            while (object) {
-                if (object instanceof Font) {
-                    return object;
-                }
-                object = object._parent;
+    static getFont(object: EezObject | undefined) {
+        while (object) {
+            if (object instanceof Font) {
+                return object;
             }
-            return undefined;
+            object = object._parent;
+        }
+        return undefined;
+    }
+
+    @computed
+    get object() {
+        if (NavigationStore.selectedPanel) {
+            const font = FontsNavigation.getFont(NavigationStore.selectedPanel.selectedObject);
+            if (font) {
+                return NavigationStore.selectedPanel.selectedObject;
+            }
         }
 
+        const font = FontsNavigation.getFont(NavigationStore.selectedObject);
+        if (font) {
+            return font;
+        }
+
+        return undefined;
+    }
+
+    @computed
+    get font() {
         if (NavigationStore.selectedPanel) {
-            const font = getFont(NavigationStore.selectedPanel.selectedObject);
+            const font = FontsNavigation.getFont(NavigationStore.selectedPanel.selectedObject);
             if (font) {
                 return font;
             }
         }
 
-        const font = getFont(NavigationStore.selectedObject);
+        const font = FontsNavigation.getFont(NavigationStore.selectedObject);
         if (font) {
             return font;
         }
@@ -1697,7 +1720,7 @@ export class FontsNavigation extends NavigationComponent {
             >
                 <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
                 {this.font ? <FontEditor font={this.font} /> : <div />}
-                <PropertiesPanel object={this.font} />
+                <PropertiesPanel object={this.object} />
             </Splitter>
         );
     }

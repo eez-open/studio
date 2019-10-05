@@ -825,6 +825,12 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         }
 
         specific.addField(new String(text));
+
+        // first line
+        specific.addField(new Int16(widget.firstLineIndent || 0));
+
+        // hanging
+        specific.addField(new Int16(widget.hangingIndent || 0));
     } else if (type == WIDGET_TYPE_RECTANGLE) {
         let widget = object as Widget.RectangleWidget;
         specific = new Struct();

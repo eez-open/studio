@@ -70,6 +70,7 @@ import {
     textDrawingInBackground
 } from "project-editor/features/gui/draw";
 import * as lcd from "project-editor/features/gui/lcd";
+import { Font } from "project-editor/features/gui/font";
 
 import { BootstrapButton } from "project-editor/components/BootstrapButton";
 
@@ -1533,6 +1534,216 @@ registerClass(TextWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum MultilineTextRenderStep {
+    MEASURE,
+    RENDER
+}
+
+class MultilineTextRender {
+    constructor(
+        private ctx: CanvasRenderingContext2D,
+        private text: string,
+        private x1: number,
+        private y1: number,
+        private x2: number,
+        private y2: number,
+        private style: Style,
+        private inverse: boolean,
+        private firstLineIndent: number,
+        private hangingIndent: number
+    ) {}
+
+    private font: Font;
+
+    private spaceWidth: number;
+
+    private lineHeight: number;
+    private textHeight: number;
+
+    private line: string;
+    private lineIndent: number;
+    private lineWidth: number;
+
+    flushLine(y: number, step: MultilineTextRenderStep) {
+        if (this.line != "" && this.lineWidth > 0) {
+            if (step == MultilineTextRenderStep.RENDER) {
+                let x;
+
+                if (styleIsHorzAlignLeft(this.style)) {
+                    x = this.x1;
+                } else if (styleIsHorzAlignRight(this.style)) {
+                    x = this.x2 + 1 - this.lineWidth;
+                } else {
+                    x = this.x1 + Math.floor((this.x2 - this.x1 + 1 - this.lineWidth) / 2);
+                }
+
+                if (this.inverse) {
+                    lcd.setBackColor(getStyleProperty(this.style, "color"));
+                    lcd.setColor(getStyleProperty(this.style, "backgroundColor"));
+                } else {
+                    lcd.setBackColor(getStyleProperty(this.style, "backgroundColor"));
+                    lcd.setColor(getStyleProperty(this.style, "color"));
+                }
+
+                textDrawingInBackground.drawStr(
+                    this.ctx,
+                    this.line,
+                    x + this.lineIndent,
+                    y,
+                    x + this.lineWidth - 1,
+                    y + this.font.height - 1,
+                    this.font
+                );
+            } else {
+                this.textHeight = Math.max(this.textHeight, y + this.lineHeight - this.y1);
+            }
+
+            this.line = "";
+            this.lineWidth = this.lineIndent = this.hangingIndent;
+        }
+    }
+
+    executeStep(step: MultilineTextRenderStep) {
+        this.textHeight = 0;
+
+        let y = this.y1;
+
+        this.line = "";
+        this.lineWidth = this.lineIndent = this.firstLineIndent;
+
+        let i = 0;
+
+        while (true) {
+            let word = "";
+            while (i < this.text.length && this.text[i] != " " && this.text[i] != "\n") {
+                word += this.text[i++];
+            }
+
+            let width = lcd.measureStr(word, this.font, 0);
+
+            while (
+                this.lineWidth + (this.line != "" ? this.spaceWidth : 0) + width >
+                this.x2 - this.x1 + 1
+            ) {
+                this.flushLine(y, step);
+
+                y += this.lineHeight;
+                if (y + this.lineHeight - 1 > this.y2) {
+                    break;
+                }
+            }
+
+            if (y + this.lineHeight - 1 > this.y2) {
+                break;
+            }
+
+            if (this.line != "") {
+                this.line += " ";
+                this.lineWidth += this.spaceWidth;
+            }
+            this.line += word;
+            this.lineWidth += width;
+
+            while (this.text[i] == " ") {
+                i++;
+            }
+
+            if (i == this.text.length || this.text[i] == "\n") {
+                this.flushLine(y, step);
+
+                y += this.lineHeight;
+
+                if (i == this.text.length) {
+                    break;
+                }
+
+                i++;
+
+                let extraHeightBetweenParagraphs = Math.floor(0.2 * this.lineHeight);
+
+                y += extraHeightBetweenParagraphs;
+
+                if (y + this.lineHeight - 1 > this.y2) {
+                    break;
+                }
+            }
+        }
+
+        this.flushLine(y, step);
+
+        return this.textHeight + this.font.height - this.lineHeight;
+    }
+
+    render() {
+        const borderSize = this.style.borderSizeRect;
+        let borderRadius = styleGetBorderRadius(this.style) || 0;
+        if (
+            borderSize.top > 0 ||
+            borderSize.right > 0 ||
+            borderSize.bottom > 0 ||
+            borderSize.left > 0
+        ) {
+            lcd.setColor(getStyleProperty(this.style, "borderColor"));
+            lcd.fillRect(this.ctx, this.x1, this.y1, this.x2, this.y2, borderRadius);
+            this.x1 += borderSize.left;
+            this.y1 += borderSize.top;
+            this.x2 -= borderSize.right;
+            this.y2 -= borderSize.bottom;
+            borderRadius = Math.max(
+                borderRadius -
+                    Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
+                0
+            );
+        }
+
+        let backgroundColor = this.inverse
+            ? getStyleProperty(this.style, "color")
+            : getStyleProperty(this.style, "backgroundColor");
+        lcd.setColor(backgroundColor);
+        lcd.fillRect(this.ctx, this.x1, this.y1, this.x2, this.y2, borderRadius);
+
+        const font = styleGetFont(this.style);
+        if (!font) {
+            return;
+        }
+
+        let lineHeight = Math.floor(0.9 * font.height);
+        if (lineHeight <= 0) {
+            return;
+        }
+
+        try {
+            this.text = JSON.parse('"' + this.text + '"');
+        } catch (e) {
+            console.error(e, this.text);
+            return;
+        }
+
+        this.font = font;
+        this.lineHeight = lineHeight;
+
+        this.x1 += this.style.paddingRect.left;
+        this.x2 -= this.style.paddingRect.right;
+        this.y1 += this.style.paddingRect.top;
+        this.y2 -= this.style.paddingRect.bottom;
+
+        const spaceGlyph = font.glyphs._array.find(glyph => glyph.encoding == 32);
+        this.spaceWidth = (spaceGlyph && spaceGlyph.dx) || 0;
+
+        const textHeight = this.executeStep(MultilineTextRenderStep.MEASURE);
+
+        if (styleIsVertAlignTop(this.style)) {
+        } else if (styleIsVertAlignBottom(this.style)) {
+            this.y1 = this.y2 + 1 - textHeight;
+        } else {
+            this.y1 += Math.floor((this.y2 - this.y1 + 1 - textHeight) / 2);
+        }
+        this.y2 = this.y1 + textHeight - 1;
+
+        this.executeStep(MultilineTextRenderStep.RENDER);
+    }
+}
+
 export const indentationGroup: IPropertyGridGroupDefinition = {
     id: "indentation",
     title: "Indentation",
@@ -1540,14 +1751,23 @@ export const indentationGroup: IPropertyGridGroupDefinition = {
 };
 
 export class MultilineTextWidget extends Widget {
-    @observable
-    text?: string;
-
-    get label() {
-        return this.text ? `${this.type}: "${this.text}"` : this.type;
-    }
+    @observable text?: string;
+    @observable firstLineIndent: number;
+    @observable hangingIndent: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        label: (widget: TextWidget) => {
+            if (widget.text) {
+                return `${humanize(widget.type)}: ${widget.text}`;
+            }
+
+            if (widget.data) {
+                return `${humanize(widget.type)}: ${widget.data}`;
+            }
+
+            return humanize(widget.type);
+        },
+
         properties: [
             {
                 name: "text",
@@ -1555,12 +1775,14 @@ export class MultilineTextWidget extends Widget {
                 propertyGridGroup: specificGroup
             },
             {
-                name: "firsLine",
+                name: "firstLineIndent",
+                displayName: "First line",
                 type: PropertyType.Number,
                 propertyGridGroup: indentationGroup
             },
             {
-                name: "hanging",
+                name: "hangingIndent",
+                displayName: "Hanging",
                 type: PropertyType.Number,
                 propertyGridGroup: indentationGroup
             }
@@ -1573,8 +1795,8 @@ export class MultilineTextWidget extends Widget {
             top: 0,
             width: 64,
             height: 32,
-            firstLine: 0,
-            hanging: 0
+            firstLineIndent: 0,
+            hangingIndent: 0
         },
 
         icon: "_images/widgets/MultilineText.png"
@@ -1604,130 +1826,19 @@ export class MultilineTextWidget extends Widget {
             let x2 = w - 1;
             let y2 = h - 1;
 
-            const borderSize = style.borderSizeRect;
-            let borderRadius = styleGetBorderRadius(style) || 0;
-            if (
-                borderSize.top > 0 ||
-                borderSize.right > 0 ||
-                borderSize.bottom > 0 ||
-                borderSize.left > 0
-            ) {
-                lcd.setColor(getStyleProperty(style, "borderColor"));
-                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-                x1 += borderSize.left;
-                y1 += borderSize.top;
-                x2 -= borderSize.right;
-                y2 -= borderSize.bottom;
-                borderRadius = Math.max(
-                    borderRadius -
-                        Math.max(
-                            borderSize.top,
-                            borderSize.right,
-                            borderSize.bottom,
-                            borderSize.left
-                        ),
-                    0
-                );
-            }
-
-            let backgroundColor = inverse
-                ? getStyleProperty(style, "color")
-                : getStyleProperty(style, "backgroundColor");
-            lcd.setColor(backgroundColor);
-            lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-
-            const font = styleGetFont(style);
-            if (!font) {
-                return;
-            }
-
-            try {
-                text = JSON.parse('"' + text + '"');
-            } catch (e) {
-                console.log(e, text);
-            }
-
-            let height = Math.floor(0.9 * font.height);
-
-            x1 += style.paddingRect.left;
-            x2 -= style.paddingRect.right;
-            y1 += style.paddingRect.top;
-            y2 -= style.paddingRect.bottom;
-
-            const spaceGlyph = font.glyphs._array.find(glyph => glyph.encoding == 32);
-            const spaceWidth = (spaceGlyph && spaceGlyph.dx) || 0;
-
-            let x = x1;
-            let y = y1;
-
-            let i = 0;
-            while (true) {
-                let j = i;
-                while (i < text.length && text[i] != " " && text[i] != "\n") {
-                    i++;
-                }
-
-                let width = lcd.measureStr(text.substr(j, i - j), font, 0);
-
-                while (width > x2 - x + 1) {
-                    y += height;
-                    if (y + height > y2) {
-                        break;
-                    }
-
-                    x = x1;
-                }
-
-                if (y + height > y2) {
-                    break;
-                }
-
-                if (width > 0 && height > 0) {
-                    if (inverse) {
-                        lcd.setBackColor(getStyleProperty(style, "color"));
-                        lcd.setColor(getStyleProperty(style, "backgroundColor"));
-                    } else {
-                        lcd.setBackColor(getStyleProperty(style, "backgroundColor"));
-                        lcd.setColor(getStyleProperty(style, "color"));
-                    }
-
-                    textDrawingInBackground.drawStr(
-                        ctx,
-                        text.substr(j, i - j),
-                        x,
-                        y,
-                        width,
-                        height,
-                        font
-                    );
-
-                    x += width;
-                }
-
-                while (text[i] == " ") {
-                    x += spaceWidth;
-                    i++;
-                }
-
-                if (i == text.length || text[i] == "\n") {
-                    y += height;
-
-                    if (i == text.length) {
-                        break;
-                    }
-
-                    i++;
-
-                    let extraHeightBetweenParagraphs = Math.floor(0.2 * height);
-
-                    y += extraHeightBetweenParagraphs;
-
-                    if (y + height > y2) {
-                        break;
-                    }
-                    x = x1;
-                }
-            }
+            var multilineTextRender = new MultilineTextRender(
+                ctx,
+                text,
+                x1,
+                y1,
+                x2,
+                y2,
+                style,
+                inverse,
+                this.firstLineIndent || 0,
+                this.hangingIndent || 0
+            );
+            multilineTextRender.render();
         });
     }
 }
