@@ -37,6 +37,8 @@ import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { DocumentStore, NavigationStore, IContextMenuContext } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
+import { Project } from "project-editor/project/project";
+
 import {
     IResizeHandler,
     IDesignerContext
@@ -125,11 +127,13 @@ function htmlEncode(value: string) {
     return el.innerHTML;
 }
 
-function migrateStyleProperty(jsObject: any, propertyName: string) {
+function migrateStyleProperty(jsObject: any, propertyName: string, propertyName2?: string) {
     if (jsObject[propertyName] === undefined) {
-        jsObject[propertyName] = {
-            inheritFrom: "default"
-        };
+        jsObject[propertyName] = propertyName2
+            ? jsObject[propertyName2]
+            : {
+                  inheritFrom: "default"
+              };
     } else if (typeof jsObject[propertyName] === "string") {
         jsObject[propertyName] = {
             inheritFrom: jsObject[propertyName]
@@ -170,6 +174,9 @@ export class Widget extends EezObject {
 
     static classInfo: ClassInfo = {
         getClass: function(jsObject: any) {
+            if (jsObject.type.startsWith("Local.")) {
+                return findClass("LayoutViewWidget");
+            }
             return findClass(jsObject.type + "Widget");
         },
 
@@ -220,6 +227,11 @@ export class Widget extends EezObject {
         ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
+            if (jsObject.type.startsWith("Local.")) {
+                jsObject.layout = jsObject.type.substring("Local.".length);
+                jsObject.type = "LayoutView";
+            }
+
             if (jsObject["x"] !== undefined) {
                 jsObject["left"] = jsObject["x"];
                 delete jsObject["x"];
@@ -247,7 +259,7 @@ export class Widget extends EezObject {
             }
 
             migrateStyleProperty(jsObject, "style");
-            migrateStyleProperty(jsObject, "activeStyle");
+            migrateStyleProperty(jsObject, "activeStyle", "style");
         },
 
         isPropertyMenuSupported: true
@@ -1399,7 +1411,9 @@ export class DisplayDataWidget extends Widget {
         }
 
         if (this.displayOption === undefined) {
-            messages.push(output.propertyNotSetMessage(this, "displayOption"));
+            if ((ProjectStore.project as Project).settings.general.projectVersion !== "v1") {
+                messages.push(output.propertyNotSetMessage(this, "displayOption"));
+            }
         }
 
         return super.check().concat(messages);
@@ -2905,7 +2919,7 @@ export class UpDownWidget extends Widget {
         ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
-            migrateStyleProperty(jsObject, "buttonStyle");
+            migrateStyleProperty(jsObject, "buttonsStyle");
         },
 
         defaultValue: {

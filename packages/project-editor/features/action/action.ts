@@ -28,6 +28,8 @@ export class Action extends EezObject {
     @observable
     description?: string;
     @observable
+    implementationType: "native";
+    @observable
     implementation?: string;
     @observable
     usedIn: string[] | undefined;
@@ -44,9 +46,17 @@ export class Action extends EezObject {
                 type: PropertyType.MultilineText
             },
             {
+                name: "implementationType",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "native"
+                    }
+                ]
+            },
+            {
                 name: "implementation",
-                type: PropertyType.String,
-                hideInPropertyGrid: true
+                type: PropertyType.Cpp
             },
             {
                 name: "usedIn",

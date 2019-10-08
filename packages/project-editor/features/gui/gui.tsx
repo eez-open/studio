@@ -48,6 +48,9 @@ export class GuiNavigation extends NavigationComponent {
 
 export class Gui extends EezObject {
     @observable
+    storyboard: string;
+
+    @observable
     pages: EezArrayObject<Page>;
 
     @observable
@@ -68,6 +71,10 @@ export class Gui extends EezObject {
     static classInfo: ClassInfo = {
         label: () => "GUI",
         properties: [
+            {
+                name: "storyboard",
+                type: PropertyType.JSON
+            },
             {
                 name: "pages",
                 displayName: "Pages (Layouts)",
@@ -149,6 +156,22 @@ export class Gui extends EezObject {
             }
         ],
         beforeLoadHook: (object: Gui, jsObject: any) => {
+            if (jsObject.widgets) {
+                jsObject.pages.push(
+                    ...jsObject.widgets.map((widgetType: any) => ({
+                        name: widgetType.name,
+                        description: widgetType.description,
+                        style: widgetType.style,
+                        widgets: widgetType.widgets,
+                        left: 0,
+                        top: 0,
+                        width: widgetType.width,
+                        height: widgetType.height,
+                        isUsedAsCustomWidget: true
+                    }))
+                );
+            }
+
             if (jsObject.colors) {
                 for (const color of jsObject.colors) {
                     color.id = guid();
@@ -225,6 +248,22 @@ registerFeatureImplementation("gui", {
                                     pixelArrayCompressed: number[];
                                 };
                             }[];
+                        };
+                    }[];
+                };
+                pages: {
+                    _array: {
+                        left: number;
+                        top: number;
+                        width: number;
+                        height: number;
+                        widgets: any[];
+                        landscape: {
+                            x: number;
+                            y: number;
+                            width: number;
+                            height: number;
+                            widgets: any[];
                         };
                     }[];
                 };

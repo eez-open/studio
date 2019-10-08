@@ -144,21 +144,25 @@ function drawGlyph(
                     pixelData[i + 2] = color[2];
                 }
             }
-
-            ctx.putImageData(pixelImageData, x_glyph, y_glyph, 0, 0, width, height);
         } else {
-            const color = getColorRGB(fgColor);
-            pixelData[0] = color.r;
-            pixelData[1] = color.g;
-            pixelData[2] = color.b;
+            const fgColorRGB = getColorRGB(fgColor);
+            const bgColorRGB = getColorRGB(bgColor);
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
+                    const i = (y * MAX_GLYPH_WIDTH + x) * 4;
                     if (glyph.getPixel(x, y)) {
-                        ctx.putImageData(pixelImageData, x_glyph + x, y_glyph + y);
+                        pixelData[i + 0] = fgColorRGB.r;
+                        pixelData[i + 1] = fgColorRGB.g;
+                        pixelData[i + 2] = fgColorRGB.b;
+                    } else {
+                        pixelData[i + 0] = bgColorRGB.r;
+                        pixelData[i + 1] = bgColorRGB.g;
+                        pixelData[i + 2] = bgColorRGB.b;
                     }
                 }
             }
         }
+        ctx.putImageData(pixelImageData, x_glyph, y_glyph, 0, 0, width, height);
     }
 
     return glyph.dx || 0;

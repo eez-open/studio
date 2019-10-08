@@ -31,7 +31,9 @@ function buildDataFuncsDecl(projectDataItems: DataItem[]) {
         )}(DataOperationEnum operation, Cursor &cursor, Value &value);`;
     });
 
-    return ["void data_none(DataOperationEnum operation, Cursor &cursor, Value &value);"].concat(dataItems).join("\n");
+    return ["void data_none(DataOperationEnum operation, Cursor &cursor, Value &value);"]
+        .concat(dataItems)
+        .join("\n");
 }
 
 function buildDataArrayDecl() {

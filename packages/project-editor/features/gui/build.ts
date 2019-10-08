@@ -659,24 +659,16 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
     result.addField(new UInt16(action));
 
     // x
-    let x: number = 0;
-    if (object instanceof Widget.Widget || object instanceof Page) {
-        x = object.rect.left;
-    }
-    result.addField(new Int16(x));
+    result.addField(new Int16(object.rect.left || 0));
 
     // y
-    let y: number = 0;
-    if (object instanceof Widget.Widget || object instanceof Page) {
-        y = object.rect.top;
-    }
-    result.addField(new Int16(y));
+    result.addField(new Int16(object.rect.top || 0));
 
     // width
-    result.addField(new Int16(object.rect.width));
+    result.addField(new Int16(object.rect.width || 0));
 
     // height
-    result.addField(new Int16(object.rect.height));
+    result.addField(new Int16(object.rect.height || 0));
 
     // style
     let style: number;
@@ -1395,7 +1387,13 @@ class Assets {
             }
         }
 
-        output.propertyNotFoundMessage(object, propertyName);
+        const message = output.propertyNotFoundMessage(object, propertyName);
+        OutputSectionsStore.write(
+            output.Section.OUTPUT,
+            message.type,
+            message.text,
+            message.object
+        );
 
         return 0;
     }
@@ -1565,11 +1563,17 @@ class Assets {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+import { build as buildV1 } from "project-editor/features/gui/build-v1";
+
 export async function build(
     project: Project,
     sectionNames: string[] | undefined,
     buildConfiguration: BuildConfiguration | undefined
 ): Promise<BuildResult> {
+    if (project.settings.general.projectVersion === "v1") {
+        return buildV1(project, sectionNames, buildConfiguration);
+    }
+
     const result: any = {};
 
     const assets = new Assets(project, buildConfiguration);

@@ -1783,6 +1783,8 @@ export class Font extends EezObject {
     @observable
     glyphs: EezArrayObject<Glyph>;
 
+    @observable screenOrientation: string;
+
     @observable
     alwaysBuild: boolean;
 
@@ -1827,6 +1829,21 @@ export class Font extends EezObject {
                 typeClass: Glyph,
                 type: PropertyType.Array,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "screenOrientation",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "all"
+                    },
+                    {
+                        id: "portrait"
+                    },
+                    {
+                        id: "landscape"
+                    }
+                ]
             },
             {
                 name: "alwaysBuild",

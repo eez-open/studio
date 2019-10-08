@@ -179,7 +179,10 @@ export const lazyLoadPageWidgets = (function() {
             if (!page) {
                 page = pageWidgets.keys().next().value;
             }
-            loadPageWidgets(page);
+
+            if (page) {
+                loadPageWidgets(page);
+            }
 
             if (pageWidgets.size > 0) {
                 setTimeout(loadNextPage);
@@ -322,6 +325,81 @@ export class PagesNavigation extends NavigationComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class PageOrientation extends EezObject {
+    @observable x: number;
+    @observable y: number;
+    @observable width: number;
+    @observable height: number;
+    @observable style?: string;
+    @observable widgets: EezArrayObject<Widget>;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "x",
+                type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
+            },
+            {
+                name: "y",
+                type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
+            },
+            {
+                name: "width",
+                type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
+            },
+            {
+                name: "height",
+                type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
+            },
+            {
+                name: "style",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: ["gui", "styles"],
+                propertyGridGroup: styleGroup
+            },
+            {
+                name: "widgets",
+                type: PropertyType.Array,
+                typeClass: Widget,
+                hideInPropertyGrid: true
+            }
+        ]
+    };
+
+    @computed
+    get left() {
+        return this.x;
+    }
+
+    @computed
+    get top() {
+        return this.y;
+    }
+
+    @computed
+    get rect() {
+        return {
+            left: this.x,
+            top: this.y,
+            width: this.width,
+            height: this.height
+        };
+    }
+
+    @computed
+    get closePageIfTouchedOutside() {
+        return (this._parent as Page).closePageIfTouchedOutside;
+    }
+}
+
+registerClass(PageOrientation);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class Page extends EezObject {
     @observable name: string;
     @observable description?: string;
@@ -334,6 +412,10 @@ export class Page extends EezObject {
     @observable top: number;
     @observable width: number;
     @observable height: number;
+
+    @observable portrait: PageOrientation;
+
+    @observable isUsedAsCustomWidget: boolean;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -389,27 +471,35 @@ export class Page extends EezObject {
                 name: "closePageIfTouchedOutside",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup
+            },
+            {
+                name: "portrait",
+                type: PropertyType.Object,
+                typeClass: PageOrientation,
+                isOptional: true,
+                hideInPropertyGrid: true,
+                enumerable: false
+            },
+            {
+                name: "isUsedAsCustomWidget",
+                type: PropertyType.Boolean,
+                propertyGridGroup: generalGroup
             }
         ],
         beforeLoadHook: (page: Page, jsObject: any) => {
+            if (jsObject.landscape) {
+                Object.assign(jsObject, jsObject.landscape);
+                delete jsObject.landscape;
+            }
+
             if (jsObject["x"] !== undefined) {
                 jsObject["left"] = jsObject["x"];
                 delete jsObject["x"];
             }
 
-            if (jsObject["x_"] !== undefined) {
-                jsObject["left_"] = jsObject["x_"];
-                delete jsObject["x_"];
-            }
-
             if (jsObject["y"] !== undefined) {
                 jsObject["top"] = jsObject["y"];
                 delete jsObject["y"];
-            }
-
-            if (jsObject["y_"] !== undefined) {
-                jsObject["top_"] = jsObject["y_"];
-                delete jsObject["y_"];
             }
 
             if (!(ProjectStore.project && ProjectStore.project._allGuiPagesLoaded)) {
@@ -484,11 +574,13 @@ export class Page extends EezObject {
     }
 
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
-        if (this.style) {
-            const pageStyle = findStyle(this.style);
-            if (pageStyle && pageStyle.backgroundColor) {
-                style.backgroundColor = to16bitsColor(getThemedColor(pageStyle.backgroundColor));
-            }
+        const pageStyle = findStyle(this.style || "default");
+        if (pageStyle && pageStyle.backgroundColorProperty) {
+            style.backgroundColor = to16bitsColor(
+                getThemedColor(pageStyle.backgroundColorProperty)
+            );
+        } else {
+            console.log(this.style, pageStyle);
         }
     }
 }

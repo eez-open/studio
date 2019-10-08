@@ -19,7 +19,8 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { ThemesSideView } from "project-editor/features/gui/theme";
+import { findStyle } from "project-editor/features/gui/gui";
+import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
 
 import { ProjectStore } from "project-editor/core/store";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
@@ -42,7 +43,7 @@ const BitmapEditorContainer = styled.div`
         background-color: transparent;
         max-width: 100%;
         max-height: calc(100% - 50px);
-        padding-bottom: 25px;
+        margin-bottom: 25px;
     }
 `;
 
@@ -57,7 +58,7 @@ class BitmapEditor extends React.Component<{ bitmap: Bitmap }> {
 
         return (
             <BitmapEditorContainer>
-                <img src={bitmap.image} />
+                <img src={bitmap.image} style={{ backgroundColor: bitmap.backgroundColor }} />
                 <h4>
                     Dimension: {bitmap.imageElement.width} x {bitmap.imageElement.height}
                 </h4>
@@ -116,6 +117,7 @@ export class Bitmap extends EezObject implements IBitmap {
     @observable image: string;
     @observable bpp: number;
     @observable alwaysBuild: boolean;
+    @observable style?: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -140,6 +142,11 @@ export class Bitmap extends EezObject implements IBitmap {
                 type: PropertyType.Enum,
                 enumItems: [{ id: 16 }, { id: 32 }],
                 defaultValue: 16
+            },
+            {
+                name: "style",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: ["gui", "styles"]
             },
             {
                 name: "alwaysBuild",
@@ -212,6 +219,17 @@ export class Bitmap extends EezObject implements IBitmap {
     private _imageElementImage: string;
 
     @computed
+    get backgroundColor() {
+        if (this.bpp !== 32) {
+            const style = findStyle(this.style || "default");
+            if (style && style.backgroundColorProperty) {
+                return getThemedColor(style.backgroundColorProperty);
+            }
+        }
+        return "transparent";
+    }
+
+    @computed
     get imageElement() {
         if (!this.image) {
             return null;
@@ -220,6 +238,7 @@ export class Bitmap extends EezObject implements IBitmap {
         if (this.image !== this._imageElementImage) {
             let imageElement = new Image();
             imageElement.src = this.image;
+
             imageElement.onload = action(() => {
                 this._imageElement = imageElement;
                 this._imageElementImage = this.image;
@@ -238,6 +257,7 @@ export interface BitmapData {
     width: number;
     height: number;
     bpp: number;
+    style?: string;
     pixels: number[];
 }
 
@@ -258,7 +278,12 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
                 return;
             }
 
-            ctx.clearRect(0, 0, image.width, image.height);
+            if (bitmap.backgroundColor !== "transparent") {
+                ctx.fillStyle = bitmap.backgroundColor;
+                ctx.fillRect(0, 0, image.width, image.height);
+            } else {
+                ctx.clearRect(0, 0, image.width, image.height);
+            }
 
             ctx.drawImage(image, 0, 0);
 

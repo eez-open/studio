@@ -69,6 +69,10 @@ export function extensionDefinitionAnythingToBuild() {
 export async function extensionDefinitionBuild() {
     const extensionsToBuild = getExtensionsToBuild();
 
+    if (!extensionsToBuild) {
+        return;
+    }
+
     await Promise.all(
         extensionsToBuild.map(async extensionDefinition => {
             const idfFromProject = toJS(extensionDefinition);
@@ -104,9 +108,7 @@ export async function extensionDefinitionBuild() {
             }
 
             if (instrumentIdf.extensionName && instrumentIdf.idfGuid) {
-                let idfFileName = `${instrumentIdf.extensionName}-${
-                    instrumentIdf.idfRevisionNumber
-                }.zip`;
+                let idfFileName = `${instrumentIdf.extensionName}-${instrumentIdf.idfRevisionNumber}.zip`;
 
                 let idfFilePath;
                 if (extensionDefinition.buildFolder) {

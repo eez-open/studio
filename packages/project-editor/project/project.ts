@@ -35,6 +35,8 @@ export class BuildConfiguration extends EezObject {
     description: string;
     @observable
     properties: string;
+    @observable
+    screenOrientation: "landscape" | "portrait";
 
     static classInfo: ClassInfo = {
         properties: [
@@ -50,6 +52,18 @@ export class BuildConfiguration extends EezObject {
             {
                 name: "properties",
                 type: PropertyType.JSON
+            },
+            {
+                name: "screenOrientation",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "landscape"
+                    },
+                    {
+                        id: "portrait"
+                    }
+                ]
             }
         ],
         newItem: (parent: EezObject) => {
@@ -171,11 +185,19 @@ registerClass(Build);
 
 export class General extends EezObject {
     @observable
+    projectVersion: "v1" | "v2";
+
+    @observable
     scpiDocFolder?: string;
 
     static classInfo: ClassInfo = {
         label: () => "General",
         properties: [
+            {
+                name: "projectVersion",
+                type: PropertyType.Enum,
+                enumItems: [{ id: "v1" }, { id: "v2" }]
+            },
             {
                 name: "scpiDocFolder",
                 displayName: "SCPI documentation folder",

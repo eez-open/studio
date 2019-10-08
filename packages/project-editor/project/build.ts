@@ -241,7 +241,10 @@ export async function build(onlyCheck: boolean) {
             [configurationName: string]: BuildResult[];
         } = {};
 
-        if (ProjectStore.project.settings.build.configurations._array.length > 0) {
+        if (
+            ProjectStore.project.settings.general.projectVersion !== "v1" &&
+            ProjectStore.project.settings.build.configurations._array.length > 0
+        ) {
             for (const configuration of ProjectStore.project.settings.build.configurations._array) {
                 OutputSectionsStore.write(
                     Section.OUTPUT,
@@ -254,10 +257,20 @@ export async function build(onlyCheck: boolean) {
                 );
             }
         } else {
-            configurationBuildResuts["default"] = await getBuildResults(
-                sectionNames,
-                ProjectStore.selectedBuildConfiguration
-            );
+            const selectedBuildConfiguration =
+                ProjectStore.selectedBuildConfiguration ||
+                ProjectStore.project.settings.build.configurations._array[0];
+            if (selectedBuildConfiguration) {
+                OutputSectionsStore.write(
+                    Section.OUTPUT,
+                    Type.INFO,
+                    `Building ${selectedBuildConfiguration.name} configuration`
+                );
+                configurationBuildResuts[selectedBuildConfiguration.name] = await getBuildResults(
+                    sectionNames,
+                    selectedBuildConfiguration
+                );
+            }
         }
 
         showCheckResult();
