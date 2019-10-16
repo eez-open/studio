@@ -881,8 +881,8 @@ registerClass(ListWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class GridWidget extends Widget {
-    @observable
-    itemWidget?: Widget;
+    @observable itemWidget?: Widget;
+    @observable gridFlow?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
@@ -892,6 +892,19 @@ export class GridWidget extends Widget {
                 typeClass: Widget,
                 hideInPropertyGrid: true,
                 isOptional: true
+            },
+            {
+                name: "gridFlow",
+                type: PropertyType.Enum,
+                propertyGridGroup: specificGroup,
+                enumItems: [
+                    {
+                        id: "row"
+                    },
+                    {
+                        id: "column"
+                    }
+                ]
             }
         ],
 
@@ -903,7 +916,8 @@ export class GridWidget extends Widget {
                 left: 0,
                 top: 0,
                 width: 32,
-                height: 32
+                height: 32,
+                gridFlow: "row"
             },
             left: 0,
             top: 0,
@@ -945,11 +959,20 @@ export class GridWidget extends Widget {
             const rows = Math.floor(gridRect.width / itemRect.width);
             const cols = Math.floor(gridRect.height / itemRect.height);
 
-            const row = i % rows;
-            const col = Math.floor(i / rows);
-
-            if (col >= cols) {
-                return undefined;
+            let row;
+            let col;
+            if (this.gridFlow === "column") {
+                row = Math.floor(i / cols);
+                col = i % cols;
+                if (row >= rows) {
+                    return undefined;
+                }
+            } else {
+                row = i % rows;
+                col = Math.floor(i / rows);
+                if (col >= cols) {
+                    return undefined;
+                }
             }
 
             let xListItem = row * itemRect.width;

@@ -73,83 +73,87 @@ export async function extensionDefinitionBuild() {
         return;
     }
 
-    await Promise.all(
-        extensionsToBuild.map(async extensionDefinition => {
-            const idfFromProject = toJS(extensionDefinition);
+    for (const extensionDefinition of extensionsToBuild) {
+        const idfFromProject = toJS(extensionDefinition);
 
-            const instrumentIdf: InstrumentIdfProperties = idfFromProject as any;
+        const instrumentIdf: InstrumentIdfProperties = idfFromProject as any;
 
-            // collect extension properties
-            let properties: any = {};
+        // collect extension properties
+        let properties: any = {};
 
-            // from configuration
-            const configuration = ProjectStore.project.settings.build.configurations._array.find(
-                configuration => configuration.name == extensionDefinition.buildConfiguration
-            );
-            if (configuration && configuration.properties) {
-                properties = Object.assign(properties, JSON.parse(configuration.properties));
-            }
+        // from configuration
+        const configuration = ProjectStore.project.settings.build.configurations._array.find(
+            configuration => configuration.name == extensionDefinition.buildConfiguration
+        );
+        if (configuration && configuration.properties) {
+            properties = Object.assign(properties, JSON.parse(configuration.properties));
+        }
 
-            // from extension definition
-            if (idfFromProject.properties) {
-                properties = Object.assign(properties, JSON.parse(idfFromProject.properties));
-            }
+        // from extension definition
+        if (idfFromProject.properties) {
+            properties = Object.assign(properties, JSON.parse(idfFromProject.properties));
+        }
 
-            // from other project extensions
-            properties = Object.assign(
-                {
-                    properties
-                },
-                getInstrumentExtensionProperties(idfFromProject)
-            );
+        // from other project extensions
+        properties = Object.assign(
+            {
+                properties
+            },
+            getInstrumentExtensionProperties(idfFromProject)
+        );
 
-            if (configuration) {
-                properties.moreDescription = configuration.description;
-            }
+        if (configuration) {
+            properties.moreDescription = configuration.description;
+        }
 
-            if (instrumentIdf.extensionName && instrumentIdf.idfGuid) {
-                let idfFileName = `${instrumentIdf.extensionName}-${instrumentIdf.idfRevisionNumber}.zip`;
+        if (instrumentIdf.extensionName && instrumentIdf.idfGuid) {
+            let idfFileName = `${instrumentIdf.extensionName}-${instrumentIdf.idfRevisionNumber}.zip`;
 
-                let idfFilePath;
-                if (extensionDefinition.buildFolder) {
-                    let buildFolderPath = ProjectStore.getAbsoluteFilePath(
-                        extensionDefinition.buildFolder
-                    );
+            let idfFilePath;
+            if (extensionDefinition.buildFolder) {
+                let buildFolderPath = ProjectStore.getAbsoluteFilePath(
+                    extensionDefinition.buildFolder
+                );
+
+                try {
                     await makeFolder(buildFolderPath);
-                    idfFilePath = buildFolderPath + "/" + idfFileName;
-                } else {
-                    idfFilePath = ProjectStore.getAbsoluteFilePath(idfFileName);
+                } catch (err) {
+                    console.error(err);
                 }
 
-                const scpi = getProperty(ProjectStore.project, "scpi") as Scpi;
-                const subsystems = objectToJS(scpi.subsystems);
-                const enums = objectToJS(scpi.enums);
-
-                await buildInstrumentExtension(
-                    instrumentIdf,
-
-                    subsystems,
-
-                    enums,
-
-                    idfFilePath,
-
-                    instrumentIdf.image && ProjectStore.getAbsoluteFilePath(instrumentIdf.image),
-
-                    ProjectStore.project.settings.general.scpiDocFolder &&
-                        ProjectStore.getAbsoluteFilePath(
-                            ProjectStore.project.settings.general.scpiDocFolder
-                        ),
-
-                    properties
-                );
-
-                OutputSectionsStore.write(
-                    Section.OUTPUT,
-                    Type.INFO,
-                    `Instrument definition file "${idfFileName}" builded.`
-                );
+                idfFilePath = buildFolderPath + "/" + idfFileName;
+            } else {
+                idfFilePath = ProjectStore.getAbsoluteFilePath(idfFileName);
             }
-        })
-    );
+
+            const scpi = getProperty(ProjectStore.project, "scpi") as Scpi;
+            const subsystems = objectToJS(scpi.subsystems);
+            const enums = objectToJS(scpi.enums);
+
+            await buildInstrumentExtension(
+                instrumentIdf,
+
+                subsystems,
+
+                enums,
+
+                idfFilePath,
+
+                instrumentIdf.image && ProjectStore.getAbsoluteFilePath(instrumentIdf.image),
+
+                ProjectStore.project.settings.general.scpiDocFolder &&
+                    ProjectStore.getAbsoluteFilePath(
+                        ProjectStore.project.settings.general.scpiDocFolder
+                    ),
+
+                properties
+            );
+
+            OutputSectionsStore.write(
+                Section.OUTPUT,
+                Type.INFO,
+                `Instrument definition file "${idfFileName}" builded.`
+            );
+        }
+    }
 }

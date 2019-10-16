@@ -283,7 +283,11 @@ export async function build(onlyCheck: boolean) {
 
         await extensionDefinitionBuild();
 
-        OutputSectionsStore.write(Section.OUTPUT, Type.INFO, "Build successfully finished.");
+        OutputSectionsStore.write(
+            Section.OUTPUT,
+            Type.INFO,
+            `Build successfully finished at ${new Date().toLocaleString()}.`
+        );
     } catch (err) {
         if (err instanceof BuildException) {
             OutputSectionsStore.write(Section.OUTPUT, Type.ERROR, err.message, err.object);

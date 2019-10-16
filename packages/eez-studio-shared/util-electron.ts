@@ -52,13 +52,11 @@ export function zipExtract(zipFilePath: string, destFolderPath: string) {
     });
 }
 
-export function makeFolder(folderPath: string) {
-    return new Promise(async (resolve, reject) => {
-        let exists = await fileExists(folderPath);
-        if (exists) {
-            resolve();
-        } else {
-            await makeFolder(path.dirname(folderPath));
+export async function makeFolder(folderPath: string) {
+    let exists = await fileExists(folderPath);
+    if (!exists) {
+        await makeFolder(path.dirname(folderPath));
+        await new Promise(async (resolve, reject) => {
             fs.mkdir(folderPath, (err: any) => {
                 if (err) {
                     reject(err);
@@ -66,8 +64,8 @@ export function makeFolder(folderPath: string) {
                     resolve();
                 }
             });
-        }
-    });
+        });
+    }
 }
 
 export function removeFolder(folderPath: string) {

@@ -57,6 +57,9 @@ const WIDGET_TYPE_APP_VIEW = 19;
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
 
+const GRID_FLOW_ROW = 1;
+const GRID_FLOW_COLUMN = 2;
+
 const SCALE_NEEDLE_POSITION_LEFT = 1;
 const SCALE_NEEDLE_POSITION_RIGHT = 2;
 const SCALE_NEEDLE_POSITION_TOP = 3;
@@ -752,6 +755,11 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
     } else if (type == WIDGET_TYPE_GRID) {
         let widget = object as Widget.GridWidget;
         specific = new Struct();
+
+        // listType
+        specific.addField(
+            new UInt8(widget.gridFlow === "column" ? GRID_FLOW_COLUMN : GRID_FLOW_ROW)
+        );
 
         // itemWidget
         let itemWidget: Struct | undefined;
