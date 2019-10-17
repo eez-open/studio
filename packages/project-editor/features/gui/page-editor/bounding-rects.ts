@@ -15,7 +15,13 @@ import {
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 
 class BoundingRects {
-    @observable map = new Map<string, Rect[]>();
+    @observable map = new Map<
+        string,
+        {
+            zIndex: number;
+            rect: Rect;
+        }[]
+    >();
 
     constructor() {
         this.updateBoundingRects();
@@ -25,7 +31,13 @@ class BoundingRects {
     updateBoundingRects() {
         const $divs = $(`[data-designer-object-id]`);
 
-        const map = new Map<string, Rect[]>();
+        const map = new Map<
+            string,
+            {
+                zIndex: number;
+                rect: Rect;
+            }[]
+        >();
 
         for (let i = 0; i < $divs.length; ++i) {
             const div = $divs[i];
@@ -34,9 +46,22 @@ class BoundingRects {
 
             const rects = map.get(id);
             if (rects) {
-                map.set(id, rects.concat([rect]));
+                map.set(
+                    id,
+                    rects.concat([
+                        {
+                            zIndex: i,
+                            rect
+                        }
+                    ])
+                );
             } else {
-                map.set(id, [rect]);
+                map.set(id, [
+                    {
+                        zIndex: i,
+                        rect
+                    }
+                ]);
             }
         }
 
@@ -53,16 +78,18 @@ class BoundingRects {
                 !r2 ||
                 r1.length !== r2.length ||
                 (r1.length == 1 &&
-                    (r1[0].left != r2[0].left ||
-                        r1[0].top != r2[0].top ||
-                        r1[0].width != r2[0].width ||
-                        r1[0].height != r2[0].height)) ||
+                    (r1[0].zIndex != r2[0].zIndex ||
+                        r1[0].rect.left != r2[0].rect.left ||
+                        r1[0].rect.top != r2[0].rect.top ||
+                        r1[0].rect.width != r2[0].rect.width ||
+                        r1[0].rect.height != r2[0].rect.height)) ||
                 r1.find(
                     (r, i) =>
-                        r.left != r2[i].left ||
-                        r.top != r2[i].top ||
-                        r.width != r2[i].width ||
-                        r.height != r2[i].height
+                        r.zIndex != r2[i].zIndex ||
+                        r.rect.left != r2[i].rect.left ||
+                        r.rect.top != r2[i].rect.top ||
+                        r.rect.width != r2[i].rect.width ||
+                        r.rect.height != r2[i].rect.height
                 )
             ) {
                 this.map.set(key, r1);
@@ -84,7 +111,10 @@ class BoundingRects {
 
     getBoundingRectFromId(id: string, viewState?: IViewState) {
         const boundingRects = this.map.get(id);
-        return BoundingRects.boundigRectToPageRect(boundingRects && boundingRects[0], viewState);
+        return BoundingRects.boundigRectToPageRect(
+            boundingRects && boundingRects[0].rect,
+            viewState
+        );
     }
 
     getBoundingRect(object: IBaseObject, viewState: IViewState) {
@@ -93,12 +123,14 @@ class BoundingRects {
 
     getObjectIdFromPoint(document: IDocument, viewState: IViewState, point: Point) {
         let foundId: string | undefined;
+        let foundZIndex: number = -1;
         point = viewState.transform.pageToClientPoint(point);
         for (const [id, boundingRects] of this.map.entries()) {
             for (const boundingRect of boundingRects) {
-                if (pointInRect(point, boundingRect) && document.findObjectById(id)) {
-                    if (!foundId || id.length > foundId.length) {
+                if (pointInRect(point, boundingRect.rect) && document.findObjectById(id)) {
+                    if (!foundId || boundingRect.zIndex > foundZIndex) {
                         foundId = id;
+                        foundZIndex = boundingRect.zIndex;
                     }
                 }
             }
@@ -110,7 +142,7 @@ class BoundingRects {
         let boundingRectBuilder = new BoundingRectBuilder();
         this.map.forEach(boundingRects => {
             for (const boundingRect of boundingRects) {
-                boundingRectBuilder.addRect(boundingRect);
+                boundingRectBuilder.addRect(boundingRect.rect);
             }
         });
         return BoundingRects.boundigRectToPageRect(boundingRectBuilder.getRect(), viewState);
@@ -120,7 +152,7 @@ class BoundingRects {
         const ids: string[] = [];
         for (const [id, boundingRects] of this.map.entries()) {
             for (const boundingRect of boundingRects) {
-                const pageRect = BoundingRects.boundigRectToPageRect(boundingRect, viewState);
+                const pageRect = BoundingRects.boundigRectToPageRect(boundingRect.rect, viewState);
                 if (isRectInsideRect(pageRect, rect)) {
                     ids.push(id);
                 }

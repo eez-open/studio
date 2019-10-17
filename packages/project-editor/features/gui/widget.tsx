@@ -718,11 +718,9 @@ interface IContainerWidget extends IWidget {
 }
 
 export class ContainerWidget extends Widget {
-    @observable
-    name: string;
-
-    @observable
-    widgets: EezArrayObject<Widget>;
+    @observable name: string;
+    @observable widgets: EezArrayObject<Widget>;
+    @observable isOverlay: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         label: (widget: ContainerWidget) => {
@@ -743,6 +741,11 @@ export class ContainerWidget extends Widget {
                 name: "name",
                 type: PropertyType.String,
                 propertyGridGroup: generalGroup
+            },
+            {
+                name: "isOverlay",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -752,7 +755,8 @@ export class ContainerWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32
+            height: 32,
+            isOverlay: false
         } as IContainerWidget,
 
         icon: "_images/widgets/Container.png"
@@ -760,6 +764,13 @@ export class ContainerWidget extends Widget {
 
     render(rect: Rect) {
         return <WidgetContainerComponent containerWidget={this} widgets={this.widgets._array} />;
+    }
+
+    styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
+        super.styleHook(style, designerContext);
+        if (this.isOverlay) {
+            style.boxShadow = "1px 1px 8px 1px rgba(0,0,0,0.5)";
+        }
     }
 }
 

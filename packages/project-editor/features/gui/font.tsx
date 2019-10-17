@@ -1541,8 +1541,6 @@ export class FontEditor extends React.Component<{ font: Font }> implements IPane
 
                 const font = this.props.font;
 
-                console.log(font.glyphs);
-
                 let glyphWidth = font.glyphs._array[0].width;
                 let glyphHeight = font.glyphs._array[0].height;
 
