@@ -977,7 +977,8 @@ class Property extends React.Component<PropertyProps> {
                             type="text"
                             className="form-control"
                             value={this._value || ""}
-                            readOnly
+                            onChange={this.onChange}
+                            readOnly={propertyInfo.computed}
                         />
                         <div className="input-group-append">
                             <button

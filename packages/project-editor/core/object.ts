@@ -5,7 +5,7 @@ import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
 import { loadObject, objectToJson } from "project-editor/core/serialization";
-import { IContextMenuContext } from "project-editor/core/store";
+import { IContextMenuContext, INavigationStore } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,6 +139,8 @@ export interface PropertyInfo {
 export interface NavigationComponentProps {
     id: string;
     navigationObject: EezObject;
+    navigationStore?: INavigationStore;
+    onDoubleClickItem?: (item: EezObject) => void;
 }
 
 export class NavigationComponent extends React.Component<NavigationComponentProps, {}> {}
@@ -191,6 +193,7 @@ export interface ClassInfo {
 
     createEditorState?: (object: EezObject) => IEditorState;
     newItem?: (object: EezObject) => Promise<any>;
+    findItemByName?: (name: string) => EezObject | undefined;
     getInheritedValue?: (object: EezObject, propertyName: string) => InheritedValue;
     defaultValue?: any;
     findPastePlaceInside?: (

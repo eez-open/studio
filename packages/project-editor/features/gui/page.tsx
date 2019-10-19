@@ -275,7 +275,7 @@ export class PagesNavigation extends NavigationComponent {
     }
 
     render() {
-        const navigation = this.treeAdapter ? (
+        const navigation = (
             <Splitter
                 type="vertical"
                 persistId="page-editor/navigation-structure"
@@ -287,12 +287,18 @@ export class PagesNavigation extends NavigationComponent {
                     id="page-structure"
                     title="Page Structure"
                     body={
-                        <Tree treeAdapter={this.treeAdapter} tabIndex={0} onFocus={this.onFocus} />
+                        this.treeAdapter ? (
+                            <Tree
+                                treeAdapter={this.treeAdapter}
+                                tabIndex={0}
+                                onFocus={this.onFocus}
+                            />
+                        ) : (
+                            <div />
+                        )
                     }
                 />
             </Splitter>
-        ) : (
-            <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
         );
 
         const properties = (

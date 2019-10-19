@@ -81,7 +81,46 @@ export interface IPanel {
 
 type NavigationItem = EezObject | ITreeObjectAdapter;
 
-class NavigationStoreClass {
+export interface INavigationStore {
+    selectedPanel?: IPanel;
+    selectedObject?: EezObject;
+    getNavigationSelectedItem(navigationObject: EezObject): NavigationItem | undefined;
+    getNavigationSelectedItemAsObject(navigationObject: EezObject): EezObject | undefined;
+    setNavigationSelectedItem(
+        navigationObject: EezObject,
+        navigationSelectedItem: NavigationItem
+    ): void;
+    setSelectedPanel(selectedPanel: IPanel | undefined): void;
+}
+
+export class SimpleNavigationStoreClass implements INavigationStore {
+    @observable selectedItem: NavigationItem | undefined;
+
+    constructor(selectedObject: EezObject | undefined) {
+        this.selectedItem = selectedObject;
+    }
+
+    get selectedObject(): EezObject | undefined {
+        return this.selectedItem as EezObject;
+    }
+
+    getNavigationSelectedItem(navigationObject: EezObject) {
+        return this.selectedItem;
+    }
+
+    getNavigationSelectedItemAsObject(navigationObject: EezObject) {
+        return this.selectedItem as EezObject;
+    }
+
+    @action
+    setNavigationSelectedItem(navigationObject: EezObject, navigationSelectedItem: NavigationItem) {
+        this.selectedItem = navigationSelectedItem;
+    }
+
+    setSelectedPanel(selectedPanel: IPanel | undefined) {}
+}
+
+class NavigationStoreClass implements INavigationStore {
     @observable
     navigationMap = new Map<string, NavigationItem>();
 

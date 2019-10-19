@@ -714,7 +714,11 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
 
         specific.addField(childWidgets);
 
-        specific.addField(new UInt8((object as Widget.ContainerWidget).isOverlay ? 1 : 0));
+        let overlay = 0;
+        if (object instanceof Widget.ContainerWidget && object.overlay) {
+            overlay = assets.getDataItemIndex(object, "overlay");
+        }
+        specific.addField(new UInt16(overlay));
 
         // closePageIfTouchedOutside
         if (object instanceof Page) {

@@ -28,11 +28,12 @@ import { validators } from "eez-studio-shared/validation";
 import { loadObject } from "project-editor/core/serialization";
 import * as output from "project-editor/core/output";
 import { ListNavigation } from "project-editor/components/ListNavigation";
+import { onSelectItem } from "project-editor/components/ItemSelect";
 import { Splitter } from "eez-studio-ui/splitter";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
-import { getGui, findStyle, findFont } from "project-editor/features/gui/gui";
+import { getGui, findFont } from "project-editor/features/gui/gui";
 import { drawText } from "project-editor/features/gui/draw";
 import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
 
@@ -83,33 +84,60 @@ export class StyleEditor extends React.Component<{ style: Style }> {
 export class StylesNavigation extends NavigationComponent {
     @computed
     get style() {
-        if (NavigationStore.selectedPanel) {
-            if (NavigationStore.selectedPanel.selectedObject instanceof Style) {
-                return NavigationStore.selectedPanel.selectedObject;
+        const navigationStore = this.props.navigationStore || NavigationStore;
+
+        if (navigationStore.selectedPanel) {
+            if (navigationStore.selectedPanel.selectedObject instanceof Style) {
+                return navigationStore.selectedPanel.selectedObject;
             }
         }
 
-        if (NavigationStore.selectedObject instanceof Style) {
-            return NavigationStore.selectedObject;
+        if (navigationStore.selectedObject instanceof Style) {
+            return navigationStore.selectedObject;
         }
 
         return undefined;
     }
 
     render() {
-        return (
-            <Splitter
-                type="horizontal"
-                persistId={`project-editor/styles`}
-                sizes={`240px|100%|400px|240px`}
-                childrenOverflow="hidden|hidden|hidden|hidden"
-            >
-                <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
-                {this.style ? <StyleEditor style={this.style} /> : <div />}
-                <PropertiesPanel object={this.style} />
-                <ThemesSideView />
-            </Splitter>
-        );
+        if (this.props.navigationStore) {
+            // used in select style dialog
+            return (
+                <Splitter
+                    type="horizontal"
+                    persistId={`project-editor/styles-dialog`}
+                    sizes={`200px|100%|200px`}
+                    childrenOverflow="hidden|hidden|hidden"
+                >
+                    <ListNavigation
+                        id={this.props.id}
+                        navigationObject={this.props.navigationObject}
+                        navigationStore={this.props.navigationStore}
+                        onDoubleClickItem={this.props.onDoubleClickItem}
+                    />
+                    <PropertiesPanel object={this.style} />
+                    <ThemesSideView />
+                </Splitter>
+            );
+        } else {
+            // used in global navigation
+            return (
+                <Splitter
+                    type="horizontal"
+                    persistId={`project-editor/styles`}
+                    sizes={`240px|100%|400px|240px`}
+                    childrenOverflow="hidden|hidden|hidden|hidden"
+                >
+                    <ListNavigation
+                        id={this.props.id}
+                        navigationObject={this.props.navigationObject}
+                    />
+                    {this.style ? <StyleEditor style={this.style} /> : <div />}
+                    <PropertiesPanel object={this.style} />
+                    <ThemesSideView />
+                </Splitter>
+            );
+        }
     }
 }
 
@@ -132,6 +160,7 @@ const inheritFromProperty: PropertyInfo = {
     name: "inheritFrom",
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: ["gui", "styles"],
+    onSelect: onSelectItem,
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
         let menuItems: Electron.MenuItem[] = [];
 
@@ -466,6 +495,7 @@ export class Style extends EezObject {
                 name: "Style"
             });
         },
+        findItemByName: findStyle,
         getInheritedValue: (styleObject: Style, propertyName: string) =>
             getInheritedValue(styleObject, propertyName, false),
         navigationComponentId: "styles",
@@ -894,4 +924,17 @@ export function drawStylePreview(canvas: HTMLCanvasElement, style: Style) {
         ctx.drawImage(drawText("Hello!", 240, 160, style, true), 0, 160);
         ctx.restore();
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function findStyle(styleName: string | undefined) {
+    let gui = getGui();
+    let styles = (gui && gui.styles._array) || [];
+    for (const style of styles) {
+        if (style.name == styleName) {
+            return style;
+        }
+    }
+    return undefined;
 }

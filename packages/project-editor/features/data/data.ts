@@ -125,6 +125,7 @@ export class DataItem extends EezObject {
                 });
             });
         },
+        findItemByName: findDataItem,
         navigationComponent: ListNavigationWithProperties,
         navigationComponentId: "data-items",
         icon: "dns"

@@ -40,7 +40,8 @@ import {
     showContextMenu,
     canContainChildren,
     DocumentStore,
-    NavigationStore
+    NavigationStore,
+    INavigationStore
 } from "project-editor/core/store";
 import {
     objectToClipboardData,
@@ -1180,12 +1181,17 @@ class ListItem {
 }
 
 export class ListAdapter implements ITreeAdapter {
+    navigationStore: INavigationStore;
+
     constructor(
         private object: EezObject,
         private sortDirection?: SortDirectionType,
-        onDoubleClick?: (object: EezObject) => void
+        onDoubleClick?: (object: EezObject) => void,
+        navigationStore?: INavigationStore
     ) {
         this.onDoubleClickCallback = onDoubleClick;
+
+        this.navigationStore = navigationStore || NavigationStore;
 
         autorun(() => {
             const selectedItem = this.selectedItem;
@@ -1257,7 +1263,7 @@ export class ListAdapter implements ITreeAdapter {
 
     @computed
     get selectedItem(): ListItem | undefined {
-        const item = NavigationStore.getNavigationSelectedItem(this.object);
+        const item = this.navigationStore.getNavigationSelectedItem(this.object);
 
         if (item instanceof EezObject) {
             return this.getItemFromId(item._id);
@@ -1269,7 +1275,7 @@ export class ListAdapter implements ITreeAdapter {
     @action
     selectItem(item: ListItem): void {
         if (item.object._parent && !isPartOfNavigation(item.object._parent)) {
-            NavigationStore.setNavigationSelectedItem(this.object, item.object);
+            this.navigationStore.setNavigationSelectedItem(this.object, item.object);
             return;
         }
 
@@ -1278,7 +1284,7 @@ export class ListAdapter implements ITreeAdapter {
             selectedItem.selected = false;
         }
 
-        NavigationStore.setNavigationSelectedItem(this.object, item.object);
+        this.navigationStore.setNavigationSelectedItem(this.object, item.object);
 
         selectedItem = this.selectedItem;
         if (selectedItem) {

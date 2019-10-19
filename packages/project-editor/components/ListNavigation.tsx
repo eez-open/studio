@@ -17,6 +17,7 @@ import {
 import { ListAdapter, SortDirectionType } from "project-editor/core/objectAdapter";
 import {
     NavigationStore,
+    INavigationStore,
     EditorsStore,
     addItem,
     deleteItem,
@@ -121,20 +122,23 @@ class AddButton extends React.Component<{
 @observer
 class DeleteButton extends React.Component<{
     navigationObject: EezObject | undefined;
+    navigationStore?: INavigationStore;
 }> {
     onDelete() {
+        const navigationStore = this.props.navigationStore || NavigationStore;
         let selectedItem =
             this.props.navigationObject &&
-            NavigationStore.getNavigationSelectedItemAsObject(this.props.navigationObject);
+            navigationStore.getNavigationSelectedItemAsObject(this.props.navigationObject);
         if (selectedItem) {
             deleteItem(selectedItem);
         }
     }
 
     render() {
+        const navigationStore = this.props.navigationStore || NavigationStore;
         let selectedItem =
             this.props.navigationObject &&
-            NavigationStore.getNavigationSelectedItemAsObject(this.props.navigationObject);
+            navigationStore.getNavigationSelectedItemAsObject(this.props.navigationObject);
 
         return (
             <IconAction
@@ -158,6 +162,7 @@ interface ListNavigationProps {
     additionalButtons?: JSX.Element[];
     onEditItem?: (itemId: string) => void;
     renderItem?: (itemId: string) => React.ReactNode;
+    navigationStore?: INavigationStore;
 }
 
 @observer
@@ -192,10 +197,11 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
 
     @computed
     get selectedObject() {
-        let selectedItem = NavigationStore.getNavigationSelectedItem(
+        const navigationStore = this.props.navigationStore || NavigationStore;
+        let selectedItem = navigationStore.getNavigationSelectedItem(
             this.props.navigationObject
         ) as EezObject;
-        return selectedItem || NavigationStore.selectedObject;
+        return selectedItem || navigationStore.selectedObject;
     }
 
     cutSelection() {
@@ -219,13 +225,15 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
         return new ListAdapter(
             this.props.navigationObject,
             this.sortDirection,
-            this.onDoubleClickItem
+            this.onDoubleClickItem,
+            this.props.navigationStore
         );
     }
 
     onFocus() {
+        const navigationStore = this.props.navigationStore || NavigationStore;
         if (isPartOfNavigation(this.props.navigationObject)) {
-            NavigationStore.setSelectedPanel(this);
+            navigationStore.setSelectedPanel(this);
         }
     }
 
@@ -255,7 +263,13 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
             />
         );
 
-        buttons.push(<DeleteButton key="delete" navigationObject={this.props.navigationObject} />);
+        buttons.push(
+            <DeleteButton
+                key="delete"
+                navigationObject={this.props.navigationObject}
+                navigationStore={this.props.navigationStore}
+            />
+        );
 
         return (
             <Panel
@@ -286,6 +300,7 @@ interface ListNavigationWithContentProps extends NavigationComponentProps {
     orientation?: "horizontal" | "vertical";
     onEditItem?: (itemId: string) => void;
     renderItem?: (itemId: string) => React.ReactNode;
+    navigantionStore?: INavigationStore;
 }
 
 @observer
@@ -307,6 +322,7 @@ export class ListNavigationWithContent extends React.Component<ListNavigationWit
                     additionalButtons={this.props.additionalButtons}
                     onEditItem={onEditItem}
                     renderItem={renderItem}
+                    navigationStore={this.props.navigationStore}
                 />
                 {this.props.content}
             </Splitter>
@@ -320,9 +336,10 @@ export class ListNavigationWithContent extends React.Component<ListNavigationWit
 export class ListNavigationWithProperties extends NavigationComponent {
     @computed
     get object() {
+        const navigationStore = this.props.navigationStore || NavigationStore;
         return (
-            (NavigationStore.selectedPanel && NavigationStore.selectedPanel.selectedObject) ||
-            NavigationStore.selectedObject
+            (navigationStore.selectedPanel && navigationStore.selectedPanel.selectedObject) ||
+            navigationStore.selectedObject
         );
     }
 
@@ -330,12 +347,23 @@ export class ListNavigationWithProperties extends NavigationComponent {
         return (
             <Splitter
                 type="horizontal"
-                persistId={`project-editor/navigation-${this.props.id}`}
+                persistId={
+                    `project-editor/navigation-${this.props.id}` +
+                    (this.props.navigationStore ? "-dialog" : "")
+                }
                 sizes={`240px|100%`}
                 childrenOverflow="hidden"
             >
-                <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
-                <PropertiesPanel object={this.object} />
+                <ListNavigation
+                    id={this.props.id}
+                    navigationObject={this.props.navigationObject}
+                    navigationStore={this.props.navigationStore}
+                    onDoubleClickItem={this.props.onDoubleClickItem}
+                />
+                <PropertiesPanel
+                    object={this.object}
+                    navigationStore={this.props.navigationStore}
+                />
             </Splitter>
         );
     }

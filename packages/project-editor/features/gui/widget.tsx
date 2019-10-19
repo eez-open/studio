@@ -50,6 +50,7 @@ import {
 import { EditorObject } from "project-editor/features/gui/page-editor/editor";
 
 import { PropertyProps } from "project-editor/components/PropertyGrid";
+import { onSelectItem } from "project-editor/components/ItemSelect";
 
 import { ProjectStore } from "project-editor/core/store";
 
@@ -90,7 +91,8 @@ function makeDataPropertyInfo(
         displayName,
         type: PropertyType.ObjectReference,
         referencedObjectCollectionPath: ["data"],
-        propertyGridGroup: propertyGridGroup || dataGroup
+        propertyGridGroup: propertyGridGroup || dataGroup,
+        onSelect: onSelectItem
     };
 }
 
@@ -104,7 +106,8 @@ function makeActionPropertyInfo(
         displayName,
         type: PropertyType.ObjectReference,
         referencedObjectCollectionPath: ["actions"],
-        propertyGridGroup: propertyGridGroup || actionsGroup
+        propertyGridGroup: propertyGridGroup || actionsGroup,
+        onSelect: onSelectItem
     };
 }
 
@@ -720,7 +723,7 @@ interface IContainerWidget extends IWidget {
 export class ContainerWidget extends Widget {
     @observable name: string;
     @observable widgets: EezArrayObject<Widget>;
-    @observable isOverlay: boolean;
+    @observable overlay: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         label: (widget: ContainerWidget) => {
@@ -742,11 +745,7 @@ export class ContainerWidget extends Widget {
                 type: PropertyType.String,
                 propertyGridGroup: generalGroup
             },
-            {
-                name: "isOverlay",
-                type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
-            }
+            makeDataPropertyInfo("overlay")
         ],
 
         defaultValue: {
@@ -755,8 +754,7 @@ export class ContainerWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32,
-            isOverlay: false
+            height: 32
         } as IContainerWidget,
 
         icon: "_images/widgets/Container.png"
@@ -768,7 +766,7 @@ export class ContainerWidget extends Widget {
 
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
         super.styleHook(style, designerContext);
-        if (this.isOverlay) {
+        if (this.overlay) {
             style.boxShadow = "1px 1px 8px 1px rgba(0,0,0,0.5)";
         }
     }

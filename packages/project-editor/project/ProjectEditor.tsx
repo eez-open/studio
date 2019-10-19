@@ -20,6 +20,7 @@ import {
     UIStateStore,
     EditorsStore,
     NavigationStore,
+    INavigationStore,
     OutputSectionsStore
 } from "project-editor/core/store";
 import { startSearch } from "project-editor/core/search";
@@ -253,16 +254,21 @@ export class Editors extends React.Component<{}, {}> {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class PropertiesPanel extends React.Component<{ object: EezObject | undefined }, {}> {
+export class PropertiesPanel extends React.Component<
+    { object: EezObject | undefined; navigationStore?: INavigationStore },
+    {}
+> {
     render() {
         let objects: EezObject[];
 
+        const navigationStore = this.props.navigationStore || NavigationStore;
+
         if (
-            NavigationStore.selectedPanel &&
-            NavigationStore.selectedPanel.selectedObjects !== undefined &&
-            NavigationStore.selectedPanel.selectedObjects.length > 0
+            navigationStore.selectedPanel &&
+            navigationStore.selectedPanel.selectedObjects !== undefined &&
+            navigationStore.selectedPanel.selectedObjects.length > 0
         ) {
-            objects = NavigationStore.selectedPanel.selectedObjects;
+            objects = navigationStore.selectedPanel.selectedObjects;
         } else if (this.props.object) {
             objects = [this.props.object];
         } else {

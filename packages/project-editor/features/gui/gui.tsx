@@ -22,13 +22,15 @@ import { registerFeatureImplementation } from "project-editor/core/extensions";
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
 import { Page } from "project-editor/features/gui/page";
-import { Style } from "project-editor/features/gui/style";
+import { Style, findStyle } from "project-editor/features/gui/style";
 import { Font } from "project-editor/features/gui/font";
 import { Bitmap } from "project-editor/features/gui/bitmap";
 import { Theme, Color } from "project-editor/features/gui/theme";
 
 import { build } from "project-editor/features/gui/build";
 import { metrics } from "project-editor/features/gui/metrics";
+
+export { findStyle } from "project-editor/features/gui/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -323,17 +325,6 @@ export function findPage(pageName: string) {
     for (const page of pages._array) {
         if (page.name == pageName) {
             return page;
-        }
-    }
-    return undefined;
-}
-
-export function findStyle(styleName: string | undefined) {
-    let gui = getGui();
-    let styles = (gui && gui.styles._array) || [];
-    for (const style of styles) {
-        if (style.name == styleName) {
-            return style;
         }
     }
     return undefined;

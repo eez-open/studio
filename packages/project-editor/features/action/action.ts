@@ -85,6 +85,7 @@ export class Action extends EezObject {
                 });
             });
         },
+        findItemByName: findAction,
         navigationComponent: ListNavigationWithProperties,
         navigationComponentId: "actions",
         icon: "code"
