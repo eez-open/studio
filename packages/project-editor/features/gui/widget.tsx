@@ -50,7 +50,7 @@ import {
 import { EditorObject } from "project-editor/features/gui/page-editor/editor";
 
 import { PropertyProps } from "project-editor/components/PropertyGrid";
-import { onSelectItem } from "project-editor/components/ItemSelect";
+import { onSelectItem } from "project-editor/components/SelectItem";
 
 import { ProjectStore } from "project-editor/core/store";
 

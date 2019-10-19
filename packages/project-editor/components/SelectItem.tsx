@@ -20,14 +20,14 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ItemSelectDialogDiv = styled.div`
+const SelectItemDialogDiv = styled.div`
     display: flex;
     height: 500px;
     border: 1px solid ${props => props.theme.borderColor};
 `;
 
 @observer
-class ItemSelectDialog extends React.Component<{
+class SelectItemDialog extends React.Component<{
     open: IObservableValue<boolean>;
     navigationStore: INavigationStore;
     collectionObject: EezObject;
@@ -49,14 +49,14 @@ class ItemSelectDialog extends React.Component<{
                 onOk={onOk}
                 onCancel={onCancel}
             >
-                <ItemSelectDialogDiv>
+                <SelectItemDialogDiv>
                     <NavigationComponent
                         id={collectionObject!._classInfo.navigationComponentId!}
                         navigationObject={collectionObject}
                         navigationStore={navigationStore}
                         onDoubleClickItem={onOk}
                     />
-                </ItemSelectDialogDiv>
+                </SelectItemDialogDiv>
             </Dialog>
         );
     }
@@ -89,7 +89,7 @@ export async function onSelectItem(object: EezObject, propertyInfo: PropertyInfo
         });
 
         showDialog(
-            <ItemSelectDialog
+            <SelectItemDialog
                 open={open}
                 collectionObject={collectionObject}
                 navigationStore={navigationStore}

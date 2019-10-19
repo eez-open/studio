@@ -23,12 +23,17 @@ import {
     isAnyPropertyModified,
     asArray
 } from "project-editor/core/object";
-import { NavigationStore, DocumentStore, UndoManager } from "project-editor/core/store";
+import {
+    NavigationStore,
+    SimpleNavigationStoreClass,
+    DocumentStore,
+    UndoManager
+} from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import { loadObject } from "project-editor/core/serialization";
 import * as output from "project-editor/core/output";
 import { ListNavigation } from "project-editor/components/ListNavigation";
-import { onSelectItem } from "project-editor/components/ItemSelect";
+import { onSelectItem } from "project-editor/components/SelectItem";
 import { Splitter } from "eez-studio-ui/splitter";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
@@ -67,12 +72,19 @@ const Image = styled.img`
 `;
 
 @observer
-export class StyleEditor extends React.Component<{ style: Style }> {
+export class StyleEditor extends React.Component<{
+    width: number;
+    height: number;
+    text: string;
+    style: Style;
+}> {
     render() {
+        const { width, height, text, style } = this.props;
+
         let canvas = document.createElement("canvas");
-        canvas.width = 240;
-        canvas.height = 320;
-        drawStylePreview(canvas, this.props.style);
+        canvas.width = width;
+        canvas.height = height;
+        drawStylePreview(canvas, style, text);
 
         return <Image src={canvas.toDataURL()} />;
     }
@@ -115,8 +127,30 @@ export class StylesNavigation extends NavigationComponent {
                         navigationStore={this.props.navigationStore}
                         onDoubleClickItem={this.props.onDoubleClickItem}
                     />
-                    <PropertiesPanel object={this.style} />
-                    <ThemesSideView />
+
+                    <Splitter
+                        type="vertical"
+                        persistId={`project-editor/styles-dialog-middle-splitter`}
+                        sizes={`80px|100%`}
+                        childrenOverflow="hidden|hidden"
+                    >
+                        {this.style ? (
+                            <StyleEditor
+                                style={this.style}
+                                width={480 / 4}
+                                height={272 / 4}
+                                text="A"
+                            />
+                        ) : (
+                            <div />
+                        )}
+                        <PropertiesPanel
+                            object={this.style}
+                            navigationStore={this.props.navigationStore}
+                        />
+                    </Splitter>
+
+                    <ThemesSideView navigationStore={new SimpleNavigationStoreClass(undefined)} />
                 </Splitter>
             );
         } else {
@@ -132,7 +166,11 @@ export class StylesNavigation extends NavigationComponent {
                         id={this.props.id}
                         navigationObject={this.props.navigationObject}
                     />
-                    {this.style ? <StyleEditor style={this.style} /> : <div />}
+                    {this.style ? (
+                        <StyleEditor style={this.style} width={480} height={272} text="Hello!" />
+                    ) : (
+                        <div />
+                    )}
                     <PropertiesPanel object={this.style} />
                     <ThemesSideView />
                 </Splitter>
@@ -915,13 +953,25 @@ export function getStyleProperty(
     return propertiesMap[propertyName].defaultValue;
 }
 
-export function drawStylePreview(canvas: HTMLCanvasElement, style: Style) {
+export function drawStylePreview(canvas: HTMLCanvasElement, style: Style, text: string) {
     let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     if (ctx) {
         ctx.save();
-        ctx.translate(Math.floor((canvas.width - 240) / 2), Math.floor((canvas.height - 320) / 2));
-        ctx.drawImage(drawText("Hello!", 240, 160, style, false), 0, 0);
-        ctx.drawImage(drawText("Hello!", 240, 160, style, true), 0, 160);
+        if (canvas.width > canvas.height) {
+            ctx.drawImage(drawText(text, canvas.width / 2, canvas.height, style, false), 0, 0);
+            ctx.drawImage(
+                drawText(text, canvas.width / 2, canvas.height, style, true),
+                canvas.width / 2,
+                0
+            );
+        } else {
+            ctx.drawImage(drawText(text, canvas.width, canvas.height / 2, style, false), 0, 0);
+            ctx.drawImage(
+                drawText(text, canvas.width, canvas.height / 2, style, true),
+                0,
+                canvas.height / 2
+            );
+        }
         ctx.restore();
     }
 }

@@ -13,7 +13,12 @@ import {
     asArray,
     getObjectFromObjectId
 } from "project-editor/core/object";
-import { NavigationStore, DocumentStore, UndoManager } from "project-editor/core/store";
+import {
+    NavigationStore,
+    INavigationStore,
+    DocumentStore,
+    UndoManager
+} from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import { replaceObjectReference } from "project-editor/core/search";
 
@@ -144,7 +149,9 @@ function renderColorItem(itemId: string) {
 }
 
 @observer
-export class ThemesSideView extends React.Component {
+export class ThemesSideView extends React.Component<{
+    navigationStore?: INavigationStore;
+}> {
     onEditThemeName = (itemId: string) => {
         const theme = getObjectFromObjectId(ProjectStore.project, itemId) as Theme;
 
@@ -230,12 +237,15 @@ export class ThemesSideView extends React.Component {
                     id="themes"
                     navigationObject={gui.themes}
                     onEditItem={this.onEditThemeName}
+                    searchInput={false}
+                    navigationStore={this.props.navigationStore}
                 />
                 <ListNavigation
                     id="theme-colors"
                     navigationObject={gui.colors}
                     onEditItem={this.onEditColorName}
                     renderItem={renderColorItem}
+                    navigationStore={this.props.navigationStore}
                 />
             </Splitter>
         );

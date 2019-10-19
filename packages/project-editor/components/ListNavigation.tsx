@@ -6,6 +6,7 @@ import { bind } from "bind-decorator";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 import { styled } from "eez-studio-ui/styled-components";
+import { SearchInput } from "eez-studio-ui/search-input";
 
 import {
     EezObject,
@@ -154,6 +155,15 @@ class DeleteButton extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ListWithSearchInputContainer = styled.div`
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    & > :first-child {
+        border-bottom: 1px solid ${props => props.theme.borderColor};
+    }
+`;
+
 interface ListNavigationProps {
     id: string;
     title?: string;
@@ -163,11 +173,13 @@ interface ListNavigationProps {
     onEditItem?: (itemId: string) => void;
     renderItem?: (itemId: string) => React.ReactNode;
     navigationStore?: INavigationStore;
+    searchInput?: boolean;
 }
 
 @observer
 export class ListNavigation extends React.Component<ListNavigationProps> implements IPanel {
     @observable sortDirection: SortDirectionType = "none";
+    @observable searchText: string = "";
 
     constructor(props: any) {
         super(props);
@@ -226,7 +238,8 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
             this.props.navigationObject,
             this.sortDirection,
             this.onDoubleClickItem,
-            this.props.navigationStore
+            this.props.navigationStore,
+            this.searchText
         );
     }
 
@@ -235,6 +248,11 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
         if (isPartOfNavigation(this.props.navigationObject)) {
             navigationStore.setSelectedPanel(this);
         }
+    }
+
+    @action.bound
+    onSearchChange(event: any) {
+        this.searchText = ($(event.target).val() as string).trim();
     }
 
     render() {
@@ -271,22 +289,30 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
             />
         );
 
-        return (
-            <Panel
-                id="navigation"
-                title={title}
-                buttons={buttons}
-                body={
-                    <List
-                        listAdapter={this.listAdapter}
-                        tabIndex={0}
-                        onFocus={this.onFocus.bind(this)}
-                        onEditItem={onEditItem}
-                        renderItem={renderItem}
-                    />
-                }
+        let body = (
+            <List
+                listAdapter={this.listAdapter}
+                tabIndex={0}
+                onFocus={this.onFocus.bind(this)}
+                onEditItem={onEditItem}
+                renderItem={renderItem}
             />
         );
+
+        if (this.props.searchInput == undefined || this.props.searchInput) {
+            body = (
+                <ListWithSearchInputContainer>
+                    <SearchInput
+                        searchText={this.searchText}
+                        onChange={this.onSearchChange}
+                        onKeyDown={this.onSearchChange}
+                    />
+                    {body}
+                </ListWithSearchInputContainer>
+            );
+        }
+
+        return <Panel id="navigation" title={title} buttons={buttons} body={body} />;
     }
 }
 

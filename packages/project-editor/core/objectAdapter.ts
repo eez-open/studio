@@ -1187,7 +1187,8 @@ export class ListAdapter implements ITreeAdapter {
         private object: EezObject,
         private sortDirection?: SortDirectionType,
         onDoubleClick?: (object: EezObject) => void,
-        navigationStore?: INavigationStore
+        navigationStore?: INavigationStore,
+        private searchText?: string
     ) {
         this.onDoubleClickCallback = onDoubleClick;
 
@@ -1215,7 +1216,20 @@ export class ListAdapter implements ITreeAdapter {
 
     @computed
     get items() {
-        let items = asArray(this.object).map(object => new ListItem(object));
+        let objects = asArray(this.object);
+
+        if (this.searchText) {
+            const searchText = this.searchText.toLowerCase();
+            objects = objects.filter(object => {
+                return (
+                    objectToString(object)
+                        .toLowerCase()
+                        .indexOf(searchText) != -1
+                );
+            });
+        }
+
+        let items = objects.map(object => new ListItem(object));
 
         if (this.sortDirection === "asc") {
             return items.sort((a, b) => stringCompare(a.object._label, b.object._label));
@@ -1363,7 +1377,10 @@ export class ListAdapter implements ITreeAdapter {
     collapsableAdapter = undefined;
 
     get draggableAdapter() {
-        return this.sortDirection === undefined || this.sortDirection === "none" ? this : undefined;
+        return (this.sortDirection === undefined || this.sortDirection === "none") &&
+            !this.searchText
+            ? this
+            : undefined;
     }
 
     get isDragging() {
