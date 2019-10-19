@@ -36,6 +36,7 @@ import { ListNavigation } from "project-editor/components/ListNavigation";
 import { onSelectItem } from "project-editor/components/SelectItem";
 import { Splitter } from "eez-studio-ui/splitter";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 import { getGui, findFont } from "project-editor/features/gui/gui";
@@ -118,7 +119,7 @@ export class StylesNavigation extends NavigationComponent {
                 <Splitter
                     type="horizontal"
                     persistId={`project-editor/styles-dialog`}
-                    sizes={`200px|100%|200px`}
+                    sizes={`320px|100%|320px`}
                     childrenOverflow="hidden|hidden|hidden"
                 >
                     <ListNavigation
@@ -131,14 +132,14 @@ export class StylesNavigation extends NavigationComponent {
                     <Splitter
                         type="vertical"
                         persistId={`project-editor/styles-dialog-middle-splitter`}
-                        sizes={`80px|100%`}
+                        sizes={`160px|100%`}
                         childrenOverflow="hidden|hidden"
                     >
                         {this.style ? (
                             <StyleEditor
                                 style={this.style}
-                                width={480 / 4}
-                                height={272 / 4}
+                                width={Math.ceil(480 / 3)}
+                                height={Math.ceil(272 / 3)}
                                 text="A"
                             />
                         ) : (
@@ -198,7 +199,11 @@ const inheritFromProperty: PropertyInfo = {
     name: "inheritFrom",
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: ["gui", "styles"],
-    onSelect: onSelectItem,
+    onSelect: (object: EezObject, propertyInfo: PropertyInfo) =>
+        onSelectItem(object, propertyInfo, {
+            title: "Select Style",
+            width: 1200
+        }),
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
         let menuItems: Electron.MenuItem[] = [];
 
@@ -979,12 +984,8 @@ export function drawStylePreview(canvas: HTMLCanvasElement, style: Style, text: 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findStyle(styleName: string | undefined) {
-    let gui = getGui();
-    let styles = (gui && gui.styles._array) || [];
-    for (const style of styles) {
-        if (style.name == styleName) {
-            return style;
-        }
+    if (!styleName) {
+        return undefined;
     }
-    return undefined;
+    return getGui().stylesMap.get(styleName);
 }

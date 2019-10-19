@@ -4,6 +4,30 @@ import { bind } from "bind-decorator";
 import classNames from "classnames";
 
 import { IDialogComponentProps } from "eez-studio-ui/dialog";
+import { styled } from "eez-studio-ui/styled-components";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const NonModalDialogContainer = styled.div`
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    & > :nth-child(1) {
+        flex-grow: 1;
+        display: flex;
+    }
+    & > :nth-child(2) {
+        padding: 10px;
+        display: flex;
+        justify-content: "flex-end";
+        border-top: 1px solid ${props => props.theme.borderColor};
+        background-color: ${props => props.theme.panelHeaderColor};
+
+        & > button {
+            margin-left: 10px;
+        }
+    }
+`;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +75,33 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
 
     render() {
         const props = this.props;
+
+        if (props.modal != undefined && !props.modal) {
+            return (
+                <NonModalDialogContainer>
+                    <div>{props.children}</div>
+                    <div>
+                        {props.buttons.map(button => (
+                            <button
+                                key={button.id}
+                                type="button"
+                                className={classNames("btn", {
+                                    "btn-primary": button.type === "primary",
+                                    "btn-secondary": button.type === "secondary",
+                                    "btn-danger": button.type === "danger",
+                                    "float-left": button.position === "left"
+                                })}
+                                onClick={button.onClick}
+                                disabled={button.disabled}
+                                style={button.style}
+                            >
+                                {button.text}
+                            </button>
+                        ))}
+                    </div>
+                </NonModalDialogContainer>
+            );
+        }
 
         let formClassName = classNames("modal-dialog", {
             "modal-lg": props.size === "large",

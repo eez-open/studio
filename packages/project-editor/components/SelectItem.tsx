@@ -1,8 +1,7 @@
 import React from "react";
-import { observable, IObservableValue, action } from "mobx";
 import { observer } from "mobx-react";
 
-import { Dialog, showDialog } from "eez-studio-ui/dialog";
+import { showDialog, Dialog } from "eez-studio-ui/dialog";
 import { styled } from "eez-studio-ui/styled-components";
 
 import {
@@ -21,14 +20,12 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 const SelectItemDialogDiv = styled.div`
+    flex-grow: 1;
     display: flex;
-    height: 500px;
-    border: 1px solid ${props => props.theme.borderColor};
 `;
 
 @observer
 class SelectItemDialog extends React.Component<{
-    open: IObservableValue<boolean>;
     navigationStore: INavigationStore;
     collectionObject: EezObject;
     okDisabled: () => boolean;
@@ -42,8 +39,7 @@ class SelectItemDialog extends React.Component<{
 
         return (
             <Dialog
-                open={this.props.open.get()}
-                size="large"
+                modal={false}
                 okButtonText="Select"
                 okDisabled={okDisabled}
                 onOk={onOk}
@@ -62,7 +58,14 @@ class SelectItemDialog extends React.Component<{
     }
 }
 
-export async function onSelectItem(object: EezObject, propertyInfo: PropertyInfo) {
+export async function onSelectItem(
+    object: EezObject,
+    propertyInfo: PropertyInfo,
+    opts: {
+        title: string;
+        width: number;
+    }
+) {
     return new Promise<{
         [propertyName: string]: string;
     }>((resolve, reject) => {
@@ -75,28 +78,34 @@ export async function onSelectItem(object: EezObject, propertyInfo: PropertyInfo
             collectionObject!._classInfo.findItemByName!(getProperty(object, propertyInfo.name))
         );
 
-        const open = observable.box(true);
-
-        const onOk = action(() => {
+        const onOk = () => {
             if (!navigationStore.selectedObject) {
                 return false;
             }
             resolve({
                 [propertyInfo.name]: (navigationStore.selectedObject! as any).name
             });
-            open.set(false);
-            return true;
-        });
 
-        showDialog(
+            modalDialog.close();
+
+            return true;
+        };
+
+        const onCancel = () => {
+            modalDialog.close();
+        };
+
+        const modalDialog = showDialog(
             <SelectItemDialog
-                open={open}
                 collectionObject={collectionObject}
                 navigationStore={navigationStore}
                 okDisabled={() => !navigationStore.selectedObject}
                 onOk={onOk}
-                onCancel={reject}
-            />
+                onCancel={onCancel}
+            />,
+            {
+                jsPanel: Object.assign({}, opts)
+            }
         );
     });
 }

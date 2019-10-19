@@ -92,7 +92,11 @@ function makeDataPropertyInfo(
         type: PropertyType.ObjectReference,
         referencedObjectCollectionPath: ["data"],
         propertyGridGroup: propertyGridGroup || dataGroup,
-        onSelect: onSelectItem
+        onSelect: (object: EezObject, propertyInfo: PropertyInfo) =>
+            onSelectItem(object, propertyInfo, {
+                title: "Select Data",
+                width: 800
+            })
     };
 }
 
@@ -107,7 +111,11 @@ function makeActionPropertyInfo(
         type: PropertyType.ObjectReference,
         referencedObjectCollectionPath: ["actions"],
         propertyGridGroup: propertyGridGroup || actionsGroup,
-        onSelect: onSelectItem
+        onSelect: (object: EezObject, propertyInfo: PropertyInfo) =>
+            onSelectItem(object, propertyInfo, {
+                title: "Select Action",
+                width: 800
+            })
     };
 }
 

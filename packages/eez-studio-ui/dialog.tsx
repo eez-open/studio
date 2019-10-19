@@ -22,6 +22,7 @@ export interface IDialogButton {
 }
 
 export interface IDialogComponentProps {
+    modal?: boolean;
     open: boolean;
     size?: "small" | "medium" | "large";
     title: string | undefined;
@@ -39,6 +40,7 @@ export interface IDialogComponentProps {
 @observer
 export class Dialog extends React.Component<
     {
+        modal?: boolean;
         open?: boolean;
         title?: string;
         size?: "small" | "medium" | "large";
@@ -128,6 +130,7 @@ export class Dialog extends React.Component<
 
         return (
             <BootstrapDialog
+                modal={this.props.modal}
                 open={this.open && (this.props.open === undefined || this.props.open)}
                 size={this.props.size}
                 title={this.props.title}
@@ -143,11 +146,51 @@ export class Dialog extends React.Component<
     }
 }
 
-export function showDialog(dialog: JSX.Element, id?: string) {
-    let element = document.createElement("div");
-    if (id) {
-        element.id = id;
+export function showDialog(
+    dialog: JSX.Element,
+    opts?: {
+        id?: string;
+        jsPanel?: {
+            title: string;
+            width: number;
+        };
     }
+) {
+    let element = document.createElement("div");
+    if (opts && opts.id) {
+        element.id = opts.id;
+    }
+
     ReactDOM.render(<ThemeProvider theme={theme}>{dialog}</ThemeProvider>, element);
-    document.body.appendChild(element);
+
+    if (opts && opts.jsPanel) {
+        element.style.position = "absolute";
+        element.style.width = "100%";
+        element.style.height = "100%";
+        element.style.display = "flex";
+
+        const jsPanel: any = (window as any).jsPanel;
+
+        const dialog = jsPanel.modal.create({
+            container: "#EezStudio_Content",
+            theme: "primary",
+            headerTitle: opts.jsPanel.title,
+            panelSize: {
+                width: Math.min(Math.round(window.innerWidth * 0.8), opts.jsPanel.width),
+                height: Math.round(window.innerHeight * 0.8)
+            },
+            content: element,
+            headerControls: {
+                minimize: "remove",
+                smallify: "remove"
+            },
+            dragit: {},
+            resizeit: {},
+            closeOnBackdrop: false
+        });
+        return dialog;
+    } else {
+        document.body.appendChild(element);
+        return undefined;
+    }
 }

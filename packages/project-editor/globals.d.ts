@@ -8,3 +8,5 @@ declare const ace: {
     edit(arg: any): any;
     acequire(arg: any): any;
 };
+
+declare module "jspanel4";

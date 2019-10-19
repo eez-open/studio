@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action } from "mobx";
+import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 //const LZ4 = require("lz4");
 
@@ -204,6 +204,13 @@ export class Gui extends EezObject {
     @action
     setThemeColor(themeId: string, colorId: string, color: string) {
         this.themeColors.set(themeId + colorId, color);
+    }
+
+    @computed
+    get stylesMap() {
+        const map = new Map<String, Style>();
+        this.styles._array.forEach(style => map.set(style.name, style));
+        return map;
     }
 }
 

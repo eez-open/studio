@@ -499,9 +499,6 @@ export class Tree extends React.Component<TreeProps, {}> {
             } else if (event.keyCode == "V".charCodeAt(0)) {
                 this.props.treeAdapter.pasteSelection();
             }
-        } else if (event.keyCode == 46) {
-            // delete
-            this.props.treeAdapter.deleteSelection();
         } else {
             if (
                 event.keyCode == 38 ||

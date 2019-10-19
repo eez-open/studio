@@ -97,6 +97,7 @@
         "golden-layout": "^1.5.9",
         "jquery": "^3.4.1",
         "json-stable-stringify": "^1.0.1",
+        "jspanel4": "^4.7.0",
         "lodash": "^4.17.15",
         "lz4": "^0.6.3",
         "marked": "^0.7.0",
