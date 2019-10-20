@@ -8,7 +8,9 @@ import {
     EezObject,
     PropertyInfo,
     getProperty,
-    getObjectFromPath
+    PropertyType,
+    getObjectFromPath,
+    IOnSelectParams
 } from "project-editor/core/object";
 import {
     ProjectStore,
@@ -16,6 +18,9 @@ import {
     INavigationStore
 } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
+
+import { Widget } from "project-editor/features/gui/widget";
+import { Glyph } from "project-editor/features/gui/font";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,7 +60,7 @@ class SelectItemDialog extends React.Component<{
             >
                 <SelectItemDialogDiv>
                     <NavigationComponent
-                        id={collectionObject!._classInfo.navigationComponentId!}
+                        id={collectionObject!._classInfo.navigationComponentId! + "-dialog"}
                         navigationObject={collectionObject}
                         navigationStore={navigationStore}
                         dragAndDropManager={dragAndDropManager}
@@ -73,28 +78,70 @@ export async function onSelectItem(
     opts: {
         title: string;
         width: number;
-    }
+    },
+    params?: IOnSelectParams
 ) {
     return new Promise<{
         [propertyName: string]: string;
     }>((resolve, reject) => {
-        const collectionObject = getObjectFromPath(
-            ProjectStore.project,
-            propertyInfo.referencedObjectCollectionPath!
-        );
+        const collectionObject =
+            propertyInfo.type === PropertyType.String
+                ? getObjectFromPath(ProjectStore.project, ["gui", "fonts"])
+                : getObjectFromPath(
+                      ProjectStore.project,
+                      propertyInfo.referencedObjectCollectionPath!
+                  );
 
         const navigationStore = new SimpleNavigationStoreClass(
-            collectionObject!._classInfo.findItemByName!(getProperty(object, propertyInfo.name))
+            collectionObject!._classInfo.findItemByName!(
+                propertyInfo.type === PropertyType.String
+                    ? (object as Widget).style.fontName
+                    : getProperty(object, propertyInfo.name)
+            )
         );
 
         const dragAndDropManager = new DragAndDropManagerClass();
+
+        const onOkDisabled = () => {
+            if (propertyInfo.type === PropertyType.String) {
+                return !(navigationStore.selectedObject instanceof Glyph);
+            }
+
+            return !navigationStore.selectedObject;
+        };
 
         const onOk = () => {
             if (!navigationStore.selectedObject) {
                 return false;
             }
+
+            let value;
+
+            if (propertyInfo.type === PropertyType.String) {
+                const glyphCode = `\\u${(navigationStore.selectedObject as Glyph).encoding
+                    .toString(16)
+                    .padStart(4, "0")}`;
+
+                if (
+                    params &&
+                    params.textInputSelection &&
+                    params.textInputSelection.start != null &&
+                    params.textInputSelection.end != null
+                ) {
+                    const existingValue: string = getProperty(object, propertyInfo.name);
+                    value =
+                        existingValue.substring(0, params.textInputSelection.start) +
+                        glyphCode +
+                        existingValue.substring(params.textInputSelection.end);
+                } else {
+                    value = glyphCode;
+                }
+            } else {
+                value = (navigationStore.selectedObject! as any).name;
+            }
+
             resolve({
-                [propertyInfo.name]: (navigationStore.selectedObject! as any).name
+                [propertyInfo.name]: value
             });
 
             modalDialog.close();
@@ -111,7 +158,7 @@ export async function onSelectItem(
                 collectionObject={collectionObject}
                 navigationStore={navigationStore}
                 dragAndDropManager={dragAndDropManager}
-                okDisabled={() => !navigationStore.selectedObject}
+                okDisabled={onOkDisabled}
                 onOk={onOk}
                 onCancel={onCancel}
             />,

@@ -742,10 +742,27 @@ class Property extends React.Component<PropertyProps> {
     }
 
     @bind
-    onSelect() {
+    onSelect(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         if (this.props.propertyInfo.onSelect) {
+            let params;
+
+            if (this.props.propertyInfo.type == PropertyType.String) {
+                const input = $(event.target)
+                    .parent()
+                    .parent()
+                    .find("input")[0] as HTMLInputElement;
+                if (input) {
+                    params = {
+                        textInputSelection: {
+                            start: input.selectionStart,
+                            end: input.selectionEnd
+                        }
+                    };
+                }
+            }
+
             this.props.propertyInfo
-                .onSelect(this.props.objects[0], this.props.propertyInfo)
+                .onSelect(this.props.objects[0], this.props.propertyInfo, params)
                 .then(propertyValues => {
                     this.props.updateObject(propertyValues);
                 })
@@ -934,6 +951,7 @@ class Property extends React.Component<PropertyProps> {
                             <button
                                 className="btn btn-secondary"
                                 type="button"
+                                title={this.props.propertyInfo.onSelectTitle}
                                 onClick={this.onSelect}
                             >
                                 &hellip;
@@ -989,6 +1007,7 @@ class Property extends React.Component<PropertyProps> {
                                 className="btn btn-secondary"
                                 type="button"
                                 onClick={this.onSelect}
+                                title={this.props.propertyInfo.onSelectTitle}
                             >
                                 &hellip;
                             </button>
@@ -1077,17 +1096,43 @@ class Property extends React.Component<PropertyProps> {
                 </div>
             );
         } else if (propertyInfo.type === PropertyType.String) {
-            return (
-                <input
-                    ref={(ref: any) => (this.input = ref)}
-                    type="text"
-                    className="form-control"
-                    value={this._value || ""}
-                    onChange={this.onChange}
-                    onKeyDown={this.onKeyDown}
-                    readOnly={propertyInfo.computed}
-                />
-            );
+            if (this.props.propertyInfo.onSelect) {
+                return (
+                    <div className="input-group" title={this._value || ""}>
+                        <input
+                            ref={(ref: any) => (this.input = ref)}
+                            type="text"
+                            className="form-control"
+                            value={this._value || ""}
+                            onChange={this.onChange}
+                            onKeyDown={this.onKeyDown}
+                            readOnly={propertyInfo.computed}
+                        />
+                        <div className="input-group-append">
+                            <button
+                                className="btn btn-secondary"
+                                type="button"
+                                onClick={this.onSelect}
+                                title={this.props.propertyInfo.onSelectTitle}
+                            >
+                                &hellip;
+                            </button>
+                        </div>
+                    </div>
+                );
+            } else {
+                return (
+                    <input
+                        ref={(ref: any) => (this.input = ref)}
+                        type="text"
+                        className="form-control"
+                        value={this._value || ""}
+                        onChange={this.onChange}
+                        onKeyDown={this.onKeyDown}
+                        readOnly={propertyInfo.computed}
+                    />
+                );
+            }
         } else if (propertyInfo.type === PropertyType.Number) {
             return (
                 <input

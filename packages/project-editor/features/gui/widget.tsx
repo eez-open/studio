@@ -31,7 +31,8 @@ import {
     IPropertyGridGroupDefinition,
     areAllChildrenOfTheSameParent,
     isAncestor,
-    getProperty
+    getProperty,
+    IOnSelectParams
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { DocumentStore, NavigationStore, IContextMenuContext } from "project-editor/core/store";
@@ -94,9 +95,10 @@ function makeDataPropertyInfo(
         propertyGridGroup: propertyGridGroup || dataGroup,
         onSelect: (object: EezObject, propertyInfo: PropertyInfo) =>
             onSelectItem(object, propertyInfo, {
-                title: "Select Data",
+                title: propertyInfo.onSelectTitle!,
                 width: 800
-            })
+            }),
+        onSelectTitle: "Select Data"
     };
 }
 
@@ -113,9 +115,10 @@ function makeActionPropertyInfo(
         propertyGridGroup: propertyGridGroup || actionsGroup,
         onSelect: (object: EezObject, propertyInfo: PropertyInfo) =>
             onSelectItem(object, propertyInfo, {
-                title: "Select Action",
+                title: propertyInfo.onSelectTitle!,
                 width: 800
-            })
+            }),
+        onSelectTitle: "Select Action"
     };
 }
 
@@ -129,6 +132,26 @@ function makeStylePropertyInfo(name: string, displayName?: string): PropertyInfo
         propertyGridCollapsable: true,
         propertyGridCollapsableDefaultPropertyName: "inheritFrom",
         enumerable: false
+    };
+}
+
+function makeTextPropertyInfo(name: string, displayName?: string): PropertyInfo {
+    return {
+        name,
+        displayName,
+        type: PropertyType.String,
+        propertyGridGroup: specificGroup,
+        onSelect: (object: EezObject, propertyInfo: PropertyInfo, params?: IOnSelectParams) =>
+            onSelectItem(
+                object,
+                propertyInfo,
+                {
+                    title: propertyInfo.onSelectTitle!,
+                    width: 800
+                },
+                params
+            ),
+        onSelectTitle: "Select Glyph"
     };
 }
 
@@ -1527,11 +1550,7 @@ export class TextWidget extends Widget {
         },
 
         properties: [
-            {
-                name: "text",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            },
+            makeTextPropertyInfo("text"),
             {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
@@ -1823,11 +1842,7 @@ export class MultilineTextWidget extends Widget {
         },
 
         properties: [
-            {
-                name: "text",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            },
+            makeTextPropertyInfo("text"),
             {
                 name: "firstLineIndent",
                 displayName: "First line",

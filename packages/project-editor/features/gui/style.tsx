@@ -205,9 +205,10 @@ const inheritFromProperty: PropertyInfo = {
     referencedObjectCollectionPath: ["gui", "styles"],
     onSelect: (object: EezObject, propertyInfo: PropertyInfo) =>
         onSelectItem(object, propertyInfo, {
-            title: "Select Style",
+            title: propertyInfo.onSelectTitle!,
             width: 1200
         }),
+    onSelectTitle: "Select Style",
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
         let menuItems: Electron.MenuItem[] = [];
 

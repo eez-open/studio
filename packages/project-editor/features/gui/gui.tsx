@@ -31,6 +31,7 @@ import { build } from "project-editor/features/gui/build";
 import { metrics } from "project-editor/features/gui/metrics";
 
 export { findStyle } from "project-editor/features/gui/style";
+export { findFont } from "project-editor/features/gui/font";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -339,17 +340,6 @@ export function findPage(pageName: string) {
     for (const page of pages._array) {
         if (page.name == pageName) {
             return page;
-        }
-    }
-    return undefined;
-}
-
-export function findFont(fontName: any) {
-    let gui = getGui();
-    let fonts = (gui && gui.fonts) || [];
-    for (const font of fonts._array) {
-        if (font.name == fontName) {
-            return font;
         }
     }
     return undefined;

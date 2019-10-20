@@ -102,6 +102,13 @@ export interface PropertyProps {
     updateObject: (propertyValues: Object) => void;
 }
 
+export interface IOnSelectParams {
+    textInputSelection?: {
+        start: number | null;
+        end: number | null;
+    };
+}
+
 export interface PropertyInfo {
     name: string;
     type: PropertyType;
@@ -114,7 +121,12 @@ export interface PropertyInfo {
     matchObjectReference?: (object: EezObject, path: (string | number)[], value: string) => boolean;
     replaceObjectReference?: (value: string) => string;
     computed?: boolean;
-    onSelect?: (object: EezObject, propertyInfo: PropertyInfo) => Promise<any>;
+    onSelect?: (
+        object: EezObject,
+        propertyInfo: PropertyInfo,
+        params?: IOnSelectParams
+    ) => Promise<any>;
+    onSelectTitle?: string;
     hideInPropertyGrid?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
     readOnlyInPropertyGrid?: boolean;
     propertyGridGroup?: IPropertyGridGroupDefinition;

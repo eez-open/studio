@@ -30,7 +30,12 @@ import {
     cloneObject,
     NavigationComponent
 } from "project-editor/core/object";
-import { DocumentStore, NavigationStore, IPanel } from "project-editor/core/store";
+import {
+    DocumentStore,
+    NavigationStore,
+    INavigationStore,
+    IPanel
+} from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { ProjectStore } from "project-editor/core/store";
 import { ListNavigation } from "project-editor/components/ListNavigation";
@@ -39,6 +44,8 @@ import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";
 import { FontProperties as FontValue } from "font-services/interfaces";
+
+import { getGui } from "project-editor/features/gui/gui";
 
 const path = EEZStudio.electron.remote.require("path");
 
@@ -1419,7 +1426,13 @@ class GlyphEditor extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class FontEditor extends React.Component<{ font: Font }> implements IPanel {
+export class FontEditor
+    extends React.Component<{
+        font: Font;
+        navigationStore?: INavigationStore;
+        onDoubleClickItem?: (item: EezObject) => void;
+    }>
+    implements IPanel {
     get glyphs() {
         let font = this.props.font;
         return font.glyphs;
@@ -1430,6 +1443,9 @@ export class FontEditor extends React.Component<{ font: Font }> implements IPane
 
     @action.bound
     onSelectGlyph(glyph: Glyph) {
+        if (this.props.navigationStore) {
+            this.props.navigationStore.setNavigationSelectedItem(this.props.font, glyph);
+        }
         this.selectedGlyph = glyph;
     }
 
@@ -1636,6 +1652,23 @@ export class FontEditor extends React.Component<{ font: Font }> implements IPane
             onDeleteGlyph = this.onDeleteGlyph;
         }
 
+        const glyphs = (
+            <Glyphs
+                glyphs={this.glyphs._array}
+                selectedGlyph={this.selectedGlyph}
+                onSelectGlyph={this.onSelectGlyph}
+                onDoubleClickGlyph={this.props.onDoubleClickItem || this.onDoubleClickGlyph}
+                onRebuildGlyphs={this.props.navigationStore ? undefined : this.onRebuildGlyphs}
+                onAddGlyph={this.props.navigationStore ? undefined : this.onAddGlyph}
+                onDeleteGlyph={this.props.navigationStore ? undefined : onDeleteGlyph}
+                onCreateShadow={this.props.navigationStore ? undefined : this.onCreateShadow}
+            />
+        );
+
+        if (this.props.navigationStore) {
+            return glyphs;
+        }
+
         return (
             <Splitter
                 type="horizontal"
@@ -1644,16 +1677,7 @@ export class FontEditor extends React.Component<{ font: Font }> implements IPane
                 tabIndex={0}
                 onFocus={this.onFocus}
             >
-                <Glyphs
-                    glyphs={this.glyphs._array}
-                    selectedGlyph={this.selectedGlyph}
-                    onSelectGlyph={this.onSelectGlyph}
-                    onDoubleClickGlyph={this.onDoubleClickGlyph}
-                    onRebuildGlyphs={this.onRebuildGlyphs}
-                    onAddGlyph={this.onAddGlyph}
-                    onDeleteGlyph={onDeleteGlyph}
-                    onCreateShadow={this.onCreateShadow}
-                />
+                {glyphs}
                 <GlyphEditor glyph={this.selectedGlyph} />
             </Splitter>
         );
@@ -1676,14 +1700,16 @@ export class FontsNavigation extends NavigationComponent {
 
     @computed
     get object() {
-        if (NavigationStore.selectedPanel) {
-            const font = FontsNavigation.getFont(NavigationStore.selectedPanel.selectedObject);
+        const navigationStore = this.props.navigationStore || NavigationStore;
+
+        if (navigationStore.selectedPanel) {
+            const font = FontsNavigation.getFont(navigationStore.selectedPanel.selectedObject);
             if (font) {
-                return NavigationStore.selectedPanel.selectedObject;
+                return navigationStore.selectedPanel.selectedObject;
             }
         }
 
-        const font = FontsNavigation.getFont(NavigationStore.selectedObject);
+        const font = FontsNavigation.getFont(navigationStore.selectedObject);
         if (font) {
             return font;
         }
@@ -1693,14 +1719,16 @@ export class FontsNavigation extends NavigationComponent {
 
     @computed
     get font() {
-        if (NavigationStore.selectedPanel) {
-            const font = FontsNavigation.getFont(NavigationStore.selectedPanel.selectedObject);
+        const navigationStore = this.props.navigationStore || NavigationStore;
+
+        if (navigationStore.selectedPanel) {
+            const font = FontsNavigation.getFont(navigationStore.selectedPanel.selectedObject);
             if (font) {
                 return font;
             }
         }
 
-        const font = FontsNavigation.getFont(NavigationStore.selectedObject);
+        const font = FontsNavigation.getFont(navigationStore.selectedObject);
         if (font) {
             return font;
         }
@@ -1709,18 +1737,60 @@ export class FontsNavigation extends NavigationComponent {
     }
 
     render() {
-        return (
-            <Splitter
-                type="horizontal"
-                persistId={`project-editor/fonts`}
-                sizes={`240px|100%|240px`}
-                childrenOverflow="hidden|hidden|hidden"
-            >
-                <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
-                {this.font ? <FontEditor font={this.font} /> : <div />}
-                <PropertiesPanel object={this.object} />
-            </Splitter>
-        );
+        if (this.props.navigationStore) {
+            return (
+                <Splitter
+                    type="horizontal"
+                    persistId={`project-editor/fonts-dialog`}
+                    sizes={`240px|100%`}
+                    childrenOverflow="hidden|hidden"
+                >
+                    <ListNavigation
+                        id={this.props.id}
+                        navigationObject={this.props.navigationObject}
+                        navigationStore={this.props.navigationStore}
+                    />
+                    {this.font ? (
+                        <FontEditor
+                            font={this.font}
+                            navigationStore={this.props.navigationStore}
+                            onDoubleClickItem={this.props.onDoubleClickItem}
+                        />
+                    ) : (
+                        <div />
+                    )}
+                </Splitter>
+            );
+        } else {
+            return (
+                <Splitter
+                    type="horizontal"
+                    persistId={`project-editor/fonts`}
+                    sizes={`240px|100%|240px`}
+                    childrenOverflow="hidden|hidden|hidden"
+                >
+                    <ListNavigation
+                        id={this.props.id}
+                        navigationObject={this.props.navigationObject}
+                        navigationStore={this.props.navigationStore}
+                    />
+                    {this.font ? (
+                        <FontEditor
+                            font={this.font}
+                            navigationStore={this.props.navigationStore}
+                            onDoubleClickItem={this.props.onDoubleClickItem}
+                        />
+                    ) : (
+                        <div />
+                    )}
+
+                    <PropertiesPanel
+                        object={this.object}
+                        navigationStore={this.props.navigationStore}
+                    />
+                </Splitter>
+            );
+        }
     }
 }
 
@@ -1980,6 +2050,7 @@ export class Font extends EezObject {
         },
         navigationComponent: FontsNavigation,
         navigationComponentId: "fonts",
+        findItemByName: findFont,
         icon: "font_download"
     };
 }
@@ -2082,4 +2153,15 @@ export function getData(font: Font) {
     }
 
     return data;
+}
+
+export function findFont(fontName: any) {
+    let gui = getGui();
+    let fonts = (gui && gui.fonts) || [];
+    for (const font of fonts._array) {
+        if (font.name == fontName) {
+            return font;
+        }
+    }
+    return undefined;
 }
