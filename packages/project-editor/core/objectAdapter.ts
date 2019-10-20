@@ -49,7 +49,7 @@ import {
     findPastePlaceInside,
     copyToClipboard
 } from "project-editor/core/clipboard";
-import { DragAndDropManager } from "project-editor/core/dd";
+import { DragAndDropManagerClass, DragAndDropManager } from "project-editor/core/dd";
 import { objectToJson } from "project-editor/core/serialization";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
@@ -1182,17 +1182,20 @@ class ListItem {
 
 export class ListAdapter implements ITreeAdapter {
     navigationStore: INavigationStore;
+    dragAndDropManager: DragAndDropManagerClass;
 
     constructor(
         private object: EezObject,
         private sortDirection?: SortDirectionType,
         onDoubleClick?: (object: EezObject) => void,
         navigationStore?: INavigationStore,
+        dragAndDropManager?: DragAndDropManagerClass,
         private searchText?: string
     ) {
         this.onDoubleClickCallback = onDoubleClick;
 
         this.navigationStore = navigationStore || NavigationStore;
+        this.dragAndDropManager = dragAndDropManager || DragAndDropManager;
 
         autorun(() => {
             const selectedItem = this.selectedItem;
@@ -1384,36 +1387,36 @@ export class ListAdapter implements ITreeAdapter {
     }
 
     get isDragging() {
-        return !!DragAndDropManager.dragObject;
+        return !!this.dragAndDropManager.dragObject;
     }
 
     isDragSource(item: ListItem) {
-        return DragAndDropManager.dragObject === item.object;
+        return this.dragAndDropManager.dragObject === item.object;
     }
 
     onDragStart(item: ListItem, event: any) {
         event.dataTransfer.effectAllowed = "copyMove";
         setClipboardData(event, objectToClipboardData(item.object));
-        event.dataTransfer.setDragImage(DragAndDropManager.blankDragImage, 0, 0);
+        event.dataTransfer.setDragImage(this.dragAndDropManager.blankDragImage, 0, 0);
         // postpone render, otherwise we can receive onDragEnd immediatelly
         setTimeout(() => {
-            DragAndDropManager.start(event, item.object);
+            this.dragAndDropManager.start(event, item.object);
         });
     }
 
     onDrag(event: any) {
-        DragAndDropManager.drag(event);
+        this.dragAndDropManager.drag(event);
     }
 
     onDragEnd(event: any) {
-        DragAndDropManager.end(event);
+        this.dragAndDropManager.end(event);
     }
 
     onDragOver(dropItem: ListItem | undefined, event: any) {
         if (dropItem) {
             event.preventDefault();
             event.stopPropagation();
-            DragAndDropManager.setDropEffect(event);
+            this.dragAndDropManager.setDropEffect(event);
         }
 
         if (this.dropItem !== dropItem) {
@@ -1428,12 +1431,12 @@ export class ListAdapter implements ITreeAdapter {
     }
 
     onDrop(dropPosition: DropPosition, event: any) {
-        DragAndDropManager.deleteDragItem();
+        this.dragAndDropManager.deleteDragItem();
 
-        if (DragAndDropManager.dragObject) {
-            let object = objectToJson(DragAndDropManager.dragObject);
+        if (this.dragAndDropManager.dragObject) {
+            let object = objectToJson(this.dragAndDropManager.dragObject);
 
-            let dropItem = DragAndDropManager.dropObject as ListItem;
+            let dropItem = this.dragAndDropManager.dropObject as ListItem;
 
             if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
                 DocumentStore.insertObjectBefore(dropItem.object, object);
@@ -1442,11 +1445,11 @@ export class ListAdapter implements ITreeAdapter {
             }
         }
 
-        DragAndDropManager.end(event);
+        this.dragAndDropManager.end(event);
     }
 
     isAncestorOfDragObject(dropItem: ListItem) {
-        return isAncestor(dropItem.object, DragAndDropManager.dragObject!);
+        return isAncestor(dropItem.object, this.dragAndDropManager.dragObject!);
     }
 
     canDrop(
@@ -1455,7 +1458,7 @@ export class ListAdapter implements ITreeAdapter {
         prevObjectId: string | undefined,
         nextObjectId: string | undefined
     ): boolean {
-        const dragObject = DragAndDropManager.dragObject!;
+        const dragObject = this.dragAndDropManager.dragObject!;
 
         // check: can't drop object if parent can't accept it
         if (!isObjectInstanceOf(dragObject, this.object._classInfo)) {
@@ -1489,14 +1492,14 @@ export class ListAdapter implements ITreeAdapter {
     }
 
     get dropItem(): ListItem | undefined {
-        return DragAndDropManager.dropObject as (ListItem | undefined);
+        return this.dragAndDropManager.dropObject as (ListItem | undefined);
     }
 
     set dropItem(value: ListItem | undefined) {
         if (value) {
-            DragAndDropManager.setDropObject(value);
+            this.dragAndDropManager.setDropObject(value);
         } else {
-            DragAndDropManager.unsetDropObject();
+            this.dragAndDropManager.unsetDropObject();
         }
     }
 }

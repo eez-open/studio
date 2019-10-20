@@ -9,7 +9,7 @@ interface IDropObject {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class DragAndDropManagerClass {
+export class DragAndDropManagerClass {
     @observable dragObject: EezObject | undefined;
     @observable dropObject: IDropObject | undefined;
     dragItemDeleted: boolean;

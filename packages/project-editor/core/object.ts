@@ -6,6 +6,7 @@ import { humanize } from "eez-studio-shared/string";
 
 import { loadObject, objectToJson } from "project-editor/core/serialization";
 import { IContextMenuContext, INavigationStore } from "project-editor/core/store";
+import { DragAndDropManagerClass } from "project-editor/core/dd";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -140,6 +141,7 @@ export interface NavigationComponentProps {
     id: string;
     navigationObject: EezObject;
     navigationStore?: INavigationStore;
+    dragAndDropManager?: DragAndDropManagerClass;
     onDoubleClickItem?: (item: EezObject) => void;
 }
 

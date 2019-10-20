@@ -26,6 +26,7 @@ import {
     canDelete,
     IPanel
 } from "project-editor/core/store";
+import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { List } from "project-editor/components/List";
 import { Panel } from "project-editor/components/Panel";
 
@@ -173,6 +174,7 @@ interface ListNavigationProps {
     onEditItem?: (itemId: string) => void;
     renderItem?: (itemId: string) => React.ReactNode;
     navigationStore?: INavigationStore;
+    dragAndDropManager?: DragAndDropManagerClass;
     searchInput?: boolean;
 }
 
@@ -239,6 +241,7 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
             this.sortDirection,
             this.onDoubleClickItem,
             this.props.navigationStore,
+            this.props.dragAndDropManager,
             this.searchText
         );
     }
@@ -384,6 +387,7 @@ export class ListNavigationWithProperties extends NavigationComponent {
                     id={this.props.id}
                     navigationObject={this.props.navigationObject}
                     navigationStore={this.props.navigationStore}
+                    dragAndDropManager={this.props.dragAndDropManager}
                     onDoubleClickItem={this.props.onDoubleClickItem}
                 />
                 <PropertiesPanel

@@ -195,6 +195,13 @@ export class Gui extends EezObject {
         icon: "filter"
     };
 
+    @computed
+    get stylesMap() {
+        const map = new Map<String, Style>();
+        this.styles._array.forEach(style => map.set(style.name, style));
+        return map;
+    }
+
     @observable themeColors = new Map<string, string>();
 
     getThemeColor(themeId: string, colorId: string) {
@@ -207,9 +214,9 @@ export class Gui extends EezObject {
     }
 
     @computed
-    get stylesMap() {
-        const map = new Map<String, Style>();
-        this.styles._array.forEach(style => map.set(style.name, style));
+    get colorsMap() {
+        const map = new Map<String, number>();
+        this.colors._array.forEach((color, i) => map.set(color.name, i));
         return map;
     }
 }

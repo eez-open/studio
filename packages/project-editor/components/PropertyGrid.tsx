@@ -195,7 +195,9 @@ class PropertyMenu extends React.Component<PropertyProps> {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class CodeEditorProperty extends React.Component<PropertyProps & { mode: CodeEditorMode }> {
+class CodeEditorProperty extends React.Component<
+    PropertyProps & { mode: CodeEditorMode; showLabel?: boolean }
+> {
     @observable
     value: string = this.getValue();
 
@@ -251,10 +253,12 @@ class CodeEditorProperty extends React.Component<PropertyProps & { mode: CodeEdi
     }
 
     render() {
-        const { propertyInfo } = this.props;
+        const { propertyInfo, showLabel } = this.props;
         return (
             <React.Fragment>
-                <div>{propertyInfo.displayName || humanize(propertyInfo.name)}</div>
+                {(showLabel == undefined || showLabel) && (
+                    <div>{propertyInfo.displayName || humanize(propertyInfo.name)}</div>
+                )}
                 <CodeEditor
                     ref={(ref: any) => (this.editor = ref)}
                     value={this.value}
@@ -901,9 +905,9 @@ class Property extends React.Component<PropertyProps> {
                 />
             );
         } else if (propertyInfo.type === PropertyType.JSON) {
-            return <CodeEditorProperty {...this.props} mode="json" />;
+            return <CodeEditorProperty {...this.props} mode="json" showLabel={false} />;
         } else if (propertyInfo.type === PropertyType.Cpp) {
-            return <CodeEditorProperty {...this.props} mode="c_cpp" />;
+            return <CodeEditorProperty {...this.props} mode="c_cpp" showLabel={false} />;
         } else if (
             propertyInfo.type === PropertyType.Object ||
             (propertyInfo.type === PropertyType.Array && this.props.propertyInfo.onSelect)
@@ -1594,8 +1598,6 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             const colSpan =
                 propertyInfo.type === PropertyType.Boolean ||
                 propertyInfo.type === PropertyType.Any ||
-                propertyInfo.type === PropertyType.JSON ||
-                propertyInfo.type === PropertyType.Cpp ||
                 (propertyInfo.propertyGridCollapsable &&
                     (!propertyCollapsedStore.isCollapsed(propertyInfo) ||
                         !propertyInfo.propertyGridCollapsableDefaultPropertyName));

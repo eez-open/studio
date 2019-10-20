@@ -1638,7 +1638,7 @@ export class FontEditor extends React.Component<{ font: Font }> implements IPane
 
         return (
             <Splitter
-                type="vertical"
+                type="horizontal"
                 persistId="project-editor/font-editor"
                 sizes={`50%|50%`}
                 tabIndex={0}

@@ -64,7 +64,7 @@ export function objectClone(obj: any) {
         }
     }
 
-    if (a instanceof EezObject) {
+    if (obj instanceof EezObject) {
         return JSON.parse(
             JSON.stringify(toJS(a), (key: string, value: any) => {
                 return key.startsWith("$") || key.startsWith("_") ? undefined : value;

@@ -29,6 +29,7 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 
 import { ProjectStore } from "project-editor/core/store";
+import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { Gui } from "project-editor/features/gui/gui";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,6 +152,7 @@ function renderColorItem(itemId: string) {
 @observer
 export class ThemesSideView extends React.Component<{
     navigationStore?: INavigationStore;
+    dragAndDropManager?: DragAndDropManagerClass;
 }> {
     onEditThemeName = (itemId: string) => {
         const theme = getObjectFromObjectId(ProjectStore.project, itemId) as Theme;
@@ -226,6 +228,22 @@ export class ThemesSideView extends React.Component<{
 
     render() {
         const gui = getProperty(ProjectStore.project, "gui") as Gui;
+
+        const colors = (
+            <ListNavigation
+                id="theme-colors"
+                navigationObject={gui.colors}
+                onEditItem={this.onEditColorName}
+                renderItem={renderColorItem}
+                navigationStore={this.props.navigationStore}
+                dragAndDropManager={this.props.dragAndDropManager}
+            />
+        );
+
+        if (this.props.navigationStore) {
+            return colors;
+        }
+
         return (
             <Splitter
                 type="vertical"
@@ -238,15 +256,8 @@ export class ThemesSideView extends React.Component<{
                     navigationObject={gui.themes}
                     onEditItem={this.onEditThemeName}
                     searchInput={false}
-                    navigationStore={this.props.navigationStore}
                 />
-                <ListNavigation
-                    id="theme-colors"
-                    navigationObject={gui.colors}
-                    onEditItem={this.onEditColorName}
-                    renderItem={renderColorItem}
-                    navigationStore={this.props.navigationStore}
-                />
+                {colors}
             </Splitter>
         );
     }
@@ -384,8 +395,8 @@ export function getThemedColor(colorValue: string): string {
         return colorValue;
     }
 
-    let index = gui.colors._array.findIndex(value => value.name === colorValue);
-    if (index === -1) {
+    let index = gui.colorsMap.get(colorValue);
+    if (index === undefined) {
         return colorValue;
     }
 

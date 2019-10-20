@@ -80,7 +80,7 @@ export class DataItem extends EezObject {
             },
             {
                 name: "enumItems",
-                type: PropertyType.MultilineText
+                type: PropertyType.JSON
             },
             {
                 name: "defaultValue",

@@ -126,6 +126,7 @@ export class StylesNavigation extends NavigationComponent {
                         id={this.props.id}
                         navigationObject={this.props.navigationObject}
                         navigationStore={this.props.navigationStore}
+                        dragAndDropManager={this.props.dragAndDropManager}
                         onDoubleClickItem={this.props.onDoubleClickItem}
                     />
 
@@ -151,7 +152,10 @@ export class StylesNavigation extends NavigationComponent {
                         />
                     </Splitter>
 
-                    <ThemesSideView navigationStore={new SimpleNavigationStoreClass(undefined)} />
+                    <ThemesSideView
+                        navigationStore={new SimpleNavigationStoreClass(undefined)}
+                        dragAndDropManager={this.props.dragAndDropManager}
+                    />
                 </Splitter>
             );
         } else {
