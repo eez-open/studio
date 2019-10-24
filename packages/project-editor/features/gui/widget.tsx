@@ -32,7 +32,8 @@ import {
     areAllChildrenOfTheSameParent,
     isAncestor,
     getProperty,
-    IOnSelectParams
+    IOnSelectParams,
+    asArray
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { DocumentStore, NavigationStore, IContextMenuContext } from "project-editor/core/store";
@@ -63,7 +64,7 @@ import { Style, getStyleProperty } from "project-editor/features/gui/style";
 import { findDataItem, dataContext } from "project-editor/features/data/data";
 import { findAction } from "project-editor/features/action/action";
 import {
-    draw,
+    drawOnCanvas,
     drawText,
     styleGetBorderRadius,
     styleIsHorzAlignLeft,
@@ -73,7 +74,7 @@ import {
     styleGetFont,
     textDrawingInBackground
 } from "project-editor/features/gui/draw";
-import * as lcd from "project-editor/features/gui/lcd";
+import * as draw from "project-editor/features/gui/draw";
 import { Font } from "project-editor/features/gui/font";
 
 import { BootstrapButton } from "project-editor/components/BootstrapButton";
@@ -792,7 +793,7 @@ export class ContainerWidget extends Widget {
     });
 
     render(rect: Rect) {
-        return <WidgetContainerComponent containerWidget={this} widgets={this.widgets._array} />;
+        return <WidgetContainerComponent containerWidget={this} widgets={asArray(this.widgets)} />;
     }
 
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
@@ -1103,7 +1104,7 @@ export class SelectWidget extends Widget {
                 } else if (dataItem.type == "boolean") {
                     enumItems = ["0", "1"];
                 }
-                if (enumItems.length > this.widgets._array.length) {
+                if (enumItems.length > this.widgets.length) {
                     messages.push(
                         new output.Message(
                             output.Type.ERROR,
@@ -1111,7 +1112,7 @@ export class SelectWidget extends Widget {
                             this
                         )
                     );
-                } else if (enumItems.length < this.widgets._array.length) {
+                } else if (enumItems.length < this.widgets.length) {
                     messages.push(
                         new output.Message(
                             output.Type.ERROR,
@@ -1128,7 +1129,7 @@ export class SelectWidget extends Widget {
 
     getChildLabel(childObject: Widget) {
         if (this.widgets) {
-            let index = this.widgets._array.indexOf(childObject);
+            let index = this.widgets.indexOf(childObject);
             if (index != -1) {
                 if (this.data) {
                     let dataItem = findDataItem(this.data);
@@ -1164,8 +1165,8 @@ export class SelectWidget extends Widget {
     getSelectedWidget() {
         if (this.data) {
             let index: number = dataContext.getEnumValue(this.data);
-            if (index >= 0 && index < this.widgets._array.length) {
-                return this.widgets._array[index];
+            if (index >= 0 && index < this.widgets.length) {
+                return asArray(this.widgets)[index];
             }
         }
         return undefined;
@@ -1175,10 +1176,13 @@ export class SelectWidget extends Widget {
         if (designerContext) {
             const selectedObjects = designerContext.viewState.selectedObjects;
 
-            for (let i = 0; i < this.widgets._array.length; ++i) {
+            for (let i = 0; i < this.widgets.length; ++i) {
                 if (
                     selectedObjects.find(selectedObject =>
-                        isAncestor((selectedObject as EditorObject).object, this.widgets._array[i])
+                        isAncestor(
+                            (selectedObject as EditorObject).object,
+                            asArray(this.widgets)[i]
+                        )
                     )
                 ) {
                     this._lastSelectedIndexInSelectWidget = i;
@@ -1188,31 +1192,31 @@ export class SelectWidget extends Widget {
 
             if (
                 this._lastSelectedIndexInSelectWidget !== undefined &&
-                this._lastSelectedIndexInSelectWidget < this.widgets._array.length
+                this._lastSelectedIndexInSelectWidget < this.widgets.length
             ) {
                 return this._lastSelectedIndexInSelectWidget;
             }
 
             const selectedWidget = this.getSelectedWidget();
             if (selectedWidget) {
-                return this.widgets._array.indexOf(selectedWidget);
+                return this.widgets.indexOf(selectedWidget);
             }
 
-            if (this.widgets._array.length > 0) {
+            if (this.widgets.length > 0) {
                 this._lastSelectedIndexInSelectWidget = 0;
                 return this._lastSelectedIndexInSelectWidget;
             }
         } else {
             if (
                 this._lastSelectedIndexInSelectWidget !== undefined &&
-                this._lastSelectedIndexInSelectWidget < this.widgets._array.length
+                this._lastSelectedIndexInSelectWidget < this.widgets.length
             ) {
                 return this._lastSelectedIndexInSelectWidget;
             }
 
             const selectedWidget = this.getSelectedWidget();
             if (selectedWidget) {
-                return this.widgets._array.indexOf(selectedWidget);
+                return this.widgets.indexOf(selectedWidget);
             }
         }
 
@@ -1225,7 +1229,7 @@ export class SelectWidget extends Widget {
             return null;
         }
 
-        const selectedWidget = this.widgets._array[index];
+        const selectedWidget = asArray(this.widgets)[index];
 
         return <WidgetContainerComponent containerWidget={this} widgets={[selectedWidget]} />;
     }
@@ -1378,7 +1382,7 @@ export class LayoutViewWidget extends Widget {
         if (this.layoutPage) {
             var containerWidgetJsObject = Object.assign({}, ContainerWidget.classInfo.defaultValue);
 
-            containerWidgetJsObject.widgets = this.layoutPage.widgets._array.map(widget =>
+            containerWidgetJsObject.widgets = this.layoutPage.widgets.map(widget =>
                 objectToJS(widget)
             );
 
@@ -1651,11 +1655,11 @@ class MultilineTextRender {
                 }
 
                 if (this.inverse) {
-                    lcd.setBackColor(getStyleProperty(this.style, "color"));
-                    lcd.setColor(getStyleProperty(this.style, "backgroundColor"));
+                    draw.setBackColor(getStyleProperty(this.style, "color"));
+                    draw.setColor(getStyleProperty(this.style, "backgroundColor"));
                 } else {
-                    lcd.setBackColor(getStyleProperty(this.style, "backgroundColor"));
-                    lcd.setColor(getStyleProperty(this.style, "color"));
+                    draw.setBackColor(getStyleProperty(this.style, "backgroundColor"));
+                    draw.setColor(getStyleProperty(this.style, "color"));
                 }
 
                 textDrawingInBackground.drawStr(
@@ -1692,7 +1696,7 @@ class MultilineTextRender {
                 word += this.text[i++];
             }
 
-            let width = lcd.measureStr(word, this.font, 0);
+            let width = draw.measureStr(word, this.font, 0);
 
             while (
                 this.lineWidth + (this.line != "" ? this.spaceWidth : 0) + width >
@@ -1756,8 +1760,8 @@ class MultilineTextRender {
             borderSize.bottom > 0 ||
             borderSize.left > 0
         ) {
-            lcd.setColor(getStyleProperty(this.style, "borderColor"));
-            lcd.fillRect(this.ctx, this.x1, this.y1, this.x2, this.y2, borderRadius);
+            draw.setColor(getStyleProperty(this.style, "borderColor"));
+            draw.fillRect(this.ctx, this.x1, this.y1, this.x2, this.y2, borderRadius);
             this.x1 += borderSize.left;
             this.y1 += borderSize.top;
             this.x2 -= borderSize.right;
@@ -1772,8 +1776,8 @@ class MultilineTextRender {
         let backgroundColor = this.inverse
             ? getStyleProperty(this.style, "color")
             : getStyleProperty(this.style, "backgroundColor");
-        lcd.setColor(backgroundColor);
-        lcd.fillRect(this.ctx, this.x1, this.y1, this.x2, this.y2, borderRadius);
+        draw.setColor(backgroundColor);
+        draw.fillRect(this.ctx, this.x1, this.y1, this.x2, this.y2, borderRadius);
 
         const font = styleGetFont(this.style);
         if (!font) {
@@ -1800,7 +1804,7 @@ class MultilineTextRender {
         this.y1 += this.style.paddingRect.top;
         this.y2 -= this.style.paddingRect.bottom;
 
-        const spaceGlyph = font.glyphs._array.find(glyph => glyph.encoding == 32);
+        const spaceGlyph = font.glyphs.find(glyph => glyph.encoding == 32);
         this.spaceWidth = (spaceGlyph && spaceGlyph.dx) || 0;
 
         const textHeight = this.executeStep(MultilineTextRenderStep.MEASURE);
@@ -1889,7 +1893,7 @@ export class MultilineTextWidget extends Widget {
         const style = this.style;
         const inverse = false;
 
-        return draw(w, h, (ctx: CanvasRenderingContext2D) => {
+        return drawOnCanvas(w, h, (ctx: CanvasRenderingContext2D) => {
             let x1 = 0;
             let y1 = 0;
             let x2 = w - 1;
@@ -1966,7 +1970,7 @@ export class RectangleWidget extends Widget {
         const inverse = this.invertColors;
 
         if (w > 0 && h > 0) {
-            return draw(w, h, (ctx: CanvasRenderingContext2D) => {
+            return drawOnCanvas(w, h, (ctx: CanvasRenderingContext2D) => {
                 let x1 = 0;
                 let y1 = 0;
                 let x2 = w - 1;
@@ -1980,8 +1984,8 @@ export class RectangleWidget extends Widget {
                     borderSize.bottom > 0 ||
                     borderSize.left > 0
                 ) {
-                    lcd.setColor(getStyleProperty(style, "borderColor"));
-                    lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                    draw.setColor(getStyleProperty(style, "borderColor"));
+                    draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
                     x1 += borderSize.left;
                     y1 += borderSize.top;
                     x2 -= borderSize.right;
@@ -1998,12 +2002,12 @@ export class RectangleWidget extends Widget {
                     );
                 }
 
-                lcd.setColor(
+                draw.setColor(
                     inverse
                         ? getStyleProperty(style, "backgroundColor")
                         : getStyleProperty(style, "color")
                 );
-                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
             });
         }
         return undefined;
@@ -2136,7 +2140,7 @@ export class BitmapWidget extends Widget {
                 return undefined;
             }
 
-            return draw(w, h, (ctx: CanvasRenderingContext2D) => {
+            return drawOnCanvas(w, h, (ctx: CanvasRenderingContext2D) => {
                 let x1 = 0;
                 let y1 = 0;
                 let x2 = w - 1;
@@ -2146,8 +2150,8 @@ export class BitmapWidget extends Widget {
                     let backgroundColor = inverse
                         ? getStyleProperty(style, "color")
                         : getStyleProperty(style, "backgroundColor");
-                    lcd.setColor(backgroundColor);
-                    lcd.fillRect(ctx, x1, y1, x2, y2, 0);
+                    draw.setColor(backgroundColor);
+                    draw.fillRect(ctx, x1, y1, x2, y2, 0);
                 }
 
                 let width = imageElement.width;
@@ -2172,14 +2176,14 @@ export class BitmapWidget extends Widget {
                 }
 
                 if (inverse) {
-                    lcd.setBackColor(getStyleProperty(style, "color"));
-                    lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                    draw.setBackColor(getStyleProperty(style, "color"));
+                    draw.setColor(getStyleProperty(style, "backgroundColor"));
                 } else {
-                    lcd.setBackColor(getStyleProperty(style, "backgroundColor"));
-                    lcd.setColor(getStyleProperty(style, "color"));
+                    draw.setBackColor(getStyleProperty(style, "backgroundColor"));
+                    draw.setColor(getStyleProperty(style, "color"));
                 }
 
-                lcd.drawBitmap(ctx, imageElement, x_offset, y_offset, width, height);
+                draw.drawBitmap(ctx, imageElement, x_offset, y_offset, width, height);
             });
         }
 
@@ -2337,7 +2341,7 @@ export class ButtonGroupWidget extends Widget {
         let selectedButton = (this.data && data.get(this.data)) || 0;
         let style = this.style;
 
-        return draw(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
             let x = 0;
             let y = 0;
             let w = rect.width;
@@ -2530,48 +2534,48 @@ export class ScaleWidget extends Widget {
             // draw ticks
             if (y_i >= y_min && y_i <= y_max) {
                 if (y_i % s == 0) {
-                    lcd.setColor(getStyleProperty(style, "borderColor"));
+                    draw.setColor(getStyleProperty(style, "borderColor"));
                     if (vertical) {
-                        lcd.drawHLine(ctx, x1, y, l1);
+                        draw.drawHLine(ctx, x1, y, l1);
                     } else {
-                        lcd.drawVLine(ctx, y, x1, l1);
+                        draw.drawVLine(ctx, y, x1, l1);
                     }
                 } else if (y_i % (s / 2) == 0) {
-                    lcd.setColor(getStyleProperty(style, "borderColor"));
+                    draw.setColor(getStyleProperty(style, "borderColor"));
                     if (vertical) {
                         if (flip) {
-                            lcd.drawHLine(ctx, x1 + l1 / 2, y, l1 / 2);
+                            draw.drawHLine(ctx, x1 + l1 / 2, y, l1 / 2);
                         } else {
-                            lcd.drawHLine(ctx, x1, y, l1 / 2);
+                            draw.drawHLine(ctx, x1, y, l1 / 2);
                         }
                     } else {
                         if (flip) {
-                            lcd.drawVLine(ctx, y, x1 + l1 / 2, l1 / 2);
+                            draw.drawVLine(ctx, y, x1 + l1 / 2, l1 / 2);
                         } else {
-                            lcd.drawVLine(ctx, y, x1, l1 / 2);
+                            draw.drawVLine(ctx, y, x1, l1 / 2);
                         }
                     }
                 } else if (y_i % (s / 10) == 0) {
-                    lcd.setColor(getStyleProperty(style, "borderColor"));
+                    draw.setColor(getStyleProperty(style, "borderColor"));
                     if (vertical) {
                         if (flip) {
-                            lcd.drawHLine(ctx, x1 + l1 - l1 / 4, y, l1 / 4);
+                            draw.drawHLine(ctx, x1 + l1 - l1 / 4, y, l1 / 4);
                         } else {
-                            lcd.drawHLine(ctx, x1, y, l1 / 4);
+                            draw.drawHLine(ctx, x1, y, l1 / 4);
                         }
                     } else {
                         if (flip) {
-                            lcd.drawVLine(ctx, y, x1 + l1 - l1 / 4, l1 / 4);
+                            draw.drawVLine(ctx, y, x1 + l1 - l1 / 4, l1 / 4);
                         } else {
-                            lcd.drawVLine(ctx, y, x1, l1 / 4);
+                            draw.drawVLine(ctx, y, x1, l1 / 4);
                         }
                     }
                 } else {
-                    lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                    draw.setColor(getStyleProperty(style, "backgroundColor"));
                     if (vertical) {
-                        lcd.drawHLine(ctx, x1, y, l1);
+                        draw.drawHLine(ctx, x1, y, l1);
                     } else {
-                        lcd.drawVLine(ctx, y, x1, l1);
+                        draw.drawVLine(ctx, y, x1, l1);
                     }
                 }
             }
@@ -2579,44 +2583,44 @@ export class ScaleWidget extends Widget {
             let d = Math.abs(y_i - y_value);
             if (d <= Math.floor(needleSize / 2)) {
                 // draw thumb
-                lcd.setColor(getStyleProperty(style, "color"));
+                draw.setColor(getStyleProperty(style, "color"));
                 if (vertical) {
                     if (flip) {
-                        lcd.drawHLine(ctx, x2, y, l2 - d);
+                        draw.drawHLine(ctx, x2, y, l2 - d);
                     } else {
-                        lcd.drawHLine(ctx, x2 + d, y, l2 - d);
+                        draw.drawHLine(ctx, x2 + d, y, l2 - d);
                     }
                 } else {
                     if (flip) {
-                        lcd.drawVLine(ctx, y, x2, l2 - d);
+                        draw.drawVLine(ctx, y, x2, l2 - d);
                     } else {
-                        lcd.drawVLine(ctx, y, x2 + d, l2 - d);
+                        draw.drawVLine(ctx, y, x2 + d, l2 - d);
                     }
                 }
 
                 if (y_i != y_value) {
-                    lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                    draw.setColor(getStyleProperty(style, "backgroundColor"));
                     if (vertical) {
                         if (flip) {
-                            lcd.drawHLine(ctx, x2 + l2 - d, y, d);
+                            draw.drawHLine(ctx, x2 + l2 - d, y, d);
                         } else {
-                            lcd.drawHLine(ctx, x2, y, d);
+                            draw.drawHLine(ctx, x2, y, d);
                         }
                     } else {
                         if (flip) {
-                            lcd.drawVLine(ctx, y, x2 + l2 - d, d);
+                            draw.drawVLine(ctx, y, x2 + l2 - d, d);
                         } else {
-                            lcd.drawVLine(ctx, y, x2, d);
+                            draw.drawVLine(ctx, y, x2, d);
                         }
                     }
                 }
             } else {
                 // erase
-                lcd.setColor(getStyleProperty(style, "backgroundColor"));
+                draw.setColor(getStyleProperty(style, "backgroundColor"));
                 if (vertical) {
-                    lcd.drawHLine(ctx, x2, y, l2);
+                    draw.drawHLine(ctx, x2, y, l2);
                 } else {
-                    lcd.drawVLine(ctx, y, x2, l2);
+                    draw.drawVLine(ctx, y, x2, l2);
                 }
             }
         }
@@ -2625,13 +2629,13 @@ export class ScaleWidget extends Widget {
     draw(rect: Rect): HTMLCanvasElement | undefined {
         let style = this.style;
 
-        return draw(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
             let value = 0;
             let min = (this.data && data.getMin(this.data)) || 0;
             let max = (this.data && data.getMax(this.data)) || 0;
 
-            lcd.setColor(getStyleProperty(style, "backgroundColor"));
-            lcd.fillRect(ctx, 0, 0, rect.width - 1, rect.height - 1);
+            draw.setColor(getStyleProperty(style, "backgroundColor"));
+            draw.fillRect(ctx, 0, 0, rect.width - 1, rect.height - 1);
 
             let vertical = this.needlePosition == "left" || this.needlePosition == "right";
 
@@ -2753,7 +2757,7 @@ export class BarGraphWidget extends Widget {
         let barGraphWidget = this;
         let style = barGraphWidget.style;
 
-        return draw(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
             let min = (barGraphWidget.data && data.getMin(barGraphWidget.data)) || 0;
             let max = (barGraphWidget.data && data.getMax(barGraphWidget.data)) || 0;
             let valueText = (barGraphWidget.data && data.get(barGraphWidget.data)) || "0";
@@ -2781,32 +2785,32 @@ export class BarGraphWidget extends Widget {
             let pos = calcPos(value);
 
             if (barGraphWidget.orientation == "left-right") {
-                lcd.setColor(getStyleProperty(style, "color"));
-                lcd.fillRect(ctx, 0, 0, pos - 1, rect.height - 1);
-                lcd.setColor(getStyleProperty(style, "backgroundColor"));
-                lcd.fillRect(ctx, pos, 0, rect.width - 1, rect.height - 1);
+                draw.setColor(getStyleProperty(style, "color"));
+                draw.fillRect(ctx, 0, 0, pos - 1, rect.height - 1);
+                draw.setColor(getStyleProperty(style, "backgroundColor"));
+                draw.fillRect(ctx, pos, 0, rect.width - 1, rect.height - 1);
             } else if (barGraphWidget.orientation == "right-left") {
-                lcd.setColor(getStyleProperty(style, "backgroundColor"));
-                lcd.fillRect(ctx, 0, 0, rect.width - pos - 1, rect.height - 1);
-                lcd.setColor(getStyleProperty(style, "color"));
-                lcd.fillRect(ctx, rect.width - pos, 0, rect.width - 1, rect.height - 1);
+                draw.setColor(getStyleProperty(style, "backgroundColor"));
+                draw.fillRect(ctx, 0, 0, rect.width - pos - 1, rect.height - 1);
+                draw.setColor(getStyleProperty(style, "color"));
+                draw.fillRect(ctx, rect.width - pos, 0, rect.width - 1, rect.height - 1);
             } else if (barGraphWidget.orientation == "top-bottom") {
-                lcd.setColor(getStyleProperty(style, "color"));
-                lcd.fillRect(ctx, 0, 0, rect.width - 1, pos - 1);
-                lcd.setColor(getStyleProperty(style, "backgroundColor"));
-                lcd.fillRect(ctx, 0, pos, rect.width - 1, rect.height - 1);
+                draw.setColor(getStyleProperty(style, "color"));
+                draw.fillRect(ctx, 0, 0, rect.width - 1, pos - 1);
+                draw.setColor(getStyleProperty(style, "backgroundColor"));
+                draw.fillRect(ctx, 0, pos, rect.width - 1, rect.height - 1);
             } else {
-                lcd.setColor(getStyleProperty(style, "backgroundColor"));
-                lcd.fillRect(ctx, 0, 0, rect.width - 1, rect.height - pos - 1);
-                lcd.setColor(getStyleProperty(style, "color"));
-                lcd.fillRect(ctx, 0, rect.height - pos, rect.width - 1, rect.height - 1);
+                draw.setColor(getStyleProperty(style, "backgroundColor"));
+                draw.fillRect(ctx, 0, 0, rect.width - 1, rect.height - pos - 1);
+                draw.setColor(getStyleProperty(style, "color"));
+                draw.fillRect(ctx, 0, rect.height - pos, rect.width - 1, rect.height - 1);
             }
 
             if (horizontal) {
                 let textStyle = barGraphWidget.textStyle;
                 const font = styleGetFont(textStyle);
                 if (font) {
-                    let w = lcd.measureStr(valueText, font, rect.width);
+                    let w = draw.measureStr(valueText, font, rect.width);
                     w += style.paddingRect.left;
 
                     if (w > 0 && rect.height > 0) {
@@ -2839,15 +2843,15 @@ export class BarGraphWidget extends Widget {
                 if (pos == d) {
                     pos = d - 1;
                 }
-                lcd.setColor(getStyleProperty(lineStyle, "color"));
+                draw.setColor(getStyleProperty(lineStyle, "color"));
                 if (barGraphWidget.orientation == "left-right") {
-                    lcd.drawVLine(ctx, pos, 0, rect.height - 1);
+                    draw.drawVLine(ctx, pos, 0, rect.height - 1);
                 } else if (barGraphWidget.orientation == "right-left") {
-                    lcd.drawVLine(ctx, rect.width - pos, 0, rect.height - 1);
+                    draw.drawVLine(ctx, rect.width - pos, 0, rect.height - 1);
                 } else if (barGraphWidget.orientation == "top-bottom") {
-                    lcd.drawHLine(ctx, 0, pos, rect.width - 1);
+                    draw.drawHLine(ctx, 0, pos, rect.width - 1);
                 } else {
-                    lcd.drawHLine(ctx, 0, rect.height - pos, rect.width - 1);
+                    draw.drawHLine(ctx, 0, rect.height - pos, rect.width - 1);
                 }
             }
 
@@ -2911,7 +2915,7 @@ export class YTGraphWidget extends Widget {
         let ytGraphWidget = this;
         let style = ytGraphWidget.style;
 
-        return draw(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
             let x1 = 0;
             let y1 = 0;
             let x2 = rect.width - 1;
@@ -2925,8 +2929,8 @@ export class YTGraphWidget extends Widget {
                 borderSize.bottom > 0 ||
                 borderSize.left > 0
             ) {
-                lcd.setColor(getStyleProperty(style, "borderColor"));
-                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                draw.setColor(getStyleProperty(style, "borderColor"));
+                draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
                 x1 += borderSize.left;
                 y1 += borderSize.top;
                 x2 -= borderSize.right;
@@ -2943,8 +2947,8 @@ export class YTGraphWidget extends Widget {
                 );
             }
 
-            lcd.setColor(getStyleProperty(style, "backgroundColor"));
-            lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+            draw.setColor(getStyleProperty(style, "backgroundColor"));
+            draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
         });
     }
 }
@@ -3013,7 +3017,7 @@ export class UpDownWidget extends Widget {
         let style = upDownWidget.style;
         let buttonsStyle = upDownWidget.buttonsStyle;
 
-        return draw(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
             const buttonsFont = styleGetFont(buttonsStyle);
             if (!buttonsFont) {
                 return;
@@ -3137,7 +3141,7 @@ export class ListGraphWidget extends Widget {
         let listGraphWidget = this;
         let style = listGraphWidget.style;
 
-        return draw(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
             let x1 = 0;
             let y1 = 0;
             let x2 = rect.width - 1;
@@ -3151,8 +3155,8 @@ export class ListGraphWidget extends Widget {
                 borderSize.bottom > 0 ||
                 borderSize.left > 0
             ) {
-                lcd.setColor(getStyleProperty(style, "borderColor"));
-                lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                draw.setColor(getStyleProperty(style, "borderColor"));
+                draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
                 x1 += borderSize.left;
                 y1 += borderSize.top;
                 x2 -= borderSize.right;
@@ -3169,8 +3173,8 @@ export class ListGraphWidget extends Widget {
                 );
             }
 
-            lcd.setColor(getStyleProperty(style, "backgroundColor"));
-            lcd.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+            draw.setColor(getStyleProperty(style, "backgroundColor"));
+            draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
         });
     }
 }

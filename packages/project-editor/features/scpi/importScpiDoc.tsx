@@ -9,7 +9,7 @@ import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 
-import { EezObject, EezArrayObject, getProperty } from "project-editor/core/object";
+import { EezObject, EezArrayObject, getProperty, asArray } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/serialization";
 import { DocumentStore, UndoManager, NavigationStore } from "project-editor/core/store";
 
@@ -157,8 +157,9 @@ class FindChanges {
         // find in existing enums
         for (let i = 0; i < this.existingEnums.length; ++i) {
             if (
-                this.existingEnums[i].members._array.map(member => member.name).join("|") ===
-                members
+                asArray(this.existingEnums[i].members)
+                    .map(member => member.name)
+                    .join("|") === members
             ) {
                 return this.existingEnums[i].name;
             }
@@ -819,8 +820,8 @@ function findCommandInScpiSubsystems(
     subsystems: EezArrayObject<ScpiSubsystem>,
     commandName: string
 ) {
-    for (const subsystem of subsystems._array) {
-        for (const command of subsystem.commands._array) {
+    for (const subsystem of asArray(subsystems)) {
+        for (const command of asArray(subsystem.commands)) {
             if (command.name === commandName) {
                 return {
                     subsystem: subsystem,
@@ -982,7 +983,7 @@ export class ImportScpiDocDialog extends React.Component<
 
         const scpi = getProperty(ProjectStore.project, "scpi") as Scpi;
 
-        const findChanges = new FindChanges(scpi.enums._array);
+        const findChanges = new FindChanges(asArray(scpi.enums));
 
         findChanges
             .getChanges()
@@ -1048,7 +1049,7 @@ export class ImportScpiDocDialog extends React.Component<
         let existingSubsystems = scpi.subsystems;
 
         let getOrAddSubsystem = (subsystem: Subsystem) => {
-            let existingSubsystem = existingSubsystems._array.find(
+            let existingSubsystem = existingSubsystems.find(
                 existingSubsystem => existingSubsystem.name === subsystem.name
             );
             if (existingSubsystem) {
@@ -1114,7 +1115,7 @@ export class ImportScpiDocDialog extends React.Component<
                             type: parameter.type.map(type => {
                                 if (type.type === "discrete") {
                                     if (
-                                        !scpi.enums._array.find(
+                                        !scpi.enums.find(
                                             scpiEnum => scpiEnum.name === type.enumeration
                                         )
                                     ) {

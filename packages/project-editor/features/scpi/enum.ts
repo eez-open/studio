@@ -114,7 +114,7 @@ export class ScpiEnum extends EezObject {
 
     static classInfo: ClassInfo = {
         label: (scpiEnum: ScpiEnum) => {
-            return `${scpiEnum.name} (${scpiEnum.members._array
+            return `${scpiEnum.name} (${asArray(scpiEnum.members)
                 .map(member => member.name)
                 .join("|")})`;
         },
@@ -176,9 +176,9 @@ export class ScpiEnum extends EezObject {
 export function findScpiEnum(enumeration: string) {
     const scpi = (ProjectStore.project as any).scpi as Scpi;
 
-    for (let i = 0; i < scpi.enums._array.length; ++i) {
-        if (scpi.enums._array[i].name === enumeration) {
-            return scpi.enums._array[i];
+    for (let i = 0; i < scpi.enums.length; ++i) {
+        if (asArray(scpi.enums)[i].name === enumeration) {
+            return asArray(scpi.enums)[i];
         }
     }
 
@@ -188,7 +188,7 @@ export function findScpiEnum(enumeration: string) {
 export function getScpiEnumsAsDialogEnumItems(): EnumItems {
     const scpi = (ProjectStore.project as any).scpi as Scpi;
 
-    return scpi.enums._array
+    return asArray(scpi.enums)
         .slice()
         .sort((a, b) => stringCompare(a._label, b._label))
         .map(scpiEnum => ({

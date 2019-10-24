@@ -6,7 +6,7 @@ import {
     buildInstrumentExtension,
     IdfProperties as InstrumentIdfProperties
 } from "instrument/export";
-import { EezArrayObject, getProperty } from "project-editor/core/object";
+import { EezArrayObject, getProperty, asArray } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/serialization";
 import { OutputSectionsStore } from "project-editor/core/store";
 import { Section, Type } from "project-editor/core/output";
@@ -52,7 +52,7 @@ function getExtensionsToBuild() {
 
     return (
         extensionDefinitions &&
-        extensionDefinitions._array
+        asArray(extensionDefinitions)
             .filter(extensionDefinition => !extensionDefinition.doNotBuild)
             .filter(extensionDefinition => {
                 const idfFromProject = toJS(extensionDefinition);
@@ -82,7 +82,7 @@ export async function extensionDefinitionBuild() {
         let properties: any = {};
 
         // from configuration
-        const configuration = ProjectStore.project.settings.build.configurations._array.find(
+        const configuration = ProjectStore.project.settings.build.configurations.find(
             configuration => configuration.name == extensionDefinition.buildConfiguration
         );
         if (configuration && configuration.properties) {

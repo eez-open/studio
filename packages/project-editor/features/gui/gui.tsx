@@ -199,7 +199,7 @@ export class Gui extends EezObject {
     @computed
     get stylesMap() {
         const map = new Map<String, Style>();
-        this.styles._array.forEach(style => map.set(style.name, style));
+        this.styles.forEach(style => map.set(style.name, style));
         return map;
     }
 
@@ -217,7 +217,7 @@ export class Gui extends EezObject {
     @computed
     get colorsMap() {
         const map = new Map<String, number>();
-        this.colors._array.forEach((color, i) => map.set(color.name, i));
+        this.colors.forEach((color, i) => map.set(color.name, i));
         return map;
     }
 }
@@ -337,7 +337,7 @@ export function getPages() {
 
 export function findPage(pageName: string) {
     let pages = getPages();
-    for (const page of pages._array) {
+    for (const page of asArray(pages)) {
         if (page.name == pageName) {
             return page;
         }
@@ -348,7 +348,7 @@ export function findPage(pageName: string) {
 export function findBitmap(bitmapName: any) {
     let gui = getGui();
     let bitmaps = (gui && gui.bitmaps) || [];
-    for (const bitmap of bitmaps._array) {
+    for (const bitmap of asArray(bitmaps)) {
         if (bitmap.name == bitmapName) {
             return bitmap;
         }

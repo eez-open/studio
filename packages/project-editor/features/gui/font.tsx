@@ -16,6 +16,7 @@ import { IFieldComponentProps } from "eez-studio-ui/generic-dialog";
 import styled from "eez-studio-ui/styled-components";
 import { Splitter } from "eez-studio-ui/splitter";
 import { Loader } from "eez-studio-ui/loader";
+import { SearchInput } from "eez-studio-ui/search-input";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
@@ -962,7 +963,7 @@ export class GlyphSelectFieldType extends React.Component<
                         const font: Font = loadObject(undefined, fontValue, Font) as Font;
                         this.onChange(
                             font,
-                            font.glyphs._array.find(
+                            font.glyphs.find(
                                 glyph =>
                                     glyph.encoding ==
                                     this.props.values[this.props.fieldProperties.name]
@@ -1014,7 +1015,7 @@ export class GlyphSelectFieldType extends React.Component<
                 <GlyphSelectFieldContainerDiv ref={(ref: any) => (this.glyphsContainer = ref)}>
                     <Glyphs
                         ref={ref => (this.glyphs = ref!)}
-                        glyphs={this.state.font.glyphs._array}
+                        glyphs={asArray(this.state.font.glyphs)}
                         selectedGlyph={this.state.selectedGlyph}
                         onSelectGlyph={this.onSelectGlyph.bind(this)}
                         onDoubleClickGlyph={this.onDoubleClickGlyph.bind(this)}
@@ -1124,11 +1125,8 @@ const GlyphsFilterDiv = styled.div`
     background-color: ${props => props.theme.panelHeaderColor};
     border-bottom: 1px solid ${props => props.theme.borderColor};
     input {
-        height: 28px;
-    }
-
-    input {
         width: 100%;
+        height: 28px;
     }
 `;
 
@@ -1139,37 +1137,28 @@ const GlyphsContentDiv = styled.div`
 `;
 
 @observer
-class Glyphs extends React.Component<
-    {
-        glyphs: Glyph[];
-        selectedGlyph: Glyph | undefined;
-        onSelectGlyph: (glyph: Glyph) => void;
-        onDoubleClickGlyph: (glyph: Glyph) => void;
-        onRebuildGlyphs?: () => void;
-        onAddGlyph?: () => void;
-        onDeleteGlyph?: () => void;
-        onCreateShadow?: () => void;
-    },
-    {
-        searchValue: string;
-    }
-> {
-    state = {
-        searchValue: ""
-    };
+class Glyphs extends React.Component<{
+    glyphs: Glyph[];
+    selectedGlyph: Glyph | undefined;
+    onSelectGlyph: (glyph: Glyph) => void;
+    onDoubleClickGlyph: (glyph: Glyph) => void;
+    onRebuildGlyphs?: () => void;
+    onAddGlyph?: () => void;
+    onDeleteGlyph?: () => void;
+    onCreateShadow?: () => void;
+}> {
+    @observable searchText: string;
 
     list: HTMLUListElement;
 
-    onChange(event: any) {
-        let searchValue: string = event.target.value;
+    @action.bound
+    onSearchChange(event: any) {
+        this.searchText = ($(event.target).val() as string).trim();
 
-        this.setState({
-            searchValue: searchValue
-        });
+        const searchText = this.searchText.toLowerCase();
 
-        searchValue = searchValue.toLowerCase();
         let glyph = this.props.glyphs.find(
-            glyph => glyph._label.toLowerCase().indexOf(searchValue) != -1
+            glyph => glyph._label.toLowerCase().indexOf(searchText) != -1
         );
 
         if (glyph) {
@@ -1254,12 +1243,10 @@ class Glyphs extends React.Component<
             <GlyphsDiv>
                 <GlyphsFilterDiv>
                     <Toolbar className="btn-toolbar" role="toolbar">
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={this.state.searchValue}
-                            onChange={this.onChange.bind(this)}
-                            placeholder="search"
+                        <SearchInput
+                            searchText={this.searchText}
+                            onChange={this.onSearchChange}
+                            onKeyDown={this.onSearchChange}
                         />
                         <div style={{ flexGrow: 1 }} />
                         {rebuildGlyphsButton}
@@ -1505,7 +1492,7 @@ export class FontEditor
         const font = this.props.font;
         let newGlyph = cloneObject(
             undefined,
-            font.glyphs._array[font.glyphs._array.length - 1]
+            asArray(font.glyphs)[font.glyphs.length - 1]
         ) as Glyph;
         newGlyph.encoding = newGlyph.encoding + 1;
         newGlyph = DocumentStore.addObject(font.glyphs, newGlyph) as Glyph;
@@ -1516,7 +1503,7 @@ export class FontEditor
     onDeleteGlyph() {
         const font = this.props.font;
         let selectedGlyph = this.selectedGlyph;
-        if (selectedGlyph && font.glyphs._array[font.glyphs._array.length - 1] == selectedGlyph) {
+        if (selectedGlyph && asArray(font.glyphs)[font.glyphs.length - 1] == selectedGlyph) {
             DocumentStore.deleteObject(selectedGlyph);
         }
     }
@@ -1557,8 +1544,8 @@ export class FontEditor
 
                 const font = this.props.font;
 
-                let glyphWidth = font.glyphs._array[0].width;
-                let glyphHeight = font.glyphs._array[0].height;
+                let glyphWidth = asArray(font.glyphs)[0].width;
+                let glyphHeight = asArray(font.glyphs)[0].height;
 
                 const darkest =
                     imageData[
@@ -1579,31 +1566,31 @@ export class FontEditor
                     return pixelArray;
                 }
 
-                font.glyphs._array[0].glyphBitmap = {
+                asArray(font.glyphs)[0].glyphBitmap = {
                     pixelArray: getPixelArray(0, 0),
                     width: glyphWidth,
                     height: glyphHeight
                 };
 
-                font.glyphs._array[1].glyphBitmap = {
+                asArray(font.glyphs)[1].glyphBitmap = {
                     pixelArray: getPixelArray(Math.round((image.width - glyphWidth) / 2), 0),
                     width: glyphWidth,
                     height: glyphHeight
                 };
 
-                font.glyphs._array[2].glyphBitmap = {
+                asArray(font.glyphs)[2].glyphBitmap = {
                     pixelArray: getPixelArray(image.width - glyphWidth, 0),
                     width: glyphWidth,
                     height: glyphHeight
                 };
 
-                font.glyphs._array[3].glyphBitmap = {
+                asArray(font.glyphs)[3].glyphBitmap = {
                     pixelArray: getPixelArray(0, (image.height - glyphHeight) / 2),
                     width: glyphWidth,
                     height: glyphHeight
                 };
 
-                font.glyphs._array[4].glyphBitmap = {
+                asArray(font.glyphs)[4].glyphBitmap = {
                     pixelArray: getPixelArray(
                         image.width - glyphWidth,
                         (image.height - glyphHeight) / 2
@@ -1612,13 +1599,13 @@ export class FontEditor
                     height: glyphHeight
                 };
 
-                font.glyphs._array[5].glyphBitmap = {
+                asArray(font.glyphs)[5].glyphBitmap = {
                     pixelArray: getPixelArray(0, image.height - glyphHeight),
                     width: glyphWidth,
                     height: glyphHeight
                 };
 
-                font.glyphs._array[6].glyphBitmap = {
+                asArray(font.glyphs)[6].glyphBitmap = {
                     pixelArray: getPixelArray(
                         Math.round((image.width - glyphWidth) / 2),
                         image.height - glyphHeight
@@ -1627,7 +1614,7 @@ export class FontEditor
                     height: glyphHeight
                 };
 
-                font.glyphs._array[7].glyphBitmap = {
+                asArray(font.glyphs)[7].glyphBitmap = {
                     pixelArray: getPixelArray(image.width - glyphWidth, image.height - glyphHeight),
                     width: glyphWidth,
                     height: glyphHeight
@@ -1647,14 +1634,14 @@ export class FontEditor
         let onDeleteGlyph: (() => void) | undefined;
         if (
             this.selectedGlyph &&
-            font.glyphs._array[font.glyphs._array.length - 1] == this.selectedGlyph
+            asArray(font.glyphs)[font.glyphs.length - 1] == this.selectedGlyph
         ) {
             onDeleteGlyph = this.onDeleteGlyph;
         }
 
         const glyphs = (
             <Glyphs
-                glyphs={this.glyphs._array}
+                glyphs={asArray(this.glyphs)}
                 selectedGlyph={this.selectedGlyph}
                 onSelectGlyph={this.onSelectGlyph}
                 onDoubleClickGlyph={this.props.onDoubleClickItem || this.onDoubleClickGlyph}
@@ -2086,9 +2073,9 @@ export function getData(font: Font) {
     Note: byte 0 == 255 indicates empty glyph
     */
 
-    const min = _minBy(font.glyphs._array, g => g.encoding);
+    const min = _minBy(asArray(font.glyphs), g => g.encoding);
     const startEncoding = (min && min.encoding) || 32;
-    const max = _maxBy(font.glyphs._array, g => g.encoding);
+    const max = _maxBy(asArray(font.glyphs), g => g.encoding);
     const endEncoding = (max && max.encoding) || 127;
 
     const data: number[] = [];
@@ -2136,7 +2123,7 @@ export function getData(font: Font) {
                 data[offsetIndex + 1] = offset & 0xff;
             }
 
-            const glyph = font.glyphs._array[i - 32];
+            const glyph = asArray(font.glyphs)[i - 32];
 
             if (glyph && glyph.pixelArray) {
                 add(glyph.dx);
@@ -2158,7 +2145,7 @@ export function getData(font: Font) {
 export function findFont(fontName: any) {
     let gui = getGui();
     let fonts = (gui && gui.fonts) || [];
-    for (const font of fonts._array) {
+    for (const font of asArray(fonts)) {
         if (font.name == fontName) {
             return font;
         }

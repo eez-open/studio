@@ -9,7 +9,7 @@ import { confirm } from "project-editor/core/util";
 
 import {
     EezObject,
-    EezArrayObject,
+    asArray,
     PropertyInfo,
     PropertyType,
     IEditorState,
@@ -1226,7 +1226,7 @@ export function pasteItem(object: EezObject) {
                     ) {
                         return DocumentStore.insertObject(
                             c.pastePlace as EezObject,
-                            (c.pastePlace as EezArrayObject<any>)._array.indexOf(object) + 1,
+                            asArray(c.pastePlace as EezObject).indexOf(object) + 1,
                             objectToJS(c.serializedData.object)
                         );
                     } else {
@@ -1554,12 +1554,12 @@ class ProjectStoreClass {
     get selectedBuildConfiguration() {
         let configuration =
             this.project &&
-            this.project.settings.build.configurations._array.find(
+            this.project.settings.build.configurations.find(
                 configuration => configuration.name == UIStateStore.selectedBuildConfiguration
             );
         if (!configuration) {
-            if (this.project.settings.build.configurations._array.length > 0) {
-                configuration = this.project.settings.build.configurations._array[0];
+            if (this.project.settings.build.configurations.length > 0) {
+                configuration = asArray(this.project.settings.build.configurations)[0];
             }
         }
         return configuration;

@@ -2,7 +2,7 @@ const LZ4 = require("lz4");
 
 import { strToColor16 } from "eez-studio-shared/color";
 
-import { getProperty } from "project-editor/core/object";
+import { getProperty, asArray } from "project-editor/core/object";
 import { OutputSectionsStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
@@ -578,7 +578,7 @@ function buildGuiStylesData(assets: Assets, packData: boolean = true) {
 function buildGuiColorsEnum(assets: Assets) {
     let gui = getProperty(assets.project, "gui") as Gui;
 
-    let colors = gui.colors._array.map(
+    let colors = gui.colors.map(
         (color, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "COLOR_ID_",
@@ -700,9 +700,9 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         // widgets
         let widgets: Widget.Widget[] | undefined;
         if (object instanceof Page) {
-            widgets = object.widgets._array;
+            widgets = asArray(object.widgets);
         } else {
-            widgets = (object as Widget.ContainerWidget).widgets._array;
+            widgets = asArray((object as Widget.ContainerWidget).widgets);
         }
 
         let childWidgets = new ObjectList();
@@ -731,7 +731,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         // widgets
         let childWidgets = new ObjectList();
         if (widget.widgets) {
-            widget.widgets._array.forEach(childWidget => {
+            widget.widgets.forEach(childWidget => {
                 childWidgets.addItem(buildWidget(childWidget, assets));
             });
         }
@@ -1235,7 +1235,7 @@ function buildGuiColors(assets: Assets) {
 
         let gui = getProperty(assets.project, "gui") as Gui;
 
-        gui.themes._array.forEach(theme => {
+        gui.themes.forEach(theme => {
             themes.addItem(buildTheme(theme));
         });
 
@@ -1334,14 +1334,14 @@ class Assets {
     colors: string[] = [];
 
     constructor(public project: Project, buildConfiguration: BuildConfiguration | undefined) {
-        this.dataItems = project.data._array.filter(
+        this.dataItems = project.data.filter(
             dataItem =>
                 !buildConfiguration ||
                 !dataItem.usedIn ||
                 dataItem.usedIn.indexOf(buildConfiguration.name) !== -1
         );
 
-        this.actions = project.actions._array.filter(
+        this.actions = project.actions.filter(
             action =>
                 !buildConfiguration ||
                 !action.usedIn ||
@@ -1350,18 +1350,18 @@ class Assets {
 
         const gui = getProperty(project, "gui") as Gui;
 
-        this.pages = gui.pages._array.filter(
+        this.pages = gui.pages.filter(
             page =>
                 !buildConfiguration ||
                 !page.usedIn ||
                 page.usedIn.indexOf(buildConfiguration.name) !== -1
         );
 
-        this.styles = gui.styles._array.filter(style => style.alwaysBuild);
+        this.styles = gui.styles.filter(style => style.alwaysBuild);
 
-        this.fonts = gui.fonts._array.filter(bitmap => bitmap.alwaysBuild);
+        this.fonts = gui.fonts.filter(bitmap => bitmap.alwaysBuild);
 
-        this.bitmaps = gui.bitmaps._array.filter(font => font.alwaysBuild);
+        this.bitmaps = gui.bitmaps.filter(font => font.alwaysBuild);
 
         while (true) {
             const n = this.totalGuiAssets;
@@ -1507,29 +1507,29 @@ class Assets {
         let color = getStyleProperty(style, propertyName, false);
 
         let gui = getProperty(this.project, "gui") as Gui;
-        let colors = gui.colors;
+        let colors = asArray(gui.colors);
 
-        for (let i = 0; i < colors._array.length; i++) {
-            if (colors._array[i].name === color) {
+        for (let i = 0; i < colors.length; i++) {
+            if (colors[i].name === color) {
                 return i;
             }
         }
 
         for (let i = 0; i < this.colors.length; i++) {
             if (this.colors[i] == color) {
-                return colors._array.length + i;
+                return colors.length + i;
             }
         }
 
         this.colors.push(color);
 
-        return colors._array.length + this.colors.length - 1;
+        return colors.length + this.colors.length - 1;
     }
 
     reportUnusedAssets() {
         let gui = getProperty(this.project, "gui") as Gui;
 
-        gui.pages._array.forEach(page => {
+        gui.pages.forEach(page => {
             if (this.pages.indexOf(page) === -1) {
                 OutputSectionsStore.write(
                     output.Section.OUTPUT,
@@ -1540,7 +1540,7 @@ class Assets {
             }
         });
 
-        gui.styles._array.forEach(style => {
+        gui.styles.forEach(style => {
             if (this.styles.indexOf(style) === -1) {
                 OutputSectionsStore.write(
                     output.Section.OUTPUT,
@@ -1551,7 +1551,7 @@ class Assets {
             }
         });
 
-        gui.fonts._array.forEach(font => {
+        gui.fonts.forEach(font => {
             if (this.fonts.indexOf(font) === -1) {
                 OutputSectionsStore.write(
                     output.Section.OUTPUT,
@@ -1562,7 +1562,7 @@ class Assets {
             }
         });
 
-        gui.bitmaps._array.forEach(bitmap => {
+        gui.bitmaps.forEach(bitmap => {
             if (this.bitmaps.indexOf(bitmap) === -1) {
                 OutputSectionsStore.write(
                     output.Section.OUTPUT,

@@ -10,6 +10,6 @@ export function metrics(project: Project): { [key: string]: string | number } {
     let shortcuts = getProperty(project, "shortcuts") as Shortcuts;
 
     return {
-        Shortcuts: shortcuts.shortcuts._array.length
+        Shortcuts: shortcuts.shortcuts.length
     };
 }

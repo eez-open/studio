@@ -151,7 +151,7 @@ registerFeatureImplementation("shortcuts", {
         ) => {
             let shortcuts = getProperty(project, "shortcuts") as Shortcuts;
             properties.shortcuts = objectToJS(
-                shortcuts.shortcuts._array.filter(
+                shortcuts.shortcuts.filter(
                     shortcut =>
                         !shortcut.usedIn ||
                         shortcut.usedIn.indexOf(extensionDefinition.buildConfiguration) != -1

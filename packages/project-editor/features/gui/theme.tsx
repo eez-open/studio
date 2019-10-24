@@ -7,7 +7,6 @@ import {
     getProperty,
     ClassInfo,
     EezObject,
-    EezArrayObject,
     registerClass,
     PropertyType,
     asArray,
@@ -72,9 +71,7 @@ class ColorItem extends React.Component<{
 
     @computed
     get colorIndex() {
-        return (this.colorObject._parent! as EezArrayObject<Color>)._array.indexOf(
-            this.colorObject
-        );
+        return asArray(this.colorObject._parent!).indexOf(this.colorObject);
     }
 
     @computed
@@ -83,7 +80,7 @@ class ColorItem extends React.Component<{
 
         let selectedTheme = NavigationStore.getNavigationSelectedItem(gui.themes) as Theme;
         if (!selectedTheme) {
-            selectedTheme = gui.themes._array[0];
+            selectedTheme = asArray(gui.themes)[0];
         }
 
         return selectedTheme!;
@@ -365,13 +362,13 @@ export class Theme extends EezObject {
 
     @computed get colors() {
         const gui = this._parent!._parent as Gui;
-        return gui.colors._array.map(color => gui.getThemeColor(this.id, color.id));
+        return gui.colors.map(color => gui.getThemeColor(this.id, color.id));
     }
 
     set colors(value: string[]) {
         const gui = this._parent!._parent as Gui;
         for (let i = 0; i < value.length; i++) {
-            gui.setThemeColor(this.id, gui.colors._array[i].id, value[i]);
+            gui.setThemeColor(this.id, asArray(gui.colors)[i].id, value[i]);
         }
     }
 }
@@ -389,7 +386,7 @@ export function getThemedColor(colorValue: string): string {
 
     let selectedTheme = NavigationStore.getNavigationSelectedItem(gui.themes) as Theme;
     if (!selectedTheme) {
-        selectedTheme = gui.themes._array[0];
+        selectedTheme = asArray(gui.themes)[0];
     }
     if (!selectedTheme) {
         return colorValue;

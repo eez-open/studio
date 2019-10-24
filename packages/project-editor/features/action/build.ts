@@ -85,7 +85,7 @@ export function build(
     return new Promise((resolve, reject) => {
         const result: any = {};
 
-        const projectActions = project.actions._array.filter(
+        const projectActions = project.actions.filter(
             action =>
                 !buildConfiguration ||
                 !action.usedIn ||

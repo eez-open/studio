@@ -23,7 +23,8 @@ import {
     styleGroup,
     specificGroup,
     EditorComponent,
-    NavigationComponent
+    NavigationComponent,
+    asArray
 } from "project-editor/core/object";
 import {
     TreeObjectAdapter,
@@ -576,7 +577,7 @@ export class Page extends EezObject {
     }
 
     render(rect: Rect) {
-        return <WidgetContainerComponent containerWidget={this} widgets={this.widgets._array} />;
+        return <WidgetContainerComponent containerWidget={this} widgets={asArray(this.widgets)} />;
     }
 
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {

@@ -1,5 +1,13 @@
+import { objectClone } from "eez-studio-shared/util";
+import { Rect } from "eez-studio-shared/geometry";
+import {
+    DisplayItem,
+    DisplayItemChildrenArray,
+    DisplayItemChildrenObject,
+    TreeObjectAdapter
+} from "project-editor/core/objectAdapter";
 import { ProjectStore, OutputSectionsStore } from "project-editor/core/store";
-import { EezObject, EezArrayObject, getProperty } from "project-editor/core/object";
+import { EezObject, EezArrayObject, getProperty, asArray } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import { loadObject } from "project-editor/core/serialization";
 import { BuildResult } from "project-editor/core/extensions";
@@ -7,13 +15,14 @@ import { BuildResult } from "project-editor/core/extensions";
 import * as projectBuild from "project-editor/project/build";
 import { Project, BuildConfiguration } from "project-editor/project/project";
 
+import * as data from "project-editor/features/data/data";
+
 import { Gui } from "project-editor/features/gui/gui";
 import { getData as getFontData } from "project-editor/features/gui/font";
 import { getData as getBitmapData, BitmapData } from "project-editor/features/gui/bitmap";
 import { Style } from "project-editor/features/gui/style";
 import * as Widget from "project-editor/features/gui/widget";
 import { Page, PageOrientation } from "project-editor/features/gui/page";
-import { findPageTransparentRectanglesInContainer } from "project-editor/features/gui/pageTransparentRectangles";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -66,7 +75,7 @@ const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
 // If hex image contains three consecutive '!' characters (33 is ASCII code)
 // then uploading hex image to the device will fail.
 // Here we replace "!!!"" with "!! ", i.e. [33, 33, 33] with [33, 33, 32].
-export function fixDataForMegaBootloader(data: any, object: EezObject) {
+function fixDataForMegaBootloader(data: any, object: EezObject) {
     let result: number[] = [];
 
     let threeExclamationsDetected = false;
@@ -85,6 +94,343 @@ export function fixDataForMegaBootloader(data: any, object: EezObject) {
     }
 
     return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface TreeNode {
+    parent: TreeNode;
+    children: TreeNode[];
+
+    rect: Rect;
+
+    item: DisplayItem;
+    custom?: any;
+    isOpaque?: boolean;
+}
+
+enum TraverseTreeContinuation {
+    CONTINUE,
+    SKIP_CHILDREN,
+    BREAK
+}
+
+function traverseTree(
+    node: TreeNode,
+    callback: (node: TreeNode) => TraverseTreeContinuation | void
+) {
+    let result = callback(node);
+    if (result == undefined || result === TraverseTreeContinuation.CONTINUE) {
+        for (let i = 0; i < node.children.length; i++) {
+            if (traverseTree(node.children[i], callback) == TraverseTreeContinuation.BREAK) {
+                return TraverseTreeContinuation.BREAK;
+            }
+        }
+    }
+
+    return result;
+}
+
+function isWidgetOpaque(widgetObj: Widget.Widget) {
+    return !(
+        widgetObj.type === "Container" ||
+        widgetObj.type === "List" ||
+        widgetObj.type === "Select"
+    );
+}
+
+function getSelectedWidgetForSelectWidget(
+    widgetContainerDisplayItem: DisplayItem,
+    item: DisplayItem
+): DisplayItem | undefined {
+    let widget = item.object as Widget.SelectWidget;
+    if (widget.data && widget.widgets) {
+        let index: number = data.getEnumValue(widget.data);
+        if (index >= 0 && index < widget.widgets.length) {
+            let widgetsItemChildren = item.children as DisplayItemChildrenArray;
+
+            return widgetsItemChildren[index];
+        }
+    }
+    return undefined;
+}
+
+function createWidgetTree(
+    widgetContainerDisplayItemOrObject: DisplayItem | EezObject,
+    draw: boolean
+) {
+    function enumWidgets(widgetContainerDisplayItem: DisplayItem) {
+        function enumWidget(
+            parentNode: TreeNode | undefined,
+            item: DisplayItem,
+            x: number,
+            y: number
+        ) {
+            let object = item.object as Widget.Widget | Page;
+
+            x += object.left || 0;
+            y += object.top || 0;
+
+            let rect = {
+                left: x,
+                top: y,
+                width: object.width,
+                height: object.height
+            };
+
+            let treeNode: TreeNode = {
+                parent: parentNode as TreeNode,
+                children: [],
+                rect: rect,
+                item: item,
+                isOpaque: object instanceof Widget.Widget && isWidgetOpaque(object)
+            };
+
+            if (parentNode) {
+                parentNode.children.push(treeNode);
+            }
+
+            if (!(object instanceof Widget.Widget)) {
+                let widgetsItemChildren = item.children;
+
+                if (!Array.isArray(widgetsItemChildren)) {
+                    widgetsItemChildren = widgetsItemChildren["widgets"].children;
+                }
+
+                (widgetsItemChildren as DisplayItemChildrenArray).forEach(child => {
+                    enumWidget(treeNode, child, x, y);
+                });
+            } else {
+                if (object.type == "Container") {
+                    let widgetsItemChildren = item.children as DisplayItemChildrenArray;
+                    widgetsItemChildren.forEach(child => {
+                        enumWidget(treeNode, child, x, y);
+                    });
+                } else if (object.type == "List") {
+                    let widget = object as Widget.ListWidget;
+                    let itemWidget = widget.itemWidget;
+                    if (itemWidget) {
+                        let itemWidgetItem = (item.children as DisplayItemChildrenObject)[
+                            "itemWidget"
+                        ];
+
+                        for (let i = 0; i < data.count(widget.data as string); i++) {
+                            enumWidget(treeNode, itemWidgetItem, x, y);
+
+                            if (widget.listType == "vertical") {
+                                y += itemWidget.height;
+                            } else {
+                                x += itemWidget.width;
+                            }
+                        }
+                    }
+                } else if (object.type == "Select") {
+                    let selectedWidgetItem = getSelectedWidgetForSelectWidget(
+                        widgetContainerDisplayItem,
+                        item
+                    );
+                    if (selectedWidgetItem) {
+                        enumWidget(treeNode, selectedWidgetItem, x, y);
+                    }
+                }
+            }
+
+            return treeNode;
+        }
+
+        return enumWidget(undefined, widgetContainerDisplayItem, 0, 0);
+    }
+
+    if (widgetContainerDisplayItemOrObject instanceof EezObject) {
+        return enumWidgets(new TreeObjectAdapter(widgetContainerDisplayItemOrObject));
+    } else {
+        return enumWidgets(widgetContainerDisplayItemOrObject);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class PageTransparencyGrid {
+    cols: {
+        x: number;
+        width: number;
+        rows: {
+            y: number;
+            height: number;
+            opaque: boolean;
+        }[];
+    }[];
+
+    constructor(rect: Rect) {
+        this.cols = [
+            {
+                x: rect.left,
+                width: rect.width,
+                rows: [
+                    {
+                        y: rect.top,
+                        height: rect.height,
+                        opaque: false
+                    }
+                ]
+            }
+        ];
+    }
+
+    private addCol(x: number) {
+        for (let iCol = 0; iCol < this.cols.length; iCol++) {
+            let col = this.cols[iCol];
+
+            if (x <= col.x) {
+                return;
+            }
+
+            if (x < col.x + col.width) {
+                let newCol = objectClone(col);
+
+                newCol.x = x;
+                newCol.width = col.x + col.width - x;
+
+                col.width = x - col.x;
+
+                this.cols.splice(iCol + 1, 0, newCol);
+
+                return;
+            }
+        }
+    }
+
+    private addRow(y: number) {
+        for (let iCol = 0; iCol < this.cols.length; iCol++) {
+            let col = this.cols[iCol];
+
+            for (let iRow = 0; iRow < col.rows.length; iRow++) {
+                let row = col.rows[iRow];
+
+                if (y <= row.y) {
+                    break;
+                }
+
+                if (y < row.y + row.height) {
+                    let newRow = objectClone(row);
+
+                    newRow.y = y;
+                    newRow.height = row.y + row.height - y;
+
+                    row.height = y - row.y;
+
+                    col.rows.splice(iRow + 1, 0, newRow);
+
+                    break;
+                }
+            }
+        }
+    }
+
+    private addRect(rect: Rect) {
+        this.addCol(rect.left);
+        this.addCol(rect.left + rect.width);
+        this.addRow(rect.top);
+        this.addRow(rect.top + rect.height);
+    }
+
+    addOpaqueRect(rect: Rect) {
+        if (rect.width > 0 || rect.height > 0) {
+            this.addRect(rect);
+
+            // mark as opaque
+            for (let iCol = 0; iCol < this.cols.length; iCol++) {
+                let col = this.cols[iCol];
+                if (col.x >= rect.left && col.x + col.width <= rect.left + rect.width) {
+                    for (let iRow = 0; iRow < col.rows.length; iRow++) {
+                        let row = col.rows[iRow];
+                        if (row.y >= rect.top && row.y + row.height <= rect.top + rect.height) {
+                            row.opaque = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    getMaxRectAtCell(iColStart: number, iRowStart: number): Rect {
+        let colStart = this.cols[iColStart];
+
+        let iColEnd: number;
+        for (iColEnd = iColStart + 1; iColEnd < this.cols.length; iColEnd++) {
+            let row = this.cols[iColEnd].rows[iRowStart];
+            if (row.opaque) {
+                break;
+            }
+            row.opaque = true;
+        }
+        iColEnd--;
+        let colEnd = this.cols[iColEnd];
+
+        let rowStart = colStart.rows[iRowStart];
+
+        let iRowEnd: number;
+        for (iRowEnd = iRowStart + 1; iRowEnd < colStart.rows.length; iRowEnd++) {
+            let opaque = false;
+
+            for (let iCol = iColStart; iCol <= iColEnd; iCol++) {
+                if (this.cols[iCol].rows[iRowEnd].opaque) {
+                    opaque = true;
+                    break;
+                }
+            }
+
+            if (opaque) {
+                break;
+            }
+
+            for (let iCol = iColStart; iCol <= iColEnd; iCol++) {
+                this.cols[iCol].rows[iRowEnd].opaque = true;
+            }
+        }
+        iRowEnd--;
+        let rowEnd = colEnd.rows[iRowEnd];
+
+        return {
+            left: colStart.x,
+            top: rowStart.y,
+            width: colEnd.x + colEnd.width - colStart.x,
+            height: rowEnd.y + rowEnd.height - rowStart.y
+        };
+    }
+
+    getTransparentRectangles(): Rect[] {
+        let rects: Rect[] = [];
+
+        for (let iCol = 0; iCol < this.cols.length; iCol++) {
+            let col = this.cols[iCol];
+            for (let iRow = 0; iRow < col.rows.length; iRow++) {
+                let row = col.rows[iRow];
+                if (!row.opaque) {
+                    let rect = this.getMaxRectAtCell(iCol, iRow);
+                    rects.push(rect);
+                }
+            }
+        }
+
+        return rects;
+    }
+}
+
+function findPageTransparentRectanglesInTree(tree: TreeNode): Rect[] {
+    let grid = new PageTransparencyGrid(tree.rect);
+
+    traverseTree(tree, node => {
+        if (node.isOpaque) {
+            grid.addOpaqueRect(node.rect);
+        }
+    });
+
+    return grid.getTransparentRectangles();
+}
+
+function findPageTransparentRectanglesInContainer(container: EezObject) {
+    return findPageTransparentRectanglesInTree(createWidgetTree(container, false));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,35 +461,35 @@ function getItem(
 
 function getPageLayoutIndex(object: any, propertyName: string) {
     const gui = getProperty(ProjectStore.project, "gui") as Gui;
-    const pages = gui.pages._array.filter(page => page.isUsedAsCustomWidget);
+    const pages = gui.pages.filter(page => page.isUsedAsCustomWidget);
     return getItem(pages, object, propertyName);
 }
 
 function getDataItemIndex(object: any, propertyName: string) {
-    const dataItems = (ProjectStore.project as Project).data._array;
+    const dataItems = asArray((ProjectStore.project as Project).data);
     return getItem(dataItems, object, propertyName);
 }
 
 function getActionIndex(object: any, propertyName: string) {
-    const actions = (ProjectStore.project as Project).actions._array;
+    const actions = asArray((ProjectStore.project as Project).actions);
     return getItem(actions, object, propertyName);
 }
 
 function getBitmapIndex(object: any, propertyName: string) {
     const gui = getProperty(ProjectStore.project, "gui") as Gui;
-    const bitmaps = gui.bitmaps._array;
+    const bitmaps = asArray(gui.bitmaps);
     return getItem(bitmaps, object, propertyName);
 }
 
 function getFontIndex(object: any, propertyName: string) {
     const gui = getProperty(ProjectStore.project, "gui") as Gui;
-    const fonts = gui.fonts._array;
+    const fonts = asArray(gui.fonts);
     return getItem(fonts, object, propertyName);
 }
 
 function getStyleIndex(object: any, propertyName: string) {
     const gui = getProperty(ProjectStore.project, "gui") as Gui;
-    const styles = gui.styles._array;
+    const styles = asArray(gui.styles);
 
     let itemName = object[propertyName];
     if (itemName.inheritFrom) {
@@ -167,7 +513,7 @@ function getStyleIndex(object: any, propertyName: string) {
 
 function getDefaultStyleIndex() {
     const gui = getProperty(ProjectStore.project, "gui") as Gui;
-    const styles = gui.styles._array;
+    const styles = asArray(gui.styles);
     for (let i = 0; i < styles.length; i++) {
         if (styles[i].name === "default") {
             if (++i > 255) {
@@ -193,7 +539,7 @@ function buildWidgetText(text: string) {
 function buildGuiFontsEnum(project: Project) {
     let gui = getProperty(project, "gui") as Gui;
 
-    let fonts = gui.fonts._array.map(
+    let fonts = gui.fonts.map(
         font =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "FONT_ID_",
@@ -218,7 +564,7 @@ function buildGuiFontsDef(project: Project) {
     let fontItemDataList: string[] = [];
     let fontItemList: string[] = [];
 
-    gui.fonts._array.forEach(font => {
+    gui.fonts.forEach(font => {
         let fontItemDataName = projectBuild.getName(
             "font_data_",
             font.name,
@@ -254,7 +600,7 @@ function buildGuiFontsDef(project: Project) {
 function buildGuiBitmapsEnum(project: Project) {
     let gui = getProperty(project, "gui") as Gui;
 
-    let bitmaps = gui.bitmaps._array.map(
+    let bitmaps = gui.bitmaps.map(
         bitmap =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "BITMAP_ID_",
@@ -282,7 +628,7 @@ function buildGuiBitmapsDef(project: Project) {
     return new Promise<string>((resolve, reject) => {
         let gui = getProperty(project, "gui") as Gui;
 
-        if (gui.bitmaps._array.length === 0) {
+        if (gui.bitmaps.length === 0) {
             resolve(`Bitmap bitmaps[] = {
     { 0, 0, NULL }
 };`);
@@ -290,8 +636,8 @@ function buildGuiBitmapsDef(project: Project) {
         }
 
         let getBitmapDataPromises: Promise<BitmapData>[] = [];
-        for (let i = 0; i < gui.bitmaps._array.length; i++) {
-            getBitmapDataPromises.push(getBitmapData(gui.bitmaps._array[i]));
+        for (let i = 0; i < gui.bitmaps.length; i++) {
+            getBitmapDataPromises.push(getBitmapData(asArray(gui.bitmaps)[i]));
         }
 
         Promise.all(getBitmapDataPromises).then(bitmapsData => {
@@ -304,12 +650,12 @@ function buildGuiBitmapsDef(project: Project) {
                 height: number;
                 pixels: number[];
             }[] = [];
-            for (let i = 0; i < gui.bitmaps._array.length; i++) {
+            for (let i = 0; i < gui.bitmaps.length; i++) {
                 bitmaps.push({
-                    name: gui.bitmaps._array[i].name,
+                    name: asArray(gui.bitmaps)[i].name,
                     width: bitmapsData[i].width,
                     height: bitmapsData[i].height,
-                    pixels: fixDataForMegaBootloader(bitmapsData[i].pixels, gui.bitmaps._array[i])
+                    pixels: fixDataForMegaBootloader(bitmapsData[i].pixels, asArray(gui.bitmaps)[i])
                 });
             }
 
@@ -499,7 +845,7 @@ class Int16 extends Field {
 function buildGuiStylesEnum(project: Project) {
     let gui = getProperty(project, "gui") as Gui;
 
-    let styles = gui.styles._array.map(
+    let styles = gui.styles.map(
         style =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "STYLE_ID_",
@@ -590,7 +936,7 @@ function buildGuiStylesDef(project: Project) {
 
         let styles = new ObjectList();
 
-        gui.styles._array.forEach(style => {
+        gui.styles.forEach(style => {
             styles.addItem(buildStyle(style));
         });
 
@@ -750,7 +1096,7 @@ function buildWidget(object: Widget.Widget | Page) {
         // widgets
         let childWidgets = new ObjectList();
         if (widgets) {
-            widgets._array.forEach(childWidget => {
+            widgets.forEach(childWidget => {
                 childWidgets.addItem(buildWidget(childWidget));
             });
         }
@@ -786,7 +1132,7 @@ function buildWidget(object: Widget.Widget | Page) {
         // widgets
         let childWidgets = new ObjectList();
         if (widget.widgets) {
-            widget.widgets._array.forEach(childWidget => {
+            widget.widgets.forEach(childWidget => {
                 childWidgets.addItem(buildWidget(childWidget));
             });
         }
@@ -1173,7 +1519,7 @@ function buildWidget(object: Widget.Widget | Page) {
 function buildGuiPagesEnum(project: Project) {
     let gui = getProperty(project, "gui") as Gui;
 
-    let pages = gui.pages._array
+    let pages = asArray(gui.pages)
         .filter(page => !page.isUsedAsCustomWidget)
         .map(
             widget =>
@@ -1198,7 +1544,7 @@ function buildGuiDocumentDef(project: Project, orientation: "portrait" | "landsc
 
         // widgets
         let childWidgets = new ObjectList();
-        customWidget.widgets._array.forEach(childWidget => {
+        customWidget.widgets.forEach(childWidget => {
             childWidgets.addItem(buildWidget(childWidget));
         });
 
@@ -1237,7 +1583,7 @@ function buildGuiDocumentDef(project: Project, orientation: "portrait" | "landsc
         let gui = getProperty(project, "gui") as Gui;
 
         let customWidgets = new ObjectList();
-        gui.pages._array
+        asArray(gui.pages)
             .filter(page => page.isUsedAsCustomWidget)
             .forEach(customWidget => {
                 customWidgets.addItem(buildCustomWidget(customWidget));
@@ -1245,7 +1591,7 @@ function buildGuiDocumentDef(project: Project, orientation: "portrait" | "landsc
         document.addField(customWidgets);
 
         let pages = new ObjectList();
-        gui.pages._array
+        asArray(gui.pages)
             .filter(page => !page.isUsedAsCustomWidget)
             .forEach(page => {
                 pages.addItem(buildPage(page));

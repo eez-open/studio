@@ -51,37 +51,33 @@ export class ConfigurationReferencesPropertyValue extends React.Component<
                 </div>
                 {this.props.value && (
                     <ConfigurationReferencesPropertyValueConfigurationsDiv>
-                        {ProjectStore.project.settings.build.configurations._array.map(
-                            configuration => {
-                                return (
-                                    <div key={configuration.name} className="checkbox">
-                                        <label>
-                                            <input
-                                                type="checkbox"
-                                                checked={
-                                                    this.props.value!.indexOf(
-                                                        configuration.name
-                                                    ) !== -1
+                        {ProjectStore.project.settings.build.configurations.map(configuration => {
+                            return (
+                                <div key={configuration.name} className="checkbox">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={
+                                                this.props.value!.indexOf(configuration.name) !== -1
+                                            }
+                                            onChange={event => {
+                                                let value = this.props.value!.slice();
+                                                if (event.target.checked) {
+                                                    value.push(configuration.name);
+                                                } else {
+                                                    value.splice(
+                                                        value.indexOf(configuration.name),
+                                                        1
+                                                    );
                                                 }
-                                                onChange={event => {
-                                                    let value = this.props.value!.slice();
-                                                    if (event.target.checked) {
-                                                        value.push(configuration.name);
-                                                    } else {
-                                                        value.splice(
-                                                            value.indexOf(configuration.name),
-                                                            1
-                                                        );
-                                                    }
-                                                    this.props.onChange(value);
-                                                }}
-                                            />
-                                            {" " + configuration.name}
-                                        </label>
-                                    </div>
-                                );
-                            }
-                        )}
+                                                this.props.onChange(value);
+                                            }}
+                                        />
+                                        {" " + configuration.name}
+                                    </label>
+                                </div>
+                            );
+                        })}
                     </ConfigurationReferencesPropertyValueConfigurationsDiv>
                 )}
             </ConfigurationReferencesPropertyValueDiv>

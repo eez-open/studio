@@ -16,11 +16,13 @@ import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
 
-import { IPropertyGridGroupDefinition } from "project-editor/core/object";
-import { NavigationStore, UndoManager, DocumentStore } from "project-editor/core/store";
-import { ProjectStore } from "project-editor/core/store";
+import {
+    NavigationStore,
+    UndoManager,
+    DocumentStore,
+    ProjectStore
+} from "project-editor/core/store";
 import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
-
 import {
     EezObject,
     EezArrayObject,
@@ -38,7 +40,8 @@ import {
     PropertyProps,
     getCommonProperties,
     getPropertySourceInfo,
-    isAnyPropertyModified
+    isAnyPropertyModified,
+    IPropertyGridGroupDefinition
 } from "project-editor/core/object";
 
 import { replaceObjectReference } from "project-editor/core/search";
@@ -480,7 +483,7 @@ class ArrayProperty extends React.Component<PropertyProps> {
             </button>
         );
 
-        if (!this.value || this.value._array.length === 0) {
+        if (!this.value || this.value.length === 0) {
             return addButton;
         }
 
@@ -501,7 +504,7 @@ class ArrayProperty extends React.Component<PropertyProps> {
                 </thead>
                 <tbody>
                     {this.value &&
-                        this.value._array.map(object => (
+                        this.value.map(object => (
                             <ArrayElementProperties key={object._id} object={object} />
                         ))}
                 </tbody>
@@ -758,6 +761,7 @@ class Property extends React.Component<PropertyProps> {
                             end: input.selectionEnd
                         }
                     };
+                    console.log(params);
                 }
             }
 

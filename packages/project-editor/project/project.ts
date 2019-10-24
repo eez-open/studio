@@ -309,14 +309,14 @@ export class Project extends EezObject {
     @computed
     get dataItemsMap() {
         const map = new Map<String, DataItem>();
-        this.data._array.forEach(dataItem => map.set(dataItem.name, dataItem));
+        this.data.forEach(dataItem => map.set(dataItem.name, dataItem));
         return map;
     }
 
     @computed
     get actionsMap() {
         const map = new Map<String, Action>();
-        this.actions._array.forEach(action => map.set(action.name, action));
+        this.actions.forEach(action => map.set(action.name, action));
         return map;
     }
 

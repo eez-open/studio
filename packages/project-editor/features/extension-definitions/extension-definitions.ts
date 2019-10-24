@@ -217,7 +217,7 @@ export class ExtensionDefinition extends EezObject {
             "extensionDefinitions"
         ) as EezArrayObject<ExtensionDefinition>;
         if (
-            extensionDefinitions._array.find(
+            extensionDefinitions.find(
                 extensionDefinition =>
                     extensionDefinition !== this && extensionDefinition.idfGuid === this.idfGuid
             )
@@ -244,7 +244,7 @@ export function findExtensionDefinition(name: string) {
         ProjectStore.project,
         "extensionDefinitions"
     ) as EezArrayObject<ExtensionDefinition>;
-    for (const extensionDefinition of extensionDefinitions._array) {
+    for (const extensionDefinition of asArray(extensionDefinitions)) {
         if (extensionDefinition.name == name) {
             return extensionDefinition;
         }

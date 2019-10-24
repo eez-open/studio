@@ -99,7 +99,7 @@ class Toolbar extends React.Component {
     }
 
     render() {
-        let configurations = ProjectStore.project.settings.build.configurations._array.map(
+        let configurations = ProjectStore.project.settings.build.configurations.map(
             (item: BuildConfiguration) => {
                 return (
                     <option key={item.name} value={item.name}>

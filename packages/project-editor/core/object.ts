@@ -347,6 +347,30 @@ export class EezArrayObject<T> extends EezObject {
     get _class() {
         return this._propertyInfo!.typeClass!;
     }
+
+    get length() {
+        return this._array.length;
+    }
+
+    indexOf(value: T) {
+        return this._array.indexOf(value);
+    }
+
+    forEach(callback: (value: T, index: number, array: T[]) => void) {
+        this._array.forEach(callback);
+    }
+
+    map<U>(callback: (value: T, index: number, array: T[]) => U): U[] {
+        return this._array.map(callback);
+    }
+
+    find(callback: (value: T, index: number, array: T[]) => boolean) {
+        return this._array.find(callback);
+    }
+
+    filter(callback: (value: T, index: number, array: T[]) => boolean): T[] {
+        return this._array.filter(callback);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -433,27 +457,6 @@ export function isObjectInstanceOf(object: EezObject, baseClassInfo: ClassInfo) 
     return isSubclassOf(object._classInfo, baseClassInfo);
 }
 
-export function isSameInstanceTypeAs(object1: EezObject, object2: EezObject) {
-    if (!object1 || !object2) {
-        return false;
-    }
-    return object1._classInfo === object2._classInfo;
-}
-
-export function isEqual(object1: EezObject, object2: EezObject) {
-    if (isValue(object1)) {
-        if (!isValue(object1)) {
-            return false;
-        }
-        return object1._parent == object2._parent && object1._key == object2._key;
-    } else {
-        if (isValue(object1)) {
-            return false;
-        }
-        return object1 == object2;
-    }
-}
-
 export function isValue(object: EezObject | undefined) {
     return !!object && object instanceof EezValueObject;
 }
@@ -462,11 +465,11 @@ export function isObject(object: EezObject | undefined) {
     return !!object && !isValue(object) && !isArray(object);
 }
 
-export function isArray(object: EezObject | undefined) {
+export function isArray(object: EezObject | undefined): object is EezArrayObject<EezObject> {
     return !!object && !isValue(object) && object instanceof EezArrayObject;
 }
 
-export function asArray<T = EezObject>(object: EezObject) {
+export function asArray<T = EezObject>(object: EezObject | EezArrayObject<T>) {
     return object && ((object as EezArrayObject<T>)._array as T[]);
 }
 
@@ -603,7 +606,9 @@ export function getPropertyAsString(object: EezObject, propertyInfo: PropertyInf
         return value;
     }
     if (value instanceof EezArrayObject) {
-        return (value as EezArrayObject<EezObject>)._array.map(object => object._label).join(", ");
+        return asArray(value as EezArrayObject<EezObject>)
+            .map(object => object._label)
+            .join(", ");
     }
     if (value instanceof EezObject) {
         return objectToString(value);
@@ -704,8 +709,8 @@ export function getAncestorOfType(object: EezObject, classInfo: ClassInfo): EezO
 export function getObjectPath(object: EezObject): (string | number)[] {
     let parent = object._parent;
     if (parent) {
-        if (isArrayElement(object)) {
-            return getObjectPath(parent).concat(asArray(parent).indexOf(object as EezObject));
+        if (isArray(parent)) {
+            return getObjectPath(parent).concat(parent.indexOf(object as EezObject));
         } else {
             return getObjectPath(parent).concat(object._key as string);
         }
@@ -740,7 +745,7 @@ export function getAncestors(
     }
 
     if (isArray(ancestor)) {
-        let possibleAncestor = asArray(ancestor).find(
+        let possibleAncestor = ancestor.find(
             possibleAncestor =>
                 object == possibleAncestor || object._id.startsWith(possibleAncestor._id + ".")
         );
@@ -810,7 +815,7 @@ export function isObjectExists(object: EezObject) {
     let parent = object._parent;
     if (parent) {
         if (isArray(parent)) {
-            if (asArray(parent).indexOf(object) === -1) {
+            if (parent.indexOf(object) === -1) {
                 return false;
             }
         } else {
@@ -850,7 +855,7 @@ export function getObjectFromObjectId(
         }
 
         if (isArray(object)) {
-            let childObject = asArray(object).find(
+            let childObject = object.find(
                 child => id == child._id || id.startsWith(child._id + ".")
             );
             if (childObject) {

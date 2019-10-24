@@ -142,7 +142,7 @@ function getSectionNames(): string[] {
 
     const sectionNames: string[] = [];
 
-    project.settings.build.files._array.forEach(buildFile => {
+    project.settings.build.files.forEach(buildFile => {
         let result;
         while ((result = sectionNamesRegexp.exec(buildFile.template)) !== null) {
             sectionNames.push(result[1]);
@@ -175,9 +175,9 @@ async function generateFiles(
 ) {
     const build = ProjectStore.project.settings.build;
 
-    for (const buildFile of build.files._array) {
+    for (const buildFile of asArray(build.files)) {
         if (buildFile.fileName.indexOf("<configuration>") !== -1) {
-            for (const configuration of build.configurations._array) {
+            for (const configuration of asArray(build.configurations)) {
                 await generateFile(
                     configurationBuildResults[configuration.name],
                     buildFile,
@@ -201,7 +201,7 @@ async function generateFiles(
 }
 
 function anythingToBuild() {
-    if (ProjectStore.project.settings.build.files._array.length > 0) {
+    if (ProjectStore.project.settings.build.files.length > 0) {
         return true;
     }
     return extensionDefinitionAnythingToBuild();
@@ -243,9 +243,11 @@ export async function build(onlyCheck: boolean) {
 
         if (
             ProjectStore.project.settings.general.projectVersion !== "v1" &&
-            ProjectStore.project.settings.build.configurations._array.length > 0
+            ProjectStore.project.settings.build.configurations.length > 0
         ) {
-            for (const configuration of ProjectStore.project.settings.build.configurations._array) {
+            for (const configuration of asArray(
+                ProjectStore.project.settings.build.configurations
+            )) {
                 OutputSectionsStore.write(
                     Section.OUTPUT,
                     Type.INFO,
@@ -259,7 +261,7 @@ export async function build(onlyCheck: boolean) {
         } else {
             const selectedBuildConfiguration =
                 ProjectStore.selectedBuildConfiguration ||
-                ProjectStore.project.settings.build.configurations._array[0];
+                asArray(ProjectStore.project.settings.build.configurations)[0];
             if (selectedBuildConfiguration) {
                 OutputSectionsStore.write(
                     Section.OUTPUT,

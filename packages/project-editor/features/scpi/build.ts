@@ -30,8 +30,8 @@ function buildScpiCommandsDecl(project: Project) {
 
     let commands: string[] = [];
 
-    projectActions.subsystems._array.forEach(subsystem => {
-        subsystem.commands._array.forEach(command => {
+    projectActions.subsystems.forEach(subsystem => {
+        subsystem.commands.forEach(command => {
             commands.push(
                 `${projectBuild.TAB}SCPI_COMMAND("${cleanUpCommandName(
                     command

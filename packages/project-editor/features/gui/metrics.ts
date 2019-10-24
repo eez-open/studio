@@ -10,9 +10,9 @@ export function metrics(project: Project): { [key: string]: string | number } {
 
     return {
         GUI: "",
-        "<span class='td-indent'>Pages</span>": gui.pages._array.length,
-        "<span class='td-indent'>Styles</span>": gui.styles._array.length,
-        "<span class='td-indent'>Fonts</span>": gui.fonts._array.length,
-        "<span class='td-indent'>Bitmaps</span>": gui.bitmaps._array.length
+        "<span class='td-indent'>Pages</span>": gui.pages.length,
+        "<span class='td-indent'>Styles</span>": gui.styles.length,
+        "<span class='td-indent'>Fonts</span>": gui.fonts.length,
+        "<span class='td-indent'>Bitmaps</span>": gui.bitmaps.length
     };
 }

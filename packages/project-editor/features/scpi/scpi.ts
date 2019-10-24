@@ -92,7 +92,7 @@ export class ScpiParameterType extends EezObject implements IParameterType {
 }
 
 function getScpiType(object: ScpiParameter, type: ParameterTypeType) {
-    return object.type._array.find(scpiType => scpiType.type === type);
+    return object.type.find(scpiType => scpiType.type === type);
 }
 
 function isScpiType(object: ScpiParameter, type: ParameterTypeType) {
@@ -364,7 +364,7 @@ export class ScpiParameter extends EezObject {
             }
         }
 
-        if (!this.type || this.type._array.length === 0) {
+        if (!this.type || this.type.length === 0) {
             messages.push(output.propertyNotSetMessage(this, "type"));
         }
 
