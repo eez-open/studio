@@ -1529,19 +1529,24 @@ class Assets {
     reportUnusedAssets() {
         let gui = getProperty(this.project, "gui") as Gui;
 
-        gui.pages.forEach(page => {
-            if (this.pages.indexOf(page) === -1) {
-                OutputSectionsStore.write(
-                    output.Section.OUTPUT,
-                    output.Type.INFO,
-                    "Unused page: " + page.name,
-                    page
-                );
-            }
-        });
-
         gui.styles.forEach(style => {
-            if (this.styles.indexOf(style) === -1) {
+            if (
+                !this.styles.find(usedStyle => {
+                    if (usedStyle == style) {
+                        return true;
+                    }
+
+                    let baseStyle = findStyle(usedStyle.inheritFrom);
+                    while (baseStyle) {
+                        if (baseStyle == style) {
+                            return true;
+                        }
+                        baseStyle = findStyle(baseStyle.inheritFrom);
+                    }
+
+                    return false;
+                })
+            ) {
                 OutputSectionsStore.write(
                     output.Section.OUTPUT,
                     output.Type.INFO,

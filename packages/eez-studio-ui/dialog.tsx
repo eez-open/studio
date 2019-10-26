@@ -146,16 +146,15 @@ export class Dialog extends React.Component<
     }
 }
 
-export function showDialog(
-    dialog: JSX.Element,
-    opts?: {
-        id?: string;
-        jsPanel?: {
-            title: string;
-            width: number;
-        };
-    }
-) {
+export interface IDialogOptions {
+    id?: string;
+    jsPanel?: {
+        title: string;
+        width: number;
+    };
+}
+
+export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
     let element = document.createElement("div");
     if (opts && opts.id) {
         element.id = opts.id;

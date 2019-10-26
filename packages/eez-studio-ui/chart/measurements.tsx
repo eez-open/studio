@@ -420,9 +420,7 @@ class Measurement {
         const chartControllers = this.measurementsController.chartsController.chartControllers;
         if (chartControllers.length > 1) {
             if (this.arity === 1) {
-                return `${this.name} (${
-                    chartControllers[this.chartIndex].yAxisController.axisModel.label
-                })`;
+                return `${this.name} (${chartControllers[this.chartIndex].yAxisController.axisModel.label})`;
             } else {
                 return `${this.name} (${this.chartIndexes
                     .map(chartIndex => chartControllers[chartIndex].yAxisController.axisModel.label)
@@ -933,7 +931,7 @@ class MeasurementComponent extends React.Component<{
                         dialogDefinition={this.dialogDefinition}
                         dialogContext={measurement}
                         values={this.dialogValues}
-                        modal={false}
+                        embedded={true}
                         onValueChange={this.onValueChange}
                     />
                 </td>

@@ -55,12 +55,13 @@ export function getName(prefix: string, name: string, namingConvention: NamingCo
 ////////////////////////////////////////////////////////////////////////////////
 
 export function dumpData(data: number[] | Buffer) {
+    const NUMBERS_PER_LINE = 16;
     let result = "";
     _map(data, value => "0x" + formatNumber(value, 16, 2)).forEach((value, index) => {
         if (result.length > 0) {
             result += ",";
         }
-        if (index % 16 == 0) {
+        if (index % NUMBERS_PER_LINE == 0) {
             result += "\n" + TAB;
         } else {
             result += " ";
@@ -220,6 +221,7 @@ export async function build(onlyCheck: boolean) {
 
     OutputSectionsStore.setLoading(Section.OUTPUT, true);
 
+    // give some time for loader to start
     await new Promise(resolve => setTimeout(resolve, 50));
 
     try {
@@ -272,6 +274,11 @@ export async function build(onlyCheck: boolean) {
                     sectionNames,
                     selectedBuildConfiguration
                 );
+            } else {
+                configurationBuildResuts["default"] = await getBuildResults(
+                    sectionNames,
+                    undefined
+                );
             }
         }
 
@@ -306,29 +313,6 @@ export async function build(onlyCheck: boolean) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-var enumTransformer: (object: EezObject) => EezObject[] = createTransformer(
-    (object: EezObject): EezObject[] => {
-        const objects = [object];
-
-        if (isArray(object)) {
-            // check array elements
-            for (const childObject of asArray(object)) {
-                objects.push(...enumTransformer(childObject));
-            }
-        } else {
-            // check all child array and object properties
-            for (const propertyInfo of getArrayAndObjectProperties(object)) {
-                const childObject = (object as any)[propertyInfo.name];
-                if (childObject) {
-                    objects.push(...enumTransformer(childObject));
-                }
-            }
-        }
-
-        return objects;
-    }
-);
 
 var checkTransformer: (object: EezObject) => IMessage[] = createTransformer(
     (object: EezObject): IMessage[] => {

@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 const LZ4 = require("lz4");
@@ -62,7 +62,7 @@ function formatEncoding(encoding: number) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function selectGlyph(glyph: Glyph) {
+export function browseGlyph(glyph: Glyph) {
     function isFont(obj: any) {
         return obj["filePath"];
     }
@@ -75,9 +75,11 @@ export function selectGlyph(glyph: Glyph) {
         return isNonBdfFont(obj) && obj["bpp"] === 1;
     }
 
+    const title = "Select Glyph";
+
     return showGenericDialog({
         dialogDefinition: {
-            title: "Select Glyph",
+            title,
             size: "large",
             fields: [
                 {
@@ -120,7 +122,13 @@ export function selectGlyph(glyph: Glyph) {
         },
         values: Object.assign({}, glyph.source && objectToJS(glyph.source), {
             bpp: glyph.getFont().bpp
-        })
+        }),
+        opts: {
+            jsPanel: {
+                title,
+                width: 1200
+            }
+        }
     }).then(result => {
         return {
             x: result.context.encoding.glyph.x,
@@ -334,7 +342,7 @@ export class Glyph extends EezObject {
                 name: "source",
                 type: PropertyType.Object,
                 typeClass: GlyphSource,
-                onSelect: selectGlyph
+                onSelect: browseGlyph
             },
             {
                 name: "glyphBitmap",
@@ -860,20 +868,12 @@ registerClass(Glyph);
 ////////////////////////////////////////////////////////////////////////////////
 
 const GlyphSelectFieldContainerDiv = styled.div`
-    height: 600px;
     border: 1px solid ${props => props.theme.borderColor};
     display: flex;
 `;
 
 @observer
-export class GlyphSelectFieldType extends React.Component<
-    IFieldComponentProps,
-    {
-        isLoading: boolean;
-        font?: Font;
-        selectedGlyph?: Glyph;
-    }
-> {
+export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> {
     fontFilePath: string;
     fontBpp: number;
     fontSize: number;
@@ -884,13 +884,56 @@ export class GlyphSelectFieldType extends React.Component<
     glyphs: any;
     glyphsContainer: any;
 
-    constructor(props: IFieldComponentProps) {
-        super(props);
-        this.state = {
-            isLoading: false,
-            font: undefined,
-            selectedGlyph: undefined
-        };
+    @observable isLoading: boolean;
+    font?: Font;
+    selectedGlyph?: Glyph;
+
+    static MAX_CACHED_FONTS = 5;
+
+    static fontsCache: {
+        font: Font;
+        fontFilePath: string;
+        fontBpp: number;
+        fontSize: number;
+        fontThreshold: number;
+    }[] = [];
+
+    static getFontFromCache(
+        fontFilePath: string,
+        fontBpp: number,
+        fontSize: number,
+        fontThreshold: number
+    ) {
+        for (let cachedFont of GlyphSelectFieldType.fontsCache) {
+            if (
+                cachedFont.fontFilePath === fontFilePath &&
+                cachedFont.fontBpp === fontBpp &&
+                cachedFont.fontSize === fontSize &&
+                cachedFont.fontThreshold === fontThreshold
+            ) {
+                return cachedFont.font;
+            }
+        }
+        return undefined;
+    }
+
+    static putFontInCache(
+        font: Font,
+        fontFilePath: string,
+        fontBpp: number,
+        fontSize: number,
+        fontThreshold: number
+    ) {
+        GlyphSelectFieldType.fontsCache.push({
+            font,
+            fontFilePath,
+            fontBpp,
+            fontSize,
+            fontThreshold
+        });
+        if (GlyphSelectFieldType.fontsCache.length > GlyphSelectFieldType.MAX_CACHED_FONTS) {
+            GlyphSelectFieldType.fontsCache.shift();
+        }
     }
 
     componentDidMount() {
@@ -901,6 +944,7 @@ export class GlyphSelectFieldType extends React.Component<
         this.loadFont();
     }
 
+    @action
     loadFont() {
         let fontFilePath: string = this.props.values[
             this.props.fieldProperties.options.fontFilePathField
@@ -947,40 +991,63 @@ export class GlyphSelectFieldType extends React.Component<
             this.fontSize = fontSize;
             this.fontThreshold = fontThreshold;
 
-            if (this.timeoutId) {
-                clearTimeout(this.timeoutId);
-            }
-            this.timeoutId = setTimeout(() => {
-                extractFont({
-                    absoluteFilePath: ProjectStore.getAbsoluteFilePath(fontFilePath),
-                    relativeFilePath: fontFilePath,
-                    bpp: fontBpp,
-                    size: fontSize,
-                    threshold: fontThreshold,
-                    createGlyphs: true
-                })
-                    .then((fontValue: FontValue) => {
-                        const font: Font = loadObject(undefined, fontValue, Font) as Font;
-                        this.onChange(
-                            font,
-                            font.glyphs.find(
-                                glyph =>
-                                    glyph.encoding ==
-                                    this.props.values[this.props.fieldProperties.name]
-                            )
-                        );
+            const font = GlyphSelectFieldType.getFontFromCache(
+                fontFilePath,
+                fontBpp,
+                fontSize,
+                fontThreshold
+            );
+            if (font) {
+                this.onChange(
+                    font,
+                    font.glyphs.find(
+                        glyph =>
+                            glyph.encoding == this.props.values[this.props.fieldProperties.name]
+                    )
+                );
+            } else {
+                if (this.timeoutId) {
+                    clearTimeout(this.timeoutId);
+                }
+                this.timeoutId = setTimeout(() => {
+                    extractFont({
+                        absoluteFilePath: ProjectStore.getAbsoluteFilePath(fontFilePath),
+                        relativeFilePath: fontFilePath,
+                        bpp: fontBpp,
+                        size: fontSize,
+                        threshold: fontThreshold,
+                        createGlyphs: true
                     })
-                    .catch(error => {
-                        console.error(error);
-                        this.onChange(undefined, undefined);
-                    });
-            }, 1000);
+                        .then((fontValue: FontValue) => {
+                            const font: Font = loadObject(undefined, fontValue, Font) as Font;
 
-            this.setState({
-                isLoading: true,
-                font: undefined,
-                selectedGlyph: undefined
-            });
+                            GlyphSelectFieldType.putFontInCache(
+                                font,
+                                fontFilePath,
+                                fontBpp,
+                                fontSize,
+                                fontThreshold
+                            );
+
+                            this.onChange(
+                                font,
+                                font.glyphs.find(
+                                    glyph =>
+                                        glyph.encoding ==
+                                        this.props.values[this.props.fieldProperties.name]
+                                )
+                            );
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            this.onChange(undefined, undefined);
+                        });
+                }, 1000);
+
+                this.isLoading = true;
+                this.font = undefined;
+                this.selectedGlyph = undefined;
+            }
         } else {
             if (this.glyphs) {
                 this.glyphs.ensureVisible();
@@ -988,12 +1055,11 @@ export class GlyphSelectFieldType extends React.Component<
         }
     }
 
+    @action
     onChange(font: Font | undefined, glyph: Glyph | undefined) {
-        this.setState({
-            isLoading: false,
-            font: font,
-            selectedGlyph: glyph
-        });
+        this.isLoading = false;
+        this.font = font;
+        this.selectedGlyph = glyph;
 
         this.props.onChange((glyph && glyph.encoding) || undefined);
 
@@ -1004,32 +1070,29 @@ export class GlyphSelectFieldType extends React.Component<
     }
 
     onSelectGlyph(glyph: Glyph) {
-        this.onChange(this.state.font, glyph);
+        this.onChange(this.font, glyph);
     }
 
-    onDoubleClickGlyph(glyph: Glyph) {}
+    onDoubleClickGlyph(glyph: Glyph) {
+        this.onSelectGlyph(glyph);
+        this.props.onOk();
+    }
 
     render() {
-        if (this.state.font) {
+        if (this.font) {
             return (
                 <GlyphSelectFieldContainerDiv ref={(ref: any) => (this.glyphsContainer = ref)}>
                     <Glyphs
                         ref={ref => (this.glyphs = ref!)}
-                        glyphs={asArray(this.state.font.glyphs)}
-                        selectedGlyph={this.state.selectedGlyph}
+                        glyphs={asArray(this.font.glyphs)}
+                        selectedGlyph={this.selectedGlyph}
                         onSelectGlyph={this.onSelectGlyph.bind(this)}
                         onDoubleClickGlyph={this.onDoubleClickGlyph.bind(this)}
                     />
                 </GlyphSelectFieldContainerDiv>
             );
-        } else if (this.state.isLoading) {
-            return (
-                <div className="form-control-static">
-                    <Loader />
-                </div>
-            );
         } else {
-            return <div className="form-control-static" />;
+            return <div style={{ padding: 20 }}>{this.isLoading && <Loader />}</div>;
         }
     }
 }
@@ -1143,6 +1206,7 @@ class Glyphs extends React.Component<{
     onSelectGlyph: (glyph: Glyph) => void;
     onDoubleClickGlyph: (glyph: Glyph) => void;
     onRebuildGlyphs?: () => void;
+    onBrowseGlyph?: () => void;
     onAddGlyph?: () => void;
     onDeleteGlyph?: () => void;
     onCreateShadow?: () => void;
@@ -1198,7 +1262,19 @@ class Glyphs extends React.Component<{
                 <TextAction
                     text="Rebuild"
                     title="Rebuild Glyphs"
-                    onClick={this.props.onRebuildGlyphs.bind(this)}
+                    onClick={this.props.onRebuildGlyphs}
+                />
+            );
+        }
+
+        let browseGlyphButton: JSX.Element | undefined;
+        if (this.props.onBrowseGlyph) {
+            browseGlyphButton = (
+                <IconAction
+                    title="Select Glyph"
+                    icon="material:more_horiz"
+                    iconSize={16}
+                    onClick={this.props.onBrowseGlyph}
                 />
             );
         }
@@ -1210,7 +1286,7 @@ class Glyphs extends React.Component<{
                     title="Add Glyph"
                     icon="material:add"
                     iconSize={16}
-                    onClick={this.props.onAddGlyph.bind(this)}
+                    onClick={this.props.onAddGlyph}
                 />
             );
         }
@@ -1248,8 +1324,8 @@ class Glyphs extends React.Component<{
                             onChange={this.onSearchChange}
                             onKeyDown={this.onSearchChange}
                         />
-                        <div style={{ flexGrow: 1 }} />
                         {rebuildGlyphsButton}
+                        {browseGlyphButton}
                         {addGlyphButton}
                         {deleteGlyphButton}
                         {createShadowButton}
@@ -1437,12 +1513,19 @@ export class FontEditor
     }
 
     @bind
-    onDoubleClickGlyph(glyph: Glyph) {
-        selectGlyph(glyph)
+    onBrowseGlyph(glyph: Glyph) {
+        browseGlyph(glyph)
             .then(propertyValues => {
                 DocumentStore.updateObject(glyph, propertyValues);
             })
             .catch(error => console.error(error));
+    }
+
+    @bind
+    onBrowseSelectedGlyph() {
+        if (this.selectedGlyph) {
+            this.onBrowseGlyph(this.selectedGlyph);
+        }
     }
 
     get selectedObject() {
@@ -1631,11 +1714,11 @@ export class FontEditor
     render() {
         const font = this.props.font;
 
+        const isDialog = !!this.props.navigationStore;
+        const selectedGlyph = this.selectedGlyph;
+
         let onDeleteGlyph: (() => void) | undefined;
-        if (
-            this.selectedGlyph &&
-            asArray(font.glyphs)[font.glyphs.length - 1] == this.selectedGlyph
-        ) {
+        if (selectedGlyph && asArray(font.glyphs)[font.glyphs.length - 1] == this.selectedGlyph) {
             onDeleteGlyph = this.onDeleteGlyph;
         }
 
@@ -1644,11 +1727,12 @@ export class FontEditor
                 glyphs={asArray(this.glyphs)}
                 selectedGlyph={this.selectedGlyph}
                 onSelectGlyph={this.onSelectGlyph}
-                onDoubleClickGlyph={this.props.onDoubleClickItem || this.onDoubleClickGlyph}
-                onRebuildGlyphs={this.props.navigationStore ? undefined : this.onRebuildGlyphs}
-                onAddGlyph={this.props.navigationStore ? undefined : this.onAddGlyph}
-                onDeleteGlyph={this.props.navigationStore ? undefined : onDeleteGlyph}
-                onCreateShadow={this.props.navigationStore ? undefined : this.onCreateShadow}
+                onDoubleClickGlyph={this.props.onDoubleClickItem || this.onBrowseGlyph}
+                onRebuildGlyphs={!isDialog ? this.onRebuildGlyphs : undefined}
+                onBrowseGlyph={isDialog && selectedGlyph ? this.onBrowseSelectedGlyph : undefined}
+                onAddGlyph={this.onAddGlyph}
+                onDeleteGlyph={onDeleteGlyph}
+                onCreateShadow={!isDialog ? this.onCreateShadow : undefined}
             />
         );
 

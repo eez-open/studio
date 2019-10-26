@@ -371,6 +371,10 @@ export class EezArrayObject<T> extends EezObject {
     filter(callback: (value: T, index: number, array: T[]) => boolean): T[] {
         return this._array.filter(callback);
     }
+
+    slice(start?: number | undefined, end?: number | undefined): T[] {
+        return this._array.slice(start, end);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

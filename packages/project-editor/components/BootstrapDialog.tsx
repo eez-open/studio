@@ -15,6 +15,7 @@ const NonModalDialogContainer = styled.div`
     & > :nth-child(1) {
         flex-grow: 1;
         display: flex;
+        overflow: auto;
     }
     & > :nth-child(2) {
         padding: 10px;

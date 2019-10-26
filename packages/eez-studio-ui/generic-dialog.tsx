@@ -8,7 +8,7 @@ import { UNITS } from "eez-studio-shared/units";
 
 import { Rule, validators } from "eez-studio-shared/validation";
 
-import { Dialog, showDialog } from "eez-studio-ui/dialog";
+import { Dialog, showDialog, IDialogOptions } from "eez-studio-ui/dialog";
 import {
     PropertyList,
     PropertyEnclosure,
@@ -49,6 +49,7 @@ export interface IFieldComponentProps {
     values: any;
     fieldContext: any;
     onChange: (event: any) => void;
+    onOk: () => void;
 }
 
 export class FieldComponent extends React.Component<IFieldComponentProps, any> {}
@@ -96,7 +97,9 @@ interface GenericDialogProps {
     dialogDefinition: DialogDefinition;
     dialogContext: any;
     values: any;
-    modal: boolean;
+    embedded?: boolean;
+    modal?: boolean;
+    opts?: IDialogOptions;
     onOk?: (result: GenericDialogResult) => void;
     onCancel?: () => void;
     onValueChange?: (name: string, value: string) => void;
@@ -182,6 +185,18 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
         return values;
     }
 
+    get modal() {
+        if (this.props.modal !== undefined) {
+            return this.props.modal;
+        }
+
+        if (this.props.opts) {
+            return !this.props.opts.jsPanel;
+        }
+
+        return true;
+    }
+
     onChange(fieldProperties: any, value: any) {
         this.state.values[fieldProperties.name] = value;
 
@@ -192,7 +207,7 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                 errorMessages: this.validate()
             });
         } else {
-            if (!this.props.modal) {
+            if (this.props.embedded) {
                 if (this.props.onValueChange) {
                     this.props.onValueChange(fieldProperties.name, value);
                 }
@@ -265,7 +280,7 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
     }
 
     render() {
-        const properties = (
+        let properties = (
             <PropertyList>
                 {this.props.dialogDefinition.fields
                     .filter(fieldProperties => {
@@ -343,6 +358,7 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                                                 values={this.state.values}
                                                 fieldContext={this.fieldContext}
                                                 onChange={this.onChange.bind(this, fieldProperties)}
+                                                onOk={this.onOk}
                                             />
                                         }
                                     </td>
@@ -367,9 +383,14 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
             </PropertyList>
         );
 
-        if (this.props.modal) {
+        if (this.props.opts && this.props.opts.jsPanel) {
+            properties = <div style={{ padding: 10, width: "100%" }}>{properties}</div>;
+        }
+
+        if (!this.props.embedded) {
             return (
                 <Dialog
+                    modal={this.modal}
                     title={this.props.dialogDefinition.title}
                     size={this.props.dialogDefinition.size}
                     onOk={this.props.onOk && this.onOk}
@@ -390,17 +411,33 @@ export function showGenericDialog(conf: {
     dialogDefinition: DialogDefinition;
     values: any;
     showOkButton?: boolean;
+    opts?: IDialogOptions;
 }) {
     return new Promise<GenericDialogResult>((resolve, reject) => {
-        showDialog(
+        const modalDialog = showDialog(
             <GenericDialog
                 dialogDefinition={conf.dialogDefinition}
                 dialogContext={undefined}
                 values={conf.values}
-                modal={true}
-                onOk={conf.showOkButton === undefined || conf.showOkButton ? resolve : undefined}
-                onCancel={reject}
-            />
+                opts={conf.opts}
+                onOk={
+                    conf.showOkButton === undefined || conf.showOkButton
+                        ? values => {
+                              if (modalDialog) {
+                                  modalDialog.close();
+                              }
+                              resolve(values);
+                          }
+                        : undefined
+                }
+                onCancel={() => {
+                    if (modalDialog) {
+                        modalDialog.close();
+                    }
+                    reject();
+                }}
+            />,
+            conf.opts
         );
     });
 }
