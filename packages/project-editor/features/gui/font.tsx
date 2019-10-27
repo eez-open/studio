@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, runInAction } from "mobx";
+import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 const LZ4 = require("lz4");
@@ -1271,7 +1271,7 @@ class Glyphs extends React.Component<{
         if (this.props.onBrowseGlyph) {
             browseGlyphButton = (
                 <IconAction
-                    title="Select Glyph"
+                    title="Change Glyph"
                     icon="material:more_horiz"
                     iconSize={16}
                     onClick={this.props.onBrowseGlyph}
