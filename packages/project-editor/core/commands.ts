@@ -357,6 +357,10 @@ export let replaceObject = action(
 
 export let replaceObjects = action(
     (context: ICommandContext, objects: EezObject[], replaceWithObject: EezObject) => {
+        if (objects.length === 1) {
+            return replaceObject(context, objects[0], replaceWithObject);
+        }
+
         const parent = objects[0]._parent;
         const array = asArray(parent!);
         const index = array.indexOf(objects[0]);

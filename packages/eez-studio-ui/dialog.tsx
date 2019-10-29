@@ -185,7 +185,10 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
             },
             dragit: {},
             resizeit: {},
-            closeOnBackdrop: false
+            closeOnBackdrop: false,
+            onclosed: function() {
+                ReactDOM.unmountComponentAtNode(element);
+            }
         });
         return dialog;
     } else {
