@@ -1177,7 +1177,7 @@ class Property extends React.Component<PropertyProps> {
                     <button
                         className="btn btn-secondary"
                         type="button"
-                        onClick={() => this.onChange(undefined)}
+                        onClick={() => this.changeValue(undefined)}
                     >
                         <Icon icon="material:close" size={14} />
                     </button>
@@ -1207,7 +1207,7 @@ class Property extends React.Component<PropertyProps> {
 
                                     const filePaths = result.filePaths;
                                     if (filePaths && filePaths[0]) {
-                                        this.onChange(
+                                        this.changeValue(
                                             ProjectStore.getFolderPathRelativeToProjectPath(
                                                 filePaths[0]
                                             )

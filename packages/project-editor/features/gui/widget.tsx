@@ -136,12 +136,16 @@ function makeStylePropertyInfo(name: string, displayName?: string): PropertyInfo
     };
 }
 
-function makeTextPropertyInfo(name: string, displayName?: string): PropertyInfo {
+function makeTextPropertyInfo(
+    name: string,
+    displayName?: string,
+    propertyGridGroup?: IPropertyGridGroupDefinition
+): PropertyInfo {
     return {
         name,
         displayName,
         type: PropertyType.String,
-        propertyGridGroup: specificGroup,
+        propertyGridGroup: propertyGridGroup || specificGroup,
         onSelect: (object: EezObject, propertyInfo: PropertyInfo, params?: IOnSelectParams) =>
             onSelectItem(
                 object,
@@ -2965,16 +2969,8 @@ export class UpDownWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
             makeStylePropertyInfo("buttonsStyle"),
-            {
-                name: "downButtonText",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            },
-            {
-                name: "upButtonText",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            }
+            makeTextPropertyInfo("downButtonText", undefined, specificGroup),
+            makeTextPropertyInfo("upButtonText", undefined, specificGroup)
         ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
@@ -3223,3 +3219,106 @@ export class AppViewWidget extends Widget {
 }
 
 registerClass(AppViewWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class ScrollBarWidget extends Widget {
+    @observable thumbStyle: Style;
+    @observable buttonsStyle: Style;
+    @observable leftButtonText?: string;
+    @observable rightButtonText?: string;
+
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        properties: [
+            makeStylePropertyInfo("thumbStyle"),
+            makeStylePropertyInfo("buttonsStyle"),
+            makeTextPropertyInfo("leftButtonText", undefined, specificGroup),
+            makeTextPropertyInfo("rightButtonText", undefined, specificGroup)
+        ],
+
+        defaultValue: {
+            type: "ScrollBar",
+            left: 0,
+            top: 0,
+            width: 128,
+            height: 32,
+            leftButtonText: "<",
+            rightButtonText: ">"
+        },
+
+        icon: "_images/widgets/UpDown.png"
+    });
+
+    check() {
+        let messages: output.Message[] = [];
+
+        if (!this.data) {
+            messages.push(output.propertyNotSetMessage(this, "data"));
+        }
+
+        if (!this.leftButtonText) {
+            messages.push(output.propertyNotSetMessage(this, "leftButtonText"));
+        }
+
+        if (!this.rightButtonText) {
+            messages.push(output.propertyNotSetMessage(this, "rightButtonText"));
+        }
+
+        return super.check().concat(messages);
+    }
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        let widget = this;
+
+        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+            const buttonsFont = styleGetFont(widget.buttonsStyle);
+            if (!buttonsFont) {
+                return;
+            }
+
+            // draw left button
+            let leftButtonCanvas = drawText(
+                widget.leftButtonText || "<",
+                buttonsFont.height,
+                rect.height,
+                widget.buttonsStyle,
+                false
+            );
+            ctx.drawImage(leftButtonCanvas, 0, 0);
+
+            // draw track
+            const x = buttonsFont.height;
+            const y = 0;
+            const width = rect.width - 2 * buttonsFont.height;
+            const height = rect.height;
+
+            draw.setColor(getStyleProperty(this.style, "color"));
+            draw.fillRect(ctx, x, y, x + width - 1, y + height - 1, 0);
+
+            // draw thumb
+            const [size, position, pageSize] = (widget.data && data.get(widget.data)) || [
+                100,
+                25,
+                20
+            ];
+
+            const xThumb = Math.floor((position * width) / size);
+            const widthThumb = Math.max(Math.floor((pageSize * width) / size), buttonsFont.height);
+
+            draw.setColor(getStyleProperty(this.thumbStyle, "color"));
+            draw.fillRect(ctx, xThumb, y, xThumb + widthThumb - 1, y + height - 1, 0);
+
+            // draw right button
+            let rightButonCanvas = drawText(
+                widget.rightButtonText || ">",
+                buttonsFont.height,
+                rect.height,
+                widget.buttonsStyle,
+                false
+            );
+            ctx.drawImage(rightButonCanvas, rect.width - buttonsFont.height, 0);
+        });
+    }
+}
+
+registerClass(ScrollBarWidget);

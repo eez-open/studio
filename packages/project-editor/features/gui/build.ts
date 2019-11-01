@@ -53,6 +53,7 @@ const WIDGET_TYPE_YT_GRAPH = 16;
 const WIDGET_TYPE_UP_DOWN = 17;
 const WIDGET_TYPE_LIST_GRAPH = 18;
 const WIDGET_TYPE_APP_VIEW = 19;
+const WIDGET_TYPE_SCROLL_BAR = 20;
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -639,6 +640,8 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
             type = WIDGET_TYPE_APP_VIEW;
         } else if (widget.type == "Grid") {
             type = WIDGET_TYPE_GRID;
+        } else if (widget.type == "ScrollBar") {
+            type = WIDGET_TYPE_SCROLL_BAR;
         } else {
             type = WIDGET_TYPE_NONE;
         }
@@ -1139,6 +1142,41 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific.addField(new UInt16(context));
     } else if (type == WIDGET_TYPE_APP_VIEW) {
         // no specific fields
+    } else if (type == WIDGET_TYPE_SCROLL_BAR) {
+        let widget = object as Widget.ScrollBarWidget;
+        specific = new Struct();
+
+        // thumbStyle
+        let thumbStyle: number = 0;
+        if (widget.thumbStyle) {
+            thumbStyle = assets.getStyleIndex(widget.thumbStyle);
+        }
+        specific.addField(new UInt16(thumbStyle));
+
+        // buttonStyle
+        let buttonsStyle: number = 0;
+        if (widget.buttonsStyle) {
+            buttonsStyle = assets.getStyleIndex(widget.buttonsStyle);
+        }
+        specific.addField(new UInt16(buttonsStyle));
+
+        // down button text
+        let leftButtonText: string;
+        if (widget.leftButtonText) {
+            leftButtonText = buildWidgetText(widget.leftButtonText);
+        } else {
+            leftButtonText = "<";
+        }
+        specific.addField(new String(leftButtonText));
+
+        // up button text
+        let rightButtonText: string;
+        if (widget.rightButtonText) {
+            rightButtonText = buildWidgetText(widget.rightButtonText);
+        } else {
+            rightButtonText = ">";
+        }
+        specific.addField(new String(rightButtonText));
     }
 
     result.addField(new ObjectPtr(specific));
