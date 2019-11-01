@@ -242,7 +242,7 @@ export function deleteWorkbenchObject(object: WorkbenchObject) {
 ////////////////////////////////////////////////////////////////////////////////
 
 if (isRenderer()) {
-    window.onmessage = message => {
+    window.onmessage = (message: any) => {
         for (let key of workbenchObjects.keys()) {
             const workbenchObject = workbenchObjects.get(key);
             if (
