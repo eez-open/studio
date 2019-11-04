@@ -301,6 +301,17 @@ class UInt16 extends Field {
     }
 }
 
+class UInt32 extends Field {
+    constructor(public value: number) {
+        super();
+        this.size = 4;
+    }
+
+    pack(): number[] {
+        return packUInt32(this.value);
+    }
+}
+
 class Int16 extends Field {
     constructor(public value: number) {
         super();
@@ -723,10 +734,22 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         }
         specific.addField(new UInt16(overlay));
 
-        // closePageIfTouchedOutside
-        if (object instanceof Page) {
-            specific.addField(new UInt8(object.closePageIfTouchedOutside ? 1 : 0));
+        // flags
+        let flags = 0;
+
+        if (overlay && object instanceof Widget.ContainerWidget) {
+            if (object.shadow) {
+                flags |= 1;
+            }
         }
+
+        if (object instanceof Page) {
+            if (object.closePageIfTouchedOutside) {
+                flags |= 2;
+            }
+        }
+
+        specific.addField(new UInt32(flags));
     } else if (type == WIDGET_TYPE_SELECT) {
         let widget = object as Widget.SelectWidget;
         specific = new Struct();
@@ -943,33 +966,6 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         }
 
         specific.addField(new UInt16(line2Style));
-    } else if (type == WIDGET_TYPE_YT_GRAPH) {
-        let widget = object as Widget.YTGraphWidget;
-        specific = new Struct();
-
-        // y1Style
-        let y1Style: number = 0;
-        if (widget.y1Style) {
-            y1Style = assets.getStyleIndex(widget.y1Style);
-        }
-
-        specific.addField(new UInt16(y1Style));
-
-        // data2
-        let y2Data = 0;
-        if (widget.y2Data) {
-            y2Data = assets.getDataItemIndex(widget, "y2Data");
-        }
-
-        specific.addField(new UInt16(y2Data));
-
-        // y2Style
-        let y2Style: number = 0;
-        if (widget.y2Style) {
-            y2Style = assets.getStyleIndex(widget.y2Style);
-        }
-
-        specific.addField(new UInt16(y2Style));
     } else if (type == WIDGET_TYPE_UP_DOWN) {
         let widget = object as Widget.UpDownWidget;
         specific = new Struct();

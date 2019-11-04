@@ -141,7 +141,7 @@ export class Draggable {
 
         this.overlayElement.remove();
 
-        document.body.style.userSelect = this.savedBodyUserSelect || ;
+        document.body.style.userSelect = this.savedBodyUserSelect || "";
 
         if (this.element) {
             this.element.releasePointerCapture(this.capturedPointerId);

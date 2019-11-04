@@ -760,6 +760,7 @@ export class ContainerWidget extends Widget {
     @observable name: string;
     @observable widgets: EezArrayObject<Widget>;
     @observable overlay: string;
+    @observable shadow: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         label: (widget: ContainerWidget) => {
@@ -781,7 +782,15 @@ export class ContainerWidget extends Widget {
                 type: PropertyType.String,
                 propertyGridGroup: generalGroup
             },
-            makeDataPropertyInfo("overlay")
+            makeDataPropertyInfo("overlay"),
+            {
+                name: "shadow",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (containerWidget: ContainerWidget) => {
+                    return !containerWidget.overlay;
+                }
+            }
         ],
 
         defaultValue: {
@@ -803,7 +812,10 @@ export class ContainerWidget extends Widget {
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
         super.styleHook(style, designerContext);
         if (this.overlay) {
-            style.boxShadow = "1px 1px 8px 1px rgba(0,0,0,0.5)";
+            if (this.shadow) {
+                style.boxShadow = "1px 1px 8px 1px rgba(0,0,0,0.5)";
+            }
+            style.opacity = getStyleProperty(this.style, "opacity") / 255;
         }
     }
 }
@@ -2869,6 +2881,10 @@ registerClass(BarGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const hideIfNotProjectVersion1: Partial<PropertyInfo> = {
+    hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion !== "v1"
+};
+
 export class YTGraphWidget extends Widget {
     @observable y1Style: Style;
     @observable y2Data?: string;
@@ -2876,9 +2892,9 @@ export class YTGraphWidget extends Widget {
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
-            makeStylePropertyInfo("y1Style"),
-            makeStylePropertyInfo("y2Style"),
-            makeDataPropertyInfo("y2Data")
+            Object.assign(makeStylePropertyInfo("y1Style"), hideIfNotProjectVersion1),
+            Object.assign(makeStylePropertyInfo("y2Style"), hideIfNotProjectVersion1),
+            Object.assign(makeDataPropertyInfo("y2Data"), hideIfNotProjectVersion1)
         ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
@@ -2904,12 +2920,14 @@ export class YTGraphWidget extends Widget {
             messages.push(output.propertyNotSetMessage(this, "data"));
         }
 
-        if (this.y2Data) {
-            if (!findDataItem(this.y2Data)) {
-                messages.push(output.propertyNotFoundMessage(this, "y2Data"));
+        if (ProjectStore.project.settings.general.projectVersion === "v1") {
+            if (this.y2Data) {
+                if (!findDataItem(this.y2Data)) {
+                    messages.push(output.propertyNotFoundMessage(this, "y2Data"));
+                }
+            } else {
+                messages.push(output.propertyNotSetMessage(this, "y2Data"));
             }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "y2Data"));
         }
 
         return super.check().concat(messages);
