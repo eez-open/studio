@@ -202,13 +202,10 @@ async function generateFiles(
 }
 
 function anythingToBuild() {
-    if (ProjectStore.project.settings.build.files.length > 0) {
-        return true;
-    }
-    return extensionDefinitionAnythingToBuild();
+    return ProjectStore.project.settings.build.files.length > 0;
 }
 
-export async function build(onlyCheck: boolean) {
+export async function build({ onlyCheck }: { onlyCheck: boolean }) {
     const timeStart = new Date().getTime();
 
     OutputSectionsStore.setActiveSection(Section.OUTPUT);
@@ -289,6 +286,52 @@ export async function build(onlyCheck: boolean) {
         }
 
         await generateFiles(destinationFolderPath, configurationBuildResuts);
+
+        OutputSectionsStore.write(
+            Section.OUTPUT,
+            Type.INFO,
+            `Build successfully finished at ${new Date().toLocaleString()}.`
+        );
+    } catch (err) {
+        if (err instanceof BuildException) {
+            OutputSectionsStore.write(Section.OUTPUT, Type.ERROR, err.message, err.object);
+        } else {
+            OutputSectionsStore.write(Section.OUTPUT, Type.ERROR, `Module build error: ${err}`);
+        }
+
+        showCheckResult();
+    } finally {
+        OutputSectionsStore.setLoading(Section.OUTPUT, false);
+    }
+
+    console.log("Build time:", new Date().getTime() - timeStart);
+}
+
+export async function buildExtensions() {
+    const timeStart = new Date().getTime();
+
+    OutputSectionsStore.setActiveSection(Section.OUTPUT);
+    OutputSectionsStore.clear(Section.OUTPUT);
+
+    if (!extensionDefinitionAnythingToBuild()) {
+        OutputSectionsStore.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
+        return;
+    }
+
+    OutputSectionsStore.setLoading(Section.OUTPUT, true);
+
+    // give some time for loader to start
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    try {
+        let destinationFolderPath = ProjectStore.getAbsoluteFilePath(
+            ProjectStore.project.settings.build.destinationFolder || "."
+        );
+        if (!fs.existsSync(destinationFolderPath)) {
+            throw new BuildException("Cannot find destination folder.");
+        }
+
+        showCheckResult();
 
         await extensionDefinitionBuild();
 

@@ -59,7 +59,11 @@ import {
     load as loadProject,
     getNewProject
 } from "project-editor/project/project";
-import { build as buildProject, backgroundCheck } from "project-editor/project/build";
+import {
+    build as buildProject,
+    backgroundCheck,
+    buildExtensions
+} from "project-editor/project/build";
 import { getAllMetrics } from "project-editor/project/metrics";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
@@ -1705,11 +1709,15 @@ class ProjectStoreClass {
     }
 
     check() {
-        buildProject(true);
+        buildProject({ onlyCheck: true });
     }
 
     build() {
-        buildProject(false);
+        buildProject({ onlyCheck: false });
+    }
+
+    buildExtensions() {
+        buildExtensions();
     }
 
     closeWindow() {
@@ -1765,6 +1773,7 @@ export function init() {
 
     EEZStudio.electron.ipcRenderer.on("check", () => ProjectStore.check());
     EEZStudio.electron.ipcRenderer.on("build", () => ProjectStore.build());
+    EEZStudio.electron.ipcRenderer.on("build-extensions", () => ProjectStore.buildExtensions());
 
     EEZStudio.electron.ipcRenderer.on("undo", () => UndoManager.undo());
     EEZStudio.electron.ipcRenderer.on("redo", () => UndoManager.redo());

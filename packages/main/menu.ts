@@ -148,6 +148,14 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
         }
     },
     {
+        label: "Build Extensions",
+        click: function(item: any, focusedWindow: any) {
+            if (focusedWindow) {
+                focusedWindow.webContents.send("build-extensions");
+            }
+        }
+    },
+    {
         type: "separator"
     },
     {
