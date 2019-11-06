@@ -812,9 +812,9 @@ export class Style extends EezObject {
         if (this.inheritFrom && !findStyle(this.inheritFrom)) {
             messages.push(output.propertyNotFoundMessage(this, "inheritFrom"));
         } else {
-            if (!this.fontName) {
-                messages.push(output.propertyNotFoundMessage(this, "font"));
-            }
+            // if (!this.fontName) {
+            //     messages.push(output.propertyNotFoundMessage(this, "font"));
+            // }
 
             let borderSizeError = Style.getRect(this.borderSizeProperty).error;
             if (borderSizeError) {

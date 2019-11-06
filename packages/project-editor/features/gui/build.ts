@@ -301,17 +301,6 @@ class UInt16 extends Field {
     }
 }
 
-class UInt32 extends Field {
-    constructor(public value: number) {
-        super();
-        this.size = 4;
-    }
-
-    pack(): number[] {
-        return packUInt32(this.value);
-    }
-}
-
 class Int16 extends Field {
     constructor(public value: number) {
         super();
@@ -766,7 +755,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
             }
         }
 
-        specific.addField(new UInt32(flags));
+        specific.addField(new UInt8(flags));
     } else if (type == WIDGET_TYPE_SELECT) {
         let widget = object as Widget.SelectWidget;
         specific = new Struct();
@@ -851,6 +840,18 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         }
 
         specific.addField(new String(text));
+
+        // focusStyle
+        let focusStyle: number;
+        if (widget.focusStyle) {
+            focusStyle = assets.getStyleIndex(widget.focusStyle);
+            if (focusStyle == 0) {
+                focusStyle = style;
+            }
+        } else {
+            focusStyle = style;
+        }
+        specific.addField(new UInt16(focusStyle));
 
         // flags
         let flags: number = 0;

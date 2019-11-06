@@ -385,7 +385,7 @@ export class DlogWaveform extends FileHistoryItem {
 
     @computed
     get time() {
-        return this.values ? this.readFloat(20) : 0;
+        return this.values ? this.length * this.period : 0;
     }
 
     @computed
@@ -457,12 +457,15 @@ export class DlogWaveform extends FileHistoryItem {
             return null;
         }
 
+        console.log(this);
+
         return (
-            <div>
-                `Start time: ${formatDateTimeLong(this.startTime)}, Period: $
-                {TIME_UNIT.formatValue(this.period, 4)}, Duration: $
-                {TIME_UNIT.formatValue(this.time)}`
-            </div>
+            <div>{`Start time: ${formatDateTimeLong(
+                this.startTime
+            )}, Period: ${TIME_UNIT.formatValue(this.period, 4)}, Duration: ${TIME_UNIT.formatValue(
+                this.time,
+                4
+            )}`}</div>
         );
     }
 

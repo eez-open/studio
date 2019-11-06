@@ -1551,10 +1551,9 @@ registerClass(DisplayDataWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class TextWidget extends Widget {
-    @observable
-    text?: string;
-    @observable
-    ignoreLuminocity: boolean;
+    @observable text?: string;
+    @observable ignoreLuminocity: boolean;
+    @observable focusStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         label: (widget: TextWidget) => {
@@ -1576,7 +1575,8 @@ export class TextWidget extends Widget {
                 type: PropertyType.Boolean,
                 defaultValue: false,
                 propertyGridGroup: specificGroup
-            }
+            },
+            makeStylePropertyInfo("focusStyle")
         ],
 
         defaultValue: {
@@ -1602,7 +1602,7 @@ export class TextWidget extends Widget {
     }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
-        let text = (this.data ? (data.get(this.data) as string) : this.text) || "";
+        let text = this.text ? this.text : this.data ? (data.get(this.data) as string) : "";
         return drawText(text, rect.width, rect.height, this.style, false);
     }
 
