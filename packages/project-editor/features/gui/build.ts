@@ -46,7 +46,6 @@ const WIDGET_TYPE_BITMAP = 9;
 const WIDGET_TYPE_BUTTON = 10;
 const WIDGET_TYPE_TOGGLE_BUTTON = 11;
 const WIDGET_TYPE_BUTTON_GROUP = 12;
-const WIDGET_TYPE_SCALE = 13;
 const WIDGET_TYPE_BAR_GRAPH = 14;
 const WIDGET_TYPE_LAYOUT_VIEW = 15;
 const WIDGET_TYPE_YT_GRAPH = 16;
@@ -60,11 +59,6 @@ const LIST_TYPE_HORIZONTAL = 2;
 
 const GRID_FLOW_ROW = 1;
 const GRID_FLOW_COLUMN = 2;
-
-const SCALE_NEEDLE_POSITION_LEFT = 1;
-const SCALE_NEEDLE_POSITION_RIGHT = 2;
-const SCALE_NEEDLE_POSITION_TOP = 3;
-const SCALE_NEEDLE_POSITION_BOTTOM = 4;
 
 const BAR_GRAPH_ORIENTATION_LEFT_RIGHT = 1;
 const BAR_GRAPH_ORIENTATION_RIGHT_LEFT = 2;
@@ -641,8 +635,6 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
             type = WIDGET_TYPE_TOGGLE_BUTTON;
         } else if (widget.type == "ButtonGroup") {
             type = WIDGET_TYPE_BUTTON_GROUP;
-        } else if (widget.type == "Scale") {
-            type = WIDGET_TYPE_SCALE;
         } else if (widget.type == "BarGraph") {
             type = WIDGET_TYPE_BAR_GRAPH;
         } else if (widget.type == "YTGraph") {
@@ -701,15 +693,6 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         style = assets.getStyleIndex("default");
     }
     result.addField(new UInt16(style));
-
-    // active style
-    let activeStyle: number;
-    if (object instanceof Widget.Widget && object.activeStyle) {
-        activeStyle = assets.getStyleIndex(object.activeStyle);
-    } else {
-        activeStyle = 0;
-    }
-    result.addField(new UInt16(activeStyle));
 
     // specific
     let specific: Struct | undefined;
@@ -899,30 +882,6 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         }
 
         specific.addField(new UInt8(flags));
-    } else if (type == WIDGET_TYPE_SCALE) {
-        let widget = object as Widget.ScaleWidget;
-        specific = new Struct();
-
-        // needlePosition
-        let needlePosition: number;
-        switch (widget.needlePosition) {
-            case "left":
-                needlePosition = SCALE_NEEDLE_POSITION_LEFT;
-            case "right":
-                needlePosition = SCALE_NEEDLE_POSITION_RIGHT;
-            case "top":
-                needlePosition = SCALE_NEEDLE_POSITION_TOP;
-            default:
-                needlePosition = SCALE_NEEDLE_POSITION_BOTTOM;
-        }
-
-        specific.addField(new UInt8(needlePosition));
-
-        // needleWidth
-        specific.addField(new UInt8(widget.needleWidth || 0));
-
-        // needleHeight
-        specific.addField(new UInt8(widget.needleHeight || 0));
     } else if (type == WIDGET_TYPE_BAR_GRAPH) {
         let widget = object as Widget.BarGraphWidget;
         specific = new Struct();

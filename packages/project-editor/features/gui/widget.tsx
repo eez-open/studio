@@ -198,7 +198,6 @@ interface IWidget {
 export class Widget extends EezObject {
     @observable type: string;
     @observable style: Style;
-    @observable activeStyle: Style;
     @observable data?: string;
     @observable action?: string;
 
@@ -261,8 +260,7 @@ export class Widget extends EezObject {
             },
             makeDataPropertyInfo("data"),
             makeActionPropertyInfo("action"),
-            makeStylePropertyInfo("style", "Normal style"),
-            makeStylePropertyInfo("activeStyle")
+            makeStylePropertyInfo("style", "Normal style")
         ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
@@ -298,7 +296,8 @@ export class Widget extends EezObject {
             }
 
             migrateStyleProperty(jsObject, "style");
-            migrateStyleProperty(jsObject, "activeStyle", "style");
+
+            delete jsObject.activeStyle;
         },
 
         isPropertyMenuSupported: true
@@ -339,11 +338,6 @@ export class Widget extends EezObject {
     @computed
     get styleObject() {
         return this.style;
-    }
-
-    @computed
-    get activeStyleObject() {
-        return this.activeStyle;
     }
 
     // Return immediate parent, which can be of type Page or Widget
@@ -2412,280 +2406,6 @@ export class ButtonGroupWidget extends Widget {
 }
 
 registerClass(ButtonGroupWidget);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class ScaleWidget extends Widget {
-    @observable
-    needlePosition: string;
-    @observable
-    needleWidth: number;
-    @observable
-    needleHeight: number;
-
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: [
-            {
-                name: "needlePosition",
-                type: PropertyType.Enum,
-                propertyGridGroup: specificGroup,
-                enumItems: [
-                    {
-                        id: "left"
-                    },
-                    {
-                        id: "right"
-                    },
-                    {
-                        id: "top"
-                    },
-                    {
-                        id: "bottom"
-                    }
-                ]
-            },
-            {
-                name: "needleWidth",
-                propertyGridGroup: specificGroup,
-                type: PropertyType.Number
-            },
-            {
-                name: "needleHeight",
-                propertyGridGroup: specificGroup,
-                type: PropertyType.Number
-            }
-        ],
-
-        defaultValue: {
-            type: "Scale",
-            left: 0,
-            top: 0,
-            width: 64,
-            height: 32,
-            needlePostion: "right",
-            needleWidth: 19,
-            needleHeight: 11
-        },
-
-        icon: "_images/widgets/Scale.png"
-    });
-
-    check() {
-        let messages: output.Message[] = [];
-
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        return super.check().concat(messages);
-    }
-
-    drawScale(
-        ctx: CanvasRenderingContext2D,
-        rect: Rect,
-        y_from: number,
-        y_to: number,
-        y_min: number,
-        y_max: number,
-        y_value: number,
-        f: number,
-        d: number
-    ) {
-        let vertical = this.needlePosition == "left" || this.needlePosition == "right";
-        let flip = this.needlePosition == "left" || this.needlePosition == "top";
-
-        let needleSize: number;
-
-        let x1: number, l1: number, x2: number, l2: number;
-        if (vertical) {
-            needleSize = this.needleHeight || 0;
-
-            if (flip) {
-                x1 = this.needleWidth + 2;
-                l1 = rect.width - (this.needleWidth + 2);
-                x2 = 0;
-                l2 = this.needleWidth || 0;
-            } else {
-                x1 = 0;
-                l1 = rect.width - (this.needleWidth + 2);
-                x2 = rect.width - this.needleWidth;
-                l2 = this.needleWidth || 0;
-            }
-        } else {
-            needleSize = this.needleWidth || 0;
-
-            if (flip) {
-                x1 = this.needleHeight + 2;
-                l1 = rect.height - (this.needleHeight + 2);
-                x2 = 0;
-                l2 = this.needleHeight || 0;
-            } else {
-                x1 = 0;
-                l1 = rect.height - this.needleHeight - 2;
-                x2 = rect.height - this.needleHeight;
-                l2 = this.needleHeight || 0;
-            }
-        }
-
-        let s = (10 * f) / d;
-
-        let y_offset: number;
-        if (vertical) {
-            y_offset = Math.floor(rect.height - 1 - (rect.height - (y_max - y_min)) / 2);
-        } else {
-            y_offset = Math.floor((rect.width - (y_max - y_min)) / 2);
-        }
-
-        let style = this.style;
-
-        for (let y_i = y_from; y_i <= y_to; y_i++) {
-            let y: number;
-
-            if (vertical) {
-                y = y_offset - y_i;
-            } else {
-                y = y_offset + y_i;
-            }
-
-            // draw ticks
-            if (y_i >= y_min && y_i <= y_max) {
-                if (y_i % s == 0) {
-                    draw.setColor(getStyleProperty(style, "borderColor"));
-                    if (vertical) {
-                        draw.drawHLine(ctx, x1, y, l1);
-                    } else {
-                        draw.drawVLine(ctx, y, x1, l1);
-                    }
-                } else if (y_i % (s / 2) == 0) {
-                    draw.setColor(getStyleProperty(style, "borderColor"));
-                    if (vertical) {
-                        if (flip) {
-                            draw.drawHLine(ctx, x1 + l1 / 2, y, l1 / 2);
-                        } else {
-                            draw.drawHLine(ctx, x1, y, l1 / 2);
-                        }
-                    } else {
-                        if (flip) {
-                            draw.drawVLine(ctx, y, x1 + l1 / 2, l1 / 2);
-                        } else {
-                            draw.drawVLine(ctx, y, x1, l1 / 2);
-                        }
-                    }
-                } else if (y_i % (s / 10) == 0) {
-                    draw.setColor(getStyleProperty(style, "borderColor"));
-                    if (vertical) {
-                        if (flip) {
-                            draw.drawHLine(ctx, x1 + l1 - l1 / 4, y, l1 / 4);
-                        } else {
-                            draw.drawHLine(ctx, x1, y, l1 / 4);
-                        }
-                    } else {
-                        if (flip) {
-                            draw.drawVLine(ctx, y, x1 + l1 - l1 / 4, l1 / 4);
-                        } else {
-                            draw.drawVLine(ctx, y, x1, l1 / 4);
-                        }
-                    }
-                } else {
-                    draw.setColor(getStyleProperty(style, "backgroundColor"));
-                    if (vertical) {
-                        draw.drawHLine(ctx, x1, y, l1);
-                    } else {
-                        draw.drawVLine(ctx, y, x1, l1);
-                    }
-                }
-            }
-
-            let d = Math.abs(y_i - y_value);
-            if (d <= Math.floor(needleSize / 2)) {
-                // draw thumb
-                draw.setColor(getStyleProperty(style, "color"));
-                if (vertical) {
-                    if (flip) {
-                        draw.drawHLine(ctx, x2, y, l2 - d);
-                    } else {
-                        draw.drawHLine(ctx, x2 + d, y, l2 - d);
-                    }
-                } else {
-                    if (flip) {
-                        draw.drawVLine(ctx, y, x2, l2 - d);
-                    } else {
-                        draw.drawVLine(ctx, y, x2 + d, l2 - d);
-                    }
-                }
-
-                if (y_i != y_value) {
-                    draw.setColor(getStyleProperty(style, "backgroundColor"));
-                    if (vertical) {
-                        if (flip) {
-                            draw.drawHLine(ctx, x2 + l2 - d, y, d);
-                        } else {
-                            draw.drawHLine(ctx, x2, y, d);
-                        }
-                    } else {
-                        if (flip) {
-                            draw.drawVLine(ctx, y, x2 + l2 - d, d);
-                        } else {
-                            draw.drawVLine(ctx, y, x2, d);
-                        }
-                    }
-                }
-            } else {
-                // erase
-                draw.setColor(getStyleProperty(style, "backgroundColor"));
-                if (vertical) {
-                    draw.drawHLine(ctx, x2, y, l2);
-                } else {
-                    draw.drawVLine(ctx, y, x2, l2);
-                }
-            }
-        }
-    }
-
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        let style = this.style;
-
-        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
-            let value = 0;
-            let min = (this.data && data.getMin(this.data)) || 0;
-            let max = (this.data && data.getMax(this.data)) || 0;
-
-            draw.setColor(getStyleProperty(style, "backgroundColor"));
-            draw.fillRect(ctx, 0, 0, rect.width - 1, rect.height - 1);
-
-            let vertical = this.needlePosition == "left" || this.needlePosition == "right";
-
-            let needleSize: number;
-            let f: number;
-            if (vertical) {
-                needleSize = this.needleHeight || 0;
-                f = Math.floor((rect.height - needleSize) / max);
-            } else {
-                needleSize = this.needleWidth || 0;
-                f = Math.floor((rect.width - needleSize) / max);
-            }
-
-            let d: number;
-            if (max > 10) {
-                d = 1;
-            } else {
-                f = 10 * (f / 10);
-                d = 10;
-            }
-
-            let y_min = Math.round(min * f);
-            let y_max = Math.round(max * f);
-            let y_value = Math.round(value * f);
-
-            let y_from_min = y_min - Math.floor(needleSize / 2);
-            let y_from_max = y_max + Math.floor(needleSize / 2);
-
-            this.drawScale(ctx, rect, y_from_min, y_from_max, y_min, y_max, y_value, f, d);
-        });
-    }
-}
-
-registerClass(ScaleWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
