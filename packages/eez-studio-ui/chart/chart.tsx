@@ -838,6 +838,7 @@ class DynamicAxisController extends AxisController {
         });
     }
 
+    @action
     animate(set: () => void) {
         if (!globalViewOptions.enableZoomAnimations) {
             runInAction(set);
