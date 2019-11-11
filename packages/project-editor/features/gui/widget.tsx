@@ -297,6 +297,10 @@ export class Widget extends EezObject {
 
             migrateStyleProperty(jsObject, "style");
 
+            if (jsObject.style && typeof jsObject.style.padding === "number") {
+                delete jsObject.style.padding;
+            }
+
             delete jsObject.activeStyle;
         },
 

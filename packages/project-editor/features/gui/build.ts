@@ -492,6 +492,18 @@ function buildGuiStylesData(assets: Assets, packData: boolean = true) {
         }
         result.addField(new UInt16(color));
 
+        let activeBackgroundColor = assets.getColorIndex(style, "activeBackgroundColor");
+        if (isNaN(activeBackgroundColor)) {
+            activeBackgroundColor = 0;
+        }
+        result.addField(new UInt16(activeBackgroundColor));
+
+        let activeColor = assets.getColorIndex(style, "activeColor");
+        if (isNaN(activeColor)) {
+            activeColor = 0;
+        }
+        result.addField(new UInt16(activeColor));
+
         result.addField(new UInt8(style.borderSizeRect.top));
         result.addField(new UInt8(style.borderSizeRect.right));
         result.addField(new UInt8(style.borderSizeRect.bottom));
@@ -1514,7 +1526,15 @@ class Assets {
         return 0;
     }
 
-    getColorIndex(style: Style, propertyName: "color" | "backgroundColor" | "borderColor") {
+    getColorIndex(
+        style: Style,
+        propertyName:
+            | "color"
+            | "backgroundColor"
+            | "activeColor"
+            | "activeBackgroundColor"
+            | "borderColor"
+    ) {
         let color = getStyleProperty(style, propertyName, false);
 
         let gui = getProperty(this.project, "gui") as Gui;

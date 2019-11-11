@@ -27,7 +27,8 @@ import {
     NavigationStore,
     SimpleNavigationStoreClass,
     DocumentStore,
-    UndoManager
+    UndoManager,
+    ProjectStore
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import { loadObject } from "project-editor/core/serialization";
@@ -37,6 +38,7 @@ import { onSelectItem } from "project-editor/components/SelectItem";
 import { Splitter } from "eez-studio-ui/splitter";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
+import { Project } from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 import { getGui, findFont } from "project-editor/features/gui/gui";
@@ -377,6 +379,24 @@ const backgroundColorProperty: PropertyInfo = {
     inheritable: true
 };
 
+const activeColorProperty: PropertyInfo = {
+    name: "activeColor",
+    type: PropertyType.ThemedColor,
+    referencedObjectCollectionPath: ["gui", "colors"],
+    defaultValue: "#ffffff",
+    inheritable: true,
+    hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
+};
+
+const activeBackgroundColorProperty: PropertyInfo = {
+    name: "activeBackgroundColor",
+    type: PropertyType.ThemedColor,
+    referencedObjectCollectionPath: ["gui", "colors"],
+    defaultValue: "#000000",
+    inheritable: true,
+    hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
+};
+
 const borderSizeProperty: PropertyInfo = {
     name: "borderSize",
     type: PropertyType.String,
@@ -444,6 +464,8 @@ const properties = [
     alignVerticalProperty,
     colorProperty,
     backgroundColorProperty,
+    activeColorProperty,
+    activeBackgroundColorProperty,
     borderSizeProperty,
     borderRadiusProperty,
     borderColorProperty,
@@ -476,6 +498,8 @@ function getInheritedValue(
             translateThemedColors &&
             (propertyName === "color" ||
                 propertyName === "backgroundColor" ||
+                propertyName === "activeColor" ||
+                propertyName === "activeBackgroundColor" ||
                 propertyName === "borderColor")
         ) {
             value = getThemedColor(value);
@@ -508,6 +532,8 @@ export class Style extends EezObject {
     @observable alignVertical?: string;
     @observable color?: string;
     @observable backgroundColor?: string;
+    @observable activeColor?: string;
+    @observable activeBackgroundColor?: string;
     @observable borderSize?: string;
     @observable borderRadius?: number;
     @observable borderColor?: string;
@@ -763,6 +789,26 @@ export class Style extends EezObject {
     }
 
     @computed
+    get activeColorProperty(): string {
+        return getStyleProperty(this, "activeColor");
+    }
+
+    @computed
+    get activeColor16(): number {
+        return strToColor16(this.activeColorProperty);
+    }
+
+    @computed
+    get activeBackgroundColorProperty(): string {
+        return getStyleProperty(this, "activeBackgroundColor");
+    }
+
+    @computed
+    get activeBackgroundColor16(): number {
+        return strToColor16(this.activeBackgroundColorProperty);
+    }
+
+    @computed
     get borderColorProperty(): string {
         return getStyleProperty(this, "borderColor");
     }
@@ -854,6 +900,18 @@ export class Style extends EezObject {
                 messages.push(output.propertyInvalidValueMessage(this, "backgroundColor"));
             }
 
+            if ((ProjectStore.project as Project).settings.general.projectVersion !== "v1") {
+                if (isNaN(this.activeColor16)) {
+                    messages.push(output.propertyInvalidValueMessage(this, "activeColor"));
+                }
+
+                if (isNaN(this.activeBackgroundColor16)) {
+                    messages.push(
+                        output.propertyInvalidValueMessage(this, "activeBackgroundColor")
+                    );
+                }
+            }
+
             if (isNaN(this.borderColor16)) {
                 messages.push(output.propertyInvalidValueMessage(this, "borderColor"));
             }
@@ -891,6 +949,8 @@ export class Style extends EezObject {
             this.alignVerticalProperty === otherStyle.alignVerticalProperty &&
             this.colorProperty === otherStyle.colorProperty &&
             this.backgroundColorProperty === otherStyle.backgroundColorProperty &&
+            this.activeColorProperty === otherStyle.activeColorProperty &&
+            this.activeBackgroundColorProperty === otherStyle.activeBackgroundColorProperty &&
             this.borderSizeProperty === otherStyle.borderSizeProperty &&
             this.borderRadiusProperty === otherStyle.borderRadiusProperty &&
             this.borderColorProperty === otherStyle.borderColorProperty &&
@@ -924,6 +984,8 @@ export function getDefaultStyle(): Style {
                 alignVertical: alignVerticalProperty.defaultValue,
                 color: colorProperty.defaultValue,
                 backgroundColor: backgroundColorProperty.defaultValue,
+                activeColor: activeColorProperty.defaultValue,
+                activeBackgroundColor: activeBackgroundColorProperty.defaultValue,
                 borderSize: borderSizeProperty.defaultValue,
                 borderRadius: borderRadiusProperty.defaultValue,
                 borderColor: borderColorProperty.defaultValue,
