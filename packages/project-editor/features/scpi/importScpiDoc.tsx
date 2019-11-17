@@ -787,10 +787,17 @@ class FindChanges {
                             if (
                                 existingCommand &&
                                 existingCommand.subsystem.name === subsystem.name &&
-                                !this.compareParameters(
-                                    command.parameters,
-                                    existingCommand.command.parameters
-                                )
+                                (!existingCommand.command.helpLink ||
+                                    !subsystem.helpLink ||
+                                    (existingCommand.command.helpLink &&
+                                        subsystem.helpLink &&
+                                        !existingCommand.command.helpLink.startsWith(
+                                            subsystem.helpLink
+                                        )) ||
+                                    !this.compareParameters(
+                                        command.parameters,
+                                        existingCommand.command.parameters
+                                    ))
                             ) {
                                 updated.push({
                                     command: command,
@@ -1109,6 +1116,7 @@ export class ImportScpiDocDialog extends React.Component<
             );
             if (result) {
                 DocumentStore.updateObject(result.command, {
+                    helpLink: commandDefinition.command.helpLink,
                     parameters: toJS(commandDefinition.command.parameters).map(parameter => {
                         return {
                             name: parameter.name,
