@@ -10,45 +10,8 @@ import { FileState } from "instrument/connection/file-state";
 export const SAMPLE_LENGTH = 4096;
 
 export const MIME_EEZ_DLOG = "application/eez-dlog";
-
-function getUint8Array(data: string | Buffer) {
-    if (typeof data === "string") {
-        return new Uint8Array(new Buffer(data.slice(0, SAMPLE_LENGTH), "binary"));
-    } else {
-        return new Uint8Array(data);
-    }
-}
-
-function isDlog(dataSample: Uint8Array) {
-    const DLOG_MAGIC1 = 0x2d5a4545;
-    const DLOG_MAGIC2 = 0x474f4c44;
-    const DLOG_VERSION = 0x0001;
-
-    let i = 0;
-
-    function isEqual16(value: number) {
-        const result =
-            dataSample[i] === (value & 0xff) && dataSample[i + 1] === ((value >> 8) & 0xff);
-
-        i += 2;
-
-        return result;
-    }
-
-    function isEqual32(value: number) {
-        const result =
-            dataSample[i] === (value & 0xff) &&
-            dataSample[i + 1] === ((value >> 8) & 0xff) &&
-            dataSample[i + 2] === ((value >> 16) & 0xff) &&
-            dataSample[i + 3] === value >> 24;
-
-        i += 4;
-
-        return result;
-    }
-
-    return isEqual32(DLOG_MAGIC1) && isEqual32(DLOG_MAGIC2) && isEqual16(DLOG_VERSION);
-}
+export const MIME_EEZ_LIST = "application/eez-list";
+export const MIME_CSV = "text/csv";
 
 export function detectFileType(data: string | Buffer, fileName?: string) {
     const dataSample = getUint8Array(data);
@@ -66,10 +29,11 @@ export function detectFileType(data: string | Buffer, fileName?: string) {
         return type;
     }
 
-    if (isSimpleCSV(data)) {
+    const csvMime = detectCSV(data);
+    if (csvMime) {
         return {
             ext: "csv",
-            mime: "text/csv"
+            mime: csvMime
         };
     }
 
@@ -123,23 +87,79 @@ export function convertBmpToPng(data: string) {
     });
 }
 
-function isSimpleCSV(data: string | Buffer) {
+function getUint8Array(data: string | Buffer) {
+    if (typeof data === "string") {
+        return new Uint8Array(new Buffer(data.slice(0, SAMPLE_LENGTH), "binary"));
+    } else {
+        return new Uint8Array(data);
+    }
+}
+
+function isDlog(dataSample: Uint8Array) {
+    const DLOG_MAGIC1 = 0x2d5a4545;
+    const DLOG_MAGIC2 = 0x474f4c44;
+    const DLOG_VERSION = 0x0001;
+
+    let i = 0;
+
+    function isEqual16(value: number) {
+        const result =
+            dataSample[i] === (value & 0xff) && dataSample[i + 1] === ((value >> 8) & 0xff);
+
+        i += 2;
+
+        return result;
+    }
+
+    function isEqual32(value: number) {
+        const result =
+            dataSample[i] === (value & 0xff) &&
+            dataSample[i + 1] === ((value >> 8) & 0xff) &&
+            dataSample[i + 2] === ((value >> 16) & 0xff) &&
+            dataSample[i + 3] === value >> 24;
+
+        i += 4;
+
+        return result;
+    }
+
+    return isEqual32(DLOG_MAGIC1) && isEqual32(DLOG_MAGIC2) && isEqual16(DLOG_VERSION);
+}
+
+function detectCSV(data: string | Buffer) {
     if (data instanceof Buffer) {
         data = data.toString("binary");
     }
 
-    // is CSV file?
     let lines = data.split("\n");
     if (lines.length === 0) {
-        return false;
+        return undefined;
     }
+
+    let numColumns: number | undefined = undefined;
+
     for (let line of lines) {
-        let numbers = line.split(",");
+        line = line.trim();
+        if (!line) {
+            continue;
+        }
+
+        let numbers = line.split(",").map(number => number.trim());
+
+        if (numColumns === undefined) {
+            numColumns = numbers.length;
+        } else {
+            if (numColumns !== numbers.length) {
+                return undefined;
+            }
+        }
+
         if (numbers.find(number => number !== "=" && isNaN(parseFloat(number)))) {
-            return false;
+            return undefined;
         }
     }
-    return true;
+
+    return numColumns == 3 ? MIME_EEZ_LIST : MIME_CSV;
 }
 
 export function checkMime(message: string, list: string[]) {

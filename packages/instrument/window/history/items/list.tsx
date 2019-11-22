@@ -15,6 +15,8 @@ import { getSource } from "notebook/store";
 
 import { InstrumentObject, instruments } from "instrument/instrument-object";
 
+import { checkMime, MIME_EEZ_LIST } from "instrument/connection/file-type";
+
 import { ChartPreview } from "instrument/window/chart-preview";
 
 import { createTableListFromData } from "instrument/window/lists/factory";
@@ -58,6 +60,46 @@ export class ListHistoryItemComponent extends React.Component<
             );
         }
 
+        if (this.props.historyItem.data && this.props.historyItem.instrument) {
+            const tableData: {
+                dwell: number[];
+                voltage: number[];
+                current: number[];
+            } = {
+                dwell: [],
+                voltage: [],
+                current: []
+            };
+
+            const data: string = this.props.historyItem.data.toString();
+
+            for (const line of data.split("\n").map(line => line.trim())) {
+                if (!line) {
+                    continue;
+                }
+
+                const values = line.split(",").map(value => value.trim());
+
+                if (values[0] !== "=") {
+                    tableData.dwell.push(parseFloat(values[0]));
+                }
+
+                if (values[1] !== "=") {
+                    tableData.voltage.push(parseFloat(values[1]));
+                }
+
+                if (values[2] !== "=") {
+                    tableData.current.push(parseFloat(values[2]));
+                }
+            }
+
+            return createTableListFromData(
+                tableData as any,
+                this.props.historyItem.appStore! as any, // @todo remove need for any
+                this.props.historyItem.instrument
+            );
+        }
+
         return null;
     }
 
@@ -79,7 +121,7 @@ export class ListHistoryItemComponent extends React.Component<
             saveTableListData(
                 this.props.historyItem.appStore!.instrument! as any, // @todo remove need for any
                 this.message.listName,
-                this.list.tableListData
+                this.list!.tableListData
             );
         }
     }
@@ -96,9 +138,10 @@ export class ListHistoryItemComponent extends React.Component<
                     </p>
                     {this.props.historyItem.sourceDescriptionElement}
                     <div>
-                        {this.message.operation === "get"
-                            ? `Instrument list saved as "${this.message.listName}"`
-                            : `List "${this.message.listName}" sent to instrument`}
+                        {this.message.operation &&
+                            (this.message.operation === "get"
+                                ? `Instrument list saved as "${this.message.listName}"`
+                                : `List "${this.message.listName}" sent to instrument`)}
                     </div>
                     {this.message.error && <div className="text-danger">{this.message.error}</div>}
                     {this.list && <ChartPreview data={this.list} />}
@@ -153,4 +196,10 @@ export class ListHistoryItem extends HistoryItem {
     get listItemElement(): JSX.Element | null {
         return <ListHistoryItemComponent historyItem={this} />;
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function isTableList(activityLogEntry: IActivityLogEntry) {
+    return checkMime(activityLogEntry.message, [MIME_EEZ_LIST]);
 }

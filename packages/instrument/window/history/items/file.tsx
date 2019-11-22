@@ -295,7 +295,7 @@ export class FileHistoryItemComponent extends React.Component<
             clipboard.writeImage(image);
             notification.success("Image copied to the clipboard");
         } else if (this.props.historyItem.isText) {
-            clipboard.writeText(this.props.historyItem.data);
+            clipboard.writeText(this.props.historyItem.data.toString());
             notification.success("Text copied to the clipboard");
         }
     }
@@ -329,9 +329,7 @@ export class FileHistoryItemComponent extends React.Component<
             let progress;
             if (this.props.historyItem.expectedDataLength) {
                 let transferSpeed = formatTransferSpeed(this.props.historyItem.transferSpeed);
-                progress = `${percent}% (${this.props.historyItem.dataLength} of ${
-                    this.props.historyItem.expectedDataLength
-                }) ${transferSpeed}`;
+                progress = `${percent}% (${this.props.historyItem.dataLength} of ${this.props.historyItem.expectedDataLength}) ${transferSpeed}`;
             } else {
                 progress = `${this.props.historyItem.dataLength} bytes`;
             }
@@ -382,11 +380,13 @@ export class FileHistoryItemComponent extends React.Component<
                 actions = (
                     <Toolbar>
                         <IconAction icon="material:save" title="Save file" onClick={this.onSave} />
-                        <IconAction
-                            icon="material:content_copy"
-                            title="Copy to clipboard"
-                            onClick={this.onCopy}
-                        />
+                        {(this.props.historyItem.isImage || this.props.historyItem.isText) && (
+                            <IconAction
+                                icon="material:content_copy"
+                                title="Copy to clipboard"
+                                onClick={this.onCopy}
+                            />
+                        )}
                         {!this.props.historyItem.note && (
                             <IconAction
                                 icon="material:comment"

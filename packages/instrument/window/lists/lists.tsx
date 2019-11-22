@@ -362,8 +362,8 @@ export async function saveTableListData(
     const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
         EEZStudio.electron.remote.getCurrentWindow(),
         {
-            defaultPath: getValidFileNameFromFileName(listName) + ".csv",
-            filters: [{ name: "CSV Files", extensions: ["csv"] }]
+            defaultPath: listName ? getValidFileNameFromFileName(listName) + ".list" : undefined,
+            filters: [{ name: "EEZ List Files", extensions: ["list"] }]
         }
     );
     const filePath = result.filePath;
@@ -372,7 +372,7 @@ export async function saveTableListData(
             await writeCsvFile(filePath, tableListData, getCsvDataColumnDefinitions(instrument));
             notification.success(`List exported to "${filePath}".`);
         } catch (err) {
-            error("Failed to write CSV file.", err.toString());
+            error("Failed to write list file.", err.toString());
         }
     }
 }

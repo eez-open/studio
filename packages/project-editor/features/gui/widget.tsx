@@ -3018,21 +3018,37 @@ export class ScrollBarWidget extends Widget {
                 return;
             }
 
+            let isHorizontal = rect.width > rect.height;
+
+            let buttonSize = isHorizontal ? rect.height : rect.width;
+
             // draw left button
             let leftButtonCanvas = drawText(
                 widget.leftButtonText || "<",
-                buttonsFont.height,
-                rect.height,
+                isHorizontal ? buttonSize : rect.width,
+                isHorizontal ? rect.height : buttonSize,
                 widget.buttonsStyle,
                 false
             );
             ctx.drawImage(leftButtonCanvas, 0, 0);
 
             // draw track
-            const x = buttonsFont.height;
-            const y = 0;
-            const width = rect.width - 2 * buttonsFont.height;
-            const height = rect.height;
+            let x;
+            let y;
+            let width;
+            let height;
+
+            if (isHorizontal) {
+                x = buttonSize;
+                y = 0;
+                width = rect.width - 2 * buttonSize;
+                height = rect.height;
+            } else {
+                x = 0;
+                y = buttonSize;
+                width = rect.width;
+                height = rect.height - 2 * buttonSize;
+            }
 
             draw.setColor(getStyleProperty(this.style, "color"));
             draw.fillRect(ctx, x, y, x + width - 1, y + height - 1, 0);
@@ -3044,21 +3060,46 @@ export class ScrollBarWidget extends Widget {
                 20
             ];
 
-            const xThumb = Math.floor((position * width) / size);
-            const widthThumb = Math.max(Math.floor((pageSize * width) / size), buttonsFont.height);
+            let xThumb;
+            let widthThumb;
+            let yThumb;
+            let heightThumb;
+
+            if (isHorizontal) {
+                xThumb = Math.floor((position * width) / size);
+                widthThumb = Math.max(Math.floor((pageSize * width) / size), buttonSize);
+                yThumb = y;
+                heightThumb = height;
+            } else {
+                xThumb = x;
+                widthThumb = width;
+                yThumb = Math.floor((position * height) / size);
+                heightThumb = Math.max(Math.floor((pageSize * height) / size), buttonSize);
+            }
 
             draw.setColor(getStyleProperty(this.thumbStyle, "color"));
-            draw.fillRect(ctx, xThumb, y, xThumb + widthThumb - 1, y + height - 1, 0);
+            draw.fillRect(
+                ctx,
+                xThumb,
+                yThumb,
+                xThumb + widthThumb - 1,
+                yThumb + heightThumb - 1,
+                0
+            );
 
             // draw right button
             let rightButonCanvas = drawText(
                 widget.rightButtonText || ">",
-                buttonsFont.height,
-                rect.height,
+                isHorizontal ? buttonSize : rect.width,
+                isHorizontal ? rect.height : buttonSize,
                 widget.buttonsStyle,
                 false
             );
-            ctx.drawImage(rightButonCanvas, rect.width - buttonsFont.height, 0);
+            ctx.drawImage(
+                rightButonCanvas,
+                isHorizontal ? rect.width - buttonSize : 0,
+                isHorizontal ? 0 : rect.height - buttonSize
+            );
         });
     }
 }

@@ -20,6 +20,37 @@ import * as ScriptHistoryItemModule from "instrument/window/history/items/script
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function getFileSpecializationItem(activityLogEntry: IActivityLogEntry, appStore?: any) {
+    const {
+        ListHistoryItem,
+        isTableList
+    } = require("instrument/window/history/items/list") as typeof ListHistoryItemModule;
+
+    if (isTableList(activityLogEntry)) {
+        return new ListHistoryItem(activityLogEntry, appStore);
+    }
+
+    const {
+        isDlogWaveform,
+        DlogWaveform
+    } = require("instrument/window/waveform/dlog") as typeof DlogWaveformModule;
+
+    if (isDlogWaveform(activityLogEntry)) {
+        return new DlogWaveform(activityLogEntry, appStore);
+    }
+
+    const {
+        isWaveform,
+        Waveform
+    } = require("instrument/window/waveform/generic") as typeof GenericWaveformModule;
+
+    if (isWaveform(activityLogEntry)) {
+        return new Waveform(activityLogEntry, appStore);
+    }
+
+    return undefined;
+}
+
 export function createHistoryItem(
     activityLogEntry: IActivityLogEntry,
     appStore?: any
@@ -86,20 +117,9 @@ export function createHistoryItem(
 
     if (activityLogEntry.type.startsWith("instrument/file")) {
         if (appStore) {
-            const {
-                isWaveform,
-                Waveform
-            } = require("instrument/window/waveform/generic") as typeof GenericWaveformModule;
-
-            const {
-                isDlogWaveform,
-                DlogWaveform
-            } = require("instrument/window/waveform/dlog") as typeof DlogWaveformModule;
-
-            if (isDlogWaveform(activityLogEntry)) {
-                return new DlogWaveform(activityLogEntry, appStore);
-            } else if (isWaveform(activityLogEntry)) {
-                return new Waveform(activityLogEntry, appStore);
+            const item = getFileSpecializationItem(activityLogEntry, appStore);
+            if (item) {
+                return item;
             }
         }
 
@@ -135,12 +155,9 @@ export function createHistoryItem(
 
 export function updateHistoryItemClass(historyItem: IHistoryItem, appStore: any): IHistoryItem {
     if (historyItem.type.startsWith("instrument/file")) {
-        const {
-            isDlogWaveform,
-            DlogWaveform
-        } = require("instrument/window/waveform/dlog") as typeof DlogWaveformModule;
-        if (isDlogWaveform(historyItem) && !(historyItem instanceof DlogWaveform)) {
-            return new DlogWaveform(historyItem, appStore);
+        const item = getFileSpecializationItem(historyItem, appStore);
+        if (item) {
+            return item;
         }
     }
     return historyItem;
