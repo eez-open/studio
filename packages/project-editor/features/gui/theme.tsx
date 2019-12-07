@@ -16,7 +16,8 @@ import {
     NavigationStore,
     INavigationStore,
     DocumentStore,
-    UndoManager
+    UndoManager,
+    IContextMenuContext
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import { replaceObjectReference } from "project-editor/core/search";
@@ -30,6 +31,8 @@ import { ListNavigation } from "project-editor/components/ListNavigation";
 import { ProjectStore } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { Gui } from "project-editor/features/gui/gui";
+
+const { MenuItem } = EEZStudio.electron.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -305,6 +308,52 @@ export class Color extends EezObject {
             });
         }
     };
+
+    extendContextMenu(
+        context: IContextMenuContext,
+        objects: EezObject[],
+        menuItems: Electron.MenuItem[]
+    ) {
+        var additionalMenuItems: Electron.MenuItem[] = [];
+
+        additionalMenuItems.push(
+            new MenuItem({
+                label: "Copy to other themes",
+                click: () => {
+                    UndoManager.setCombineCommands(true);
+
+                    const gui = getProperty(ProjectStore.project, "gui") as Gui;
+
+                    const selectedTheme = NavigationStore.getNavigationSelectedItem(
+                        gui.themes
+                    ) as Theme;
+
+                    const colorIndex = asArray(gui.colors).indexOf(this);
+                    const color = gui.getThemeColor(selectedTheme.id, this.id);
+
+                    gui.themes._array.forEach((theme: any, i: number) => {
+                        if (theme != selectedTheme) {
+                            const colors = theme.colors.slice();
+                            colors[colorIndex] = color;
+                            DocumentStore.updateObject(theme, {
+                                colors
+                            });
+                        }
+                    });
+
+                    UndoManager.setCombineCommands(false);
+                }
+            })
+        );
+
+        additionalMenuItems.push(
+            new MenuItem({
+                type: "separator"
+            })
+        );
+
+        menuItems.unshift(...additionalMenuItems);
+    }
 }
 
 registerClass(Color);

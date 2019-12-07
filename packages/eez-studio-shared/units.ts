@@ -445,6 +445,43 @@ export const POWER_UNIT = new Unit({
     precision: 12
 });
 
+export const JOULE_UNIT = new Unit({
+    name: "joule",
+    color: "#423b16",
+    colorInverse: "#423b16",
+    unitSymbol: "J",
+    units: [
+        0.000000000001,
+        0.00000000001,
+        0.0000000001,
+        0.000000001,
+        0.00000001,
+        0.0000001,
+        0.000001,
+        0.00001,
+        0.0001,
+        0.001,
+        0.005,
+        0.01,
+        0.05,
+        0.1,
+        0.5,
+        1,
+        5,
+        10,
+        100,
+        1000,
+        10000,
+        100000,
+        1000000,
+        10000000,
+        100000000,
+        1000000000,
+        10000000000
+    ],
+    precision: 12
+});
+
 export const FREQUENCY_UNIT = new Unit({
     name: "frequency",
     color: "white",
@@ -606,6 +643,8 @@ export const UNITS = {
     "sampling rate": SAMPLING_RATE_UNIT,
 
     decibel: DECIBEL_UNIT,
+
+    joule: JOULE_UNIT,
 
     unknown: UNKNOWN_UNIT,
     unkn: UNKNOWN_UNIT

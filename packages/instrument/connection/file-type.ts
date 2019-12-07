@@ -98,7 +98,8 @@ function getUint8Array(data: string | Buffer) {
 function isDlog(dataSample: Uint8Array) {
     const DLOG_MAGIC1 = 0x2d5a4545;
     const DLOG_MAGIC2 = 0x474f4c44;
-    const DLOG_VERSION = 0x0001;
+    const DLOG_VERSION1 = 0x0001;
+    const DLOG_VERSION2 = 0x0002;
 
     let i = 0;
 
@@ -123,7 +124,21 @@ function isDlog(dataSample: Uint8Array) {
         return result;
     }
 
-    return isEqual32(DLOG_MAGIC1) && isEqual32(DLOG_MAGIC2) && isEqual16(DLOG_VERSION);
+    if (!isEqual32(DLOG_MAGIC1)) {
+        return false;
+    }
+
+    if (!isEqual32(DLOG_MAGIC2)) {
+        return false;
+    }
+
+    if (isEqual16(DLOG_VERSION1)) {
+        return true;
+    }
+
+    i -= 2;
+
+    return isEqual16(DLOG_VERSION2);
 }
 
 function detectCSV(data: string | Buffer) {

@@ -123,11 +123,12 @@ class DlogWaveformLineController extends LineController {
         public dlogWaveform: DlogWaveform,
         public yAxisController: AxisController,
         channel: IChannel,
-        values: any
+        values: any,
+        dataOffset: number
     ) {
         super(id, yAxisController);
 
-        let rowOffset = 7 * 4;
+        let rowOffset = dataOffset;
         const rowBytes =
             4 * ((this.dlogWaveform.hasJitterColumn ? 1 : 0) + this.dlogWaveform.channels.length);
         const length = (values.length - rowOffset) / rowBytes;
@@ -226,6 +227,11 @@ function readFloat(data: any, i: number) {
     return buffer.readFloatLE(0);
 }
 
+function readUInt8(data: any, i: number) {
+    buffer[0] = data[i];
+    return buffer.readUInt8(0);
+}
+
 function readUInt16(data: any, i: number) {
     buffer[0] = data[i];
     buffer[1] = data[i + 1];
@@ -240,7 +246,61 @@ function readUInt32(data: any, i: number) {
     return buffer.readUInt32LE(0);
 }
 
+function getUnit(unit: number) {
+    enum FirmwareUnit {
+        UNIT_UNKNOWN,
+        UNIT_VOLT,
+        UNIT_MILLI_VOLT,
+        UNIT_AMPER,
+        UNIT_MILLI_AMPER,
+        UNIT_MICRO_AMPER,
+        UNIT_WATT,
+        UNIT_MILLI_WATT,
+        UNIT_SECOND,
+        UNIT_MILLI_SECOND,
+        UNIT_CELSIUS,
+        UNIT_RPM,
+        UNIT_OHM,
+        UNIT_KOHM,
+        UNIT_MOHM,
+        UNIT_PERCENT,
+        UNIT_FREQUENCY,
+        UNIT_JOULE
+    }
+
+    if (unit === FirmwareUnit.UNIT_VOLT) {
+        return UNITS.volt;
+    } else if (unit === FirmwareUnit.UNIT_AMPER) {
+        return UNITS.ampere;
+    } else if (unit === FirmwareUnit.UNIT_WATT) {
+        return UNITS.watt;
+    } else if (unit === FirmwareUnit.UNIT_SECOND) {
+        return UNITS.time;
+    } else if (unit === FirmwareUnit.UNIT_JOULE) {
+        return UNITS.joule;
+    } else {
+        return UNITS.unknown;
+    }
+}
+
 interface IDlogChart {}
+
+enum Fields {
+    FIELD_ID_X_UNIT = 10,
+    FIELD_ID_X_STEP = 11,
+    FIELD_ID_X_RANGE_MIN = 12,
+    FIELD_ID_X_RANGE_MAX = 13,
+    FIELD_ID_X_LABEL = 14,
+
+    FIELD_ID_Y_UNIT = 30,
+    FIELD_ID_Y_RANGE_MIN = 32,
+    FIELD_ID_Y_RANGE_MAX = 33,
+    FIELD_ID_Y_LABEL = 34,
+    FIELD_ID_Y_CHANNEL_INDEX = 35,
+
+    FIELD_ID_CHANNEL_MODULE_TYPE = 50,
+    FIELD_ID_CHANNEL_MODULE_REVISION = 51
+}
 
 interface IChannel {
     iChannel: number;
@@ -373,9 +433,151 @@ export class DlogWaveform extends FileHistoryItem {
         return readUInt16(this.values, offset);
     }
 
+    readUInt8(offset: number) {
+        return readUInt8(this.values, offset);
+    }
+
+    @computed
+    get version() {
+        return this.values ? this.readUInt16(8) : 0;
+    }
+
+    @computed
+    get fields() {
+        let xAxis: {
+            unit: IUnit;
+            step: number;
+            range: {
+                min: number;
+                max: number;
+            };
+            label: string;
+        } = {
+            unit: TIME_UNIT,
+            step: 1,
+            range: {
+                min: 0,
+                max: 1
+            },
+            label: ""
+        };
+
+        let yAxes: {
+            unit: IUnit;
+            range: {
+                min: number;
+                max: number;
+            };
+            label: string;
+            channelIndex: number;
+        }[] = [];
+
+        let offset = 16;
+        while (offset < this.dataOffset) {
+            const fieldLength = this.readUInt16(offset);
+            if (fieldLength == 0) {
+                break;
+            }
+
+            offset += 2;
+
+            const fieldId = this.readUInt8(offset);
+            offset++;
+
+            let fieldDataLength = fieldLength - 2 - 1;
+
+            if (fieldId === Fields.FIELD_ID_X_UNIT) {
+                xAxis.unit = getUnit(this.readUInt8(offset));
+                offset++;
+            } else if (fieldId === Fields.FIELD_ID_X_STEP) {
+                xAxis.step = this.readFloat(offset);
+                offset += 4;
+            } else if (fieldId === Fields.FIELD_ID_X_RANGE_MIN) {
+                xAxis.range.min = this.readFloat(offset);
+                offset += 4;
+            } else if (fieldId === Fields.FIELD_ID_X_RANGE_MAX) {
+                xAxis.range.max = this.readFloat(offset);
+                offset += 4;
+            } else if (fieldId === Fields.FIELD_ID_X_LABEL) {
+                xAxis.label = "";
+                for (let i = 0; i < fieldDataLength; i++) {
+                    xAxis.label += this.readUInt8(offset);
+                    offset++;
+                }
+            } else if (
+                fieldId >= Fields.FIELD_ID_Y_UNIT &&
+                fieldId <= Fields.FIELD_ID_Y_CHANNEL_INDEX
+            ) {
+                let yAxisIndex = this.readUInt8(offset);
+                offset++;
+
+                yAxisIndex--;
+                while (yAxisIndex >= yAxes.length) {
+                    yAxes.push({
+                        unit: VOLTAGE_UNIT,
+                        range: {
+                            min: 0,
+                            max: 1
+                        },
+                        label: "",
+                        channelIndex: 0
+                    });
+                }
+
+                fieldDataLength -= 1;
+
+                if (fieldId === Fields.FIELD_ID_Y_UNIT) {
+                    yAxes[yAxisIndex].unit = getUnit(this.readUInt8(offset));
+                    offset++;
+                } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MIN) {
+                    yAxes[yAxisIndex].range.min = this.readFloat(offset);
+                    offset += 4;
+                } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MAX) {
+                    yAxes[yAxisIndex].range.max = this.readFloat(offset);
+                    offset += 4;
+                } else if (fieldId === Fields.FIELD_ID_Y_LABEL) {
+                    yAxes[yAxisIndex].label = "";
+                    for (let i = 0; i < fieldDataLength; i++) {
+                        yAxes[yAxisIndex].label += this.readUInt8(offset);
+                        offset++;
+                    }
+                } else if (fieldId === Fields.FIELD_ID_Y_CHANNEL_INDEX) {
+                    yAxes[yAxisIndex].channelIndex = this.readUInt8(offset) - 1;
+                    offset++;
+                } else {
+                    // unknown field, skip
+                    offset += fieldDataLength;
+                }
+            } else if (fieldId === Fields.FIELD_ID_CHANNEL_MODULE_TYPE) {
+                this.readUInt8(offset); // channel index
+                offset++;
+                this.readUInt16(offset); // module type
+                offset += 2;
+            } else if (fieldId == Fields.FIELD_ID_CHANNEL_MODULE_REVISION) {
+                this.readUInt8(offset); // channel index
+                offset++;
+                this.readUInt16(offset); // module revision
+                offset += 2;
+            } else {
+                // unknown field, skip
+                offset += fieldDataLength;
+            }
+        }
+
+        return {
+            xAxis,
+            yAxes
+        };
+    }
+
     @computed
     get period() {
-        return this.values ? this.readFloat(16) : 1;
+        if (this.version === 1) {
+            return this.readFloat(16);
+        } else if (this.version === 2) {
+            return this.fields.xAxis.step;
+        }
+        return 1;
     }
 
     @computed
@@ -390,14 +592,16 @@ export class DlogWaveform extends FileHistoryItem {
 
     @computed
     get startTime() {
-        return this.values ? new Date(this.readUInt32(24) * 1000) : new Date();
+        if (this.version === 1) {
+            return this.values ? new Date(this.readUInt32(24) * 1000) : new Date();
+        }
+        return undefined;
     }
 
     @computed
     get channels() {
-        const channels: IChannel[] = [];
-
-        if (this.values) {
+        if (this.version === 1) {
+            const channels: IChannel[] = [];
             const columns = this.readUInt32(12);
             for (let iChannel = 0; iChannel < 8; iChannel++) {
                 if (columns & (1 << (4 * iChannel))) {
@@ -424,28 +628,47 @@ export class DlogWaveform extends FileHistoryItem {
                     });
                 }
             }
+            return channels;
+        } else if (this.version === 2) {
+            return this.fields.yAxes.map(yAxis => ({
+                iChannel: yAxis.channelIndex,
+                unit: yAxis.unit,
+                axisModel: new DlogWaveformAxisModel(yAxis.channelIndex, yAxis.unit)
+            })) as IChannel[];
         }
 
-        return channels;
+        return [];
     }
 
     @computed
     get hasJitterColumn() {
-        if (!this.values) {
-            return false;
+        if (this.version === 1) {
+            const flag = this.readUInt16(10);
+            return !!(flag & 0x0001);
         }
-        const flag = this.readUInt16(10);
-        return !!(flag & 0x0001);
+        return false;
     }
 
     @computed
     get length() {
-        if (!this.values) {
-            return 0;
+        if (this.version === 1) {
+            let rowOffset = this.dataOffset;
+            const rowBytes = 4 * ((this.hasJitterColumn ? 1 : 0) + this.channels.length);
+            return (this.values.length - rowOffset) / rowBytes;
+        } else if (this.version === 2) {
+            return (this.values.length - this.dataOffset) / (this.fields.yAxes.length * 4);
         }
-        let rowOffset = 7 * 4;
-        const rowBytes = 4 * ((this.hasJitterColumn ? 1 : 0) + this.channels.length);
-        return (this.values.length - rowOffset) / rowBytes;
+        return 0;
+    }
+
+    @computed
+    get dataOffset() {
+        if (this.version === 1) {
+            return 28;
+        } else if (this.version === 2) {
+            return this.readUInt32(12);
+        }
+        return 0;
     }
 
     @observable
@@ -457,16 +680,27 @@ export class DlogWaveform extends FileHistoryItem {
             return null;
         }
 
-        console.log(this);
+        const startTime = this.startTime;
 
-        return (
-            <div>{`Start time: ${formatDateTimeLong(
-                this.startTime
-            )}, Period: ${TIME_UNIT.formatValue(this.period, 4)}, Duration: ${TIME_UNIT.formatValue(
-                this.time,
-                4
-            )}`}</div>
-        );
+        if (startTime) {
+            return (
+                <div>{`Start time: ${formatDateTimeLong(
+                    startTime
+                )}, Period: ${TIME_UNIT.formatValue(
+                    this.period,
+                    4
+                )}, Duration: ${TIME_UNIT.formatValue(this.time, 4)}`}</div>
+            );
+        } else {
+            return (
+                <div>
+                    {`Period: ${TIME_UNIT.formatValue(
+                        this.period,
+                        4
+                    )}, Duration: ${TIME_UNIT.formatValue(this.time, 4)}`}
+                </div>
+            );
+        }
     }
 
     createChartController(chartsController: ChartsController, channel: IChannel) {
@@ -481,7 +715,8 @@ export class DlogWaveform extends FileHistoryItem {
             this,
             chartController.yAxisController,
             channel,
-            this.values || ""
+            this.values || "",
+            this.dataOffset
         );
 
         chartController.lineControllers.push(lineController);
