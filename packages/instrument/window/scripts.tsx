@@ -1,19 +1,25 @@
 import React from "react";
 import { observable, computed, values, action, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react";
+import { bind } from "bind-decorator";
 
 import { stringCompare } from "eez-studio-shared/string";
+import { validators } from "eez-studio-shared/validation";
 
 import styled from "eez-studio-ui/styled-components";
 import { AlertDanger } from "eez-studio-ui/alert";
 import { Splitter } from "eez-studio-ui/splitter";
 import { List } from "eez-studio-ui/list";
-import { ButtonAction } from "eez-studio-ui/action";
+import { IconAction, ButtonAction } from "eez-studio-ui/action";
 import { CodeEditor } from "eez-studio-ui/code-editor";
+import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { IShortcut } from "shortcuts/interfaces";
+import { DEFAULT_TOOLBAR_BUTTON_COLOR } from "shortcuts/toolbar-button-colors";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
+import { executeShortcut } from "instrument/window/script";
 import { IModel } from "instrument/window/undo";
 
 import { Terminal } from "instrument/window/terminal/terminal";
@@ -21,11 +27,12 @@ import { Terminal } from "instrument/window/terminal/terminal";
 export class ScriptsModel implements IModel {
     constructor(private appStore: InstrumentAppStore) {}
 
-    @observable
-    _newActionCode: string | undefined;
+    @observable _newActionCode: string | undefined;
+
     get newActionCode() {
         return this._newActionCode;
     }
+
     set newActionCode(value: string | undefined) {
         runInAction(() => {
             this._newActionCode = value;
@@ -37,14 +44,10 @@ export class ScriptsModel implements IModel {
         }
     }
 
-    @observable
-    errorMessage: string | undefined;
-    @observable
-    errorLineNumber: number | undefined;
-    @observable
-    errorColumnNumber: number | undefined;
-    @observable
-    terminalVisible: boolean;
+    @observable errorMessage: string | undefined;
+    @observable errorLineNumber: number | undefined;
+    @observable errorColumnNumber: number | undefined;
+    @observable terminalVisible: boolean;
 
     @computed
     get selectedScript() {
@@ -115,6 +118,84 @@ export class ScriptsModel implements IModel {
             this.codeEditor.redo();
         }
     }
+
+    @bind
+    addScript() {
+        showGenericDialog({
+            dialogDefinition: {
+                fields: [
+                    {
+                        name: "name",
+                        type: "string",
+                        validators: [
+                            validators.required,
+                            validators.unique({}, values(this.appStore.shortcutsStore.shortcuts))
+                        ]
+                    }
+                ]
+            },
+
+            values: {
+                name: ""
+            }
+        })
+            .then(result => {
+                this.appStore.shortcutsStore.addShortcut({
+                    name: result.values.name,
+                    action: {
+                        type: "micropython",
+                        data: ""
+                    },
+                    keybinding: "",
+                    groupName: "",
+                    showInToolbar: false,
+                    toolbarButtonPosition: 0,
+                    toolbarButtonColor: DEFAULT_TOOLBAR_BUTTON_COLOR,
+                    requiresConfirmation: false,
+                    selected: false
+                });
+
+                console.log(result);
+                // beginTransaction("Add instrument list");
+                // let listId = this.props.appStore.instrumentListStore.createObject({
+                //     type: result.values.type,
+                //     name: result.values.name,
+                //     description: result.values.description,
+                //     data: createEmptyListData(
+                //         result.values.type,
+                //         {
+                //             duration: result.values.duration,
+                //             numSamples: result.values.numSamples
+                //         },
+                //         this.props.appStore.instrument!
+                //     )
+                // });
+                // commitTransaction();
+
+                // this.props.appStore.navigationStore.selectedListId = listId;
+
+                // setTimeout(() => {
+                //     let element = document.querySelector(`.EezStudio_InstrumentList_${listId}`);
+                //     if (element) {
+                //         element.scrollIntoView();
+                //     }
+                // }, 10);
+            })
+            .catch(() => {});
+    }
+
+    @bind
+    deleteScript() {}
+
+    @bind
+    run() {
+        if (this.selectedScript) {
+            executeShortcut(this.appStore, this.selectedScript);
+        }
+    }
+
+    @bind
+    upload() {}
 }
 
 const ScriptsContainer = styled.div`
@@ -198,12 +279,36 @@ class MasterView extends React.Component<{
     }
 
     render() {
+        const scriptsModel = this.props.appStore.scriptsModel;
+
         return (
-            <List
-                nodes={this.sortedLists}
-                renderNode={node => <div>{node.data.name}</div>}
-                selectNode={node => this.props.selectScript(node.data)}
-            />
+            <VerticalHeaderWithBody>
+                <ToolbarHeader>
+                    <IconAction
+                        icon="material:add"
+                        iconSize={16}
+                        title="Add list"
+                        onClick={scriptsModel.addScript}
+                    />
+                    <IconAction
+                        icon="material:delete"
+                        iconSize={16}
+                        title="Remove list"
+                        enabled={
+                            scriptsModel.selectedScript &&
+                            scriptsModel.selectedScript.action.type === "micropython"
+                        }
+                        onClick={scriptsModel.deleteScript}
+                    />
+                </ToolbarHeader>
+                <Body tabIndex={0}>
+                    <List
+                        nodes={this.sortedLists}
+                        renderNode={node => <div>{node.data.name}</div>}
+                        selectNode={node => this.props.selectScript(node.data)}
+                    />
+                </Body>
+            </VerticalHeaderWithBody>
         );
     }
 }
@@ -236,8 +341,9 @@ export class ScriptsEditor extends React.Component<{ appStore: InstrumentAppStor
                     <ScriptView appStore={appStore} />
                 </Splitter>
 
-                {scriptsModel.terminalVisible &&
-                    appStore.instrument && <Terminal appStore={appStore} />}
+                {scriptsModel.terminalVisible && appStore.instrument && (
+                    <Terminal appStore={appStore} />
+                )}
             </Splitter>
         );
     }
@@ -260,6 +366,29 @@ export function toolbarButtonsRender(appStore: InstrumentAppStore) {
                     onClick={scriptsModel.commit}
                 />
             )}
+            {scriptsModel.selectedScript &&
+                appStore.instrument!.connection.isConnected &&
+                scriptsModel.selectedScript.action.type === "micropython" && (
+                    <ButtonAction
+                        text="Upload"
+                        icon="material:file_upload"
+                        className="btn-secondary"
+                        title="Upload script to instrument"
+                        onClick={scriptsModel.upload}
+                    />
+                )}
+            {scriptsModel.selectedScript &&
+                appStore.instrument!.connection.isConnected &&
+                (scriptsModel.selectedScript.action.type === "scpi-commands" ||
+                    scriptsModel.selectedScript.action.type === "javascript") && (
+                    <ButtonAction
+                        text="Run"
+                        icon="material:play_arrow"
+                        className="btn-secondary"
+                        title="Run"
+                        onClick={scriptsModel.run}
+                    />
+                )}
             <ButtonAction
                 text={scriptsModel.terminalVisible ? "Hide Terminal" : "Show Terminal"}
                 className="btn-secondary"

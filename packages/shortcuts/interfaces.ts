@@ -1,4 +1,4 @@
-export type IActionType = "scpi-commands" | "javascript";
+export type IActionType = "scpi-commands" | "javascript" | "micropython";
 
 export interface IAction {
     type: IActionType;
