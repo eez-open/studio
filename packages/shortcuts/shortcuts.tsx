@@ -282,7 +282,11 @@ class ShortcutRow implements IRow {
 
     @computed
     get action() {
-        return this.shortcut.action.type === "scpi-commands" ? "SCPI" : "JavaScript";
+        return this.shortcut.action.type === "scpi-commands"
+            ? "SCPI"
+            : this.shortcut.action.type === "javascript"
+            ? "JavaScript"
+            : "MicroPython";
     }
 
     get confirmation() {

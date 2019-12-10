@@ -13,7 +13,10 @@ import { Connection } from "instrument/connection/connection";
 import { detectFileType, SAMPLE_LENGTH } from "instrument/connection/file-type";
 
 export interface IFileUploadInstructions {
-    sourceFilePath: string;
+    sourceFilePath?: string;
+    sourceData?: string;
+    sourceFileType?: string;
+
     destinationFileName: string;
     destinationFolderPath: string;
 
@@ -37,7 +40,12 @@ export class FileUpload extends FileTransfer {
     fileType: string;
     dataSurplus: string | undefined;
 
-    constructor(connection: Connection, private instructions: IFileUploadInstructions) {
+    constructor(
+        connection: Connection,
+        private instructions: IFileUploadInstructions,
+        private onSuccessCallback?: () => void,
+        private onErrorCallback?: (error: any) => void
+    ) {
         super(connection);
 
         this.logEntry = {
@@ -72,14 +80,25 @@ export class FileUpload extends FileTransfer {
 
     async loadData() {
         try {
-            this.fileDataLength = await getFileSizeInBytes(this.instructions.sourceFilePath);
-            this.fileData = Buffer.allocUnsafe(this.fileDataLength);
-
-            this.fd = await openFile(this.instructions.sourceFilePath);
-
-            let inputBuffer = new Buffer(SAMPLE_LENGTH);
-            let { buffer } = await readFile(this.fd, inputBuffer, 0, SAMPLE_LENGTH, 0);
-            this.fileType = detectFileType(buffer, this.instructions.sourceFilePath);
+            if (this.instructions.sourceFilePath) {
+                this.fileDataLength = await getFileSizeInBytes(this.instructions.sourceFilePath);
+                this.fileData = Buffer.allocUnsafe(this.fileDataLength);
+                this.fd = await openFile(this.instructions.sourceFilePath);
+                let inputBuffer = new Buffer(SAMPLE_LENGTH);
+                let { buffer } = await readFile(this.fd, inputBuffer, 0, SAMPLE_LENGTH, 0);
+                this.fileType = detectFileType(buffer, this.instructions.sourceFilePath);
+            } else {
+                this.fileData = Buffer.from(this.instructions.sourceData!, "utf8");
+                this.fileDataLength = this.fileData.length;
+                if (this.instructions.sourceFileType) {
+                    this.fileType = this.instructions.sourceFileType;
+                } else {
+                    this.fileType = detectFileType(
+                        this.fileData,
+                        this.instructions.destinationFileName
+                    );
+                }
+            }
 
             this.state = "init";
         } catch (err) {
@@ -172,17 +191,21 @@ export class FileUpload extends FileTransfer {
         let position = this.getNextChunkBlockPosition();
         let length = this.getNextChunkBlockLength();
 
-        let inputBuffer = Buffer.allocUnsafe(length);
+        if (this.fd) {
+            let inputBuffer = Buffer.allocUnsafe(length);
 
-        let { bytesRead, buffer } = await readFile(this.fd, inputBuffer, 0, length, position);
+            let { bytesRead, buffer } = await readFile(this.fd, inputBuffer, 0, length, position);
 
-        if (bytesRead !== length) {
-            return undefined;
+            if (bytesRead !== length) {
+                return undefined;
+            }
+
+            buffer.copy(this.fileData!, position, 0, length);
+
+            return buffer.toString("binary");
+        } else {
+            return this.fileData!.slice(position, position + length);
         }
-
-        buffer.copy(this.fileData!, position, 0, length);
-
-        return buffer.toString("binary");
     }
 
     async getNextChunkBlock() {
@@ -245,6 +268,18 @@ export class FileUpload extends FileTransfer {
             if (this.fileData) {
                 this.logEntry.data = this.fileData;
                 this.fileData = undefined;
+            }
+
+            if (this.onSuccessCallback) {
+                this.onSuccessCallback();
+                this.onSuccessCallback = undefined;
+            }
+        }
+
+        if (this.state === "error") {
+            if (this.onErrorCallback) {
+                this.onErrorCallback(this.error);
+                this.onErrorCallback = undefined;
             }
         }
 

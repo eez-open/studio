@@ -66,6 +66,7 @@ function createEditor(
                     addScript("../../libs/brace-0.8.0/mode/css.js"),
                     addScript("../../libs/brace-0.8.0/mode/json.min.js"),
                     addScript("../../libs/brace-0.8.0/mode/javascript.js"),
+                    addScript("../../libs/brace-0.8.0/mode/python.js"),
                     addScript("../../libs/brace-0.8.0/mode/scpi.js"),
                     addScript("../../libs/brace-0.8.0/theme/github.js")
                 ]).then(aceReady);
@@ -124,7 +125,7 @@ const CodeEditorDiv = styled.div`
     flex-grow: 1;
 `;
 
-export type CodeEditorMode = "c_cpp" | "javascript" | "json" | "scpi" | "css";
+export type CodeEditorMode = "c_cpp" | "javascript" | "json" | "scpi" | "css" | "python";
 
 interface CodeEditorProps {
     mode: CodeEditorMode;

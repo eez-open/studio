@@ -1,9 +1,10 @@
 import { observable } from "mobx";
 
-import { IUnit, TIME_UNIT } from "eez-studio-shared/units";
+import { IUnit } from "eez-studio-shared/units";
 import { IAxisModel, ZoomMode, ChartsController } from "eez-studio-ui/chart/chart";
 
 interface IWaveform {
+    xAxisUnit: IUnit;
     samplingRate: number;
     length: number;
     xAxisDefaultSubdivisionOffset: number | undefined;
@@ -15,9 +16,11 @@ interface IWaveform {
 export class WaveformTimeAxisModel implements IAxisModel {
     constructor(private waveform: IWaveform) {}
 
-    unit: IUnit = TIME_UNIT;
-
     chartsController: ChartsController;
+
+    get unit() {
+        return this.waveform.xAxisUnit;
+    }
 
     get minValue() {
         return 0;

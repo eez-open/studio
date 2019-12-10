@@ -95,6 +95,9 @@ export class InstrumentAppStore implements IEditor {
                 );
 
                 bindShortcuts(this.shortcutsStore.instrumentShortcuts, (shortcut: IShortcut) => {
+                    if (shortcut.action.type === "micropython") {
+                        return;
+                    }
                     const {
                         executeShortcut
                     } = require("instrument/window/script") as typeof ScriptModule;

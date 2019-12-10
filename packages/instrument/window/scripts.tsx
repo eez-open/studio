@@ -14,8 +14,12 @@ import { IconAction, ButtonAction } from "eez-studio-ui/action";
 import { CodeEditor } from "eez-studio-ui/code-editor";
 import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import { confirm } from "eez-studio-ui/dialog-electron";
+import { Icon } from "eez-studio-ui/icon";
+import * as notification from "eez-studio-ui/notification";
 
 import { IShortcut } from "shortcuts/interfaces";
+import { SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } from "shortcuts/shortcuts";
 import { DEFAULT_TOOLBAR_BUTTON_COLOR } from "shortcuts/toolbar-button-colors";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
@@ -131,19 +135,39 @@ export class ScriptsModel implements IModel {
                             validators.required,
                             validators.unique({}, values(this.appStore.shortcutsStore.shortcuts))
                         ]
+                    },
+                    {
+                        name: "type",
+                        type: "enum",
+                        enumItems: [
+                            {
+                                id: "scpi-commands",
+                                label: "SCPI"
+                            },
+                            {
+                                id: "javascript",
+                                label: "JavaScript"
+                            },
+                            {
+                                id: "micropython",
+                                label: "MicroPython"
+                            }
+                        ],
+                        validators: [validators.required]
                     }
                 ]
             },
 
             values: {
-                name: ""
+                name: "",
+                type: ""
             }
         })
             .then(result => {
-                this.appStore.shortcutsStore.addShortcut({
+                const scriptId = this.appStore.shortcutsStore.addShortcut({
                     name: result.values.name,
                     action: {
-                        type: "micropython",
+                        type: result.values.type,
                         data: ""
                     },
                     keybinding: "",
@@ -154,38 +178,32 @@ export class ScriptsModel implements IModel {
                     requiresConfirmation: false,
                     selected: false
                 });
-
-                console.log(result);
-                // beginTransaction("Add instrument list");
-                // let listId = this.props.appStore.instrumentListStore.createObject({
-                //     type: result.values.type,
-                //     name: result.values.name,
-                //     description: result.values.description,
-                //     data: createEmptyListData(
-                //         result.values.type,
-                //         {
-                //             duration: result.values.duration,
-                //             numSamples: result.values.numSamples
-                //         },
-                //         this.props.appStore.instrument!
-                //     )
-                // });
-                // commitTransaction();
-
-                // this.props.appStore.navigationStore.selectedListId = listId;
-
-                // setTimeout(() => {
-                //     let element = document.querySelector(`.EezStudio_InstrumentList_${listId}`);
-                //     if (element) {
-                //         element.scrollIntoView();
-                //     }
-                // }, 10);
+                if (scriptId) {
+                    runInAction(() => (this.appStore.navigationStore.selectedScriptId = scriptId));
+                }
             })
             .catch(() => {});
     }
 
     @bind
-    deleteScript() {}
+    deleteScript() {
+        const selectedScript = this.selectedScript;
+        if (selectedScript) {
+            const isExtensionShortcut =
+                selectedScript.groupName &&
+                selectedScript.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX);
+
+            confirm(
+                "Are you sure?",
+                isExtensionShortcut
+                    ? "This will also delete shortcut which cannot be restored without reinstalling instrument extension."
+                    : undefined,
+                () => {
+                    this.appStore.shortcutsStore.deleteShortcut(selectedScript);
+                }
+            );
+        }
+    }
 
     @bind
     run() {
@@ -194,8 +212,36 @@ export class ScriptsModel implements IModel {
         }
     }
 
+    @computed
+    get canUpload() {
+        const instrument = this.appStore.instrument!;
+        const connection = instrument.connection;
+        return (
+            this.selectedScript &&
+            this.selectedScript.action.type === "micropython" &&
+            connection.isConnected &&
+            instrument.getFileDownloadProperty()
+        );
+    }
+
     @bind
-    upload() {}
+    upload() {
+        if (this.canUpload) {
+            const instrument = this.appStore.instrument!;
+            const connection = instrument.connection;
+
+            connection.upload(
+                Object.assign({}, instrument.defaultFileUploadInstructions, {
+                    sourceData: this.selectedScript!.action.data,
+                    sourceFileType: "text/x-python",
+                    destinationFileName: this.selectedScript!.name + ".py",
+                    destinationFolderPath: "/Scripts"
+                }),
+                () => notification.success(`Script uploaded.`),
+                err => notification.error(`Failed to upload script: ${err.toString()}`)
+            );
+        }
+    }
 }
 
 const ScriptsContainer = styled.div`
@@ -240,7 +286,9 @@ export class ScriptView extends React.Component<{ appStore: InstrumentAppStore }
                     mode={
                         scriptsModel.selectedScript.action.type === "scpi-commands"
                             ? "scpi"
-                            : "javascript"
+                            : scriptsModel.selectedScript.action.type === "javascript"
+                            ? "javascript"
+                            : "python"
                     }
                     lineNumber={scriptsModel.errorLineNumber}
                     columnNumber={scriptsModel.errorColumnNumber}
@@ -258,6 +306,16 @@ export class ScriptView extends React.Component<{ appStore: InstrumentAppStore }
                 {codeEditor}
             </ScriptsContainer>
         );
+    }
+}
+
+function getScriptIcon(script: IShortcut) {
+    if (script.action.type === "scpi-commands") {
+        return <Icon icon="../instrument/_images/scpi.png" />;
+    } else if (script.action.type === "javascript") {
+        return <Icon icon="../instrument/_images/javascript.png" />;
+    } else {
+        return <Icon icon="../instrument/_images/micropython.png" />;
     }
 }
 
@@ -287,24 +345,25 @@ class MasterView extends React.Component<{
                     <IconAction
                         icon="material:add"
                         iconSize={16}
-                        title="Add list"
+                        title="Add script"
                         onClick={scriptsModel.addScript}
                     />
                     <IconAction
                         icon="material:delete"
                         iconSize={16}
-                        title="Remove list"
-                        enabled={
-                            scriptsModel.selectedScript &&
-                            scriptsModel.selectedScript.action.type === "micropython"
-                        }
+                        title="Delete script"
+                        enabled={!!scriptsModel.selectedScript}
                         onClick={scriptsModel.deleteScript}
                     />
                 </ToolbarHeader>
                 <Body tabIndex={0}>
                     <List
                         nodes={this.sortedLists}
-                        renderNode={node => <div>{node.data.name}</div>}
+                        renderNode={node => (
+                            <div>
+                                {getScriptIcon(node.data)} {node.data.name}
+                            </div>
+                        )}
                         selectNode={node => this.props.selectScript(node.data)}
                     />
                 </Body>
@@ -366,17 +425,15 @@ export function toolbarButtonsRender(appStore: InstrumentAppStore) {
                     onClick={scriptsModel.commit}
                 />
             )}
-            {scriptsModel.selectedScript &&
-                appStore.instrument!.connection.isConnected &&
-                scriptsModel.selectedScript.action.type === "micropython" && (
-                    <ButtonAction
-                        text="Upload"
-                        icon="material:file_upload"
-                        className="btn-secondary"
-                        title="Upload script to instrument"
-                        onClick={scriptsModel.upload}
-                    />
-                )}
+            {scriptsModel.canUpload && (
+                <ButtonAction
+                    text="Upload"
+                    icon="material:file_upload"
+                    className="btn-secondary"
+                    title="Upload script to instrument"
+                    onClick={scriptsModel.upload}
+                />
+            )}
             {scriptsModel.selectedScript &&
                 appStore.instrument!.connection.isConnected &&
                 (scriptsModel.selectedScript.action.type === "scpi-commands" ||

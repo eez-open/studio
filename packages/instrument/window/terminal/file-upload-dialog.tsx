@@ -103,9 +103,9 @@ class FileUploadDialog extends React.Component<
 
     deriveDestinationFileNameFromSourceFilePath() {
         if (this.instructions.shortFileName) {
-            return getShortFileName(this.instructions.sourceFilePath);
+            return getShortFileName(this.instructions.sourceFilePath!);
         } else {
-            return getValidFileNameFromFileName(getFileName(this.instructions.sourceFilePath));
+            return getValidFileNameFromFileName(getFileName(this.instructions.sourceFilePath!));
         }
     }
 
@@ -115,7 +115,7 @@ class FileUploadDialog extends React.Component<
                 <PropertyList withAdvancedProperties={true}>
                     <FileInputProperty
                         name="Source file path"
-                        value={this.instructions.sourceFilePath}
+                        value={this.instructions.sourceFilePath || ""}
                         onChange={action((value: string) => {
                             this.instructions.sourceFilePath = value;
 

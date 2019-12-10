@@ -44,6 +44,343 @@ import { WaveformToolbar } from "instrument/window/waveform/toolbar";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum Fields {
+    FIELD_ID_X_UNIT = 10,
+    FIELD_ID_X_STEP = 11,
+    FIELD_ID_X_RANGE_MIN = 12,
+    FIELD_ID_X_RANGE_MAX = 13,
+    FIELD_ID_X_LABEL = 14,
+
+    FIELD_ID_Y_UNIT = 30,
+    FIELD_ID_Y_RANGE_MIN = 32,
+    FIELD_ID_Y_RANGE_MAX = 33,
+    FIELD_ID_Y_LABEL = 34,
+    FIELD_ID_Y_CHANNEL_INDEX = 35,
+
+    FIELD_ID_CHANNEL_MODULE_TYPE = 50,
+    FIELD_ID_CHANNEL_MODULE_REVISION = 51
+}
+
+interface IDlogXAxis {
+    unit: IUnit;
+    step: number;
+    range: {
+        min: number;
+        max: number;
+    };
+    label: string;
+}
+
+interface IDlogYAxis {
+    unit: IUnit;
+    range?: {
+        min: number;
+        max: number;
+    };
+    label?: string;
+    channelIndex: number;
+}
+
+interface IDlog {
+    version: number;
+    xAxis: IDlogXAxis;
+    yAxes: IDlogYAxis[];
+    dataOffset: number;
+    length: number;
+
+    // legacy, version 1
+    startTime?: Date;
+    hasJitterColumn: boolean;
+}
+
+const DLOG_MAGIC1 = 0x2d5a4545;
+const DLOG_MAGIC2 = 0x474f4c44;
+const DLOG_VERSION1 = 0x0001;
+const DLOG_VERSION2 = 0x0002;
+
+function decodeDlog(data: Uint8Array): IDlog | undefined {
+    const buffer = Buffer.allocUnsafe(4);
+
+    function readFloat(i: number) {
+        buffer[0] = data[i];
+        buffer[1] = data[i + 1];
+        buffer[2] = data[i + 2];
+        buffer[3] = data[i + 3];
+        return buffer.readFloatLE(0);
+    }
+
+    function readUInt8(i: number) {
+        buffer[0] = data[i];
+        return buffer.readUInt8(0);
+    }
+
+    function readUInt16(i: number) {
+        buffer[0] = data[i];
+        buffer[1] = data[i + 1];
+        return buffer.readUInt16LE(0);
+    }
+
+    function readUInt32(i: number) {
+        buffer[0] = data[i];
+        buffer[1] = data[i + 1];
+        buffer[2] = data[i + 2];
+        buffer[3] = data[i + 3];
+        return buffer.readUInt32LE(0);
+    }
+
+    function getUnit(unit: number) {
+        enum FirmwareUnit {
+            UNIT_UNKNOWN,
+            UNIT_VOLT,
+            UNIT_MILLI_VOLT,
+            UNIT_AMPER,
+            UNIT_MILLI_AMPER,
+            UNIT_MICRO_AMPER,
+            UNIT_WATT,
+            UNIT_MILLI_WATT,
+            UNIT_SECOND,
+            UNIT_MILLI_SECOND,
+            UNIT_CELSIUS,
+            UNIT_RPM,
+            UNIT_OHM,
+            UNIT_KOHM,
+            UNIT_MOHM,
+            UNIT_PERCENT,
+            UNIT_FREQUENCY,
+            UNIT_JOULE
+        }
+
+        if (unit === FirmwareUnit.UNIT_VOLT) {
+            return UNITS.volt;
+        } else if (unit === FirmwareUnit.UNIT_AMPER) {
+            return UNITS.ampere;
+        } else if (unit === FirmwareUnit.UNIT_WATT) {
+            return UNITS.watt;
+        } else if (unit === FirmwareUnit.UNIT_SECOND) {
+            return UNITS.time;
+        } else if (unit === FirmwareUnit.UNIT_JOULE) {
+            return UNITS.joule;
+        } else {
+            return UNITS.unknown;
+        }
+    }
+
+    function readColumns() {
+        const columns = readUInt32(12);
+        for (let iChannel = 0; iChannel < 8; iChannel++) {
+            if (columns & (1 << (4 * iChannel))) {
+                yAxes.push({
+                    unit: VOLTAGE_UNIT,
+                    channelIndex: iChannel
+                });
+            }
+
+            if (columns & (2 << (4 * iChannel))) {
+                yAxes.push({
+                    unit: CURRENT_UNIT,
+                    channelIndex: iChannel
+                });
+            }
+
+            if (columns & (4 << (4 * iChannel))) {
+                yAxes.push({
+                    unit: POWER_UNIT,
+                    channelIndex: iChannel
+                });
+            }
+        }
+    }
+
+    function readFields() {
+        let offset = 16;
+        while (offset < dataOffset) {
+            const fieldLength = readUInt16(offset);
+            if (fieldLength == 0) {
+                break;
+            }
+
+            offset += 2;
+
+            const fieldId = readUInt8(offset);
+            offset++;
+
+            let fieldDataLength = fieldLength - 2 - 1;
+
+            if (fieldId === Fields.FIELD_ID_X_UNIT) {
+                xAxis.unit = getUnit(readUInt8(offset));
+                offset++;
+            } else if (fieldId === Fields.FIELD_ID_X_STEP) {
+                xAxis.step = readFloat(offset);
+                offset += 4;
+            } else if (fieldId === Fields.FIELD_ID_X_RANGE_MIN) {
+                xAxis.range.min = readFloat(offset);
+                offset += 4;
+            } else if (fieldId === Fields.FIELD_ID_X_RANGE_MAX) {
+                xAxis.range.max = readFloat(offset);
+                offset += 4;
+            } else if (fieldId === Fields.FIELD_ID_X_LABEL) {
+                xAxis.label = "";
+                for (let i = 0; i < fieldDataLength; i++) {
+                    xAxis.label += readUInt8(offset);
+                    offset++;
+                }
+            } else if (
+                fieldId >= Fields.FIELD_ID_Y_UNIT &&
+                fieldId <= Fields.FIELD_ID_Y_CHANNEL_INDEX
+            ) {
+                let yAxisIndex = readUInt8(offset);
+                offset++;
+
+                yAxisIndex--;
+                while (yAxisIndex >= yAxes.length) {
+                    yAxes.push({
+                        unit: VOLTAGE_UNIT,
+                        range: {
+                            min: 0,
+                            max: 1
+                        },
+                        label: "",
+                        channelIndex: 0
+                    });
+                }
+
+                fieldDataLength -= 1;
+
+                if (fieldId === Fields.FIELD_ID_Y_UNIT) {
+                    yAxes[yAxisIndex].unit = getUnit(readUInt8(offset));
+                    offset++;
+                } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MIN) {
+                    yAxes[yAxisIndex].range!.min = readFloat(offset);
+                    offset += 4;
+                } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MAX) {
+                    yAxes[yAxisIndex].range!.max = readFloat(offset);
+                    offset += 4;
+                } else if (fieldId === Fields.FIELD_ID_Y_LABEL) {
+                    let label = "";
+                    for (let i = 0; i < fieldDataLength; i++) {
+                        label += readUInt8(offset);
+                        offset++;
+                    }
+                    yAxes[yAxisIndex].label = label;
+                } else if (fieldId === Fields.FIELD_ID_Y_CHANNEL_INDEX) {
+                    yAxes[yAxisIndex].channelIndex = readUInt8(offset) - 1;
+                    offset++;
+                } else {
+                    // unknown field, skip
+                    offset += fieldDataLength;
+                }
+            } else if (fieldId === Fields.FIELD_ID_CHANNEL_MODULE_TYPE) {
+                readUInt8(offset); // channel index
+                offset++;
+                readUInt16(offset); // module type
+                offset += 2;
+            } else if (fieldId == Fields.FIELD_ID_CHANNEL_MODULE_REVISION) {
+                readUInt8(offset); // channel index
+                offset++;
+                readUInt16(offset); // module revision
+                offset += 2;
+            } else {
+                // unknown field, skip
+                offset += fieldDataLength;
+            }
+        }
+    }
+
+    if (readUInt32(0) !== DLOG_MAGIC1) {
+        return undefined;
+    }
+
+    if (readUInt32(4) !== DLOG_MAGIC2) {
+        return undefined;
+    }
+
+    const version = readUInt16(8);
+    if (version !== DLOG_VERSION1 && version !== DLOG_VERSION2) {
+        return undefined;
+    }
+
+    let dataOffset = version == 1 ? 28 : readUInt32(12);
+
+    let xAxis: IDlogXAxis = {
+        unit: TIME_UNIT,
+        step: 1,
+        range: {
+            min: 0,
+            max: 1
+        },
+        label: ""
+    };
+
+    let yAxes: IDlogYAxis[] = [];
+
+    let startTime = undefined;
+    let hasJitterColumn = false;
+
+    if (version == 1) {
+        xAxis.step = readFloat(16);
+
+        readColumns();
+
+        startTime = new Date(readUInt32(24) * 1000);
+        hasJitterColumn = version === 1 ? !!(readUInt16(10) & 0x0001) : false;
+    } else {
+        readFields();
+        startTime = undefined;
+        hasJitterColumn = false;
+    }
+
+    let length = (data.length - dataOffset) / (((hasJitterColumn ? 1 : 0) + yAxes.length) * 4);
+
+    return {
+        version,
+        xAxis,
+        yAxes,
+        dataOffset,
+        length,
+        startTime,
+        hasJitterColumn
+    };
+}
+
+export function isDlog(dataSample: Uint8Array) {
+    return !!decodeDlog(dataSample);
+}
+
+export function convertDlogToCsv(data: Uint8Array) {
+    const dlog = decodeDlog(data);
+    if (!dlog) {
+        return undefined;
+    }
+
+    const buffer = Buffer.allocUnsafe(4);
+
+    function readFloat(i: number) {
+        buffer[0] = data[i];
+        buffer[1] = data[i + 1];
+        buffer[2] = data[i + 2];
+        buffer[3] = data[i + 3];
+        return buffer.readFloatLE(0);
+    }
+
+    const numColumns = (dlog.hasJitterColumn ? 1 : 0) + dlog.yAxes.length;
+
+    let csv = "";
+    for (let rowIndex = 0; rowIndex < dlog.length; rowIndex++) {
+        for (let columnIndex = 0; columnIndex < dlog.yAxes.length; columnIndex++) {
+            if (columnIndex > 0) {
+                csv += ",";
+            }
+            csv += readFloat(
+                dlog.dataOffset +
+                    4 * (rowIndex * numColumns + (dlog.hasJitterColumn ? 1 : 0) + columnIndex)
+            ).toString();
+        }
+        csv += "\n";
+    }
+
+    return Buffer.from(csv, "utf8");
+}
+
 export function isDlogWaveform(activityLogEntry: IActivityLogEntry) {
     return checkMime(activityLogEntry.message, [MIME_EEZ_DLOG]);
 }
@@ -51,19 +388,33 @@ export function isDlogWaveform(activityLogEntry: IActivityLogEntry) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DlogWaveformAxisModel implements IAxisModel {
-    constructor(public iChannel: number, public unit: IUnit) {}
+    unit: IUnit;
+
+    constructor(public yAxis: IDlogYAxis) {
+        this.unit = yAxis.unit;
+    }
 
     get minValue() {
+        if (this.yAxis.range) {
+            return this.yAxis.range.min;
+        }
+
         return 0;
     }
 
     get maxValue() {
-        if (this.unit.name === "voltage") {
+        if (this.yAxis.range) {
+            return this.yAxis.range.max;
+        }
+
+        if (this.yAxis.unit.name === "voltage") {
             return 40;
         }
-        if (this.unit.name === "current") {
+
+        if (this.yAxis.unit.name === "current") {
             return 5;
         }
+
         return 200;
     }
 
@@ -101,17 +452,18 @@ export class DlogWaveformAxisModel implements IAxisModel {
 
     @computed
     get label() {
-        return `Channel ${this.iChannel + 1} ${capitalize(this.unit.name)}`;
+        return `Channel ${this.yAxis.channelIndex + 1} ${this.yAxis.label ||
+            capitalize(this.yAxis.unit.name)}`;
     }
 
     @computed
     get color() {
-        return this.unit.color;
+        return this.yAxis.unit.color;
     }
 
     @computed
     get colorInverse() {
-        return this.unit.colorInverse;
+        return this.yAxis.unit.colorInverse;
     }
 }
 
@@ -217,90 +569,7 @@ class DlogWaveformChartsController extends ChartsController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const buffer = Buffer.allocUnsafe(4);
-
-function readFloat(data: any, i: number) {
-    buffer[0] = data[i];
-    buffer[1] = data[i + 1];
-    buffer[2] = data[i + 2];
-    buffer[3] = data[i + 3];
-    return buffer.readFloatLE(0);
-}
-
-function readUInt8(data: any, i: number) {
-    buffer[0] = data[i];
-    return buffer.readUInt8(0);
-}
-
-function readUInt16(data: any, i: number) {
-    buffer[0] = data[i];
-    buffer[1] = data[i + 1];
-    return buffer.readUInt16LE(0);
-}
-
-function readUInt32(data: any, i: number) {
-    buffer[0] = data[i];
-    buffer[1] = data[i + 1];
-    buffer[2] = data[i + 2];
-    buffer[3] = data[i + 3];
-    return buffer.readUInt32LE(0);
-}
-
-function getUnit(unit: number) {
-    enum FirmwareUnit {
-        UNIT_UNKNOWN,
-        UNIT_VOLT,
-        UNIT_MILLI_VOLT,
-        UNIT_AMPER,
-        UNIT_MILLI_AMPER,
-        UNIT_MICRO_AMPER,
-        UNIT_WATT,
-        UNIT_MILLI_WATT,
-        UNIT_SECOND,
-        UNIT_MILLI_SECOND,
-        UNIT_CELSIUS,
-        UNIT_RPM,
-        UNIT_OHM,
-        UNIT_KOHM,
-        UNIT_MOHM,
-        UNIT_PERCENT,
-        UNIT_FREQUENCY,
-        UNIT_JOULE
-    }
-
-    if (unit === FirmwareUnit.UNIT_VOLT) {
-        return UNITS.volt;
-    } else if (unit === FirmwareUnit.UNIT_AMPER) {
-        return UNITS.ampere;
-    } else if (unit === FirmwareUnit.UNIT_WATT) {
-        return UNITS.watt;
-    } else if (unit === FirmwareUnit.UNIT_SECOND) {
-        return UNITS.time;
-    } else if (unit === FirmwareUnit.UNIT_JOULE) {
-        return UNITS.joule;
-    } else {
-        return UNITS.unknown;
-    }
-}
-
 interface IDlogChart {}
-
-enum Fields {
-    FIELD_ID_X_UNIT = 10,
-    FIELD_ID_X_STEP = 11,
-    FIELD_ID_X_RANGE_MIN = 12,
-    FIELD_ID_X_RANGE_MAX = 13,
-    FIELD_ID_X_LABEL = 14,
-
-    FIELD_ID_Y_UNIT = 30,
-    FIELD_ID_Y_RANGE_MIN = 32,
-    FIELD_ID_Y_RANGE_MAX = 33,
-    FIELD_ID_Y_LABEL = 34,
-    FIELD_ID_Y_CHANNEL_INDEX = 35,
-
-    FIELD_ID_CHANNEL_MODULE_TYPE = 50,
-    FIELD_ID_CHANNEL_MODULE_REVISION = 51
-}
 
 interface IChannel {
     iChannel: number;
@@ -421,254 +690,71 @@ export class DlogWaveform extends FileHistoryItem {
         return this.data;
     }
 
-    readFloat(offset: number) {
-        return readFloat(this.values, offset);
-    }
-
-    readUInt32(offset: number) {
-        return readUInt32(this.values, offset);
-    }
-
-    readUInt16(offset: number) {
-        return readUInt16(this.values, offset);
-    }
-
-    readUInt8(offset: number) {
-        return readUInt8(this.values, offset);
+    @computed
+    get dlog() {
+        return (
+            (this.values && decodeDlog(this.values)) || {
+                version: 1,
+                xAxis: {
+                    unit: TIME_UNIT,
+                    step: 1,
+                    range: {
+                        min: 0,
+                        max: 1
+                    },
+                    label: ""
+                },
+                yAxes: [],
+                dataOffset: 0,
+                length: 0,
+                startTime: undefined,
+                hasJitterColumn: false
+            }
+        );
     }
 
     @computed
     get version() {
-        return this.values ? this.readUInt16(8) : 0;
+        return this.dlog.version;
     }
 
     @computed
-    get fields() {
-        let xAxis: {
-            unit: IUnit;
-            step: number;
-            range: {
-                min: number;
-                max: number;
-            };
-            label: string;
-        } = {
-            unit: TIME_UNIT,
-            step: 1,
-            range: {
-                min: 0,
-                max: 1
-            },
-            label: ""
-        };
-
-        let yAxes: {
-            unit: IUnit;
-            range: {
-                min: number;
-                max: number;
-            };
-            label: string;
-            channelIndex: number;
-        }[] = [];
-
-        let offset = 16;
-        while (offset < this.dataOffset) {
-            const fieldLength = this.readUInt16(offset);
-            if (fieldLength == 0) {
-                break;
-            }
-
-            offset += 2;
-
-            const fieldId = this.readUInt8(offset);
-            offset++;
-
-            let fieldDataLength = fieldLength - 2 - 1;
-
-            if (fieldId === Fields.FIELD_ID_X_UNIT) {
-                xAxis.unit = getUnit(this.readUInt8(offset));
-                offset++;
-            } else if (fieldId === Fields.FIELD_ID_X_STEP) {
-                xAxis.step = this.readFloat(offset);
-                offset += 4;
-            } else if (fieldId === Fields.FIELD_ID_X_RANGE_MIN) {
-                xAxis.range.min = this.readFloat(offset);
-                offset += 4;
-            } else if (fieldId === Fields.FIELD_ID_X_RANGE_MAX) {
-                xAxis.range.max = this.readFloat(offset);
-                offset += 4;
-            } else if (fieldId === Fields.FIELD_ID_X_LABEL) {
-                xAxis.label = "";
-                for (let i = 0; i < fieldDataLength; i++) {
-                    xAxis.label += this.readUInt8(offset);
-                    offset++;
-                }
-            } else if (
-                fieldId >= Fields.FIELD_ID_Y_UNIT &&
-                fieldId <= Fields.FIELD_ID_Y_CHANNEL_INDEX
-            ) {
-                let yAxisIndex = this.readUInt8(offset);
-                offset++;
-
-                yAxisIndex--;
-                while (yAxisIndex >= yAxes.length) {
-                    yAxes.push({
-                        unit: VOLTAGE_UNIT,
-                        range: {
-                            min: 0,
-                            max: 1
-                        },
-                        label: "",
-                        channelIndex: 0
-                    });
-                }
-
-                fieldDataLength -= 1;
-
-                if (fieldId === Fields.FIELD_ID_Y_UNIT) {
-                    yAxes[yAxisIndex].unit = getUnit(this.readUInt8(offset));
-                    offset++;
-                } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MIN) {
-                    yAxes[yAxisIndex].range.min = this.readFloat(offset);
-                    offset += 4;
-                } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MAX) {
-                    yAxes[yAxisIndex].range.max = this.readFloat(offset);
-                    offset += 4;
-                } else if (fieldId === Fields.FIELD_ID_Y_LABEL) {
-                    yAxes[yAxisIndex].label = "";
-                    for (let i = 0; i < fieldDataLength; i++) {
-                        yAxes[yAxisIndex].label += this.readUInt8(offset);
-                        offset++;
-                    }
-                } else if (fieldId === Fields.FIELD_ID_Y_CHANNEL_INDEX) {
-                    yAxes[yAxisIndex].channelIndex = this.readUInt8(offset) - 1;
-                    offset++;
-                } else {
-                    // unknown field, skip
-                    offset += fieldDataLength;
-                }
-            } else if (fieldId === Fields.FIELD_ID_CHANNEL_MODULE_TYPE) {
-                this.readUInt8(offset); // channel index
-                offset++;
-                this.readUInt16(offset); // module type
-                offset += 2;
-            } else if (fieldId == Fields.FIELD_ID_CHANNEL_MODULE_REVISION) {
-                this.readUInt8(offset); // channel index
-                offset++;
-                this.readUInt16(offset); // module revision
-                offset += 2;
-            } else {
-                // unknown field, skip
-                offset += fieldDataLength;
-            }
-        }
-
-        return {
-            xAxis,
-            yAxes
-        };
-    }
-
-    @computed
-    get period() {
-        if (this.version === 1) {
-            return this.readFloat(16);
-        } else if (this.version === 2) {
-            return this.fields.xAxis.step;
-        }
-        return 1;
+    get xAxisUnit() {
+        return this.dlog.xAxis.unit;
     }
 
     @computed
     get samplingRate() {
-        return 1 / this.period;
-    }
-
-    @computed
-    get time() {
-        return this.values ? this.length * this.period : 0;
+        return 1 / this.dlog.xAxis.step;
     }
 
     @computed
     get startTime() {
-        if (this.version === 1) {
-            return this.values ? new Date(this.readUInt32(24) * 1000) : new Date();
-        }
-        return undefined;
+        return this.dlog.startTime;
     }
 
     @computed
     get channels() {
-        if (this.version === 1) {
-            const channels: IChannel[] = [];
-            const columns = this.readUInt32(12);
-            for (let iChannel = 0; iChannel < 8; iChannel++) {
-                if (columns & (1 << (4 * iChannel))) {
-                    channels.push({
-                        iChannel,
-                        unit: VOLTAGE_UNIT,
-                        axisModel: new DlogWaveformAxisModel(iChannel, VOLTAGE_UNIT)
-                    });
-                }
-
-                if (columns & (2 << (4 * iChannel))) {
-                    channels.push({
-                        iChannel,
-                        unit: CURRENT_UNIT,
-                        axisModel: new DlogWaveformAxisModel(iChannel, CURRENT_UNIT)
-                    });
-                }
-
-                if (columns & (4 << (4 * iChannel))) {
-                    channels.push({
-                        iChannel,
-                        unit: POWER_UNIT,
-                        axisModel: new DlogWaveformAxisModel(iChannel, POWER_UNIT)
-                    });
-                }
-            }
-            return channels;
-        } else if (this.version === 2) {
-            return this.fields.yAxes.map(yAxis => ({
-                iChannel: yAxis.channelIndex,
-                unit: yAxis.unit,
-                axisModel: new DlogWaveformAxisModel(yAxis.channelIndex, yAxis.unit)
-            })) as IChannel[];
-        }
-
-        return [];
+        return this.dlog.yAxes.map(yAxis => ({
+            iChannel: yAxis.channelIndex,
+            unit: yAxis.unit,
+            axisModel: new DlogWaveformAxisModel(yAxis)
+        })) as IChannel[];
     }
 
     @computed
     get hasJitterColumn() {
-        if (this.version === 1) {
-            const flag = this.readUInt16(10);
-            return !!(flag & 0x0001);
-        }
-        return false;
+        return this.dlog.hasJitterColumn;
     }
 
     @computed
     get length() {
-        if (this.version === 1) {
-            let rowOffset = this.dataOffset;
-            const rowBytes = 4 * ((this.hasJitterColumn ? 1 : 0) + this.channels.length);
-            return (this.values.length - rowOffset) / rowBytes;
-        } else if (this.version === 2) {
-            return (this.values.length - this.dataOffset) / (this.fields.yAxes.length * 4);
-        }
-        return 0;
+        return this.dlog.length;
     }
 
     @computed
     get dataOffset() {
-        if (this.version === 1) {
-            return 28;
-        } else if (this.version === 2) {
-            return this.readUInt32(12);
-        }
-        return 0;
+        return this.dlog.dataOffset;
     }
 
     @observable
@@ -680,27 +766,24 @@ export class DlogWaveform extends FileHistoryItem {
             return null;
         }
 
-        const startTime = this.startTime;
+        const step = this.dlog.xAxis.step;
+        const stepStr = this.dlog.xAxis.unit.formatValue(step, 4);
 
-        if (startTime) {
-            return (
-                <div>{`Start time: ${formatDateTimeLong(
-                    startTime
-                )}, Period: ${TIME_UNIT.formatValue(
-                    this.period,
-                    4
-                )}, Duration: ${TIME_UNIT.formatValue(this.time, 4)}`}</div>
-            );
+        const max = (this.length - 1) * this.dlog.xAxis.step;
+        const maxStr = this.dlog.xAxis.unit.formatValue(max, 4);
+
+        let info;
+        if (this.dlog.xAxis.unit === TIME_UNIT) {
+            info = `Period: ${stepStr}, Duration: ${maxStr}`;
         } else {
-            return (
-                <div>
-                    {`Period: ${TIME_UNIT.formatValue(
-                        this.period,
-                        4
-                    )}, Duration: ${TIME_UNIT.formatValue(this.time, 4)}`}
-                </div>
-            );
+            info = `Step: ${stepStr}, Max: ${maxStr}`;
         }
+
+        if (this.startTime) {
+            info = `Start time: ${formatDateTimeLong(this.startTime)}, ${info}`;
+        }
+
+        return <div>{info}</div>;
     }
 
     createChartController(chartsController: ChartsController, channel: IChannel) {

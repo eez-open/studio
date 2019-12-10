@@ -7,6 +7,8 @@ import { UNITS, PREFIXES } from "eez-studio-shared/units";
 
 import { FileState } from "instrument/connection/file-state";
 
+import { isDlog } from "instrument/window/waveform/dlog";
+
 export const SAMPLE_LENGTH = 4096;
 
 export const MIME_EEZ_DLOG = "application/eez-dlog";
@@ -93,52 +95,6 @@ function getUint8Array(data: string | Buffer) {
     } else {
         return new Uint8Array(data);
     }
-}
-
-function isDlog(dataSample: Uint8Array) {
-    const DLOG_MAGIC1 = 0x2d5a4545;
-    const DLOG_MAGIC2 = 0x474f4c44;
-    const DLOG_VERSION1 = 0x0001;
-    const DLOG_VERSION2 = 0x0002;
-
-    let i = 0;
-
-    function isEqual16(value: number) {
-        const result =
-            dataSample[i] === (value & 0xff) && dataSample[i + 1] === ((value >> 8) & 0xff);
-
-        i += 2;
-
-        return result;
-    }
-
-    function isEqual32(value: number) {
-        const result =
-            dataSample[i] === (value & 0xff) &&
-            dataSample[i + 1] === ((value >> 8) & 0xff) &&
-            dataSample[i + 2] === ((value >> 16) & 0xff) &&
-            dataSample[i + 3] === value >> 24;
-
-        i += 4;
-
-        return result;
-    }
-
-    if (!isEqual32(DLOG_MAGIC1)) {
-        return false;
-    }
-
-    if (!isEqual32(DLOG_MAGIC2)) {
-        return false;
-    }
-
-    if (isEqual16(DLOG_VERSION1)) {
-        return true;
-    }
-
-    i -= 2;
-
-    return isEqual16(DLOG_VERSION2);
 }
 
 function detectCSV(data: string | Buffer) {

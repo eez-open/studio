@@ -29,6 +29,9 @@ export const shortcutsOrGroups = observable.box<boolean>(true);
 export class ShortcutsStore {
     constructor(public appStore: InstrumentAppStore) {
         bindShortcuts(this.instrumentShortcuts, (shortcut: IShortcut) => {
+            if (shortcut.action.type === "micropython") {
+                return;
+            }
             const { executeShortcut } = require("instrument/window/script") as typeof ScriptModule;
             if (appStore.instrument) {
                 executeShortcut(this.appStore, shortcut);

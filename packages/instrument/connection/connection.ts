@@ -77,7 +77,11 @@ abstract class ConnectionBase {
     abstract disconnect(): void;
     abstract destroy(): void;
     abstract send(command: string, options?: ISendOptions): void;
-    abstract upload(instructions: IFileUploadInstructions): void;
+    abstract upload(
+        instructions: IFileUploadInstructions,
+        onSuccess?: () => void,
+        onError?: (error: any) => void
+    ): void;
     abstract abortLongOperation(): void;
 
     abstract acquire(callbackWindowId: number, traceEnabled: boolean): string | null;
@@ -391,7 +395,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     }
 
     send(command: string, options?: ISendOptions): void {
-        if (!options || (options.log === undefined || options.log)) {
+        if (!options || options.log === undefined || options.log) {
             this.logRequest(command);
         }
 
@@ -461,9 +465,13 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         this.longOperation = createLongOperation();
     }
 
-    upload(instructions: IFileUploadInstructions) {
+    upload(
+        instructions: IFileUploadInstructions,
+        onSuccess?: () => void,
+        onError?: (error: any) => void
+    ) {
         try {
-            this.startLongOperation(() => new FileUpload(this, instructions));
+            this.startLongOperation(() => new FileUpload(this, instructions, onSuccess, onError));
         } catch (err) {
             this.logAnswer(`**ERROR: ${err}\n`);
         }
@@ -548,12 +556,12 @@ export class Connection extends ConnectionBase implements CommunicationInterface
 }
 
 export class IpcConnection extends ConnectionBase {
-    @observable
-    state: ConnectionState = ConnectionState.IDLE;
-    @observable
-    errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
-    @observable
-    error: string | undefined;
+    @observable state: ConnectionState = ConnectionState.IDLE;
+    @observable errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
+    @observable error: string | undefined;
+
+    onSuccess?: () => void;
+    onError?: (error: any) => void;
 
     constructor(instrument: InstrumentObject) {
         super(instrument);
@@ -566,6 +574,23 @@ export class IpcConnection extends ConnectionBase {
                 this.errorCode = connectionStatus.errorCode;
                 this.error = connectionStatus.error;
             })
+        );
+
+        EEZStudio.electron.ipcRenderer.on(
+            "instrument/connection/long-operation-result",
+            (event: any, args: any) => {
+                if (args.error) {
+                    if (this.onError) {
+                        this.onError(args.error);
+                    }
+                } else {
+                    if (this.onSuccess) {
+                        this.onSuccess();
+                    }
+                }
+                this.onError = undefined;
+                this.onSuccess = undefined;
+            }
         );
     }
 
@@ -620,10 +645,18 @@ export class IpcConnection extends ConnectionBase {
         });
     }
 
-    upload(instructions: IFileUploadInstructions) {
+    upload(
+        instructions: IFileUploadInstructions,
+        onSuccess?: () => void,
+        onError?: (error: any) => void
+    ) {
+        this.onSuccess = onSuccess;
+        this.onError = onError;
+
         EEZStudio.electron.ipcRenderer.send("instrument/connection/upload", {
             instrumentId: this.instrument.id,
-            instructions
+            instructions,
+            callbackWindowId: EEZStudio.electron.remote.getCurrentWindow().id
         });
     }
 
@@ -710,12 +743,33 @@ export function setupIpcServer() {
         arg: {
             instrumentId: string;
             instructions: IFileUploadInstructions;
+            callbackWindowId: number;
         }
     ) {
         let connection = connections.get(arg.instrumentId);
         if (connection) {
             connection.instrument.setLastFileUploadInstructions(arg.instructions);
-            connection.upload(arg.instructions);
+
+            connection.upload(
+                arg.instructions,
+                () => {
+                    let browserWindow = require("electron").BrowserWindow.fromId(
+                        arg.callbackWindowId
+                    );
+                    browserWindow.webContents.send(
+                        "instrument/connection/long-operation-result",
+                        {}
+                    );
+                },
+                error => {
+                    let browserWindow = require("electron").BrowserWindow.fromId(
+                        arg.callbackWindowId
+                    );
+                    browserWindow.webContents.send("instrument/connection/long-operation-result", {
+                        error
+                    });
+                }
+            );
         }
     });
 

@@ -38,6 +38,8 @@ import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
+import { convertDlogToCsv } from "instrument/window/waveform/dlog";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const FileHistoryItemDiv = styled(HistoryItemDiv)`
@@ -264,6 +266,13 @@ export class FileHistoryItemComponent extends React.Component<
                 name: fileExtension.toUpperCase() + " Files",
                 extensions: [fileExtension]
             });
+
+            if (fileExtension.toUpperCase() === "DLOG") {
+                filters.push({
+                    name: "CSV Files",
+                    extensions: ["CSV"]
+                });
+            }
         }
 
         filters.push({ name: "All Files", extensions: ["*"] });
@@ -279,9 +288,29 @@ export class FileHistoryItemComponent extends React.Component<
             EEZStudio.electron.remote.getCurrentWindow(),
             options
         );
-        const filePath = result.filePath;
+
+        let filePath = result.filePath;
         if (filePath) {
-            await writeBinaryData(filePath, this.props.historyItem.data);
+            let data = this.props.historyItem.data;
+
+            if (fileExtension) {
+                if (!filePath.endsWith(fileExtension)) {
+                    if (
+                        fileExtension.toUpperCase() === "DLOG" &&
+                        filePath.toUpperCase().endsWith(".CSV")
+                    ) {
+                        data = convertDlogToCsv(data);
+                        if (!data) {
+                            notification.error(`Failed to convert DLOG to CSV!`);
+                            return;
+                        }
+                    } else {
+                        filePath += "." + fileExtension;
+                    }
+                }
+            }
+
+            await writeBinaryData(filePath, data);
             notification.success(`Saved to "${filePath}"`);
         }
     }

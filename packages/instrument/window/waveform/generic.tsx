@@ -8,7 +8,7 @@ import { objectEqual, objectClone } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
-import { IUnit, SAMPLING_RATE_UNIT, UNITS } from "eez-studio-shared/units";
+import { IUnit, SAMPLING_RATE_UNIT, UNITS, TIME_UNIT } from "eez-studio-shared/units";
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 import { Point } from "eez-studio-shared/geometry";
 
@@ -579,6 +579,11 @@ export class Waveform extends FileHistoryItem {
 
     set scale(value: number) {
         this.waveformDefinition.scale = value;
+    }
+
+    @computed
+    get xAxisUnit() {
+        return TIME_UNIT;
     }
 
     @computed

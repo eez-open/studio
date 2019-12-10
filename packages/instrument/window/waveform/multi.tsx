@@ -6,6 +6,7 @@ import { bind } from "bind-decorator";
 import { objectEqual, objectClone, formatDateTimeLong } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
+import { TIME_UNIT } from "eez-studio-shared/units";
 
 import styled from "eez-studio-ui/styled-components";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
@@ -288,6 +289,11 @@ export class MultiWaveform extends HistoryItem {
     }
 
     @computed
+    get xAxisUnit() {
+        return TIME_UNIT;
+    }
+
+    @computed
     get samplingRate() {
         return this.longestWaveform ? this.longestWaveform.samplingRate : 1;
     }
@@ -513,7 +519,12 @@ class MultiWaveformConfigurationDialog extends React.Component<
             colorInverse:
                 joinedWaveformLinkAndDefinitionProperties.waveformLinkProperties.props.colorInverse
         }));
-        if (!objectEqual(waveformLinks, this.waveforms.map(x => x.linkedWaveform.waveformLink))) {
+        if (
+            !objectEqual(
+                waveformLinks,
+                this.waveforms.map(x => x.linkedWaveform.waveformLink)
+            )
+        ) {
             const multiWaveformHistoryItemMessage = Object.assign(
                 objectClone(this.props.multiWaveform.multiWaveformHistoryItemMessage),
                 {

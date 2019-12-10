@@ -84,7 +84,12 @@ class JavaScriptSession {
     constructor(private instrument: InstrumentObject, shortcut: IShortcut) {
         this.scriptMessage = {
             name: shortcut.name,
-            type: shortcut.action.type === "scpi-commands" ? "SCPI" : "JavaScript",
+            type:
+                shortcut.action.type === "scpi-commands"
+                    ? "SCPI"
+                    : shortcut.action.type === "javascript"
+                    ? "JavaScript"
+                    : "MicroPython",
             done: false
         };
 
