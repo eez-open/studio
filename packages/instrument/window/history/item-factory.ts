@@ -2,6 +2,7 @@ import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import * as GenericWaveformModule from "instrument/window/waveform/generic";
 import * as MultiWaveformModule from "instrument/window/waveform/multi";
+import * as DlogFileModule from "instrument/window/waveform/dlog-file";
 import * as DlogWaveformModule from "instrument/window/waveform/dlog";
 
 import { IHistoryItem, HistoryItem } from "instrument/window/history/item";
@@ -31,7 +32,10 @@ function getFileSpecializationItem(activityLogEntry: IActivityLogEntry, appStore
     }
 
     const {
-        isDlogWaveform,
+        isDlogWaveform
+    } = require("instrument/window/waveform/dlog-file") as typeof DlogFileModule;
+
+    const {
         DlogWaveform
     } = require("instrument/window/waveform/dlog") as typeof DlogWaveformModule;
 

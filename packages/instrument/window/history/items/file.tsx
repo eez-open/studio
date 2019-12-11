@@ -38,7 +38,7 @@ import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
-import { convertDlogToCsv } from "instrument/window/waveform/dlog";
+import { convertDlogToCsv } from "instrument/window/waveform/dlog-file";
 
 ////////////////////////////////////////////////////////////////////////////////
 

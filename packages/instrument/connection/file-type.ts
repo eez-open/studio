@@ -7,7 +7,7 @@ import { UNITS, PREFIXES } from "eez-studio-shared/units";
 
 import { FileState } from "instrument/connection/file-state";
 
-import { isDlog } from "instrument/window/waveform/dlog";
+import { isDlog } from "instrument/window/waveform/dlog-file";
 
 export const SAMPLE_LENGTH = 4096;
 
