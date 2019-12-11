@@ -335,10 +335,9 @@ export function convertDlogToCsv(data: Uint8Array) {
 
     let csv = "";
     for (let rowIndex = 0; rowIndex < dlog.length; rowIndex++) {
+        csv += roundNumber(rowIndex * dlog.xAxis.step, 6).toString();
         for (let columnIndex = 0; columnIndex < dlog.yAxes.length; columnIndex++) {
-            if (columnIndex > 0) {
-                csv += ",";
-            }
+            csv += ",";
             csv += roundNumber(
                 readFloat(
                     dlog.dataOffset +
