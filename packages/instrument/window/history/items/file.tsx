@@ -38,6 +38,7 @@ import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
+import { DlogWaveform } from "instrument/window/waveform/dlog";
 import { convertDlogToCsv } from "instrument/window/waveform/dlog-file";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -262,23 +263,52 @@ export class FileHistoryItemComponent extends React.Component<
         let fileExtension = this.props.historyItem.fileExtension;
 
         if (fileExtension) {
+            fileExtension = fileExtension.toLowerCase();
             filters.push({
                 name: fileExtension.toUpperCase() + " Files",
                 extensions: [fileExtension]
             });
-
-            if (fileExtension.toUpperCase() === "DLOG") {
-                filters.push({
-                    name: "CSV Files",
-                    extensions: ["CSV"]
-                });
-            }
         }
 
         filters.push({ name: "All Files", extensions: ["*"] });
 
+        let options: SaveDialogOptions = { filters };
+        if (this.props.historyItem.sourceFilePath) {
+            options.defaultPath = getFileName(this.props.historyItem.sourceFilePath);
+        }
+
+        const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
+            EEZStudio.electron.remote.getCurrentWindow(),
+            options
+        );
+
+        let filePath = result.filePath;
+        if (filePath) {
+            if (fileExtension && !filePath.toLowerCase().endsWith(fileExtension)) {
+                filePath += "." + fileExtension;
+            }
+
+            await writeBinaryData(filePath, this.props.historyItem.data);
+            notification.success(`Saved as "${filePath}"`);
+        }
+    }
+
+    @bind
+    async onSaveAsCsv() {
+        const data = convertDlogToCsv(this.props.historyItem.data);
+        if (!data) {
+            notification.error(`Failed to convert DLOG to CSV!`);
+            return;
+        }
+
         let options: SaveDialogOptions = {
-            filters: filters
+            filters: [
+                {
+                    name: "CSV Files",
+                    extensions: ["csv"]
+                },
+                { name: "All Files", extensions: ["*"] }
+            ]
         };
         if (this.props.historyItem.sourceFilePath) {
             options.defaultPath = getFileName(this.props.historyItem.sourceFilePath);
@@ -291,27 +321,12 @@ export class FileHistoryItemComponent extends React.Component<
 
         let filePath = result.filePath;
         if (filePath) {
-            let data = this.props.historyItem.data;
-
-            if (fileExtension) {
-                if (!filePath.endsWith(fileExtension)) {
-                    if (
-                        fileExtension.toUpperCase() === "DLOG" &&
-                        filePath.toUpperCase().endsWith(".CSV")
-                    ) {
-                        data = convertDlogToCsv(data);
-                        if (!data) {
-                            notification.error(`Failed to convert DLOG to CSV!`);
-                            return;
-                        }
-                    } else {
-                        filePath += "." + fileExtension;
-                    }
-                }
+            if (!filePath.toLowerCase().endsWith("csv")) {
+                filePath += ".csv";
             }
 
             await writeBinaryData(filePath, data);
-            notification.success(`Saved to "${filePath}"`);
+            notification.success(`Saved as "${filePath}"`);
         }
     }
 
@@ -409,6 +424,13 @@ export class FileHistoryItemComponent extends React.Component<
                 actions = (
                     <Toolbar>
                         <IconAction icon="material:save" title="Save file" onClick={this.onSave} />
+                        {this.props.historyItem instanceof DlogWaveform && (
+                            <TextAction
+                                text="Save as CSV"
+                                title="Save as CSV file"
+                                onClick={this.onSaveAsCsv}
+                            />
+                        )}
                         {(this.props.historyItem.isImage || this.props.historyItem.isText) && (
                             <IconAction
                                 icon="material:content_copy"

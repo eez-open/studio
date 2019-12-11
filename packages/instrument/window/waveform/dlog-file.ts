@@ -7,6 +7,7 @@ import {
     POWER_UNIT,
     UNITS
 } from "eez-studio-shared/units";
+import { roundNumber } from "eez-studio-shared/roundNumber";
 
 import { MIME_EEZ_DLOG, checkMime } from "instrument/connection/file-type";
 
@@ -338,9 +339,12 @@ export function convertDlogToCsv(data: Uint8Array) {
             if (columnIndex > 0) {
                 csv += ",";
             }
-            csv += readFloat(
-                dlog.dataOffset +
-                    4 * (rowIndex * numColumns + (dlog.hasJitterColumn ? 1 : 0) + columnIndex)
+            csv += roundNumber(
+                readFloat(
+                    dlog.dataOffset +
+                        4 * (rowIndex * numColumns + (dlog.hasJitterColumn ? 1 : 0) + columnIndex)
+                ),
+                6
             ).toString();
         }
         csv += "\n";
