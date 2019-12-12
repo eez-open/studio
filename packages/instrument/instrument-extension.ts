@@ -23,9 +23,9 @@ import * as ConnectionModule from "instrument/connection/connection";
 
 import { createInstrumentListStore } from "instrument/window/lists/store";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
-import { importScript } from "instrument/window/scripts";
-import { importDlog } from "instrument/window/waveform/dlog";
+import * as InstrumentAppStoreModule from "instrument/window/app-store";
+import * as ScriptsModule from "instrument/window/scripts";
+import * as DlogModule from "instrument/window/waveform/dlog";
 
 if (!isRenderer()) {
     createInstrumentListStore(null);
@@ -127,6 +127,12 @@ const instrumentExtension: IExtensionDefinition = {
     loadExtension: loadInstrumentExtension,
 
     handleDragAndDropFile: async (filePath: string, host: IExtensionHost) => {
+        const {
+            InstrumentAppStore
+        } = require("instrument/window/app-store") as typeof InstrumentAppStoreModule;
+        const { importScript } = require("instrument/window/scripts") as typeof ScriptsModule;
+        const { importDlog } = require("instrument/window/waveform/dlog") as typeof DlogModule;
+
         if (host.activeTab.editor instanceof InstrumentAppStore) {
             const appStore = host.activeTab.editor;
             if (await importScript(appStore, filePath)) {

@@ -8,6 +8,7 @@ import { formatTransferSpeed, formatDateTimeLong } from "eez-studio-shared/util"
 import {
     writeBinaryData,
     getFileName,
+    getFileNameWithoutExtension,
     getTempDirPath,
     fileExists
 } from "eez-studio-shared/util-electron";
@@ -311,7 +312,9 @@ export class FileHistoryItemComponent extends React.Component<
             ]
         };
         if (this.props.historyItem.sourceFilePath) {
-            options.defaultPath = getFileName(this.props.historyItem.sourceFilePath);
+            options.defaultPath = getFileNameWithoutExtension(
+                this.props.historyItem.sourceFilePath
+            );
         }
 
         const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
@@ -425,10 +428,11 @@ export class FileHistoryItemComponent extends React.Component<
                     <Toolbar>
                         <IconAction icon="material:save" title="Save file" onClick={this.onSave} />
                         {this.props.historyItem instanceof DlogWaveform && (
-                            <TextAction
-                                text="Save as CSV"
+                            <IconAction
+                                icon="material:save"
                                 title="Save as CSV file"
                                 onClick={this.onSaveAsCsv}
+                                overlayText={"CSV"}
                             />
                         )}
                         {(this.props.historyItem.isImage || this.props.historyItem.isText) && (

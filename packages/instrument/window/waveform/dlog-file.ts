@@ -9,6 +9,8 @@ import {
 } from "eez-studio-shared/units";
 import { roundNumber } from "eez-studio-shared/roundNumber";
 
+import * as I10nModule from "eez-studio-shared/i10n";
+
 import { MIME_EEZ_DLOG, checkMime } from "instrument/connection/file-type";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -81,6 +83,10 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
     function readUInt8(i: number) {
         buffer[0] = data[i];
         return buffer.readUInt8(0);
+    }
+
+    function readString(start: number, end: number) {
+        return data.slice(start, end).toString();
     }
 
     function readUInt16(i: number) {
@@ -188,11 +194,8 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
                 xAxis.range.max = readFloat(offset);
                 offset += 4;
             } else if (fieldId === Fields.FIELD_ID_X_LABEL) {
-                xAxis.label = "";
-                for (let i = 0; i < fieldDataLength; i++) {
-                    xAxis.label += readUInt8(offset);
-                    offset++;
-                }
+                xAxis.label = readString(offset, offset + fieldDataLength);
+                offset += fieldDataLength;
             } else if (
                 fieldId >= Fields.FIELD_ID_Y_UNIT &&
                 fieldId <= Fields.FIELD_ID_Y_CHANNEL_INDEX
@@ -225,12 +228,8 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
                     yAxes[yAxisIndex].range!.max = readFloat(offset);
                     offset += 4;
                 } else if (fieldId === Fields.FIELD_ID_Y_LABEL) {
-                    let label = "";
-                    for (let i = 0; i < fieldDataLength; i++) {
-                        label += readUInt8(offset);
-                        offset++;
-                    }
-                    yAxes[yAxisIndex].label = label;
+                    yAxes[yAxisIndex].label = readString(offset, offset + fieldDataLength);
+                    offset += fieldDataLength;
                 } else if (fieldId === Fields.FIELD_ID_Y_CHANNEL_INDEX) {
                     yAxes[yAxisIndex].channelIndex = readUInt8(offset) - 1;
                     offset++;
@@ -333,18 +332,50 @@ export function convertDlogToCsv(data: Uint8Array) {
 
     const numColumns = (dlog.hasJitterColumn ? 1 : 0) + dlog.yAxes.length;
 
+    const { getLocale } = require("eez-studio-shared/i10n") as typeof I10nModule;
+
+    const locale = getLocale();
+
+    // determine CSV separator depending of locale usage of ","
+    let separator;
+    if ((0.1).toLocaleString(locale).indexOf(",") != -1) {
+        separator = ";";
+    } else {
+        separator = ",";
+    }
+
+    // first row contains column names
     let csv = "";
+
+    if (dlog.xAxis.label) {
+        csv += dlog.xAxis.label;
+    } else {
+        csv += dlog.xAxis.unit.name;
+    }
+
+    for (let columnIndex = 0; columnIndex < dlog.yAxes.length; columnIndex++) {
+        csv += separator;
+        if (dlog.yAxes[columnIndex].label) {
+            csv += dlog.yAxes[columnIndex].label;
+        } else {
+            csv += dlog.yAxes[columnIndex].unit.name;
+        }
+    }
+
+    csv += "\n";
+
+    //
     for (let rowIndex = 0; rowIndex < dlog.length; rowIndex++) {
-        csv += roundNumber(rowIndex * dlog.xAxis.step, 6).toString();
+        csv += roundNumber(rowIndex * dlog.xAxis.step, 6).toLocaleString(locale);
         for (let columnIndex = 0; columnIndex < dlog.yAxes.length; columnIndex++) {
-            csv += ",";
+            csv += separator;
             csv += roundNumber(
                 readFloat(
                     dlog.dataOffset +
                         4 * (rowIndex * numColumns + (dlog.hasJitterColumn ? 1 : 0) + columnIndex)
                 ),
                 6
-            ).toString();
+            ).toLocaleString(locale);
         }
         csv += "\n";
     }

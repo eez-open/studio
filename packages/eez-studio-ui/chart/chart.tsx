@@ -2583,7 +2583,10 @@ class Cursor implements ICursor {
         if (
             !point ||
             !event ||
-            (point.x < 0 || point.x > chartWidth || point.y < 0 || point.y > chartHeight)
+            point.x < 0 ||
+            point.x > chartWidth ||
+            point.y < 0 ||
+            point.y > chartHeight
         ) {
             return;
         }
@@ -2946,7 +2949,25 @@ export class ChartView extends React.Component<
         const { chartController } = this.props;
         const chartsController = chartController.chartsController;
 
-        const color = globalViewOptions.blackBackground
+        let color = globalViewOptions.blackBackground
+            ? chartController.xAxisController.axisModel.color
+            : chartController.xAxisController.axisModel.colorInverse;
+
+        let chartXAxisTitle = chartController.xAxisController.axisModel.label && (
+            <div
+                className="EezStudio_Chart_Title"
+                style={{
+                    color: color,
+                    right: `calc(100% - ${chartsController.chartRight}px)`,
+                    bottom: `calc(100% - ${chartsController.chartBottom}px)`,
+                    borderColor: color
+                }}
+            >
+                {chartController.xAxisController.axisModel.label}
+            </div>
+        );
+
+        color = globalViewOptions.blackBackground
             ? chartController.yAxisController.axisModel.color
             : chartController.yAxisController.axisModel.colorInverse;
 
@@ -3051,6 +3072,7 @@ export class ChartView extends React.Component<
                     </g>
                 </svg>
                 {chartTitle}
+                {chartXAxisTitle}
             </div>
         );
     }

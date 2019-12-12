@@ -72,6 +72,7 @@ export class IconAction extends React.Component<
         className?: string;
         style?: React.CSSProperties;
         color?: string;
+        overlayText?: string;
     },
     {}
 > {
@@ -85,7 +86,12 @@ export class IconAction extends React.Component<
 
         return (
             <Action className={className} {...this.props}>
-                <Icon icon={this.props.icon} size={this.props.iconSize} style={style} />
+                <Icon
+                    icon={this.props.icon}
+                    size={this.props.iconSize}
+                    style={style}
+                    overlayText={this.props.overlayText}
+                />
             </Action>
         );
     }

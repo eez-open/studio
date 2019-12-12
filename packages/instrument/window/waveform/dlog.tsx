@@ -107,8 +107,9 @@ export class DlogWaveformAxisModel implements IAxisModel {
 
     @computed
     get label() {
-        return `Channel ${this.yAxis.channelIndex + 1} ${this.yAxis.label ||
-            capitalize(this.yAxis.unit.name)}`;
+        return this.yAxis.label
+            ? this.yAxis.label
+            : `Channel ${this.yAxis.channelIndex + 1} ${capitalize(this.yAxis.unit.name)}`;
     }
 
     @computed
@@ -376,6 +377,11 @@ export class DlogWaveform extends FileHistoryItem {
     @computed
     get xAxisUnit() {
         return this.dlog.xAxis.unit;
+    }
+
+    @computed
+    get xAxisLabel() {
+        return this.dlog.xAxis.label;
     }
 
     @computed

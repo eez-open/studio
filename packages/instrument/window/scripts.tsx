@@ -6,7 +6,6 @@ import { bind } from "bind-decorator";
 import { stringCompare } from "eez-studio-shared/string";
 import { validators } from "eez-studio-shared/validation";
 import { readTextFile } from "eez-studio-shared/util-electron";
-import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 
 import styled from "eez-studio-ui/styled-components";
 import { AlertDanger } from "eez-studio-ui/alert";
@@ -168,7 +167,6 @@ export class ScriptsModel implements IModel {
             }
         })
             .then(result => {
-                beginTransaction("Add script");
                 const scriptId = this.appStore.shortcutsStore.addShortcut({
                     name: result.values.name,
                     action: {
@@ -183,7 +181,6 @@ export class ScriptsModel implements IModel {
                     requiresConfirmation: false,
                     selected: false
                 });
-                commitTransaction();
                 if (scriptId) {
                     runInAction(() => (this.appStore.navigationStore.selectedScriptId = scriptId));
                 }
@@ -546,16 +543,13 @@ export async function importScript(appStore: InstrumentAppStore, filePath: strin
             return;
         }
 
-        beginTransaction("Update script");
         appStore.shortcutsStore.updateShortcut({
             id: scriptId,
             action: Object.assign({}, toJS(script.action), {
                 data: scriptSourceText
             })
         });
-        commitTransaction();
     } else {
-        beginTransaction("Add script");
         scriptId = appStore.shortcutsStore.addShortcut({
             name,
             action: {
@@ -570,7 +564,6 @@ export async function importScript(appStore: InstrumentAppStore, filePath: strin
             requiresConfirmation: false,
             selected: false
         });
-        commitTransaction();
     }
 
     if (scriptId) {

@@ -5,6 +5,7 @@ import { IAxisModel, ZoomMode, ChartsController } from "eez-studio-ui/chart/char
 
 interface IWaveform {
     xAxisUnit: IUnit;
+    xAxisLabel?: string;
     samplingRate: number;
     length: number;
     xAxisDefaultSubdivisionOffset: number | undefined;
@@ -82,7 +83,15 @@ export class WaveformTimeAxisModel implements IAxisModel {
         return this.waveform.xAxisDefaultSubdivisionScale;
     }
 
-    label: "";
-    color: "";
-    colorInverse: "";
+    get label() {
+        return this.waveform.xAxisLabel || "";
+    }
+
+    get color() {
+        return "#eee";
+    }
+
+    get colorInverse() {
+        return "#333";
+    }
 }
