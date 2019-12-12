@@ -1,4 +1,8 @@
-import { IExtensionDefinition, IActivityLogController } from "eez-studio-shared/extensions/extension";
+import {
+    IExtensionDefinition,
+    IActivityLogController,
+    IExtensionHost
+} from "eez-studio-shared/extensions/extension";
 
 // late binding
 import * as SectionModule from "notebook/section";
@@ -34,7 +38,7 @@ const notebookExtension: IExtensionDefinition = {
         }
     ],
 
-    handleDragAndDropFile: (filePath: string) => {
+    handleDragAndDropFile: (filePath: string, host: IExtensionHost) => {
         const { importNotebook } = require("notebook/import") as typeof ImportModule;
         return importNotebook(filePath);
     }

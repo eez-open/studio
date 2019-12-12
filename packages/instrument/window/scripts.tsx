@@ -5,6 +5,8 @@ import { bind } from "bind-decorator";
 
 import { stringCompare } from "eez-studio-shared/string";
 import { validators } from "eez-studio-shared/validation";
+import { readTextFile } from "eez-studio-shared/util-electron";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 
 import styled from "eez-studio-ui/styled-components";
 import { AlertDanger } from "eez-studio-ui/alert";
@@ -27,6 +29,8 @@ import { executeShortcut } from "instrument/window/script";
 import { IModel } from "instrument/window/undo";
 
 import { Terminal } from "instrument/window/terminal/terminal";
+
+const path = EEZStudio.electron.remote.require("path");
 
 export class ScriptsModel implements IModel {
     constructor(private appStore: InstrumentAppStore) {}
@@ -164,6 +168,7 @@ export class ScriptsModel implements IModel {
             }
         })
             .then(result => {
+                beginTransaction("Add script");
                 const scriptId = this.appStore.shortcutsStore.addShortcut({
                     name: result.values.name,
                     action: {
@@ -178,6 +183,7 @@ export class ScriptsModel implements IModel {
                     requiresConfirmation: false,
                     selected: false
                 });
+                commitTransaction();
                 if (scriptId) {
                     runInAction(() => (this.appStore.navigationStore.selectedScriptId = scriptId));
                 }
@@ -516,4 +522,61 @@ export function insertScpiQueryIntoCode(appStore: InstrumentAppStore, scpiQuery:
     }
 
     codeEditor.insertText(text);
+}
+
+export async function importScript(appStore: InstrumentAppStore, filePath: string) {
+    filePath = filePath.toLowerCase();
+
+    if (!filePath.endsWith(".py")) {
+        return false;
+    }
+
+    const scriptSourceText = await readTextFile(filePath);
+
+    const name = path.basename(filePath, ".py");
+
+    const script = values(appStore.shortcutsStore.shortcuts).find(script => script.name === name);
+
+    let scriptId: string | undefined;
+    if (script) {
+        scriptId = script.id;
+
+        if (scriptId == appStore.navigationStore.selectedScriptId) {
+            appStore.scriptsModel.newActionCode = scriptSourceText;
+            return;
+        }
+
+        beginTransaction("Update script");
+        appStore.shortcutsStore.updateShortcut({
+            id: scriptId,
+            action: Object.assign({}, toJS(script.action), {
+                data: scriptSourceText
+            })
+        });
+        commitTransaction();
+    } else {
+        beginTransaction("Add script");
+        scriptId = appStore.shortcutsStore.addShortcut({
+            name,
+            action: {
+                type: "micropython",
+                data: scriptSourceText
+            },
+            keybinding: "",
+            groupName: "",
+            showInToolbar: false,
+            toolbarButtonPosition: 0,
+            toolbarButtonColor: DEFAULT_TOOLBAR_BUTTON_COLOR,
+            requiresConfirmation: false,
+            selected: false
+        });
+        commitTransaction();
+    }
+
+    if (scriptId) {
+        appStore.navigationStore.navigateToScripts();
+        runInAction(() => (appStore.navigationStore.selectedScriptId = scriptId));
+    }
+
+    return true;
 }

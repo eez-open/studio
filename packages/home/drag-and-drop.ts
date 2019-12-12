@@ -1,5 +1,7 @@
 import { extensions } from "eez-studio-shared/extensions/extensions";
 
+import { tabs } from "home/tabs-store";
+
 export function handleDragAndDrop() {
     function removeDragData(ev: DragEvent) {
         if (ev.dataTransfer) {
@@ -32,7 +34,12 @@ export function handleDragAndDrop() {
             for (const file of files) {
                 for (const extension of extensions) {
                     const handleDragAndDropFile = extension[1].handleDragAndDropFile;
-                    if (handleDragAndDropFile && (await handleDragAndDropFile(file.path))) {
+                    if (
+                        handleDragAndDropFile &&
+                        (await handleDragAndDropFile(file.path, {
+                            activeTab: tabs.activeTab
+                        }))
+                    ) {
                         break;
                     }
                 }

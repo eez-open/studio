@@ -6,6 +6,9 @@ import { capitalize } from "eez-studio-shared/string";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
 import { IUnit, TIME_UNIT, UNITS } from "eez-studio-shared/units";
 import { Point } from "eez-studio-shared/geometry";
+import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import { log } from "eez-studio-shared/activity-log";
+import { readBinaryFile } from "eez-studio-shared/util-electron";
 
 import {
     AxisController,
@@ -25,6 +28,8 @@ import { WaveformModel } from "eez-studio-ui/chart/waveform";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
+
+import { MIME_EEZ_DLOG } from "instrument/connection/file-type";
 
 import { FileHistoryItem } from "instrument/window/history/items/file";
 
@@ -513,4 +518,45 @@ export class DlogWaveform extends FileHistoryItem {
     get previewElement() {
         return <ChartPreview data={this} />;
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export async function importDlog(appStore: InstrumentAppStore, filePath: string) {
+    filePath = filePath.toLowerCase();
+
+    if (!filePath.endsWith(".dlog")) {
+        return false;
+    }
+
+    const data = await readBinaryFile(filePath);
+
+    beginTransaction("Add DLOG chart");
+
+    log(
+        appStore.history.options.store,
+        {
+            oid: appStore.history.oid,
+            type: "instrument/file-attachment",
+            message: JSON.stringify({
+                sourceFilePath: filePath,
+                state: "success",
+                fileType: {
+                    ext: "dlog",
+                    mime: MIME_EEZ_DLOG
+                },
+                dataLength: data.length
+            }),
+            data
+        },
+        {
+            undoable: true
+        }
+    );
+
+    commitTransaction();
+
+    appStore.navigationStore.navigateToHistory();
+
+    return false;
 }

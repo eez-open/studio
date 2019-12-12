@@ -2,6 +2,8 @@ import { Point, Rect } from "eez-studio-shared/geometry";
 
 import { ITransform, Transform } from "home/designer/transform";
 
+export { IHomeTab } from "home/tabs-store";
+
 export interface IBaseObject {
     id: string;
     rect: Rect;

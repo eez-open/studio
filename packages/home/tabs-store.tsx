@@ -14,7 +14,8 @@ import * as HomeComponentModule from "home/home-component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface IHomeTab extends ITab {
+export interface IHomeTab extends ITab {
+    editor?: IEditor;
     render(): JSX.Element;
 }
 
@@ -33,8 +34,6 @@ class HomeTab implements IHomeTab {
         </React.Fragment>
     );
 
-    _editor: JSX.Element;
-
     render() {
         const { HomeComponent } = require("home/home-component") as typeof HomeComponentModule;
         return <HomeComponent />;
@@ -48,11 +47,11 @@ class HomeTab implements IHomeTab {
 
 class ObjectEditorTab implements IHomeTab {
     constructor(public tabs: Tabs, public object: WorkbenchObject) {
-        this.objectEditor = this.object.getEditor();
-        this.objectEditor.onCreate();
+        this.editor = this.object.getEditor();
+        this.editor.onCreate();
     }
 
-    objectEditor: IEditor;
+    editor: IEditor;
 
     permanent: boolean = true;
     @observable _active: boolean = false;
@@ -68,9 +67,9 @@ class ObjectEditorTab implements IHomeTab {
             runInAction(() => (this._active = value));
 
             if (this._active) {
-                this.objectEditor.onActivate();
+                this.editor.onActivate();
             } else {
-                this.objectEditor.onDeactivate();
+                this.editor.onDeactivate();
             }
         }
     }
@@ -84,7 +83,7 @@ class ObjectEditorTab implements IHomeTab {
     }
 
     render() {
-        return this.objectEditor.render();
+        return this.editor.render();
     }
 
     @action
@@ -98,7 +97,7 @@ class ObjectEditorTab implements IHomeTab {
 
     close() {
         this.tabs.removeTab(this);
-        this.objectEditor.onTerminate();
+        this.editor.onTerminate();
     }
 }
 

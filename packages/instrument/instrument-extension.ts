@@ -3,7 +3,8 @@ import { computed, values } from "mobx";
 import {
     IExtensionDefinition,
     IExtension,
-    IExtensionProperties
+    IExtensionProperties,
+    IExtensionHost
 } from "eez-studio-shared/extensions/extension";
 import { extensions } from "eez-studio-shared/extensions/extensions";
 import { isRenderer } from "eez-studio-shared/util-electron";
@@ -21,6 +22,10 @@ import { IInstrumentProperties } from "instrument/export";
 import * as ConnectionModule from "instrument/connection/connection";
 
 import { createInstrumentListStore } from "instrument/window/lists/store";
+
+import { InstrumentAppStore } from "instrument/window/app-store";
+import { importScript } from "instrument/window/scripts";
+import { importDlog } from "instrument/window/waveform/dlog";
 
 if (!isRenderer()) {
     createInstrumentListStore(null);
@@ -119,7 +124,22 @@ const instrumentExtension: IExtensionDefinition = {
         instrument: (id: string) => instruments.get(id)
     },
 
-    loadExtension: loadInstrumentExtension
+    loadExtension: loadInstrumentExtension,
+
+    handleDragAndDropFile: async (filePath: string, host: IExtensionHost) => {
+        if (host.activeTab.editor instanceof InstrumentAppStore) {
+            const appStore = host.activeTab.editor;
+            if (await importScript(appStore, filePath)) {
+                return true;
+            }
+
+            if (await importDlog(appStore, filePath)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 };
 
 export default instrumentExtension;

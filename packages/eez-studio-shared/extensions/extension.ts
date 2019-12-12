@@ -1,7 +1,7 @@
 import { UNITS } from "eez-studio-shared/units";
 import { IStore } from "eez-studio-shared/store";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log-interfaces";
-import { IToolbarButton } from "home/designer/designer-interfaces";
+import { IToolbarButton, IHomeTab } from "home/designer/designer-interfaces";
 
 import { IShortcut } from "shortcuts/interfaces";
 
@@ -148,6 +148,10 @@ export interface IExtensionDescription {
     revisionComments?: string;
 }
 
+export interface IExtensionHost {
+    activeTab: IHomeTab;
+}
+
 export interface IExtensionDefinition {
     preInstalled?: boolean;
 
@@ -172,7 +176,7 @@ export interface IExtensionDefinition {
 
     measurementFunctions?: IMeasurementFunction[];
 
-    handleDragAndDropFile?(filePath: string): Promise<boolean>;
+    handleDragAndDropFile?(filePath: string, host: IExtensionHost): Promise<boolean>;
 }
 
 export type IExtension = IExtensionDescription & IExtensionDefinition;
