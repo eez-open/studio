@@ -529,9 +529,7 @@ export class DlogWaveform extends FileHistoryItem {
 ////////////////////////////////////////////////////////////////////////////////
 
 export async function importDlog(appStore: InstrumentAppStore, filePath: string) {
-    filePath = filePath.toLowerCase();
-
-    if (!filePath.endsWith(".dlog")) {
+    if (!filePath.toLowerCase().endsWith(".dlog")) {
         return false;
     }
 

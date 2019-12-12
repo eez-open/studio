@@ -522,15 +522,13 @@ export function insertScpiQueryIntoCode(appStore: InstrumentAppStore, scpiQuery:
 }
 
 export async function importScript(appStore: InstrumentAppStore, filePath: string) {
-    filePath = filePath.toLowerCase();
-
-    if (!filePath.endsWith(".py")) {
+    if (!filePath.toLowerCase().endsWith(".py")) {
         return false;
     }
 
     const scriptSourceText = await readTextFile(filePath);
 
-    const name = path.basename(filePath, ".py");
+    const name = path.basename(filePath, filePath.slice(-3));
 
     const script = values(appStore.shortcutsStore.shortcuts).find(script => script.name === name);
 
