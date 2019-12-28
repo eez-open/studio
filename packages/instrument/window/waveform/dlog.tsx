@@ -145,15 +145,7 @@ class DlogWaveformLineController extends LineController {
             rowOffset += 4; // skip jitter column
         }
 
-        for (let i = 0; i < this.dlogWaveform.channels.length; i++) {
-            if (
-                this.dlogWaveform.channels[i].iChannel === channel.iChannel &&
-                this.dlogWaveform.channels[i].unit === channel.unit
-            ) {
-                break;
-            }
-            rowOffset += 4;
-        }
+        rowOffset += 4 * this.dlogWaveform.channels.indexOf(channel);
 
         this.waveform = {
             format: WaveformFormat.EEZ_DLOG,
@@ -228,8 +220,7 @@ class DlogWaveformChartsController extends ChartsController {
 interface IDlogChart {}
 
 interface IChannel {
-    iChannel: number;
-    unit: IUnit;
+    yAxis: IDlogYAxis;
     axisModel: IAxisModel;
 }
 
@@ -397,8 +388,7 @@ export class DlogWaveform extends FileHistoryItem {
     @computed
     get channels() {
         return this.dlog.yAxes.map(yAxis => ({
-            iChannel: yAxis.channelIndex,
-            unit: yAxis.unit,
+            yAxis,
             axisModel: new DlogWaveformAxisModel(yAxis)
         })) as IChannel[];
     }
@@ -448,7 +438,7 @@ export class DlogWaveform extends FileHistoryItem {
     }
 
     createChartController(chartsController: ChartsController, channel: IChannel) {
-        const id = `ch${channel.iChannel + 1}_${channel.unit.name}`;
+        const id = `ch${this.channels.indexOf(channel) + 1}`;
 
         const chartController = new ChartController(chartsController, id);
 
