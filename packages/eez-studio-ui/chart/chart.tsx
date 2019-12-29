@@ -1328,7 +1328,11 @@ export abstract class LineController implements ILineController {
     abstract render(clipId: string): JSX.Element;
 
     closestPoint(point: Point): Point | undefined {
-        return point;
+        const { x, y } = this.getNearestValuePoint(point);
+        return {
+            x: this.xAxisController.valueToPx(x),
+            y: this.yAxisController.valueToPx(y)
+        };
     }
 }
 
@@ -2604,7 +2608,7 @@ class Cursor implements ICursor {
             return cursor;
         });
 
-        let minDistance = 0;
+        let minDistance = Number.MAX_SAFE_INTEGER;
         let minDistanceIndex: number = -1;
         cursors.forEach((cursor, i) => {
             if (cursor.visible) {

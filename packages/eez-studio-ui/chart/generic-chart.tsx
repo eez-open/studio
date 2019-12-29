@@ -63,6 +63,12 @@ export function getNearestValuePoint(
         }
     } else {
         let i = Math.round(xAxisController.pxToValue(point.x) * waveform.samplingRate);
+        if (i > waveform.length) {
+            return {
+                x: NaN,
+                y: NaN
+            };
+        }
         return {
             x: i / waveform.samplingRate,
             y: waveform.value(i)

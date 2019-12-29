@@ -431,7 +431,10 @@ export class RulersController {
     renderYRulersRect(chartView: ChartView) {
         const chartIndex = chartView.props.chartController.chartIndex;
 
-        if (!this.rulersModel.yAxisRulersEnabled[chartIndex]) {
+        if (
+            chartIndex >= this.rulersModel.yAxisRulersEnabled.length ||
+            !this.rulersModel.yAxisRulersEnabled[chartIndex]
+        ) {
             return null;
         }
 
@@ -465,7 +468,10 @@ export class RulersController {
     renderYRulersLines(chartView: ChartView) {
         const chartIndex = chartView.props.chartController.chartIndex;
 
-        if (!this.rulersModel.yAxisRulersEnabled[chartIndex]) {
+        if (
+            chartIndex >= this.rulersModel.yAxisRulersEnabled.length ||
+            !this.rulersModel.yAxisRulersEnabled[chartIndex]
+        ) {
             return null;
         }
 
@@ -611,7 +617,11 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         this.outsideChangeInYRulersSubscriptionDisposer = autorun(() => {
             for (let i = 0; i < this.props.chartsController.chartControllers.length; ++i) {
                 const chartController = this.props.chartsController.chartControllers[i];
-                if (this.rulersModel.yAxisRulersEnabled[i] && !this.isInsideChange) {
+                if (
+                    i < this.rulersModel.yAxisRulersEnabled.length &&
+                    this.rulersModel.yAxisRulersEnabled[i] &&
+                    !this.isInsideChange
+                ) {
                     const y1 = chartController.yAxisController.unit.formatValue(
                         this.rulersModel.y1[i],
                         4
@@ -855,82 +865,83 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                     <div key={chartIndex} className="EezStudio_AxisRulersProperties">
                         <div className="EezStudio_SideDockView_PropertyLabel">
                             <Checkbox
-                                checked={this.rulersModel.yAxisRulersEnabled[chartIndex]}
+                                checked={
+                                    chartIndex < this.rulersModel.yAxisRulersEnabled.length &&
+                                    this.rulersModel.yAxisRulersEnabled[chartIndex]
+                                }
                                 onChange={(checked: boolean) =>
                                     this.enableYAxisRulers(chartIndex, checked)
                                 }
                             >
                                 Enable{" "}
                                 {this.props.chartsController.chartControllers.length > 1
-                                    ? `"${
-                                          this.props.chartsController.chartControllers[chartIndex]
-                                              .yAxisController.axisModel.label
-                                      }" `
+                                    ? `"${this.props.chartsController.chartControllers[chartIndex].yAxisController.axisModel.label}" `
                                     : ""}
                                 Y axis rulers
                             </Checkbox>
                         </div>
-                        {this.rulersModel.yAxisRulersEnabled[chartIndex] && (
-                            <div className="EezStudio_SideDockView_Property">
-                                <table>
-                                    <tbody>
-                                        <tr>
-                                            <td>Y1</td>
-                                            <td>
-                                                <input
-                                                    type="text"
-                                                    className={classNames("form-control", {
-                                                        error: this.y1Error[chartIndex]
-                                                    })}
-                                                    value={this.y1[chartIndex]}
-                                                    onChange={event =>
-                                                        this.setY1(chartIndex, event)
-                                                    }
-                                                />
-                                            </td>
-                                            <td>Y2</td>
-                                            <td>
-                                                <input
-                                                    type="text"
-                                                    className={classNames("form-control", {
-                                                        error: this.y2Error[chartIndex]
-                                                    })}
-                                                    value={this.y2[chartIndex]}
-                                                    onChange={event =>
-                                                        this.setY2(chartIndex, event)
-                                                    }
-                                                />
-                                            </td>
-                                            <td>&Delta;Y</td>
-                                            <td>
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    value={this.props.chartsController.chartControllers[
-                                                        chartIndex
-                                                    ].yAxisController.unit.formatValue(
-                                                        this.rulersModel.y2[chartIndex] -
-                                                            this.rulersModel.y1[chartIndex],
-                                                        4
-                                                    )}
-                                                    readOnly={true}
-                                                />
-                                            </td>
-                                            <td />
-                                            <td style={{ textAlign: "left" }}>
-                                                <IconAction
-                                                    icon="material:search"
-                                                    onClick={() =>
-                                                        this.zoomToFitYRulers(chartIndex)
-                                                    }
-                                                    title="Zoom chart to fit both y1 and y2"
-                                                />
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                        {chartIndex < this.rulersModel.yAxisRulersEnabled.length &&
+                            this.rulersModel.yAxisRulersEnabled[chartIndex] && (
+                                <div className="EezStudio_SideDockView_Property">
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td>Y1</td>
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        className={classNames("form-control", {
+                                                            error: this.y1Error[chartIndex]
+                                                        })}
+                                                        value={this.y1[chartIndex]}
+                                                        onChange={event =>
+                                                            this.setY1(chartIndex, event)
+                                                        }
+                                                    />
+                                                </td>
+                                                <td>Y2</td>
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        className={classNames("form-control", {
+                                                            error: this.y2Error[chartIndex]
+                                                        })}
+                                                        value={this.y2[chartIndex]}
+                                                        onChange={event =>
+                                                            this.setY2(chartIndex, event)
+                                                        }
+                                                    />
+                                                </td>
+                                                <td>&Delta;Y</td>
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control"
+                                                        value={this.props.chartsController.chartControllers[
+                                                            chartIndex
+                                                        ].yAxisController.unit.formatValue(
+                                                            this.rulersModel.y2[chartIndex] -
+                                                                this.rulersModel.y1[chartIndex],
+                                                            4
+                                                        )}
+                                                        readOnly={true}
+                                                    />
+                                                </td>
+                                                <td />
+                                                <td style={{ textAlign: "left" }}>
+                                                    <IconAction
+                                                        icon="material:search"
+                                                        onClick={() =>
+                                                            this.zoomToFitYRulers(chartIndex)
+                                                        }
+                                                        title="Zoom chart to fit both y1 and y2"
+                                                    />
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                     </div>
                 ))}
             </SideDockViewContainer>

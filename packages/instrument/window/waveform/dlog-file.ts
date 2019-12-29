@@ -5,6 +5,7 @@ import {
     VOLTAGE_UNIT,
     CURRENT_UNIT,
     POWER_UNIT,
+    UNKNOWN_UNIT,
     UNITS
 } from "eez-studio-shared/units";
 import { roundNumber } from "eez-studio-shared/roundNumber";
@@ -55,6 +56,7 @@ export interface IDlogYAxis {
 export interface IDlog {
     version: number;
     xAxis: IDlogXAxis;
+    yAxis: IDlogYAxis;
     yAxes: IDlogYAxis[];
     dataOffset: number;
     length: number;
@@ -218,20 +220,28 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
 
                 fieldDataLength -= 1;
 
+                let destYAxis;
+                if (yAxisIndex == -1) {
+                    yAxisDefined = true;
+                    destYAxis = yAxis;
+                } else {
+                    destYAxis = yAxes[yAxisIndex];
+                }
+
                 if (fieldId === Fields.FIELD_ID_Y_UNIT) {
-                    yAxes[yAxisIndex].unit = getUnit(readUInt8(offset));
+                    destYAxis.unit = getUnit(readUInt8(offset));
                     offset++;
                 } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MIN) {
-                    yAxes[yAxisIndex].range!.min = readFloat(offset);
+                    destYAxis.range!.min = readFloat(offset);
                     offset += 4;
                 } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MAX) {
-                    yAxes[yAxisIndex].range!.max = readFloat(offset);
+                    destYAxis.range!.max = readFloat(offset);
                     offset += 4;
                 } else if (fieldId === Fields.FIELD_ID_Y_LABEL) {
-                    yAxes[yAxisIndex].label = readString(offset, offset + fieldDataLength);
+                    destYAxis.label = readString(offset, offset + fieldDataLength);
                     offset += fieldDataLength;
                 } else if (fieldId === Fields.FIELD_ID_Y_CHANNEL_INDEX) {
-                    yAxes[yAxisIndex].channelIndex = readUInt8(offset) - 1;
+                    destYAxis.channelIndex = readUInt8(offset) - 1;
                     offset++;
                 } else {
                     // unknown field, skip
@@ -279,6 +289,17 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
         label: ""
     };
 
+    let yAxisDefined = false;
+    let yAxis: IDlogYAxis = {
+        unit: UNKNOWN_UNIT,
+        range: {
+            min: 0,
+            max: 1
+        },
+        label: "",
+        channelIndex: -1
+    };
+
     let yAxes: IDlogYAxis[] = [];
 
     let startTime = undefined;
@@ -299,9 +320,14 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
 
     let length = (data.length - dataOffset) / (((hasJitterColumn ? 1 : 0) + yAxes.length) * 4);
 
+    if (!yAxisDefined) {
+        yAxis = yAxes[0];
+    }
+
     return {
         version,
         xAxis,
+        yAxis,
         yAxes,
         dataOffset,
         length,

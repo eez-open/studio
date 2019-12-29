@@ -73,21 +73,30 @@ export interface IWaveformRenderJobSpecification {
     yFromValue: number;
     yToValue: number;
     strokeColor: string;
+    label?: string;
 }
 
-interface IAverageContinuation {
+////////////////////////////////////////////////////////////////////////////////
+
+interface IContinuation {
+    isDone?: boolean;
+    xLabel?: number;
+    yLabel?: number;
+}
+
+interface IAverageContinuation extends IContinuation {
     offsets: number[];
     offset: number;
     commitAlways: boolean;
 }
 
-interface IMinMaxContinuation {
+interface IMinMaxContinuation extends IContinuation {
     offsets: number[];
     offset: number;
     commitAlways: boolean;
 }
 
-interface IGraduallyContinuation {
+interface IGraduallyContinuation extends IContinuation {
     a: number;
     b: number;
     K: number;
@@ -96,15 +105,31 @@ interface IGraduallyContinuation {
     commitAlways: boolean;
 }
 
+interface ILogarithmicContinuation extends IContinuation {
+    i: number;
+    b: number;
+    K: number;
+
+    points: {
+        x: number;
+        y: number;
+    }[];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export function renderWaveformPath(
     canvas: HTMLCanvasElement,
     job: IWaveformRenderJobSpecification,
     continuation: any
 ) {
-    const { waveform, xAxisController, yAxisController, strokeColor } = job;
+    const { waveform, xAxisController, yAxisController, strokeColor, label } = job;
 
     let xFromPx = xAxisController.valueToPx(xAxisController.from);
     let xToPx = xAxisController.valueToPx(xAxisController.to);
+
+    let xLabel = continuation ? continuation.xLabel : undefined;
+    let yLabel = continuation ? continuation.yLabel : undefined;
 
     function xAxisPxToIndex(px: number) {
         return xAxisController.pxToValue(px) * waveform.samplingRate;
@@ -136,22 +161,29 @@ export function renderWaveformPath(
             ctx.arc(x, y, r, 0, 2 * Math.PI);
             ctx.fill();
 
-            if (r > 1.2) {
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x, y0);
-                ctx.stroke();
-            }
+            if (!label) {
+                if (r > 1.2) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x, y0);
+                    ctx.stroke();
+                }
 
-            if (i > a) {
-                ctx.beginPath();
-                ctx.moveTo(xPrev, yPrev);
-                ctx.lineTo(x, y);
-                ctx.stroke();
+                if (i > a) {
+                    ctx.beginPath();
+                    ctx.moveTo(xPrev, yPrev);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                }
             }
 
             xPrev = x;
             yPrev = y;
+
+            if (xLabel == undefined || x > xLabel) {
+                xLabel = x;
+                yLabel = y;
+            }
         }
     }
 
@@ -227,6 +259,11 @@ export function renderWaveformPath(
                 ctx.beginPath();
                 ctx.arc(x, canvas.height - y, 1, 0, 2 * Math.PI);
                 ctx.fill();
+
+                if (xLabel == undefined || x > xLabel) {
+                    xLabel = x;
+                    yLabel = canvas.height - y;
+                }
             }
         }
 
@@ -307,6 +344,11 @@ export function renderWaveformPath(
                 ctx.moveTo(x, canvas.height - result[0]);
                 ctx.lineTo(x, canvas.height - result[1]);
                 ctx.stroke();
+
+                if (xLabel == undefined || x > xLabel) {
+                    xLabel = x;
+                    yLabel = (canvas.height - result[0] + canvas.height - result[1]) / 2;
+                }
             }
         }
 
@@ -354,6 +396,11 @@ export function renderWaveformPath(
                 let y = yAxisController.valueToPx(waveform.value(i));
                 if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
                     ctx.fillRect(x - 1, canvas.height - y - 1, 2, 2);
+
+                    if (xLabel == undefined || x > xLabel) {
+                        xLabel = x;
+                        yLabel = canvas.height - y;
+                    }
                 }
             }
         }
@@ -374,19 +421,6 @@ export function renderWaveformPath(
         }
 
         return undefined;
-    }
-
-    interface ILogarithmicContinuation {
-        i: number;
-        b: number;
-        K: number;
-
-        points: {
-            x: number;
-            y: number;
-        }[];
-
-        isDone: boolean;
     }
 
     function renderLogarithmic(
@@ -486,20 +520,57 @@ export function renderWaveformPath(
     var ctx = canvas.getContext("2d")!;
 
     if (job.xAxisController.logarithmic) {
-        return renderLogarithmic(continuation);
+        continuation = renderLogarithmic(continuation);
+    } else if (xAxisPxToIndex(1) - xAxisPxToIndex(0) < 1) {
+        continuation = renderSparse();
+    } else if (job.renderAlgorithm === "minmax") {
+        continuation = renderMinMax(continuation);
+    } else if (job.renderAlgorithm === "avg") {
+        continuation = renderAverage(continuation);
+    } else {
+        continuation = renderGradually(continuation);
     }
 
-    if (xAxisPxToIndex(1) - xAxisPxToIndex(0) < 1) {
-        return renderSparse();
+    if (continuation) {
+        continuation.xLabel = xLabel;
+        continuation.yLabel = yLabel;
+        return continuation;
     }
 
-    if (job.renderAlgorithm === "minmax") {
-        return renderMinMax(continuation);
+    // draw label
+    if (label && xLabel != undefined && yLabel != undefined) {
+        const FONT_SIZE = 14;
+        const HORZ_PADDING = 4;
+        const VERT_PADDING = 4;
+
+        ctx.font = `${FONT_SIZE}px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"`;
+
+        const width = Math.ceil(ctx.measureText(label).width) + 2 * HORZ_PADDING;
+        const height = FONT_SIZE + 2 * VERT_PADDING;
+
+        xLabel = Math.round(xLabel - width);
+        yLabel = Math.round(yLabel - height);
+
+        if (xLabel < 0) {
+            xLabel = 0;
+        } else if (xLabel + width > canvas.width) {
+            xLabel = canvas.width - width;
+        }
+
+        if (yLabel < 0) {
+            yLabel = 0;
+        } else if (yLabel + height > canvas.height) {
+            yLabel = canvas.height - height;
+        }
+
+        xLabel += 0.5;
+        yLabel += 0.5;
+
+        ctx.fillStyle = strokeColor;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillText(label, xLabel + HORZ_PADDING, yLabel + VERT_PADDING);
     }
 
-    if (job.renderAlgorithm === "avg") {
-        return renderAverage(continuation);
-    }
-
-    return renderGradually(continuation);
+    return undefined;
 }

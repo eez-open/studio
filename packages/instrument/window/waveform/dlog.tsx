@@ -4,7 +4,7 @@ import { observable, computed, reaction, toJS } from "mobx";
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
-import { IUnit, TIME_UNIT, UNITS } from "eez-studio-shared/units";
+import { IUnit, TIME_UNIT, UNKNOWN_UNIT, UNITS } from "eez-studio-shared/units";
 import { Point } from "eez-studio-shared/geometry";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { log } from "eez-studio-shared/activity-log";
@@ -38,11 +38,11 @@ import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
 import { WaveformLineView } from "instrument/window/waveform/line-view";
 import { WaveformToolbar } from "instrument/window/waveform/toolbar";
 
-import { IDlogYAxis, decodeDlog } from "instrument/window/waveform/dlog-file";
+import { IDlog, IDlogYAxis, decodeDlog } from "instrument/window/waveform/dlog-file";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DlogWaveformAxisModel implements IAxisModel {
+class DlogWaveformAxisModel implements IAxisModel {
     unit: IUnit;
 
     constructor(public yAxis: IDlogYAxis) {
@@ -130,7 +130,7 @@ class DlogWaveformLineController extends LineController {
         public id: string,
         public dlogWaveform: DlogWaveform,
         public yAxisController: AxisController,
-        channel: IChannel,
+        private channel: IChannel,
         values: any,
         dataOffset: number
     ) {
@@ -186,7 +186,13 @@ class DlogWaveformLineController extends LineController {
     }
 
     render(): JSX.Element {
-        return <WaveformLineView key={this.id} waveformLineController={this} />;
+        return (
+            <WaveformLineView
+                key={this.id}
+                waveformLineController={this}
+                label={this.channel.axisModel.label}
+            />
+        );
     }
 }
 
@@ -338,7 +344,7 @@ export class DlogWaveform extends FileHistoryItem {
     }
 
     @computed
-    get dlog() {
+    get dlog(): IDlog {
         return (
             (this.values && decodeDlog(this.values)) || {
                 version: 1,
@@ -350,6 +356,15 @@ export class DlogWaveform extends FileHistoryItem {
                         max: 1
                     },
                     label: ""
+                },
+                yAxis: {
+                    unit: UNKNOWN_UNIT,
+                    range: {
+                        min: 0,
+                        max: 1
+                    },
+                    label: "",
+                    channelIndex: -1
                 },
                 yAxes: [],
                 dataOffset: 0,
@@ -437,25 +452,61 @@ export class DlogWaveform extends FileHistoryItem {
         return <div>{info}</div>;
     }
 
-    createChartController(chartsController: ChartsController, channel: IChannel) {
-        const id = `ch${this.channels.indexOf(channel) + 1}`;
-
-        const chartController = new ChartController(chartsController, id);
-
-        chartController.createYAxisController(channel.axisModel);
-
-        const lineController = new DlogWaveformLineController(
-            "waveform-" + chartController.yAxisController.position,
+    createLineController(chartController: ChartController, channel: IChannel) {
+        return new DlogWaveformLineController(
+            "waveform-" +
+                chartController.yAxisController.position +
+                "-" +
+                this.channels.indexOf(channel),
             this,
             chartController.yAxisController,
             channel,
             this.values || "",
             this.dataOffset
         );
+    }
 
-        chartController.lineControllers.push(lineController);
-
+    createChartControllerForSingleChannel(chartsController: ChartsController, channel: IChannel) {
+        const id = `ch${this.channels.indexOf(channel) + 1}`;
+        const chartController = new ChartController(chartsController, id);
+        chartController.createYAxisController(channel.axisModel);
+        chartController.lineControllers.push(this.createLineController(chartController, channel));
         return chartController;
+    }
+
+    createChartControllerForAllChannels(chartsController: ChartsController) {
+        const id = "dlog_chart_controller";
+        const chartController = new ChartController(chartsController, id);
+        chartController.createYAxisController(new DlogWaveformAxisModel(this.dlog.yAxis));
+        this.channels.forEach(channel => {
+            chartController.lineControllers.push(
+                this.createLineController(chartController, channel)
+            );
+        });
+        return chartController;
+    }
+
+    @computed
+    get singleChart() {
+        const firstYAxis = this.dlog.yAxes[0];
+        for (let i = 1; i < this.dlog.yAxes.length; i++) {
+            const otherYAxis = this.dlog.yAxes[i];
+            if (firstYAxis.unit != otherYAxis.unit) {
+                return false;
+            }
+
+            if (firstYAxis.range && otherYAxis.range) {
+                if (
+                    firstYAxis.range.min != otherYAxis.range.min ||
+                    firstYAxis.range.max != otherYAxis.range.max
+                ) {
+                    return false;
+                }
+            } else if (firstYAxis.range || otherYAxis.range) {
+                return false;
+            }
+        }
+        return true;
     }
 
     viewOptions: ViewOptions;
@@ -480,9 +531,15 @@ export class DlogWaveform extends FileHistoryItem {
 
         this.xAxisModel.chartsController = chartsController;
 
-        chartsController.chartControllers = this.channels.map(channel =>
-            this.createChartController(chartsController, channel)
-        );
+        if (this.singleChart) {
+            chartsController.chartControllers = [
+                this.createChartControllerForAllChannels(chartsController)
+            ];
+        } else {
+            chartsController.chartControllers = this.channels.map(channel =>
+                this.createChartControllerForSingleChannel(chartsController, channel)
+            );
+        }
 
         chartsController.createRulersController(this.rulers);
         chartsController.createMeasurementsController(this.measurements);

@@ -18,6 +18,7 @@ interface IWaveformLineController extends ILineController {
 
 interface WaveformLineViewProperties {
     waveformLineController: IWaveformLineController;
+    label?: string;
 }
 
 @observer
@@ -52,7 +53,12 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
             yToValue: yAxisController.to,
             strokeColor: globalViewOptions.blackBackground
                 ? yAxisController.axisModel.color
-                : yAxisController.axisModel.colorInverse
+                : yAxisController.axisModel.colorInverse,
+            label:
+                yAxisController.chartController!.lineControllers.length > 1 &&
+                chartsController.mode !== "preview"
+                    ? this.props.label
+                    : undefined
         };
     }
 
@@ -75,8 +81,8 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
             const chartsController = this.props.waveformLineController.yAxisController
                 .chartsController;
             this.canvas = document.createElement("canvas");
-            this.canvas.width = chartsController.chartWidth;
-            this.canvas.height = chartsController.chartHeight;
+            this.canvas.width = Math.floor(chartsController.chartWidth);
+            this.canvas.height = Math.floor(chartsController.chartHeight);
         }
 
         this.continuation = renderWaveformPath(this.canvas, this.nextJob!, this.continuation);
@@ -94,7 +100,8 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
             window.cancelAnimationFrame(this.requestAnimationFrameId);
             this.requestAnimationFrameId = undefined;
         }
-        if (this.nextJob) {
+        if (this.nextJob != this.waveformRenderJobSpecification) {
+            this.nextJob = this.waveformRenderJobSpecification;
             this.continuation = undefined;
             this.drawStep();
         }
@@ -107,17 +114,16 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
     }
 
     render() {
-        this.nextJob = this.waveformRenderJobSpecification;
-        if (!this.nextJob) {
+        if (!this.waveformRenderJobSpecification) {
             return null;
         }
         const chartsController = this.props.waveformLineController.yAxisController.chartsController;
         return (
             <image
-                x={chartsController.chartLeft}
-                y={chartsController.chartTop}
-                width={chartsController.chartWidth}
-                height={chartsController.chartHeight}
+                x={Math.floor(chartsController.chartLeft)}
+                y={Math.floor(chartsController.chartTop)}
+                width={Math.floor(chartsController.chartWidth)}
+                height={Math.floor(chartsController.chartHeight)}
                 href={this.chartImage}
             />
         );
