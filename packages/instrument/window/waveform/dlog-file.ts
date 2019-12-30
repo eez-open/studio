@@ -207,25 +207,17 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
 
                 yAxisIndex--;
                 while (yAxisIndex >= yAxes.length) {
-                    yAxes.push({
-                        unit: VOLTAGE_UNIT,
-                        range: {
-                            min: 0,
-                            max: 1
-                        },
-                        label: "",
-                        channelIndex: 0
-                    });
+                    yAxes.push(Object.assign({}, yAxis));
                 }
 
                 fieldDataLength -= 1;
 
                 let destYAxis;
-                if (yAxisIndex == -1) {
+                if (yAxisIndex >= 0) {
+                    destYAxis = yAxes[yAxisIndex];
+                } else {
                     yAxisDefined = true;
                     destYAxis = yAxis;
-                } else {
-                    destYAxis = yAxes[yAxisIndex];
                 }
 
                 if (fieldId === Fields.FIELD_ID_Y_UNIT) {
