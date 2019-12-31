@@ -17,25 +17,35 @@ import { MIME_EEZ_DLOG, checkMime } from "instrument/connection/file-type";
 ////////////////////////////////////////////////////////////////////////////////
 
 enum Fields {
+    FIELD_ID_COMMENT = 1,
+
     FIELD_ID_X_UNIT = 10,
     FIELD_ID_X_STEP = 11,
     FIELD_ID_X_RANGE_MIN = 12,
     FIELD_ID_X_RANGE_MAX = 13,
     FIELD_ID_X_LABEL = 14,
+    FIELD_ID_X_SCALE = 15,
 
     FIELD_ID_Y_UNIT = 30,
     FIELD_ID_Y_RANGE_MIN = 32,
     FIELD_ID_Y_RANGE_MAX = 33,
     FIELD_ID_Y_LABEL = 34,
     FIELD_ID_Y_CHANNEL_INDEX = 35,
+    FIELD_ID_Y_SCALE = 36,
 
     FIELD_ID_CHANNEL_MODULE_TYPE = 50,
     FIELD_ID_CHANNEL_MODULE_REVISION = 51
 }
 
+export enum Scale {
+    LINEAR,
+    LOGARITHMIC
+}
+
 export interface IDlogXAxis {
     unit: IUnit;
     step: number;
+    scale: Scale;
     range: {
         min: number;
         max: number;
@@ -55,9 +65,11 @@ export interface IDlogYAxis {
 
 export interface IDlog {
     version: number;
+    comment?: string;
     xAxis: IDlogXAxis;
     yAxis: IDlogYAxis;
     yAxes: IDlogYAxis[];
+    yAxisScale: Scale;
     dataOffset: number;
     length: number;
 
@@ -88,7 +100,7 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
     }
 
     function readString(start: number, end: number) {
-        return data.slice(start, end).toString();
+        return new Buffer(data.slice(start, end)).toString();
     }
 
     function readUInt16(i: number) {
@@ -183,12 +195,18 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
 
             let fieldDataLength = fieldLength - 2 - 1;
 
-            if (fieldId === Fields.FIELD_ID_X_UNIT) {
+            if (fieldId === Fields.FIELD_ID_COMMENT) {
+                comment = readString(offset, offset + fieldDataLength);
+                offset += fieldDataLength;
+            } else if (fieldId === Fields.FIELD_ID_X_UNIT) {
                 xAxis.unit = getUnit(readUInt8(offset));
                 offset++;
             } else if (fieldId === Fields.FIELD_ID_X_STEP) {
                 xAxis.step = readFloat(offset);
                 offset += 4;
+            } else if (fieldId === Fields.FIELD_ID_X_SCALE) {
+                xAxis.scale = readUInt8(offset);
+                offset++;
             } else if (fieldId === Fields.FIELD_ID_X_RANGE_MIN) {
                 xAxis.range.min = readFloat(offset);
                 offset += 4;
@@ -239,6 +257,9 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
                     // unknown field, skip
                     offset += fieldDataLength;
                 }
+            } else if (fieldId === Fields.FIELD_ID_Y_SCALE) {
+                yAxisScale = readUInt8(offset);
+                offset++;
             } else if (fieldId === Fields.FIELD_ID_CHANNEL_MODULE_TYPE) {
                 readUInt8(offset); // channel index
                 offset++;
@@ -271,6 +292,8 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
 
     let dataOffset = version == 1 ? 28 : readUInt32(12);
 
+    let comment: string | undefined = undefined;
+
     let xAxis: IDlogXAxis = {
         unit: TIME_UNIT,
         step: 1,
@@ -278,7 +301,8 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
             min: 0,
             max: 1
         },
-        label: ""
+        label: "",
+        scale: Scale.LINEAR
     };
 
     let yAxisDefined = false;
@@ -291,6 +315,8 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
         label: "",
         channelIndex: -1
     };
+
+    let yAxisScale = Scale.LOGARITHMIC;
 
     let yAxes: IDlogYAxis[] = [];
 
@@ -318,8 +344,10 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
 
     return {
         version,
+        comment,
         xAxis,
         yAxis,
+        yAxisScale,
         yAxes,
         dataOffset,
         length,
@@ -329,7 +357,16 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
 }
 
 export function isDlog(dataSample: Uint8Array) {
-    return !!decodeDlog(dataSample);
+    const dlog = decodeDlog(dataSample);
+    if (dlog) {
+        return {
+            ext: "dlog",
+            mime: MIME_EEZ_DLOG,
+            comment: dlog.comment
+        };
+    }
+
+    return undefined;
 }
 
 export function convertDlogToCsv(data: Uint8Array) {

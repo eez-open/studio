@@ -37,7 +37,7 @@ export class FileUpload extends FileTransfer {
     fileDataLength: number;
     chunkIndex: number = 0;
     dataReceived: string;
-    fileType: string;
+    fileType: { ext?: string; mime: string } | string;
     dataSurplus: string | undefined;
 
     constructor(
@@ -86,17 +86,25 @@ export class FileUpload extends FileTransfer {
                 this.fd = await openFile(this.instructions.sourceFilePath);
                 let inputBuffer = new Buffer(SAMPLE_LENGTH);
                 let { buffer } = await readFile(this.fd, inputBuffer, 0, SAMPLE_LENGTH, 0);
-                this.fileType = detectFileType(buffer, this.instructions.sourceFilePath);
+                const fileType = detectFileType(buffer, this.instructions.sourceFilePath);
+                this.fileType = {
+                    ext: fileType.ext,
+                    mime: fileType.mime
+                };
             } else {
                 this.fileData = Buffer.from(this.instructions.sourceData!, "utf8");
                 this.fileDataLength = this.fileData.length;
                 if (this.instructions.sourceFileType) {
                     this.fileType = this.instructions.sourceFileType;
                 } else {
-                    this.fileType = detectFileType(
+                    const fileType = detectFileType(
                         this.fileData,
                         this.instructions.destinationFileName
                     );
+                    this.fileType = {
+                        ext: fileType.ext,
+                        mime: fileType.mime
+                    };
                 }
             }
 

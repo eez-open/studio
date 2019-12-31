@@ -17,7 +17,7 @@ export interface FileState {
     fileType:
         | string
         | {
-              ext: string;
+              ext?: string;
               mime: string;
           };
     dataLength: number;

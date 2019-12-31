@@ -38,7 +38,7 @@ import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
 import { WaveformLineView } from "instrument/window/waveform/line-view";
 import { WaveformToolbar } from "instrument/window/waveform/toolbar";
 
-import { IDlog, IDlogYAxis, decodeDlog } from "instrument/window/waveform/dlog-file";
+import { IDlog, IDlogYAxis, decodeDlog, Scale } from "instrument/window/waveform/dlog-file";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -351,6 +351,7 @@ export class DlogWaveform extends FileHistoryItem {
                 xAxis: {
                     unit: TIME_UNIT,
                     step: 1,
+                    scale: Scale.LINEAR,
                     range: {
                         min: 0,
                         max: 1
@@ -366,6 +367,7 @@ export class DlogWaveform extends FileHistoryItem {
                     label: "",
                     channelIndex: -1
                 },
+                yAxisScale: Scale.LINEAR,
                 yAxes: [],
                 dataOffset: 0,
                 length: 0,

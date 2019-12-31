@@ -15,17 +15,22 @@ export const MIME_EEZ_DLOG = "application/eez-dlog";
 export const MIME_EEZ_LIST = "application/eez-list";
 export const MIME_CSV = "text/csv";
 
-export function detectFileType(data: string | Buffer, fileName?: string) {
+export function detectFileType(
+    data: string | Buffer,
+    fileName?: string
+): {
+    ext?: string;
+    mime: string;
+    comment?: string;
+} {
     const dataSample = getUint8Array(data);
 
-    if (isDlog(dataSample)) {
-        return {
-            ext: "dlog",
-            mime: MIME_EEZ_DLOG
-        };
+    let type = isDlog(dataSample);
+    if (type) {
+        return type;
     }
 
-    let type = fileType(dataSample, "binary");
+    type = fileType(dataSample, "binary");
 
     if (type) {
         return type;

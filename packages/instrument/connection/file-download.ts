@@ -13,10 +13,16 @@ import { detectFileType, convertBmpToPng } from "instrument/connection/file-type
 const CONF_FILE_TRANSFER_TIMEOUT_FOR_ARBITRARY_BLOCK_MS = 500;
 
 export class FileDownload extends FileTransfer {
-    fileType: string;
+    fileType:
+        | {
+              ext?: string;
+              mime: string;
+          }
+        | string;
     data: string;
     expectedDataLength: number;
     dataSurplus: string | undefined;
+    note: string | undefined;
 
     constructor(connection: Connection, data: string, private arbitraryBlock?: boolean) {
         super(connection);
@@ -171,6 +177,9 @@ export class FileDownload extends FileTransfer {
                             this.clearTimeout();
                         });
                 } else {
+                    this.note = JSON.stringify([{ insert: fileType.comment }]);
+                    delete fileType.comment;
+
                     this.fileType = fileType;
                     this.state = "success";
                 }
@@ -182,7 +191,8 @@ export class FileDownload extends FileTransfer {
 
     serializeState() {
         let state = {
-            state: this.state
+            state: this.state,
+            note: this.note
         } as FileState;
 
         if (this.state === "progress") {

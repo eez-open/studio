@@ -110,10 +110,14 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
                 }
 
                 if (!message) {
+                    const fileType = detectFileType(data, filePath);
+                    const note = fileType.comment;
+                    delete fileType.comment;
                     message = {
                         sourceFilePath: filePath,
                         state: "success",
-                        fileType: detectFileType(data, filePath),
+                        fileType,
+                        note,
                         dataLength: data.length
                     };
                 }
