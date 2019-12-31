@@ -15,7 +15,7 @@ interface IWaveform {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class WaveformTimeAxisModel implements IAxisModel {
-    constructor(private waveform: IWaveform) {}
+    constructor(private waveform: IWaveform, public semiLogarithmic?: { a: number; b: number }) {}
 
     chartsController: ChartsController;
 
@@ -36,6 +36,9 @@ export class WaveformTimeAxisModel implements IAxisModel {
     }
 
     get defaultTo() {
+        if (this.semiLogarithmic) {
+            return this.maxValue;
+        }
         return this.chartsController.chartWidth / this.waveform.samplingRate;
     }
 

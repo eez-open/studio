@@ -5,6 +5,7 @@ export enum WaveformFormat {
     RIGOL_WORD,
     CSV_STRING,
     EEZ_DLOG,
+    EEZ_DLOG_LOGARITHMIC,
     JS_NUMBERS,
     FLOATS_64BIT
 }
@@ -51,6 +52,7 @@ export function initValuesAccesor(
         values: any;
         offset: number;
         scale: number;
+        logOffset?: number;
         // output
         length: number;
         value(value: number): number;
@@ -62,6 +64,7 @@ export function initValuesAccesor(
     const format = object.format;
     const offset = object.offset;
     const scale = object.scale;
+    const logOffset = object.logOffset;
 
     let length: number;
     let value: (value: number) => number;
@@ -102,14 +105,22 @@ export function initValuesAccesor(
             return offset + csvValues[index] * scale;
         };
         waveformData = value;
-    } else if (format === WaveformFormat.EEZ_DLOG) {
+    } else if (
+        format === WaveformFormat.EEZ_DLOG ||
+        format === WaveformFormat.EEZ_DLOG_LOGARITHMIC
+    ) {
         length = object.length;
         if (length === undefined) {
             length = values.length;
         }
-        value = (index: number) => {
-            return readFloat(values, offset + index * scale);
-        };
+        value =
+            format === WaveformFormat.EEZ_DLOG_LOGARITHMIC
+                ? (index: number) => {
+                      return Math.log10(logOffset! + readFloat(values, offset + index * scale));
+                  }
+                : (index: number) => {
+                      return readFloat(values, offset + index * scale);
+                  };
         waveformData = value;
     } else if (format === WaveformFormat.JS_NUMBERS) {
         length = object.length;

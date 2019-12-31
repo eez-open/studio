@@ -159,6 +159,11 @@ export interface IAxisModel {
     colorInverse: string;
 
     logarithmic?: boolean;
+
+    semiLogarithmic?: {
+        a: number;
+        b: number;
+    };
 }
 
 interface ITick {
@@ -599,12 +604,20 @@ class DynamicAxisController extends AxisController {
                     maxTextColorOpacity
                 );
 
-                let label = unitPx >= minLabelPx ? self.unit.formatValue(value) : "";
+                let label =
+                    unitPx >= minLabelPx
+                        ? self.unit.formatValue(
+                              self.axisModel.semiLogarithmic
+                                  ? Math.pow(10, value + self.axisModel.semiLogarithmic.a) +
+                                        self.axisModel.semiLogarithmic.b
+                                  : value, 4
+                          )
+                        : "";
 
                 ticks.push({
                     px,
                     value,
-                    label,
+                    label: label,
                     color: globalViewOptions.blackBackground
                         ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${opacity})`
                         : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${opacity})`,
@@ -2533,10 +2546,23 @@ class CursorPopover extends React.Component<{ cursor: ICursor }, {}> {
     render() {
         const { cursor } = this.props;
 
-        const time = cursor.lineController.yAxisController.chartsController.xAxisController.unit.formatValue(
-            cursor.time
+        const yAxisController = cursor.lineController.yAxisController;
+        const xAxisController = yAxisController.chartsController.xAxisController;
+
+        const time = xAxisController.unit.formatValue(
+            xAxisController.axisModel.semiLogarithmic
+                ? Math.pow(10, cursor.time + xAxisController.axisModel.semiLogarithmic.a) +
+                      xAxisController.axisModel.semiLogarithmic.b
+                : cursor.time,
+            4
         );
-        const value = cursor.lineController.yAxisController.unit.formatValue(cursor.value);
+        const value = cursor.lineController.yAxisController.unit.formatValue(
+            yAxisController.axisModel.semiLogarithmic
+                ? Math.pow(10, cursor.value + yAxisController.axisModel.semiLogarithmic.a) +
+                      yAxisController.axisModel.semiLogarithmic.b
+                : cursor.value,
+            5
+        );
 
         return (
             <React.Fragment>

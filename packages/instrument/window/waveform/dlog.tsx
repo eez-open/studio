@@ -45,11 +45,15 @@ import { IDlog, IDlogYAxis, decodeDlog, Scale } from "instrument/window/waveform
 class DlogWaveformAxisModel implements IAxisModel {
     unit: IUnit;
 
-    constructor(public yAxis: IDlogYAxis) {
+    constructor(public yAxis: IDlogYAxis, public semiLogarithmic?: { a: number; b: number }) {
         this.unit = yAxis.unit;
     }
 
     get minValue() {
+        if (this.semiLogarithmic) {
+            return 0;
+        }
+
         if (this.yAxis.range) {
             return this.yAxis.range.min;
         }
@@ -58,6 +62,11 @@ class DlogWaveformAxisModel implements IAxisModel {
     }
 
     get maxValue() {
+        if (this.semiLogarithmic) {
+            const logOffset = 1 - this.yAxis.range!.min;
+            return Math.log10(logOffset + this.yAxis.range!.max);
+        }
+
         if (this.yAxis.range) {
             return this.yAxis.range.max;
         }
@@ -148,7 +157,11 @@ class DlogWaveformLineController extends LineController {
         rowOffset += 4 * this.dlogWaveform.channels.indexOf(channel);
 
         this.waveform = {
-            format: WaveformFormat.EEZ_DLOG,
+            format:
+                dlogWaveform.dlog.yAxisScale === Scale.LINEAR
+                    ? WaveformFormat.EEZ_DLOG
+                    : WaveformFormat.EEZ_DLOG_LOGARITHMIC,
+            logOffset: 1 - channel.yAxis.range!.min,
             values,
             length,
             value: undefined as any,
@@ -164,6 +177,7 @@ class DlogWaveformLineController extends LineController {
 
     waveform: IWaveform & {
         valueUnit: keyof typeof UNITS;
+        logOffset: number;
     };
 
     @computed
@@ -479,7 +493,17 @@ export class DlogWaveform extends FileHistoryItem {
     createChartControllerForAllChannels(chartsController: ChartsController) {
         const id = "dlog_chart_controller";
         const chartController = new ChartController(chartsController, id);
-        chartController.createYAxisController(new DlogWaveformAxisModel(this.dlog.yAxis));
+        chartController.createYAxisController(
+            new DlogWaveformAxisModel(
+                this.dlog.yAxis,
+                this.dlog.yAxisScale == Scale.LOGARITHMIC
+                    ? {
+                          a: 0,
+                          b: -(1 - this.dlog.yAxis.range!.min)
+                      }
+                    : undefined
+            )
+        );
         this.channels.forEach(channel => {
             chartController.lineControllers.push(
                 this.createLineController(chartController, channel)
@@ -515,7 +539,17 @@ export class DlogWaveform extends FileHistoryItem {
     rulers: RulersModel;
     measurements: MeasurementsModel;
 
-    xAxisModel = new WaveformTimeAxisModel(this);
+    @computed get xAxisModel() {
+        return new WaveformTimeAxisModel(
+            this,
+            this.dlog.xAxis.scale === Scale.LOGARITHMIC
+                ? {
+                      a: this.dlog.xAxis.range.min,
+                      b: 0
+                  }
+                : undefined
+        );
+    }
 
     chartsController: ChartsController;
 
