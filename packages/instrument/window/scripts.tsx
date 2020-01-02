@@ -235,7 +235,7 @@ export class ScriptsModel implements IModel {
 
             connection.upload(
                 Object.assign({}, instrument.defaultFileUploadInstructions, {
-                    sourceData: this.selectedScript!.action.data,
+                    sourceData: this.newActionCode || this.selectedScript!.action.data,
                     sourceFileType: "text/x-python",
                     destinationFileName: this.selectedScript!.name + ".py",
                     destinationFolderPath: "/Scripts"
