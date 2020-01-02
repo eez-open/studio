@@ -177,8 +177,10 @@ export class FileDownload extends FileTransfer {
                             this.clearTimeout();
                         });
                 } else {
-                    this.note = JSON.stringify([{ insert: fileType.comment }]);
-                    delete fileType.comment;
+                    if (fileType.comment) {
+                        this.note = JSON.stringify([{ insert: fileType.comment }]);
+                        delete fileType.comment;
+                    }
 
                     this.fileType = fileType;
                     this.state = "success";
