@@ -618,6 +618,11 @@ export async function importDlog(appStore: InstrumentAppStore, filePath: string)
 
     const data = await readBinaryFile(filePath);
 
+    const dlog = decodeDlog(data);
+    if (!dlog) {
+        return false;
+    }
+
     beginTransaction("Add DLOG chart");
 
     log(
@@ -632,7 +637,8 @@ export async function importDlog(appStore: InstrumentAppStore, filePath: string)
                     ext: "dlog",
                     mime: MIME_EEZ_DLOG
                 },
-                dataLength: data.length
+                dataLength: data.length,
+                note: dlog.comment ? JSON.stringify([{ insert: dlog.comment }]) : undefined
             }),
             data
         },
