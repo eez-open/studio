@@ -120,6 +120,21 @@ export function settingsSetWindowBoundsIntoParams(
 ) {
     let windowState = settings.windowStates[windowId];
     if (isValidWindowState(windowState)) {
+        if (windowState.isMaximized) {
+            if (windowState.bounds!.width < 1200) {
+                windowState.bounds!.width = 1200;
+            }
+            if (windowState.bounds!.height < 900) {
+                windowState.bounds!.height = 900;
+            }
+        } else {
+            if (windowState.bounds!.width < 640) {
+                windowState.bounds!.width = 640;
+            }
+            if (windowState.bounds!.height < 480) {
+                windowState.bounds!.height = 480;
+            }
+        }
         Object.assign(params, windowState.bounds);
     } else {
         params.width = 1200;
