@@ -40,7 +40,14 @@ export function createInstrumentListStore(appStore: InstrumentAppStore | null) {
                 SELECT ROWID, deleted, name, data, type, description FROM "instrument/list";
             DROP TABLE "instrument/list";
             ALTER TABLE "instrument/list-new" RENAME TO "instrument/list";
-            UPDATE "instrument/list/version" SET version = 4;`
+            UPDATE "instrument/list/version" SET version = 4;`,
+
+            // version 5
+            // migrate version to versions table
+            `DROP TABLE "instrument/list/version";
+            CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
+            INSERT INTO versions(tableName, version) VALUES ('instrument/list', 5);
+            `
         ],
         properties: {
             id: types.id,

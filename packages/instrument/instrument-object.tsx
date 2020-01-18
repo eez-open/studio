@@ -966,7 +966,14 @@ export const store = createStore({
             SELECT id, deleted, instrumentExtensionId, label, idn, lastConnection, autoConnect, lastFileDownloadInstructions, selectedShortcutGroups FROM "instrument";
         DROP TABLE "instrument";
         ALTER TABLE "instrument-new" RENAME TO "instrument";
-        UPDATE "instrument/version" SET version = 4;`
+        UPDATE "instrument/version" SET version = 4;`,
+
+        // version 5
+        // migrate version to versions table
+        `DROP TABLE "instrument/version";
+        CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
+        INSERT INTO versions(tableName, version) VALUES ('instrument', 5);
+        `
     ],
     properties: {
         id: types.id,

@@ -53,7 +53,14 @@ const store = createStore({
             SELECT ROWID, deleted, name FROM "shortcuts/groups";
         DROP TABLE "shortcuts/groups";
         ALTER TABLE "shortcuts/groups-new" RENAME TO "shortcuts/groups";
-        UPDATE "shortcuts/groups/version" SET version = 5;`
+        UPDATE "shortcuts/groups/version" SET version = 5;`,
+
+        // version 6
+        // migrate version to versions table
+        `DROP TABLE "shortcuts/groups/version";
+        CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
+        INSERT INTO versions(tableName, version) VALUES ('shortcuts/groups', 6);
+        `
     ],
     properties: {
         id: types.id,

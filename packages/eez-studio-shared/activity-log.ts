@@ -4,7 +4,12 @@ import { db } from "eez-studio-shared/db";
 import { IStore } from "eez-studio-shared/store";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log-interfaces";
 
-import { createStore, types, IFilterSpecification, IStoreOperationOptions } from "eez-studio-shared/store";
+import {
+    createStore,
+    types,
+    IFilterSpecification,
+    IStoreOperationOptions
+} from "eez-studio-shared/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -256,7 +261,14 @@ export const activityLogStore = createStore({
 
         // version 12
         `UPDATE activityLog SET oid="0" WHERE type = "activity-log/session-start";
-        UPDATE activityLogVersion SET version = 12;`
+        UPDATE activityLogVersion SET version = 12;`,
+
+        // version 13
+        // migrate version to versions table
+        `DROP TABLE activityLogVersion;
+        CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
+        INSERT INTO versions(tableName, version) VALUES ('activityLog', 13);
+        `
     ],
 
     properties: {
@@ -291,8 +303,8 @@ export const activityLogStore = createStore({
 
         if (
             filterSpecification.oids &&
-            (filterSpecification.oids.length > 0 &&
-                filterSpecification.oids.indexOf(message.object.oid) === -1)
+            filterSpecification.oids.length > 0 &&
+            filterSpecification.oids.indexOf(message.object.oid) === -1
         ) {
             return false;
         }

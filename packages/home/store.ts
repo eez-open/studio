@@ -203,7 +203,14 @@ export const store = createStore({
             SELECT ROWID, deleted, type, oid, rect FROM "workbench/objects";
         DROP TABLE "workbench/objects";
         ALTER TABLE "workbench/objects-new" RENAME TO "workbench/objects";
-        UPDATE "workbench/objects/version" SET version = 4;`
+        UPDATE "workbench/objects/version" SET version = 4;`,
+
+        // version 5
+        // migrate version to versions table
+        `DROP TABLE "workbench/objects/version";
+        CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
+        INSERT INTO versions(tableName, version) VALUES ('workbench/objects', 5);
+        `
     ],
     properties: {
         id: types.id,

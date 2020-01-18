@@ -166,7 +166,12 @@ export function createStore({
     orderBy
 }: {
     storeName: string;
-    versionTables: string[];
+    versionTables?: (
+        | string
+        | {
+              tableName: string;
+          }
+    )[];
     versions: string[];
     properties: { [propertyName: string]: IType };
     create?: (props: any) => any;
@@ -551,9 +556,26 @@ export function createStore({
 
         let version;
 
+        if (!versionTables) {
+            versionTables = [];
+        }
+
+        versionTables.push({
+            tableName: storeName
+        });
+
         for (let i = 0; i < versionTables.length; i++) {
+            const versionTable = versionTables[i];
             try {
-                let versionRow = db.prepare(`SELECT * FROM "${versionTables[i]}"`).get();
+                let versionRows;
+                if (typeof versionTable === "string") {
+                    versionRows = db.prepare(`SELECT * FROM "${versionTable}"`);
+                } else {
+                    versionRows = db.prepare(
+                        `SELECT * FROM versions WHERE tableName = '${versionTable.tableName}'`
+                    );
+                }
+                const versionRow = versionRows.get();
                 if (versionRow !== undefined) {
                     version = versionRow.version;
                     break;

@@ -127,7 +127,14 @@ export const store = createStore({
             SELECT ROWID, deleted, name, action, keybinding, groupName, showInToolbar, toolbarButtonColor, toolbarButtonPosition, requiresConfirmation, originalId FROM "shortcuts/shortcuts";
         DROP TABLE "shortcuts/shortcuts";
         ALTER TABLE "shortcuts/shortcuts-new" RENAME TO "shortcuts/shortcuts";
-        UPDATE "shortcuts/shortcuts/version" SET version = 11;`
+        UPDATE "shortcuts/shortcuts/version" SET version = 11;`,
+
+        // version 12
+        // migrate version to versions table
+        `DROP TABLE "shortcuts/shortcuts/version";
+        CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
+        INSERT INTO versions(tableName, version) VALUES ('shortcuts/shortcuts', 12);
+        `
     ],
     properties: {
         id: types.id,

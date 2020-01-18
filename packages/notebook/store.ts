@@ -29,7 +29,14 @@ export const notebooksStore = createStore({
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
             deleted BOOLEAN,
             name TEXT NOT NULL
-        );`
+        );`,
+
+        // version 2
+        // migrate version to versions table
+        `DROP TABLE "notebook/notebooks/version";
+        CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
+        INSERT INTO versions(tableName, version) VALUES ('notebook/notebooks', 2);
+        `
     ],
     properties: {
         id: types.id,
@@ -83,7 +90,14 @@ export const notebookItemSourcesStore = createStore({
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
             instrumentName TEXT NOT NULL,
             instrumentExtensionId TEXT NOT NULL
-        );`
+        );`,
+
+        // version 2
+        // migrate version to versions table
+        `DROP TABLE "notebook/sources/version";
+        CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
+        INSERT INTO versions(tableName, version) VALUES ('notebook/sources', 2);
+        `
     ],
     properties: {
         id: types.id,
@@ -207,7 +221,14 @@ export const itemsStore = createStore({
             message TEXT NOT NULL,
             data TEXT,
             deleted BOOLEAN
-        );`
+        );`,
+
+        // version 2
+        // migrate version to versions table
+        `DROP TABLE "notebook/items/version";
+        CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
+        INSERT INTO versions(tableName, version) VALUES ('notebook/items', 2);
+        `
     ],
     properties: {
         id: types.id,
@@ -242,8 +263,8 @@ export const itemsStore = createStore({
         if (
             filterSpecification &&
             filterSpecification.oids &&
-            (filterSpecification.oids.length > 0 &&
-                filterSpecification.oids.indexOf(message.object.oid) === -1)
+            filterSpecification.oids.length > 0 &&
+            filterSpecification.oids.indexOf(message.object.oid) === -1
         ) {
             return false;
         }
