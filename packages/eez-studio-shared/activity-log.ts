@@ -429,7 +429,11 @@ export function logUndelete(
 export function loadData(store: IStore, id: string) {
     try {
         let result = db.prepare(`SELECT data FROM "${store.storeName}" WHERE id = ?`).get(id);
-        return result && result.data;
+        const data = result && result.data;
+        if (typeof data === "string") {
+            return Buffer.from(data, "binary");
+        }
+        return data;
     } catch (err) {
         console.error(err);
     }

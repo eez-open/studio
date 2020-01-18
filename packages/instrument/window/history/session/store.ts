@@ -13,7 +13,7 @@ import {
 
 import { error } from "eez-studio-ui/notification";
 
-import { History, CONF_BLOCK_SIZE } from "instrument/window/history/history";
+import { History, CONF_ITEMS_BLOCK_SIZE } from "instrument/window/history/history";
 import { createHistoryItem } from "instrument/window/history/item-factory";
 import { moveToTopOfHistory } from "instrument/window/history/history-view";
 
@@ -121,7 +121,7 @@ export class HistorySessions {
                                 date
                         )
                     LIMIT ?`
-            ).all(new Date(selectedSession.activityLogEntry.date).getTime(), CONF_BLOCK_SIZE);
+            ).all(new Date(selectedSession.activityLogEntry.date).getTime(), CONF_ITEMS_BLOCK_SIZE);
 
             this.history.displayRows(rows);
 

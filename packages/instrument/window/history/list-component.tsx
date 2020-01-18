@@ -449,12 +449,7 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
     }
 
     selectAll() {
-        const allItems = this.props.history.blocks.reduce(
-            (previousValue: IHistoryItem[], currentValue: IHistoryItem[]) =>
-                currentValue.concat(previousValue),
-            []
-        );
-        this.props.history.selection.selectItems(allItems);
+        this.props.history.selection.selectItems(this.props.history.items);
     }
 
     @bind
@@ -545,19 +540,11 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
                 {this.props.history.navigator.hasOlder && (
                     <LoadMoreButton icon="material:expand_less" loadMore={this.loadOlder} />
                 )}
-                {this.props.history.blocks.map(historyItems => {
-                    if (historyItems.length === 0) {
-                        return null;
-                    }
-                    return (
-                        <HistoryItems
-                            appStore={this.props.appStore}
-                            key={historyItems[0].id}
-                            history={this.props.history}
-                            historyItems={historyItems}
-                        />
-                    );
-                })}
+                <HistoryItems
+                    appStore={this.props.appStore}
+                    history={this.props.history}
+                    historyItems={this.props.history.items}
+                />
                 {this.props.history.navigator.hasNewer && (
                     <LoadMoreButton icon="material:expand_more" loadMore={this.loadNewer} />
                 )}

@@ -161,7 +161,7 @@ class DlogWaveformLineController extends LineController {
                 dlogWaveform.dlog.yAxisScale === Scale.LINEAR
                     ? WaveformFormat.EEZ_DLOG
                     : WaveformFormat.EEZ_DLOG_LOGARITHMIC,
-            logOffset: 1 - channel.yAxis.range!.min,
+            logOffset: channel.yAxis.range ? 1 - channel.yAxis.range.min : 0,
             values,
             length,
             value: undefined as any,
@@ -557,6 +557,7 @@ export class DlogWaveform extends FileHistoryItem {
         if (
             this.chartsController &&
             this.chartsController.mode === mode &&
+            this.chartsController.chartControllers &&
             this.chartsController.chartControllers.length === this.channels.length
         ) {
             return this.chartsController;

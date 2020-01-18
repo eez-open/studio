@@ -260,7 +260,7 @@ export class TableLineView extends React.Component<
         for (let i = 0; i < size; i++) {
             if (i === 0) {
                 path = `M${chartLeft + xAxisController.valueToPx(0)} ${chartBottom -
-                    yAxisController.valueToPx(values[0] || 0)}`;
+                    yAxisController.valueToPx((values.length > 0 && values[0]) || 0)}`;
             } else {
                 if (i < values.length) {
                     path += " v " + -(values[i] - (values[i - 1] || 0)) * yAxisController.scale;

@@ -39,7 +39,8 @@ import {
 
 const CONF_START_SEARCH_TIMEOUT = 250;
 const CONF_SINGLE_SEARCH_LIMIT = 1;
-export const CONF_BLOCK_SIZE = 10;
+
+export const CONF_ITEMS_BLOCK_SIZE = 10;
 const CONF_MAX_NUM_OF_LOADED_ITEMS = 100;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +177,7 @@ class HistoryCalendar {
                                 date
                         )
                     LIMIT ?`
-            ).all(selectedDay.getTime(), CONF_BLOCK_SIZE);
+            ).all(selectedDay.getTime(), CONF_ITEMS_BLOCK_SIZE);
 
             this.history.displayRows(rows);
 
@@ -197,7 +198,7 @@ class HistoryCalendar {
                     ORDER BY
                         date DESC
                     LIMIT ?`
-            ).all(CONF_BLOCK_SIZE);
+            ).all(CONF_ITEMS_BLOCK_SIZE);
 
             rows.reverse();
 
@@ -241,9 +242,9 @@ class HistoryCalendar {
         let selectedDay = this.selectedDay;
         return (
             selectedDay &&
-            (day.getFullYear() === selectedDay.getFullYear() &&
-                day.getMonth() === selectedDay.getMonth() &&
-                day.getDate() === selectedDay.getDate())
+            day.getFullYear() === selectedDay.getFullYear() &&
+            day.getMonth() === selectedDay.getMonth() &&
+            day.getDate() === selectedDay.getDate()
         );
     }
 
@@ -254,8 +255,8 @@ class HistoryCalendar {
         let selectedDay = this.selectedDay;
         return (
             selectedDay &&
-            (month.getFullYear() === selectedDay.getFullYear() &&
-                month.getMonth() === selectedDay.getMonth())
+            month.getFullYear() === selectedDay.getFullYear() &&
+            month.getMonth() === selectedDay.getMonth()
         );
     }
 
@@ -440,8 +441,7 @@ class HistorySearch {
                 this.selectedSearchResult.logEntry.id
             );
             if (foundItem) {
-                const historyItem = foundItem.block[foundItem.index];
-                historyItem.selected = false;
+                foundItem.historyItem.selected = false;
             }
         }
 
@@ -484,20 +484,22 @@ class HistorySearch {
                     ) ORDER BY date`
             ).all(
                 searchResult.logEntry.date.getTime(),
-                Math.round(CONF_BLOCK_SIZE / 2),
+                Math.round(CONF_ITEMS_BLOCK_SIZE / 2),
                 searchResult.logEntry.date.getTime(),
-                Math.round(CONF_BLOCK_SIZE / 2)
+                Math.round(CONF_ITEMS_BLOCK_SIZE / 2)
             );
 
             this.history.displayRows(rows);
 
             const foundItem = this.history.findHistoryItemById(searchResult.logEntry.id);
             if (foundItem) {
-                const historyItem = foundItem.block[foundItem.index];
                 runInAction(() => {
-                    historyItem.selected = true;
+                    foundItem.historyItem.selected = true;
                 });
-                showHistoryItem(this.history.appStore.navigationStore.mainHistoryView, historyItem);
+                showHistoryItem(
+                    this.history.appStore.navigationStore.mainHistoryView,
+                    foundItem.historyItem
+                );
             } else {
                 console.warn("History item not found", searchResult);
             }
@@ -559,24 +561,14 @@ class HistoryNavigator {
 
     @computed
     get firstHistoryItem() {
-        if (this.history.blocks.length > 0) {
-            const firstBlock = this.history.blocks[0];
-            if (firstBlock.length > 0) {
-                return firstBlock[0];
-            }
-        }
-        return undefined;
+        return this.history.items.length > 0 ? this.history.items[0] : undefined;
     }
 
     @computed
     get lastHistoryItem() {
-        if (this.history.blocks.length > 0) {
-            const lastBlock = this.history.blocks[this.history.blocks.length - 1];
-            if (lastBlock.length > 0) {
-                return lastBlock[lastBlock.length - 1];
-            }
-        }
-        return undefined;
+        return this.history.items.length > 0
+            ? this.history.items[this.history.items.length - 1]
+            : undefined;
     }
 
     @action.bound
@@ -600,14 +592,14 @@ class HistoryNavigator {
                                 date DESC
                         )
                     LIMIT ?`
-            ).all(this.firstHistoryItemTime, CONF_BLOCK_SIZE);
+            ).all(this.firstHistoryItemTime, CONF_ITEMS_BLOCK_SIZE);
 
             rows.reverse();
 
             if (rows.length > 0) {
                 runInAction(() => {
                     this.history.calendar.showFirstHistoryItemAsSelectedDay = true;
-                    this.history.blocks.splice(0, 0, this.history.rowsToHistoryItems(rows));
+                    this.history.items.splice(0, 0, ...this.history.rowsToHistoryItems(rows));
                     this.history.freeSomeHistoryItemsFromBottomIfTooMany();
                 });
                 this.update();
@@ -636,12 +628,12 @@ class HistoryNavigator {
                                 date
                         )
                     LIMIT ?`
-            ).all(this.lastHistoryItemTime, CONF_BLOCK_SIZE);
+            ).all(this.lastHistoryItemTime, CONF_ITEMS_BLOCK_SIZE);
 
             if (rows.length > 0) {
                 runInAction(() => {
                     this.history.calendar.showFirstHistoryItemAsSelectedDay = false;
-                    this.history.blocks.push(this.history.rowsToHistoryItems(rows));
+                    this.history.items.push(...this.history.rowsToHistoryItems(rows));
                     this.history.freeSomeHistoryItemsFromTopIfTooMany();
                 });
                 this.update();
@@ -706,7 +698,7 @@ export class History {
     );
 
     @observable
-    blocks: IHistoryItem[][] = [];
+    items: IHistoryItem[] = [];
 
     calendar = new HistoryCalendar(this);
     search = new HistorySearch(this);
@@ -812,7 +804,11 @@ export class History {
         );
 
         if (this.isSessionsSupported) {
-            scheduleTask("Load sessions", Priority.Low, action(() => this.sessions.load()));
+            scheduleTask(
+                "Load sessions",
+                Priority.Low,
+                action(() => this.sessions.load())
+            );
         }
 
         this.reactionDisposer = reaction(
@@ -904,98 +900,33 @@ export class History {
     }
 
     findHistoryItemById(id: string) {
-        for (let i = 0; i < this.blocks.length; i++) {
-            const historyItems = this.blocks[i];
-            for (let j = 0; j < historyItems.length; j++) {
-                let historyItem = historyItems[j];
-                if (historyItem.id === id) {
-                    return { block: historyItems, blockIndex: i, index: j };
-                }
+        for (let i = 0; i < this.items.length; i++) {
+            let historyItem = this.items[i];
+            if (historyItem.id === id) {
+                return { historyItem, index: i };
             }
         }
-
         return undefined;
-    }
-
-    @computed
-    get numLoadedHistoryItems() {
-        let counter = 0;
-        for (let i = 0; i < this.blocks.length; i++) {
-            counter += this.blocks[i].length;
-        }
-        return counter;
     }
 
     @action
     freeSomeHistoryItemsFromTopIfTooMany() {
-        const numLoadedHistoryItems = this.numLoadedHistoryItems;
-        if (numLoadedHistoryItems > CONF_MAX_NUM_OF_LOADED_ITEMS) {
-            let toBeRemoved = numLoadedHistoryItems - CONF_MAX_NUM_OF_LOADED_ITEMS;
-            let removed = 0;
-            while (removed < toBeRemoved) {
-                if (this.blocks.length === 0) {
-                    break;
-                }
-
-                const block = this.blocks[0];
-
-                if (block.length === 0) {
-                    this.blocks.splice(0, 1);
-                    continue;
-                }
-
-                const nextHistoryItemToRemove = block[0];
-                if (nextHistoryItemToRemove.selected) {
-                    break;
-                }
-
-                block.splice(0, 1);
-                if (block.length === 0) {
-                    this.blocks.splice(0, 1);
-                }
-
-                ++removed;
-            }
+        while (this.items.length > CONF_MAX_NUM_OF_LOADED_ITEMS) {
+            this.items.splice(0, 1);
         }
     }
 
     @action
     freeSomeHistoryItemsFromBottomIfTooMany() {
-        const numLoadedHistoryItems = this.numLoadedHistoryItems;
-        if (numLoadedHistoryItems > CONF_MAX_NUM_OF_LOADED_ITEMS) {
-            let toBeRemoved = numLoadedHistoryItems - CONF_MAX_NUM_OF_LOADED_ITEMS;
-            let removed = 0;
-            while (removed < toBeRemoved) {
-                if (this.blocks.length === 0) {
-                    break;
-                }
-
-                const block = this.blocks[this.blocks.length - 1];
-
-                if (block.length === 0) {
-                    this.blocks.splice(this.blocks.length - 1, 1);
-                    continue;
-                }
-
-                const nextHistoryItemToRemove = block[block.length - 1];
-                if (nextHistoryItemToRemove.selected) {
-                    break;
-                }
-
-                block.splice(block.length - 1, 1);
-                if (block.length === 0) {
-                    this.blocks.splice(this.blocks.length - 1, 1);
-                }
-
-                ++removed;
-            }
+        while (this.items.length > CONF_MAX_NUM_OF_LOADED_ITEMS) {
+            this.items.splice(this.items.length - 1, 1);
         }
     }
 
     getHistoryItemById(id: string) {
         const foundItem = this.findHistoryItemById(id);
         if (foundItem) {
-            return foundItem.block[foundItem.index];
+            return foundItem.historyItem;
         }
 
         const activityLogEntry = this.options.store.findById(id);
@@ -1018,7 +949,7 @@ export class History {
         return "AND NOT deleted AND " + this.appStore.filters.getFilter();
     }
 
-    addActivityLogEntryToBlocks(activityLogEntry: IActivityLogEntry) {
+    addActivityLogEntry(activityLogEntry: IActivityLogEntry) {
         const historyItem = createHistoryItem(activityLogEntry, this.appStore);
 
         this.filterStats.onHistoryItemCreated(historyItem);
@@ -1031,74 +962,43 @@ export class History {
         );
         this.calendar.incrementCounter(day);
 
-        // find the block (according to datetime) to which it should be added
-        let i;
-        for (i = 0; i < this.blocks.length; i++) {
-            const historyItemBlock = this.blocks[i];
+        let j;
+        for (j = 0; j < this.items.length; j++) {
             if (
-                historyItemBlock.length > 0 &&
-                (historyItem.date < historyItemBlock[0].date ||
-                    (historyItem.date === historyItemBlock[0].date &&
-                        historyItem.id < historyItemBlock[0].id))
+                this.items.length > 0 &&
+                (historyItem.date < this.items[j].date ||
+                    (historyItem.date === this.items[j].date && historyItem.id < this.items[j].id))
             ) {
                 break;
             }
         }
 
-        if (i == 0) {
-            // add at the beginning
-            if (this.blocks.length === 0) {
-                this.blocks.push([historyItem]);
-            } else {
-                this.blocks[0].unshift(historyItem);
-            }
+        if (j == 0) {
+            // add to the front
+            this.items.unshift(historyItem);
+        } else if (j == this.items.length) {
+            // add to the back
+            this.items.push(historyItem);
         } else {
-            // add inside existing block
-            const historyItemBlock = this.blocks[i - 1];
-            let j;
-            for (j = 0; j < historyItemBlock.length; j++) {
-                if (
-                    historyItemBlock.length > 0 &&
-                    (historyItem.date < historyItemBlock[j].date ||
-                        (historyItem.date === historyItemBlock[j].date &&
-                            historyItem.id < historyItemBlock[j].id))
-                ) {
-                    break;
-                }
-            }
-
-            if (j == 0) {
-                // add to the front of the block
-                historyItemBlock.unshift(historyItem);
-            } else if (j == historyItemBlock.length) {
-                // add to the back of the block
-                historyItemBlock.push(historyItem);
-            } else {
-                // add inside block
-                historyItemBlock.splice(j, 0, historyItem);
-            }
+            // add inside
+            this.items.splice(j, 0, historyItem);
         }
 
         return historyItem;
     }
 
-    removeActivityLogEntryFromBlocks(activityLogEntry: IActivityLogEntry) {
+    removeActivityLogEntry(activityLogEntry: IActivityLogEntry) {
         const foundItem = this.findHistoryItemById(activityLogEntry.id);
         if (foundItem) {
-            const historyItem = foundItem.block[foundItem.index];
+            this.items.splice(foundItem.index, 1);
 
-            foundItem.block.splice(foundItem.index, 1);
-            if (foundItem.block.length === 0) {
-                this.blocks.splice(foundItem.blockIndex, 1);
-            }
-
-            this.filterStats.onHistoryItemRemoved(historyItem);
+            this.filterStats.onHistoryItemRemoved(foundItem.historyItem);
 
             // decrement day counter in calandar
             let day = new Date(
-                historyItem.date.getFullYear(),
-                historyItem.date.getMonth(),
-                historyItem.date.getDate()
+                foundItem.historyItem.date.getFullYear(),
+                foundItem.historyItem.date.getMonth(),
+                foundItem.historyItem.date.getDate()
             );
             this.calendar.decrementCounter(day);
         }
@@ -1116,7 +1016,7 @@ export class History {
 
     @action
     displayRows(rows: any[]) {
-        this.blocks = [this.rowsToHistoryItems(rows)];
+        this.items = this.rowsToHistoryItems(rows);
         this.itemInTheCenterOfTheView = undefined;
         this.navigator.update();
     }
@@ -1151,7 +1051,7 @@ export class History {
                     if (this.sessions) {
                         this.sessions.onActivityLogEntryRemoved(sessionStart as IActivityLogEntry);
                     }
-                    this.removeActivityLogEntryFromBlocks(sessionStart as IActivityLogEntry);
+                    this.removeActivityLogEntry(sessionStart as IActivityLogEntry);
                     return;
                 }
             }
@@ -1168,14 +1068,14 @@ export class History {
 
         if (op === "restore") {
             // this item was restored from undo buffer,
-            this.addActivityLogEntryToBlocks(activityLogEntry);
+            this.addActivityLogEntry(activityLogEntry);
         } else {
             // This is a new history item,
-            // add it to the bottom of history list (last block) ...
+            // add it to the bottom of history list...
             if (this.navigator.hasNewer) {
                 await this.calendar.showRecent();
             } else {
-                this.addActivityLogEntryToBlocks(activityLogEntry);
+                this.addActivityLogEntry(activityLogEntry);
             }
             // ... and scroll to the bottom of history list.
             moveToBottomOfHistory(this.appStore.navigationStore.mainHistoryView);
@@ -1188,30 +1088,22 @@ export class History {
         op: StoreOperation,
         options: IStoreOperationOptions
     ) {
-        let historyItem;
-
         if (this.sessions) {
             this.sessions.onActivityLogEntryUpdated(activityLogEntry);
         }
 
         const foundItem = this.findHistoryItemById(activityLogEntry.id);
-        if (foundItem) {
-            historyItem = foundItem.block[foundItem.index];
-        }
-
-        if (!historyItem) {
+        if (!foundItem) {
             return;
         }
 
         if (activityLogEntry.message !== undefined) {
-            historyItem.message = activityLogEntry.message;
+            foundItem.historyItem.message = activityLogEntry.message;
         }
 
-        const updatedHistoryItem = updateHistoryItemClass(historyItem, this.appStore);
-        if (updatedHistoryItem !== historyItem) {
-            if (foundItem) {
-                foundItem.block[foundItem.index] = updatedHistoryItem;
-            }
+        const updatedHistoryItem = updateHistoryItemClass(foundItem.historyItem, this.appStore);
+        if (updatedHistoryItem !== foundItem.historyItem) {
+            this.items[foundItem.index] = updatedHistoryItem;
         }
     }
 
@@ -1224,7 +1116,7 @@ export class History {
         if (this.sessions) {
             this.sessions.onActivityLogEntryRemoved(activityLogEntry);
         }
-        this.removeActivityLogEntryFromBlocks(activityLogEntry);
+        this.removeActivityLogEntry(activityLogEntry);
     }
 
     @action.bound
@@ -1250,7 +1142,7 @@ export class History {
             this.selection.selectItems([]);
 
             setTimeout(() => {
-                if (this.numLoadedHistoryItems < CONF_BLOCK_SIZE) {
+                if (this.items.length < CONF_ITEMS_BLOCK_SIZE) {
                     if (this.navigator.hasOlder) {
                         this.navigator.loadOlder();
                     } else {
@@ -1269,36 +1161,33 @@ export class History {
 
         const items: IHistoryItem[] = [];
 
-        for (let blockIndex = 0; blockIndex < this.blocks.length; ++blockIndex) {
-            const block = this.blocks[blockIndex];
-            for (let itemIndex = 0; itemIndex < block.length; ++itemIndex) {
-                const item = block[itemIndex];
+        for (let itemIndex = 0; itemIndex < this.items.length; ++itemIndex) {
+            const item = this.items[itemIndex];
 
-                if (item === fromItem) {
-                    if (direction) {
-                        done = true;
-                    } else {
-                        direction = "normal";
-                    }
+            if (item === fromItem) {
+                if (direction) {
+                    done = true;
+                } else {
+                    direction = "normal";
                 }
+            }
 
-                if (item === toItem) {
-                    if (direction) {
-                        done = true;
-                    } else {
-                        direction = "reversed";
-                    }
+            if (item === toItem) {
+                if (direction) {
+                    done = true;
+                } else {
+                    direction = "reversed";
                 }
+            }
 
-                if (direction === "normal") {
-                    items.push(item);
-                } else if (direction === "reversed") {
-                    items.unshift(item);
-                }
+            if (direction === "normal") {
+                items.push(item);
+            } else if (direction === "reversed") {
+                items.unshift(item);
+            }
 
-                if (done) {
-                    return items;
-                }
+            if (done) {
+                return items;
             }
         }
 
@@ -1312,7 +1201,7 @@ export class History {
     setItemInTheCenterOfTheView(id: string) {
         const foundItem = this.findHistoryItemById(id);
         if (foundItem) {
-            this.itemInTheCenterOfTheView = foundItem.block[foundItem.index];
+            this.itemInTheCenterOfTheView = foundItem.historyItem;
         } else {
             this.itemInTheCenterOfTheView = undefined;
         }
@@ -1369,7 +1258,7 @@ export class DeletedItemsHistory extends History {
         options: IStoreOperationOptions
     ) {
         if (op === "restore") {
-            this.removeActivityLogEntryFromBlocks(activityLogEntry);
+            this.removeActivityLogEntry(activityLogEntry);
             this.deletedCount--;
         }
     }
@@ -1381,13 +1270,13 @@ export class DeletedItemsHistory extends History {
         options: IStoreOperationOptions
     ) {
         if (options.deletePermanently) {
-            this.removeActivityLogEntryFromBlocks(activityLogEntry);
+            this.removeActivityLogEntry(activityLogEntry);
             this.deletedCount--;
         } else {
             // we need all properties here since only id is guaranteed from store notification when deleting object
             activityLogEntry = this.options.store.findById(activityLogEntry.id);
             if (activityLogEntry) {
-                this.addActivityLogEntryToBlocks(activityLogEntry);
+                this.addActivityLogEntry(activityLogEntry);
                 this.deletedCount++;
             }
         }

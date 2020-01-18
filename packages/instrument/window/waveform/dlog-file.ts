@@ -316,7 +316,7 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
         channelIndex: -1
     };
 
-    let yAxisScale = Scale.LOGARITHMIC;
+    let yAxisScale = Scale.LINEAR;
 
     let yAxes: IDlogYAxis[] = [];
 
