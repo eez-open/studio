@@ -48,7 +48,7 @@ const darwinAppMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Hide Others",
             accelerator: "Command+Alt+H",
-            role: "hideothers"
+            role: "hideOthers"
         },
         {
             label: "Show All",
@@ -538,15 +538,15 @@ function buildViewMenu(windowType: WindowType) {
         },
         {
             label: "Zoom In",
-            role: "zoomin"
+            role: "zoomIn"
         },
         {
             label: "Zoom Out",
-            role: "zoomout"
+            role: "zoomOut"
         },
         {
             label: "Reset Zoom",
-            role: "resetzoom"
+            role: "resetZoom"
         }
     );
 

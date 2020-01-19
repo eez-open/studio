@@ -560,7 +560,7 @@ export function createStore({
             versionTables = [];
         }
 
-        versionTables.push({
+        versionTables.splice(0, 0, {
             tableName: storeName
         });
 
