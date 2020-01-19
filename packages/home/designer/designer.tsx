@@ -7,7 +7,6 @@ import { VerticalHeaderWithBody, Header, Body } from "eez-studio-ui/header-with-
 import { Splitter } from "eez-studio-ui/splitter";
 import { TransitionGroup, BounceEntranceTransition } from "eez-studio-ui/transitions";
 import styled from "eez-studio-ui/styled-components";
-import { Box } from "eez-studio-ui/box";
 import { PanelTitle } from "eez-studio-ui/panel";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
@@ -55,6 +54,21 @@ export class DesignerToolbar extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const HistoryContainerDiv = styled.div`
+    display: flex;
+    flex-direction: column;
+    background-color: ${props => props.theme.panelHeaderColor};
+    height: 100%;
+`;
+
+const HistoryContentDiv = styled.div`
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    background-color: white;
+    overflow: auto;
+`;
+
 @inject("designerContext")
 @observer
 export class Properties extends React.Component<{
@@ -73,17 +87,17 @@ export class Properties extends React.Component<{
         }
 
         let history = (
-            <Box direction="column" background="panel-header" style={{ height: "100%" }}>
+            <HistoryContainerDiv>
                 <PanelTitle title="History" />
-                <Box scrollable={true} background="white" grow={1}>
+                <HistoryContentDiv>
                     <HistorySection
                         oids={this.viewStateSelectedObject.map(
                             selectedObject => (selectedObject as IWorkbenchObject).oid
                         )}
                         simple={true}
                     />
-                </Box>
-            </Box>
+                </HistoryContentDiv>
+            </HistoryContainerDiv>
         );
 
         return (

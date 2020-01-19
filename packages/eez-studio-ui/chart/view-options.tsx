@@ -5,7 +5,6 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 import { Checkbox, Radio } from "eez-studio-ui/properties";
-import { CONF_BORDER_COLOR } from "eez-studio-ui/box";
 import { ChartsController, ChartController, globalViewOptions } from "eez-studio-ui/chart/chart";
 import { WaveformRenderAlgorithm } from "eez-studio-ui/chart/render";
 import { SideDockViewContainer } from "eez-studio-ui/side-dock";
@@ -343,6 +342,14 @@ const ChartViewOptionsContainer = styled(SideDockViewContainer)`
     }
 `;
 
+const GlobalOptionsContainer = styled.div`
+    margin-top: 10px;
+    border-top: 1px solid ${props => props.theme.borderColor};
+    padding-top: 10px;
+    margin-bottom: 5px;
+    font-weight: bold;
+`;
+
 export interface ChartViewOptionsProps {
     showRenderAlgorithm: boolean;
     showShowSampledDataOption: boolean;
@@ -439,17 +446,7 @@ export class ChartViewOptions extends React.Component<
                             Show zoom in/out buttons
                         </Checkbox>
                     </div>
-                    <div
-                        style={{
-                            marginTop: 10,
-                            borderTop: "1px solid " + CONF_BORDER_COLOR,
-                            paddingTop: 10,
-                            marginBottom: 5,
-                            fontWeight: "bold"
-                        }}
-                    >
-                        Global options:
-                    </div>
+                    <GlobalOptionsContainer>Global options:</GlobalOptionsContainer>
                     <div>
                         <Checkbox
                             checked={globalViewOptions.enableZoomAnimations}

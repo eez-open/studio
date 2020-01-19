@@ -4,7 +4,7 @@ import React from "react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
 
-import { CONF_BORDER_COLOR } from "eez-studio-ui/box";
+import { theme } from "eez-studio-ui/theme";
 import { Draggable } from "eez-studio-ui/draggable";
 
 const SPLITTER_SIZE = 8;
@@ -286,8 +286,8 @@ export class Splitter extends React.Component<SplitterProps, {}> {
                 style.width = SPLITTER_SIZE + "px";
                 style.height = "100%";
 
-                style.borderLeft = "1px solid " + CONF_BORDER_COLOR;
-                style.borderRight = "1px solid " + CONF_BORDER_COLOR;
+                style.borderLeft = "1px solid " + theme.borderColor;
+                style.borderRight = "1px solid " + theme.borderColor;
             } else {
                 style.cursor = "row-resize";
                 style.left = 0;
@@ -295,8 +295,8 @@ export class Splitter extends React.Component<SplitterProps, {}> {
                 style.width = "100%";
                 style.height = SPLITTER_SIZE + "px";
 
-                style.borderTop = "1px solid " + CONF_BORDER_COLOR;
-                style.borderBottom = "1px solid " + CONF_BORDER_COLOR;
+                style.borderTop = "1px solid " + theme.borderColor;
+                style.borderBottom = "1px solid " + theme.borderColor;
             }
 
             splitterStyles.push(style);

@@ -1,21 +1,34 @@
 import React from "react";
 
-import { Box } from "eez-studio-ui/box";
+import styled from "eez-studio-ui/styled-components";
+
+const PanelTitleDiv = styled.div`
+    display: flex;
+    flex-direction: row;
+    padding: 5px 10px;
+    border-bottom: 1px solid ${props => props.theme.borderColor};
+    font-weight: bold;
+`;
 
 export class PanelTitle extends React.Component<{ title?: string }, {}> {
     render() {
-        return (
-            <Box
-                className="EezStudio_Panel_Title"
-                padding={[0.5, 1]}
-                border="bottom"
-                borderColor="lighter"
-            >
-                {this.props.title}
-            </Box>
-        );
+        return <PanelTitleDiv>{this.props.title}</PanelTitleDiv>;
     }
 }
+
+const PanelContainerDiv = styled.div`
+    display: flex;
+    flex-direction: column;
+    margin: 5px;
+    background-color: white;
+    border: 1px solid ${props => props.theme.borderColor};
+`;
+
+const PanelContentDiv = styled.div`
+    display: flex;
+    flex-direction: row;
+    padding: 10px;
+`;
 
 export class Panel extends React.Component<
     {
@@ -28,33 +41,31 @@ export class Panel extends React.Component<
 > {
     render() {
         return (
-            <Box
-                direction="column"
-                margin={0.5}
-                background="white"
-                border="all"
-                borderColor="lighter"
-            >
+            <PanelContainerDiv>
                 {this.props.title && <PanelTitle title={this.props.title} />}
-                <Box
-                    padding={1}
-                    justify={this.props.justify || "center"}
-                    scrollable={this.props.scrollable}
-                    grow={this.props.grow}
+                <PanelContentDiv
+                    style={{
+                        flexGrow: this.props.grow,
+                        overflow: this.props.scrollable ? "auto" : "hidden",
+                        justifyContent: this.props.justify
+                    }}
                 >
                     {this.props.children}
-                </Box>
-            </Box>
+                </PanelContentDiv>
+            </PanelContainerDiv>
         );
     }
 }
 
+const PanelsDiv = styled.div`
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+    background-color: ${props => props.theme.panelHeaderColor};
+`;
+
 export class Panels extends React.Component<{}, {}> {
     render() {
-        return (
-            <Box direction="column" padding={0.5} background="panel-header">
-                {this.props.children}
-            </Box>
-        );
+        return <PanelsDiv>{this.props.children}</PanelsDiv>;
     }
 }
