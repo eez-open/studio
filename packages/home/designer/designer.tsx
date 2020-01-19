@@ -7,7 +7,6 @@ import { VerticalHeaderWithBody, Header, Body } from "eez-studio-ui/header-with-
 import { Splitter } from "eez-studio-ui/splitter";
 import { TransitionGroup, BounceEntranceTransition } from "eez-studio-ui/transitions";
 import styled from "eez-studio-ui/styled-components";
-import { PanelTitle } from "eez-studio-ui/panel";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
 
@@ -68,6 +67,20 @@ const HistoryContentDiv = styled.div`
     background-color: white;
     overflow: auto;
 `;
+
+const PanelTitleDiv = styled.div`
+    display: flex;
+    flex-direction: row;
+    padding: 5px 10px;
+    border-bottom: 1px solid ${props => props.theme.borderColor};
+    font-weight: bold;
+`;
+
+export class PanelTitle extends React.Component<{ title?: string }, {}> {
+    render() {
+        return <PanelTitleDiv>{this.props.title}</PanelTitleDiv>;
+    }
+}
 
 @inject("designerContext")
 @observer
