@@ -14,21 +14,26 @@ function collectModules(thirdPartyModules: ModuleInfo[], ourModules: ModuleInfo[
     const fs = require("fs");
 
     _each(require.cache, (nodeModule: NodeModule) => {
-        const moduleInfo: ModuleInfo = {
-            fileName: nodeModule.filename,
-            relativeName: "",
-            bytes: fs.statSync(nodeModule.filename).size
-        };
-
-        let i = moduleInfo.fileName.indexOf(TP_MODULE_PREFIX);
-        if (i !== -1) {
-            moduleInfo.relativeName = moduleInfo.fileName.substring(i + TP_MODULE_PREFIX.length);
-            thirdPartyModules.push(moduleInfo);
-        } else {
-            i = moduleInfo.fileName.indexOf(LOCAL_MODULE_PREFIX);
-            moduleInfo.relativeName = moduleInfo.fileName.substring(i + LOCAL_MODULE_PREFIX.length);
-            ourModules.push(moduleInfo);
-        }
+        try {
+            const moduleInfo: ModuleInfo = {
+                fileName: nodeModule.filename,
+                relativeName: "",
+                bytes: fs.statSync(nodeModule.filename).size
+            };
+            let i = moduleInfo.fileName.indexOf(TP_MODULE_PREFIX);
+            if (i !== -1) {
+                moduleInfo.relativeName = moduleInfo.fileName.substring(
+                    i + TP_MODULE_PREFIX.length
+                );
+                thirdPartyModules.push(moduleInfo);
+            } else {
+                i = moduleInfo.fileName.indexOf(LOCAL_MODULE_PREFIX);
+                moduleInfo.relativeName = moduleInfo.fileName.substring(
+                    i + LOCAL_MODULE_PREFIX.length
+                );
+                ourModules.push(moduleInfo);
+            }
+        } catch (err) {}
     });
 }
 
