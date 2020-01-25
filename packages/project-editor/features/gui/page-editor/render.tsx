@@ -3,6 +3,7 @@ import { observer, inject } from "mobx-react";
 
 import { Rect } from "eez-studio-shared/geometry";
 
+import { DataContext } from "project-editor/features/data/data";
 import { IDesignerContext } from "project-editor/features/gui/page-editor/designer-interfaces";
 
 import { Page } from "project-editor/features/gui/page";
@@ -14,11 +15,12 @@ import { Widget } from "project-editor/features/gui/widget";
 @observer
 export class WidgetComponent extends React.Component<{
     widget: Widget | Page;
+    dataContext: DataContext;
     rect?: Rect;
     designerContext?: IDesignerContext;
 }> {
     render() {
-        const { widget, designerContext } = this.props;
+        const { widget, dataContext, designerContext } = this.props;
 
         function cleanUpValue(value: any) {
             if (value == undefined) {
@@ -71,7 +73,7 @@ export class WidgetComponent extends React.Component<{
         const dataDesignerObjectId = designerContext ? widget._id : undefined;
 
         if (widget instanceof Widget) {
-            const canvas = widget.draw(rect);
+            const canvas = widget.draw(rect, dataContext);
             if (canvas) {
                 style.imageRendering = "pixelated";
                 return (
@@ -90,7 +92,7 @@ export class WidgetComponent extends React.Component<{
 
             return (
                 <div data-designer-object-id={dataDesignerObjectId} style={style}>
-                    {widget.render(rect, designerContext)}
+                    {widget.render(rect, dataContext, designerContext)}
                 </div>
             );
         } catch (err) {
@@ -126,12 +128,13 @@ export class WidgetComponent extends React.Component<{
 export class WidgetContainerComponent extends React.Component<{
     containerWidget: Widget | Page;
     widgets: Widget[];
+    dataContext: DataContext;
 }> {
     render() {
-        const { widgets } = this.props;
+        const { widgets, dataContext } = this.props;
 
         return widgets.map((widget, i) => {
-            return <WidgetComponent key={widget._id} widget={widget} />;
+            return <WidgetComponent key={widget._id} widget={widget} dataContext={dataContext} />;
         });
     }
 }

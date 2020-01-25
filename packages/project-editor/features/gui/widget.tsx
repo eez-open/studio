@@ -33,7 +33,8 @@ import {
     isAncestor,
     getProperty,
     IOnSelectParams,
-    asArray
+    asArray,
+    getChildOfObject
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { DocumentStore, NavigationStore, IContextMenuContext } from "project-editor/core/store";
@@ -56,12 +57,12 @@ import { onSelectItem } from "project-editor/components/SelectItem";
 
 import { ProjectStore } from "project-editor/core/store";
 
-import * as data from "project-editor/features/data/data";
+// import * as data from "project-editor/features/data/data";
 
 import { Page, lazyLoadPageWidgets } from "project-editor/features/gui/page";
 import { Gui, findPage, findBitmap } from "project-editor/features/gui/gui";
 import { Style, getStyleProperty } from "project-editor/features/gui/style";
-import { findDataItem, dataContext } from "project-editor/features/data/data";
+import { findDataItem, DataContext, dataContext } from "project-editor/features/data/data";
 import { findAction } from "project-editor/features/action/action";
 import {
     drawOnCanvas,
@@ -366,15 +367,39 @@ export class Widget extends EezObject {
     check() {
         let messages: output.Message[] = [];
 
-        if (
-            this.rect.left < 0 ||
-            this.rect.top < 0 ||
-            (this.parent &&
-                (this.rect.left + this.rect.width > this.parent.rect.width ||
-                    this.rect.top + this.rect.height > this.parent.rect.height))
-        ) {
+        if (this.rect.left < 0) {
             messages.push(
-                new output.Message(output.Type.ERROR, "Widget is outside of its parent", this)
+                new output.Message(
+                    output.Type.ERROR,
+                    "Widget is outside of its parent",
+                    getChildOfObject(this, "left")
+                )
+            );
+        }
+
+        if (this.rect.top < 0) {
+            messages.push(
+                new output.Message(
+                    output.Type.ERROR,
+                    "Widget is outside of its parent",
+                    getChildOfObject(this, "top")
+                )
+            );
+        }
+
+        if (this.parent && this.rect.left + this.rect.width > this.parent.rect.width) {
+            messages.push(
+                new output.Message(
+                    output.Type.ERROR,
+                    "Widget is outside of its parent",
+                    getChildOfObject(this, "width")
+                )
+            );
+        }
+
+        if (this.parent && this.rect.top + this.rect.height > this.parent.rect.height) {
+            messages.push(
+                new output.Message(output.Type.ERROR, "Widget is outside of its parent", getChildOfObject(this, "height"))
             );
         }
 
@@ -673,11 +698,15 @@ export class Widget extends EezObject {
         return undefined;
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
+    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         return undefined;
     }
 
-    render(rect: Rect, designerContext?: IDesignerContext): React.ReactNode {
+    render(
+        rect: Rect,
+        dataContext: DataContext,
+        designerContext?: IDesignerContext
+    ): React.ReactNode {
         return undefined;
     }
 
@@ -803,8 +832,14 @@ export class ContainerWidget extends Widget {
         icon: "_images/widgets/Container.png"
     });
 
-    render(rect: Rect) {
-        return <WidgetContainerComponent containerWidget={this} widgets={asArray(this.widgets)} />;
+    render(rect: Rect, dataContext: DataContext) {
+        return (
+            <WidgetContainerComponent
+                containerWidget={this}
+                widgets={asArray(this.widgets)}
+                dataContext={dataContext}
+            />
+        );
     }
 
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
@@ -893,7 +928,7 @@ export class ListWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    render(rect: Rect) {
+    render(rect: Rect, dataContext: DataContext) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
@@ -901,9 +936,13 @@ export class ListWidget extends Widget {
 
         const itemRect = itemWidget.rect;
 
-        const listItemsCount = this.data ? dataContext.count(this.data) : 0;
+        const dataValue = this.data ? dataContext.get(this.data) : 0;
 
-        return _range(listItemsCount).map(i => {
+        if (!dataValue || !Array.isArray(dataValue)) {
+            return null;
+        }
+
+        return _range(dataValue.length).map(i => {
             let xListItem = 0;
             let yListItem = 0;
 
@@ -925,6 +964,7 @@ export class ListWidget extends Widget {
                         width: itemRect.width,
                         height: itemRect.height
                     }}
+                    dataContext={new DataContext(dataContext, dataValue[i])}
                 />
             );
         });
@@ -999,7 +1039,7 @@ export class GridWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    render(rect: Rect) {
+    render(rect: Rect, dataContext: DataContext) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
@@ -1008,9 +1048,13 @@ export class GridWidget extends Widget {
         const gridRect = rect;
         const itemRect = itemWidget.rect;
 
-        const gridItemsCount = this.data ? dataContext.count(this.data) : 0;
+        const dataValue = this.data ? dataContext.get(this.data) : 0;
 
-        return _range(gridItemsCount).map(i => {
+        if (!dataValue || !Array.isArray(dataValue)) {
+            return null;
+        }
+
+        return _range(dataValue.length).map(i => {
             const rows = Math.floor(gridRect.width / itemRect.width);
             const cols = Math.floor(gridRect.height / itemRect.height);
 
@@ -1043,6 +1087,7 @@ export class GridWidget extends Widget {
                         width: itemRect.width,
                         height: itemRect.height
                     }}
+                    dataContext={new DataContext(dataContext, dataValue[i])}
                 />
             );
         });
@@ -1176,7 +1221,7 @@ export class SelectWidget extends Widget {
         return undefined;
     }
 
-    getSelectedWidget() {
+    getSelectedWidget(dataContext: DataContext) {
         if (this.data) {
             let index: number = dataContext.getEnumValue(this.data);
             if (index >= 0 && index < this.widgets.length) {
@@ -1186,7 +1231,7 @@ export class SelectWidget extends Widget {
         return undefined;
     }
 
-    getSelectedIndex(designerContext?: IDesignerContext) {
+    getSelectedIndex(dataContext: DataContext, designerContext?: IDesignerContext) {
         if (designerContext) {
             const selectedObjects = designerContext.viewState.selectedObjects;
 
@@ -1211,7 +1256,7 @@ export class SelectWidget extends Widget {
                 return this._lastSelectedIndexInSelectWidget;
             }
 
-            const selectedWidget = this.getSelectedWidget();
+            const selectedWidget = this.getSelectedWidget(dataContext);
             if (selectedWidget) {
                 return this.widgets.indexOf(selectedWidget);
             }
@@ -1228,7 +1273,7 @@ export class SelectWidget extends Widget {
                 return this._lastSelectedIndexInSelectWidget;
             }
 
-            const selectedWidget = this.getSelectedWidget();
+            const selectedWidget = this.getSelectedWidget(dataContext);
             if (selectedWidget) {
                 return this.widgets.indexOf(selectedWidget);
             }
@@ -1237,15 +1282,21 @@ export class SelectWidget extends Widget {
         return -1;
     }
 
-    render(rect: Rect, designerContext?: IDesignerContext) {
-        const index = this.getSelectedIndex(designerContext);
+    render(rect: Rect, dataContext: DataContext, designerContext?: IDesignerContext) {
+        const index = this.getSelectedIndex(dataContext, designerContext);
         if (index === -1) {
             return null;
         }
 
         const selectedWidget = asArray(this.widgets)[index];
 
-        return <WidgetContainerComponent containerWidget={this} widgets={[selectedWidget]} />;
+        return (
+            <WidgetContainerComponent
+                containerWidget={this}
+                widgets={[selectedWidget]}
+                dataContext={dataContext}
+            />
+        );
     }
 }
 
@@ -1376,14 +1427,41 @@ export class LayoutViewWidget extends Widget {
         return layout;
     }
 
-    render(rect: Rect): React.ReactNode {
-        if (!this.layoutPage) {
+    getLayoutPage(dataContext: DataContext) {
+        let layout;
+
+        if (this.data) {
+            const layoutName = dataContext.get(this.data);
+            if (layoutName) {
+                layout = findPage(layoutName);
+            }
+        }
+
+        if (!layout) {
+            layout = findPage(this.layout);
+        }
+
+        if (!layout) {
             return null;
         }
 
-        lazyLoadPageWidgets.prioritizePage(this.layoutPage);
+        if (isAncestor(this, layout)) {
+            // prevent cyclic referencing
+            return null;
+        }
 
-        return <WidgetComponent widget={this.layoutPage} />;
+        return layout;
+    }
+
+    render(rect: Rect, dataContext: DataContext): React.ReactNode {
+        const layoutPage = this.getLayoutPage(dataContext);
+        if (!layoutPage) {
+            return null;
+        }
+
+        lazyLoadPageWidgets.prioritizePage(layoutPage);
+
+        return <WidgetComponent widget={layoutPage} dataContext={dataContext} />;
     }
 
     open() {
@@ -1500,8 +1578,8 @@ export class DisplayDataWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        let text = (this.data && (data.get(this.data) as string)) || "";
+    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+        let text = (this.data && (dataContext.get(this.data) as string)) || "";
 
         function findStartOfFraction() {
             let i;
@@ -1599,8 +1677,8 @@ export class TextWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        let text = this.text ? this.text : this.data ? (data.get(this.data) as string) : "";
+    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+        let text = this.text ? this.text : this.data ? (dataContext.get(this.data) as string) : "";
         return drawText(text, rect.width, rect.height, this.style, false);
     }
 
@@ -1899,8 +1977,8 @@ export class MultilineTextWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        let text = (this.data ? (data.get(this.data) as string) : this.text) || "";
+    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+        let text = (this.data ? (dataContext.get(this.data) as string) : this.text) || "";
 
         const w = rect.width;
         const h = rect.height;
@@ -2135,16 +2213,24 @@ export class BitmapWidget extends Widget {
         return this.bitmap
             ? findBitmap(this.bitmap)
             : this.data
-            ? findBitmap(data.get(this.data) as string)
+            ? findBitmap(dataContext.get(this.data) as string)
             : undefined;
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
+    getBitmapObject(dataContext: DataContext) {
+        return this.bitmap
+            ? findBitmap(this.bitmap)
+            : this.data
+            ? findBitmap(dataContext.get(this.data) as string)
+            : undefined;
+    }
+
+    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         const w = rect.width;
         const h = rect.height;
         const style = this.style;
 
-        const bitmap = this.bitmapObject;
+        const bitmap = this.getBitmapObject(dataContext);
 
         const inverse = false;
 
@@ -2245,7 +2331,7 @@ export class ButtonWidget extends Widget {
         }
 
         if (this.enabled) {
-            if (!data.findDataItem(this.enabled)) {
+            if (!findDataItem(this.enabled)) {
                 messages.push(output.propertyNotFoundMessage(this, "enabled"));
             }
         } else {
@@ -2255,12 +2341,13 @@ export class ButtonWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        let text = this.data && data.get(this.data);
+    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+        let text = this.data && dataContext.get(this.data);
         if (!text) {
             text = this.text;
         }
-        let style = this.enabled && data.getBool(this.enabled) ? this.style : this.disabledStyle;
+        let style =
+            this.enabled && dataContext.getBool(this.enabled) ? this.style : this.disabledStyle;
         return drawText(text, rect.width, rect.height, style, false);
     }
 }
@@ -2350,9 +2437,9 @@ export class ButtonGroupWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        let buttonLabels = (this.data && data.getValueList(this.data)) || [];
-        let selectedButton = (this.data && data.get(this.data)) || 0;
+    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+        let buttonLabels = (this.data && dataContext.getValueList(this.data)) || [];
+        let selectedButton = (this.data && dataContext.get(this.data)) || 0;
         let style = this.style;
 
         return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
@@ -2493,14 +2580,14 @@ export class BarGraphWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
+    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         let barGraphWidget = this;
         let style = barGraphWidget.style;
 
         return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
-            let min = (barGraphWidget.data && data.getMin(barGraphWidget.data)) || 0;
-            let max = (barGraphWidget.data && data.getMax(barGraphWidget.data)) || 0;
-            let valueText = (barGraphWidget.data && data.get(barGraphWidget.data)) || "0";
+            let min = (barGraphWidget.data && dataContext.getMin(barGraphWidget.data)) || 0;
+            let max = (barGraphWidget.data && dataContext.getMax(barGraphWidget.data)) || 0;
+            let valueText = (barGraphWidget.data && dataContext.get(barGraphWidget.data)) || "0";
             let value = parseFloat(valueText);
             if (isNaN(value)) {
                 value = 0;
@@ -2575,7 +2662,7 @@ export class BarGraphWidget extends Widget {
             }
 
             function drawLine(lineData: string | undefined, lineStyle: Style) {
-                let value = (lineData && parseFloat(data.get(lineData))) || 0;
+                let value = (lineData && parseFloat(dataContext.get(lineData))) || 0;
                 if (isNaN(value)) {
                     value = 0;
                 }
@@ -2750,7 +2837,7 @@ export class UpDownWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
+    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         let upDownWidget = this;
         let style = upDownWidget.style;
         let buttonsStyle = upDownWidget.buttonsStyle;
@@ -2770,7 +2857,7 @@ export class UpDownWidget extends Widget {
             );
             ctx.drawImage(downButtonCanvas, 0, 0);
 
-            let text = upDownWidget.data ? (data.get(upDownWidget.data) as string) : "";
+            let text = upDownWidget.data ? (dataContext.get(upDownWidget.data) as string) : "";
             let textCanvas = drawText(
                 text,
                 rect.width - 2 * buttonsFont.height,
@@ -2849,7 +2936,7 @@ export class ListGraphWidget extends Widget {
         }
 
         if (this.y1Data) {
-            if (!data.findDataItem(this.y1Data)) {
+            if (!findDataItem(this.y1Data)) {
                 messages.push(output.propertyNotFoundMessage(this, "y1Data"));
             }
         } else {
@@ -2865,7 +2952,7 @@ export class ListGraphWidget extends Widget {
         }
 
         if (this.cursorData) {
-            if (!data.findDataItem(this.cursorData)) {
+            if (!findDataItem(this.cursorData)) {
                 messages.push(output.propertyNotFoundMessage(this, "cursorData"));
             }
         } else {
@@ -2941,7 +3028,7 @@ export class AppViewWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    render(rect: Rect) {
+    render(rect: Rect, dataContext: DataContext) {
         if (!this.data) {
             return null;
         }
@@ -2956,7 +3043,7 @@ export class AppViewWidget extends Widget {
             return null;
         }
 
-        return page.render(rect);
+        return page.render(rect, dataContext);
     }
 }
 
@@ -3009,7 +3096,7 @@ export class ScrollBarWidget extends Widget {
         return super.check().concat(messages);
     }
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
+    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         let widget = this;
 
         return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
@@ -3054,7 +3141,7 @@ export class ScrollBarWidget extends Widget {
             draw.fillRect(ctx, x, y, x + width - 1, y + height - 1, 0);
 
             // draw thumb
-            const [size, position, pageSize] = (widget.data && data.get(widget.data)) || [
+            const [size, position, pageSize] = (widget.data && dataContext.get(widget.data)) || [
                 100,
                 25,
                 20

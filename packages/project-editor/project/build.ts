@@ -290,7 +290,13 @@ export async function build({ onlyCheck }: { onlyCheck: boolean }) {
         OutputSectionsStore.write(
             Section.OUTPUT,
             Type.INFO,
-            `Build successfully finished at ${new Date().toLocaleString()}.`
+            `Build duration: ${(new Date().getTime() - timeStart) / 1000} seconds`
+        );
+
+        OutputSectionsStore.write(
+            Section.OUTPUT,
+            Type.INFO,
+            `Build successfully finished at ${new Date().toLocaleString()}`
         );
     } catch (err) {
         if (err instanceof BuildException) {
@@ -303,8 +309,6 @@ export async function build({ onlyCheck }: { onlyCheck: boolean }) {
     } finally {
         OutputSectionsStore.setLoading(Section.OUTPUT, false);
     }
-
-    console.log("Build time:", new Date().getTime() - timeStart);
 }
 
 export async function buildExtensions() {
@@ -338,7 +342,13 @@ export async function buildExtensions() {
         OutputSectionsStore.write(
             Section.OUTPUT,
             Type.INFO,
-            `Build successfully finished at ${new Date().toLocaleString()}.`
+            `Build duration: ${(new Date().getTime() - timeStart) / 1000} seconds`
+        );
+
+        OutputSectionsStore.write(
+            Section.OUTPUT,
+            Type.INFO,
+            `Build successfully finished at ${new Date().toLocaleString()}`
         );
     } catch (err) {
         if (err instanceof BuildException) {
@@ -351,8 +361,6 @@ export async function buildExtensions() {
     } finally {
         OutputSectionsStore.setLoading(Section.OUTPUT, false);
     }
-
-    console.log("Build time:", new Date().getTime() - timeStart);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

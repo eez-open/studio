@@ -173,180 +173,176 @@ export function findDataItem(dataItemName: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function count(dataItemId: string): number {
-    let dataItem = findDataItem(dataItemId);
-    if (dataItem) {
-        if (dataItem.type != "list") {
-            console.error("Count for non-list data attempted", dataItem);
-            return 0;
+export class DataContext {
+    constructor(public parentDataContext?: DataContext, public defaultValueOverrides?: any) {}
+
+    findDataItemDefaultValue(dataItemId: string): any {
+        if (this.defaultValueOverrides) {
+            const defaultValue = this.defaultValueOverrides[dataItemId];
+            if (defaultValue != undefined) {
+                return defaultValue;
+            }
         }
-
-        let list: any[];
-        try {
-            list = JSON.parse(dataItem.defaultValue);
-        } catch (err) {
-            list = [];
-            console.error("Invalid list default value", dataItem, err);
+        if (this.parentDataContext) {
+            return this.parentDataContext.findDataItemDefaultValue(dataItemId);
         }
-
-        return list.length;
-    }
-
-    console.error(`Data item '${dataItemId}' not found`);
-
-    return 0;
-}
-
-export function get(dataItemId: string, params?: { [key: string]: any }): any {
-    if (dataItemId === undefined) {
         return undefined;
     }
 
-    let dataItem = findDataItem(dataItemId);
-    if (dataItem) {
-        let value: any;
-
-        if (dataItem.defaultValue !== undefined) {
-            if (dataItem.type == "integer" || dataItem.type == "enum") {
-                value = parseInt(dataItem.defaultValue);
-                if (isNaN(value)) {
-                    value = dataItem.defaultValue;
-                    if (dataItem.enumItems.indexOf(value) == -1) {
-                        console.error("Invalid integer default value", dataItem);
-                    }
-                }
-            } else if (dataItem.type == "float") {
-                value = parseFloat(dataItem.defaultValue);
-                if (isNaN(value)) {
-                    value = dataItem.defaultValue;
-                    console.error("Invalid float default value", dataItem);
-                } else {
-                    value = dataItem.defaultValue;
-                }
-            } else if (dataItem.type == "boolean") {
-                let defaultValue = dataItem.defaultValue
-                    .toString()
-                    .trim()
-                    .toLowerCase();
-                if (defaultValue == "1" || defaultValue == "true") {
-                    value = true;
-                } else if (defaultValue == "0" || defaultValue == "false") {
-                    value = false;
-                } else {
-                    value = false;
-                    console.error("Invalid boolean default value", dataItem);
-                }
-            } else if (dataItem.type == "list") {
-                try {
-                    value = JSON.parse(dataItem.defaultValue);
-                } catch (err) {
-                    value = [];
-                    console.error("Invalid list default value", dataItem, err);
-                }
-            } else {
-                value = dataItem.defaultValue;
-            }
-        } else {
-            console.error("Undefined default value", dataItem);
-        }
-
-        return value;
-    }
-
-    console.error(`Data item '${dataItemId}' not found`);
-
-    return "ERR!";
-}
-
-export function getBool(dataItemId: string): boolean {
-    let value = get(dataItemId);
-
-    if (typeof value === "boolean") {
-        return value;
-    }
-
-    if (typeof value === "number" && Number.isInteger(value)) {
-        return value ? true : false;
-    }
-
-    console.error(`Data item '${dataItemId}' is not boolean or integer`);
-    return false;
-}
-
-export function getEnumValue(dataItemId: string): number {
-    let value = get(dataItemId);
-
-    if (typeof value === "boolean") {
-        return value ? 1 : 0;
-    } else if (typeof value === "number" && Number.isInteger(value)) {
-        return value;
-    } else if (typeof value === "string") {
+    findDataItem(dataItemId: string) {
         let dataItem = findDataItem(dataItemId);
-        if (dataItem && dataItem.type == "enum") {
-            value = dataItem.enumItems.indexOf(value);
-            if (value == -1) {
-                console.error("Invalid enum value", dataItem);
-                return 0;
-            } else {
-                return value;
+        if (dataItem) {
+            const defaultValue = this.findDataItemDefaultValue(dataItemId);
+            if (defaultValue != undefined) {
+                return { ...dataItem, defaultValue };
             }
         }
+        return dataItem;
     }
 
-    console.error(`Data item '${dataItemId}' is not boolean or integer or enum`);
-
-    return 0;
-}
-
-export function getMin(dataItemId: string): number {
-    let dataItem = findDataItem(dataItemId);
-    if (dataItem) {
-        return dataItem.defaultMinValue;
-    }
-
-    console.error(`Data item '${dataItemId}' not found`);
-
-    return 0;
-}
-
-export function getMax(dataItemId: string): number {
-    let dataItem = findDataItem(dataItemId);
-    if (dataItem) {
-        return dataItem.defaultMaxValue;
-    }
-
-    console.error(`Data item '${dataItemId}' not found`);
-
-    return 1;
-}
-
-export function getValueList(dataItemId: string): string[] {
-    let dataItem = findDataItem(dataItemId);
-    if (dataItem) {
-        try {
-            return JSON.parse(dataItem.defaultValueList);
-        } catch (err) {
-            console.error("Invalid value list", dataItem, err);
-            return [];
+    get(dataItemId: string): any {
+        if (dataItemId === undefined) {
+            return undefined;
         }
+
+        let dataItem = this.findDataItem(dataItemId);
+        if (dataItem) {
+            let value: any;
+
+            if (dataItem.defaultValue !== undefined) {
+                if (dataItem.type == "integer" || dataItem.type == "enum") {
+                    value = parseInt(dataItem.defaultValue);
+                    if (isNaN(value)) {
+                        value = dataItem.defaultValue;
+                        if (dataItem.enumItems.indexOf(value) == -1) {
+                            console.error("Invalid integer default value", dataItem);
+                        }
+                    }
+                } else if (dataItem.type == "float") {
+                    value = parseFloat(dataItem.defaultValue);
+                    if (isNaN(value)) {
+                        value = dataItem.defaultValue;
+                        console.error("Invalid float default value", dataItem);
+                    } else {
+                        value = dataItem.defaultValue;
+                    }
+                } else if (dataItem.type == "boolean") {
+                    let defaultValue = dataItem.defaultValue
+                        .toString()
+                        .trim()
+                        .toLowerCase();
+                    if (defaultValue == "1" || defaultValue == "true") {
+                        value = true;
+                    } else if (defaultValue == "0" || defaultValue == "false") {
+                        value = false;
+                    } else {
+                        value = false;
+                        console.error("Invalid boolean default value", dataItem);
+                    }
+                } else if (dataItem.type == "list") {
+                    try {
+                        value =
+                            typeof dataItem.defaultValue === "string"
+                                ? JSON.parse(dataItem.defaultValue)
+                                : dataItem.defaultValue;
+                    } catch (err) {
+                        value = [];
+                        console.error("Invalid list default value", dataItem, err);
+                    }
+                } else {
+                    value = dataItem.defaultValue;
+                }
+            } else {
+                console.error("Undefined default value", dataItem);
+            }
+
+            return value;
+        }
+
+        console.error(`Data item '${dataItemId}' not found`);
+
+        return "ERR!";
     }
 
-    console.error(`Data item '${dataItemId}' not found`);
+    getBool(dataItemId: string): boolean {
+        let value = this.get(dataItemId);
 
-    return [];
+        if (typeof value === "boolean") {
+            return value;
+        }
+
+        if (typeof value === "number" && Number.isInteger(value)) {
+            return value ? true : false;
+        }
+
+        console.error(`Data item '${dataItemId}' is not boolean or integer`);
+        return false;
+    }
+
+    getEnumValue(dataItemId: string): number {
+        let value = this.get(dataItemId);
+
+        if (typeof value === "boolean") {
+            return value ? 1 : 0;
+        } else if (typeof value === "number" && Number.isInteger(value)) {
+            return value;
+        } else if (typeof value === "string") {
+            let dataItem = this.findDataItem(dataItemId);
+            if (dataItem && dataItem.type == "enum") {
+                value = dataItem.enumItems.indexOf(value);
+                if (value == -1) {
+                    console.error("Invalid enum value", dataItem);
+                    return 0;
+                } else {
+                    return value;
+                }
+            }
+        }
+
+        console.error(`Data item '${dataItemId}' is not boolean or integer or enum`);
+
+        return 0;
+    }
+
+    getMin(dataItemId: string): number {
+        let dataItem = this.findDataItem(dataItemId);
+        if (dataItem) {
+            return dataItem.defaultMinValue;
+        }
+
+        console.error(`Data item '${dataItemId}' not found`);
+
+        return 0;
+    }
+
+    getMax(dataItemId: string): number {
+        let dataItem = this.findDataItem(dataItemId);
+        if (dataItem) {
+            return dataItem.defaultMaxValue;
+        }
+
+        console.error(`Data item '${dataItemId}' not found`);
+
+        return 1;
+    }
+
+    getValueList(dataItemId: string): string[] {
+        let dataItem = this.findDataItem(dataItemId);
+        if (dataItem) {
+            try {
+                return JSON.parse(dataItem.defaultValueList);
+            } catch (err) {
+                console.error("Invalid value list", dataItem, err);
+                return [];
+            }
+        }
+
+        console.error(`Data item '${dataItemId}' not found`);
+
+        return [];
+    }
+
+    executeAction(action: string) {}
 }
 
-function executeAction(action: string) {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const dataContext = {
-    get,
-    set(dataItemId: string, value: any) {},
-    count,
-    getEnumValue,
-    executeAction,
-    push(data: any) {
-        return dataContext;
-    }
-};
+export const dataContext = new DataContext();

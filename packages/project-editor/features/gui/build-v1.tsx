@@ -139,7 +139,7 @@ function getSelectedWidgetForSelectWidget(
 ): DisplayItem | undefined {
     let widget = item.object as Widget.SelectWidget;
     if (widget.data && widget.widgets) {
-        let index: number = data.getEnumValue(widget.data);
+        let index: number = data.dataContext.getEnumValue(widget.data);
         if (index >= 0 && index < widget.widgets.length) {
             let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
@@ -208,13 +208,16 @@ function createWidgetTree(
                             "itemWidget"
                         ];
 
-                        for (let i = 0; i < data.count(widget.data as string); i++) {
-                            enumWidget(treeNode, itemWidgetItem, x, y);
+                        const dataValue = data.dataContext.get(widget.data as string);
+                        if (dataValue && Array.isArray(dataValue)) {
+                            for (let i = 0; i < dataValue.length; i++) {
+                                enumWidget(treeNode, itemWidgetItem, x, y);
 
-                            if (widget.listType == "vertical") {
-                                y += itemWidget.height;
-                            } else {
-                                x += itemWidget.width;
+                                if (widget.listType == "vertical") {
+                                    y += itemWidget.height;
+                                } else {
+                                    x += itemWidget.width;
+                                }
                             }
                         }
                     }

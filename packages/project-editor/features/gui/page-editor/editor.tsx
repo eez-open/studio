@@ -39,6 +39,7 @@ import { DragAndDropManager } from "project-editor/core/dd";
 import { Page } from "project-editor/features/gui/page";
 import { Widget } from "project-editor/features/gui/widget";
 import { WidgetComponent } from "project-editor/features/gui/page-editor/render";
+import { dataContext } from "project-editor/features/data/data";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -236,6 +237,7 @@ const DragWidget = observer(
                     width: pageEditorContext.dragWidget.rect.width,
                     height: pageEditorContext.dragWidget.rect.height
                 }}
+                dataContext={dataContext}
             />
         ) : null;
     }
@@ -725,7 +727,7 @@ export class PageEditor
                                     height: pageRect && pageRect.height
                                 }}
                             >
-                                <WidgetComponent widget={this.page} />
+                                <WidgetComponent widget={this.page} dataContext={dataContext} />
                             </div>
                         }
                         <DragWidget page={this.page} pageEditorContext={this.pageEditorContext} />

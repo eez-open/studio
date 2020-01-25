@@ -33,10 +33,13 @@ import {
 } from "project-editor/core/objectAdapter";
 import { loadObject } from "project-editor/core/serialization";
 import { ProjectStore, NavigationStore, EditorsStore, IPanel } from "project-editor/core/store";
+import * as output from "project-editor/core/output";
+
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Tree } from "project-editor/components/Tree";
 import { Panel } from "project-editor/components/Panel";
 
+import { DataContext } from "project-editor/features/data/data";
 import {
     IResizeHandler,
     IDesignerContext
@@ -424,6 +427,8 @@ export class Page extends EezObject {
 
     @observable isUsedAsCustomWidget: boolean;
 
+    @observable dataContextOverrides: string;
+
     static classInfo: ClassInfo = {
         properties: [
             {
@@ -435,6 +440,12 @@ export class Page extends EezObject {
             {
                 name: "description",
                 type: PropertyType.MultilineText,
+                propertyGridGroup: generalGroup
+            },
+            {
+                name: "dataContextOverrides",
+                displayName: "Data context",
+                type: PropertyType.JSON,
                 propertyGridGroup: generalGroup
             },
             {
@@ -576,8 +587,37 @@ export class Page extends EezObject {
         ];
     }
 
-    render(rect: Rect) {
-        return <WidgetContainerComponent containerWidget={this} widgets={asArray(this.widgets)} />;
+    @computed
+    get dataContextOverridesObject() {
+        try {
+            return JSON.parse(this.dataContextOverrides);
+        } catch {
+            return undefined;
+        }
+    }
+
+    check() {
+        let messages: output.Message[] = [];
+
+        if (this.dataContextOverrides) {
+            try {
+                JSON.parse(this.dataContextOverrides);
+            } catch {
+                messages.push(output.propertyInvalidValueMessage(this, "dataContextOverrides"));
+            }
+        }
+
+        return messages;
+    }
+
+    render(rect: Rect, dataContext: DataContext) {
+        return (
+            <WidgetContainerComponent
+                containerWidget={this}
+                widgets={asArray(this.widgets)}
+                dataContext={new DataContext(dataContext, this.dataContextOverridesObject)}
+            />
+        );
     }
 
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
