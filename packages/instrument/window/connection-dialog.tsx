@@ -154,41 +154,41 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
         this.serialPortBaudRate = parseInt(value);
     }
 
-    refreshSerialPortPaths() {
+    async refreshSerialPortPaths() {
         const SerialPort = require("serialport") as typeof SerialPortModule;
-        SerialPort.list((err: any, ports: any[]) => {
-            if (err) {
-                console.error(err);
-            } else {
-                runInAction(() => {
-                    let found;
+        try {
+            const ports = await SerialPort.list();
+            console.log(ports);
+            runInAction(() => {
+                let found;
 
-                    devices.serialPortPaths = [
-                        {
-                            path: "",
-                            description: ""
-                        }
-                    ].concat(
-                        ports.map(port => {
-                            if (this.serialPortPath === port.comName) {
-                                found = true;
-                            }
-                            return {
-                                path: port.comName,
-                                description:
-                                    port.comName +
-                                    (port.manufacturer ? " - " + port.manufacturer : "") +
-                                    (port.productId ? " - " + port.productId : "")
-                            };
-                        })
-                    );
-
-                    if (!found) {
-                        this.serialPortPath = "";
+                devices.serialPortPaths = [
+                    {
+                        path: "",
+                        description: ""
                     }
-                });
-            }
-        });
+                ].concat(
+                    ports.map(port => {
+                        if (this.serialPortPath === port.path) {
+                            found = true;
+                        }
+                        return {
+                            path: port.path,
+                            description:
+                                port.path +
+                                (port.manufacturer ? " - " + port.manufacturer : "") +
+                                (port.productId ? " - " + port.productId : "")
+                        };
+                    })
+                );
+
+                if (!found) {
+                    this.serialPortPath = "";
+                }
+            });
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     @bind

@@ -7,8 +7,6 @@ declare const EEZStudio: {
     windowType: string;
 };
 
-declare module "serialport";
-
 declare module "quill";
 
 declare module "react-visibility-sensor";
