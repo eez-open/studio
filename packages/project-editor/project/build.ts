@@ -398,8 +398,20 @@ var checkTransformer: (object: EezObject) => IMessage[] = createTransformer(
     }
 );
 
+let setMessagesTimeoutId: any;
+
 export function backgroundCheck() {
     //console.time("backgroundCheck");
-    OutputSectionsStore.setMessages(Section.CHECKS, checkTransformer(ProjectStore.project));
+    const messages = checkTransformer(ProjectStore.project);
+    if (setMessagesTimeoutId) {
+        clearTimeout(setMessagesTimeoutId);
+    }
+    setMessagesTimeoutId = setTimeout(
+        () => {
+            OutputSectionsStore.setMessages(Section.CHECKS, messages);
+        },
+        // wait a little bit more before showing messages while pages are still loaded
+        ProjectStore.project._allGuiPagesLoaded ? 100 : 1000
+    );
     //console.timeEnd("backgroundCheck");
 }

@@ -399,7 +399,11 @@ export class Widget extends EezObject {
 
         if (this.parent && this.rect.top + this.rect.height > this.parent.rect.height) {
             messages.push(
-                new output.Message(output.Type.ERROR, "Widget is outside of its parent", getChildOfObject(this, "height"))
+                new output.Message(
+                    output.Type.ERROR,
+                    "Widget is outside of its parent",
+                    getChildOfObject(this, "height")
+                )
             );
         }
 
@@ -2415,7 +2419,10 @@ registerClass(ToggleButtonWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ButtonGroupWidget extends Widget {
+    @observable selectedStyle: Style;
+
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        properties: [makeStylePropertyInfo("selectedStyle")],
         defaultValue: {
             type: "ButtonGroup",
             left: 0,
@@ -2440,7 +2447,6 @@ export class ButtonGroupWidget extends Widget {
     draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         let buttonLabels = (this.data && dataContext.getValueList(this.data)) || [];
         let selectedButton = (this.data && dataContext.get(this.data)) || 0;
-        let style = this.style;
 
         return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
             let x = 0;
@@ -2455,13 +2461,21 @@ export class ButtonGroupWidget extends Widget {
                 let buttonHeight = h;
                 for (let i = 0; i < buttonLabels.length; i++) {
                     ctx.drawImage(
-                        drawText(
-                            buttonLabels[i],
-                            buttonWidth,
-                            buttonHeight,
-                            style,
-                            i == selectedButton
-                        ),
+                        i == selectedButton
+                            ? drawText(
+                                  buttonLabels[i],
+                                  buttonWidth,
+                                  buttonHeight,
+                                  this.selectedStyle,
+                                  false
+                              )
+                            : drawText(
+                                  buttonLabels[i],
+                                  buttonWidth,
+                                  buttonHeight,
+                                  this.style,
+                                  false
+                              ),
                         x,
                         y
                     );
@@ -2479,13 +2493,21 @@ export class ButtonGroupWidget extends Widget {
 
                 for (let i = 0; i < buttonLabels.length; i++) {
                     ctx.drawImage(
-                        drawText(
-                            buttonLabels[i],
-                            buttonWidth,
-                            labelHeight,
-                            style,
-                            i == selectedButton
-                        ),
+                        i == selectedButton
+                            ? drawText(
+                                  buttonLabels[i],
+                                  buttonWidth,
+                                  labelHeight,
+                                  this.selectedStyle,
+                                  false
+                              )
+                            : drawText(
+                                  buttonLabels[i],
+                                  buttonWidth,
+                                  labelHeight,
+                                  this.style,
+                                  false
+                              ),
                         x,
                         y + yOffset
                     );

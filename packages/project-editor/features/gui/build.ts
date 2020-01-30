@@ -173,13 +173,10 @@ class Struct extends ObjectField {
     packObject(): number[] {
         let data: number[] = [];
 
-        this.fields.forEach(
-            field => {
-                addPadding(data, field.size);
-                data = data.concat(field.pack());
-            },
-            [] as number[]
-        );
+        this.fields.forEach(field => {
+            addPadding(data, field.size);
+            data = data.concat(field.pack());
+        }, [] as number[]);
 
         addPadding(data, 4);
 
@@ -894,6 +891,22 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         }
 
         specific.addField(new UInt8(flags));
+    } else if (type == WIDGET_TYPE_BUTTON_GROUP) {
+        let widget = object as Widget.ButtonGroupWidget;
+        specific = new Struct();
+
+        // selectedStyle
+        let selectedStyle: number;
+        if (widget.selectedStyle) {
+            selectedStyle = assets.getStyleIndex(widget.selectedStyle);
+            if (selectedStyle == 0) {
+                selectedStyle = style;
+            }
+        } else {
+            selectedStyle = style;
+        }
+
+        specific.addField(new UInt16(selectedStyle));
     } else if (type == WIDGET_TYPE_BAR_GRAPH) {
         let widget = object as Widget.BarGraphWidget;
         specific = new Struct();

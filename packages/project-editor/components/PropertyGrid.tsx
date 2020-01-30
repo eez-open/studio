@@ -20,8 +20,10 @@ import {
     NavigationStore,
     UndoManager,
     DocumentStore,
-    ProjectStore
+    ProjectStore,
+    OutputSectionsStore
 } from "project-editor/core/store";
+import { Section } from "project-editor/core/output";
 import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
 import {
     EezObject,
@@ -346,7 +348,8 @@ function isArrayElementPropertyVisible(propertyInfo: PropertyInfo, object?: EezO
 
     if (
         propertyInfo.hideInPropertyGrid === undefined ||
-        (typeof propertyInfo.hideInPropertyGrid !== "boolean" || !propertyInfo.hideInPropertyGrid)
+        typeof propertyInfo.hideInPropertyGrid !== "boolean" ||
+        !propertyInfo.hideInPropertyGrid
     ) {
         return true;
     }
@@ -354,13 +357,22 @@ function isArrayElementPropertyVisible(propertyInfo: PropertyInfo, object?: EezO
     return false;
 }
 
-function isHighlightedProperty(propertyInfo: PropertyInfo, object: EezObject) {
+function isHighlightedProperty(object: EezObject, propertyInfo: PropertyInfo) {
     const selectedObject =
         NavigationStore.selectedPanel && NavigationStore.selectedPanel.selectedObject;
     return !!(
         selectedObject &&
         ((selectedObject._parent === object && selectedObject._key === propertyInfo.name) ||
             isProperAncestor(selectedObject._parent!, getProperty(object, propertyInfo.name)))
+    );
+}
+
+function isPropertyInError(object: EezObject, propertyInfo: PropertyInfo) {
+    return !!OutputSectionsStore.getSection(Section.CHECKS).messages.find(
+        message =>
+            message.object &&
+            message.object._parent === object &&
+            message.object._key === propertyInfo.name
     );
 }
 
@@ -384,7 +396,8 @@ class ArrayElementProperty extends React.Component<{
         const { propertyInfo } = this.props;
 
         const className = classNames(propertyInfo.name, {
-            highlighted: isHighlightedProperty(this.props.propertyInfo, this.props.object)
+            inError: isPropertyInError(this.props.object, this.props.propertyInfo),
+            highlighted: isHighlightedProperty(this.props.object, this.props.propertyInfo)
         });
 
         if (isArrayElementPropertyVisible(propertyInfo, this.props.object)) {
@@ -761,7 +774,6 @@ class Property extends React.Component<PropertyProps> {
                             end: input.selectionEnd
                         }
                     };
-                    console.log(params);
                 }
             }
 
@@ -1414,15 +1426,18 @@ const PropertyGridDiv = styled.div`
 
         & > tbody {
             & > tr {
-                padding-bottom: 5px;
+                &.inError {
+                    background-color: #ffcccc;
+                }
 
                 &.highlighted {
-                    border: 2px solid #ffccd4;
+                    background-color: #ff6666;
                 }
 
                 & > td {
                     vertical-align: middle;
-                    padding-bottom: 5px;
+                    padding-top: 3px;
+                    padding-bottom: 3px;
                 }
 
                 & > td:first-child {
@@ -1521,10 +1536,13 @@ const PropertyGridDiv = styled.div`
             & > tbody {
                 & > tr {
                     & > td {
-                        padding: 2px;
+                        padding: 4px;
+                    }
+                    & > td.inError {
+                        background-color: #ffaaaa;
                     }
                     & > td.highlighted {
-                        border: 2px solid #ffccd4;
+                        background-color: #ff6666;
                     }
                 }
             }
@@ -1567,19 +1585,15 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
         return this.props.objects.filter(object => !!object);
     }
 
-    @computed
-    get object() {
-        return this.objects.length === 1 ? this.objects[0] : undefined;
-    }
-
     ensureHighlightedVisible() {
         if (this.div) {
-            if (this.lastObject !== this.object) {
+            const object = this.objects.length === 1 ? this.objects[0] : undefined;
+            if (this.lastObject !== object) {
                 const $highlighted = $(this.div).find(".highlighted");
                 if ($highlighted[0]) {
                     ($highlighted[0] as any).scrollIntoViewIfNeeded();
                 }
-                this.lastObject = this.object;
+                this.lastObject = object;
             }
         }
     }
@@ -1617,7 +1631,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
         if (objects.length === 1) {
             let object;
             if (isValue(objects[0])) {
-                // if given object is actually a value, we show the parent properties with the value higlighted
+                // if given object is actually a value, we show the parent properties with the value highlighted
                 highlightedPropertyName = objects[0]._key;
                 object = objects[0]._parent as EezObject;
             } else {
@@ -1685,10 +1699,13 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 );
             }
 
+            console.log(highlightedPropertyName);
+
             const className = classNames({
+                inError: objects.length === 1 && isPropertyInError(objects[0], propertyInfo),
                 highlighted:
                     propertyInfo.name == highlightedPropertyName ||
-                    isHighlightedProperty(propertyInfo, objects[0])
+                    isHighlightedProperty(objects[0], propertyInfo)
             });
 
             const propertyComponent = (
