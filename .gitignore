@@ -13,10 +13,8 @@ installation/build-installation.js
 installation/build-installation.js.map
 installation/build-installation-new.js
 installation/build-installation-new.js.map
-installation/extra-resources/**
 installation/extra-resource.js
 installation/extra-resource.js.map
-installation/extra-resource.json
 
 tools/freetype-tools/agg-2.5
 tools/freetype-tools/FreeType-Emscripten

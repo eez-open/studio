@@ -1,0 +1,9 @@
+[
+    "./installation/init_storage.db",
+    "./installation/extra-resources/catalog-version.json",
+    "./installation/extra-resources/catalog.json",
+    "./installation/extra-resources/eez_bb3-1.0.3.zip",
+    "./installation/extra-resources/eez_h24005_r5b12-1.1.2.zip",
+    "./installation/extra-resources/generic_scpi-1.0.1.zip",
+    "./installation/extra-resources/eez-studio-advanced-measurements-1.2.0.zip"
+]
