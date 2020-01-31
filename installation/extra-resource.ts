@@ -91,6 +91,7 @@ async function getExtraResource() {
 
     const extensions: string[] = [];
 
+    // advanced-measurements-extension
     rows.push({
         instrumentExtensionId: "b278d8da-1c17-4baa-9837-1761b2481c2b"
     });

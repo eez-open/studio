@@ -13,7 +13,6 @@
         "start": "electron .",
         "build": "npm install && npm run postinstall && npm run build-src && npm run build-css",
         "build-src": "tsc && node node_modules/gulp-cli/bin/gulp.js release",
-        "build-extensions": "cd extensions && tsc",
         "build-css": "npm run build-shared-css",
         "build-shared-css": "node node_modules/less/bin/lessc --clean-css packages/eez-studio-ui/_stylesheets/main.less dist/eez-studio-ui/_stylesheets/main.css",
         "watch-all": "concurrently \"npm run watch\" \"npm run watch-less\"",
@@ -30,7 +29,7 @@
         "tslint": "tslint --project ./tsconfig.json 'packages/**/*.{ts,tsx}'",
         "tsc-version": "tsc --version",
         "electron-version": "electron --version",
-        "build2": "node installation/build-installation-new.js",
+        "build2": "npm run build-extra-resource-json && node installation/build-installation-new.js",
         "build-all": "npm run build && npm run build-extra-resource-json && npm run build2"
     },
     "prettier": {
