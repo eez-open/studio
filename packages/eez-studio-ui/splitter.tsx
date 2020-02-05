@@ -55,7 +55,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         this.animationFrameCallback();
     }
 
-    componentWillReceiveProps(nextProps: SplitterProps) {
+    UNSAFE_componentWillReceiveProps(nextProps: SplitterProps) {
         this.calcSizes(nextProps);
     }
 

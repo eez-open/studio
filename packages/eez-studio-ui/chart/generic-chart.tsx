@@ -187,16 +187,11 @@ class GenericChartXAxisModel implements IAxisModel {
     }
 
     get minScale() {
-        return (
-            Math.min(
-                this.data.samplingRate,
-                this.chartsController.chartWidth / ((this.data.length - 1) / this.data.samplingRate)
-            ) / 2
-        );
+        return 1e-15;
     }
 
     get maxScale() {
-        return 10 * this.data.samplingRate;
+        return 1e15;
     }
 
     @observable

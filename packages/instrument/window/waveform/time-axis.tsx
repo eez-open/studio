@@ -43,17 +43,11 @@ export class WaveformTimeAxisModel implements IAxisModel {
     }
 
     get minScale() {
-        return (
-            Math.min(
-                this.waveform.samplingRate,
-                this.chartsController.chartWidth /
-                    ((this.waveform.length - 1) / this.waveform.samplingRate)
-            ) / 2
-        );
+        return 1e-15;
     }
 
     get maxScale() {
-        return 10 * this.waveform.samplingRate;
+        return 1e15;
     }
 
     @observable

@@ -11,6 +11,7 @@ import { capitalize } from "eez-studio-shared/string";
 import { Point, pointDistance } from "eez-studio-shared/geometry";
 import { IUnit } from "eez-studio-shared/units";
 import { _uniqWith } from "eez-studio-shared/algorithm";
+//import { roundNumberWithMaxNumberOfDecimalDigits } from "eez-studio-shared/roundNumber";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
@@ -187,13 +188,10 @@ export abstract class AxisController {
 
     unit: IUnit = this.axisModel.unit;
 
-    @observable
-    labelTextsWidth: number = 0;
-    @observable
-    labelTextsHeight: number = 0;
+    @observable labelTextsWidth: number = 0;
+    @observable labelTextsHeight: number = 0;
 
-    @observable
-    isAnimationActive: boolean;
+    @observable isAnimationActive: boolean;
     animationController = new AnimationController();
 
     get logarithmic() {
@@ -254,16 +252,12 @@ export abstract class AxisController {
 
     @computed
     get minScale() {
-        return this.axisModel.minScale !== undefined
-            ? this.axisModel.minScale
-            : this.distancePx / this.range;
+        return 1e-15;
     }
 
     @computed
     get maxScale() {
-        return this.axisModel.maxScale !== undefined
-            ? this.axisModel.maxScale
-            : this.distancePx / this.unit.units[0];
+        return 1e15;
     }
 
     toLogScale(value: number) {
@@ -351,7 +345,7 @@ export abstract class AxisController {
 
     @computed
     get zoomOutEnabled() {
-        return /*this.position === "x" ? this.scale > this.minScale : */ this.isScrollBarEnabled;
+        return this.scale > this.minScale;
     }
 
     abstract zoomOut(): void;
@@ -361,11 +355,11 @@ export abstract class AxisController {
     abstract zoomAroundPivotPoint(pivotPx: number, zoomIn: boolean): void;
 
     pageUp() {
-        this.panTo(this.from + this.distance);
+        this.panTo(this.from + this.distance / 2);
     }
 
     pageDown() {
-        this.panTo(this.from - this.distance);
+        this.panTo(this.from - this.distance / 2);
     }
 
     home() {
@@ -400,67 +394,54 @@ class DynamicAxisController extends AxisController {
         super(position, chartsController, chartController, axisModel);
     }
 
-    @observable
-    animationFrom: number;
-    @observable
-    animationTo: number;
+    @observable animationFrom: number;
+    @observable animationTo: number;
 
     @computed
     get from() {
-        if (this.isAnimationActive) {
-            return this.animationFrom;
+        if (this.chartsController.mode === "preview") {
+            return this.minValue;
         }
 
-        if (this.axisModel.dynamic.zoomMode === "default") {
-            return this.axisModel.defaultFrom;
+        if (this.isAnimationActive) {
+            return this.animationFrom;
         }
 
         if (this.axisModel.dynamic.zoomMode === "all") {
             return this.minValue;
         }
 
-        let from = this.axisModel.dynamic.from;
-        let to = this.axisModel.dynamic.to;
-        let range = to - from;
-        if (range < this.steps[0] && from + this.steps[0] > this.maxValue) {
-            from = this.maxValue - this.steps[0];
+        if (this.axisModel.dynamic.zoomMode === "default") {
+            return this.axisModel.defaultFrom;
         }
-        return from;
+
+        return this.axisModel.dynamic.from;
     }
 
     set from(value: number) {
         this.axisModel.dynamic.zoomMode = "custom";
-        if (value < this.minValue) {
-            this.axisModel.dynamic.from = this.minValue;
-        } else {
-            this.axisModel.dynamic.from = value;
-        }
+        this.axisModel.dynamic.from = value;
     }
 
     @computed
     get to() {
-        if (this.isAnimationActive) {
-            return this.animationTo;
+        if (this.chartsController.mode === "preview") {
+            return this.maxValue;
         }
 
-        if (this.axisModel.dynamic.zoomMode === "default") {
-            return this.axisModel.defaultTo;
+        if (this.isAnimationActive) {
+            return this.animationTo;
         }
 
         if (this.axisModel.dynamic.zoomMode === "all") {
             return this.maxValue;
         }
 
-        let from = this.axisModel.dynamic.from;
-        let to = this.axisModel.dynamic.to;
-        let range = to - from;
-        if (range < this.steps[0]) {
-            if (from + this.steps[0] > this.maxValue) {
-                from = this.maxValue - this.steps[0];
-            }
-            to = from + this.steps[0];
+        if (this.axisModel.dynamic.zoomMode === "default") {
+            return this.axisModel.defaultTo;
         }
-        return to;
+
+        return this.axisModel.dynamic.to;
     }
 
     set to(value: number) {
@@ -610,7 +591,8 @@ class DynamicAxisController extends AxisController {
                               self.axisModel.semiLogarithmic
                                   ? Math.pow(10, value + self.axisModel.semiLogarithmic.a) +
                                         self.axisModel.semiLogarithmic.b
-                                  : value, 4
+                                  : value,
+                              4
                           )
                         : "";
 
@@ -732,9 +714,7 @@ class DynamicAxisController extends AxisController {
 
     @computed
     get maxScale() {
-        return this.axisModel.maxScale !== undefined
-            ? this.axisModel.maxScale
-            : this.distancePx / this.steps[0];
+        return this.axisModel.maxScale !== undefined ? this.axisModel.maxScale : 1e15;
     }
 
     panByDirection(direction: number) {
@@ -742,19 +722,7 @@ class DynamicAxisController extends AxisController {
     }
 
     panTo(newFrom: number) {
-        if (newFrom < this.minValue) {
-            newFrom = this.minValue;
-        } else if (newFrom + this.distance > this.maxValue) {
-            newFrom = this.maxValue - this.distance;
-        }
-
-        let distance = this.distance;
-        if (newFrom > this.from) {
-            let maxTo = Math.max(this.to, this.maxValue);
-            if (newFrom + distance > maxTo) {
-                newFrom = maxTo - distance;
-            }
-        }
+        const distance = this.distance;
         this.from = newFrom;
         this.to = this.from + distance;
     }
@@ -769,47 +737,29 @@ class DynamicAxisController extends AxisController {
 
     @bind
     zoomIn() {
-        this.zoom(this.from, this.from + this.distance / CONF_ZOOM_STEP);
+        if (!this.zoomInEnabled) {
+            return;
+        }
+
+        const c = (this.to + this.from) / 2;
+        const newDistance = this.distance / CONF_ZOOM_STEP;
+
+        this.zoom(c - newDistance / 2, c + newDistance / 2);
     }
 
     @bind
     zoomOut() {
-        this.zoom(this.from, this.from + this.distance * CONF_ZOOM_STEP);
+        if (!this.zoomOutEnabled) {
+            return;
+        }
+
+        const c = (this.to + this.from) / 2;
+        const newDistance = this.distance * CONF_ZOOM_STEP;
+
+        this.zoom(c - newDistance / 2, c + newDistance / 2);
     }
 
     zoom(from: number, to: number) {
-        let distance = to - from;
-
-        if (distance * this.maxScale < this.distancePx) {
-            distance = this.distancePx / this.maxScale;
-            from = (from + to - distance) / 2;
-            to = from + distance;
-        }
-
-        if (distance < this.distance) {
-            if (!this.zoomInEnabled) {
-                return;
-            }
-        } else {
-            if (!this.zoomOutEnabled) {
-                return;
-            }
-        }
-
-        if (distance > this.range) {
-            distance = this.range;
-        }
-
-        if (from < this.minValue) {
-            from = this.minValue;
-            to = from + distance;
-        }
-
-        if (to > this.maxValue) {
-            to = this.maxValue;
-            from = to - distance;
-        }
-
         this.animate(() => {
             this.from = from;
             this.to = to;
@@ -829,21 +779,8 @@ class DynamicAxisController extends AxisController {
 
         let distance = zoomIn ? this.distance / CONF_ZOOM_STEP : this.distance * CONF_ZOOM_STEP;
 
-        if (distance > this.range) {
-            distance = this.range;
-        }
-
         let from = this.from + ((this.distance - distance) * pivotPx) / this.distancePx;
         let to = from + distance;
-
-        if (from < this.minValue) {
-            from = this.minValue;
-            to = from + distance;
-        }
-        if (to > this.maxValue) {
-            to = this.maxValue;
-            from = to - distance;
-        }
 
         this.animate(() => {
             this.from = from;
@@ -854,7 +791,7 @@ class DynamicAxisController extends AxisController {
     @action
     animate(set: () => void) {
         if (!globalViewOptions.enableZoomAnimations) {
-            runInAction(set);
+            set();
             return;
         }
 
@@ -867,7 +804,7 @@ class DynamicAxisController extends AxisController {
         this.animationTo = oldTo;
         this.isAnimationActive = true;
 
-        runInAction(set);
+        set();
 
         const newFrom = this.from;
         const newTo = this.to;
@@ -887,12 +824,13 @@ class DynamicAxisController extends AxisController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const MIN_FIXED_SCALE_POWER = -9;
-const MAX_FIXED_SCALE_POWER = 9;
+const MIN_FIXED_SCALE_POWER = -15;
+const MAX_FIXED_SCALE_POWER = 15;
 
-function calcSubdivisionScaleOffset(from: number, to: number, subdivision: number) {
+function calcSubdivisionScaleAndOffset(from: number, to: number, subdivision: number) {
+    // first try heuristic to find nice round numbers
     for (let i = MIN_FIXED_SCALE_POWER; i <= MAX_FIXED_SCALE_POWER; i++) {
-        for (let k = 1; k < 100; k++) {
+        for (let k = 1; k <= 9; k++) {
             const scale = k * Math.pow(10, i);
             const offset = Math.floor(from / scale) * scale;
             const range = scale * subdivision;
@@ -952,10 +890,8 @@ class FixedAxisController extends AxisController {
 
     animationController = new AnimationController();
 
-    @observable
-    animationSubdivisionOffset: number;
-    @observable
-    animationSubdivisionScale: number;
+    @observable animationSubdivisionOffset: number;
+    @observable animationSubdivisionScale: number;
 
     get majorSubdivison() {
         return this.position === "x"
@@ -965,19 +901,19 @@ class FixedAxisController extends AxisController {
 
     @computed
     get subdivisionOffset() {
+        if (this.chartsController.mode === "preview" || this.axisModel.fixed.zoomMode === "all") {
+            return calcSubdivisionScaleAndOffset(this.minValue, this.maxValue, this.majorSubdivison)
+                .offset;
+        }
+
         if (this.axisModel.fixed.zoomMode === "default") {
             return this.axisModel.defaultSubdivisionOffset !== undefined
                 ? this.axisModel.defaultSubdivisionOffset
-                : calcSubdivisionScaleOffset(
+                : calcSubdivisionScaleAndOffset(
                       this.axisModel.defaultFrom,
                       this.axisModel.defaultTo,
                       this.majorSubdivison
                   ).offset;
-        }
-
-        if (this.axisModel.fixed.zoomMode === "all") {
-            return calcSubdivisionScaleOffset(this.minValue, this.maxValue, this.majorSubdivison)
-                .offset;
         }
 
         return this.axisModel.fixed.subdivisionOffset;
@@ -985,19 +921,19 @@ class FixedAxisController extends AxisController {
 
     @computed
     get subdivisionScale() {
+        if (this.chartsController.mode === "preview" || this.axisModel.fixed.zoomMode === "all") {
+            return calcSubdivisionScaleAndOffset(this.minValue, this.maxValue, this.majorSubdivison)
+                .scale;
+        }
+
         if (this.axisModel.fixed.zoomMode === "default") {
             return this.axisModel.defaultSubdivisionScale !== undefined
                 ? this.axisModel.defaultSubdivisionScale
-                : calcSubdivisionScaleOffset(
+                : calcSubdivisionScaleAndOffset(
                       this.axisModel.defaultFrom,
                       this.axisModel.defaultTo,
                       this.majorSubdivison
                   ).scale;
-        }
-
-        if (this.axisModel.fixed.zoomMode === "all") {
-            return calcSubdivisionScaleOffset(this.minValue, this.maxValue, this.majorSubdivison)
-                .scale;
         }
 
         return this.axisModel.fixed.subdivisonScale;
@@ -1027,7 +963,7 @@ class FixedAxisController extends AxisController {
     @computed
     get minValue(): number {
         const minValue = this._minValue;
-        if (this.axisModel.fixed.zoomMode === "all") {
+        if (this.chartsController.mode === "preview" || this.axisModel.fixed.zoomMode === "all") {
             return minValue;
         }
         return Math.min(minValue, this.from);
@@ -1036,7 +972,7 @@ class FixedAxisController extends AxisController {
     @computed
     get maxValue(): number {
         const maxValue = super._maxValue;
-        if (this.axisModel.fixed.zoomMode === "all") {
+        if (this.chartsController.mode === "preview" || this.axisModel.fixed.zoomMode === "all") {
             return maxValue;
         }
         return Math.max(maxValue, this.to);
@@ -1124,18 +1060,14 @@ class FixedAxisController extends AxisController {
     }
 
     panByDirection(direction: number) {
-        this.panByDistance(direction * 1.1 * this.subdivisionScale);
+        this.panByDistance(direction * this.subdivisionScale);
     }
 
     panTo(newFrom: number) {
-        if (newFrom < this.minValue) {
-            newFrom = this.minValue;
-        } else if (newFrom + this.distance > this.maxValue) {
-            newFrom = this.maxValue - this.distance;
-        }
-
-        this.axisModel.fixed.subdivisionOffset =
-            Math.floor(newFrom / this.subdivisionScale) * this.subdivisionScale;
+        //newFrom = roundNumberWithMaxNumberOfDecimalDigits(newFrom, 2);
+        this.axisModel.fixed.subdivisionOffset = newFrom;
+        this.axisModel.fixed.subdivisonScale = this.subdivisionScale;
+        this.axisModel.fixed.zoomMode = "custom";
     }
 
     zoomAll() {
@@ -1152,11 +1084,13 @@ class FixedAxisController extends AxisController {
             return;
         }
 
+        const c = (this.to + this.from) / 2;
         const scale = scaleZoomIn(this.subdivisionScale);
+        const offset = c - (scale * this.majorSubdivison) / 2;
 
         this.animate(() => {
             this.axisModel.fixed.subdivisonScale = scale;
-            this.axisModel.fixed.subdivisionOffset = this.subdivisionOffset;
+            this.axisModel.fixed.subdivisionOffset = offset;
             this.axisModel.fixed.zoomMode = "custom";
         });
     }
@@ -1167,11 +1101,13 @@ class FixedAxisController extends AxisController {
             return;
         }
 
+        const c = (this.to + this.from) / 2;
         const scale = scaleZoomOut(this.subdivisionScale);
+        const offset = c - (scale * this.majorSubdivison) / 2;
 
         this.animate(() => {
             this.axisModel.fixed.subdivisonScale = scale;
-            this.axisModel.fixed.subdivisionOffset = this.subdivisionOffset;
+            this.axisModel.fixed.subdivisionOffset = offset;
             this.axisModel.fixed.zoomMode = "custom";
         });
     }
@@ -1187,7 +1123,7 @@ class FixedAxisController extends AxisController {
             }
         }
 
-        const result = calcSubdivisionScaleOffset(from, to, this.majorSubdivison);
+        const result = calcSubdivisionScaleAndOffset(from, to, this.majorSubdivison);
 
         this.animate(() => {
             this.axisModel.fixed.subdivisonScale = result.scale;
@@ -1220,15 +1156,8 @@ class FixedAxisController extends AxisController {
                 ((this.subdivisionScale - newScale) * this.majorSubdivison * pivotPx) /
                     this.distancePx;
 
-            if (fixedOffset > this.maxValue - this.majorSubdivison * newScale) {
-                fixedOffset = this.maxValue - this.majorSubdivison * newScale;
-            }
-
-            if (fixedOffset < this.minValue) {
-                fixedOffset = this.minValue;
-            }
-
-            fixedOffset = Math.floor(fixedOffset / newScale) * newScale;
+            //fixedOffset = Math.floor(fixedOffset / newScale) * newScale;
+            //fixedOffset = roundNumberWithMaxNumberOfDecimalDigits(fixedOffset, 2);
 
             this.animate(() => {
                 this.axisModel.fixed.subdivisionOffset = fixedOffset;
@@ -1238,9 +1167,10 @@ class FixedAxisController extends AxisController {
         }
     }
 
+    @action
     animate(set: () => void) {
         if (!globalViewOptions.enableZoomAnimations) {
-            runInAction(set);
+            set();
             return;
         }
 
@@ -1253,7 +1183,7 @@ class FixedAxisController extends AxisController {
         this.animationSubdivisionOffset = oldOffset;
         this.animationSubdivisionScale = oldScale;
 
-        runInAction(set);
+        set();
 
         const newOffset = this.subdivisionOffset;
         const newScale = this.subdivisionScale;
@@ -1852,11 +1782,15 @@ export abstract class ChartsController {
             this.xAxisController.to != this.maxValue ||
             this.chartControllers.find(chartController => {
                 return (
-                    chartController.yAxisController.isScrollBarEnabled ||
-                    !!(
-                        chartController.yAxisControllerOnRightSide &&
-                        chartController.yAxisControllerOnRightSide.isScrollBarEnabled
-                    )
+                    chartController.yAxisController.from !=
+                        chartController.yAxisController.minValue ||
+                    chartController.yAxisController.to !=
+                        chartController.yAxisController.maxValue ||
+                    (chartController.yAxisControllerOnRightSide &&
+                        (chartController.yAxisController.from !=
+                            chartController.yAxisController.minValue ||
+                            chartController.yAxisController.to !=
+                                chartController.yAxisController.maxValue))
                 );
             })
         );
@@ -2401,12 +2335,14 @@ class PanMouseHandler implements MouseHandler {
 
     @action
     move(point: SVGPoint, event: PointerEvent) {
-        let dx = this.lastPoint.x - point.x;
-        this.axes[0].panByDistanceInPx(dx);
-
-        let dy = this.lastPoint.y - point.y;
-        for (let i = 1; i < this.axes.length; i++) {
-            this.axes[i].panByDistanceInPx(dy);
+        for (let i = 0; i < this.axes.length; i++) {
+            let d;
+            if (this.axes[i].position === "x") {
+                d = this.lastPoint.x - point.x;
+            } else {
+                d = this.lastPoint.y - point.y;
+            }
+            this.axes[i].panByDistanceInPx(d);
         }
 
         this.lastPoint = point;
@@ -2840,11 +2776,9 @@ export class ChartView extends React.Component<
             if (event.ctrlKey) {
                 axisController.zoomAroundPivotPoint(pivotPx, this.deltaY < 0);
             } else {
-                if (axisController.isScrollBarEnabled) {
-                    runInAction(() => {
-                        axisController.panByDirection(this.deltaY < 0 ? 1 : -1);
-                    });
-                }
+                runInAction(() => {
+                    axisController.panByDirection(this.deltaY < 0 ? 1 : -1);
+                });
             }
 
             this.deltaY = 0;
@@ -2857,7 +2791,6 @@ export class ChartView extends React.Component<
             return;
         }
 
-        event.preventDefault();
         event.stopPropagation();
 
         this.cursor.visible = false;
@@ -2915,7 +2848,11 @@ export class ChartView extends React.Component<
 
         let point = this.transformEventPoint(event);
 
-        if (event.buttons === 1) {
+        if (point.x < 0) {
+            this.mouseHandler = new PanMouseHandler([this.props.chartController.yAxisController]);
+        } else if (point.y < 0) {
+            this.mouseHandler = new PanMouseHandler([this.props.chartController.xAxisController]);
+        } else if (event.buttons === 1) {
             if (this.cursor && this.cursor.visible && this.cursor.addPoint) {
                 this.mouseHandler = this.cursor.lineController.addPoint(this, this.cursor);
             } else {

@@ -464,7 +464,7 @@ export class Tree extends React.Component<TreeProps, {}> {
     @observable dropMarkWidth: number;
     @observable dropMarkVerticalConnectionLineHeight: number | undefined;
 
-    componentWillReceiveProps(nextProps: TreeProps) {
+    UNSAFE_componentWillReceiveProps(nextProps: TreeProps) {
         this.setState({
             dropItem: undefined
         });

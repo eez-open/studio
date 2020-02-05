@@ -67,7 +67,7 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
     disposer: any;
 
     @action
-    componentWillReceiveProps(nextProps: ConnectionPropertiesProps) {
+    UNSAFE_componentWillReceiveProps(nextProps: ConnectionPropertiesProps) {
         this.applyConnectionParameters(nextProps.connectionParameters);
     }
 

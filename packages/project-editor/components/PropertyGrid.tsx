@@ -234,7 +234,7 @@ class CodeEditorProperty extends React.Component<
     }
 
     @action
-    componentWillReceiveProps(props: PropertyProps) {
+    UNSAFE_componentWillReceiveProps(props: PropertyProps) {
         this.value = this.getValue(props);
     }
 
@@ -730,7 +730,7 @@ class Property extends React.Component<PropertyProps> {
     }
 
     @action
-    componentWillReceiveProps(props: PropertyProps) {
+    UNSAFE_componentWillReceiveProps(props: PropertyProps) {
         const getPropertyValueResult = getPropertyValue(
             this.props.objects,
             this.props.propertyInfo

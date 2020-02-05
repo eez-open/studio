@@ -401,7 +401,7 @@ export class PageEditor
 
         this.pageEditorContext = new PageEditorDesignerContext();
 
-        this.componentWillReceiveProps(props);
+        this.UNSAFE_componentWillReceiveProps(props);
 
         autorun(() => {
             this.pageEditorContext.set(
@@ -415,7 +415,7 @@ export class PageEditor
     }
 
     @action
-    componentWillReceiveProps(props: PageEditorProps) {
+    UNSAFE_componentWillReceiveProps(props: PageEditorProps) {
         this.pageDocument = new PageDocument(props.widgetContainer, this.pageEditorContext);
 
         this.options = {

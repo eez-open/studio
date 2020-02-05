@@ -581,7 +581,7 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         this.subscribeToOutsideModelChanges();
     }
 
-    componentWillReceiveProps(props: RulersDockViewProps) {
+    UNSAFE_componentWillReceiveProps(props: RulersDockViewProps) {
         this.subscribeToOutsideModelChanges();
     }
 

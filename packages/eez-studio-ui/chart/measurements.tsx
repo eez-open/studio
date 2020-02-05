@@ -420,7 +420,9 @@ class Measurement {
         const chartControllers = this.measurementsController.chartsController.chartControllers;
         if (chartControllers.length > 1) {
             if (this.arity === 1) {
-                return `${this.name} (${chartControllers[this.chartIndex].yAxisController.axisModel.label})`;
+                return `${this.name} (${
+                    chartControllers[this.chartIndex].yAxisController.axisModel.label
+                })`;
             } else {
                 return `${this.name} (${this.chartIndexes
                     .map(chartIndex => chartControllers[chartIndex].yAxisController.axisModel.label)
@@ -608,10 +610,11 @@ export class MeasurementsController {
         reaction(
             () => ({
                 isAnimationActive: this.chartsController.xAxisController.isAnimationActive,
-                measurementsInterval: this.calcMeasurementsInterval()
+                measurementsInterval: this.calcMeasurementsInterval(),
+                measurements: this.measurementsModel.measurements
             }),
-            ({ isAnimationActive, measurementsInterval }) => {
-                if (!isAnimationActive) {
+            ({ isAnimationActive, measurementsInterval, measurements }) => {
+                if (!isAnimationActive && measurements.length > 0) {
                     this.startMeasurement(measurementsInterval);
                 }
             }

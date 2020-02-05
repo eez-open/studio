@@ -3,7 +3,12 @@ import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
-import { ChartsView, globalViewOptions, ChartsController, ChartMode } from "eez-studio-ui/chart/chart";
+import {
+    ChartsView,
+    globalViewOptions,
+    ChartsController,
+    ChartMode
+} from "eez-studio-ui/chart/chart";
 
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
@@ -60,7 +65,7 @@ export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
     }
 
     @action
-    componentWillReceiveProps(nextProps: ChartPreviewProps) {
+    UNSAFE_componentWillReceiveProps(nextProps: ChartPreviewProps) {
         this.data = nextProps.data;
     }
 

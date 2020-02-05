@@ -429,7 +429,7 @@ class Cell extends React.Component<CellProps, {}> {
     }
 
     @action
-    componentWillReceiveProps(props: CellProps) {
+    UNSAFE_componentWillReceiveProps(props: CellProps) {
         this.value = Cell.getValue(props);
     }
 
@@ -790,7 +790,7 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
     }
 
     @action
-    componentWillReceiveProps(nextProps: TableDetailsViewProps) {
+    UNSAFE_componentWillReceiveProps(nextProps: TableDetailsViewProps) {
         this.list = nextProps.list;
     }
 

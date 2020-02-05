@@ -69,8 +69,14 @@ function getDefaultEnvelopeListData(instrument: InstrumentObject) {
     const voltage = getMaxVoltage(instrument) / 2;
     const current = getMaxCurrent(instrument) / 2;
     return {
-        voltage: [{ time: 0, value: voltage }, { time: 1, value: voltage }],
-        current: [{ time: 0, value: current }, { time: 1, value: current }],
+        voltage: [
+            { time: 0, value: voltage },
+            { time: 1, value: voltage }
+        ],
+        current: [
+            { time: 0, value: current },
+            { time: 1, value: current }
+        ],
         duration: 1,
         numSamples: 256
     };
@@ -417,19 +423,13 @@ class EditEnvelopeValue extends React.Component<
         this.onValueChange = this.onValueChange.bind(this);
     }
 
-    @observable
-    time = this.props.time && this.props.timeUnit.formatValue(this.props.time);
-    @observable
-    timeError: string | undefined;
-    @observable
-    value = this.props.valueUnit.formatValue(this.props.value);
-    @observable
-    valueError: string | undefined;
+    @observable time = this.props.time && this.props.timeUnit.formatValue(this.props.time);
+    @observable timeError: string | undefined;
+    @observable value = this.props.valueUnit.formatValue(this.props.value);
+    @observable valueError: string | undefined;
 
-    @observable
-    lastTime: number | undefined = this.props.time;
-    @observable
-    lastValue: number = this.props.value;
+    @observable lastTime: number | undefined = this.props.time;
+    @observable lastValue: number = this.props.value;
 
     @computed
     get canSave() {
@@ -1043,7 +1043,7 @@ export class EnvelopeLineController extends LineController {
             value: cursor.value
         };
         this.values.splice(cursor.valueIndex, 0, newValue);
-        cursor.error = this.list.powerLimitError;
+        cursor.error = time < 0 ? "Time must be >= 0" : this.list.powerLimitError;
         this.values.splice(cursor.valueIndex, 1);
 
         cursor.addPoint = !cursor.error;
@@ -1600,7 +1600,7 @@ export class EnvelopeDetailsView extends React.Component<EnvelopeDetailsViewProp
     }
 
     @action
-    componentWillReceiveProps(nextProps: EnvelopeDetailsViewProps) {
+    UNSAFE_componentWillReceiveProps(nextProps: EnvelopeDetailsViewProps) {
         this.list = nextProps.list;
     }
 

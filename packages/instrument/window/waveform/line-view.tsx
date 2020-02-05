@@ -63,7 +63,7 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
     }
 
     @action
-    componentWillReceiveProps(nextProps: WaveformLineViewProperties) {
+    UNSAFE_componentWillReceiveProps(nextProps: WaveformLineViewProperties) {
         this.waveformLineController = nextProps.waveformLineController;
     }
 

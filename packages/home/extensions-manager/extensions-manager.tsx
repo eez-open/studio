@@ -559,7 +559,7 @@ export class ExtensionSections extends React.Component<ExtensionSectionsProps, {
         }
     }
 
-    componentWillReceiveProps(nextProps: ExtensionSectionsProps) {
+    UNSAFE_componentWillReceiveProps(nextProps: ExtensionSectionsProps) {
         if (this.props.extension !== nextProps.extension) {
             this.renderPropertiesComponent(nextProps.extension);
         }

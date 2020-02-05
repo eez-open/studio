@@ -372,7 +372,7 @@ export class StaticRichTextProperty extends React.Component<
         this.quill.enable(false);
     }
 
-    componentWillReceiveProps(nextProps: any) {
+    UNSAFE_componentWillReceiveProps(nextProps: any) {
         this.setContents(nextProps.value);
     }
 

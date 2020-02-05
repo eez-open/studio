@@ -33,7 +33,7 @@ class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOption
         this.loadProps(this.props);
     }
 
-    componentWillReceiveProps(props: DynamicSubdivisionOptionsProps) {
+    UNSAFE_componentWillReceiveProps(props: DynamicSubdivisionOptionsProps) {
         this.loadProps(props);
     }
 
@@ -199,7 +199,7 @@ class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsPro
         this.loadProps(this.props);
     }
 
-    componentWillReceiveProps(props: FixedSubdivisionOptionsProps) {
+    UNSAFE_componentWillReceiveProps(props: FixedSubdivisionOptionsProps) {
         this.loadProps(props);
     }
 

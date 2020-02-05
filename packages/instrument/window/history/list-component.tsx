@@ -299,7 +299,7 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         this.lastItemInTheCenterId = undefined;
     }
 
-    componentWillReceiveProps(props: HistoryListComponentProps) {
+    UNSAFE_(props: HistoryListComponentProps) {
         if (props.history !== this.props.history) {
             this.fromBottom = undefined;
             this.fromTop = 0;

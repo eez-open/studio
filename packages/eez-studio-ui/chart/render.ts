@@ -146,7 +146,7 @@ export function renderWaveformPath(
 
         let r = Math.max(1, Math.min(4, 0.75 / Math.sqrt(xAxisPxToIndex(1) - xAxisPxToIndex(0))));
 
-        let y0 = Math.round(canvas.height - yAxisController.valueToPx(0));
+        // let y0 = Math.round(canvas.height - yAxisController.valueToPx(0));
 
         let xPrev = 0;
         let yPrev = 0;
@@ -162,19 +162,20 @@ export function renderWaveformPath(
             ctx.fill();
 
             if (!label) {
-                if (r > 1.2) {
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                    ctx.lineTo(x, y0);
-                    ctx.stroke();
-                }
+                // draw vertical line to y-axis 0
+                // if (r > 1.2) {
+                //     ctx.beginPath();
+                //     ctx.moveTo(x, y);
+                //     ctx.lineTo(x, y0);
+                //     ctx.stroke();
+                // }
+            }
 
-                if (i > a) {
-                    ctx.beginPath();
-                    ctx.moveTo(xPrev, yPrev);
-                    ctx.lineTo(x, y);
-                    ctx.stroke();
-                }
+            if (i > a) {
+                ctx.beginPath();
+                ctx.moveTo(xPrev, yPrev);
+                ctx.lineTo(x, y);
+                ctx.stroke();
             }
 
             xPrev = x;
