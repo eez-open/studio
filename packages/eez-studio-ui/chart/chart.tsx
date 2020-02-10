@@ -901,12 +901,10 @@ class FixedAxisController extends AxisController {
 
     @computed
     get subdivisionOffset() {
-        if (this.chartsController.mode === "preview" || this.axisModel.fixed.zoomMode === "all") {
-            return calcSubdivisionScaleAndOffset(this.minValue, this.maxValue, this.majorSubdivison)
-                .offset;
-        }
-
-        if (this.axisModel.fixed.zoomMode === "default") {
+        if (
+            this.chartsController.mode === "preview" ||
+            this.axisModel.fixed.zoomMode === "default"
+        ) {
             return this.axisModel.defaultSubdivisionOffset !== undefined
                 ? this.axisModel.defaultSubdivisionOffset
                 : calcSubdivisionScaleAndOffset(
@@ -916,17 +914,20 @@ class FixedAxisController extends AxisController {
                   ).offset;
         }
 
+        if (this.axisModel.fixed.zoomMode === "all") {
+            return calcSubdivisionScaleAndOffset(this.minValue, this.maxValue, this.majorSubdivison)
+                .offset;
+        }
+
         return this.axisModel.fixed.subdivisionOffset;
     }
 
     @computed
     get subdivisionScale() {
-        if (this.chartsController.mode === "preview" || this.axisModel.fixed.zoomMode === "all") {
-            return calcSubdivisionScaleAndOffset(this.minValue, this.maxValue, this.majorSubdivison)
-                .scale;
-        }
-
-        if (this.axisModel.fixed.zoomMode === "default") {
+        if (
+            this.chartsController.mode === "preview" ||
+            this.axisModel.fixed.zoomMode === "default"
+        ) {
             return this.axisModel.defaultSubdivisionScale !== undefined
                 ? this.axisModel.defaultSubdivisionScale
                 : calcSubdivisionScaleAndOffset(
@@ -934,6 +935,11 @@ class FixedAxisController extends AxisController {
                       this.axisModel.defaultTo,
                       this.majorSubdivison
                   ).scale;
+        }
+
+        if (this.axisModel.fixed.zoomMode === "all") {
+            return calcSubdivisionScaleAndOffset(this.minValue, this.maxValue, this.majorSubdivison)
+                .scale;
         }
 
         return this.axisModel.fixed.subdivisonScale;
