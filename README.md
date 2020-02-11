@@ -60,7 +60,7 @@ The EEZ Studio is an open source cross-platform modular visual tool aimed to add
 
 ## Installation
 
-In all cases 64-bit OS is required.
+64-bit OS is required in all cases.
 
 ### Linux
 
