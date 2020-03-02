@@ -438,8 +438,8 @@ export class Waveform extends FileHistoryItem {
     }
 
     findRange() {
-        let minValue;
-        let maxValue;
+        let minValue = Number.POSITIVE_INFINITY;
+        let maxValue = Number.NEGATIVE_INFINITY;
         if (this.length > 0) {
             minValue = this.waveformData(0);
             maxValue = this.waveformData(0);

@@ -1,5 +1,6 @@
 import MobXModule from "mobx";
 import MomentModule from "moment";
+import stringify from "json-stable-stringify";
 
 import * as GeometryModule from "eez-studio-shared/geometry";
 import * as ModelObjectModule from "project-editor/core/object";
@@ -85,7 +86,7 @@ export function objectEqual<T>(a: T, b: T) {
             return true;
         }
 
-        if (typeof x == "object" && x != null && (typeof y == "object" && y != null)) {
+        if (typeof x == "object" && x != null && typeof y == "object" && y != null) {
             if (Object.keys(x).length != Object.keys(y).length) {
                 return false;
             }
@@ -107,8 +108,16 @@ export function objectEqual<T>(a: T, b: T) {
     };
 
     const { toJS } = require("mobx") as typeof MobXModule;
-    const result = deepEqual(toJS(a), toJS(b));
-    return result;
+
+    const result = deepEqual(stringify(toJS(a)), toJS(b));
+
+    const result2 = stringify(toJS(a)) === stringify(toJS(b));
+
+    if (result != result2) {
+        console.error(toJS(a), toJS(b));
+    }
+
+    return result2;
 }
 
 export function clamp(value: number, min: number, max: number) {

@@ -130,7 +130,7 @@ function detectCSV(data: string | Buffer) {
             }
         }
 
-        if (numbers.find(number => number !== "=" && isNaN(parseFloat(number)))) {
+        if (numbers.find(number => number !== "=" && !isFinite(parseFloat(number)))) {
             return undefined;
         }
     }
