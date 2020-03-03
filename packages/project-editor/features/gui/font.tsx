@@ -9,6 +9,7 @@ import { Rect } from "eez-studio-shared/geometry";
 import { _minBy, _maxBy } from "eez-studio-shared/algorithm";
 import { validators } from "eez-studio-shared/validation";
 
+import { Draggable } from "eez-studio-ui/draggable";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import * as notification from "eez-studio-ui/notification";
 import { IconAction, TextAction } from "eez-studio-ui/action";
@@ -829,22 +830,28 @@ export class Glyph extends EezObject {
         return canvas.toDataURL();
     }
 
-    editorImageHitTest(xTest: number, yTest: number): EditorImageHitTestResult | undefined {
+    @computed
+    get topLeftOffset() {
         let font = this.getFont();
 
         let fontAscent = font.ascent || 0;
 
         let x = this.x || 0;
         let y = this.y || 0;
+        let height = this.height || 0;
+
+        return {
+            x: GLYPH_EDITOR_PADDING_LEFT + x * GLYPH_EDITOR_PIXEL_SIZE,
+            y: GLYPH_EDITOR_PADDING_TOP + (fontAscent - (y + height)) * GLYPH_EDITOR_PIXEL_SIZE
+        };
+    }
+
+    editorImageHitTest(xTest: number, yTest: number): EditorImageHitTestResult | undefined {
         let width = this.width || 0;
         let height = this.height || 0;
 
-        let xOffset = GLYPH_EDITOR_PADDING_LEFT + x * GLYPH_EDITOR_PIXEL_SIZE;
-        let yOffset =
-            GLYPH_EDITOR_PADDING_TOP + (fontAscent - (y + height)) * GLYPH_EDITOR_PIXEL_SIZE;
-
-        let xResult = Math.floor((xTest - xOffset) / GLYPH_EDITOR_PIXEL_SIZE);
-        let yResult = Math.floor((yTest - yOffset) / GLYPH_EDITOR_PIXEL_SIZE);
+        let xResult = Math.floor((xTest - this.topLeftOffset.x) / GLYPH_EDITOR_PIXEL_SIZE);
+        let yResult = Math.floor((yTest - this.topLeftOffset.y) / GLYPH_EDITOR_PIXEL_SIZE);
 
         if (xResult < 0 || xResult >= width || yResult < 0 || yResult >= height) {
             return undefined;
@@ -853,12 +860,30 @@ export class Glyph extends EezObject {
         return {
             x: xResult,
             y: yResult,
-            rect: {
-                left: xOffset + xResult * GLYPH_EDITOR_PIXEL_SIZE,
-                top: yOffset + yResult * GLYPH_EDITOR_PIXEL_SIZE,
-                width: GLYPH_EDITOR_PIXEL_SIZE,
-                height: GLYPH_EDITOR_PIXEL_SIZE
-            }
+            rect: this.getPixelRect(xResult, yResult)
+        };
+    }
+
+    getPixelRect(x: number, y: number): Rect {
+        return {
+            left: this.topLeftOffset.x + x * GLYPH_EDITOR_PIXEL_SIZE,
+            top: this.topLeftOffset.y + y * GLYPH_EDITOR_PIXEL_SIZE,
+            width: GLYPH_EDITOR_PIXEL_SIZE,
+            height: GLYPH_EDITOR_PIXEL_SIZE
+        };
+    }
+
+    getSelectionRect(selection: Rect): Rect {
+        const r1 = this.getPixelRect(selection.left, selection.top);
+        const r2 = this.getPixelRect(
+            selection.left + selection.width,
+            selection.top + selection.height
+        );
+        return {
+            left: r1.left,
+            top: r1.top,
+            width: r2.left - r1.left,
+            height: r2.top - r1.top
         };
     }
 }
@@ -1341,6 +1366,74 @@ class Glyphs extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class SelectionState {
+    glyph: Glyph;
+    @observable rect: Rect;
+
+    setGlyph(glyph: Glyph) {
+        if (glyph != this.glyph) {
+            this.glyph = glyph;
+
+            this.rect = {
+                left: 0,
+                top: 0,
+                width: glyph.width || 0,
+                height: glyph.height || 0
+            };
+        }
+    }
+
+    render() {
+        return this.glyph && <Selection glyph={this.glyph} selection={this} />;
+    }
+}
+
+@observer
+class TopLeft extends React.Component<{
+    glyph: Glyph;
+    selection: SelectionState;
+}> {
+    draggable = new Draggable(this);
+
+    onDragStart(e: PointerEvent, x: number, y: number) {
+        return 1;
+    }
+
+    onDragMove(e: PointerEvent, x: number, y: number, params: any) {}
+
+    componentWillUnmount() {
+        this.draggable.attach(null);
+    }
+
+    render() {
+        this.draggable.cursor = "nwse-resize";
+        return <div ref={ref => this.draggable.attach(ref)} />;
+    }
+}
+
+@observer
+class Selection extends React.Component<{
+    glyph: Glyph;
+    selection: SelectionState;
+}> {
+    render() {
+        const selectionRect = this.props.glyph.getSelectionRect(this.props.selection.rect);
+        return (
+            <div
+                style={{
+                    position: "absolute",
+                    backgroundColor: "rgba(0, 255, 0, 0.1)",
+                    ...selectionRect
+                }}
+            >
+                <TopLeft glyph={this.props.glyph} selection={this.props.selection} />
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 @observer
 class GlyphEditor extends React.Component<
     {
@@ -1359,6 +1452,8 @@ class GlyphEditor extends React.Component<
               y: number;
           }
         | undefined = undefined;
+
+    @observable selectionState = new SelectionState();
 
     togglePixel() {
         if (this.props.glyph && this.hitTestResult) {
@@ -1425,8 +1520,8 @@ class GlyphEditor extends React.Component<
             if (this.hitTestResult) {
                 if (
                     !this.lastToggledPixel ||
-                    (this.lastToggledPixel.x != this.hitTestResult.x ||
-                        this.lastToggledPixel.y != this.hitTestResult.y)
+                    this.lastToggledPixel.x != this.hitTestResult.x ||
+                    this.lastToggledPixel.y != this.hitTestResult.y
                 ) {
                     this.togglePixel();
                 }
@@ -1445,6 +1540,8 @@ class GlyphEditor extends React.Component<
     render() {
         var glyph: JSX.Element | undefined;
         if (this.props.glyph) {
+            this.selectionState.setGlyph(this.props.glyph);
+
             glyph = (
                 <img
                     src={this.props.glyph.editorImage}
@@ -1481,6 +1578,7 @@ class GlyphEditor extends React.Component<
             >
                 {glyph}
                 {hitTest}
+                {this.selectionState.render()}
             </div>
         );
     }
