@@ -1699,8 +1699,6 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 );
             }
 
-            console.log(highlightedPropertyName);
-
             const className = classNames({
                 inError: objects.length === 1 && isPropertyInError(objects[0], propertyInfo),
                 highlighted:

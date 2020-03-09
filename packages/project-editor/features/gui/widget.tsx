@@ -855,6 +855,18 @@ export class ContainerWidget extends Widget {
             style.opacity = getStyleProperty(this.style, "opacity") / 255;
         }
     }
+
+    check() {
+        let messages: output.Message[] = [];
+
+        if (this.overlay) {
+            if (!findDataItem(this.overlay)) {
+                messages.push(output.propertyNotFoundMessage(this, "overlay"));
+            }
+        }
+
+        return super.check().concat(messages);
+    }
 }
 
 registerClass(ContainerWidget);

@@ -9,7 +9,6 @@ import { Rect } from "eez-studio-shared/geometry";
 import { _minBy, _maxBy } from "eez-studio-shared/algorithm";
 import { validators } from "eez-studio-shared/validation";
 
-import { Draggable } from "eez-studio-ui/draggable";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import * as notification from "eez-studio-ui/notification";
 import { IconAction, TextAction } from "eez-studio-ui/action";
@@ -294,18 +293,12 @@ export interface EditorImageHitTestResult {
 var outputBuffer = new Buffer(1000000);
 
 export class Glyph extends EezObject {
-    @observable
-    encoding: number;
-    @observable
-    x: number;
-    @observable
-    y: number;
-    @observable
-    width: number;
-    @observable
-    height: number;
-    @observable
-    dx: number;
+    @observable encoding: number;
+    @observable x: number;
+    @observable y: number;
+    @observable width: number;
+    @observable height: number;
+    @observable dx: number;
 
     @observable
     glyphBitmap?: GlyphBitmap;
@@ -873,18 +866,54 @@ export class Glyph extends EezObject {
         };
     }
 
-    getSelectionRect(selection: Rect): Rect {
-        const r1 = this.getPixelRect(selection.left, selection.top);
-        const r2 = this.getPixelRect(
-            selection.left + selection.width,
-            selection.top + selection.height
-        );
-        return {
-            left: r1.left,
-            top: r1.top,
-            width: r2.left - r1.left,
-            height: r2.top - r1.top
-        };
+    copyToClipboard() {
+        if (this.glyphBitmap) {
+            const buffer = Buffer.alloc(this.glyphBitmap.width * this.glyphBitmap.height * 4, 0);
+
+            for (let x = 0; x < this.glyphBitmap.width; x++) {
+                for (let y = 0; y < this.glyphBitmap.height; y++) {
+                    const i = (y * this.glyphBitmap.width + x) * 4;
+                    buffer[i + 0] = this.getPixel(x, y);
+                    buffer[i + 1] = this.getPixel(x, y);
+                    buffer[i + 2] = this.getPixel(x, y);
+                    buffer[i + 3] = 255;
+                }
+            }
+
+            EEZStudio.electron.remote.clipboard.writeImage(
+                EEZStudio.electron.remote.nativeImage.createFromBuffer(buffer, {
+                    width: this.glyphBitmap.width,
+                    height: this.glyphBitmap.height
+                })
+            );
+        }
+    }
+
+    pasteFromClipboard() {
+        const image = EEZStudio.electron.remote.clipboard.readImage();
+        if (image) {
+            const buffer = image.getBitmap();
+
+            const width = image.getSize().width;
+            const height = image.getSize().height;
+            const pixelArray = new Array(width * height);
+
+            for (let x = 0; x < width; x++) {
+                for (let y = 0; y < height; y++) {
+                    pixelArray[y * width + x] = buffer[(y * width + x) * 4];
+                }
+            }
+
+            DocumentStore.updateObject(this, {
+                width,
+                height,
+                glyphBitmap: {
+                    width,
+                    height,
+                    pixelArray
+                }
+            });
+        }
     }
 }
 
@@ -1366,74 +1395,6 @@ class Glyphs extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class SelectionState {
-    glyph: Glyph;
-    @observable rect: Rect;
-
-    setGlyph(glyph: Glyph) {
-        if (glyph != this.glyph) {
-            this.glyph = glyph;
-
-            this.rect = {
-                left: 0,
-                top: 0,
-                width: glyph.width || 0,
-                height: glyph.height || 0
-            };
-        }
-    }
-
-    render() {
-        return this.glyph && <Selection glyph={this.glyph} selection={this} />;
-    }
-}
-
-@observer
-class TopLeft extends React.Component<{
-    glyph: Glyph;
-    selection: SelectionState;
-}> {
-    draggable = new Draggable(this);
-
-    onDragStart(e: PointerEvent, x: number, y: number) {
-        return 1;
-    }
-
-    onDragMove(e: PointerEvent, x: number, y: number, params: any) {}
-
-    componentWillUnmount() {
-        this.draggable.attach(null);
-    }
-
-    render() {
-        this.draggable.cursor = "nwse-resize";
-        return <div ref={ref => this.draggable.attach(ref)} />;
-    }
-}
-
-@observer
-class Selection extends React.Component<{
-    glyph: Glyph;
-    selection: SelectionState;
-}> {
-    render() {
-        const selectionRect = this.props.glyph.getSelectionRect(this.props.selection.rect);
-        return (
-            <div
-                style={{
-                    position: "absolute",
-                    backgroundColor: "rgba(0, 255, 0, 0.1)",
-                    ...selectionRect
-                }}
-            >
-                <TopLeft glyph={this.props.glyph} selection={this.props.selection} />
-            </div>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 @observer
 class GlyphEditor extends React.Component<
     {
@@ -1452,8 +1413,6 @@ class GlyphEditor extends React.Component<
               y: number;
           }
         | undefined = undefined;
-
-    @observable selectionState = new SelectionState();
 
     togglePixel() {
         if (this.props.glyph && this.hitTestResult) {
@@ -1540,8 +1499,6 @@ class GlyphEditor extends React.Component<
     render() {
         var glyph: JSX.Element | undefined;
         if (this.props.glyph) {
-            this.selectionState.setGlyph(this.props.glyph);
-
             glyph = (
                 <img
                     src={this.props.glyph.editorImage}
@@ -1578,7 +1535,6 @@ class GlyphEditor extends React.Component<
             >
                 {glyph}
                 {hitTest}
-                {this.selectionState.render()}
             </div>
         );
     }
@@ -1639,11 +1595,15 @@ export class FontEditor
     }
 
     copySelection() {
-        // TODO
+        if (this.selectedGlyph) {
+            this.selectedGlyph.copyToClipboard();
+        }
     }
 
     pasteSelection() {
-        // TODO
+        if (this.selectedGlyph) {
+            this.selectedGlyph.pasteFromClipboard();
+        }
     }
 
     deleteSelection() {
