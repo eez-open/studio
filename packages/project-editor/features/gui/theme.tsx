@@ -15,6 +15,7 @@ import {
 import {
     NavigationStore,
     INavigationStore,
+    SimpleNavigationStoreClass,
     DocumentStore,
     UndoManager,
     IContextMenuContext
@@ -33,6 +34,12 @@ import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { Gui } from "project-editor/features/gui/gui";
 
 const { MenuItem } = EEZStudio.electron.remote;
+
+////////////////////////////////////////////////////////////////////////////////
+
+const navigationStore = computed(() => {
+    return ProjectStore.masterProject ? new SimpleNavigationStoreClass(undefined) : NavigationStore;
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,7 +76,10 @@ class ColorItem extends React.Component<{
 }> {
     @computed
     get colorObject() {
-        return getObjectFromObjectId(ProjectStore.project, this.props.itemId) as Color;
+        return getObjectFromObjectId(
+            ProjectStore.masterProject || ProjectStore.project,
+            this.props.itemId
+        ) as Color;
     }
 
     @computed
@@ -79,9 +89,9 @@ class ColorItem extends React.Component<{
 
     @computed
     get selectedTheme() {
-        const gui = getProperty(ProjectStore.project, "gui") as Gui;
+        const gui = getProperty(ProjectStore.masterProject || ProjectStore.project, "gui") as Gui;
 
-        let selectedTheme = NavigationStore.getNavigationSelectedItem(gui.themes) as Theme;
+        let selectedTheme = navigationStore.get().getNavigationSelectedItem(gui.themes) as Theme;
         if (!selectedTheme) {
             selectedTheme = asArray(gui.themes)[0];
         }
@@ -155,7 +165,10 @@ export class ThemesSideView extends React.Component<{
     dragAndDropManager?: DragAndDropManagerClass;
 }> {
     onEditThemeName = (itemId: string) => {
-        const theme = getObjectFromObjectId(ProjectStore.project, itemId) as Theme;
+        const theme = getObjectFromObjectId(
+            ProjectStore.masterProject || ProjectStore.project,
+            itemId
+        ) as Theme;
 
         showGenericDialog({
             dialogDefinition: {
@@ -191,7 +204,10 @@ export class ThemesSideView extends React.Component<{
     };
 
     onEditColorName = (itemId: string) => {
-        const color = getObjectFromObjectId(ProjectStore.project, itemId) as Color;
+        const color = getObjectFromObjectId(
+            ProjectStore.masterProject || ProjectStore.project,
+            itemId
+        ) as Color;
 
         showGenericDialog({
             dialogDefinition: {
@@ -227,38 +243,53 @@ export class ThemesSideView extends React.Component<{
     };
 
     render() {
-        const gui = getProperty(ProjectStore.project, "gui") as Gui;
+        if (ProjectStore.masterProjectEnabled && !ProjectStore.masterProject) {
+            return null;
+        }
 
-        const colors = (
+        const gui = getProperty(ProjectStore.masterProject || ProjectStore.project, "gui") as Gui;
+
+        const themes = (
             <ListNavigation
-                id="theme-colors"
-                navigationObject={gui.colors}
-                onEditItem={this.onEditColorName}
-                renderItem={renderColorItem}
-                navigationStore={this.props.navigationStore}
-                dragAndDropManager={this.props.dragAndDropManager}
+                id="themes"
+                navigationObject={gui.themes}
+                onEditItem={this.onEditThemeName}
+                searchInput={false}
+                editable={!ProjectStore.masterProject}
+                navigationStore={navigationStore.get()}
             />
         );
 
-        if (this.props.navigationStore) {
-            return colors;
+        let colors;
+        if (!ProjectStore.masterProject) {
+            colors = (
+                <ListNavigation
+                    id="theme-colors"
+                    navigationObject={gui.colors}
+                    onEditItem={this.onEditColorName}
+                    renderItem={renderColorItem}
+                    navigationStore={this.props.navigationStore}
+                    dragAndDropManager={this.props.dragAndDropManager}
+                />
+            );
+
+            if (this.props.navigationStore) {
+                return colors;
+            }
         }
 
-        return (
+        return colors ? (
             <Splitter
                 type="vertical"
                 persistId={`project-editor/themes`}
                 sizes={`240px|100%`}
                 childrenOverflow="hidden"
             >
-                <ListNavigation
-                    id="themes"
-                    navigationObject={gui.themes}
-                    onEditItem={this.onEditThemeName}
-                    searchInput={false}
-                />
+                {themes}
                 {colors}
             </Splitter>
+        ) : (
+            themes
         );
     }
 }
@@ -322,11 +353,14 @@ export class Color extends EezObject {
                 click: () => {
                     UndoManager.setCombineCommands(true);
 
-                    const gui = getProperty(ProjectStore.project, "gui") as Gui;
+                    const gui = getProperty(
+                        ProjectStore.masterProject || ProjectStore.project,
+                        "gui"
+                    ) as Gui;
 
-                    const selectedTheme = NavigationStore.getNavigationSelectedItem(
-                        gui.themes
-                    ) as Theme;
+                    const selectedTheme = navigationStore
+                        .get()
+                        .getNavigationSelectedItem(gui.themes) as Theme;
 
                     const colorIndex = asArray(gui.colors).indexOf(this);
                     const color = gui.getThemeColor(selectedTheme.id, this.id);
@@ -426,14 +460,12 @@ registerClass(Theme);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function getThemedColor(colorValue: string): string {
+export function getThemedColorInGui(gui: Gui, colorValue: string): string | undefined {
     if (colorValue.startsWith("#")) {
         return colorValue;
     }
 
-    const gui = getProperty(ProjectStore.project, "gui") as Gui;
-
-    let selectedTheme = NavigationStore.getNavigationSelectedItem(gui.themes) as Theme;
+    let selectedTheme = navigationStore.get().getNavigationSelectedItem(gui.themes) as Theme;
     if (!selectedTheme) {
         selectedTheme = asArray(gui.themes)[0];
     }
@@ -443,12 +475,36 @@ export function getThemedColor(colorValue: string): string {
 
     let index = gui.colorsMap.get(colorValue);
     if (index === undefined) {
-        return colorValue;
+        return undefined;
     }
 
     let color = selectedTheme.colors[index];
     if (color) {
         return color;
+    }
+
+    return undefined;
+}
+
+export function getThemedColor(colorValue: string): string {
+    if (colorValue.startsWith("#")) {
+        return colorValue;
+    }
+
+    const gui = getProperty(ProjectStore.masterProject || ProjectStore.project, "gui") as Gui;
+    let color = getThemedColorInGui(gui, colorValue);
+    if (color) {
+        return color;
+    }
+
+    if (ProjectStore.masterProject) {
+        const gui = (ProjectStore.masterProject as any).gui as Gui;
+        if (gui) {
+            let color = getThemedColorInGui(gui, colorValue);
+            if (color) {
+                return color;
+            }
+        }
     }
 
     return colorValue;

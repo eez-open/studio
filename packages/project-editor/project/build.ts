@@ -1,9 +1,10 @@
 import { createTransformer } from "mobx-utils";
 
 import { formatNumber } from "eez-studio-shared/util";
-import { writeTextFile } from "eez-studio-shared/util-electron";
+import { writeTextFile, writeBinaryData } from "eez-studio-shared/util-electron";
 import { _map } from "eez-studio-shared/algorithm";
 import { underscore } from "eez-studio-shared/string";
+const path = EEZStudio.electron.remote.require("path");
 
 import { getExtensionsByCategory, BuildResult } from "project-editor/core/extensions";
 import {
@@ -19,7 +20,7 @@ import { Section, Type } from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/core/store";
 
-import { BuildFile, BuildConfiguration } from "project-editor/project/project";
+import { BuildConfiguration } from "project-editor/project/project";
 import {
     extensionDefinitionAnythingToBuild,
     extensionDefinitionBuild
@@ -139,6 +140,10 @@ async function getBuildResults(
 const sectionNamesRegexp = /\/\/\$\{eez-studio (.*)\}/g;
 
 function getSectionNames(): string[] {
+    if (ProjectStore.masterProject) {
+        return ["GUI_ASSETS_DATA"];
+    }
+
     const project = ProjectStore.project;
 
     const sectionNames: string[] = [];
@@ -153,17 +158,25 @@ function getSectionNames(): string[] {
     return sectionNames;
 }
 
-async function generateFile(buildResults: BuildResult[], buildFile: BuildFile, filePath: string) {
+async function generateFile(
+    buildResults: BuildResult[],
+    template: string | undefined,
+    filePath: string
+) {
     let parts: any = {};
     for (const buildResult of buildResults) {
         parts = Object.assign(parts, buildResult);
     }
 
-    let buildFileContent = buildFile.template.replace(sectionNamesRegexp, (_1, part) => {
-        return parts[part];
-    });
+    if (template) {
+        let buildFileContent = template.replace(sectionNamesRegexp, (_1, part) => {
+            return parts[part];
+        });
 
-    await writeTextFile(filePath, buildFileContent);
+        await writeTextFile(filePath, buildFileContent);
+    } else {
+        await writeBinaryData(filePath, parts["GUI_ASSETS_DATA"]);
+    }
 
     OutputSectionsStore.write(Section.OUTPUT, Type.INFO, `File "${filePath}" builded`);
 }
@@ -174,35 +187,50 @@ async function generateFiles(
         [configurationName: string]: BuildResult[];
     }
 ) {
-    const build = ProjectStore.project.settings.build;
+    if (ProjectStore.masterProject) {
+        generateFile(
+            configurationBuildResults[
+                ProjectStore.selectedBuildConfiguration
+                    ? ProjectStore.selectedBuildConfiguration.name
+                    : "default"
+            ],
+            undefined,
+            destinationFolderPath +
+                "/" +
+                path.basename(ProjectStore.filePath, ".eez-project") +
+                ".res"
+        );
+    } else {
+        const build = ProjectStore.project.settings.build;
 
-    for (const buildFile of asArray(build.files)) {
-        if (buildFile.fileName.indexOf("<configuration>") !== -1) {
-            for (const configuration of asArray(build.configurations)) {
-                await generateFile(
-                    configurationBuildResults[configuration.name],
-                    buildFile,
-                    destinationFolderPath +
-                        "/" +
-                        buildFile.fileName.replace("<configuration>", configuration.name)
+        for (const buildFile of asArray(build.files)) {
+            if (buildFile.fileName.indexOf("<configuration>") !== -1) {
+                for (const configuration of asArray(build.configurations)) {
+                    await generateFile(
+                        configurationBuildResults[configuration.name],
+                        buildFile.template,
+                        destinationFolderPath +
+                            "/" +
+                            buildFile.fileName.replace("<configuration>", configuration.name)
+                    );
+                }
+            } else {
+                generateFile(
+                    configurationBuildResults[
+                        ProjectStore.selectedBuildConfiguration
+                            ? ProjectStore.selectedBuildConfiguration.name
+                            : "default"
+                    ],
+                    buildFile.template,
+                    destinationFolderPath + "/" + buildFile.fileName
                 );
             }
-        } else {
-            generateFile(
-                configurationBuildResults[
-                    ProjectStore.selectedBuildConfiguration
-                        ? ProjectStore.selectedBuildConfiguration.name
-                        : "default"
-                ],
-                buildFile,
-                destinationFolderPath + "/" + buildFile.fileName
-            );
         }
     }
 }
 
 function anythingToBuild() {
-    return ProjectStore.project.settings.build.files.length > 0;
+    return ProjectStore.project.settings.build.files.length > 0 || ProjectStore.masterProject;
 }
 
 export async function build({ onlyCheck }: { onlyCheck: boolean }) {
@@ -242,7 +270,8 @@ export async function build({ onlyCheck }: { onlyCheck: boolean }) {
 
         if (
             ProjectStore.project.settings.general.projectVersion !== "v1" &&
-            ProjectStore.project.settings.build.configurations.length > 0
+            ProjectStore.project.settings.build.configurations.length > 0 &&
+            !ProjectStore.masterProject
         ) {
             for (const configuration of asArray(
                 ProjectStore.project.settings.build.configurations

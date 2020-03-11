@@ -176,6 +176,8 @@ interface ListNavigationProps {
     navigationStore?: INavigationStore;
     dragAndDropManager?: DragAndDropManagerClass;
     searchInput?: boolean;
+    editable?: boolean;
+    filter?: (object: EezObject) => boolean;
 }
 
 @observer
@@ -242,7 +244,8 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
             this.onDoubleClickItem,
             this.props.navigationStore,
             this.props.dragAndDropManager,
-            this.searchText
+            this.searchText,
+            this.props.filter
         );
     }
 
@@ -259,7 +262,7 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
     }
 
     render() {
-        const { onEditItem, renderItem } = this.props;
+        const { onEditItem, renderItem, editable } = this.props;
         const title = (
             <SortableTitle
                 title={this.props.title || objectToString(this.props.navigationObject)}
@@ -276,28 +279,30 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
             buttons.push(...this.props.additionalButtons);
         }
 
-        buttons.push(
-            <AddButton
-                key="add"
-                listAdapter={this.listAdapter}
-                navigationObject={this.props.navigationObject}
-            />
-        );
+        if (editable !== false) {
+            buttons.push(
+                <AddButton
+                    key="add"
+                    listAdapter={this.listAdapter}
+                    navigationObject={this.props.navigationObject}
+                />
+            );
 
-        buttons.push(
-            <DeleteButton
-                key="delete"
-                navigationObject={this.props.navigationObject}
-                navigationStore={this.props.navigationStore}
-            />
-        );
+            buttons.push(
+                <DeleteButton
+                    key="delete"
+                    navigationObject={this.props.navigationObject}
+                    navigationStore={this.props.navigationStore}
+                />
+            );
+        }
 
         let body = (
             <List
                 listAdapter={this.listAdapter}
                 tabIndex={0}
                 onFocus={this.onFocus.bind(this)}
-                onEditItem={onEditItem}
+                onEditItem={editable === false ? undefined : onEditItem}
                 renderItem={renderItem}
             />
         );

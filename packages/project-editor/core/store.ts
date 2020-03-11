@@ -1,4 +1,13 @@
-import { observable, extendObservable, computed, action, toJS, reaction, autorun } from "mobx";
+import {
+    observable,
+    extendObservable,
+    computed,
+    action,
+    toJS,
+    reaction,
+    autorun,
+    runInAction
+} from "mobx";
 
 import { _each, _isArray, _map, _uniqWith } from "eez-studio-shared/algorithm";
 import { confirmSave } from "eez-studio-shared/util";
@@ -1756,6 +1765,33 @@ class ProjectStoreClass {
                 showOkButton: false
             }).catch(() => {});
         }
+    }
+
+    @computed
+    get masterProjectEnabled() {
+        return !!this.project.settings.general.masterProject;
+    }
+
+    masterProjectFilePath: string;
+    @observable _masterPoject: Project | undefined;
+
+    @computed
+    get masterProject() {
+        const masterProjectFilePath = this.project.settings.general.masterProject;
+        if (masterProjectFilePath != this.masterProjectFilePath) {
+            this.masterProjectFilePath = masterProjectFilePath;
+
+            (async () => {
+                const project = await loadProject(
+                    ProjectStore.getAbsoluteFilePath(masterProjectFilePath)
+                );
+                runInAction(() => {
+                    ProjectStore._masterPoject = project;
+                });
+            })();
+        }
+
+        return this._masterPoject;
     }
 }
 

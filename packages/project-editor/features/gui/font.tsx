@@ -46,7 +46,7 @@ import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";
 import { FontProperties as FontValue } from "font-services/interfaces";
 
-import { getGui } from "project-editor/features/gui/gui";
+import { Gui, getGui } from "project-editor/features/gui/gui";
 
 const path = EEZStudio.electron.remote.require("path");
 
@@ -2284,13 +2284,30 @@ export function getData(font: Font) {
     return data;
 }
 
-export function findFont(fontName: any) {
-    let gui = getGui();
+export function findFontInGui(gui: Gui, fontName: any) {
     let fonts = (gui && gui.fonts) || [];
     for (const font of asArray(fonts)) {
         if (font.name == fontName) {
             return font;
         }
     }
+
+    return undefined;
+}
+
+export function findFont(fontName: any) {
+    let gui = getGui();
+    const font = findFontInGui(gui, fontName);
+    if (font) {
+        return font;
+    }
+
+    if (ProjectStore.masterProject) {
+        const gui = (ProjectStore.masterProject as any).gui as Gui;
+        if (gui) {
+            return findFontInGui(gui, fontName);
+        }
+    }
+
     return undefined;
 }

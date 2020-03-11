@@ -239,23 +239,17 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             );
         }
 
-        return properties.reduce(
-            (children, propertyInfo) => {
-                const childObject = getProperty(this.object, propertyInfo.name);
+        return properties.reduce((children, propertyInfo) => {
+            const childObject = getProperty(this.object, propertyInfo.name);
 
-                if (isArray(childObject)) {
-                    children[propertyInfo.name] = new TreeObjectAdapter(
-                        childObject,
-                        this.transformer
-                    );
-                } else {
-                    children[propertyInfo.name] = this.transformer(childObject);
-                }
+            if (isArray(childObject)) {
+                children[propertyInfo.name] = new TreeObjectAdapter(childObject, this.transformer);
+            } else {
+                children[propertyInfo.name] = this.transformer(childObject);
+            }
 
-                return children;
-            },
-            {} as TreeObjectAdapterChildrenObject
-        );
+            return children;
+        }, {} as TreeObjectAdapterChildrenObject);
     }
 
     @computed
@@ -1143,7 +1137,7 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     get dropItem(): ITreeObjectAdapter | undefined {
-        return DragAndDropManager.dropObject as (ITreeObjectAdapter | undefined);
+        return DragAndDropManager.dropObject as ITreeObjectAdapter | undefined;
     }
 
     set dropItem(value: ITreeObjectAdapter | undefined) {
@@ -1190,7 +1184,8 @@ export class ListAdapter implements ITreeAdapter {
         onDoubleClick?: (object: EezObject) => void,
         navigationStore?: INavigationStore,
         dragAndDropManager?: DragAndDropManagerClass,
-        private searchText?: string
+        private searchText?: string,
+        private filter?: (object: EezObject) => boolean
     ) {
         this.onDoubleClickCallback = onDoubleClick;
 
@@ -1220,6 +1215,11 @@ export class ListAdapter implements ITreeAdapter {
     @computed
     get items() {
         let objects = asArray(this.object);
+
+        const filter = this.filter;
+        if (filter) {
+            objects = objects.filter(object => filter(object));
+        }
 
         if (this.searchText) {
             const searchText = this.searchText.toLowerCase();
@@ -1492,7 +1492,7 @@ export class ListAdapter implements ITreeAdapter {
     }
 
     get dropItem(): ListItem | undefined {
-        return this.dragAndDropManager.dropObject as (ListItem | undefined);
+        return this.dragAndDropManager.dropObject as ListItem | undefined;
     }
 
     set dropItem(value: ListItem | undefined) {

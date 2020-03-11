@@ -12,7 +12,8 @@ import {
     PropertyType,
     asArray,
     getProperty,
-    NavigationComponent
+    NavigationComponent,
+    PropertyInfo
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 
@@ -89,13 +90,19 @@ export class Gui extends EezObject {
                 name: "styles",
                 type: PropertyType.Array,
                 typeClass: Style,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                enumerable: (object: EezObject, propertyInfo: PropertyInfo) => {
+                    return !ProjectStore.masterProjectEnabled;
+                }
             },
             {
                 name: "fonts",
                 type: PropertyType.Array,
                 typeClass: Font,
                 hideInPropertyGrid: true,
+                enumerable: (object: EezObject, propertyInfo: PropertyInfo) => {
+                    return !ProjectStore.masterProjectEnabled;
+                },
                 check: (object: EezObject) => {
                     let messages: output.Message[] = [];
 

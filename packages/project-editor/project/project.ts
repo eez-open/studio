@@ -94,12 +94,9 @@ registerClass(BuildConfiguration);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class BuildFile extends EezObject {
-    @observable
-    fileName: string;
-    @observable
-    description?: string;
-    @observable
-    template: string;
+    @observable fileName: string;
+    @observable description?: string;
+    @observable template: string;
 
     static classInfo: ClassInfo = {
         label: (buildFile: BuildFile) => {
@@ -190,6 +187,9 @@ export class General extends EezObject {
     @observable
     scpiDocFolder?: string;
 
+    @observable
+    masterProject: string;
+
     static classInfo: ClassInfo = {
         label: () => "General",
         properties: [
@@ -203,6 +203,14 @@ export class General extends EezObject {
                 displayName: "SCPI documentation folder",
                 type: PropertyType.RelativeFolder,
                 hideInPropertyGrid: () => !(ProjectStore.project as any).scpi
+            },
+            {
+                name: "masterProject",
+                type: PropertyType.RelativeFile,
+                fileFilters: [
+                    { name: "EEZ Project", extensions: ["eez-project"] },
+                    { name: "All Files", extensions: ["*"] }
+                ]
             }
         ],
         showInNavigation: true
@@ -214,12 +222,9 @@ registerClass(General);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Settings extends EezObject {
-    @observable
-    general: General;
-    @observable
-    build: Build;
-    @observable
-    scpiHelpFolder?: string;
+    @observable general: General;
+    @observable build: Build;
+    @observable scpiHelpFolder?: string;
 
     static classInfo: ClassInfo = {
         label: () => "Settings",
@@ -234,7 +239,10 @@ export class Settings extends EezObject {
                 name: "build",
                 type: PropertyType.Object,
                 typeClass: Build,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                enumerable: (object: EezObject, propertyInfo: PropertyInfo) => {
+                    return !ProjectStore.masterProjectEnabled;
+                }
             }
         ],
         hideInProperties: true,

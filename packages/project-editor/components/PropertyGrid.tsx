@@ -558,6 +558,14 @@ class PropertyCollapsedStore {
     }
 
     isCollapsed(propertyInfo: PropertyInfo) {
+        const enabled =
+            !propertyInfo.propertyGridCollapsableEnabled ||
+            propertyInfo.propertyGridCollapsableEnabled();
+
+        if (!enabled) {
+            return true;
+        }
+
         const collapsed = this.map[this.getKey(propertyInfo)];
         if (collapsed !== undefined) {
             return collapsed;
@@ -669,18 +677,24 @@ class PropertyName extends React.Component<PropertyProps> {
         const { propertyInfo } = this.props;
 
         if (propertyInfo.propertyGridCollapsable) {
+            const enabled =
+                !propertyInfo.propertyGridCollapsableEnabled ||
+                propertyInfo.propertyGridCollapsableEnabled();
             const collapsed = propertyCollapsedStore.isCollapsed(this.props.propertyInfo);
+
             return (
                 <div className="collapsable" onClick={this.toggleCollapsed}>
-                    <Icon
-                        icon={
-                            collapsed
-                                ? "material:keyboard_arrow_right"
-                                : "material:keyboard_arrow_down"
-                        }
-                        size={18}
-                        className="triangle"
-                    />
+                    {enabled && (
+                        <Icon
+                            icon={
+                                collapsed
+                                    ? "material:keyboard_arrow_right"
+                                    : "material:keyboard_arrow_down"
+                            }
+                            size={18}
+                            className="triangle"
+                        />
+                    )}
                     {propertyInfo.displayName || humanize(propertyInfo.name)}
                     {isAnyPropertyModified({
                         ...this.props,
@@ -795,9 +809,13 @@ class Property extends React.Component<PropertyProps> {
         this._value = newValue;
 
         if (this.props.propertyInfo.type === PropertyType.Number) {
-            newValue = filterNumber(newValue);
-            if (isNaN(newValue)) {
-                return;
+            if (newValue.trim() === "" && this.props.propertyInfo.isOptional) {
+                newValue = undefined;
+            } else {
+                newValue = filterNumber(newValue);
+                if (isNaN(newValue)) {
+                    return;
+                }
             }
         }
 
@@ -1155,7 +1173,7 @@ class Property extends React.Component<PropertyProps> {
                     ref={(ref: any) => (this.input = ref)}
                     type="text"
                     className="form-control"
-                    value={this._value}
+                    value={this._value != undefined ? this._value : ""}
                     onChange={this.onChange}
                     onKeyDown={this.onKeyDown}
                 />
@@ -1229,6 +1247,64 @@ class Property extends React.Component<PropertyProps> {
                                     info(
                                         "Project not saved.",
                                         "To be able to select folder you need to save the project first."
+                                    );
+                                }
+                            }}
+                        >
+                            &hellip;
+                        </button>
+                    </div>
+                </div>
+            );
+        } else if (propertyInfo.type === PropertyType.RelativeFile) {
+            let clearButton: JSX.Element | undefined;
+
+            if (this._value !== undefined) {
+                clearButton = (
+                    <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={() => this.changeValue(undefined)}
+                    >
+                        <Icon icon="material:close" size={14} />
+                    </button>
+                );
+            }
+
+            return (
+                <div className="input-group">
+                    <input
+                        type="text"
+                        className="form-control"
+                        value={this._value || ""}
+                        readOnly
+                    />
+                    <div className="input-group-append">
+                        {clearButton}
+                        <button
+                            className="btn btn-secondary"
+                            type="button"
+                            onClick={async () => {
+                                if (ProjectStore.filePath) {
+                                    const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
+                                        {
+                                            properties: ["openFile"],
+                                            filters: propertyInfo.fileFilters
+                                        }
+                                    );
+
+                                    const filePaths = result.filePaths;
+                                    if (filePaths && filePaths[0]) {
+                                        this.changeValue(
+                                            ProjectStore.getFolderPathRelativeToProjectPath(
+                                                filePaths[0]
+                                            )
+                                        );
+                                    }
+                                } else {
+                                    info(
+                                        "Project not saved.",
+                                        "To be able to select file you need to save the project first."
                                     );
                                 }
                             }}

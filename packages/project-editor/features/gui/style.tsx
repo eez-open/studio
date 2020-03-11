@@ -41,7 +41,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { Project } from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
-import { getGui, findFont } from "project-editor/features/gui/gui";
+import { Gui, getGui, findFont } from "project-editor/features/gui/gui";
 import { drawText } from "project-editor/features/gui/draw";
 import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
 
@@ -98,6 +98,14 @@ export class StyleEditor extends React.Component<{
 @observer
 export class StylesNavigation extends NavigationComponent {
     @computed
+    get navigationObject() {
+        if (ProjectStore.masterProject) {
+            return (getProperty(ProjectStore.masterProject, "gui") as Gui).styles;
+        }
+        return this.props.navigationObject;
+    }
+
+    @computed
     get style() {
         const navigationStore = this.props.navigationStore || NavigationStore;
 
@@ -117,49 +125,91 @@ export class StylesNavigation extends NavigationComponent {
     render() {
         if (this.props.navigationStore) {
             // used in select style dialog
-            return (
-                <Splitter
-                    type="horizontal"
-                    persistId={`project-editor/styles-dialog`}
-                    sizes={`320px|100%|320px`}
-                    childrenOverflow="hidden|hidden|hidden"
-                >
-                    <ListNavigation
-                        id={this.props.id}
-                        navigationObject={this.props.navigationObject}
-                        navigationStore={this.props.navigationStore}
-                        dragAndDropManager={this.props.dragAndDropManager}
-                        onDoubleClickItem={this.props.onDoubleClickItem}
-                    />
-
+            if (ProjectStore.masterProject) {
+                return (
                     <Splitter
-                        type="vertical"
-                        persistId={`project-editor/styles-dialog-middle-splitter`}
-                        sizes={`160px|100%`}
+                        type="horizontal"
+                        persistId={`project-editor/styles-dialog`}
+                        sizes={`320px|100%`}
                         childrenOverflow="hidden|hidden"
                     >
-                        {this.style ? (
-                            <StyleEditor
-                                style={this.style}
-                                width={Math.ceil(480 / 3)}
-                                height={Math.ceil(272 / 3)}
-                                text="A"
-                            />
-                        ) : (
-                            <div />
-                        )}
-                        <PropertiesPanel
-                            object={this.style}
+                        <ListNavigation
+                            id={this.props.id}
+                            navigationObject={this.navigationObject}
                             navigationStore={this.props.navigationStore}
+                            dragAndDropManager={this.props.dragAndDropManager}
+                            onDoubleClickItem={this.props.onDoubleClickItem}
+                            filter={(style: Style) => !!style.id}
+                        />
+
+                        <Splitter
+                            type="vertical"
+                            persistId={`project-editor/styles-dialog-middle-splitter`}
+                            sizes={`160px|100%`}
+                            childrenOverflow="hidden|hidden"
+                        >
+                            {this.style ? (
+                                <StyleEditor
+                                    style={this.style}
+                                    width={Math.ceil(480 / 3)}
+                                    height={Math.ceil(272 / 3)}
+                                    text="A"
+                                />
+                            ) : (
+                                <div />
+                            )}
+                            <PropertiesPanel
+                                object={this.style}
+                                navigationStore={this.props.navigationStore}
+                            />
+                        </Splitter>
+                    </Splitter>
+                );
+            } else {
+                return (
+                    <Splitter
+                        type="horizontal"
+                        persistId={`project-editor/styles-dialog`}
+                        sizes={`320px|100%|320px`}
+                        childrenOverflow="hidden|hidden|hidden"
+                    >
+                        <ListNavigation
+                            id={this.props.id}
+                            navigationObject={this.navigationObject}
+                            navigationStore={this.props.navigationStore}
+                            dragAndDropManager={this.props.dragAndDropManager}
+                            onDoubleClickItem={this.props.onDoubleClickItem}
+                        />
+
+                        <Splitter
+                            type="vertical"
+                            persistId={`project-editor/styles-dialog-middle-splitter`}
+                            sizes={`160px|100%`}
+                            childrenOverflow="hidden|hidden"
+                        >
+                            {this.style ? (
+                                <StyleEditor
+                                    style={this.style}
+                                    width={Math.ceil(480 / 3)}
+                                    height={Math.ceil(272 / 3)}
+                                    text="A"
+                                />
+                            ) : (
+                                <div />
+                            )}
+                            <PropertiesPanel
+                                object={this.style}
+                                navigationStore={this.props.navigationStore}
+                            />
+                        </Splitter>
+
+                        <ThemesSideView
+                            navigationStore={new SimpleNavigationStoreClass(undefined)}
+                            dragAndDropManager={this.props.dragAndDropManager}
                         />
                     </Splitter>
-
-                    <ThemesSideView
-                        navigationStore={new SimpleNavigationStoreClass(undefined)}
-                        dragAndDropManager={this.props.dragAndDropManager}
-                    />
-                </Splitter>
-            );
+                );
+            }
         } else {
             // used in global navigation
             return (
@@ -169,10 +219,7 @@ export class StylesNavigation extends NavigationComponent {
                     sizes={`240px|100%|400px|240px`}
                     childrenOverflow="hidden|hidden|hidden|hidden"
                 >
-                    <ListNavigation
-                        id={this.props.id}
-                        navigationObject={this.props.navigationObject}
-                    />
+                    <ListNavigation id={this.props.id} navigationObject={this.navigationObject} />
                     {this.style ? (
                         <StyleEditor style={this.style} width={480} height={272} text="Hello!" />
                     ) : (
@@ -187,6 +234,16 @@ export class StylesNavigation extends NavigationComponent {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const idProperty: PropertyInfo = {
+    name: "id",
+    type: PropertyType.Number,
+    inheritable: false,
+    isOptional: true,
+    unique: true,
+    hideInPropertyGrid: isWidgetParentOfStyle,
+    defaultValue: undefined
+};
 
 const nameProperty: PropertyInfo = {
     name: "name",
@@ -456,6 +513,7 @@ const alwaysBuildProperty: PropertyInfo = {
 };
 
 const properties = [
+    idProperty,
     nameProperty,
     descriptionProperty,
     inheritFromProperty,
@@ -524,6 +582,7 @@ function getInheritedValue(
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Style extends EezObject {
+    @observable id: number | undefined;
     @observable name: string;
     @observable description?: string;
     @observable inheritFrom?: string;
@@ -855,6 +914,26 @@ export class Style extends EezObject {
     check() {
         let messages: output.Message[] = [];
 
+        if (this.id != undefined) {
+            if (!(this.id > 0 || this.id < 32768)) {
+                messages.push(
+                    new output.Message(
+                        MessageType.ERROR,
+                        `"Id": invalid value, should be greater then 0 and less then 32768.`,
+                        getChildOfObject(this, "id")
+                    )
+                );
+            } else {
+                if (
+                    asArray(this._parent!).find(
+                        (object: Style) => object !== this && object.id === this.id
+                    )
+                ) {
+                    messages.push(output.propertyNotUniqueMessage(this, "id"));
+                }
+            }
+        }
+
         if (this.inheritFrom && !findStyle(this.inheritFrom)) {
             messages.push(output.propertyNotFoundMessage(this, "inheritFrom"));
         } else {
@@ -1054,5 +1133,21 @@ export function findStyle(styleName: string | undefined) {
     if (!styleName) {
         return undefined;
     }
-    return getGui().stylesMap.get(styleName);
+
+    const style = getGui().stylesMap.get(styleName);
+    if (style) {
+        return style;
+    }
+
+    if (ProjectStore.masterProject) {
+        const gui = (ProjectStore.masterProject as any).gui as Gui;
+        if (gui) {
+            const style = gui.stylesMap.get(styleName);
+            if (style && style.id != undefined) {
+                return style;
+            }
+        }
+    }
+
+    return undefined;
 }

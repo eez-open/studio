@@ -7,6 +7,7 @@ import { OutputSectionsStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
 import { BuildResult } from "project-editor/core/extensions";
+import { ProjectStore } from "project-editor/core/store";
 
 import * as projectBuild from "project-editor/project/build";
 import { Project, BuildConfiguration } from "project-editor/project/project";
@@ -224,6 +225,30 @@ class ObjectList extends Field {
     }
 }
 
+class StringList extends Field {
+    items: ObjectField[] = [];
+
+    constructor() {
+        super();
+        this.size = 8;
+    }
+
+    addItem(item: ObjectField) {
+        this.items.push(item);
+        this.size += 4;
+    }
+
+    enumObjects(objects: ObjectField[]) {
+        this.items.forEach(item => objects.push(item));
+    }
+
+    pack(): number[] {
+        return packUInt32(this.items.length)
+            .concat(packUInt32(8))
+            .concat(...this.items.map(item => packUInt32(item.objectOffset)));
+    }
+}
+
 class String extends ObjectField {
     constructor(public value: string) {
         super();
@@ -355,7 +380,9 @@ function buildGuiFontsEnum(assets: Assets) {
 }
 
 function buildGuiFontsData(assets: Assets) {
-    return packRegions(assets.fonts.map(font => getFontData(font)));
+    return !ProjectStore.masterProject
+        ? packRegions(assets.fonts.map(font => getFontData(font)))
+        : [0];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -429,19 +456,57 @@ async function buildGuiBitmapsData(assets: Assets) {
 
 function buildGuiStylesEnum(assets: Assets) {
     let styles = assets.styles
-        .filter(style => !!style.name)
-        .map(
-            (style, i) =>
-                `${projectBuild.TAB}${projectBuild.getName(
+        .map((style, i) => {
+            if (style && style.name) {
+                return `${projectBuild.TAB}${projectBuild.getName(
                     "STYLE_ID_",
                     style.name,
                     projectBuild.NamingConvention.UnderscoreUpperCase
-                )} = ${i + 1}`
-        );
+                )} = ${i}`;
+            } else {
+                return undefined;
+            }
+        })
+        .filter(style => !!style);
 
     styles.unshift(`${projectBuild.TAB}STYLE_ID_NONE = 0`);
 
     return `enum StylesEnum {\n${styles.join(",\n")}\n};`;
+}
+
+function buildListData(build: (document: Struct) => void, packData: boolean) {
+    function finish() {
+        let objects: ObjectField[] = [];
+        let newObjects: ObjectField[] = [document];
+        while (newObjects.length > 0) {
+            objects = objects.concat(newObjects);
+            let temp: ObjectField[] = [];
+            newObjects.forEach(object => object.enumObjects(temp));
+            newObjects = temp.filter(object => objects.indexOf(object) == -1);
+        }
+
+        objects.forEach(object => object.finish());
+
+        let objectOffset = 0;
+        objects.forEach(object => {
+            object.objectOffset = objectOffset;
+            objectOffset += object.objectSize;
+        });
+
+        return objects;
+    }
+
+    let document = new Struct();
+
+    build(document);
+
+    if (packData) {
+        let objects = finish();
+        let data = pack(objects);
+        return data;
+    }
+
+    return [];
 }
 
 function buildGuiStylesData(assets: Assets, packData: boolean = true) {
@@ -536,45 +601,16 @@ function buildGuiStylesData(assets: Assets, packData: boolean = true) {
         return result;
     }
 
-    function build() {
+    return buildListData((document: Struct) => {
         let styles = new ObjectList();
-
-        assets.styles.forEach(style => {
-            styles.addItem(buildStyle(style));
-        });
-
-        document.addField(styles);
-    }
-
-    function finish() {
-        let objects: ObjectField[] = [];
-        let newObjects: ObjectField[] = [document];
-        while (newObjects.length > 0) {
-            objects = objects.concat(newObjects);
-            let temp: ObjectField[] = [];
-            newObjects.forEach(object => object.enumObjects(temp));
-            newObjects = temp.filter(object => objects.indexOf(object) == -1);
+        if (!ProjectStore.masterProject) {
+            const assetStyles = assets.styles.filter(style => !!style) as Style[];
+            assetStyles.forEach(style => {
+                styles.addItem(buildStyle(style));
+            });
         }
-
-        objects.forEach(object => object.finish());
-
-        let objectOffset = 0;
-        objects.forEach(object => {
-            object.objectOffset = objectOffset;
-            objectOffset += object.objectSize;
-        });
-
-        return objects;
-    }
-
-    let document = new Struct();
-    build();
-    if (packData) {
-        let objects = finish();
-        let data = pack(objects);
-        return data;
-    }
-    return [];
+        document.addField(styles);
+    }, packData);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1125,7 +1161,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific = new Struct();
 
         // layout
-        let layout: number = -1;
+        let layout: number = 0;
         if (widget.layout) {
             layout = assets.getPageIndex(widget.layout);
         }
@@ -1185,64 +1221,28 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiPagesEnum(assets: Assets) {
-    let pages = assets.pages
-        .map(
-            (widget, i) =>
-                `${projectBuild.TAB}${projectBuild.getName(
-                    "PAGE_ID_",
-                    widget.name,
-                    projectBuild.NamingConvention.UnderscoreUpperCase
-                )} = ${i}`
-        )
-        .join(",\n");
+    let pages = assets.pages.map(
+        (widget, i) =>
+            `${projectBuild.TAB}${projectBuild.getName(
+                "PAGE_ID_",
+                widget.name,
+                projectBuild.NamingConvention.UnderscoreUpperCase
+            )} = ${i + 1}`
+    );
 
-    return `enum PagesEnum {\n${pages}\n};`;
+    pages.unshift(`${projectBuild.TAB}PAGE_ID_NONE = 0`);
+
+    return `enum PagesEnum {\n${pages.join(",\n")}\n};`;
 }
 
 function buildGuiDocumentData(assets: Assets, packData: boolean = true) {
-    function buildPage(page: Page) {
-        return buildWidget(page, assets);
-    }
-
-    function build() {
+    return buildListData((document: Struct) => {
         let pages = new ObjectList();
-
         assets.pages.forEach(page => {
-            pages.addItem(buildPage(page));
+            pages.addItem(buildWidget(page, assets));
         });
-
         document.addField(pages);
-    }
-
-    function finish() {
-        let objects: ObjectField[] = [];
-        let newObjects: ObjectField[] = [document];
-        while (newObjects.length > 0) {
-            objects = objects.concat(newObjects);
-            let temp: ObjectField[] = [];
-            newObjects.forEach(object => object.enumObjects(temp));
-            newObjects = temp.filter(object => objects.indexOf(object) == -1);
-        }
-
-        objects.forEach(object => object.finish());
-
-        let objectOffset = 0;
-        objects.forEach(object => {
-            object.objectOffset = objectOffset;
-            objectOffset += object.objectSize;
-        });
-
-        return objects;
-    }
-
-    let document = new Struct();
-    build();
-    if (packData) {
-        let objects = finish();
-        let data = pack(objects);
-        return data;
-    }
-    return [];
+    }, packData);
 }
 
 function buildGuiColors(assets: Assets) {
@@ -1266,63 +1266,63 @@ function buildGuiColors(assets: Assets) {
         return new Color(strToColor16(color));
     }
 
-    function build() {
+    return buildListData((document: Struct) => {
         let themes = new ObjectList();
 
-        let gui = getProperty(assets.project, "gui") as Gui;
+        if (!ProjectStore.masterProject) {
+            let gui = getProperty(assets.project, "gui") as Gui;
 
-        gui.themes.forEach(theme => {
-            themes.addItem(buildTheme(theme));
-        });
+            gui.themes.forEach(theme => {
+                themes.addItem(buildTheme(theme));
+            });
+        }
 
         document.addField(themes);
 
         let colors = new ObjectList();
 
-        assets.colors.forEach(color => {
-            colors.addItem(buildColor(color));
-        });
-
-        document.addField(colors);
-    }
-
-    function finish() {
-        let objects: ObjectField[] = [];
-        let newObjects: ObjectField[] = [document];
-        while (newObjects.length > 0) {
-            objects = objects.concat(newObjects);
-            let temp: ObjectField[] = [];
-            newObjects.forEach(object => object.enumObjects(temp));
-            newObjects = temp.filter(object => objects.indexOf(object) == -1);
+        if (!ProjectStore.masterProject) {
+            assets.colors.forEach(color => {
+                colors.addItem(buildColor(color));
+            });
         }
 
-        objects.forEach(object => object.finish());
+        document.addField(colors);
+    }, true);
+}
 
-        let objectOffset = 0;
-        objects.forEach(object => {
-            object.objectOffset = objectOffset;
-            objectOffset += object.objectSize;
-        });
+function buildActionNames(assets: Assets) {
+    return buildListData((document: Struct) => {
+        let actionNames = new StringList();
+        for (let i = 0; i < assets.actions.length; i++) {
+            actionNames.addItem(new String(assets.actions[i].name));
+        }
+        document.addField(actionNames);
+    }, true);
+}
 
-        return objects;
-    }
-
-    let document = new Struct();
-    build();
-    let objects = finish();
-    let data = pack(objects);
-
-    return data;
+function buildDataItemNames(assets: Assets) {
+    return buildListData((document: Struct) => {
+        let dataItemNames = new StringList();
+        for (let i = 0; i < assets.dataItems.length; i++) {
+            dataItemNames.addItem(new String(assets.dataItems[i].name));
+        }
+        document.addField(dataItemNames);
+    }, true);
 }
 
 async function buildGuiAssetsData(assets: Assets) {
-    const inputArray = packRegions([
+    let assetRegions = [
         buildGuiDocumentData(assets),
         buildGuiStylesData(assets),
         buildGuiFontsData(assets),
         await buildGuiBitmapsData(assets),
         buildGuiColors(assets)
-    ]);
+    ];
+    if (ProjectStore.masterProject) {
+        assetRegions = assetRegions.concat([buildActionNames(assets), buildDataItemNames(assets)]);
+    }
+    const inputArray = packRegions(assetRegions);
 
     var inputBuffer = Buffer.from(inputArray);
     var outputBuffer = Buffer.alloc(LZ4.encodeBound(inputBuffer.length));
@@ -1364,7 +1364,7 @@ class Assets {
     actions: Action[];
 
     pages: Page[];
-    styles: Style[] = [];
+    styles: (Style | undefined)[];
     fonts: Font[] = [];
     bitmaps: Bitmap[] = [];
     colors: string[] = [];
@@ -1393,7 +1393,14 @@ class Assets {
                 page.usedIn.indexOf(buildConfiguration.name) !== -1
         );
 
-        this.styles = gui.styles.filter(style => style.alwaysBuild);
+        this.styles = [undefined];
+
+        if (!ProjectStore.masterProject) {
+            gui.styles
+                .filter(style => style.id != undefined)
+                .forEach(style => this.addStyle(style));
+            gui.styles.filter(style => style.alwaysBuild).forEach(style => this.addStyle(style));
+        }
 
         this.fonts = gui.fonts.filter(bitmap => bitmap.alwaysBuild);
 
@@ -1414,7 +1421,8 @@ class Assets {
 
         for (let i = 0; i < this.dataItems.length; i++) {
             if (this.dataItems[i].name === dataItemName) {
-                return Math.min(i + 1, 65535);
+                const dataItemIndex = Math.min(i + 1, 32767);
+                return ProjectStore.masterProject ? -dataItemIndex : dataItemIndex;
             }
         }
 
@@ -1433,7 +1441,8 @@ class Assets {
         const actionName = object[propertyName];
         for (let i = 0; i < this.actions.length; i++) {
             if (this.actions[i].name === actionName) {
-                return Math.min(i + 1, 65535);
+                const actionItemIndex = Math.min(i + 1, 32767);
+                return ProjectStore.masterProject ? -actionItemIndex : actionItemIndex;
             }
         }
 
@@ -1449,61 +1458,102 @@ class Assets {
     }
 
     get totalGuiAssets() {
-        return this.pages.length + this.styles.length + this.fonts.length + this.bitmaps.length;
+        return (
+            this.pages.length +
+            this.styles.filter(style => !!style).length +
+            this.fonts.length +
+            this.bitmaps.length
+        );
     }
 
     getPageIndex(pageName: string) {
         for (let i = 0; i < this.pages.length; i++) {
             if (this.pages[i].name == pageName) {
+                return ProjectStore.masterProject ? -(i + 1) : i + 1;
+            }
+        }
+
+        return 0;
+    }
+
+    addStyle(style: Style) {
+        if (style.id != undefined) {
+            this.styles[style.id] = style;
+            return style.id;
+        }
+
+        for (let i = 1; i < this.styles.length; i++) {
+            if (this.styles[i] == undefined) {
+                this.styles[i] = style;
                 return i;
             }
         }
 
-        return -1;
+        this.styles.push(style);
+        return this.styles.length - 1;
     }
 
     getStyleIndex(styleNameOrObject: string | Style): number {
-        if (typeof styleNameOrObject === "string") {
-            const styleName = styleNameOrObject;
-
-            for (let i = 0; i < this.styles.length; i++) {
-                if (this.styles[i].name == styleName) {
-                    return i + 1;
+        if (ProjectStore.masterProject) {
+            if (typeof styleNameOrObject === "string") {
+                const styleName = styleNameOrObject;
+                const style = findStyle(styleName);
+                if (style && style.id != undefined) {
+                    return style.id;
                 }
-            }
-
-            const style = findStyle(styleName);
-            if (style) {
-                this.styles.push(style);
-                return this.styles.length;
+            } else {
+                const style = styleNameOrObject;
+                if (style.inheritFrom) {
+                    return this.getStyleIndex(style.inheritFrom);
+                }
             }
         } else {
-            const style = styleNameOrObject;
+            if (typeof styleNameOrObject === "string") {
+                const styleName = styleNameOrObject;
 
-            let parentStyle: Style | undefined = style;
-            while (true) {
-                if (!parentStyle.inheritFrom) {
-                    break;
+                for (let i = 1; i < this.styles.length; i++) {
+                    const style = this.styles[i];
+                    if (style && style.name == styleName) {
+                        return i;
+                    }
                 }
 
-                parentStyle = findStyle(parentStyle.inheritFrom);
-                if (!parentStyle) {
-                    break;
+                const style = findStyle(styleName);
+                if (style) {
+                    if (style.id != undefined) {
+                        return style.id;
+                    }
+
+                    return this.addStyle(style);
+                }
+            } else {
+                const style = styleNameOrObject;
+
+                let parentStyle: Style | undefined = style;
+                while (true) {
+                    if (!parentStyle.inheritFrom) {
+                        break;
+                    }
+
+                    parentStyle = findStyle(parentStyle.inheritFrom);
+                    if (!parentStyle) {
+                        break;
+                    }
+
+                    if (style.compareTo(parentStyle)) {
+                        return this.getStyleIndex(parentStyle.name);
+                    }
                 }
 
-                if (style.compareTo(parentStyle)) {
-                    return this.getStyleIndex(parentStyle.name);
+                for (let i = 1; i < this.styles.length; i++) {
+                    const s = this.styles[i];
+                    if (s && style.compareTo(s)) {
+                        return i;
+                    }
                 }
+
+                return this.addStyle(style);
             }
-
-            for (let i = 0; i < this.styles.length; i++) {
-                if (style.compareTo(this.styles[i])) {
-                    return i + 1;
-                }
-            }
-
-            this.styles.push(style);
-            return this.styles.length;
         }
 
         return 0;
@@ -1527,7 +1577,7 @@ class Assets {
     getBitmapIndex(bitmapName: string) {
         for (let i = 0; i < this.bitmaps.length; i++) {
             if (this.bitmaps[i].name == bitmapName) {
-                return i + 1;
+                return ProjectStore.masterProject ? -(i + 1) : i + 1;
             }
         }
 
@@ -1576,6 +1626,10 @@ class Assets {
         gui.styles.forEach(style => {
             if (
                 !this.styles.find(usedStyle => {
+                    if (!usedStyle) {
+                        return false;
+                    }
+
                     if (usedStyle == style) {
                         return true;
                     }
@@ -1674,11 +1728,13 @@ export async function build(
     const buildAssetsDef = !sectionNames || sectionNames.indexOf("GUI_ASSETS_DEF") !== -1;
     const buildAssetsDefCompressed =
         !sectionNames || sectionNames.indexOf("GUI_ASSETS_DEF_COMPRESSED") !== -1;
+    const buildAssetsData = !sectionNames || sectionNames.indexOf("GUI_ASSETS_DATA") !== -1;
     if (
         buildAssetsDecl ||
         buildAssetsDeclCompressed ||
         buildAssetsDef ||
-        buildAssetsDefCompressed
+        buildAssetsDefCompressed ||
+        buildAssetsData
     ) {
         // build all assets as single data chunk
         const [assetsData, compressedAssetsData] = await buildGuiAssetsData(assets);
@@ -1697,6 +1753,10 @@ export async function build(
 
         if (buildAssetsDefCompressed) {
             result.GUI_ASSETS_DEF_COMPRESSED = await buildGuiAssetsDef(compressedAssetsData);
+        }
+
+        if (buildAssetsData) {
+            result.GUI_ASSETS_DATA = compressedAssetsData;
         }
     }
 

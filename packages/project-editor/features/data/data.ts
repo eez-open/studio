@@ -148,11 +148,11 @@ registerFeatureImplementation("data", {
         check: (object: EezObject) => {
             let messages: output.Message[] = [];
 
-            if (asArray(object).length >= 65535) {
+            if (asArray(object).length > 32000) {
                 messages.push(
                     new output.Message(
                         output.Type.ERROR,
-                        "Max. 65535 data items are supported",
+                        "Max. 32000 data items are supported",
                         object
                     )
                 );

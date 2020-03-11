@@ -30,6 +30,7 @@ export enum PropertyType {
     Color,
     ThemedColor,
     RelativeFolder,
+    RelativeFile,
     ObjectReference,
     ConfigurationReference,
     Boolean,
@@ -133,6 +134,7 @@ export interface PropertyInfo {
     propertyGridComponent?: typeof React.Component;
     propertyGridCollapsable?: boolean;
     propertyGridCollapsableDefaultPropertyName?: string;
+    propertyGridCollapsableEnabled?: () => boolean;
     enumerable?: boolean | ((object: EezObject, propertyInfo: PropertyInfo) => boolean);
     showOnlyChildrenInTree?: boolean;
     isOptional?: boolean;
@@ -147,6 +149,7 @@ export interface PropertyInfo {
     downloadFileName?: (object: EezObject, propertyInfo: PropertyInfo) => string;
     embeddedImage?: boolean;
     partOfNavigation?: boolean;
+    fileFilters?: any;
 }
 
 export interface NavigationComponentProps {
@@ -528,9 +531,9 @@ function uniqueTop(objects: EezObject[]): EezObject[] {
 }
 
 function getParents(objects: EezObject[]): EezObject[] {
-    return uniqueTop(objects
-        .map(object => object._parent)
-        .filter(object => !!object) as EezObject[]);
+    return uniqueTop(
+        objects.map(object => object._parent).filter(object => !!object) as EezObject[]
+    );
 }
 
 export function reduceUntilCommonParent(objects: EezObject[]): EezObject[] {

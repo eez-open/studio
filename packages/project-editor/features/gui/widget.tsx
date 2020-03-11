@@ -133,6 +133,7 @@ function makeStylePropertyInfo(name: string, displayName?: string): PropertyInfo
         propertyGridGroup: styleGroup,
         propertyGridCollapsable: true,
         propertyGridCollapsableDefaultPropertyName: "inheritFrom",
+        propertyGridCollapsableEnabled: () => !ProjectStore.masterProjectEnabled,
         enumerable: false
     };
 }
