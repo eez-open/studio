@@ -454,6 +454,24 @@ const activeBackgroundColorProperty: PropertyInfo = {
     hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
 };
 
+const focusColorProperty: PropertyInfo = {
+    name: "focusColor",
+    type: PropertyType.ThemedColor,
+    referencedObjectCollectionPath: ["gui", "colors"],
+    defaultValue: "#ffffff",
+    inheritable: true,
+    hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
+};
+
+const focusBackgroundColorProperty: PropertyInfo = {
+    name: "focusBackgroundColor",
+    type: PropertyType.ThemedColor,
+    referencedObjectCollectionPath: ["gui", "colors"],
+    defaultValue: "#000000",
+    inheritable: true,
+    hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
+};
+
 const borderSizeProperty: PropertyInfo = {
     name: "borderSize",
     type: PropertyType.String,
@@ -524,6 +542,8 @@ const properties = [
     backgroundColorProperty,
     activeColorProperty,
     activeBackgroundColorProperty,
+    focusColorProperty,
+    focusBackgroundColorProperty,
     borderSizeProperty,
     borderRadiusProperty,
     borderColorProperty,
@@ -558,6 +578,8 @@ function getInheritedValue(
                 propertyName === "backgroundColor" ||
                 propertyName === "activeColor" ||
                 propertyName === "activeBackgroundColor" ||
+                propertyName === "focusColor" ||
+                propertyName === "focusBackgroundColor" ||
                 propertyName === "borderColor")
         ) {
             value = getThemedColor(value);
@@ -593,6 +615,8 @@ export class Style extends EezObject {
     @observable backgroundColor?: string;
     @observable activeColor?: string;
     @observable activeBackgroundColor?: string;
+    @observable focusColor?: string;
+    @observable focusBackgroundColor?: string;
     @observable borderSize?: string;
     @observable borderRadius?: number;
     @observable borderColor?: string;
@@ -868,6 +892,26 @@ export class Style extends EezObject {
     }
 
     @computed
+    get focusColorProperty(): string {
+        return getStyleProperty(this, "focusColor");
+    }
+
+    @computed
+    get focusColor16(): number {
+        return strToColor16(this.focusColorProperty);
+    }
+
+    @computed
+    get focusBackgroundColorProperty(): string {
+        return getStyleProperty(this, "focusBackgroundColor");
+    }
+
+    @computed
+    get focusBackgroundColor16(): number {
+        return strToColor16(this.focusBackgroundColorProperty);
+    }
+
+    @computed
     get borderColorProperty(): string {
         return getStyleProperty(this, "borderColor");
     }
@@ -989,6 +1033,14 @@ export class Style extends EezObject {
                         output.propertyInvalidValueMessage(this, "activeBackgroundColor")
                     );
                 }
+
+                if (isNaN(this.focusColor16)) {
+                    messages.push(output.propertyInvalidValueMessage(this, "focusColor"));
+                }
+
+                if (isNaN(this.focusBackgroundColor16)) {
+                    messages.push(output.propertyInvalidValueMessage(this, "focusBackgroundColor"));
+                }
             }
 
             if (isNaN(this.borderColor16)) {
@@ -1030,6 +1082,8 @@ export class Style extends EezObject {
             this.backgroundColorProperty === otherStyle.backgroundColorProperty &&
             this.activeColorProperty === otherStyle.activeColorProperty &&
             this.activeBackgroundColorProperty === otherStyle.activeBackgroundColorProperty &&
+            this.focusColorProperty === otherStyle.focusColorProperty &&
+            this.focusBackgroundColorProperty === otherStyle.focusBackgroundColorProperty &&
             this.borderSizeProperty === otherStyle.borderSizeProperty &&
             this.borderRadiusProperty === otherStyle.borderRadiusProperty &&
             this.borderColorProperty === otherStyle.borderColorProperty &&
@@ -1065,6 +1119,8 @@ export function getDefaultStyle(): Style {
                 backgroundColor: backgroundColorProperty.defaultValue,
                 activeColor: activeColorProperty.defaultValue,
                 activeBackgroundColor: activeBackgroundColorProperty.defaultValue,
+                focusColor: focusColorProperty.defaultValue,
+                focusBackgroundColor: focusBackgroundColorProperty.defaultValue,
                 borderSize: borderSizeProperty.defaultValue,
                 borderRadius: borderRadiusProperty.defaultValue,
                 borderColor: borderColorProperty.defaultValue,

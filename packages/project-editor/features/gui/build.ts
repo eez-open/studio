@@ -566,6 +566,18 @@ function buildGuiStylesData(assets: Assets, packData: boolean = true) {
         }
         result.addField(new UInt16(activeColor));
 
+        let focusBackgroundColor = assets.getColorIndex(style, "focusBackgroundColor");
+        if (isNaN(focusBackgroundColor)) {
+            focusBackgroundColor = 0;
+        }
+        result.addField(new UInt16(focusBackgroundColor));
+
+        let focusColor = assets.getColorIndex(style, "focusColor");
+        if (isNaN(focusColor)) {
+            focusColor = 0;
+        }
+        result.addField(new UInt16(focusColor));
+
         result.addField(new UInt8(style.borderSizeRect.top));
         result.addField(new UInt8(style.borderSizeRect.right));
         result.addField(new UInt8(style.borderSizeRect.bottom));
@@ -840,19 +852,6 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         let widget = object as Widget.DisplayDataWidget;
         specific = new Struct();
 
-        // focusStyle
-        let focusStyle: number;
-        if (widget.focusStyle) {
-            focusStyle = assets.getStyleIndex(widget.focusStyle);
-            if (focusStyle == 0) {
-                focusStyle = style;
-            }
-        } else {
-            focusStyle = style;
-        }
-
-        specific.addField(new UInt16(focusStyle));
-
         // displayOption
         specific.addField(new UInt8(widget.displayOption || 0));
     } else if (type == WIDGET_TYPE_TEXT) {
@@ -868,18 +867,6 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         }
 
         specific.addField(new String(text));
-
-        // focusStyle
-        let focusStyle: number;
-        if (widget.focusStyle) {
-            focusStyle = assets.getStyleIndex(widget.focusStyle);
-            if (focusStyle == 0) {
-                focusStyle = style;
-            }
-        } else {
-            focusStyle = style;
-        }
-        specific.addField(new UInt16(focusStyle));
 
         // flags
         let flags: number = 0;
@@ -1596,6 +1583,8 @@ class Assets {
             | "backgroundColor"
             | "activeColor"
             | "activeBackgroundColor"
+            | "focusColor"
+            | "focusBackgroundColor"
             | "borderColor"
     ) {
         let color = getStyleProperty(style, propertyName, false);

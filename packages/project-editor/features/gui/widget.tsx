@@ -1522,13 +1522,19 @@ enum DisplayOption {
     IntegerAndFraction = 5
 }
 
+const hideIfNotProjectVersion1: Partial<PropertyInfo> = {
+    hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion !== "v1"
+};
+
 export class DisplayDataWidget extends Widget {
     @observable focusStyle: Style;
     @observable displayOption: DisplayOption;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
-            makeStylePropertyInfo("focusStyle"),
+            Object.assign(makeStylePropertyInfo("focusStyle"), hideIfNotProjectVersion1, {
+                isOptional: true
+            }),
             {
                 name: "displayOption",
                 type: PropertyType.Enum,
@@ -1563,7 +1569,9 @@ export class DisplayDataWidget extends Widget {
         ],
 
         beforeLoadHook: (object: EezObject, jsObject: any) => {
-            migrateStyleProperty(jsObject, "focusStyle");
+            if (ProjectStore.project.settings.general.projectVersion === "v1") {
+                migrateStyleProperty(jsObject, "focusStyle");
+            }
         },
 
         defaultValue: {
@@ -1669,7 +1677,9 @@ export class TextWidget extends Widget {
                 defaultValue: false,
                 propertyGridGroup: specificGroup
             },
-            makeStylePropertyInfo("focusStyle")
+            Object.assign(makeStylePropertyInfo("focusStyle"), hideIfNotProjectVersion1, {
+                isOptional: true
+            })
         ],
 
         defaultValue: {
@@ -2726,10 +2736,6 @@ export class BarGraphWidget extends Widget {
 registerClass(BarGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const hideIfNotProjectVersion1: Partial<PropertyInfo> = {
-    hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion !== "v1"
-};
 
 export class YTGraphWidget extends Widget {
     @observable y1Style: Style;
