@@ -1591,7 +1591,7 @@ class ProjectStoreClass {
     }
 
     doSave(callback: (() => void) | undefined) {
-        if (this.filePath) {
+        if (this.filePath && ProjectStore.project._allGuiPagesLoaded) {
             saveProject(this.filePath)
                 .then(() => {
                     DocumentStore.setModified(false);
