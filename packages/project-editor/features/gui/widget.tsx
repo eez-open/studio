@@ -3233,3 +3233,48 @@ export class ScrollBarWidget extends Widget {
 }
 
 registerClass(ScrollBarWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class ProgressWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        defaultValue: {
+            type: "Progress",
+            left: 0,
+            top: 0,
+            width: 128,
+            height: 32
+        },
+
+        icon: "_images/widgets/Progress.png"
+    });
+
+    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+        let widget = this;
+
+        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+            let isHorizontal = rect.width > rect.height;
+
+            draw.setColor(getStyleProperty(this.style, "backgroundColor"));
+            draw.fillRect(ctx, 0, 0, rect.width - 1, rect.height - 1, 0);
+
+            // draw thumb
+            const percent = (widget.data && dataContext.get(widget.data)) || 25;
+            draw.setColor(getStyleProperty(this.style, "color"));
+            if (isHorizontal) {
+                draw.fillRect(ctx, 0, 0, (percent * rect.width) / 100 - 1, rect.height - 1, 0);
+            } else {
+                draw.fillRect(
+                    ctx,
+                    0,
+                    rect.height - (percent * rect.height) / 100,
+                    rect.width - 1,
+                    rect.height - 1,
+                    0
+                );
+            }
+        });
+    }
+}
+
+registerClass(ProgressWidget);
