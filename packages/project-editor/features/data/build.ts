@@ -28,16 +28,16 @@ function buildDataFuncsDecl(projectDataItems: DataItem[]) {
             "data_",
             dataItem.name,
             projectBuild.NamingConvention.UnderscoreLowerCase
-        )}(DataOperationEnum operation, Cursor &cursor, Value &value);`;
+        )}(DataOperationEnum operation, Cursor cursor, Value &value);`;
     });
 
-    return ["void data_none(DataOperationEnum operation, Cursor &cursor, Value &value);"]
+    return ["void data_none(DataOperationEnum operation, Cursor cursor, Value &value);"]
         .concat(dataItems)
         .join("\n");
 }
 
 function buildDataArrayDecl() {
-    return "typedef void (*DataOperationsFunction)(DataOperationEnum operation, Cursor &cursor, Value &value);\n\nextern DataOperationsFunction g_dataOperationsFunctions[];";
+    return "typedef void (*DataOperationsFunction)(DataOperationEnum operation, Cursor cursor, Value &value);\n\nextern DataOperationsFunction g_dataOperationsFunctions[];";
 }
 
 function buildDataArrayDef(projectDataItems: DataItem[]) {
