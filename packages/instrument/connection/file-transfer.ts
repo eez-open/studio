@@ -3,7 +3,7 @@ import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 import { Connection } from "instrument/connection/connection";
 import { FileState, FileStateState } from "instrument/connection/file-state";
 
-const CONF_FILE_TRANSFER_TIMEOUT_MS = 5 * 1000;
+const CONF_FILE_TRANSFER_TIMEOUT_MS = 10 * 1000;
 
 export abstract class FileTransfer {
     logId: string;

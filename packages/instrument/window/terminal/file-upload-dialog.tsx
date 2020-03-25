@@ -90,7 +90,7 @@ class FileUploadDialog extends React.Component<
 
         startCommandTemplate: validators.required,
         sendChunkCommandTemplate: validators.required,
-        chunkSize: validators.rangeInclusive(1, 1024)
+        chunkSize: validators.rangeInclusive(1, 4096)
     });
 
     async handleSubmit() {
