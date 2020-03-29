@@ -71,9 +71,9 @@ export class HistorySessions {
                 FROM
                     ${this.history.table} AS T3
                 WHERE
-                    type = "activity-log/session-start" AND
+                    type = 'activity-log/session-start' AND
                     (
-                        json_extract(message, "$.sessionCloseId") IS NULL OR
+                        json_extract(message, '$.sessionCloseId') IS NULL OR
                         EXISTS(
                             SELECT * FROM ${this.history.table} AS T1
                             WHERE ${this.history.oidWhereClause} AND T1.sid = T3.id

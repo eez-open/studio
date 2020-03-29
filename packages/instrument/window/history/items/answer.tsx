@@ -39,7 +39,9 @@ export class AnswerHistoryItemComponent extends React.Component<
             textClassName = "text-danger";
         }
 
-        message = message.replace(/\"\,\"/g, '",\n"');
+        if (message.trim().startsWith(`"`)) {
+            message = message.replace(/\,\"/g, ',\n"');
+        }
 
         let content;
         if (message.length > 1024 && !this.showAll) {

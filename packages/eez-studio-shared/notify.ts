@@ -1,5 +1,6 @@
 import { isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
+import { BrowserWindow } from "electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -107,7 +108,7 @@ export function watch(
 
     getBrowserWindow()
         .getAllWindows()
-        .forEach(window => {
+        .forEach((window: BrowserWindow) => {
             if (window.id !== targetWindowId) {
                 sendNotifyWatch(window.webContents, {
                     sourceId,

@@ -1,10 +1,12 @@
 import React from "react";
 import { computed } from "mobx";
+import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { humanize } from "eez-studio-shared/string";
 import { _map } from "eez-studio-shared/algorithm";
 import { UNITS } from "eez-studio-shared/units";
+import { guid } from "eez-studio-shared/guid";
 
 import { Rule, validators } from "eez-studio-shared/validation";
 
@@ -15,14 +17,17 @@ import {
     BooleanProperty,
     TextInputProperty,
     SelectProperty,
+    Radio,
     RangeProperty
 } from "eez-studio-ui/properties";
+import styled from "eez-studio-ui/styled-components";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 interface IEnumItem {
     id: string;
     label: string;
+    image?: string;
 }
 
 export type EnumItems = (number | string | IEnumItem)[];
@@ -30,7 +35,15 @@ export type EnumItems = (number | string | IEnumItem)[];
 export interface IFieldProperties {
     name: string;
     displayName?: string;
-    type?: "integer" | "number" | "string" | "boolean" | "enum" | "range" | typeof FieldComponent;
+    type?:
+        | "integer"
+        | "number"
+        | "string"
+        | "boolean"
+        | "enum"
+        | "radio"
+        | "range"
+        | typeof FieldComponent;
     unit?: keyof typeof UNITS;
     enumItems?: EnumItems | (() => EnumItems);
     defaultValue?: number | string | boolean;
@@ -56,6 +69,7 @@ export class FieldComponent extends React.Component<IFieldComponentProps, any> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@observer
 export class TableField extends FieldComponent {
     render() {
         let data = this.props.values[this.props.fieldProperties.name];
@@ -81,11 +95,51 @@ export class TableField extends FieldComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@observer
+export class RadioGroupProperty extends React.Component<
+    {
+        id?: string;
+        name: string;
+        advanced?: boolean;
+        errors?: string[];
+    },
+    {}
+> {
+    render() {
+        let id = this.props.id || guid();
+
+        return (
+            <PropertyEnclosure advanced={this.props.advanced || false} errors={this.props.errors}>
+                <td>
+                    <label className="PropertyName col-form-label" htmlFor={id}>
+                        {this.props.name}
+                    </label>
+                </td>
+
+                <td>
+                    <div id={id}>{this.props.children}</div>
+                </td>
+            </PropertyEnclosure>
+        );
+    }
+}
+
+const Card = styled.div`
+    background: #fff;
+    border-radius: 2px;
+    display: inline-block;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+    margin-left: 20px;
+`;
+
+////////////////////////////////////////////////////////////////////////////////
+
 interface DialogDefinition {
     id?: string;
     title?: string;
     size?: "small" | "medium" | "large";
     fields: IFieldProperties[];
+    error?: string;
 }
 
 interface GenericDialogResult {
@@ -110,6 +164,7 @@ interface GenericDialogState {
     errorMessages?: any;
 }
 
+@observer
 export class GenericDialog extends React.Component<GenericDialogProps, GenericDialogState> {
     fieldContext: any = {};
 
@@ -289,7 +344,10 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                         );
                     })
                     .map(fieldProperties => {
-                        const name = fieldProperties.displayName || humanize(fieldProperties.name);
+                        const name =
+                            fieldProperties.displayName != undefined
+                                ? fieldProperties.displayName
+                                : humanize(fieldProperties.name);
                         const value = this.state.values[fieldProperties.name] || "";
                         const onChange = this.onChange.bind(this, fieldProperties);
                         const errors =
@@ -310,6 +368,53 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             fieldProperties.unit
                         ) {
                             Field = TextInputProperty;
+                        } else if (fieldProperties.type === "radio") {
+                            Field = RadioGroupProperty;
+
+                            let enumItems;
+                            if (typeof fieldProperties.enumItems === "function") {
+                                enumItems = fieldProperties.enumItems();
+                            } else {
+                                enumItems = fieldProperties.enumItems!;
+                            }
+
+                            children = enumItems.map(enumItem => {
+                                const id =
+                                    typeof enumItem === "string" || typeof enumItem === "number"
+                                        ? enumItem.toString()
+                                        : enumItem.id;
+                                return (
+                                    <Radio
+                                        key={id}
+                                        checked={id === value}
+                                        onChange={() => onChange(id)}
+                                    >
+                                        {typeof enumItem === "string" ||
+                                        typeof enumItem === "number"
+                                            ? humanize(enumItem)
+                                            : enumItem.label}
+                                    </Radio>
+                                );
+                            });
+
+                            const selectedEnumItem = enumItems.find(enumItem => {
+                                if (typeof enumItem === "string" || typeof enumItem === "number") {
+                                    return false;
+                                }
+                                return enumItem.image && enumItem.id === value;
+                            });
+
+                            if (selectedEnumItem) {
+                                const image = (selectedEnumItem as IEnumItem).image;
+                                children = (
+                                    <div style={{ display: "flex", flexDirection: "row" }}>
+                                        <div>{children}</div>
+                                        <Card>
+                                            <img src={image} />
+                                        </Card>
+                                    </div>
+                                );
+                            }
                         } else if (fieldProperties.type === "enum") {
                             Field = SelectProperty;
 
@@ -396,6 +501,11 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                     onOk={this.props.onOk && this.onOk}
                     onCancel={this.props.onCancel}
                 >
+                    {this.props.dialogDefinition.error && (
+                        <div className="alert alert-danger">
+                            {this.props.dialogDefinition.error}
+                        </div>
+                    )}
                     {properties}
                 </Dialog>
             );

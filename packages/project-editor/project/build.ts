@@ -4,7 +4,6 @@ import { formatNumber } from "eez-studio-shared/util";
 import { writeTextFile, writeBinaryData } from "eez-studio-shared/util-electron";
 import { _map } from "eez-studio-shared/algorithm";
 import { underscore } from "eez-studio-shared/string";
-const path = EEZStudio.electron.remote.require("path");
 
 import { getExtensionsByCategory, BuildResult } from "project-editor/core/extensions";
 import {
@@ -25,8 +24,6 @@ import {
     extensionDefinitionAnythingToBuild,
     extensionDefinitionBuild
 } from "project-editor/features/extension-definitions/build";
-
-const fs = EEZStudio.electron.remote.require("fs");
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -187,6 +184,8 @@ async function generateFiles(
         [configurationName: string]: BuildResult[];
     }
 ) {
+    const path = EEZStudio.electron.remote.require("path");
+
     if (ProjectStore.masterProject) {
         generateFile(
             configurationBuildResults[
@@ -257,6 +256,7 @@ export async function build({ onlyCheck }: { onlyCheck: boolean }) {
             destinationFolderPath = ProjectStore.getAbsoluteFilePath(
                 ProjectStore.project.settings.build.destinationFolder || "."
             );
+            const fs = EEZStudio.electron.remote.require("fs");
             if (!fs.existsSync(destinationFolderPath)) {
                 throw new BuildException("Cannot find destination folder.");
             }
@@ -360,6 +360,7 @@ export async function buildExtensions() {
         let destinationFolderPath = ProjectStore.getAbsoluteFilePath(
             ProjectStore.project.settings.build.destinationFolder || "."
         );
+        const fs = EEZStudio.electron.remote.require("fs");
         if (!fs.existsSync(destinationFolderPath)) {
             throw new BuildException("Cannot find destination folder.");
         }

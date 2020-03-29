@@ -156,7 +156,7 @@ export class Filters {
         }
 
         if (types.length > 0) {
-            return "(" + types.map(type => `type == "${type}"`).join(" OR ") + ")";
+            return "(" + types.map(type => `type == '${type}'`).join(" OR ") + ")";
         } else {
             return "0";
         }

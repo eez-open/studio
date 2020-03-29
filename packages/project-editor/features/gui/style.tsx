@@ -396,6 +396,9 @@ const alignHorizontalProperty: PropertyInfo = {
         },
         {
             id: "right"
+        },
+        {
+            id: "left-right"
         }
     ],
     defaultValue: "center",
@@ -1005,7 +1008,8 @@ export class Style extends EezObject {
             if (
                 alignHorizontal != "left" &&
                 alignHorizontal != "center" &&
-                alignHorizontal != "right"
+                alignHorizontal != "right" &&
+                alignHorizontal != "left-right"
             ) {
                 messages.push(output.propertyInvalidValueMessage(this, "alignHorizontal"));
             }

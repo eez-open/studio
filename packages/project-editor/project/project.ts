@@ -24,8 +24,6 @@ import { DataItem } from "project-editor/features/data/data";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
-let fs = EEZStudio.electron.remote.require("fs");
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class BuildConfiguration extends EezObject {
@@ -369,6 +367,7 @@ export function getNewProject(): Project {
 
 export async function load(filePath: string) {
     return new Promise<Project>((resolve, reject) => {
+        const fs = EEZStudio.electron.remote.require("fs");
         fs.readFile(filePath, "utf8", (err: any, data: string) => {
             if (err) {
                 reject(err);
@@ -399,6 +398,7 @@ export function save(filePath: string) {
     //console.timeEnd("save");
 
     return new Promise((resolve, reject) => {
+        const fs = EEZStudio.electron.remote.require("fs");
         fs.writeFile(filePath, json, "utf8", (err: any) => {
             if (err) {
                 reject(err);

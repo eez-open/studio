@@ -2,9 +2,6 @@ import { EezObject, EezClass, PropertyType } from "project-editor/core/object";
 import { Message } from "project-editor/core/output";
 import { Project, BuildConfiguration } from "project-editor/project/project";
 
-let fs = EEZStudio.electron.remote.require("fs");
-let path = EEZStudio.electron.remote.require("path");
-
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
 export type BuildResult = { [key: string]: string };
@@ -120,7 +117,11 @@ export function loadExtensions(): Promise<void> {
         }
 
         function loadExtensionFolder(folder: string) {
+            const fs = EEZStudio.electron.remote.require("fs");
+            const path = EEZStudio.electron.remote.require("path");
+
             totalExtensions++;
+
             fs.stat(folder, function(err: any, stats: any) {
                 if (err) {
                     console.error(err);
@@ -150,10 +151,13 @@ export function loadExtensions(): Promise<void> {
         }
 
         function processExtensionsFolder(folder: string, files: string[]) {
+            const path = EEZStudio.electron.remote.require("path");
             for (let file of files) {
                 loadExtensionFolder(path.join(folder, file));
             }
         }
+
+        const fs = EEZStudio.electron.remote.require("fs");
 
         let extensionsFolder = __dirname + "/../features";
         fs.readdir(extensionsFolder, function(err: any, files: any) {

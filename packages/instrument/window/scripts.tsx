@@ -29,8 +29,6 @@ import { IModel } from "instrument/window/undo";
 
 import { Terminal } from "instrument/window/terminal/terminal";
 
-const path = EEZStudio.electron.remote.require("path");
-
 export class ScriptsModel implements IModel {
     constructor(private appStore: InstrumentAppStore) {}
 
@@ -527,6 +525,8 @@ export async function importScript(appStore: InstrumentAppStore, filePath: strin
     }
 
     const scriptSourceText = await readTextFile(filePath);
+
+    const path = EEZStudio.electron.remote.require("path");
 
     const name = path.basename(filePath, filePath.slice(-3));
 

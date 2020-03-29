@@ -55,7 +55,6 @@ import { info } from "project-editor/core/util";
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
-const fs = EEZStudio.electron.remote.require("fs");
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1346,6 +1345,7 @@ class Property extends React.Component<PropertyProps> {
                                     const filePaths = result.filePaths;
                                     if (filePaths && filePaths[0]) {
                                         if (propertyInfo.embeddedImage) {
+                                            const fs = EEZStudio.electron.remote.require("fs");
                                             fs.readFile(
                                                 ProjectStore.getAbsoluteFilePath(filePaths[0]),
                                                 "base64",

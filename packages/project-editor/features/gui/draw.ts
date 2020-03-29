@@ -218,6 +218,10 @@ export function styleIsHorzAlignRight(style: Style) {
     return getStyleProperty(style, "alignHorizontal") == "right";
 }
 
+export function styleIsHorzAlignLeftRight(style: Style) {
+    return getStyleProperty(style, "alignHorizontal") == "left-right";
+}
+
 export function styleIsVertAlignTop(style: Style) {
     return getStyleProperty(style, "alignVertical") == "top";
 }
@@ -388,17 +392,28 @@ export function drawText(
             console.log(e, text);
         }
 
-        let width = measureStr(text, font, x2 - x1 + 1);
+        let width = measureStr(text, font, 0);
         let height = font.height;
 
         if (width > 0 && height > 0) {
+            const horizontallyFits = width <= x2 - x1 + 1;
+
             let x_offset: number;
-            if (styleIsHorzAlignLeft(style)) {
+            if (
+                styleIsHorzAlignLeft(style) ||
+                (styleIsHorzAlignLeftRight(style) && horizontallyFits)
+            ) {
                 x_offset = x1 + style.paddingRect.left;
-            } else if (styleIsHorzAlignRight(style)) {
+            } else if (
+                styleIsHorzAlignRight(style) ||
+                (styleIsHorzAlignLeftRight(style) && !horizontallyFits)
+            ) {
                 x_offset = x2 - style.paddingRect.right - width;
             } else {
                 x_offset = Math.floor(x1 + (x2 - x1 + 1 - width) / 2);
+                if (x_offset < x1) {
+                    x_offset = x1;
+                }
             }
 
             let y_offset: number;

@@ -26,8 +26,6 @@ import { ProjectStore } from "project-editor/core/store";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
-let fs = EEZStudio.electron.remote.require("fs");
-
 ////////////////////////////////////////////////////////////////////////////////
 
 const BitmapEditorContainer = styled.div`
@@ -191,6 +189,7 @@ export class Bitmap extends EezObject implements IBitmap {
                 }
             }).then(result => {
                 return new Promise<IBitmap>((resolve, reject) => {
+                    const fs = EEZStudio.electron.remote.require("fs");
                     fs.readFile(
                         ProjectStore.getAbsoluteFilePath(result.values.imageFilePath),
                         "base64",

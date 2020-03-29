@@ -20,9 +20,9 @@ export default service<Params, Result>("db-services/query", async (inputParams: 
             rows
         };
     } catch (err) {
-        return {
-            err,
-            rows: []
+        throw {
+            err: err.toString(),
+            inputParams
         };
     }
 });

@@ -26,13 +26,16 @@ import { Theme } from "project-editor/features/gui/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const STYLE_FLAGS_HORZ_ALIGN_LEFT = 0 << 1;
-const STYLE_FLAGS_HORZ_ALIGN_RIGHT = 1 << 1;
-const STYLE_FLAGS_HORZ_ALIGN_CENTER = 2 << 1;
+const STYLE_FLAGS_HORZ_ALIGN_LEFT = 0;
+const STYLE_FLAGS_HORZ_ALIGN_RIGHT = 1;
+const STYLE_FLAGS_HORZ_ALIGN_CENTER = 2;
+const STYLE_FLAGS_HORZ_ALIGN_LEFT_RIGHT = 3;
+
 const STYLE_FLAGS_VERT_ALIGN_TOP = 0 << 3;
 const STYLE_FLAGS_VERT_ALIGN_BOTTOM = 1 << 3;
 const STYLE_FLAGS_VERT_ALIGN_CENTER = 2 << 3;
-const STYLE_FLAGS_BLINK = 1 << 5;
+
+const STYLE_FLAGS_BLINK = 1 << 6;
 
 const WIDGET_TYPE_NONE = 0;
 const WIDGET_TYPE_CONTAINER = 1;
@@ -522,6 +525,8 @@ function buildGuiStylesData(assets: Assets, packData: boolean = true) {
             flags |= STYLE_FLAGS_HORZ_ALIGN_LEFT;
         } else if (styleAlignHorizontal == "right") {
             flags |= STYLE_FLAGS_HORZ_ALIGN_RIGHT;
+        } else if (styleAlignHorizontal == "left-right") {
+            flags |= STYLE_FLAGS_HORZ_ALIGN_LEFT_RIGHT;
         } else {
             flags |= STYLE_FLAGS_HORZ_ALIGN_CENTER;
         }

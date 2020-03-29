@@ -38,26 +38,26 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
     form: HTMLFormElement;
 
     componentDidMount() {
-        $(this.div).modal({
-            backdrop: "static"
-        });
-
         $(this.div).on("shown.bs.modal", () => {
-            let element = $(this.div).find(".ql-editor")[0];
-            if (element) {
-                element.focus();
-            } else {
-                $(this.div)
-                    .find(".modal-body")
-                    .find("input, textarea, .EezStudio_ListContainer")
-                    .first()
-                    .focus();
-            }
+            setTimeout(() => {
+                let element = $(this.div).find(".ql-editor")[0];
+                if (element) {
+                    element.focus();
+                } else {
+                    $(this.div)
+                        .find(".modal-body")
+                        .find("input, textarea, select, .EezStudio_ListContainer, button")
+                        .first()
+                        .focus();
+                }
+            });
         });
 
         $(this.div).on("hidden.bs.modal", () => {
             (this.div.parentElement as HTMLElement).remove();
         });
+
+        $(this.div).modal();
     }
 
     componentDidUpdate() {

@@ -20,7 +20,6 @@ import {
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 
 import { confirm } from "eez-studio-ui/dialog-electron";
-import * as notification from "eez-studio-ui/notification";
 
 import { Filters, FilterStats } from "instrument/window/history/filters";
 
@@ -123,7 +122,7 @@ class HistoryCalendar {
                         count(*) AS count
                     FROM (
                         SELECT
-                            date(date / 1000, "unixepoch", "localtime") AS date
+                            date(date / 1000, 'unixepoch', 'localtime') AS date
                         FROM
                             ${this.history.table} AS T1
                         WHERE
@@ -145,7 +144,7 @@ class HistoryCalendar {
                 }
             });
         } catch (err) {
-            notification.error(err);
+            console.error(err);
         }
     }
 
@@ -846,13 +845,13 @@ export class History {
     get oidCond() {
         if (this.appStore.oids) {
             if (this.appStore.oids.length > 0) {
-                const oids = this.appStore.oids.map(oid => '"' + oid + '"').join(",");
+                const oids = this.appStore.oids.map(oid => `'` + oid + `'`).join(",");
                 return `oid IN(${oids})`;
             } else {
                 return "oid=oid";
             }
         } else {
-            return `oid="${this.oid}"`;
+            return `oid='${this.oid}'`;
         }
     }
 

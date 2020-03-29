@@ -109,15 +109,7 @@ export function objectEqual<T>(a: T, b: T) {
 
     const { toJS } = require("mobx") as typeof MobXModule;
 
-    const result = deepEqual(stringify(toJS(a)), toJS(b));
-
-    const result2 = stringify(toJS(a)) === stringify(toJS(b));
-
-    if (result != result2) {
-        console.error(toJS(a), toJS(b));
-    }
-
-    return result2;
+    return stringify(toJS(a)) === stringify(toJS(b));
 }
 
 export function clamp(value: number, min: number, max: number) {

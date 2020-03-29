@@ -1,7 +1,3 @@
-const fs = EEZStudio.electron.remote.require("fs");
-const archiver = EEZStudio.electron.remote.require("archiver");
-const xmlFormatter = require("xml-formatter");
-
 import { ScpiCommand, ScpiCommandTreeNode, addCommandToTree } from "instrument/commands-tree";
 import {
     IEnum,
@@ -389,6 +385,10 @@ export function buildInstrumentExtension(
     properties: any
 ) {
     return new Promise((resolve, reject) => {
+        const fs = EEZStudio.electron.remote.require("fs");
+        const archiver = EEZStudio.electron.remote.require("archiver");
+        const xmlFormatter = require("xml-formatter");
+
         let extensionName = idf.extensionName;
         var output = fs.createWriteStream(moduleFilePath);
 

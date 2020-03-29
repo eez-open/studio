@@ -20,8 +20,6 @@ import { ProjectStore } from "project-editor/core/store";
 import { Scpi, ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
 
-const fs = EEZStudio.electron.remote.require("fs");
-
 ////////////////////////////////////////////////////////////////////////////////
 
 interface Command {
@@ -331,6 +329,10 @@ class FindChanges {
                                 types.push({
                                     type: "data-block"
                                 });
+                            } else if (type === "channellist") {
+                                types.push({
+                                    type: "channel-list"
+                                });
                             } else if (type === "discrete") {
                                 types.push({
                                     type: "discrete",
@@ -567,6 +569,7 @@ class FindChanges {
                 ProjectStore.project.settings.general.scpiDocFolder
             );
 
+            const fs = EEZStudio.electron.remote.require("fs");
             fs.exists(scpiHelpFolderPath, (exists: boolean) => {
                 if (!exists) {
                     reject(`SCPI help folder "${scpiHelpFolderPath}" doesn't exists.`);
@@ -974,19 +977,11 @@ export class ImportScpiDocDialog extends React.Component<
     }
 
     componentDidMount() {
-        $(this.dialog).on("shown.bs.modal", () => {
-            $(this.dialog)
-                .find("input")
-                .select();
-        });
-
         $(this.dialog).on("hidden.bs.modal", () => {
             this.props.onHidden();
         });
 
-        $(this.dialog).modal({
-            backdrop: "static"
-        });
+        $(this.dialog).modal();
 
         const scpi = getProperty(ProjectStore.project, "scpi") as Scpi;
 

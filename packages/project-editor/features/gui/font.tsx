@@ -48,8 +48,6 @@ import { FontProperties as FontValue } from "font-services/interfaces";
 
 import { Gui, getGui } from "project-editor/features/gui/gui";
 
-const path = EEZStudio.electron.remote.require("path");
-
 ////////////////////////////////////////////////////////////////////////////////
 
 function formatEncoding(encoding: number) {
@@ -68,6 +66,7 @@ export function browseGlyph(glyph: Glyph) {
     }
 
     function isNonBdfFont(obj: any) {
+        const path = EEZStudio.electron.remote.require("path");
         return isFont(obj) && path.extname(obj["filePath"]) != ".bdf";
     }
 
@@ -2053,6 +2052,7 @@ export class Font extends EezObject {
             }
 
             function isNonBdfFont(obj: EezObject) {
+                const path = EEZStudio.electron.remote.require("path");
                 return isFont(obj) && path.extname(getProperty(obj, "filePath")) != ".bdf";
             }
 

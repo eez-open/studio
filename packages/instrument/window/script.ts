@@ -323,6 +323,8 @@ function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
             console.log("Script execution done!");
         })
         .catch(err => {
+            console.error(err);
+
             let lineNumber;
             let columnNumber;
             const match = err.stack.match(/\<anonymous\>\:(\d+)\:(\d+)/);

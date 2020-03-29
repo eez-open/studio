@@ -78,8 +78,6 @@ import { getAllMetrics } from "project-editor/project/metrics";
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
 const ipcRenderer = EEZStudio.electron.ipcRenderer;
-const path = EEZStudio.electron.remote.require("path");
-const fs = EEZStudio.electron.remote.require("fs");
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1506,6 +1504,8 @@ class ProjectStoreClass {
     }
 
     updateProjectWindowState() {
+        const path = EEZStudio.electron.remote.require("path");
+
         let title = "";
 
         if (this.project) {
@@ -1543,10 +1543,12 @@ class ProjectStoreClass {
     }
 
     getFilePathRelativeToProjectPath(absoluteFilePath: string) {
+        const path = EEZStudio.electron.remote.require("path");
         return path.relative(path.dirname(this.filePath), absoluteFilePath);
     }
 
     getAbsoluteFilePath(relativeFilePath: string) {
+        const path = EEZStudio.electron.remote.require("path");
         return this.filePath
             ? path.resolve(
                   path.dirname(this.filePath),
@@ -1556,6 +1558,7 @@ class ProjectStoreClass {
     }
 
     getFolderPathRelativeToProjectPath(absoluteFolderPath: string) {
+        const path = EEZStudio.electron.remote.require("path");
         let folder = path.relative(path.dirname(this.filePath), absoluteFolderPath);
         if (folder == "") {
             folder = ".";
@@ -1644,6 +1647,7 @@ class ProjectStoreClass {
 
     loadUIState(projectFilePath: string) {
         return new Promise<any>((resolve, reject) => {
+            const fs = EEZStudio.electron.remote.require("fs");
             fs.readFile(getUIStateFilePath(projectFilePath), "utf8", (err: any, data: string) => {
                 if (err) {
                     resolve({});
@@ -1656,6 +1660,7 @@ class ProjectStoreClass {
 
     saveUIState() {
         if (this.filePath && UIStateStore.isModified) {
+            const fs = EEZStudio.electron.remote.require("fs");
             fs.writeFile(
                 getUIStateFilePath(this.filePath),
                 UIStateStore.save(),

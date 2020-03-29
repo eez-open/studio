@@ -251,6 +251,7 @@ class ShortcutRow implements IRow {
                 .map(shortcut => this.getExtension(shortcut))
                 .filter(extension => !!extension)
                 .map(extension => extension!.displayName || extension!.name)
+                .filter((value, index, self) => self.indexOf(value) === index) // unique
                 .join(",");
         } else {
             return this.getGroupName(this.props.shortcut);
@@ -263,6 +264,7 @@ class ShortcutRow implements IRow {
             return this.props.shortcut
                 .map(shortcut => this.getExtension(shortcut))
                 .filter(extension => !!extension)
+                .filter((value, index, self) => self.indexOf(value) === index) // unique
                 .map(extension => (
                     <div key={extension!.id}>{extension!.displayName || extension!.name}</div>
                 ));
