@@ -65,7 +65,7 @@ export class List extends React.Component<
         const { renderNode, tabIndex } = this.props;
 
         let nodes = this.props.nodes.map(node => {
-            let className = classNames({
+            let className = classNames("EezStudio_ListItem", {
                 EezStudio_Selected: node.selected
             });
 

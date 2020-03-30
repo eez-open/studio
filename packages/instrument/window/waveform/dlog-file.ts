@@ -119,6 +119,7 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
 
     function getUnit(unit: number) {
         enum FirmwareUnit {
+            UNIT_NONE = -1,
             UNIT_UNKNOWN,
             UNIT_VOLT,
             UNIT_MILLI_VOLT,
@@ -135,8 +136,16 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
             UNIT_KOHM,
             UNIT_MOHM,
             UNIT_PERCENT,
-            UNIT_FREQUENCY,
-            UNIT_JOULE
+            UNIT_HERTZ,
+            UNIT_MILLI_HERTZ,
+            UNIT_KHERTZ,
+            UNIT_MHERTZ,
+            UNIT_JOULE,
+            UNIT_FARAD,
+            UNIT_MILLI_FARAD,
+            UNIT_MICRO_FARAD,
+            UNIT_NANO_FARAD,
+            UNIT_PICO_FARAD
         }
 
         if (unit === FirmwareUnit.UNIT_VOLT) {
@@ -225,7 +234,7 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
 
                 yAxisIndex--;
                 while (yAxisIndex >= yAxes.length) {
-                    yAxes.push(Object.assign({}, yAxis));
+                    yAxes.push(JSON.parse(JSON.stringify(yAxis)));
                 }
 
                 fieldDataLength -= 1;

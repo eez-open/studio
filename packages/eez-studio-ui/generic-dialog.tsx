@@ -125,10 +125,6 @@ export class RadioGroupProperty extends React.Component<
 }
 
 const Card = styled.div`
-    background: #fff;
-    border-radius: 2px;
-    display: inline-block;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
     margin-left: 20px;
 `;
 
