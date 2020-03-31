@@ -227,9 +227,12 @@ class FileUploadDialog extends React.Component<
 
     @computed get destinationFoldePathSuggestions() {
         if (this.instructions.favoriteDestinationPaths) {
-            return this.instructions.favoriteDestinationPaths.map(
-                favoriteDestinationPath => favoriteDestinationPath.path
-            );
+            return this.instructions.favoriteDestinationPaths
+                .map(favoriteDestinationPath => favoriteDestinationPath.path)
+                .filter(
+                    (favoriteDestinationPath, index, self) =>
+                        self.indexOf(favoriteDestinationPath) == index
+                );
         }
         return undefined;
     }
