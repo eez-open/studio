@@ -48,13 +48,21 @@ class Action extends React.Component<
 
 @observer
 export class TextAction extends React.Component<
-    { text: string; title: string; onClick: () => void; selected?: boolean },
+    {
+        text: string;
+        icon?: string;
+        title: string;
+        onClick: () => void;
+        selected?: boolean;
+        enabled?: boolean;
+        style?: React.CSSProperties;
+    },
     {}
 > {
     render() {
         return (
             <Action className="EezStudio_TextAction" {...this.props}>
-                {this.props.text}
+                {this.props.icon && <Icon icon={this.props.icon} />} {this.props.text}
             </Action>
         );
     }

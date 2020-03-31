@@ -51,6 +51,10 @@ export interface IInstrumentProperties {
         finishCommand?: string;
         abortCommand?: string;
         chunkSize?: number;
+        favoriteDestinationPaths?: {
+            ext?: string;
+            path: string;
+        }[];
     };
 }
 

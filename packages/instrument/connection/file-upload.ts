@@ -27,6 +27,11 @@ export interface IFileUploadInstructions {
     finishCommandTemplate?: string;
     abortCommandTemplate?: string;
     chunkSize: number;
+
+    favoriteDestinationPaths?: {
+        ext?: string;
+        path: string;
+    }[];
 }
 
 export async function upload(oid: number, instructions: IFileUploadInstructions) {}

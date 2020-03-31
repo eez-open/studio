@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
+import { computed } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
@@ -13,7 +13,6 @@ import { ListContainer, List, IListNode } from "eez-studio-ui/list";
 @observer
 export class PropertyEnclosure extends React.Component<
     {
-        advanced: boolean; // show this property in "Advanced properties" section
         errors?: string[];
         style?: React.CSSProperties;
         className?: string;
@@ -22,9 +21,7 @@ export class PropertyEnclosure extends React.Component<
     {}
 > {
     render() {
-        let className = classNames(this.props.className, {
-            advanced: this.props.errors ? false : this.props.advanced
-        });
+        let className = classNames(this.props.className);
 
         let result = (
             <tr key="property" className={className} style={this.props.style}>
@@ -57,13 +54,12 @@ export class StaticProperty extends React.Component<
     {
         name: string;
         value: string;
-        advanced?: boolean;
     },
     {}
 > {
     render() {
         return (
-            <PropertyEnclosure advanced={this.props.advanced || false}>
+            <PropertyEnclosure>
                 <td className="PropertyName">{this.props.name}</td>
                 <td className="StaticPropertyValue">
                     {(this.props.value && this.props.value.toString()) || ""}
@@ -78,13 +74,12 @@ export class BytesProperty extends React.Component<
     {
         name: string;
         value: number;
-        advanced?: boolean;
     },
     {}
 > {
     render() {
         return (
-            <PropertyEnclosure advanced={this.props.advanced || false}>
+            <PropertyEnclosure>
                 <td className="PropertyName">{this.props.name}</td>
                 <td className="StaticPropertyValue">{formatBytes(this.props.value)}</td>
             </PropertyEnclosure>
@@ -101,7 +96,6 @@ export class InputProperty extends React.Component<
         suggestions?: string[];
         title?: string;
         onChange: (value: any) => void;
-        advanced?: boolean;
         type: string;
         errors?: string[];
         min?: number;
@@ -174,11 +168,7 @@ export class InputProperty extends React.Component<
         }
 
         return (
-            <PropertyEnclosure
-                advanced={this.props.advanced || false}
-                errors={this.props.errors}
-                title={this.props.title}
-            >
+            <PropertyEnclosure errors={this.props.errors} title={this.props.title}>
                 {content}
             </PropertyEnclosure>
         );
@@ -194,7 +184,6 @@ export class TextInputProperty extends React.Component<
         suggestions?: string[];
         title?: string;
         onChange: (value: string) => void;
-        advanced?: boolean;
         errors?: string[];
     },
     {}
@@ -211,7 +200,6 @@ export class MultilineTextInputProperty extends React.Component<
         name?: string;
         value: any;
         onChange: (value: any) => void;
-        advanced?: boolean;
         errors?: string[];
         rows: number;
         readOnly?: boolean;
@@ -247,11 +235,7 @@ export class MultilineTextInputProperty extends React.Component<
             content = <td colSpan={2}>{input}</td>;
         }
 
-        return (
-            <PropertyEnclosure advanced={this.props.advanced || false} errors={this.props.errors}>
-                {content}
-            </PropertyEnclosure>
-        );
+        return <PropertyEnclosure errors={this.props.errors}>{content}</PropertyEnclosure>;
     }
 }
 
@@ -262,7 +246,6 @@ export class NumberInputProperty extends React.Component<
         name?: string;
         value: number;
         onChange: (value: number) => void;
-        advanced?: boolean;
         errors?: string[];
         min?: number;
         max?: number;
@@ -286,7 +269,6 @@ export class RichTextProperty extends React.Component<
         name: string;
         value?: string;
         onChange: (value: string) => void;
-        advanced?: boolean;
     },
     {}
 > {
@@ -325,7 +307,7 @@ export class RichTextProperty extends React.Component<
 
     render() {
         return (
-            <PropertyEnclosure advanced={this.props.advanced || false}>
+            <PropertyEnclosure>
                 <td colSpan={2}>
                     <div
                         ref={(ref: any) => (this.div = ref)}
@@ -342,7 +324,6 @@ export class StaticRichTextProperty extends React.Component<
     {
         name?: string;
         value: string;
-        advanced?: boolean;
     },
     {}
 > {
@@ -388,7 +369,7 @@ export class StaticRichTextProperty extends React.Component<
 
     render() {
         return (
-            <PropertyEnclosure advanced={this.props.advanced || false}>
+            <PropertyEnclosure>
                 <td colSpan={2}>
                     <div
                         ref={(ref: any) => (this.div = ref)}
@@ -408,7 +389,6 @@ export class SelectProperty extends React.Component<
         value: string;
         onChange: (value: string) => void;
         inputGroupButton?: JSX.Element;
-        advanced?: boolean;
         selectStyle?: React.CSSProperties;
         errors?: string[];
     },
@@ -422,7 +402,7 @@ export class SelectProperty extends React.Component<
         });
 
         return (
-            <PropertyEnclosure advanced={this.props.advanced || false} errors={this.props.errors}>
+            <PropertyEnclosure errors={this.props.errors}>
                 <td>
                     <label className="PropertyName col-form-label" htmlFor={id}>
                         {this.props.name}
@@ -456,7 +436,6 @@ export class SelectFromListProperty extends React.Component<
         nodes: IListNode[];
         renderNode?: (node: IListNode) => JSX.Element;
         onChange: (value: IListNode) => void;
-        advanced?: boolean;
         errors?: string[];
     },
     {}
@@ -465,7 +444,7 @@ export class SelectFromListProperty extends React.Component<
         let id = this.props.id || guid();
 
         return (
-            <PropertyEnclosure advanced={this.props.advanced || false} errors={this.props.errors}>
+            <PropertyEnclosure errors={this.props.errors}>
                 <td colSpan={2}>
                     {this.props.name && (
                         <label className="PropertyName col-form-label" htmlFor={id}>
@@ -492,14 +471,13 @@ export class BooleanProperty extends React.Component<
         name: string;
         value: boolean;
         onChange: (value: boolean) => void;
-        advanced?: boolean;
         style?: React.CSSProperties;
     },
     {}
 > {
     render() {
         return (
-            <PropertyEnclosure advanced={this.props.advanced || false} style={this.props.style}>
+            <PropertyEnclosure style={this.props.style}>
                 <td colSpan={2}>
                     <div className="form-check">
                         <label className="form-check-label">
@@ -525,7 +503,6 @@ export class KeybindingProperty extends React.Component<
         name?: string;
         value: string;
         onChange: (value: string) => void;
-        advanced?: boolean;
         errors?: string[];
     },
     {}
@@ -643,11 +620,7 @@ export class KeybindingProperty extends React.Component<
             content = <td colSpan={2}>{input}</td>;
         }
 
-        return (
-            <PropertyEnclosure advanced={this.props.advanced || false} errors={this.props.errors}>
-                {content}
-            </PropertyEnclosure>
-        );
+        return <PropertyEnclosure errors={this.props.errors}>{content}</PropertyEnclosure>;
     }
 }
 
@@ -658,7 +631,6 @@ export class ColorInputProperty extends React.Component<
         name?: string;
         value: string;
         onChange: (value: string) => void;
-        advanced?: boolean;
         errors?: string[];
     },
     {}
@@ -669,44 +641,15 @@ export class ColorInputProperty extends React.Component<
 }
 
 @observer
-export class PropertyList extends React.Component<
-    { className?: string; withAdvancedProperties?: boolean },
-    {}
-> {
-    @observable
-    showAdvanced = false;
-
-    constructor(props: any) {
-        super(props);
-        this.toggleShowAdvanced = this.toggleShowAdvanced.bind(this);
-    }
-
-    @action
-    toggleShowAdvanced() {
-        this.showAdvanced = !this.showAdvanced;
-    }
-
+export class PropertyList extends React.Component<{
+    className?: string;
+}> {
     render() {
-        let className = classNames("EezStudio_PropertyList", this.props.className, {
-            showAdvanced: this.showAdvanced
-        });
+        let className = classNames("EezStudio_PropertyList", this.props.className);
 
         return (
             <table className={className}>
-                <tbody>
-                    {this.props.children}
-                    {this.props.withAdvancedProperties && (
-                        <tr>
-                            <td colSpan={2}>
-                                <a href="#" onClick={this.toggleShowAdvanced}>
-                                    {this.showAdvanced
-                                        ? "< Hide advanced properties"
-                                        : "Show advanced properties >"}
-                                </a>
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
+                <tbody>{this.props.children}</tbody>
             </table>
         );
     }
@@ -775,7 +718,6 @@ export class RangeProperty extends React.Component<
         name?: string;
         value: number;
         onChange: (value: number) => void;
-        advanced?: boolean;
         errors?: string[];
         min?: number;
         max?: number;

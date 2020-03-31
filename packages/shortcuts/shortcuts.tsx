@@ -113,7 +113,7 @@ export class ShortcutsToolbarButtons extends React.Component<
                     text="Add Shortcut"
                     title="Add shortcut"
                     onClick={this.addShortcut}
-                    className="btn-success"
+                    className="btn-primary"
                 />
             );
         }

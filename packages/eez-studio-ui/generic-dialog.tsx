@@ -100,7 +100,6 @@ export class RadioGroupProperty extends React.Component<
     {
         id?: string;
         name: string;
-        advanced?: boolean;
         errors?: string[];
     },
     {}
@@ -109,7 +108,7 @@ export class RadioGroupProperty extends React.Component<
         let id = this.props.id || guid();
 
         return (
-            <PropertyEnclosure advanced={this.props.advanced || false} errors={this.props.errors}>
+            <PropertyEnclosure errors={this.props.errors}>
                 <td>
                     <label className="PropertyName col-form-label" htmlFor={id}>
                         {this.props.name}
@@ -445,7 +444,6 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             return (
                                 <PropertyEnclosure
                                     key={fieldProperties.name}
-                                    advanced={false}
                                     errors={errors}
                                     className={fieldProperties.enclosureClassName}
                                 >

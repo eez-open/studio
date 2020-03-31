@@ -15,7 +15,6 @@ import { HistoryView, HistoryTools } from "instrument/window/history/history-vie
 
 import { ShortcutsToolbar } from "instrument/window/terminal/toolbar";
 import { CommandsBrowser } from "instrument/window/terminal/commands-browser";
-import { showFileUploadDialog } from "instrument/window/terminal/file-upload-dialog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -95,7 +94,7 @@ class Input extends React.Component<
     {
         appStore: InstrumentAppStore;
         sendCommand: () => void;
-        handleSendFileClick: (() => void) | undefined;
+        sendFileToInstrumentHandler: (() => void) | undefined;
     },
     {}
 > {
@@ -251,16 +250,6 @@ class Input extends React.Component<
                         title="Run command"
                     />
                 </div>
-                {this.props.handleSendFileClick && (
-                    <div>
-                        <IconAction
-                            icon="material:file_upload"
-                            onClick={this.props.handleSendFileClick}
-                            enabled={this.props.appStore.instrument!.connection.isConnected}
-                            title="Upload file"
-                        />
-                    </div>
-                )}
             </InputContainer>
         );
     }
@@ -301,20 +290,6 @@ export class Terminal extends React.Component<{ appStore: InstrumentAppStore }, 
         const { appStore } = this.props;
         const instrument = appStore.instrument!;
 
-        let handleSendFileClick;
-        if (this.props.appStore.instrument!.getFileDownloadProperty()) {
-            const fileUploadInstructions =
-                instrument.lastFileUploadInstructions || instrument.defaultFileUploadInstructions;
-
-            if (fileUploadInstructions) {
-                handleSendFileClick = () => {
-                    showFileUploadDialog(fileUploadInstructions, instructions => {
-                        instrument.connection.upload(instructions);
-                    });
-                };
-            }
-        }
-
         const terminal = (
             <TerminalBodyContainer>
                 <TerminalBody>
@@ -329,7 +304,7 @@ export class Terminal extends React.Component<{ appStore: InstrumentAppStore }, 
                         instrument.connection.send(terminalState.command);
                         terminalState.command = "";
                     }}
-                    handleSendFileClick={handleSendFileClick}
+                    sendFileToInstrumentHandler={instrument.sendFileToInstrumentHandler}
                 />
                 <ShortcutsToolbar
                     appStore={appStore}

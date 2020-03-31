@@ -41,6 +41,8 @@ import * as UiPropertiesModule from "eez-studio-ui/properties";
 
 import * as AppStoreModule from "instrument/window/app-store";
 
+import { showFileUploadDialog } from "instrument/window/terminal/file-upload-dialog";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_LISTS_MAX_POINTS = 256;
@@ -475,7 +477,8 @@ export class InstrumentObject {
                 sendChunkCommandTemplate: instructions.sendChunkCommand || "",
                 finishCommandTemplate: instructions.finishCommand || "",
                 abortCommandTemplate: instructions.abortCommand || "",
-                chunkSize: instructions.chunkSize || 1024
+                chunkSize: instructions.chunkSize || 1024,
+                favoriteDestinationPaths: instructions.favoriteDestinationPaths || undefined
             };
         } else {
             return undefined;
@@ -896,6 +899,30 @@ export class InstrumentObject {
         if (response) {
             return response.type;
         }
+        return undefined;
+    }
+
+    @computed
+    get sendFileToInstrumentHandler() {
+        if (this.getFileDownloadProperty()) {
+            const fileUploadInstructions =
+                this.lastFileUploadInstructions || this.defaultFileUploadInstructions;
+
+            if (fileUploadInstructions) {
+                if (this.defaultFileUploadInstructions) {
+                    fileUploadInstructions.favoriteDestinationPaths = this.defaultFileUploadInstructions.favoriteDestinationPaths;
+                }
+
+                const instrument = this;
+
+                return () => {
+                    showFileUploadDialog(fileUploadInstructions, instructions => {
+                        instrument.connection.upload(instructions);
+                    });
+                };
+            }
+        }
+
         return undefined;
     }
 }

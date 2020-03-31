@@ -4,6 +4,8 @@ import { bind } from "bind-decorator";
 import classNames from "classnames";
 
 import { IDialogComponentProps } from "eez-studio-ui/dialog";
+import { Icon } from "eez-studio-ui/icon";
+import { IconAction } from "eez-studio-ui/action";
 import { styled } from "eez-studio-ui/styled-components";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,29 +79,45 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
     render() {
         const props = this.props;
 
+        const buttons = props.buttons.map(button =>
+            button.text ? (
+                <button
+                    key={button.id}
+                    type="button"
+                    className={classNames(
+                        "btn",
+                        button.text
+                            ? {
+                                  "btn-primary": button.type === "primary",
+                                  "btn-secondary": button.type === "secondary",
+                                  "btn-danger": button.type === "danger",
+                                  "float-left": button.position === "left"
+                              }
+                            : "btn-outline-secondary"
+                    )}
+                    onClick={button.onClick}
+                    disabled={button.disabled}
+                    style={button.style}
+                >
+                    {button.text ? button.text : <Icon icon={button.icon!}></Icon>}
+                </button>
+            ) : (
+                <IconAction
+                    key={button.id}
+                    icon={button.icon!}
+                    title={button.title || ""}
+                    style={{ color: "#333" }}
+                    onClick={button.onClick}
+                    enabled={!button.disabled}
+                />
+            )
+        );
+
         if (props.modal != undefined && !props.modal) {
             return (
                 <NonModalDialogContainer>
                     <div>{props.children}</div>
-                    <div>
-                        {props.buttons.map(button => (
-                            <button
-                                key={button.id}
-                                type="button"
-                                className={classNames("btn", {
-                                    "btn-primary": button.type === "primary",
-                                    "btn-secondary": button.type === "secondary",
-                                    "btn-danger": button.type === "danger",
-                                    "float-left": button.position === "left"
-                                })}
-                                onClick={button.onClick}
-                                disabled={button.disabled}
-                                style={button.style}
-                            >
-                                {button.text}
-                            </button>
-                        ))}
-                    </div>
+                    <div>{buttons}</div>
                 </NonModalDialogContainer>
             );
         }
@@ -141,23 +159,7 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
                         <div className="modal-body">{props.children}</div>
 
                         <div className="modal-footer" style={{ justifyContent: "flex-start" }}>
-                            {props.buttons.map(button => (
-                                <button
-                                    key={button.id}
-                                    type="button"
-                                    className={classNames("btn", {
-                                        "btn-primary": button.type === "primary",
-                                        "btn-secondary": button.type === "secondary",
-                                        "btn-danger": button.type === "danger",
-                                        "float-left": button.position === "left"
-                                    })}
-                                    onClick={button.onClick}
-                                    disabled={button.disabled}
-                                    style={button.style}
-                                >
-                                    {button.text}
-                                </button>
-                            ))}
+                            {buttons}
                         </div>
                     </div>
                 </form>

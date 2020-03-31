@@ -260,7 +260,6 @@ interface CodeEditorPropertyProps {
     onChange: (value: string) => void;
     onBlur?: () => void;
     height?: number;
-    advanced?: boolean;
     errors?: string[];
     readOnly: boolean;
     lineNumber?: number;
@@ -304,10 +303,6 @@ export class CodeEditorProperty extends React.Component<CodeEditorPropertyProps,
             content = <td colSpan={2}>{input}</td>;
         }
 
-        return (
-            <PropertyEnclosure advanced={this.props.advanced || false} errors={this.props.errors}>
-                {content}
-            </PropertyEnclosure>
-        );
+        return <PropertyEnclosure errors={this.props.errors}>{content}</PropertyEnclosure>;
     }
 }

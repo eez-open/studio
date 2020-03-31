@@ -4,7 +4,7 @@ import { bind } from "bind-decorator";
 
 import styled from "eez-studio-ui/styled-components";
 import { confirm } from "eez-studio-ui/dialog-electron";
-import { ButtonAction, IconAction } from "eez-studio-ui/action";
+import { ButtonAction, TextAction, IconAction } from "eez-studio-ui/action";
 
 import { IAppStore } from "instrument/window/history/history";
 
@@ -60,7 +60,7 @@ export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
         } else {
             body = (
                 <React.Fragment>
-                    <ButtonAction
+                    <TextAction
                         text="Start Session"
                         title="Start a new session"
                         onClick={this.props.appStore.history.sessions.startNewSession}

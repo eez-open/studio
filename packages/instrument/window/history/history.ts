@@ -1,7 +1,7 @@
 import { observable, computed, runInAction, action, reaction } from "mobx";
 import { bind } from "bind-decorator";
 
-import { formatDate } from "eez-studio-shared/util";
+import { formatTransferSpeed, formatDate } from "eez-studio-shared/util";
 import { db, dbQuery } from "eez-studio-shared/db";
 import {
     IActivityLogEntry,
@@ -33,6 +33,7 @@ import {
     moveToBottomOfHistory,
     showHistoryItem
 } from "instrument/window/history/history-view";
+import { FileHistoryItem } from "instrument/window/history/items/file";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -79,8 +80,10 @@ export interface IAppStore {
         id: string;
         connection: {
             abortLongOperation(): void;
+            isConnected: boolean;
         };
         listsProperty?: any;
+        sendFileToInstrumentHandler?: () => void;
     };
 
     navigationStore: INavigationStore;
@@ -1204,6 +1207,23 @@ export class History {
         } else {
             this.itemInTheCenterOfTheView = undefined;
         }
+    }
+
+    @computed
+    get sendFileStatus() {
+        if (this.items.length > 0) {
+            const lastItem = this.items[this.items.length - 1];
+            if (lastItem instanceof FileHistoryItem) {
+                if (lastItem.expectedDataLength) {
+                    let percent = lastItem.expectedDataLength
+                        ? Math.floor((100 * lastItem.dataLength) / lastItem.expectedDataLength)
+                        : 0;
+                    let transferSpeed = formatTransferSpeed(lastItem.transferSpeed);
+                    return `Sending file... ${percent}% (${lastItem.dataLength} of ${lastItem.expectedDataLength}) ${transferSpeed}`;
+                }
+            }
+        }
+        return undefined;
     }
 }
 

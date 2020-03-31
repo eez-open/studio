@@ -34,14 +34,17 @@ class HomeAppStore implements IAppStore {
         id: string;
         connection: {
             abortLongOperation(): void;
+            isConnected: boolean;
         };
         listsProperty?: any;
+        sendFileToInstrumentHandler?: () => void;
     } = {
         id: "0",
         connection: {
             abortLongOperation() {
                 // @todo
-            }
+            },
+            isConnected: false
         }
     };
 

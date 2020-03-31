@@ -15,6 +15,7 @@ import { InstrumentAppStore } from "instrument/window/app-store";
 @observer
 export class ShortcutButton extends React.Component<
     {
+        appStore: InstrumentAppStore;
         shortcut: IShortcut;
         executeShortcut: () => void;
     },
@@ -40,6 +41,7 @@ export class ShortcutButton extends React.Component<
                 onClick={this.props.executeShortcut}
                 className="btn-sm "
                 style={{ color: "white", backgroundColor: this.props.shortcut.toolbarButtonColor }}
+                enabled={this.props.appStore.instrument?.connection.isConnected}
             />
         );
     }
@@ -96,6 +98,7 @@ export class ShortcutsToolbar extends React.Component<
                 {this.shortcuts.map(shortcut => (
                     <ShortcutButton
                         key={shortcut.id}
+                        appStore={this.props.appStore}
                         shortcut={shortcut}
                         executeShortcut={() => this.props.executeShortcut(shortcut)}
                     />

@@ -18,7 +18,9 @@ export interface IDialogButton {
     onClick: (event: any) => void;
     disabled: boolean;
     style: React.CSSProperties;
-    text: string;
+    text?: string;
+    icon?: string;
+    title?: string;
 }
 
 export interface IDialogComponentProps {

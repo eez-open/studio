@@ -1,6 +1,7 @@
 import React from "react";
-import { observable, action } from "mobx";
+import { observable, action, computed } from "mobx";
 import { observer } from "mobx-react";
+import { bind } from "bind-decorator";
 
 import {
     getFileName,
@@ -25,6 +26,109 @@ import { FileInputProperty } from "eez-studio-ui/properties-electron";
 import { IFileUploadInstructions } from "instrument/connection/file-upload";
 
 @observer
+class FileUploadSettingsDialog extends React.Component<
+    {
+        instructions: IFileUploadInstructions;
+        callback: (instructions: IFileUploadInstructions) => void;
+    },
+    {}
+> {
+    constructor(props: any) {
+        super(props);
+        this.instructions = { ...this.props.instructions };
+    }
+
+    @observable instructions: IFileUploadInstructions;
+
+    validator = makeValidator({
+        startCommandTemplate: validators.required,
+        sendChunkCommandTemplate: validators.required,
+        chunkSize: validators.rangeInclusive(1, 4096)
+    });
+
+    @bind
+    async handleSubmit() {
+        if (!(await this.validator.checkValidity(this.instructions))) {
+            return false;
+        }
+        this.props.callback(this.instructions);
+        return true;
+    }
+
+    render() {
+        return (
+            <Dialog onOk={this.handleSubmit} size="medium">
+                <PropertyList>
+                    <BooleanProperty
+                        name="Use short (8.3) file names"
+                        value={this.instructions.shortFileName}
+                        onChange={action(
+                            (value: boolean) => (this.instructions.shortFileName = value)
+                        )}
+                    />
+
+                    <TextInputProperty
+                        name="Start command"
+                        value={this.instructions.startCommandTemplate}
+                        onChange={action(
+                            (value: string) => (this.instructions.startCommandTemplate = value)
+                        )}
+                        errors={this.validator.errors.startCommandTemplate}
+                    />
+
+                    <TextInputProperty
+                        name="File size command"
+                        value={this.instructions.fileSizeCommandTemplate || ""}
+                        onChange={action(
+                            (value: string) => (this.instructions.fileSizeCommandTemplate = value)
+                        )}
+                    />
+
+                    <TextInputProperty
+                        name="Send one chunk command"
+                        value={this.instructions.sendChunkCommandTemplate}
+                        onChange={action(
+                            (value: string) => (this.instructions.sendChunkCommandTemplate = value)
+                        )}
+                        errors={this.validator.errors.sendChunkCommandTemplate}
+                    />
+
+                    <TextInputProperty
+                        name="Finish command"
+                        value={this.instructions.finishCommandTemplate || ""}
+                        onChange={action(
+                            (value: string) => (this.instructions.finishCommandTemplate = value)
+                        )}
+                    />
+
+                    <TextInputProperty
+                        name="Abort command"
+                        value={this.instructions.abortCommandTemplate || ""}
+                        onChange={action(
+                            (value: string) => (this.instructions.abortCommandTemplate = value)
+                        )}
+                    />
+
+                    <NumberInputProperty
+                        name="Chunk size"
+                        value={this.instructions.chunkSize}
+                        onChange={action((value: number) => (this.instructions.chunkSize = value))}
+                        errors={this.validator.errors.chunkSize}
+                    />
+                </PropertyList>
+            </Dialog>
+        );
+    }
+}
+
+function showAdvancedSettingsDialog(
+    instructions: IFileUploadInstructions,
+    callback: (instructions: IFileUploadInstructions) => void
+) {
+    showDialog(<FileUploadSettingsDialog instructions={instructions} callback={callback} />);
+}
+
+@observer
 class FileUploadDialog extends React.Component<
     {
         instructions: IFileUploadInstructions;
@@ -35,13 +139,12 @@ class FileUploadDialog extends React.Component<
     constructor(props: any) {
         super(props);
 
-        this.handleSubmit = this.handleSubmit.bind(this);
-
         this.instructions = { ...this.props.instructions };
     }
 
     @observable instructions: IFileUploadInstructions;
     @observable destinationFileNameChanged = false;
+    @observable destinationFolderPathChanged = false;
 
     validator = makeValidator({
         sourceFilePath: [
@@ -86,13 +189,10 @@ class FileUploadDialog extends React.Component<
                 }
                 return null;
             }
-        ],
-
-        startCommandTemplate: validators.required,
-        sendChunkCommandTemplate: validators.required,
-        chunkSize: validators.rangeInclusive(1, 4096)
+        ]
     });
 
+    @bind
     async handleSubmit() {
         if (!(await this.validator.checkValidity(this.instructions))) {
             return false;
@@ -109,10 +209,62 @@ class FileUploadDialog extends React.Component<
         }
     }
 
+    deriveDestinationFolderPathFromSourceFilePath() {
+        const sourceFilePath = this.instructions.sourceFilePath;
+        const favoriteDestinationPaths = this.instructions.favoriteDestinationPaths;
+        if (sourceFilePath && favoriteDestinationPaths) {
+            const favoriteDestinationPath = favoriteDestinationPaths.find(
+                favoriteDestinationPath =>
+                    favoriteDestinationPath.ext &&
+                    sourceFilePath!.endsWith(favoriteDestinationPath.ext)
+            );
+            if (favoriteDestinationPath) {
+                return favoriteDestinationPath.path;
+            }
+        }
+        return this.instructions.destinationFolderPath;
+    }
+
+    @computed get destinationFoldePathSuggestions() {
+        if (this.instructions.favoriteDestinationPaths) {
+            return this.instructions.favoriteDestinationPaths.map(
+                favoriteDestinationPath => favoriteDestinationPath.path
+            );
+        }
+        return undefined;
+    }
+
     render() {
         return (
-            <Dialog onOk={this.handleSubmit} size="large">
-                <PropertyList withAdvancedProperties={true}>
+            <Dialog
+                onOk={this.handleSubmit}
+                size="large"
+                additionalButton={{
+                    id: "settings",
+                    type: "secondary",
+                    position: "left",
+                    onClick: () =>
+                        showAdvancedSettingsDialog(
+                            this.instructions,
+                            action((instructions: IFileUploadInstructions) => {
+                                let updateDestinationFileName =
+                                    this.instructions.destinationFileName ===
+                                    this.deriveDestinationFileNameFromSourceFilePath();
+
+                                Object.assign(this.instructions, instructions);
+
+                                if (updateDestinationFileName) {
+                                    this.instructions.destinationFileName = this.deriveDestinationFileNameFromSourceFilePath();
+                                }
+                            })
+                        ),
+                    disabled: false,
+                    style: { marginRight: "auto" },
+                    icon: "material:settings",
+                    title: "Show advanced settings"
+                }}
+            >
+                <PropertyList>
                     <FileInputProperty
                         name="Source file path"
                         value={this.instructions.sourceFilePath || ""}
@@ -125,6 +277,14 @@ class FileUploadDialog extends React.Component<
                             }
                             if (!destinationFileName || !this.destinationFileNameChanged) {
                                 this.instructions.destinationFileName = this.deriveDestinationFileNameFromSourceFilePath();
+                            }
+
+                            let destinationFolderPath = this.instructions.destinationFolderPath;
+                            if (destinationFolderPath) {
+                                destinationFolderPath = destinationFolderPath.trim();
+                            }
+                            if (!destinationFolderPath || !this.destinationFolderPathChanged) {
+                                this.instructions.destinationFolderPath = this.deriveDestinationFolderPathFromSourceFilePath();
                             }
                         })}
                         errors={this.validator.errors.sourceFilePath}
@@ -143,82 +303,12 @@ class FileUploadDialog extends React.Component<
                     <TextInputProperty
                         name="Destination folder path"
                         value={this.instructions.destinationFolderPath}
-                        onChange={action(
-                            (value: string) => (this.instructions.destinationFolderPath = value)
-                        )}
-                        errors={this.validator.errors.destinationFolderPath}
-                    />
-
-                    <BooleanProperty
-                        name="Use short (8.3) file names"
-                        value={this.instructions.shortFileName}
-                        onChange={action((value: boolean) => {
-                            let updateDestinationFileName =
-                                this.instructions.destinationFileName ===
-                                this.deriveDestinationFileNameFromSourceFilePath();
-
-                            this.instructions.shortFileName = value;
-
-                            if (updateDestinationFileName) {
-                                this.instructions.destinationFileName = this.deriveDestinationFileNameFromSourceFilePath();
-                            }
+                        onChange={action((value: string) => {
+                            this.instructions.destinationFolderPath = value;
+                            this.destinationFolderPathChanged = true;
                         })}
-                        advanced={true}
-                    />
-
-                    <TextInputProperty
-                        name="Start command"
-                        value={this.instructions.startCommandTemplate}
-                        onChange={action(
-                            (value: string) => (this.instructions.startCommandTemplate = value)
-                        )}
-                        advanced={true}
-                        errors={this.validator.errors.startCommandTemplate}
-                    />
-
-                    <TextInputProperty
-                        name="File size command"
-                        value={this.instructions.fileSizeCommandTemplate || ""}
-                        onChange={action(
-                            (value: string) => (this.instructions.fileSizeCommandTemplate = value)
-                        )}
-                        advanced={true}
-                    />
-
-                    <TextInputProperty
-                        name="Send one chunk command"
-                        value={this.instructions.sendChunkCommandTemplate}
-                        onChange={action(
-                            (value: string) => (this.instructions.sendChunkCommandTemplate = value)
-                        )}
-                        advanced={true}
-                        errors={this.validator.errors.sendChunkCommandTemplate}
-                    />
-
-                    <TextInputProperty
-                        name="Finish command"
-                        value={this.instructions.finishCommandTemplate || ""}
-                        onChange={action(
-                            (value: string) => (this.instructions.finishCommandTemplate = value)
-                        )}
-                        advanced={true}
-                    />
-
-                    <TextInputProperty
-                        name="Abort command"
-                        value={this.instructions.abortCommandTemplate || ""}
-                        onChange={action(
-                            (value: string) => (this.instructions.abortCommandTemplate = value)
-                        )}
-                        advanced={true}
-                    />
-
-                    <NumberInputProperty
-                        name="Chunk size"
-                        value={this.instructions.chunkSize}
-                        onChange={action((value: number) => (this.instructions.chunkSize = value))}
-                        advanced={true}
-                        errors={this.validator.errors.chunkSize}
+                        errors={this.validator.errors.destinationFolderPath}
+                        suggestions={this.destinationFoldePathSuggestions}
                     />
                 </PropertyList>
             </Dialog>

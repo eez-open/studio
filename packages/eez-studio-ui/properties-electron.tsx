@@ -78,10 +78,6 @@ export class FileInputProperty extends React.Component<
             content = <td colSpan={2}>{input}</td>;
         }
 
-        return (
-            <PropertyEnclosure advanced={this.props.advanced || false} errors={this.props.errors}>
-                {content}
-            </PropertyEnclosure>
-        );
+        return <PropertyEnclosure errors={this.props.errors}>{content}</PropertyEnclosure>;
     }
 }

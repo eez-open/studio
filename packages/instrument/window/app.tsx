@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import styled from "eez-studio-ui/styled-components";
+import { ButtonAction } from "eez-studio-ui/action";
 import { AppRootComponent } from "eez-studio-ui/app";
 import { AlertDanger } from "eez-studio-ui/alert";
 import { Loader } from "eez-studio-ui/loader";
@@ -33,7 +34,6 @@ const ConnectionBar: typeof PanelHeader = styled(PanelHeader)`
     > div:nth-child(2) {
         display: flex;
         flex-direction: column;
-        flex-grow: 1;
 
         /* Instrument name */
         > div:nth-child(1) {
@@ -55,6 +55,11 @@ const ConnectionBar: typeof PanelHeader = styled(PanelHeader)`
                 padding: 1px 4px;
             }
         }
+    }
+
+    > div:nth-child(3) {
+        margin-left: 50px;
+        flex-grow: 1;
     }
 ` as any;
 
@@ -118,6 +123,28 @@ export class AppBar extends React.Component<
             );
         }
 
+        let sendFile;
+        if (this.instrument.sendFileToInstrumentHandler && this.instrument.connection.isConnected) {
+            if (this.props.appStore.history.sendFileStatus) {
+                if (
+                    this.props.appStore.navigationStore.mainNavigationSelectedItem !=
+                    this.props.appStore.navigationStore.terminalNavigationItem
+                ) {
+                    sendFile = this.props.appStore.history.sendFileStatus;
+                }
+            } else {
+                sendFile = (
+                    <ButtonAction
+                        icon="material:file_upload"
+                        text="Send File"
+                        onClick={this.instrument.sendFileToInstrumentHandler}
+                        title="Send file to instrument"
+                        className={"btn-primary"}
+                    ></ButtonAction>
+                );
+            }
+        }
+
         let toolbarButtons =
             this.props.selectedItem && this.props.selectedItem.renderToolbarButtons();
 
@@ -131,6 +158,8 @@ export class AppBar extends React.Component<
                     <div>{this.instrument.name}</div>
                     {connectionStatus}
                 </div>
+
+                <div>{sendFile}</div>
 
                 <Toolbar>{toolbarButtons}</Toolbar>
             </ConnectionBar>
