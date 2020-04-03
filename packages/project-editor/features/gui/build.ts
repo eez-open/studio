@@ -58,6 +58,7 @@ const WIDGET_TYPE_LIST_GRAPH = 18;
 const WIDGET_TYPE_APP_VIEW = 19;
 const WIDGET_TYPE_SCROLL_BAR = 20;
 const WIDGET_TYPE_PROGRESS = 21;
+const WIDGET_TYPE_CANVAS = 22;
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -716,6 +717,8 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
             type = WIDGET_TYPE_SCROLL_BAR;
         } else if (widget.type == "Progress") {
             type = WIDGET_TYPE_PROGRESS;
+        } else if (widget.type == "Canvas") {
+            type = WIDGET_TYPE_CANVAS;
         } else {
             type = WIDGET_TYPE_NONE;
         }
@@ -1207,6 +1210,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         }
         specific.addField(new String(rightButtonText));
     } else if (type == WIDGET_TYPE_PROGRESS) {
+    } else if (type == WIDGET_TYPE_CANVAS) {
     }
 
     result.addField(new ObjectPtr(specific));

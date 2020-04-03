@@ -487,6 +487,18 @@ export class Widget extends EezObject {
                     }
                 })
             );
+
+            additionalMenuItems.push(
+                new MenuItem({
+                    label: "Replace with Layout",
+                    click: async () => {
+                        const layoutWidget = await Widget.replaceWithLayout(objects as Widget[]);
+                        if (layoutWidget) {
+                            context.selectObject(layoutWidget);
+                        }
+                    }
+                })
+            );
         }
 
         if (objects.length === 1) {
@@ -667,6 +679,49 @@ export class Widget extends EezObject {
                     findClass("Page")!
                 )
             );
+
+            return DocumentStore.replaceObjects(
+                fromWidgets,
+                loadObject(
+                    fromWidgets[0]._parent,
+                    {
+                        type: "LayoutView",
+                        left: createWidgetsResult.left,
+                        top: createWidgetsResult.top,
+                        width: createWidgetsResult.width,
+                        height: createWidgetsResult.height,
+                        layout: layoutName
+                    },
+                    Widget
+                )
+            );
+        } catch (error) {
+            console.error(error);
+            return undefined;
+        }
+    }
+
+    static async replaceWithLayout(fromWidgets: Widget[]) {
+        try {
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "Layout name",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [validators.required]
+                        }
+                    ]
+                },
+                values: {
+                    name: ""
+                }
+            });
+
+            const layoutName = result.values.name;
+
+            const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
             return DocumentStore.replaceObjects(
                 fromWidgets,
@@ -3278,3 +3333,36 @@ export class ProgressWidget extends Widget {
 }
 
 registerClass(ProgressWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class CanvasWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        defaultValue: {
+            type: "Canvas",
+            left: 0,
+            top: 0,
+            width: 64,
+            height: 32
+        },
+
+        icon: "_images/widgets/Canvas.png"
+    });
+
+    draw(rect: Rect): HTMLCanvasElement | undefined {
+        let widget = this;
+        let style = widget.style;
+
+        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
+            let x1 = 0;
+            let y1 = 0;
+            let x2 = rect.width - 1;
+            let y2 = rect.height - 1;
+
+            draw.setColor(getStyleProperty(style, "backgroundColor"));
+            draw.fillRect(ctx, x1, y1, x2, y2, 0);
+        });
+    }
+}
+
+registerClass(CanvasWidget);
