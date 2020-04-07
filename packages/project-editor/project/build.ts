@@ -436,12 +436,8 @@ export function backgroundCheck() {
     if (setMessagesTimeoutId) {
         clearTimeout(setMessagesTimeoutId);
     }
-    setMessagesTimeoutId = setTimeout(
-        () => {
-            OutputSectionsStore.setMessages(Section.CHECKS, messages);
-        },
-        // wait a little bit more before showing messages while pages are still loaded
-        ProjectStore.project._allGuiPagesLoaded ? 100 : 1000
-    );
+    setMessagesTimeoutId = setTimeout(() => {
+        OutputSectionsStore.setMessages(Section.CHECKS, messages);
+    }, 100);
     //console.timeEnd("backgroundCheck");
 }

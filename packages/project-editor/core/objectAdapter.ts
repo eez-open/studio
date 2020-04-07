@@ -791,6 +791,8 @@ export interface ITreeAdapter {
     allRows: ITreeRow[];
     maxLevel?: number;
 
+    sortDirection?: SortDirectionType;
+
     getItemId(item: ITreeItem): string;
     getItemFromId(id: string): ITreeItem | undefined;
     getItemParent(item: ITreeItem): ITreeItem | undefined;
@@ -828,7 +830,7 @@ export class TreeAdapter implements ITreeAdapter {
         private item?: ITreeObjectAdapter,
         private filter?: (object: EezObject) => boolean,
         private collapsable?: boolean,
-        private sortDirection?: SortDirectionType,
+        public sortDirection?: SortDirectionType,
         public maxLevel?: number,
         onDoubleClick?: (object: EezObject) => void
     ) {
@@ -840,7 +842,7 @@ export class TreeAdapter implements ITreeAdapter {
     get allRows() {
         const { filter, collapsable, sortDirection, maxLevel } = this;
 
-        const draggable = sortDirection === undefined || sortDirection === "none";
+        const draggable = true;
 
         const children: ITreeRow[] = [];
 
@@ -993,7 +995,7 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     get draggableAdapter() {
-        return this.sortDirection === undefined || this.sortDirection === "none" ? this : undefined;
+        return this;
     }
 
     get isDragging() {
@@ -1180,7 +1182,7 @@ export class ListAdapter implements ITreeAdapter {
 
     constructor(
         private object: EezObject,
-        private sortDirection?: SortDirectionType,
+        public sortDirection?: SortDirectionType,
         onDoubleClick?: (object: EezObject) => void,
         navigationStore?: INavigationStore,
         dragAndDropManager?: DragAndDropManagerClass,
@@ -1224,11 +1226,7 @@ export class ListAdapter implements ITreeAdapter {
         if (this.searchText) {
             const searchText = this.searchText.toLowerCase();
             objects = objects.filter(object => {
-                return (
-                    objectToString(object)
-                        .toLowerCase()
-                        .indexOf(searchText) != -1
-                );
+                return objectToString(object).toLowerCase().indexOf(searchText) != -1;
             });
         }
 
@@ -1380,10 +1378,7 @@ export class ListAdapter implements ITreeAdapter {
     collapsableAdapter = undefined;
 
     get draggableAdapter() {
-        return (this.sortDirection === undefined || this.sortDirection === "none") &&
-            !this.searchText
-            ? this
-            : undefined;
+        return this;
     }
 
     get isDragging() {

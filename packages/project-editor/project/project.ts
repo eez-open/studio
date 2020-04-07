@@ -310,7 +310,6 @@ export class Project extends EezObject {
     @observable settings: Settings;
     @observable data: EezArrayObject<DataItem>;
     @observable actions: EezArrayObject<Action>;
-    @observable _allGuiPagesLoaded = false;
 
     @computed
     get dataItemsMap() {

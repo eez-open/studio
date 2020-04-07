@@ -159,13 +159,11 @@ class Toolbar extends React.Component {
                             title="Check"
                             icon="material:check"
                             onClick={() => ProjectStore.check()}
-                            enabled={ProjectStore.project._allGuiPagesLoaded}
                         />
                         <IconAction
                             title="Build"
                             icon="material:build"
                             onClick={() => ProjectStore.build()}
-                            enabled={ProjectStore.project._allGuiPagesLoaded}
                         />
                     </div>
                 </div>

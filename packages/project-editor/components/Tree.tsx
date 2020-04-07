@@ -479,9 +479,7 @@ export class Tree extends React.Component<TreeProps, {}> {
 
     @bind
     onKeyDown(event: any) {
-        let focusedItemId = $(this.treeDiv)
-            .find(".tree-row.selected")
-            .attr("data-object-id");
+        let focusedItemId = $(this.treeDiv).find(".tree-row.selected").attr("data-object-id");
 
         if (!focusedItemId) {
             return;
@@ -554,10 +552,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                 let $rows = $focusedItem.parent().find(".tree-row");
                 if ($rows.length == 1) {
                     let $row = $($rows[0]);
-                    $rows = $row
-                        .parent()
-                        .parent()
-                        .find(".tree-row");
+                    $rows = $row.parent().parent().find(".tree-row");
                     let newFocusedItemId = $($rows[0]).attr("data-object-id");
                     if (newFocusedItemId) {
                         this.onSelect(newFocusedItemId);
@@ -576,180 +571,186 @@ export class Tree extends React.Component<TreeProps, {}> {
         const treeAdapter = this.props.treeAdapter;
         const draggableAdapter = treeAdapter.draggableAdapter!;
 
-        const $treeDiv = $(this.treeDiv);
-        const $allRows = $treeDiv.find("[data-object-id]");
+        if (
+            this.props.treeAdapter.sortDirection == undefined ||
+            this.props.treeAdapter.sortDirection === "none"
+        ) {
+            const $treeDiv = $(this.treeDiv);
+            const $allRows = $treeDiv.find("[data-object-id]");
 
-        if ($allRows.length > 0) {
-            const firstRowRect = $allRows.get(0).getBoundingClientRect();
-            const treeDivRect = this.treeDiv.getBoundingClientRect();
-            let rowIndexAtCursor = Math.floor(
-                (event.nativeEvent.clientY - treeDivRect.top) / firstRowRect.height
-            );
+            if ($allRows.length > 0) {
+                const firstRowRect = $allRows.get(0).getBoundingClientRect();
+                const treeDivRect = this.treeDiv.getBoundingClientRect();
+                let rowIndexAtCursor = Math.floor(
+                    (event.nativeEvent.clientY - treeDivRect.top) / firstRowRect.height
+                );
 
-            if (rowIndexAtCursor >= 0 && rowIndexAtCursor < $allRows.length) {
-                const $row = $allRows.eq(rowIndexAtCursor);
-                const rowRect = $row.get(0).getBoundingClientRect();
+                if (rowIndexAtCursor >= 0 && rowIndexAtCursor < $allRows.length) {
+                    const $row = $allRows.eq(rowIndexAtCursor);
+                    const rowRect = $row.get(0).getBoundingClientRect();
 
-                const $label = $row.find("span");
-                const labelRect = $label.get(0).getBoundingClientRect();
+                    const $label = $row.find("span");
+                    const labelRect = $label.get(0).getBoundingClientRect();
 
-                const objectId = $row.attr("data-object-id");
-                let dropItem = treeAdapter.getItemFromId(objectId!)!;
+                    const objectId = $row.attr("data-object-id");
+                    let dropItem = treeAdapter.getItemFromId(objectId!)!;
 
-                let dropPosition: DropPosition | undefined;
-                let canDrop = false;
+                    let dropPosition: DropPosition | undefined;
+                    let canDrop = false;
 
-                const CHILD_OFFSET = 25;
+                    const CHILD_OFFSET = 25;
 
-                function checks() {
-                    const $row = $treeDiv.find(
-                        `[data-object-id="${treeAdapter.getItemId(dropItem)}"]`
-                    );
-                    const rowIndexAtCursor = $allRows.index($row);
-
-                    let prevObjectId;
-                    if (rowIndexAtCursor > 0) {
-                        const $prevRow = $allRows.eq(rowIndexAtCursor - 1);
-                        prevObjectId = $prevRow.attr("data-object-id");
-                    }
-
-                    let nextObjectId;
-                    if (rowIndexAtCursor < $allRows.length - 1) {
-                        const $nextRow = $allRows.eq(rowIndexAtCursor + 1);
-                        nextObjectId = $nextRow.attr("data-object-id");
-                    }
-
-                    canDrop = draggableAdapter.canDrop(
-                        dropItem,
-                        dropPosition!,
-                        prevObjectId,
-                        nextObjectId
-                    );
-                }
-
-                const $nextRow = $allRows.eq(rowIndexAtCursor + 1);
-                const nextObjectId = $nextRow.attr("data-object-id");
-                let nextItem = treeAdapter.getItemFromId(nextObjectId!)!;
-                let nextItemParent = nextItem && treeAdapter.getItemParent(nextItem);
-
-                if (event.nativeEvent.clientY < rowRect.top + rowRect.height / 2) {
-                    dropPosition = DropPosition.DROP_POSITION_BEFORE;
-
-                    checks();
-                } else {
-                    dropPosition = DropPosition.DROP_POSITION_AFTER;
-
-                    if (
-                        event.nativeEvent.clientX > labelRect.left + CHILD_OFFSET &&
-                        draggableAdapter.canDropInside(dropItem) &&
-                        !draggableAdapter.isAncestorOfDragObject(dropItem) &&
-                        !(
-                            rowIndexAtCursor + 1 < $allRows.length &&
-                            treeAdapter.isAncestor(nextItem, dropItem)
-                        )
-                    ) {
-                        dropPosition = DropPosition.DROP_POSITION_INSIDE;
-                        canDrop = true;
-                    } else if (dropItem === nextItemParent) {
-                        dropItem = nextItem;
-                        dropPosition = DropPosition.DROP_POSITION_BEFORE;
-                        checks();
-                    } else {
-                        let canDropToItem;
-
-                        while (true) {
-                            const $row = $treeDiv.find(
-                                `[data-object-id="${treeAdapter.getItemId(dropItem)}"]`
-                            );
-
-                            if ($row.length > 0) {
-                                canDrop = false;
-
-                                checks();
-
-                                if (canDrop) {
-                                    canDropToItem = dropItem;
-
-                                    const $label = $row.find("span");
-                                    const labelRect = $label.get(0).getBoundingClientRect();
-
-                                    if (event.nativeEvent.clientX > labelRect.left) {
-                                        break;
-                                    }
-                                }
-                            }
-
-                            const parentItem = treeAdapter.getItemParent(dropItem);
-
-                            if (!parentItem || parentItem === nextItemParent) {
-                                break;
-                            }
-
-                            dropItem = parentItem;
-                        }
-
-                        if (canDropToItem) {
-                            if (treeAdapter.getItemParent(canDropToItem) === nextItemParent) {
-                                dropItem = nextItem;
-                                dropPosition = DropPosition.DROP_POSITION_BEFORE;
-                                checks();
-                            } else {
-                                dropItem = canDropToItem;
-                                canDrop = true;
-                            }
-                        } else {
-                            canDrop = false;
-                        }
-                    }
-                }
-
-                if (canDrop) {
-                    if (
-                        dropItem !== draggableAdapter.dropItem ||
-                        dropPosition !== this.dropPosition
-                    ) {
-                        if (dropPosition !== this.dropPosition) {
-                            this.dropPosition = dropPosition;
-                        }
-
+                    function checks() {
                         const $row = $treeDiv.find(
                             `[data-object-id="${treeAdapter.getItemId(dropItem)}"]`
                         );
-                        const rowRect = $row[0].getBoundingClientRect();
+                        const rowIndexAtCursor = $allRows.index($row);
 
-                        const $label = $row.find("span");
-                        const labelRect = $label.get(0).getBoundingClientRect();
+                        let prevObjectId;
+                        if (rowIndexAtCursor > 0) {
+                            const $prevRow = $allRows.eq(rowIndexAtCursor - 1);
+                            prevObjectId = $prevRow.attr("data-object-id");
+                        }
 
-                        this.dropMarkVerticalConnectionLineHeight = undefined;
+                        let nextObjectId;
+                        if (rowIndexAtCursor < $allRows.length - 1) {
+                            const $nextRow = $allRows.eq(rowIndexAtCursor + 1);
+                            nextObjectId = $nextRow.attr("data-object-id");
+                        }
 
-                        if (dropPosition === DropPosition.DROP_POSITION_INSIDE) {
-                            this.dropMarkLeft = labelRect.left - treeDivRect.left + CHILD_OFFSET;
-                            this.dropMarkTop = rowRect.bottom;
-                            this.dropMarkTop -= treeDivRect.top;
-                            this.dropMarkWidth = rowRect.right - labelRect.left - CHILD_OFFSET;
+                        canDrop = draggableAdapter.canDrop(
+                            dropItem,
+                            dropPosition!,
+                            prevObjectId,
+                            nextObjectId
+                        );
+                    }
+
+                    const $nextRow = $allRows.eq(rowIndexAtCursor + 1);
+                    const nextObjectId = $nextRow.attr("data-object-id");
+                    let nextItem = treeAdapter.getItemFromId(nextObjectId!)!;
+                    let nextItemParent = nextItem && treeAdapter.getItemParent(nextItem);
+
+                    if (event.nativeEvent.clientY < rowRect.top + rowRect.height / 2) {
+                        dropPosition = DropPosition.DROP_POSITION_BEFORE;
+
+                        checks();
+                    } else {
+                        dropPosition = DropPosition.DROP_POSITION_AFTER;
+
+                        if (
+                            event.nativeEvent.clientX > labelRect.left + CHILD_OFFSET &&
+                            draggableAdapter.canDropInside(dropItem) &&
+                            !draggableAdapter.isAncestorOfDragObject(dropItem) &&
+                            !(
+                                rowIndexAtCursor + 1 < $allRows.length &&
+                                treeAdapter.isAncestor(nextItem, dropItem)
+                            )
+                        ) {
+                            dropPosition = DropPosition.DROP_POSITION_INSIDE;
+                            canDrop = true;
+                        } else if (dropItem === nextItemParent) {
+                            dropItem = nextItem;
+                            dropPosition = DropPosition.DROP_POSITION_BEFORE;
+                            checks();
                         } else {
-                            this.dropMarkLeft = labelRect.left - treeDivRect.left;
-                            if (this.dropPosition === DropPosition.DROP_POSITION_BEFORE) {
-                                this.dropMarkTop = rowRect.top;
-                            } else {
-                                if (rowIndexAtCursor !== $allRows.index($row)) {
-                                    const $row2 = $allRows.eq(rowIndexAtCursor);
-                                    const rowRect2 = $row2.get(0).getBoundingClientRect();
+                            let canDropToItem;
 
-                                    this.dropMarkTop = rowRect2.bottom;
-                                    this.dropMarkVerticalConnectionLineHeight =
-                                        rowRect2.bottom - rowRect.bottom;
-                                } else {
-                                    this.dropMarkTop = rowRect.bottom;
+                            while (true) {
+                                const $row = $treeDiv.find(
+                                    `[data-object-id="${treeAdapter.getItemId(dropItem)}"]`
+                                );
+
+                                if ($row.length > 0) {
+                                    canDrop = false;
+
+                                    checks();
+
+                                    if (canDrop) {
+                                        canDropToItem = dropItem;
+
+                                        const $label = $row.find("span");
+                                        const labelRect = $label.get(0).getBoundingClientRect();
+
+                                        if (event.nativeEvent.clientX > labelRect.left) {
+                                            break;
+                                        }
+                                    }
                                 }
+
+                                const parentItem = treeAdapter.getItemParent(dropItem);
+
+                                if (!parentItem || parentItem === nextItemParent) {
+                                    break;
+                                }
+
+                                dropItem = parentItem;
                             }
-                            this.dropMarkTop -= treeDivRect.top;
-                            this.dropMarkWidth = rowRect.right - labelRect.left;
+
+                            if (canDropToItem) {
+                                if (treeAdapter.getItemParent(canDropToItem) === nextItemParent) {
+                                    dropItem = nextItem;
+                                    dropPosition = DropPosition.DROP_POSITION_BEFORE;
+                                    checks();
+                                } else {
+                                    dropItem = canDropToItem;
+                                    canDrop = true;
+                                }
+                            } else {
+                                canDrop = false;
+                            }
                         }
                     }
 
-                    draggableAdapter.onDragOver(dropItem, event);
-                    return;
+                    if (canDrop) {
+                        if (
+                            dropItem !== draggableAdapter.dropItem ||
+                            dropPosition !== this.dropPosition
+                        ) {
+                            if (dropPosition !== this.dropPosition) {
+                                this.dropPosition = dropPosition;
+                            }
+
+                            const $row = $treeDiv.find(
+                                `[data-object-id="${treeAdapter.getItemId(dropItem)}"]`
+                            );
+                            const rowRect = $row[0].getBoundingClientRect();
+
+                            const $label = $row.find("span");
+                            const labelRect = $label.get(0).getBoundingClientRect();
+
+                            this.dropMarkVerticalConnectionLineHeight = undefined;
+
+                            if (dropPosition === DropPosition.DROP_POSITION_INSIDE) {
+                                this.dropMarkLeft =
+                                    labelRect.left - treeDivRect.left + CHILD_OFFSET;
+                                this.dropMarkTop = rowRect.bottom;
+                                this.dropMarkTop -= treeDivRect.top;
+                                this.dropMarkWidth = rowRect.right - labelRect.left - CHILD_OFFSET;
+                            } else {
+                                this.dropMarkLeft = labelRect.left - treeDivRect.left;
+                                if (this.dropPosition === DropPosition.DROP_POSITION_BEFORE) {
+                                    this.dropMarkTop = rowRect.top;
+                                } else {
+                                    if (rowIndexAtCursor !== $allRows.index($row)) {
+                                        const $row2 = $allRows.eq(rowIndexAtCursor);
+                                        const rowRect2 = $row2.get(0).getBoundingClientRect();
+
+                                        this.dropMarkTop = rowRect2.bottom;
+                                        this.dropMarkVerticalConnectionLineHeight =
+                                            rowRect2.bottom - rowRect.bottom;
+                                    } else {
+                                        this.dropMarkTop = rowRect.bottom;
+                                    }
+                                }
+                                this.dropMarkTop -= treeDivRect.top;
+                                this.dropMarkWidth = rowRect.right - labelRect.left;
+                            }
+                        }
+
+                        draggableAdapter.onDragOver(dropItem, event);
+                        return;
+                    }
                 }
             }
         }

@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, runInAction, action } from "mobx";
+import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -31,8 +31,7 @@ import {
     ITreeObjectAdapter,
     TreeAdapter
 } from "project-editor/core/objectAdapter";
-import { loadObject } from "project-editor/core/serialization";
-import { ProjectStore, NavigationStore, EditorsStore, IPanel } from "project-editor/core/store";
+import { NavigationStore, EditorsStore, IPanel } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
@@ -145,69 +144,6 @@ export class PageTabState implements IEditorState {
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-// We will not load all widgets for all pages at once, since it could take several seconds
-// for large project, and during that time application will be blocked. Therefore, we are
-// lazy loading, one page at a time.
-
-export const lazyLoadPageWidgets = (function() {
-    const pageWidgets = new Map<Page, any>();
-    const priority: Page[] = [];
-
-    function setPageWidgets(page: Page, widgets: any) {
-        pageWidgets.set(page, widgets);
-
-        if (pageWidgets.size == 1) {
-            setTimeout(loadNextPage, 1000);
-        }
-    }
-
-    function loadPageWidgets(page: Page) {
-        const widgets = pageWidgets.get(page);
-        if (widgets) {
-            pageWidgets.delete(page);
-            runInAction(
-                () =>
-                    (page.widgets = loadObject(page, widgets, Widget, "widgets") as EezArrayObject<
-                        Widget
-                    >)
-            );
-        }
-    }
-
-    function loadNextPage() {
-        if (pageWidgets.size > 0) {
-            let page = priority.shift();
-            if (!page) {
-                page = pageWidgets.keys().next().value;
-            }
-
-            if (page) {
-                loadPageWidgets(page);
-            }
-
-            if (pageWidgets.size > 0) {
-                setTimeout(loadNextPage);
-                return;
-            }
-        }
-
-        runInAction(() => (ProjectStore.project._allGuiPagesLoaded = true));
-    }
-
-    return {
-        setPageWidgets,
-
-        // this method is exported, so app can load some page widgets in advance if required
-        prioritizePage(page: Page) {
-            if (pageWidgets.has(page)) {
-                priority.push(page);
-            }
-        }
-    };
-})();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -519,11 +455,6 @@ export class Page extends EezObject {
                 jsObject["top"] = jsObject["y"];
                 delete jsObject["y"];
             }
-
-            if (!(ProjectStore.project && ProjectStore.project._allGuiPagesLoaded)) {
-                lazyLoadPageWidgets.setPageWidgets(page, jsObject.widgets);
-                jsObject.widgets = [];
-            }
         },
         isPropertyMenuSupported: true,
         newItem: (parent: EezObject) => {
@@ -537,8 +468,6 @@ export class Page extends EezObject {
             });
         },
         createEditorState: (page: Page) => {
-            // make sure widgets are loaded for this page to be ready for editor
-            lazyLoadPageWidgets.prioritizePage(page);
             return new PageTabState(page);
         },
         navigationComponentId: "pages",

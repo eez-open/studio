@@ -59,7 +59,7 @@ import { ProjectStore } from "project-editor/core/store";
 
 // import * as data from "project-editor/features/data/data";
 
-import { Page, lazyLoadPageWidgets } from "project-editor/features/gui/page";
+import { Page } from "project-editor/features/gui/page";
 import { Gui, findPage, findBitmap } from "project-editor/features/gui/gui";
 import { Style, getStyleProperty } from "project-editor/features/gui/style";
 import { findDataItem, DataContext, dataContext } from "project-editor/features/data/data";
@@ -213,7 +213,7 @@ export class Widget extends EezObject {
     }
 
     static classInfo: ClassInfo = {
-        getClass: function(jsObject: any) {
+        getClass: function (jsObject: any) {
             if (jsObject.type.startsWith("Local.")) {
                 return findClass("LayoutViewWidget");
             }
@@ -1531,8 +1531,6 @@ export class LayoutViewWidget extends Widget {
             return null;
         }
 
-        lazyLoadPageWidgets.prioritizePage(layoutPage);
-
         return <WidgetComponent widget={layoutPage} dataContext={dataContext} />;
     }
 
@@ -1622,12 +1620,6 @@ export class DisplayDataWidget extends Widget {
                 propertyGridGroup: specificGroup
             }
         ],
-
-        beforeLoadHook: (object: EezObject, jsObject: any) => {
-            if (ProjectStore.project.settings.general.projectVersion === "v1") {
-                migrateStyleProperty(jsObject, "focusStyle");
-            }
-        },
 
         defaultValue: {
             type: "DisplayData",

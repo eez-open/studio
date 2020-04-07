@@ -45,7 +45,7 @@ function onObjectModified(object: EezObject) {
     }
 }
 
-function getUniquePropertyValue(existingObjects: EezObject[], key: string, value: string) {
+function getUniquePropertyValue(existingObjects: EezObject[], key: string, value: string | number) {
     if (value === undefined) {
         return value;
     }
@@ -54,11 +54,15 @@ function getUniquePropertyValue(existingObjects: EezObject[], key: string, value
             return value;
         }
 
-        var groups = value.match(/(.+) \((\d+)\)/);
-        if (groups) {
-            value = groups[1] + " (" + (parseInt(groups[2]) + 1) + ")";
+        if (typeof value == "number") {
+            value++;
         } else {
-            value += " (1)";
+            var groups = value.match(/(.+) \((\d+)\)/);
+            if (groups) {
+                value = groups[1] + " (" + (parseInt(groups[2]) + 1) + ")";
+            } else {
+                value += " (1)";
+            }
         }
     }
 }
