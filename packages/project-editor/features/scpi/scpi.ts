@@ -11,6 +11,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import {
     ClassInfo,
     registerClass,
+    IEezObject,
     EezObject,
     EezArrayObject,
     PropertyType,
@@ -73,7 +74,7 @@ export class ScpiParameterType extends EezObject implements IParameterType {
         }
     };
 
-    check(object: EezObject) {
+    check(object: IEezObject) {
         const messages: output.Message[] = [];
 
         if (!this.type) {
@@ -322,7 +323,7 @@ export class ScpiParameter extends EezObject {
         propertyGridTableComponent: ScpiParameterTable
     };
 
-    check(object: EezObject) {
+    check(object: IEezObject) {
         const messages: output.Message[] = [];
 
         if (this.name) {
@@ -421,7 +422,7 @@ export class ScpiResponse extends EezObject {
         defaultValue: {}
     };
 
-    check(object: EezObject) {
+    check(object: IEezObject) {
         const messages: output.Message[] = [];
 
         const command: ScpiCommand = getParent(this) as ScpiCommand;
@@ -492,7 +493,7 @@ export class ScpiCommand extends EezObject {
                 defaultValue: {}
             }
         ],
-        newItem: (parent: EezObject) => {
+        newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
                     title: "New Command",
@@ -561,7 +562,7 @@ export class ScpiSubsystem extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
-        newItem: (parent: EezObject) => {
+        newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
                     title: "New Subsystem",

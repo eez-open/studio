@@ -4,12 +4,12 @@ import { _map } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
 import {
-    EezObject,
+    IEezObject,
     asArray,
     getProperty,
     getHumanReadableObjectPath,
     isArrayElement,
-    findPropertyByName,
+    findPropertyByNameInObject,
     getParent,
     getKey,
     setModificationTime,
@@ -33,7 +33,7 @@ export interface IUndoManager {
 }
 
 export interface ISelectionManager {
-    setSelection(selection: EezObject[] | undefined): void;
+    setSelection(selection: IEezObject[] | undefined): void;
 }
 
 export interface ICommandContext {
@@ -43,14 +43,18 @@ export interface ICommandContext {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function onObjectModified(object: EezObject) {
+function onObjectModified(object: IEezObject) {
     setModificationTime(object, new Date().getTime());
     if (getParent(object)) {
         onObjectModified(getParent(object));
     }
 }
 
-function getUniquePropertyValue(existingObjects: EezObject[], key: string, value: string | number) {
+function getUniquePropertyValue(
+    existingObjects: IEezObject[],
+    key: string,
+    value: string | number
+) {
     if (value === undefined) {
         return value;
     }
@@ -73,8 +77,8 @@ function getUniquePropertyValue(existingObjects: EezObject[], key: string, value
 }
 
 // ensure that unique properties are unique inside parent
-function ensureUniqueProperties(parentObject: EezObject, objects: EezObject[]) {
-    let existingObjects = asArray(parentObject).map((object: EezObject) => object);
+function ensureUniqueProperties(parentObject: IEezObject, objects: IEezObject[]) {
+    let existingObjects = asArray(parentObject).map((object: IEezObject) => object);
     objects.forEach(object => {
         for (const propertyInfo of getClassInfo(object).properties) {
             if (propertyInfo.unique) {
@@ -92,7 +96,7 @@ function ensureUniqueProperties(parentObject: EezObject, objects: EezObject[]) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export let addObject = action(
-    (context: ICommandContext, parentObject: EezObject, object: EezObject) => {
+    (context: ICommandContext, parentObject: IEezObject, object: IEezObject) => {
         object = loadObject(parentObject, object, getClass(parentObject));
         ensureUniqueProperties(parentObject, [object]);
 
@@ -117,7 +121,7 @@ export let addObject = action(
 );
 
 export let addObjects = action(
-    (context: ICommandContext, parentObject: EezObject, objects: EezObject[]) => {
+    (context: ICommandContext, parentObject: IEezObject, objects: IEezObject[]) => {
         objects = objects.map(object => loadObject(parentObject, object, getClass(parentObject)));
         ensureUniqueProperties(parentObject, objects);
 
@@ -146,7 +150,7 @@ export let addObjects = action(
 );
 
 export let insertObject = action(
-    (context: ICommandContext, parentObject: EezObject, index: number, object: any) => {
+    (context: ICommandContext, parentObject: IEezObject, index: number, object: any) => {
         object = loadObject(parentObject, object, getClass(parentObject));
         ensureUniqueProperties(parentObject, [object]);
 
@@ -174,7 +178,7 @@ class UpdateCommand implements ICommand {
     private oldValues: any = {};
     private newValues: any = {};
 
-    constructor(public object: EezObject, private values: any, lastCommand?: UpdateCommand) {
+    constructor(public object: IEezObject, private values: any, lastCommand?: UpdateCommand) {
         if (lastCommand) {
             this.oldValues = lastCommand.oldValues;
         }
@@ -184,9 +188,9 @@ class UpdateCommand implements ICommand {
 
             let propertyInfo;
             if (resolutionDependableProperty) {
-                propertyInfo = findPropertyByName(object, propertyName.slice(0, -1));
+                propertyInfo = findPropertyByNameInObject(object, propertyName.slice(0, -1));
             } else {
-                propertyInfo = findPropertyByName(object, propertyName);
+                propertyInfo = findPropertyByNameInObject(object, propertyName);
             }
 
             if (propertyInfo) {
@@ -243,7 +247,7 @@ class UpdateCommand implements ICommand {
     }
 }
 
-export let updateObject = action((context: ICommandContext, object: EezObject, values: any) => {
+export let updateObject = action((context: ICommandContext, object: IEezObject, values: any) => {
     let previousCommand;
 
     // TODO this should be moved to undoManager implementation
@@ -288,7 +292,7 @@ export let deleteObject = action((context: ICommandContext, object: any) => {
     }
 });
 
-export let deleteObjects = action((context: ICommandContext, objects: EezObject[]) => {
+export let deleteObjects = action((context: ICommandContext, objects: IEezObject[]) => {
     let undoIndexes: number[];
 
     context.undoManager.executeCommand({
@@ -335,7 +339,7 @@ export let deleteObjects = action((context: ICommandContext, objects: EezObject[
 });
 
 export let replaceObject = action(
-    (context: ICommandContext, object: EezObject, replaceWithObject: EezObject) => {
+    (context: ICommandContext, object: IEezObject, replaceWithObject: IEezObject) => {
         let parent = getParent(object);
         if (isArrayElement(object)) {
             const array = asArray(parent);
@@ -366,7 +370,7 @@ export let replaceObject = action(
 );
 
 export let replaceObjects = action(
-    (context: ICommandContext, objects: EezObject[], replaceWithObject: EezObject) => {
+    (context: ICommandContext, objects: IEezObject[], replaceWithObject: IEezObject) => {
         if (objects.length === 1) {
             return replaceObject(context, objects[0], replaceWithObject);
         }
@@ -416,7 +420,7 @@ export let replaceObjects = action(
 
 export function insertObjectBefore(
     context: ICommandContext,
-    object: EezObject,
+    object: IEezObject,
     objectToInsert: any
 ) {
     const parent = getParent(object);
@@ -427,7 +431,7 @@ export function insertObjectBefore(
 
 export function insertObjectAfter(
     context: ICommandContext,
-    object: EezObject,
+    object: IEezObject,
     objectToInsert: any
 ) {
     const parent = getParent(object);

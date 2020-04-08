@@ -7,7 +7,7 @@ import { underscore } from "eez-studio-shared/string";
 
 import { getExtensionsByCategory, BuildResult } from "project-editor/core/extensions";
 import {
-    EezObject,
+    IEezObject,
     isArray,
     asArray,
     getProperty,
@@ -102,7 +102,7 @@ function showCheckResult() {
 }
 
 class BuildException {
-    constructor(public message: string, public object?: EezObject | undefined) {}
+    constructor(public message: string, public object?: IEezObject | undefined) {}
 }
 
 async function getBuildResults(
@@ -396,8 +396,8 @@ export async function buildExtensions() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-var checkTransformer: (object: EezObject) => IMessage[] = createTransformer(
-    (object: EezObject): IMessage[] => {
+var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
+    (object: IEezObject): IMessage[] => {
         let messages: IMessage[] = [];
 
         // call check method of the object

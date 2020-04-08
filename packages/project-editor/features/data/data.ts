@@ -7,6 +7,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import {
     ClassInfo,
     registerClass,
+    IEezObject,
     EezObject,
     PropertyType,
     asArray
@@ -103,7 +104,7 @@ export class DataItem extends EezObject {
                 type: PropertyType.ConfigurationReference
             }
         ],
-        newItem: (parent: EezObject) => {
+        newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
                     title: "New Data Item",
@@ -145,7 +146,7 @@ registerFeatureImplementation("data", {
         create: () => {
             return [];
         },
-        check: (object: EezObject) => {
+        check: (object: IEezObject) => {
             let messages: output.Message[] = [];
 
             if (asArray(object).length > 32000) {
@@ -227,10 +228,7 @@ export class DataContext {
                         value = dataItem.defaultValue;
                     }
                 } else if (dataItem.type == "boolean") {
-                    let defaultValue = dataItem.defaultValue
-                        .toString()
-                        .trim()
-                        .toLowerCase();
+                    let defaultValue = dataItem.defaultValue.toString().trim().toLowerCase();
                     if (defaultValue == "1" || defaultValue == "true") {
                         value = true;
                     } else if (defaultValue == "0" || defaultValue == "false") {

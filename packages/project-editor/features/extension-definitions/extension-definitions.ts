@@ -7,6 +7,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import {
     ClassInfo,
     registerClass,
+    IEezObject,
     EezObject,
     EezArrayObject,
     PropertyType,
@@ -165,7 +166,7 @@ export class ExtensionDefinition extends EezObject {
                 defaultValue: undefined
             }
         ],
-        newItem: (parent: EezObject) => {
+        newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
                     title: "New Instrument Definition File",
@@ -264,7 +265,7 @@ registerFeatureImplementation("extension-definitions", {
         create: () => {
             return [];
         },
-        check: (object: EezObject) => {
+        check: (object: IEezObject) => {
             return [];
         },
         metrics: metrics

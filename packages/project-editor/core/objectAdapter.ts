@@ -9,7 +9,7 @@ import {
     isArray,
     asArray,
     getProperty,
-    EezObject,
+    IEezObject,
     EezArrayObject,
     PropertyType,
     isAncestor,
@@ -27,7 +27,8 @@ import {
     getParent,
     getId,
     getClassInfo,
-    getLabel
+    getLabel,
+    isEezObject
 } from "project-editor/core/object";
 import { objectsToClipboardData } from "project-editor/core/clipboard";
 import {
@@ -97,7 +98,7 @@ export type DisplayItemChildrenObject = { [key: string]: DisplayItem };
 export type DisplayItemChildren = DisplayItemChildrenArray | DisplayItemChildrenObject;
 
 export interface DisplayItem {
-    object: EezObject;
+    object: IEezObject;
     selected: boolean;
     children: DisplayItemChildren;
 }
@@ -158,20 +159,20 @@ export type TreeObjectAdapterChildren =
     | TreeObjectAdapterChildrenObject;
 
 export interface ITreeObjectAdapter extends DisplayItem, DisplayItemSelection, IEditorState {
-    object: EezObject;
+    object: IEezObject;
     selected: boolean;
     expanded: boolean;
     children: TreeObjectAdapterChildren;
     hasChildren: boolean;
     selectedItems: ITreeObjectAdapter[];
-    selectedObject: EezObject | undefined;
-    selectedObjects: EezObject[];
+    selectedObject: IEezObject | undefined;
+    selectedObjects: IEezObject[];
     selectedItem: ITreeObjectAdapter | undefined;
     selectItem(item: ITreeObjectAdapter): void;
     selectItems(items: ITreeObjectAdapter[]): void;
-    selectObjects(objects: EezObject[]): void;
+    selectObjects(objects: IEezObject[]): void;
     selectObjectIds(objectIds: string[]): void;
-    selectObject(object: EezObject): void;
+    selectObject(object: IEezObject): void;
     toggleSelected(item: ITreeObjectAdapter): void;
     toggleExpanded(): void;
     loadState(state: any): void;
@@ -179,11 +180,11 @@ export interface ITreeObjectAdapter extends DisplayItem, DisplayItemSelection, I
     getObjectAdapter(
         objectAdapterOrObjectOrObjectId:
             | ITreeObjectAdapter
-            | EezObject
-            | EezArrayObject<EezObject>
+            | IEezObject
+            | EezArrayObject<IEezObject>
             | string
     ): ITreeObjectAdapter | undefined;
-    getAncestorObjectAdapter(object: EezObject): ITreeObjectAdapter | undefined;
+    getAncestorObjectAdapter(object: IEezObject): ITreeObjectAdapter | undefined;
     getParent(item: ITreeObjectAdapter): ITreeObjectAdapter | undefined;
     getAncestors(item: ITreeObjectAdapter): ITreeObjectAdapter[];
     canCut(): boolean;
@@ -199,20 +200,20 @@ export interface ITreeObjectAdapter extends DisplayItem, DisplayItemSelection, I
 }
 
 export class TreeObjectAdapter implements ITreeObjectAdapter {
-    private transformer: (object: EezObject) => ITreeObjectAdapter;
+    private transformer: (object: IEezObject) => ITreeObjectAdapter;
 
     @observable selected: boolean;
     @observable expanded: boolean;
 
     constructor(
-        public object: EezObject,
-        transformer?: (object: EezObject) => ITreeObjectAdapter,
+        public object: IEezObject,
+        transformer?: (object: IEezObject) => ITreeObjectAdapter,
         expanded?: boolean
     ) {
         if (transformer) {
             this.transformer = transformer;
         } else {
-            this.transformer = createTransformer((object: EezObject) => {
+            this.transformer = createTransformer((object: IEezObject) => {
                 return new TreeObjectAdapter(object, this.transformer);
             });
         }
@@ -316,7 +317,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
     }
 
     @action
-    selectObjects(objects: EezObject[]) {
+    selectObjects(objects: IEezObject[]) {
         const items: ITreeObjectAdapter[] = [];
         for (const object of objects) {
             const item = this.getAncestorObjectAdapter(object);
@@ -336,7 +337,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
         const rootObject = getRootObject(this.object);
 
-        const objects: EezObject[] = [];
+        const objects: IEezObject[] = [];
         for (const objectId of objectIds) {
             const object = getObjectFromObjectId(rootObject, objectId);
             if (object) {
@@ -348,7 +349,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
     }
 
     @action
-    selectObject(object: EezObject) {
+    selectObject(object: IEezObject) {
         let objectAdapter = this.getAncestorObjectAdapter(object);
         if (objectAdapter) {
             this.selectItems([objectAdapter]);
@@ -425,8 +426,8 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
     getObjectAdapter(
         objectAdapterOrObjectOrObjectId:
             | ITreeObjectAdapter
-            | EezObject
-            | EezArrayObject<EezObject>
+            | IEezObject
+            | EezArrayObject<IEezObject>
             | string
     ): ITreeObjectAdapter | undefined {
         function getObjectAdapterFromObjectId(
@@ -452,7 +453,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             return getObjectAdapterFromObjectId(this, getId(objectAdapterOrObjectOrObjectId));
         }
 
-        if (objectAdapterOrObjectOrObjectId instanceof EezObject) {
+        if (isEezObject(objectAdapterOrObjectOrObjectId)) {
             return getObjectAdapterFromObjectId(this, getId(objectAdapterOrObjectOrObjectId));
         }
 
@@ -463,7 +464,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId);
     }
 
-    getAncestorObjectAdapter(object: EezObject) {
+    getAncestorObjectAdapter(object: IEezObject) {
         if (!isAncestor(object, this.object)) {
             return undefined;
         }
@@ -833,16 +834,16 @@ export class TreeAdapter implements ITreeAdapter {
     constructor(
         private rootItem: ITreeObjectAdapter,
         private item?: ITreeObjectAdapter,
-        private filter?: (object: EezObject) => boolean,
+        private filter?: (object: IEezObject) => boolean,
         private collapsable?: boolean,
         public sortDirection?: SortDirectionType,
         public maxLevel?: number,
-        onDoubleClick?: (object: EezObject) => void
+        onDoubleClick?: (object: IEezObject) => void
     ) {
         this.onDoubleClickCallback = onDoubleClick;
     }
 
-    onDoubleClickCallback: ((object: EezObject) => void) | undefined;
+    onDoubleClickCallback: ((object: IEezObject) => void) | undefined;
 
     get allRows() {
         const { filter, collapsable, sortDirection, maxLevel } = this;
@@ -941,14 +942,14 @@ export class TreeAdapter implements ITreeAdapter {
         this.rootItem.selectItems(items);
     }
 
-    selectObject(object: EezObject) {
+    selectObject(object: IEezObject) {
         const item = this.getItemFromId(getId(object));
         if (item) {
             this.selectItem(item);
         }
     }
 
-    selectObjects(objects: EezObject[]) {
+    selectObjects(objects: IEezObject[]) {
         objects.forEach(object => {
             const item = this.getItemFromId(getId(object));
             if (item) {
@@ -1055,7 +1056,7 @@ export class TreeAdapter implements ITreeAdapter {
 
             let dropItem = DragAndDropManager.dropObject as ITreeObjectAdapter;
 
-            let aNewObject: EezObject | undefined;
+            let aNewObject: IEezObject | undefined;
 
             if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
                 aNewObject = DocumentStore.insertObjectBefore(dropItem.object, object);
@@ -1068,8 +1069,8 @@ export class TreeAdapter implements ITreeAdapter {
                     true
                 );
                 if (dropPlace) {
-                    if (isArray(dropPlace as EezObject)) {
-                        aNewObject = DocumentStore.addObject(dropPlace as EezObject, object);
+                    if (isArray(dropPlace as IEezObject)) {
+                        aNewObject = DocumentStore.addObject(dropPlace as IEezObject, object);
                     } else {
                         DocumentStore.updateObject(dropItem.object, {
                             [(dropPlace as PropertyInfo).name]: object
@@ -1159,7 +1160,7 @@ export class TreeAdapter implements ITreeAdapter {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ListItem {
-    constructor(public object: EezObject) {}
+    constructor(public object: IEezObject) {}
 
     @observable
     selected: boolean = false;
@@ -1186,13 +1187,13 @@ export class ListAdapter implements ITreeAdapter {
     dragAndDropManager: DragAndDropManagerClass;
 
     constructor(
-        private object: EezObject,
+        private object: IEezObject,
         public sortDirection?: SortDirectionType,
-        onDoubleClick?: (object: EezObject) => void,
+        onDoubleClick?: (object: IEezObject) => void,
         navigationStore?: INavigationStore,
         dragAndDropManager?: DragAndDropManagerClass,
         private searchText?: string,
-        private filter?: (object: EezObject) => boolean
+        private filter?: (object: IEezObject) => boolean
     ) {
         this.onDoubleClickCallback = onDoubleClick;
 
@@ -1215,7 +1216,7 @@ export class ListAdapter implements ITreeAdapter {
         });
     }
 
-    onDoubleClickCallback: ((object: EezObject) => void) | undefined;
+    onDoubleClickCallback: ((object: IEezObject) => void) | undefined;
 
     parentItem = new ListItem(this.object);
 
@@ -1285,7 +1286,7 @@ export class ListAdapter implements ITreeAdapter {
     get selectedItem(): ListItem | undefined {
         const item = this.navigationStore.getNavigationSelectedItem(this.object);
 
-        if (item instanceof EezObject) {
+        if (isEezObject(item)) {
             return this.getItemFromId(getId(item));
         }
 
@@ -1319,14 +1320,14 @@ export class ListAdapter implements ITreeAdapter {
         }
     }
 
-    selectObject(object: EezObject): void {
+    selectObject(object: IEezObject): void {
         const item = this.getItemFromId(getId(object));
         if (item) {
             this.selectItem(item);
         }
     }
 
-    selectObjects(objects: EezObject[]): void {
+    selectObjects(objects: IEezObject[]): void {
         objects.forEach(object => {
             const item = this.getItemFromId(getId(object));
             if (item) {

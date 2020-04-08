@@ -5,7 +5,7 @@ import { showDialog, Dialog } from "eez-studio-ui/dialog";
 import { styled } from "eez-studio-ui/styled-components";
 
 import {
-    EezObject,
+    IEezObject,
     PropertyInfo,
     getProperty,
     PropertyType,
@@ -34,7 +34,7 @@ const SelectItemDialogDiv = styled.div`
 class SelectItemDialog extends React.Component<{
     navigationStore: INavigationStore;
     dragAndDropManager: DragAndDropManagerClass;
-    collectionObject: EezObject;
+    collectionObject: IEezObject;
     okDisabled: () => boolean;
     onOk: () => boolean;
     onCancel: () => void;
@@ -74,7 +74,7 @@ class SelectItemDialog extends React.Component<{
 }
 
 export async function onSelectItem(
-    object: EezObject,
+    object: IEezObject,
     propertyInfo: PropertyInfo,
     opts: {
         title: string;

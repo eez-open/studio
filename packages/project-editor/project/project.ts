@@ -5,6 +5,7 @@ import {
     ClassInfo,
     PropertyInfo,
     registerClass,
+    IEezObject,
     EezObject,
     EezArrayObject,
     PropertyType,
@@ -65,7 +66,7 @@ export class BuildConfiguration extends EezObject {
                 ]
             }
         ],
-        newItem: (parent: EezObject) => {
+        newItem: (parent: IEezObject) => {
             return Promise.resolve({
                 name: "Configuration"
             });
@@ -117,7 +118,7 @@ export class BuildFile extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
-        newItem: (parent: EezObject) => {
+        newItem: (parent: IEezObject) => {
             return Promise.resolve({
                 fileName: "file",
                 template: ""
@@ -239,7 +240,7 @@ export class Settings extends EezObject {
                 type: PropertyType.Object,
                 typeClass: Build,
                 hideInPropertyGrid: true,
-                enumerable: (object: EezObject, propertyInfo: PropertyInfo) => {
+                enumerable: (object: IEezObject, propertyInfo: PropertyInfo) => {
                     return !ProjectStore.masterProjectEnabled;
                 }
             }

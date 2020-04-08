@@ -12,6 +12,7 @@ import { validators } from "eez-studio-shared/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import {
+    IEezObject,
     EezObject,
     registerClass,
     EezArrayObject,
@@ -96,7 +97,7 @@ function makeDataPropertyInfo(
         type: PropertyType.ObjectReference,
         referencedObjectCollectionPath: ["data"],
         propertyGridGroup: propertyGridGroup || dataGroup,
-        onSelect: (object: EezObject, propertyInfo: PropertyInfo) =>
+        onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
             onSelectItem(object, propertyInfo, {
                 title: propertyInfo.onSelectTitle!,
                 width: 800
@@ -116,7 +117,7 @@ function makeActionPropertyInfo(
         type: PropertyType.ObjectReference,
         referencedObjectCollectionPath: ["actions"],
         propertyGridGroup: propertyGridGroup || actionsGroup,
-        onSelect: (object: EezObject, propertyInfo: PropertyInfo) =>
+        onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
             onSelectItem(object, propertyInfo, {
                 title: propertyInfo.onSelectTitle!,
                 width: 800
@@ -149,7 +150,7 @@ function makeTextPropertyInfo(
         displayName,
         type: PropertyType.String,
         propertyGridGroup: propertyGridGroup || specificGroup,
-        onSelect: (object: EezObject, propertyInfo: PropertyInfo, params?: IOnSelectParams) =>
+        onSelect: (object: IEezObject, propertyInfo: PropertyInfo, params?: IOnSelectParams) =>
             onSelectItem(
                 object,
                 propertyInfo,
@@ -266,7 +267,7 @@ export class Widget extends EezObject {
             makeStylePropertyInfo("style", "Normal style")
         ],
 
-        beforeLoadHook: (object: EezObject, jsObject: any) => {
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
             if (jsObject.type.startsWith("Local.")) {
                 jsObject.layout = jsObject.type.substring("Local.".length);
                 jsObject.type = "LayoutView";
@@ -449,7 +450,7 @@ export class Widget extends EezObject {
 
     extendContextMenu(
         context: IContextMenuContext,
-        objects: EezObject[],
+        objects: IEezObject[],
         menuItems: Electron.MenuItem[]
     ): void {
         var additionalMenuItems: Electron.MenuItem[] = [];
@@ -1184,7 +1185,7 @@ export class SelectWidget extends Widget {
                 type: PropertyType.Array,
                 typeClass: Widget,
                 hideInPropertyGrid: true,
-                childLabel: (childObject: EezObject, childLabel: string) => {
+                childLabel: (childObject: IEezObject, childLabel: string) => {
                     let label;
 
                     if (getParent(childObject)) {
@@ -2391,7 +2392,7 @@ export class ButtonWidget extends Widget {
             makeStylePropertyInfo("disabledStyle")
         ],
 
-        beforeLoadHook: (object: EezObject, jsObject: any) => {
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
             migrateStyleProperty(jsObject, "disabledStyle");
         },
 
@@ -2631,7 +2632,7 @@ export class BarGraphWidget extends Widget {
             makeDataPropertyInfo("line2Data")
         ],
 
-        beforeLoadHook: (object: EezObject, jsObject: any) => {
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
             migrateStyleProperty(jsObject, "textStyle");
             migrateStyleProperty(jsObject, "line1Style");
             migrateStyleProperty(jsObject, "line2Style");
@@ -2799,7 +2800,7 @@ export class YTGraphWidget extends Widget {
             Object.assign(makeDataPropertyInfo("y2Data"), hideIfNotProjectVersion1)
         ],
 
-        beforeLoadHook: (object: EezObject, jsObject: any) => {
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
             migrateStyleProperty(jsObject, "y1Style");
             migrateStyleProperty(jsObject, "y2Style");
         },
@@ -2893,7 +2894,7 @@ export class UpDownWidget extends Widget {
             makeTextPropertyInfo("upButtonText", undefined, specificGroup)
         ],
 
-        beforeLoadHook: (object: EezObject, jsObject: any) => {
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
             migrateStyleProperty(jsObject, "buttonsStyle");
         },
 
@@ -2994,7 +2995,7 @@ export class ListGraphWidget extends Widget {
             makeDataPropertyInfo("cursorData")
         ],
 
-        beforeLoadHook: (object: EezObject, jsObject: any) => {
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
             migrateStyleProperty(jsObject, "y1Style");
             migrateStyleProperty(jsObject, "y2Style");
             migrateStyleProperty(jsObject, "cursorStyle");

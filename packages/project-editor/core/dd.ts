@@ -1,6 +1,6 @@
 import { observable, action } from "mobx";
 
-import { EezObject } from "project-editor/core/object";
+import { IEezObject } from "project-editor/core/object";
 import { DocumentStore, UndoManager } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10,7 +10,7 @@ interface IDropObject {}
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DragAndDropManagerClass {
-    @observable dragObject: EezObject | undefined;
+    @observable dragObject: IEezObject | undefined;
     @observable dropObject: IDropObject | undefined;
     dragItemDeleted: boolean;
     dropEffect: string | undefined;
@@ -24,7 +24,7 @@ export class DragAndDropManagerClass {
     }
 
     @action
-    start(event: any, dragObject: EezObject) {
+    start(event: any, dragObject: IEezObject) {
         this.dragObject = dragObject;
         this.dragItemDeleted = false;
 

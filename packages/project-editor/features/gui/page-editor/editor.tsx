@@ -25,7 +25,7 @@ import {
 import styled from "eez-studio-ui/styled-components";
 
 import {
-    EezObject,
+    IEezObject,
     isObjectInstanceOf,
     isAncestor,
     getParent,
@@ -313,7 +313,7 @@ class PageDocument implements IDocument {
     getObjectsInsideRect(rect: Rect) {
         const ids = getObjectIdsInsideRect(this.pageEditorContext.viewState, rect);
 
-        const editorObjectsGroupedByParent = new Map<EezObject, EditorObject[]>();
+        const editorObjectsGroupedByParent = new Map<IEezObject, EditorObject[]>();
         let maxLengthGroup: EditorObject[] | undefined;
 
         ids.forEach(id => {

@@ -56,7 +56,7 @@ export function formatTransferSpeed(speed: number) {
 
 export function objectClone(obj: any) {
     const { toJS } = require("mobx") as typeof MobXModule;
-    const { EezObject } = require("project-editor/core/object") as typeof ModelObjectModule;
+    const { isEezObject } = require("project-editor/core/object") as typeof ModelObjectModule;
 
     let a: any = {};
     for (const key in obj) {
@@ -65,7 +65,7 @@ export function objectClone(obj: any) {
         }
     }
 
-    if (obj instanceof EezObject) {
+    if (isEezObject(obj)) {
         return JSON.parse(
             JSON.stringify(toJS(a), (key: string, value: any) => {
                 return key.startsWith("$") || key.startsWith("_") ? undefined : value;
@@ -81,7 +81,7 @@ export function objectClone(obj: any) {
 }
 
 export function objectEqual<T>(a: T, b: T) {
-    var deepEqual = function(x: any, y: any) {
+    var deepEqual = function (x: any, y: any) {
         if (x === y) {
             return true;
         }
@@ -159,11 +159,9 @@ export function formatDate(date: Date, format?: string) {
 }
 
 export function formatDuration(duration: number) {
-    return getMoment()
-        .duration(duration)
-        .format("d __, h __, m __, s __", {
-            userLocale
-        });
+    return getMoment().duration(duration).format("d __, h __, m __, s __", {
+        userLocale
+    });
 }
 
 export function getFirstDayOfWeek() {

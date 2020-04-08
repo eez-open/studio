@@ -9,7 +9,7 @@ import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 
-import { EezObject, EezArrayObject, getProperty, asArray } from "project-editor/core/object";
+import { EezArrayObject, getProperty, asArray, isEezObject } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/serialization";
 import { DocumentStore, UndoManager, NavigationStore } from "project-editor/core/store";
 
@@ -701,21 +701,12 @@ class FindChanges {
     }
 
     compareParameters(parameters1: IParameter[], parameters2: IParameter[]) {
-        // return (
-        //     JSON.stringify(
-        //         toJS(parameters1 instanceof EezObject ? objectToJS(parameters1) : parameters1)
-        //     ) ===
-        //     JSON.stringify(
-        //         toJS(parameters2 instanceof EezObject ? objectToJS(parameters2) : parameters2)
-        //     )
-        // );
-
         const sortedParameters1: IParameter[] = toJS(
-            parameters1 instanceof EezObject ? objectToJS(parameters1) : parameters1
+            isEezObject(parameters1) ? objectToJS(parameters1) : parameters1
         ).sort((a: IParameter, b: IParameter) => stringCompare(a.name, b.name));
 
         const sortedParameters2: IParameter[] = toJS(
-            parameters2 instanceof EezObject ? objectToJS(parameters2) : parameters2
+            isEezObject(parameters2) ? objectToJS(parameters2) : parameters2
         ).sort((a: IParameter, b: IParameter) => stringCompare(a.name, b.name));
 
         if (sortedParameters1.length !== sortedParameters2.length) {

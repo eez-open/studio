@@ -4,7 +4,7 @@ import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-ui/action";
 
-import { EezObject, objectToString, getClassInfo } from "project-editor/core/object";
+import { IEezObject, objectToString, getClassInfo } from "project-editor/core/object";
 import { EditorsStore, NavigationStore, addItem, canAdd } from "project-editor/core/store";
 import {
     TreeObjectAdapter,
@@ -78,12 +78,12 @@ class DeleteButton extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 interface TreeNavigationPanelProps {
-    navigationObject: EezObject;
+    navigationObject: IEezObject;
 }
 
 @observer
 export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProps, {}> {
-    static navigationTreeFilter(object: EezObject) {
+    static navigationTreeFilter(object: IEezObject) {
         const classInfo = getClassInfo(object);
         return (
             classInfo.showInNavigation ||
@@ -93,7 +93,7 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
     }
 
     @bind
-    onTreeDoubleClick(object: EezObject) {
+    onTreeDoubleClick(object: IEezObject) {
         if (EditorsStore.activeEditor && EditorsStore.activeEditor.object == object) {
             EditorsStore.activeEditor.makePermanent();
         }

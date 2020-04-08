@@ -8,7 +8,7 @@ import * as notification from "eez-studio-ui/notification";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import {
-    EezObject,
+    IEezObject,
     isArray,
     objectToString,
     findPropertyByChildObject,
@@ -256,11 +256,11 @@ export class Editors extends React.Component<{}, {}> {
 
 @observer
 export class PropertiesPanel extends React.Component<
-    { object: EezObject | undefined; navigationStore?: INavigationStore },
+    { object: IEezObject | undefined; navigationStore?: INavigationStore },
     {}
 > {
     render() {
-        let objects: EezObject[];
+        let objects: IEezObject[];
 
         const navigationStore = this.props.navigationStore || NavigationStore;
 
@@ -310,7 +310,7 @@ class Content extends React.Component<{}, {}> {
 
     @computed
     get hideInProperties() {
-        for (let object: EezObject | undefined = this.object; object; object = getParent(object)) {
+        for (let object: IEezObject | undefined = this.object; object; object = getParent(object)) {
             if (!isArray(object) && getEditorComponent(object)) {
                 return getClassInfo(object).hideInProperties;
             }

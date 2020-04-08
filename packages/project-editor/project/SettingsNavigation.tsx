@@ -5,7 +5,12 @@ import React from "react";
 import { Splitter } from "eez-studio-ui/splitter";
 import styled from "eez-studio-ui/styled-components";
 
-import { NavigationComponent, EezObject, getProperty, getParent } from "project-editor/core/object";
+import {
+    NavigationComponent,
+    IEezObject,
+    getProperty,
+    getParent
+} from "project-editor/core/object";
 import { loadObject } from "project-editor/core/serialization";
 import { DocumentStore, NavigationStore } from "project-editor/core/store";
 
@@ -148,7 +153,7 @@ const SettingsEditorDiv = styled.div`
 `;
 
 @observer
-export class SettingsEditor extends React.Component<{ object: EezObject | undefined }, {}> {
+export class SettingsEditor extends React.Component<{ object: IEezObject | undefined }, {}> {
     render() {
         if (!this.props.object || this.props.object === ProjectStore.project.settings.general) {
             let projectFeatures = getExtensionsByCategory("project-feature").map(extension => (

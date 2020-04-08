@@ -4,6 +4,7 @@ import { validators } from "eez-studio-shared/validation";
 import {
     ClassInfo,
     registerClass,
+    IEezObject,
     EezObject,
     PropertyType,
     asArray
@@ -63,7 +64,7 @@ export class Action extends EezObject {
                 type: PropertyType.ConfigurationReference
             }
         ],
-        newItem: (parent: EezObject) => {
+        newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
                     title: "New Action",
@@ -103,7 +104,7 @@ registerFeatureImplementation("action", {
         type: PropertyType.Array,
         typeClass: Action,
         create: () => [],
-        check: (object: EezObject) => {
+        check: (object: IEezObject) => {
             let messages: Message[] = [];
 
             if (asArray(object).length > 32000) {

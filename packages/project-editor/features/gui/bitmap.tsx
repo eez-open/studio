@@ -5,6 +5,7 @@ import styled from "eez-studio-ui/styled-components";
 
 import {
     ClassInfo,
+    IEezObject,
     EezObject,
     registerClass,
     PropertyType,
@@ -151,7 +152,7 @@ export class Bitmap extends EezObject implements IBitmap {
                 type: PropertyType.Boolean
             }
         ],
-        newItem: (parent: EezObject) => {
+        newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
                     title: "New Bitmap",

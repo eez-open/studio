@@ -17,7 +17,7 @@ import * as notification from "eez-studio-ui/notification";
 import { confirm } from "project-editor/core/util";
 
 import {
-    EezObject,
+    IEezObject,
     asArray,
     PropertyInfo,
     PropertyType,
@@ -30,7 +30,7 @@ import {
     getObjectPathAsString,
     objectToString,
     isObjectExists,
-    findPropertyByName,
+    findPropertyByNameInObject,
     getObjectFromPath,
     getObjectFromStringPath,
     getObjectFromObjectId,
@@ -41,7 +41,8 @@ import {
     getId,
     getClass,
     getClassInfo,
-    getEditorComponent
+    getEditorComponent,
+    isEezObject
 } from "project-editor/core/object";
 import {
     checkClipboard,
@@ -88,23 +89,23 @@ const ipcRenderer = EEZStudio.electron.ipcRenderer;
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IPanel {
-    selectedObject: EezObject | undefined;
-    selectedObjects?: EezObject[];
+    selectedObject: IEezObject | undefined;
+    selectedObjects?: IEezObject[];
     cutSelection(): void;
     copySelection(): void;
     pasteSelection(): void;
     deleteSelection(): void;
 }
 
-type NavigationItem = EezObject | ITreeObjectAdapter;
+type NavigationItem = IEezObject | ITreeObjectAdapter;
 
 export interface INavigationStore {
     selectedPanel?: IPanel;
-    selectedObject?: EezObject;
-    getNavigationSelectedItem(navigationObject: EezObject): NavigationItem | undefined;
-    getNavigationSelectedItemAsObject(navigationObject: EezObject): EezObject | undefined;
+    selectedObject?: IEezObject;
+    getNavigationSelectedItem(navigationObject: IEezObject): NavigationItem | undefined;
+    getNavigationSelectedItemAsObject(navigationObject: IEezObject): IEezObject | undefined;
     setNavigationSelectedItem(
-        navigationObject: EezObject,
+        navigationObject: IEezObject,
         navigationSelectedItem: NavigationItem
     ): void;
     setSelectedPanel(selectedPanel: IPanel | undefined): void;
@@ -113,24 +114,27 @@ export interface INavigationStore {
 export class SimpleNavigationStoreClass implements INavigationStore {
     @observable selectedItem: NavigationItem | undefined;
 
-    constructor(selectedObject: EezObject | undefined) {
+    constructor(selectedObject: IEezObject | undefined) {
         this.selectedItem = selectedObject;
     }
 
-    get selectedObject(): EezObject | undefined {
-        return this.selectedItem as EezObject;
+    get selectedObject(): IEezObject | undefined {
+        return this.selectedItem as IEezObject;
     }
 
-    getNavigationSelectedItem(navigationObject: EezObject) {
+    getNavigationSelectedItem(navigationObject: IEezObject) {
         return this.selectedItem;
     }
 
-    getNavigationSelectedItemAsObject(navigationObject: EezObject) {
-        return this.selectedItem as EezObject;
+    getNavigationSelectedItemAsObject(navigationObject: IEezObject) {
+        return this.selectedItem as IEezObject;
     }
 
     @action
-    setNavigationSelectedItem(navigationObject: EezObject, navigationSelectedItem: NavigationItem) {
+    setNavigationSelectedItem(
+        navigationObject: IEezObject,
+        navigationSelectedItem: NavigationItem
+    ) {
         this.selectedItem = navigationSelectedItem;
     }
 
@@ -181,7 +185,7 @@ class NavigationStoreClass implements INavigationStore {
             let navigationObject = DocumentStore.getObjectFromObjectId(id);
             if (navigationObject) {
                 let navigationObjectPath = getObjectPathAsString(navigationObject);
-                if (navigationItem instanceof EezObject) {
+                if (isEezObject(navigationItem)) {
                     map[navigationObjectPath] = getObjectPathAsString(navigationItem);
                 } else {
                     map[navigationObjectPath] = navigationItem.saveState();
@@ -197,8 +201,8 @@ class NavigationStoreClass implements INavigationStore {
     }
 
     @computed
-    get selectedObject(): EezObject | undefined {
-        let object: EezObject = DocumentStore.document;
+    get selectedObject(): IEezObject | undefined {
+        let object: IEezObject = DocumentStore.document;
         if (!object) {
             return undefined;
         }
@@ -208,20 +212,20 @@ class NavigationStoreClass implements INavigationStore {
             if (!child) {
                 return object;
             }
-            if (!(child instanceof EezObject)) {
+            if (!isEezObject(child)) {
                 return child.selectedObject;
             }
             object = child;
         }
     }
 
-    getSelection(): EezObject[] | undefined {
+    getSelection(): IEezObject[] | undefined {
         // TODO
         return undefined;
     }
 
     @action
-    setSelection(selection: EezObject[] | undefined) {
+    setSelection(selection: IEezObject[] | undefined) {
         if (!selection || selection.length == 0) {
             return;
         }
@@ -230,7 +234,7 @@ class NavigationStoreClass implements INavigationStore {
 
         for (let ancestor = getParent(object); ancestor; ancestor = getParent(ancestor)) {
             let navigationItem = this.getNavigationSelectedItem(ancestor);
-            if (navigationItem && !(navigationItem instanceof EezObject)) {
+            if (navigationItem && !isEezObject(navigationItem)) {
                 navigationItem.selectObjects(selection);
                 return;
             }
@@ -242,7 +246,7 @@ class NavigationStoreClass implements INavigationStore {
             let grandparent = getParent(parent);
             if (!isArray(grandparent)) {
                 let navigationItem = this.getNavigationSelectedItem(parent);
-                if (navigationItem && !(navigationItem instanceof EezObject)) {
+                if (navigationItem && !isEezObject(navigationItem)) {
                     navigationItem.selectObjects(selection);
                 } else {
                     this.setNavigationSelectedItem(parent, iterObject);
@@ -254,7 +258,7 @@ class NavigationStoreClass implements INavigationStore {
         }
     }
 
-    isSelected(object: EezObject) {
+    isSelected(object: IEezObject) {
         let iterObject = object;
         let parent = getParent(iterObject);
         while (iterObject && parent) {
@@ -262,7 +266,7 @@ class NavigationStoreClass implements INavigationStore {
                 let grandparent = getParent(parent);
                 if (!isArray(grandparent)) {
                     let navigationItem = this.getNavigationSelectedItem(parent);
-                    if (navigationItem && !(navigationItem instanceof EezObject)) {
+                    if (navigationItem && !isEezObject(navigationItem)) {
                         if (navigationItem.selectedObject != object) {
                             return false;
                         }
@@ -280,10 +284,10 @@ class NavigationStoreClass implements INavigationStore {
         return true;
     }
 
-    getNavigationSelectedItem(navigationObject: EezObject): NavigationItem | undefined {
+    getNavigationSelectedItem(navigationObject: IEezObject): NavigationItem | undefined {
         let item = this.navigationMap.get(getId(navigationObject));
 
-        if (item && item instanceof EezObject) {
+        if (item && isEezObject(item)) {
             // is this maybe deleted object?
             item = DocumentStore.getObjectFromObjectId(getId(item));
         }
@@ -297,12 +301,12 @@ class NavigationStoreClass implements INavigationStore {
         return item;
     }
 
-    getNavigationSelectedItemAsObject(navigationObject: EezObject): EezObject | undefined {
+    getNavigationSelectedItemAsObject(navigationObject: IEezObject): IEezObject | undefined {
         let navigationItem = this.getNavigationSelectedItem(navigationObject);
         if (!navigationItem) {
             return undefined;
         }
-        if (!(navigationItem instanceof EezObject)) {
+        if (!isEezObject(navigationItem)) {
             console.error("TreeObjectAdapter is not expected");
             return undefined;
         }
@@ -310,10 +314,10 @@ class NavigationStoreClass implements INavigationStore {
     }
 
     getNavigationSelectedItemAsObjectAdapter(
-        navigationObject: EezObject
+        navigationObject: IEezObject
     ): ITreeObjectAdapter | undefined {
         let navigationItem = this.getNavigationSelectedItem(navigationObject);
-        if (navigationItem && navigationItem instanceof EezObject) {
+        if (navigationItem && isEezObject(navigationItem)) {
             console.error("TreeObjectAdapter is expected");
             return undefined;
         }
@@ -321,7 +325,10 @@ class NavigationStoreClass implements INavigationStore {
     }
 
     @action
-    setNavigationSelectedItem(navigationObject: EezObject, navigationSelectedItem: NavigationItem) {
+    setNavigationSelectedItem(
+        navigationObject: IEezObject,
+        navigationSelectedItem: NavigationItem
+    ) {
         this.navigationMap.set(getId(navigationObject), navigationSelectedItem);
 
         if (!isPartOfNavigation(navigationObject)) {
@@ -334,9 +341,13 @@ class NavigationStoreClass implements INavigationStore {
         }
     }
 
-    showObject(objectToShow: EezObject) {
+    showObject(objectToShow: IEezObject) {
         this.setSelection([objectToShow]);
-        for (let object: EezObject | undefined = objectToShow; object; object = getParent(object)) {
+        for (
+            let object: IEezObject | undefined = objectToShow;
+            object;
+            object = getParent(object)
+        ) {
             if (getEditorComponent(object)) {
                 const editor = EditorsStore.openEditor(object);
                 setTimeout(() => {
@@ -356,7 +367,7 @@ class NavigationStoreClass implements INavigationStore {
 
 export class Editor implements IEditor {
     @observable
-    object: EezObject;
+    object: IEezObject;
     @observable
     active: boolean;
     @observable
@@ -406,7 +417,7 @@ class EditorsStoreClass {
             while (object) {
                 let navigationItem = NavigationStore.getNavigationSelectedItem(object);
                 while (navigationItem) {
-                    if (navigationItem instanceof EezObject) {
+                    if (isEezObject(navigationItem)) {
                         if (!isArray(navigationItem) && getEditorComponent(navigationItem)) {
                             this.openEditor(navigationItem);
                         }
@@ -516,7 +527,7 @@ class EditorsStoreClass {
     }
 
     @action
-    openEditor(object: EezObject, openAsPermanentEditor: boolean = false) {
+    openEditor(object: IEezObject, openAsPermanentEditor: boolean = false) {
         let nonPermanentEditor: Editor | undefined;
 
         let editorFound: Editor | undefined;
@@ -557,7 +568,7 @@ class EditorsStoreClass {
     }
 
     @action
-    openPermanentEditor(object: EezObject) {
+    openPermanentEditor(object: IEezObject) {
         this.openEditor(object, true);
     }
 
@@ -740,11 +751,11 @@ class UIStateStoreClass {
         this.selectedBuildConfiguration = selectedBuildConfiguration;
     }
 
-    getObjectUIState(object: EezObject) {
+    getObjectUIState(object: IEezObject) {
         return this.objects.get(getObjectPathAsString(object));
     }
 
-    updateObjectUIState(object: EezObject, changes: any) {
+    updateObjectUIState(object: IEezObject, changes: any) {
         const path = getObjectPathAsString(object);
         let objectUIState = this.objects.get(path);
         if (objectUIState) {
@@ -898,13 +909,13 @@ export class UndoManagerClass {
 
 class DocumentStoreClass {
     @observable
-    private _document: EezObject | undefined;
+    private _document: IEezObject | undefined;
 
     @observable
     modified: boolean = false;
 
     @computed
-    get document(): EezObject {
+    get document(): IEezObject {
         return this._document!;
     }
 
@@ -933,7 +944,7 @@ class DocumentStoreClass {
     }
 
     @action
-    changeDocument(document?: EezObject, uiState?: EezObject) {
+    changeDocument(document?: IEezObject, uiState?: IEezObject) {
         this._document = document;
         UIStateStore.load(uiState || {});
         UndoManager.clear();
@@ -943,9 +954,12 @@ class DocumentStoreClass {
         return this.modified;
     }
 
-    addObject(parentObject: EezObject, object: any) {
+    addObject(parentObject: IEezObject, object: any) {
         if (getParent(parentObject) && getKey(parentObject)) {
-            const propertyInfo = findPropertyByName(getParent(parentObject), getKey(parentObject));
+            const propertyInfo = findPropertyByNameInObject(
+                getParent(parentObject),
+                getKey(parentObject)
+            );
             if (propertyInfo && propertyInfo.interceptAddObject) {
                 object = propertyInfo.interceptAddObject(parentObject, object);
             }
@@ -961,7 +975,7 @@ class DocumentStoreClass {
         );
     }
 
-    addObjects(parentObject: EezObject, objects: any[]) {
+    addObjects(parentObject: IEezObject, objects: any[]) {
         return addObjects(
             {
                 undoManager: UndoManager,
@@ -972,7 +986,7 @@ class DocumentStoreClass {
         );
     }
 
-    insertObject(parentObject: EezObject, index: number, object: any) {
+    insertObject(parentObject: IEezObject, index: number, object: any) {
         return insertObject(
             {
                 undoManager: UndoManager,
@@ -984,7 +998,7 @@ class DocumentStoreClass {
         );
     }
 
-    updateObject(object: EezObject, inputValues: any) {
+    updateObject(object: IEezObject, inputValues: any) {
         // make sure that plain JavaScript objects to EezObject's
         let values: any = {};
 
@@ -1003,9 +1017,9 @@ class DocumentStoreClass {
 
                 let propertyInfo;
                 if (resolutionDependableProperty) {
-                    propertyInfo = findPropertyByName(object, propertyName.slice(0, -1));
+                    propertyInfo = findPropertyByNameInObject(object, propertyName.slice(0, -1));
                 } else {
-                    propertyInfo = findPropertyByName(object, propertyName);
+                    propertyInfo = findPropertyByNameInObject(object, propertyName);
                 }
 
                 if (propertyInfo) {
@@ -1015,7 +1029,7 @@ class DocumentStoreClass {
                             (propertyInfo.type === PropertyType.Object ||
                                 propertyInfo.type === PropertyType.Array) &&
                             value !== undefined &&
-                            !(value instanceof EezObject)
+                            !isEezObject(value)
                         ) {
                             // convert to EezObject
                             values[propertyName] = loadObject(
@@ -1051,7 +1065,7 @@ class DocumentStoreClass {
         }
     }
 
-    deleteObject(object: EezObject) {
+    deleteObject(object: IEezObject) {
         return deleteObject(
             {
                 undoManager: UndoManager,
@@ -1061,7 +1075,7 @@ class DocumentStoreClass {
         );
     }
 
-    deleteObjects(objects: EezObject[]) {
+    deleteObjects(objects: IEezObject[]) {
         if (objects.length === 1) {
             this.deleteObject(objects[0]);
         } else {
@@ -1075,7 +1089,7 @@ class DocumentStoreClass {
         }
     }
 
-    replaceObject(object: EezObject, replaceWithObject: EezObject) {
+    replaceObject(object: IEezObject, replaceWithObject: IEezObject) {
         if (getParent(object) !== getParent(replaceWithObject)) {
             console.error("assert failed");
         }
@@ -1090,7 +1104,7 @@ class DocumentStoreClass {
         );
     }
 
-    replaceObjects(objects: EezObject[], replaceWithObject: EezObject) {
+    replaceObjects(objects: IEezObject[], replaceWithObject: IEezObject) {
         if (getParent(objects[0]) !== getParent(replaceWithObject)) {
             console.error("assert failed");
         }
@@ -1105,7 +1119,7 @@ class DocumentStoreClass {
         );
     }
 
-    insertObjectBefore(object: EezObject, objectToInsert: any) {
+    insertObjectBefore(object: IEezObject, objectToInsert: any) {
         return insertObjectBefore(
             {
                 undoManager: UndoManager,
@@ -1116,7 +1130,7 @@ class DocumentStoreClass {
         );
     }
 
-    insertObjectAfter(object: EezObject, objectToInsert: any) {
+    insertObjectAfter(object: IEezObject, objectToInsert: any) {
         return insertObjectAfter(
             {
                 undoManager: UndoManager,
@@ -1132,28 +1146,28 @@ class DocumentStoreClass {
 
 export function extendContextMenu(
     context: IContextMenuContext,
-    object: EezObject,
-    objects: EezObject[],
+    object: IEezObject,
+    objects: IEezObject[],
     menuItems: Electron.MenuItem[]
 ) {
     return object.extendContextMenu(context, objects, menuItems);
 }
 
-export function canAdd(object: EezObject) {
+export function canAdd(object: IEezObject) {
     return (isArrayElement(object) || isArray(object)) && getClassInfo(object).newItem != undefined;
 }
 
-function canDuplicate(object: EezObject) {
+function canDuplicate(object: IEezObject) {
     return isArrayElement(object);
 }
 
-function isOptional(object: EezObject) {
+function isOptional(object: IEezObject) {
     let parent = getParent(object);
     if (!parent) {
         return false;
     }
 
-    let property: PropertyInfo | undefined = findPropertyByName(parent, getKey(object));
+    let property: PropertyInfo | undefined = findPropertyByNameInObject(parent, getKey(object));
 
     if (property == undefined) {
         return false;
@@ -1162,19 +1176,19 @@ function isOptional(object: EezObject) {
     return property.isOptional;
 }
 
-export function canDelete(object: EezObject) {
+export function canDelete(object: IEezObject) {
     return isArrayElement(object) || isOptional(object);
 }
 
-export function canCut(object: EezObject) {
+export function canCut(object: IEezObject) {
     return canCopy(object) && canDelete(object);
 }
 
-export function canCopy(object: EezObject) {
+export function canCopy(object: IEezObject) {
     return isArrayElement(object) || isOptional(object);
 }
 
-export function canContainChildren(object: EezObject) {
+export function canContainChildren(object: IEezObject) {
     for (const propertyInfo of getClassInfo(object).properties) {
         if (
             isPropertyEnumerable(object, propertyInfo) &&
@@ -1187,7 +1201,7 @@ export function canContainChildren(object: EezObject) {
     return false;
 }
 
-export function canPaste(object: EezObject) {
+export function canPaste(object: IEezObject) {
     try {
         return checkClipboard(object);
     } catch (e) {
@@ -1197,7 +1211,7 @@ export function canPaste(object: EezObject) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export async function addItem(object: EezObject) {
+export async function addItem(object: IEezObject) {
     const parent = isArray(object) ? object : getParent(object);
     if (!parent) {
         return null;
@@ -1226,7 +1240,7 @@ export async function addItem(object: EezObject) {
     return DocumentStore.addObject(parent, newObjectProperties);
 }
 
-export function pasteItem(object: EezObject) {
+export function pasteItem(object: IEezObject) {
     try {
         let c = checkClipboard(object);
         if (c) {
@@ -1237,23 +1251,23 @@ export function pasteItem(object: EezObject) {
             } else {
                 if (c.serializedData.object) {
                     if (
-                        isArray(c.pastePlace as EezObject) &&
-                        getParent(object) === (c.pastePlace as EezObject)
+                        isArray(c.pastePlace as IEezObject) &&
+                        getParent(object) === (c.pastePlace as IEezObject)
                     ) {
                         return DocumentStore.insertObject(
-                            c.pastePlace as EezObject,
-                            asArray(c.pastePlace as EezObject).indexOf(object) + 1,
+                            c.pastePlace as IEezObject,
+                            asArray(c.pastePlace as IEezObject).indexOf(object) + 1,
                             objectToJS(c.serializedData.object)
                         );
                     } else {
                         return DocumentStore.addObject(
-                            c.pastePlace as EezObject,
+                            c.pastePlace as IEezObject,
                             objectToJS(c.serializedData.object)
                         );
                     }
                 } else if (c.serializedData.objects) {
                     return DocumentStore.addObjects(
-                        c.pastePlace as EezObject,
+                        c.pastePlace as IEezObject,
                         objectToJS(c.serializedData.objects)
                     );
                 }
@@ -1265,11 +1279,11 @@ export function pasteItem(object: EezObject) {
     return undefined;
 }
 
-export function deleteItem(object: EezObject) {
+export function deleteItem(object: IEezObject) {
     deleteItems([object]);
 }
 
-export function cutItem(object: EezObject) {
+export function cutItem(object: IEezObject) {
     let clipboardText = objectToClipboardData(object);
 
     deleteItems([object], () => {
@@ -1277,21 +1291,21 @@ export function cutItem(object: EezObject) {
     });
 }
 
-export function copyItem(object: EezObject) {
+export function copyItem(object: IEezObject) {
     copyToClipboard(objectToClipboardData(object));
 }
 
-function duplicateItem(object: EezObject) {
-    let parent = getParent(object) as EezObject;
+function duplicateItem(object: IEezObject) {
+    let parent = getParent(object) as IEezObject;
     return DocumentStore.addObject(parent, toJS(object));
 }
 
 export interface IContextMenuContext {
-    selectObject(object: EezObject): void;
-    selectObjects(objects: EezObject[]): void;
+    selectObject(object: IEezObject): void;
+    selectObjects(objects: IEezObject[]): void;
 }
 
-export function createContextMenu(context: IContextMenuContext, object: EezObject) {
+export function createContextMenu(context: IContextMenuContext, object: IEezObject) {
     let menuItems: Electron.MenuItem[] = [];
 
     if (canAdd(object)) {
@@ -1424,7 +1438,7 @@ export function createContextMenu(context: IContextMenuContext, object: EezObjec
     return undefined;
 }
 
-export function showContextMenu(context: IContextMenuContext, object: EezObject) {
+export function showContextMenu(context: IContextMenuContext, object: IEezObject) {
     const menu = createContextMenu(context, object);
 
     if (menu) {
@@ -1434,7 +1448,7 @@ export function showContextMenu(context: IContextMenuContext, object: EezObject)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function deleteItems(objects: EezObject[], callback?: () => void) {
+export function deleteItems(objects: IEezObject[], callback?: () => void) {
     function doDelete() {
         DocumentStore.deleteObjects(objects);
         if (callback) {

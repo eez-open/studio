@@ -1,7 +1,7 @@
 import {
     ClassInfo,
     findClass,
-    EezObject,
+    IEezObject,
     isArray,
     isObject,
     isSubclassOf,
@@ -17,18 +17,18 @@ import { DocumentStore } from "project-editor/core/store";
 export interface SerializedData {
     objectClassName: string;
     classInfo?: ClassInfo;
-    object?: EezObject;
-    objects?: EezObject[];
+    object?: IEezObject;
+    objects?: IEezObject[];
 }
 
-export function objectToClipboardData(object: EezObject): string {
+export function objectToClipboardData(object: IEezObject): string {
     return JSON.stringify({
         objectClassName: getClass(object).name,
         object: objectToJson(object)
     });
 }
 
-export function objectsToClipboardData(objects: EezObject[]): string {
+export function objectsToClipboardData(objects: IEezObject[]): string {
     return JSON.stringify({
         objectClassName: getClass(objects[0]).name,
         objects: objects.map(object => objectToJson(object))
@@ -72,7 +72,7 @@ export function getEezStudioDataFromDragEvent(event: any) {
 }
 
 export function findPastePlaceInside(
-    object: EezObject,
+    object: IEezObject,
     classInfo: ClassInfo,
     isSingleObject: boolean
 ) {
@@ -117,7 +117,7 @@ export function findPastePlaceInside(
     return undefined;
 }
 
-export function findPastePlaceInsideAndOutside(object: EezObject, serializedData: SerializedData) {
+export function findPastePlaceInsideAndOutside(object: IEezObject, serializedData: SerializedData) {
     if (!serializedData.classInfo) {
         return undefined;
     }
@@ -133,7 +133,7 @@ export function findPastePlaceInsideAndOutside(object: EezObject, serializedData
     );
 }
 
-export function checkClipboard(object: EezObject) {
+export function checkClipboard(object: IEezObject) {
     let text = pasteFromClipboard();
     if (text) {
         let serializedData = clipboardDataToObject(text);

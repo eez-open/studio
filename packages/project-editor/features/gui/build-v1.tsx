@@ -7,7 +7,13 @@ import {
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
 import { ProjectStore, OutputSectionsStore } from "project-editor/core/store";
-import { EezObject, EezArrayObject, getProperty, asArray } from "project-editor/core/object";
+import {
+    IEezObject,
+    EezArrayObject,
+    getProperty,
+    asArray,
+    isEezObject
+} from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import { loadObject } from "project-editor/core/serialization";
 import { BuildResult } from "project-editor/core/extensions";
@@ -69,7 +75,7 @@ const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
 // If hex image contains three consecutive '!' characters (33 is ASCII code)
 // then uploading hex image to the device will fail.
 // Here we replace "!!!"" with "!! ", i.e. [33, 33, 33] with [33, 33, 32].
-function fixDataForMegaBootloader(data: number[] | Uint8Array, object: EezObject) {
+function fixDataForMegaBootloader(data: number[] | Uint8Array, object: IEezObject) {
     let result: number[] = [];
 
     let threeExclamationsDetected = false;
@@ -150,7 +156,7 @@ function getSelectedWidgetForSelectWidget(
 }
 
 function createWidgetTree(
-    widgetContainerDisplayItemOrObject: DisplayItem | EezObject,
+    widgetContainerDisplayItemOrObject: DisplayItem | IEezObject,
     draw: boolean
 ) {
     function enumWidgets(widgetContainerDisplayItem: DisplayItem) {
@@ -238,7 +244,7 @@ function createWidgetTree(
         return enumWidget(undefined, widgetContainerDisplayItem, 0, 0);
     }
 
-    if (widgetContainerDisplayItemOrObject instanceof EezObject) {
+    if (isEezObject(widgetContainerDisplayItemOrObject)) {
         return enumWidgets(new TreeObjectAdapter(widgetContainerDisplayItemOrObject));
     } else {
         return enumWidgets(widgetContainerDisplayItemOrObject);
@@ -426,7 +432,7 @@ function findPageTransparentRectanglesInTree(tree: TreeNode): Rect[] {
     return grid.getTransparentRectangles();
 }
 
-function findPageTransparentRectanglesInContainer(container: EezObject) {
+function findPageTransparentRectanglesInContainer(container: IEezObject) {
     return findPageTransparentRectanglesInTree(createWidgetTree(container, false));
 }
 

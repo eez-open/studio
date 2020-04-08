@@ -1,13 +1,13 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
 
-import { EezObject } from "project-editor/core/object";
+import { IEezObject } from "project-editor/core/object";
 
 import { ITransform, Transform } from "project-editor/features/gui/page-editor/transform";
 
 export interface IBaseObject {
     id: string;
     rect: Rect;
-    object: EezObject;
+    object: IEezObject;
     children: IBaseObject[];
     isMoveable: boolean;
     getResizeHandlers?: () => IResizeHandler[] | undefined | false;

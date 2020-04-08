@@ -10,6 +10,7 @@ import {
     ClassInfo,
     PropertyInfo,
     registerClass,
+    IEezObject,
     EezObject,
     InheritedValue,
     PropertyType,
@@ -50,7 +51,7 @@ const { MenuItem } = EEZStudio.electron.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function isWidgetParentOfStyle(object: EezObject) {
+export function isWidgetParentOfStyle(object: IEezObject) {
     const widgetClass = findClass("Widget")!;
     while (true) {
         if (isObjectInstanceOf(object, widgetClass.classInfo)) {
@@ -263,7 +264,7 @@ const inheritFromProperty: PropertyInfo = {
     name: "inheritFrom",
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: ["gui", "styles"],
-    onSelect: (object: EezObject, propertyInfo: PropertyInfo) =>
+    onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
         onSelectItem(object, propertyInfo, {
             title: propertyInfo.onSelectTitle!,
             width: 1200
@@ -651,7 +652,7 @@ export class Style extends EezObject {
             }
         },
         isPropertyMenuSupported: true,
-        newItem: (object: EezObject) => {
+        newItem: (object: IEezObject) => {
             return Promise.resolve({
                 name: "Style"
             });
@@ -660,7 +661,7 @@ export class Style extends EezObject {
         getInheritedValue: (styleObject: Style, propertyName: string) =>
             getInheritedValue(styleObject, propertyName, false),
         navigationComponentId: "styles",
-        isEditorSupported: (object: EezObject) => !isWidgetParentOfStyle(object),
+        isEditorSupported: (object: IEezObject) => !isWidgetParentOfStyle(object),
         navigationComponent: StylesNavigation,
         icon: "format_color_fill",
         defaultValue: {}

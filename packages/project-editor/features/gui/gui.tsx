@@ -7,6 +7,7 @@ import { guid } from "eez-studio-shared/guid";
 import {
     ClassInfo,
     registerClass,
+    IEezObject,
     EezObject,
     EezArrayObject,
     PropertyType,
@@ -91,7 +92,7 @@ export class Gui extends EezObject {
                 type: PropertyType.Array,
                 typeClass: Style,
                 hideInPropertyGrid: true,
-                enumerable: (object: EezObject, propertyInfo: PropertyInfo) => {
+                enumerable: (object: IEezObject, propertyInfo: PropertyInfo) => {
                     return !ProjectStore.masterProjectEnabled;
                 }
             },
@@ -100,10 +101,10 @@ export class Gui extends EezObject {
                 type: PropertyType.Array,
                 typeClass: Font,
                 hideInPropertyGrid: true,
-                enumerable: (object: EezObject, propertyInfo: PropertyInfo) => {
+                enumerable: (object: IEezObject, propertyInfo: PropertyInfo) => {
                     return !ProjectStore.masterProjectEnabled;
                 },
-                check: (object: EezObject) => {
+                check: (object: IEezObject) => {
                     let messages: output.Message[] = [];
 
                     if (asArray(object).length > 255) {
@@ -124,7 +125,7 @@ export class Gui extends EezObject {
                 type: PropertyType.Array,
                 typeClass: Bitmap,
                 hideInPropertyGrid: true,
-                check: (object: EezObject) => {
+                check: (object: IEezObject) => {
                     let messages: output.Message[] = [];
 
                     if (asArray(object).length > 255) {

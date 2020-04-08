@@ -6,7 +6,7 @@ import { guid } from "eez-studio-shared/guid";
 import { Icon } from "eez-studio-ui/icon";
 
 import {
-    EezObject,
+    IEezObject,
     IMessage,
     MessageType,
     getChildOfObject,
@@ -28,7 +28,7 @@ export class Message implements IMessage {
     id: string = guid();
     @observable selected: boolean = false;
 
-    constructor(public type: MessageType, public text: string, public object?: EezObject) {}
+    constructor(public type: MessageType, public text: string, public object?: IEezObject) {}
 }
 
 export class OutputSection implements IPanel {
@@ -111,7 +111,7 @@ export class OutputSection implements IPanel {
     }
 
     @computed
-    get selectedObject(): EezObject | undefined {
+    get selectedObject(): IEezObject | undefined {
         return this.selectedMessage && this.messages.indexOf(this.selectedMessage) !== -1
             ? this.selectedMessage.object
             : undefined;
@@ -186,7 +186,7 @@ export class OutputSections {
     }
 
     @action
-    write(sectionType: Section, type: MessageType, text: string, object?: EezObject) {
+    write(sectionType: Section, type: MessageType, text: string, object?: IEezObject) {
         let section = this.sections[sectionType];
         section.messages.push(new Message(type, text, object));
     }
@@ -201,7 +201,7 @@ export class OutputSections {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function propertyNotSetMessage(
-    object: EezObject,
+    object: IEezObject,
     propertyName: string,
     type: MessageType = MessageType.ERROR
 ) {
@@ -213,7 +213,7 @@ export function propertyNotSetMessage(
 }
 
 export function propertyNotUniqueMessage(
-    object: EezObject,
+    object: IEezObject,
     propertyName: string,
     type: MessageType = MessageType.ERROR
 ) {
@@ -225,7 +225,7 @@ export function propertyNotUniqueMessage(
 }
 
 export function propertySetButNotUsedMessage(
-    object: EezObject,
+    object: IEezObject,
     propertyName: string,
     type: MessageType = MessageType.ERROR
 ) {
@@ -237,7 +237,7 @@ export function propertySetButNotUsedMessage(
 }
 
 export function propertyNotFoundMessage(
-    object: EezObject,
+    object: IEezObject,
     propertyName: string,
     type: MessageType = MessageType.ERROR
 ) {
@@ -249,7 +249,7 @@ export function propertyNotFoundMessage(
 }
 
 export function propertyInvalidValueMessage(
-    object: EezObject,
+    object: IEezObject,
     propertyName: string,
     type: MessageType = MessageType.ERROR
 ) {

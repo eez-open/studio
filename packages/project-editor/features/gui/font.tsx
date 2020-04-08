@@ -21,6 +21,7 @@ import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 
 import {
     ClassInfo,
+    IEezObject,
     EezObject,
     registerClass,
     EezArrayObject,
@@ -344,7 +345,7 @@ export class Glyph extends EezObject {
                 skipSearch: true
             }
         ],
-        beforeLoadHook(object: EezObject, jsObject: any) {
+        beforeLoadHook(object: IEezObject, jsObject: any) {
             if (jsObject.glyphBitmap) {
                 if (
                     jsObject.width != jsObject.glyphBitmap.width ||
@@ -1551,7 +1552,7 @@ export class FontEditor
     extends React.Component<{
         font: Font;
         navigationStore?: INavigationStore;
-        onDoubleClickItem?: (item: EezObject) => void;
+        onDoubleClickItem?: (item: IEezObject) => void;
     }>
     implements IPanel {
     get glyphs() {
@@ -1821,7 +1822,7 @@ export class FontEditor
 
 @observer
 export class FontsNavigation extends NavigationComponent {
-    static getFont(object: EezObject | undefined) {
+    static getFont(object: IEezObject | undefined) {
         while (object) {
             if (object instanceof Font) {
                 return object;
@@ -2051,21 +2052,21 @@ export class Font extends EezObject {
                 type: PropertyType.Boolean
             }
         ],
-        newItem: (parent: EezObject) => {
-            function isFont(obj: EezObject) {
+        newItem: (parent: IEezObject) => {
+            function isFont(obj: IEezObject) {
                 return getProperty(obj, "filePath");
             }
 
-            function isNonBdfFont(obj: EezObject) {
+            function isNonBdfFont(obj: IEezObject) {
                 const path = EEZStudio.electron.remote.require("path");
                 return isFont(obj) && path.extname(getProperty(obj, "filePath")) != ".bdf";
             }
 
-            function isNonBdfFontAnd1BitPerPixel(obj: EezObject) {
+            function isNonBdfFontAnd1BitPerPixel(obj: IEezObject) {
                 return isNonBdfFont(obj) && getProperty(obj, "bpp") === 1;
             }
 
-            function isCreateGlyphs(obj: EezObject) {
+            function isCreateGlyphs(obj: IEezObject) {
                 return isFont(obj) && getProperty(obj, "createGlyphs");
             }
 

@@ -2,6 +2,7 @@ import { toJS } from "mobx";
 
 import {
     EezClass,
+    IEezObject,
     EezObject,
     EezArrayObject,
     PropertyType,
@@ -15,7 +16,7 @@ import {
     getClassInfo
 } from "project-editor/core/object";
 
-export function getChildId(parent: EezObject | undefined) {
+export function getChildId(parent: IEezObject | undefined) {
     let id;
     if (parent) {
         id = getId(parent) + "." + getNextChildId(parent);
@@ -42,11 +43,11 @@ function loadArrayObject(arrayObject: any, parent: any, propertyInfo: PropertyIn
 }
 
 export function loadObject(
-    parent: EezObject | EezObject[] | undefined,
+    parent: IEezObject | IEezObject[] | undefined,
     jsObjectOrString: any | string,
     aClass: EezClass,
     key?: string
-): EezObject {
+): IEezObject {
     let jsObject: any =
         typeof jsObjectOrString == "string" ? JSON.parse(jsObjectOrString) : jsObjectOrString;
 
@@ -58,7 +59,7 @@ export function loadObject(
         });
     }
 
-    let object: EezObject;
+    let object: IEezObject;
 
     try {
         object = aClass.classInfo.getClass
@@ -72,8 +73,8 @@ export function loadObject(
 
     const classInfo = getClassInfo(object);
 
-    setId(object, getChildId(parent as EezObject));
-    setParent(object, parent as EezObject);
+    setId(object, getChildId(parent as IEezObject));
+    setParent(object, parent as IEezObject);
 
     if (classInfo.beforeLoadHook) {
         classInfo.beforeLoadHook(object, jsObject);
@@ -87,7 +88,7 @@ export function loadObject(
         let value = jsObject[propertyInfo.name];
 
         if (propertyInfo.type === PropertyType.Object) {
-            let childObject: EezObject | undefined;
+            let childObject: IEezObject | undefined;
 
             if (value) {
                 childObject = loadObject(object, value, propertyInfo.typeClass!);
@@ -119,7 +120,7 @@ export function loadObject(
 }
 
 export function objectToJson(
-    object: EezObject | EezObject[],
+    object: IEezObject | IEezObject[],
     space?: number,
     toJsHook?: (jsObject: any) => void
 ) {
@@ -150,6 +151,6 @@ export function objectToJson(
     );
 }
 
-export function objectToJS(object: EezObject | EezObject[]): any {
+export function objectToJS(object: IEezObject | IEezObject[]): any {
     return JSON.parse(objectToJson(object));
 }

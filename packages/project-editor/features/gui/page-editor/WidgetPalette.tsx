@@ -6,7 +6,6 @@ import classNames from "classnames";
 import { humanize } from "eez-studio-shared/string";
 
 import {
-    EezObject,
     EezClass,
     getClassesDerivedFrom,
     setId,
@@ -23,7 +22,7 @@ import styled from "eez-studio-ui/styled-components";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getWidgetType(widgetClass: typeof EezObject) {
+function getWidgetType(widgetClass: EezClass) {
     if (widgetClass.name.endsWith("Widget")) {
         return widgetClass.name.substring(0, widgetClass.name.length - "Widget".length);
     }

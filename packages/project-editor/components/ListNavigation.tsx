@@ -9,7 +9,7 @@ import { styled } from "eez-studio-ui/styled-components";
 import { SearchInput } from "eez-studio-ui/search-input";
 
 import {
-    EezObject,
+    IEezObject,
     NavigationComponentProps,
     objectToString,
     isPartOfNavigation,
@@ -95,7 +95,7 @@ export class SortableTitle extends React.Component<{
 @observer
 class AddButton extends React.Component<{
     listAdapter: ListAdapter;
-    navigationObject: EezObject | undefined;
+    navigationObject: IEezObject | undefined;
 }> {
     async onAdd() {
         if (this.props.navigationObject) {
@@ -123,7 +123,7 @@ class AddButton extends React.Component<{
 
 @observer
 class DeleteButton extends React.Component<{
-    navigationObject: EezObject | undefined;
+    navigationObject: IEezObject | undefined;
     navigationStore?: INavigationStore;
 }> {
     onDelete() {
@@ -168,8 +168,8 @@ const ListWithSearchInputContainer = styled.div`
 interface ListNavigationProps {
     id: string;
     title?: string;
-    navigationObject: EezObject;
-    onDoubleClickItem?: (item: EezObject) => void;
+    navigationObject: IEezObject;
+    onDoubleClickItem?: (item: IEezObject) => void;
     additionalButtons?: JSX.Element[];
     onEditItem?: (itemId: string) => void;
     renderItem?: (itemId: string) => React.ReactNode;
@@ -177,7 +177,7 @@ interface ListNavigationProps {
     dragAndDropManager?: DragAndDropManagerClass;
     searchInput?: boolean;
     editable?: boolean;
-    filter?: (object: EezObject) => boolean;
+    filter?: (object: IEezObject) => boolean;
 }
 
 @observer
@@ -203,7 +203,7 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
     }
 
     @bind
-    onDoubleClickItem(object: EezObject) {
+    onDoubleClickItem(object: IEezObject) {
         if (this.props.onDoubleClickItem) {
             this.props.onDoubleClickItem(object);
         } else if (EditorsStore.activeEditor && EditorsStore.activeEditor.object == object) {
@@ -216,7 +216,7 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
         const navigationStore = this.props.navigationStore || NavigationStore;
         let selectedItem = navigationStore.getNavigationSelectedItem(
             this.props.navigationObject
-        ) as EezObject;
+        ) as IEezObject;
         return selectedItem || navigationStore.selectedObject;
     }
 
@@ -329,7 +329,7 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
 interface ListNavigationWithContentProps extends NavigationComponentProps {
     content: React.ReactNode;
     title?: string;
-    onDoubleClickItem?: (item: EezObject) => void;
+    onDoubleClickItem?: (item: IEezObject) => void;
     additionalButtons?: JSX.Element[];
     orientation?: "horizontal" | "vertical";
     onEditItem?: (itemId: string) => void;

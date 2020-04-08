@@ -10,6 +10,7 @@ import { Rect } from "eez-studio-shared/geometry";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import {
+    IEezObject,
     EezObject,
     ClassInfo,
     PropertyInfo,
@@ -110,13 +111,13 @@ export class PageTabState implements IEditorState {
     page: Page;
     widgetContainerDisplayItem: ITreeObjectAdapter;
 
-    constructor(object: EezObject) {
+    constructor(object: IEezObject) {
         this.page = object as Page;
         this.widgetContainerDisplayItem = new TreeObjectAdapter(this.page);
     }
 
     @computed
-    get selectedObject(): EezObject | undefined {
+    get selectedObject(): IEezObject | undefined {
         return this.widgetContainerDisplayItem.selectedObject || this.page;
     }
 
@@ -134,8 +135,8 @@ export class PageTabState implements IEditorState {
     }
 
     @action
-    selectObject(object: EezObject) {
-        let ancestor: EezObject | undefined;
+    selectObject(object: IEezObject) {
+        let ancestor: IEezObject | undefined;
         for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
             let item = this.widgetContainerDisplayItem.getObjectAdapter(ancestor);
             if (item) {
@@ -458,7 +459,7 @@ export class Page extends EezObject {
             }
         },
         isPropertyMenuSupported: true,
-        newItem: (parent: EezObject) => {
+        newItem: (parent: IEezObject) => {
             return Promise.resolve({
                 name: "Page",
                 left: 0,
@@ -473,10 +474,10 @@ export class Page extends EezObject {
         },
         navigationComponentId: "pages",
         findPastePlaceInside: (
-            object: EezObject,
+            object: IEezObject,
             classInfo: ClassInfo,
             isSingleObject: boolean
-        ): EezObject | PropertyInfo | undefined => {
+        ): IEezObject | PropertyInfo | undefined => {
             if (object && isSubclassOf(classInfo, Widget.classInfo)) {
                 return (object as Page).widgets;
             }

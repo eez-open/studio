@@ -11,6 +11,7 @@ import { showGenericDialog, EnumItems } from "eez-studio-ui/generic-dialog";
 
 import {
     ClassInfo,
+    IEezObject,
     EezObject,
     EezArrayObject,
     PropertyType,
@@ -108,7 +109,7 @@ export class ScpiEnum extends EezObject {
                 typeClass: ScpiEnumMember
             }
         ],
-        newItem: (parent: EezObject) => {
+        newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
                     title: "New Enumaration",

@@ -1,4 +1,4 @@
-import { EezObject, EezClass, PropertyType } from "project-editor/core/object";
+import { IEezObject, EezClass, PropertyType } from "project-editor/core/object";
 import { Message } from "project-editor/core/output";
 import { Project, BuildConfiguration } from "project-editor/project/project";
 
@@ -14,7 +14,7 @@ interface ExtensionImplementation {
         type: PropertyType;
         typeClass: EezClass;
         create: () => any;
-        check?: (object: EezObject) => Message[];
+        check?: (object: IEezObject) => Message[];
         build?: (
             project: Project,
             sectionNames: string[] | undefined,
@@ -122,12 +122,12 @@ export function loadExtensions(): Promise<void> {
 
             totalExtensions++;
 
-            fs.stat(folder, function(err: any, stats: any) {
+            fs.stat(folder, function (err: any, stats: any) {
                 if (err) {
                     console.error(err);
                     loadExtensionFinished();
                 } else if (stats.isDirectory) {
-                    fs.readFile(path.join(folder, "package.json"), "utf-8", function(
+                    fs.readFile(path.join(folder, "package.json"), "utf-8", function (
                         err: any,
                         data: any
                     ) {
@@ -160,7 +160,7 @@ export function loadExtensions(): Promise<void> {
         const fs = EEZStudio.electron.remote.require("fs");
 
         let extensionsFolder = __dirname + "/../features";
-        fs.readdir(extensionsFolder, function(err: any, files: any) {
+        fs.readdir(extensionsFolder, function (err: any, files: any) {
             if (err) {
                 reject("Failed to load extensions!");
             } else {

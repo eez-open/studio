@@ -26,7 +26,7 @@ import {
 import { Section } from "project-editor/core/output";
 import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
 import {
-    EezObject,
+    IEezObject,
     EezArrayObject,
     PropertyInfo,
     PropertyType,
@@ -38,7 +38,7 @@ import {
     getInheritedValue,
     getPropertyAsString,
     isProperAncestor,
-    findPropertyByName,
+    findPropertyByNameInClassInfo,
     PropertyProps,
     getCommonProperties,
     getPropertySourceInfo,
@@ -67,12 +67,12 @@ export { PropertyProps } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getPropertyValue(objects: EezObject[], propertyInfo: PropertyInfo) {
+function getPropertyValue(objects: IEezObject[], propertyInfo: PropertyInfo) {
     if (objects.length === 0) {
         return undefined;
     }
 
-    function getObjectPropertyValue(object: EezObject) {
+    function getObjectPropertyValue(object: IEezObject) {
         let value = (object as any)[propertyInfo.name];
 
         if (value === undefined && propertyInfo.inheritable) {
@@ -103,12 +103,12 @@ function getPropertyValue(objects: EezObject[], propertyInfo: PropertyInfo) {
     return result;
 }
 
-function getPropertyValueAsString(objects: EezObject[], propertyInfo: PropertyInfo) {
+function getPropertyValueAsString(objects: IEezObject[], propertyInfo: PropertyInfo) {
     if (objects.length === 0) {
         return undefined;
     }
 
-    function getObjectPropertyValue(object: EezObject) {
+    function getObjectPropertyValue(object: IEezObject) {
         let value = getPropertyAsString(object, propertyInfo);
 
         if (value === undefined && propertyInfo.inheritable) {
@@ -345,7 +345,7 @@ class ThemedColorInput extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function isArrayElementPropertyVisible(propertyInfo: PropertyInfo, object?: EezObject) {
+function isArrayElementPropertyVisible(propertyInfo: PropertyInfo, object?: IEezObject) {
     if (object) {
         return !isPropertyHidden(object, propertyInfo);
     }
@@ -361,7 +361,7 @@ function isArrayElementPropertyVisible(propertyInfo: PropertyInfo, object?: EezO
     return false;
 }
 
-function isHighlightedProperty(object: EezObject, propertyInfo: PropertyInfo) {
+function isHighlightedProperty(object: IEezObject, propertyInfo: PropertyInfo) {
     const selectedObject =
         NavigationStore.selectedPanel && NavigationStore.selectedPanel.selectedObject;
     return !!(
@@ -371,7 +371,7 @@ function isHighlightedProperty(object: EezObject, propertyInfo: PropertyInfo) {
     );
 }
 
-function isPropertyInError(object: EezObject, propertyInfo: PropertyInfo) {
+function isPropertyInError(object: IEezObject, propertyInfo: PropertyInfo) {
     return !!OutputSectionsStore.getSection(Section.CHECKS).messages.find(
         message =>
             message.object &&
@@ -383,7 +383,7 @@ function isPropertyInError(object: EezObject, propertyInfo: PropertyInfo) {
 @observer
 class ArrayElementProperty extends React.Component<{
     propertyInfo: PropertyInfo;
-    object: EezObject;
+    object: IEezObject;
 }> {
     @bind
     updateObject(propertyValues: Object) {
@@ -422,7 +422,7 @@ class ArrayElementProperty extends React.Component<{
 
 @observer
 class ArrayElementProperties extends React.Component<{
-    object: EezObject;
+    object: IEezObject;
     className?: string;
 }> {
     @bind
@@ -460,7 +460,7 @@ class ArrayProperty extends React.Component<PropertyProps> {
     @computed
     get value() {
         return (this.props.objects[0] as any)[this.props.propertyInfo.name] as
-            | EezArrayObject<EezObject>
+            | EezArrayObject<IEezObject>
             | undefined;
     }
 
@@ -477,7 +477,7 @@ class ArrayProperty extends React.Component<PropertyProps> {
             });
 
             value = (this.props.objects[0] as any)[this.props.propertyInfo.name] as EezArrayObject<
-                EezObject
+                IEezObject
             >;
         }
 
@@ -619,7 +619,7 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
         const collapsed = propertyCollapsedStore.isCollapsed(this.props.propertyInfo);
         if (collapsed) {
             if (propertyInfo.propertyGridCollapsableDefaultPropertyName) {
-                const defaultPropertyInfo = findPropertyByName(
+                const defaultPropertyInfo = findPropertyByNameInClassInfo(
                     propertyInfo.typeClass!.classInfo,
                     propertyInfo.propertyGridCollapsableDefaultPropertyName
                 )!;
@@ -1053,7 +1053,7 @@ class Property extends React.Component<PropertyProps> {
                     </div>
                 );
             } else {
-                let objects: EezObject[] = [];
+                let objects: IEezObject[] = [];
 
                 if (propertyInfo.referencedObjectCollectionPath) {
                     objects = asArray(
@@ -1402,7 +1402,7 @@ class Property extends React.Component<PropertyProps> {
 
 class GroupMenu extends React.Component<{
     group: IPropertyGridGroupDefinition;
-    object: EezObject;
+    object: IEezObject;
 }> {
     @bind onClick(event: MouseEvent) {
         const { group, object } = this.props;
@@ -1452,7 +1452,7 @@ const groupCollapsedStore = new GroupCollapsedStore();
 @observer
 class GroupTitle extends React.Component<{
     group: IPropertyGridGroupDefinition;
-    object: EezObject;
+    object: IEezObject;
 }> {
     @bind
     toggleCollapsed() {
@@ -1652,14 +1652,14 @@ const PropertyGridDiv = styled.div`
 `;
 
 interface PropertyGridProps {
-    objects: EezObject[];
+    objects: IEezObject[];
     className?: string;
 }
 
 @observer
 export class PropertyGrid extends React.Component<PropertyGridProps> {
     div: HTMLDivElement | null;
-    lastObject: EezObject | undefined;
+    lastObject: IEezObject | undefined;
 
     @computed
     get objects() {

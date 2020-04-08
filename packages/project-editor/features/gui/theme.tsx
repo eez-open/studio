@@ -6,6 +6,7 @@ import { guid } from "eez-studio-shared/guid";
 import {
     getProperty,
     ClassInfo,
+    IEezObject,
     EezObject,
     registerClass,
     PropertyType,
@@ -316,7 +317,7 @@ export class Color extends EezObject {
                 unique: true
             }
         ],
-        newItem: (parent: EezObject) => {
+        newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
                     title: "New Color",
@@ -343,7 +344,7 @@ export class Color extends EezObject {
 
     extendContextMenu(
         context: IContextMenuContext,
-        objects: EezObject[],
+        objects: IEezObject[],
         menuItems: Electron.MenuItem[]
     ) {
         var additionalMenuItems: Electron.MenuItem[] = [];
@@ -419,7 +420,7 @@ export class Theme extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
-        newItem: (parent: EezObject) => {
+        newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
                     title: "New Theme",

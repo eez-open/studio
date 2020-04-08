@@ -2,7 +2,7 @@ import { _isEqual } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
 import {
-    EezObject,
+    IEezObject,
     EezValueObject,
     PropertyType,
     getProperty,
@@ -23,7 +23,7 @@ import { Section, Type } from "project-editor/core/output";
 
 type VisitResult = EezValueObject | null;
 
-function* visitWithPause(parentObject: EezObject): IterableIterator<VisitResult> {
+function* visitWithPause(parentObject: IEezObject): IterableIterator<VisitResult> {
     if (isArray(parentObject)) {
         let arrayOfObjects = asArray(parentObject);
         for (let i = 0; i < arrayOfObjects.length; i++) {
@@ -51,7 +51,7 @@ function* visitWithPause(parentObject: EezObject): IterableIterator<VisitResult>
     yield null;
 }
 
-function* visitWithoutPause(parentObject: EezObject): IterableIterator<VisitResult> {
+function* visitWithoutPause(parentObject: IEezObject): IterableIterator<VisitResult> {
     if (isArray(parentObject)) {
         let arrayOfObjects = asArray(parentObject);
         for (let i = 0; i < arrayOfObjects.length; i++) {
@@ -81,7 +81,7 @@ function* visitWithoutPause(parentObject: EezObject): IterableIterator<VisitResu
 type SearchResult = EezValueObject | null;
 
 function* searchForPattern(
-    root: EezObject,
+    root: IEezObject,
     pattern: string,
     matchCase: boolean,
     matchWholeWord: boolean,
@@ -148,8 +148,8 @@ function* searchForPattern(
 }
 
 function* searchForReference(
-    root: EezObject,
-    object: EezObject,
+    root: IEezObject,
+    object: IEezObject,
     withPause: boolean
 ): IterableIterator<SearchResult> {
     let v = withPause ? visitWithPause(root) : visitWithoutPause(root);
@@ -231,8 +231,8 @@ class CurrentSearch {
     interval: any;
 
     startNewSearch(
-        root: EezObject,
-        patternOrObject: string | EezObject,
+        root: IEezObject,
+        patternOrObject: string | IEezObject,
         matchCase: boolean,
         matchWholeWord: boolean
     ) {
@@ -288,8 +288,8 @@ class CurrentSearch {
 let theCurrentSearch = new CurrentSearch();
 
 function startNewSearch(
-    root: EezObject,
-    patternOrObject: string | EezObject,
+    root: IEezObject,
+    patternOrObject: string | IEezObject,
     matchCase: boolean,
     matchWholeWord: boolean
 ) {
@@ -301,14 +301,14 @@ export function startSearch(pattern: string, matchCase: boolean, matchWholeWord:
     startNewSearch(DocumentStore.document, pattern, matchCase, matchWholeWord);
 }
 
-export function findAllReferences(object: EezObject) {
+export function findAllReferences(object: IEezObject) {
     OutputSectionsStore.setActiveSection(Section.SEARCH);
     startNewSearch(DocumentStore.document, object, true, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function isReferenced(object: EezObject) {
+export function isReferenced(object: IEezObject) {
     let resultsGenerator = searchForReference(DocumentStore.document, object, false);
 
     while (true) {
@@ -323,7 +323,7 @@ export function isReferenced(object: EezObject) {
     }
 }
 
-export function replaceObjectReference(object: EezObject, newValue: string) {
+export function replaceObjectReference(object: IEezObject, newValue: string) {
     let resultsGenerator = searchForReference(DocumentStore.document, object, false);
 
     while (true) {

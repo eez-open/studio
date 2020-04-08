@@ -5,7 +5,7 @@ import classNames from "classnames";
 import styled from "eez-studio-ui/styled-components";
 
 import {
-    EezObject,
+    IEezObject,
     getChildren,
     objectToString,
     getId,
@@ -33,8 +33,8 @@ const NavigationMenuItemContainer = styled.div`
 `;
 
 interface NavigationMenuItemProps {
-    navigationObject: EezObject;
-    item: EezObject;
+    navigationObject: IEezObject;
+    item: IEezObject;
 }
 
 @observer
@@ -79,7 +79,7 @@ const MenuContainer = styled.div`
 
 @observer
 class Menu extends React.Component<{
-    navigationObject: EezObject;
+    navigationObject: IEezObject;
 }> {
     onFocus() {
         NavigationStore.setSelectedPanel(undefined);
@@ -116,7 +116,7 @@ const MenuNavigationContainer = styled.div`
 export class MenuNavigation extends React.Component<
     {
         id: string;
-        navigationObject: EezObject;
+        navigationObject: IEezObject;
     },
     {}
 > {
