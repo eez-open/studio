@@ -263,18 +263,6 @@ registerFeatureImplementation("gui", {
                     }[];
                 };
                 themeColors: any;
-                fonts: {
-                    _array: {
-                        glyphs: {
-                            _array: {
-                                glyphBitmap?: {
-                                    pixelArray: number[];
-                                    pixelArrayCompressed: number[];
-                                };
-                            }[];
-                        };
-                    }[];
-                };
                 pages: {
                     _array: {
                         left: number;
@@ -305,27 +293,6 @@ registerFeatureImplementation("gui", {
                 });
 
                 delete jsObject.gui.themeColors;
-
-                ///
-
-                // const fontsArray = jsObject.gui.fonts._array;
-                // for (let fontIndex = 0; fontIndex < fontsArray.length; fontIndex++) {
-                //     const glyphsArray = fontsArray[fontIndex].glyphs._array;
-                //     for (let glyphIndex = 0; glyphIndex < glyphsArray.length; glyphIndex++) {
-                //         const glyph = glyphsArray[glyphIndex];
-                //         if (glyph.glyphBitmap) {
-                //             var inputBuffer = Buffer.from(glyph.glyphBitmap.pixelArray);
-
-                //             var outputBuffer = Buffer.alloc(LZ4.encodeBound(inputBuffer.length));
-                //             var compressedSize = LZ4.encodeBlock(inputBuffer, outputBuffer);
-
-                //             delete glyph.glyphBitmap.pixelArray;
-                //             glyph.glyphBitmap.pixelArrayCompressed = [
-                //                 ...outputBuffer.slice(0, compressedSize)
-                //             ];
-                //         }
-                //     }
-                // }
             }
         }
     }

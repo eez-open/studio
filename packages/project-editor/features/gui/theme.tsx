@@ -460,11 +460,7 @@ registerClass(Theme);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function getThemedColorInGui(gui: Gui, colorValue: string): string | undefined {
-    if (colorValue.startsWith("#")) {
-        return colorValue;
-    }
-
+function getThemedColorInGui(gui: Gui, colorValue: string): string | undefined {
     let selectedTheme = navigationStore.get().getNavigationSelectedItem(gui.themes) as Theme;
     if (!selectedTheme) {
         selectedTheme = asArray(gui.themes)[0];
@@ -495,16 +491,6 @@ export function getThemedColor(colorValue: string): string {
     let color = getThemedColorInGui(gui, colorValue);
     if (color) {
         return color;
-    }
-
-    if (ProjectStore.masterProject) {
-        const gui = (ProjectStore.masterProject as any).gui as Gui;
-        if (gui) {
-            let color = getThemedColorInGui(gui, colorValue);
-            if (color) {
-                return color;
-            }
-        }
     }
 
     return colorValue;

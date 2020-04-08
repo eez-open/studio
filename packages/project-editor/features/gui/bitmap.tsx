@@ -257,7 +257,7 @@ export interface BitmapData {
     height: number;
     bpp: number;
     style?: string;
-    pixels: number[];
+    pixels: Uint8Array;
 }
 
 export function getData(bitmap: Bitmap): Promise<BitmapData> {
@@ -288,7 +288,8 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
 
             let imageData = ctx.getImageData(0, 0, image.width, image.height).data;
 
-            let pixels: number[] = [];
+            let pixels = new Uint8Array((bitmap.bpp === 32 ? 4 : 2) * image.width * image.height);
+
             for (let i = 0; i < 4 * image.width * image.height; i += 4) {
                 let r = imageData[i];
                 let g = imageData[i + 1];
@@ -296,14 +297,14 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
 
                 if (bitmap.bpp === 32) {
                     let a = imageData[i + 3];
-                    pixels.push(b);
-                    pixels.push(g);
-                    pixels.push(r);
-                    pixels.push(a);
+                    pixels[i] = b;
+                    pixels[i + 1] = g;
+                    pixels[i + 2] = r;
+                    pixels[i + 3] = a;
                 } else {
                     // rrrrrggggggbbbbb
-                    pixels.push(((g & 28) << 3) | (b >> 3));
-                    pixels.push((r & 248) | (g >> 5));
+                    pixels[i / 2] = ((g & 28) << 3) | (b >> 3);
+                    pixels[i / 2 + 1] = (r & 248) | (g >> 5);
                 }
             }
 

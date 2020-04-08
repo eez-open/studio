@@ -16,13 +16,95 @@ import { DataItem } from "project-editor/features/data/data";
 import { Action } from "project-editor/features/action/action";
 
 import { Gui, findStyle, findFont, findBitmap } from "project-editor/features/gui/gui";
-import { getData as getFontData } from "project-editor/features/gui/font";
 import { getData as getBitmapData, Bitmap } from "project-editor/features/gui/bitmap";
 import { Style, getStyleProperty } from "project-editor/features/gui/style";
 import * as Widget from "project-editor/features/gui/widget";
 import { Page } from "project-editor/features/gui/page";
 import { Font } from "project-editor/features/gui/font";
 import { Theme } from "project-editor/features/gui/theme";
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function getFontData(font: Font, dataBuffer: DataBuffer) {
+    /*
+    Font header:
+
+    offset
+    0           ascent              uint8
+    1           descent             uint8
+    2           encoding start      uint8
+    3           encoding end        uint8
+    4           1st encoding offset uint16 BE (1 bpp) | uint32 LE (8 bpp)
+    6           2nd encoding offset uint16 BE (1 bpp) | uint32 LE (8 bpp)
+    ...
+    */
+
+    /*
+    Glyph header:
+
+    offset
+    0             DWIDTH                    int8
+    1             BBX width                 uint8
+    2             BBX height                uint8
+    3             BBX xoffset               int8
+    4             BBX yoffset               int8
+
+    Note: byte 0 == 255 indicates empty glyph
+    */
+
+    const min = Math.min(...font.glyphs.map(g => g.encoding));
+    const startEncoding = Number.isFinite(min) ? min : 32;
+    const max = Math.max(...font.glyphs.map(g => g.encoding));
+    const endEncoding = Number.isFinite(max) ? max : 127;
+
+    const offsetAtStart = dataBuffer.offset;
+
+    if (startEncoding <= endEncoding) {
+        dataBuffer.packInt8(font.ascent);
+        dataBuffer.packInt8(font.descent);
+        dataBuffer.packInt8(startEncoding);
+        dataBuffer.packInt8(endEncoding);
+
+        for (let i = startEncoding; i <= endEncoding; i++) {
+            if (font.bpp === 8) {
+                dataBuffer.packInt8(0);
+                dataBuffer.packInt8(0);
+                dataBuffer.packInt8(0);
+                dataBuffer.packInt8(0);
+            } else {
+                dataBuffer.packInt8(0);
+                dataBuffer.packInt8(0);
+            }
+        }
+
+        for (let i = startEncoding; i <= endEncoding; i++) {
+            const offsetIndex = 4 + (i - startEncoding) * (font.bpp === 8 ? 4 : 2);
+            const offset = dataBuffer.offset - offsetAtStart;
+            if (font.bpp === 8) {
+                // uint32 LE
+                dataBuffer.packUInt32AtOffset(offsetAtStart + offsetIndex, offset);
+            } else {
+                // uint16 BE
+                dataBuffer.packUInt8AtOffset(offsetAtStart + offsetIndex + 0, offset >> 8);
+                dataBuffer.packUInt8AtOffset(offsetAtStart + offsetIndex + 1, offset & 0xff);
+            }
+
+            let glyph = font.glyphs.find(glyph => glyph.encoding == i);
+
+            if (glyph && glyph.glyphBitmap && glyph.glyphBitmap.pixelArray) {
+                dataBuffer.packInt8(glyph.dx);
+                dataBuffer.packInt8(glyph.width);
+                dataBuffer.packInt8(glyph.height);
+                dataBuffer.packInt8(glyph.x);
+                dataBuffer.packInt8(glyph.y);
+
+                dataBuffer.packNumberArray(glyph.glyphBitmap.pixelArray);
+            } else {
+                dataBuffer.packInt8(255);
+            }
+        }
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,50 +155,99 @@ const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function packUInt16(value: number) {
-    return [value & 0xff, value >> 8];
-}
+export class DataBuffer {
+    buffer: Uint8Array;
+    offset: number;
 
-function packInt16(value: number) {
-    if (value < 0) {
-        value = 65535 + value + 1;
+    constructor() {
+        this.buffer = new Uint8Array(10 * 1024 * 1024);
+        this.offset = 0;
     }
-    return [value & 0xff, value >> 8];
-}
 
-function packUInt32(value: number) {
-    return [value & 0xff, (value >> 8) & 0xff, (value >> 16) & 0xff, value >> 24];
-}
+    packUInt8(value: number) {
+        this.buffer[this.offset++] = value;
+    }
 
-function addPadding(data: number[], length: number) {
-    if (length === 2) {
-        if (data.length % 2) {
-            data.push(0);
+    packInt8(value: number) {
+        if (value < 0) {
+            this.buffer[this.offset++] = 256 + value;
+        } else {
+            this.buffer[this.offset++] = value;
         }
-    } else if (length >= 4) {
-        if (data.length % 4) {
-            const n = 4 - (data.length % 4);
-            for (let i = 0; i < n; ++i) {
-                data.push(0);
+    }
+
+    packUInt16(value: number) {
+        this.packUInt8(value & 0xff);
+        this.packUInt8(value >> 8);
+    }
+
+    packInt16(value: number) {
+        if (value < 0) {
+            value = 65536 + value;
+        }
+        this.packUInt8(value & 0xff);
+        this.packUInt8(value >> 8);
+    }
+
+    packUInt32(value: number) {
+        this.packUInt8(value & 0xff);
+        this.packUInt8((value >> 8) & 0xff);
+        this.packUInt8((value >> 16) & 0xff);
+        this.packUInt8(value >> 24);
+    }
+
+    packUInt8AtOffset(offset: number, value: number) {
+        this.buffer[offset] = value;
+    }
+
+    packUInt32AtOffset(offset: number, value: number) {
+        this.packUInt8AtOffset(offset + 0, value & 0xff);
+        this.packUInt8AtOffset(offset + 1, (value >> 8) & 0xff);
+        this.packUInt8AtOffset(offset + 2, (value >> 16) & 0xff);
+        this.packUInt8AtOffset(offset + 3, value >> 24);
+    }
+
+    packArray(array: Uint8Array) {
+        array.forEach(x => this.packUInt8(x));
+    }
+
+    packNumberArray(array: number[]) {
+        array.forEach(x => this.packUInt8(x));
+    }
+
+    addPadding(dataLength: number, length: number) {
+        if (length === 2) {
+            if (dataLength % 2) {
+                this.packUInt8(0);
+            }
+        } else if (length >= 4) {
+            if (dataLength % 4) {
+                const n = 4 - (dataLength % 4);
+                for (let i = 0; i < n; ++i) {
+                    this.packUInt8(0);
+                }
             }
         }
     }
+
+    async packRegions(numRegions: number, buildRegion: (i: number) => Promise<void>) {
+        const headerOffset = this.offset;
+
+        for (let i = 0; i < numRegions; i++) {
+            this.packUInt32(0);
+        }
+
+        const dataOffset = this.offset;
+
+        for (let i = 0; i < numRegions; i++) {
+            this.packUInt32AtOffset(headerOffset + i * 4, this.offset - headerOffset);
+            await buildRegion(i);
+            this.addPadding(this.offset - dataOffset, 4);
+        }
+    }
 }
 
-function packRegions(regions: number[][]) {
-    let header: number[] = [];
-    let data: number[] = [];
-
-    const headerLength = 4 * regions.length;
-
-    regions.forEach(region => {
-        header = header.concat(packUInt32(headerLength + data.length));
-        data = data.concat(region);
-        addPadding(data, 4);
-    });
-
-    return header.concat(data);
-}
+////////////////////////////////////////////////////////////////////////////////
 
 abstract class Field {
     offset: number;
@@ -124,14 +255,14 @@ abstract class Field {
 
     enumObjects(objects: ObjectField[]) {}
     finish() {}
-    abstract pack(): number[];
+    abstract pack(dataBuffer: DataBuffer): void;
 }
 
 abstract class ObjectField extends Field {
     objectOffset: number;
     objectSize: number;
 
-    abstract packObject(): number[];
+    abstract packObject(dataBuffer: DataBuffer): void;
 }
 
 class Struct extends ObjectField {
@@ -172,21 +303,19 @@ class Struct extends ObjectField {
         }
     }
 
-    pack(): number[] {
-        return packUInt32(this.objectOffset);
+    pack(dataBuffer: DataBuffer) {
+        return dataBuffer.packUInt32(this.objectOffset);
     }
 
-    packObject(): number[] {
-        let data: number[] = [];
+    packObject(dataBuffer: DataBuffer) {
+        const offsetAtStart = dataBuffer.offset;
 
         this.fields.forEach(field => {
-            addPadding(data, field.size);
-            data = data.concat(field.pack());
-        }, [] as number[]);
+            dataBuffer.addPadding(dataBuffer.offset - offsetAtStart, field.size);
+            field.pack(dataBuffer);
+        });
 
-        addPadding(data, 4);
-
-        return data;
+        dataBuffer.addPadding(dataBuffer.offset - offsetAtStart, 4);
     }
 }
 
@@ -202,8 +331,8 @@ class ObjectPtr extends Field {
         }
     }
 
-    pack(): number[] {
-        return packUInt32(this.value ? this.value.objectOffset : 0);
+    pack(dataBuffer: DataBuffer) {
+        return dataBuffer.packUInt32(this.value ? this.value.objectOffset : 0);
     }
 }
 
@@ -223,10 +352,9 @@ class ObjectList extends Field {
         this.items.forEach(item => objects.push(item));
     }
 
-    pack(): number[] {
-        return packUInt32(this.items.length).concat(
-            packUInt32(this.items.length > 0 ? this.items[0].objectOffset : 0)
-        );
+    pack(dataBuffer: DataBuffer) {
+        dataBuffer.packUInt32(this.items.length);
+        dataBuffer.packUInt32(this.items.length > 0 ? this.items[0].objectOffset : 0);
     }
 }
 
@@ -247,10 +375,10 @@ class StringList extends Field {
         this.items.forEach(item => objects.push(item));
     }
 
-    pack(): number[] {
-        return packUInt32(this.items.length)
-            .concat(packUInt32(8))
-            .concat(...this.items.map(item => packUInt32(item.objectOffset)));
+    pack(dataBuffer: DataBuffer) {
+        dataBuffer.packUInt32(this.items.length);
+        dataBuffer.packUInt32(8);
+        this.items.forEach(item => dataBuffer.packUInt32(item.objectOffset));
     }
 }
 
@@ -269,18 +397,19 @@ class String extends ObjectField {
         objects.push(this);
     }
 
-    pack(): number[] {
-        return packUInt32(this.objectOffset);
+    pack(dataBuffer: DataBuffer) {
+        dataBuffer.packUInt32(this.objectOffset);
     }
 
-    packObject(): number[] {
-        let packedData: number[] = [];
+    packObject(dataBuffer: DataBuffer) {
+        const offsetAtStart = dataBuffer.offset;
+
         for (let i = 0; i < this.value.length; i++) {
-            packedData.push(this.value.charCodeAt(i));
+            dataBuffer.packUInt8(this.value.charCodeAt(i));
         }
-        packedData.push(0);
-        addPadding(packedData, 4);
-        return packedData;
+        dataBuffer.packUInt8(0);
+
+        dataBuffer.addPadding(dataBuffer.offset - offsetAtStart, 4);
     }
 }
 
@@ -291,12 +420,12 @@ class Color extends ObjectField {
         this.objectSize = 2;
     }
 
-    pack(): number[] {
-        return packUInt32(this.objectOffset);
+    pack(dataBuffer: DataBuffer) {
+        dataBuffer.packUInt32(this.objectOffset);
     }
 
-    packObject(): number[] {
-        return packUInt16(this.value);
+    packObject(dataBuffer: DataBuffer) {
+        dataBuffer.packUInt16(this.value);
     }
 }
 
@@ -306,8 +435,8 @@ class UInt8 extends Field {
         this.size = 1;
     }
 
-    pack(): number[] {
-        return [this.value];
+    pack(dataBuffer: DataBuffer) {
+        dataBuffer.packUInt8(this.value);
     }
 }
 
@@ -317,8 +446,8 @@ class UInt16 extends Field {
         this.size = 2;
     }
 
-    pack(): number[] {
-        return packUInt16(this.value);
+    pack(dataBuffer: DataBuffer) {
+        dataBuffer.packUInt16(this.value);
     }
 }
 
@@ -328,13 +457,13 @@ class Int16 extends Field {
         this.size = 2;
     }
 
-    pack(): number[] {
-        return packInt16(this.value);
+    pack(dataBuffer: DataBuffer) {
+        dataBuffer.packInt16(this.value);
     }
 }
 
-class UInt8Array extends Field {
-    constructor(public value: number[]) {
+class UInt8ArrayField extends Field {
+    constructor(public value: Uint8Array) {
         super();
         this.size = value.length;
         if (this.size % 4 > 0) {
@@ -342,28 +471,16 @@ class UInt8Array extends Field {
         }
     }
 
-    pack(): number[] {
-        if (this.value.length % 4 === 0) {
-            return this.value;
-        } else {
-            const result = this.value.slice();
-            addPadding(result, 4);
-            return result;
-        }
+    pack(dataBuffer: DataBuffer) {
+        dataBuffer.packArray(this.value);
+        dataBuffer.addPadding(this.value.length, 4);
     }
-}
-
-function pack(objects: ObjectField[] = []): number[] {
-    return objects.reduce((data: any, object: any) => data.concat(object.packObject()), []);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildWidgetText(text: string) {
-    try {
-        return JSON.parse('"' + text + '"');
-    } catch (e) {}
-    return text;
+function pack(dataBuffer: DataBuffer, objects: ObjectField[] = []) {
+    objects.forEach(object => object.packObject(dataBuffer));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -384,10 +501,12 @@ function buildGuiFontsEnum(assets: Assets) {
     return `enum FontsEnum {\n${fonts.join(",\n")}\n};`;
 }
 
-function buildGuiFontsData(assets: Assets) {
-    return !ProjectStore.masterProject
-        ? packRegions(assets.fonts.map(font => getFontData(font)))
-        : [0];
+async function buildGuiFontsData(assets: Assets, dataBuffer: DataBuffer) {
+    if (!ProjectStore.masterProject) {
+        await dataBuffer.packRegions(assets.fonts.length, async (i: number) => {
+            getFontData(assets.fonts[i], dataBuffer);
+        });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -417,7 +536,7 @@ async function buildGuiBitmaps(assets: Assets) {
         width: number;
         height: number;
         bpp: number;
-        pixels: number[];
+        pixels: Uint8Array;
     }[] = [];
 
     for (let i = 0; i < assets.bitmaps.length; i++) {
@@ -435,26 +554,23 @@ async function buildGuiBitmaps(assets: Assets) {
     return bitmaps;
 }
 
-async function buildGuiBitmapsData(assets: Assets) {
+async function buildGuiBitmapsData(assets: Assets, dataBuffer: DataBuffer) {
     const bitmaps = await buildGuiBitmaps(assets);
+    if (bitmaps) {
+        await dataBuffer.packRegions(bitmaps.length, async (i: number) => {
+            const bitmap = bitmaps[i];
 
-    if (!bitmaps) {
-        return [];
-    }
-
-    return packRegions(
-        bitmaps.map(bitmap => {
             const struct = new Struct();
 
             struct.addField(new Int16(bitmap.width));
             struct.addField(new Int16(bitmap.height));
-            struct.addField(new Int16(bitmap.bpp === 32 ? 32 : 16));
+            struct.addField(new Int16(bitmap.bpp));
             struct.addField(new Int16(0));
-            struct.addField(new UInt8Array(bitmap.pixels));
+            struct.addField(new UInt8ArrayField(bitmap.pixels));
 
-            return struct.packObject();
-        })
-    );
+            struct.packObject(dataBuffer);
+        });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -462,10 +578,10 @@ async function buildGuiBitmapsData(assets: Assets) {
 function buildGuiStylesEnum(assets: Assets) {
     let styles = assets.styles
         .map((style, i) => {
-            if (style && style.name) {
+            if (style) {
                 return `${projectBuild.TAB}${projectBuild.getName(
                     "STYLE_ID_",
-                    style.name,
+                    style.name || "inline" + i,
                     projectBuild.NamingConvention.UnderscoreUpperCase
                 )} = ${i}`;
             } else {
@@ -479,7 +595,7 @@ function buildGuiStylesEnum(assets: Assets) {
     return `enum StylesEnum {\n${styles.join(",\n")}\n};`;
 }
 
-function buildListData(build: (document: Struct) => void, packData: boolean) {
+function buildListData(build: (document: Struct) => void, dataBuffer: DataBuffer | null) {
     function finish() {
         let objects: ObjectField[] = [];
         let newObjects: ObjectField[] = [document];
@@ -505,16 +621,15 @@ function buildListData(build: (document: Struct) => void, packData: boolean) {
 
     build(document);
 
-    if (packData) {
+    if (dataBuffer) {
         let objects = finish();
-        let data = pack(objects);
-        return data;
+        pack(dataBuffer, objects);
     }
 
     return [];
 }
 
-function buildGuiStylesData(assets: Assets, packData: boolean = true) {
+function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer | null) {
     function buildStyle(style: Style) {
         let result = new Struct();
 
@@ -629,7 +744,7 @@ function buildGuiStylesData(assets: Assets, packData: boolean = true) {
             });
         }
         document.addField(styles);
-    }, packData);
+    }, dataBuffer);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -667,6 +782,13 @@ function buildGuiColorsEnum(assets: Assets) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+function buildWidgetText(text: string) {
+    try {
+        return JSON.parse('"' + text + '"');
+    } catch (e) {}
+    return text;
+}
 
 function buildWidget(object: Widget.Widget | Page, assets: Assets) {
     let result = new Struct();
@@ -1235,17 +1357,17 @@ function buildGuiPagesEnum(assets: Assets) {
     return `enum PagesEnum {\n${pages.join(",\n")}\n};`;
 }
 
-function buildGuiDocumentData(assets: Assets, packData: boolean = true) {
+function buildGuiDocumentData(assets: Assets, dataBuffer: DataBuffer | null) {
     return buildListData((document: Struct) => {
         let pages = new ObjectList();
         assets.pages.forEach(page => {
             pages.addItem(buildWidget(page, assets));
         });
         document.addField(pages);
-    }, packData);
+    }, dataBuffer);
 }
 
-function buildGuiColors(assets: Assets) {
+function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
     function buildTheme(theme: Theme) {
         let result = new Struct();
 
@@ -1288,45 +1410,57 @@ function buildGuiColors(assets: Assets) {
         }
 
         document.addField(colors);
-    }, true);
+    }, dataBuffer);
 }
 
-function buildActionNames(assets: Assets) {
+function buildActionNames(assets: Assets, dataBuffer: DataBuffer) {
     return buildListData((document: Struct) => {
         let actionNames = new StringList();
         for (let i = 0; i < assets.actions.length; i++) {
             actionNames.addItem(new String(assets.actions[i].name));
         }
         document.addField(actionNames);
-    }, true);
+    }, dataBuffer);
 }
 
-function buildDataItemNames(assets: Assets) {
+function buildDataItemNames(assets: Assets, dataBuffer: DataBuffer) {
     return buildListData((document: Struct) => {
         let dataItemNames = new StringList();
         for (let i = 0; i < assets.dataItems.length; i++) {
             dataItemNames.addItem(new String(assets.dataItems[i].name));
         }
         document.addField(dataItemNames);
-    }, true);
+    }, dataBuffer);
 }
 
 async function buildGuiAssetsData(assets: Assets) {
-    let assetRegions = [
-        buildGuiDocumentData(assets),
-        buildGuiStylesData(assets),
-        buildGuiFontsData(assets),
-        await buildGuiBitmapsData(assets),
-        buildGuiColors(assets)
-    ];
-    if (ProjectStore.masterProject) {
-        assetRegions = assetRegions.concat([buildActionNames(assets), buildDataItemNames(assets)]);
-    }
-    const inputArray = packRegions(assetRegions);
+    const dataBuffer = new DataBuffer();
 
-    var inputBuffer = Buffer.from(inputArray);
+    await dataBuffer.packRegions(ProjectStore.masterProject ? 7 : 5, async i => {
+        if (i == 0) {
+            buildGuiDocumentData(assets, dataBuffer);
+        } else if (i == 1) {
+            buildGuiStylesData(assets, dataBuffer);
+        } else if (i == 2) {
+            await buildGuiFontsData(assets, dataBuffer);
+        } else if (i == 3) {
+            await buildGuiBitmapsData(assets, dataBuffer);
+        } else if (i == 4) {
+            buildGuiColors(assets, dataBuffer);
+        } else if (i == 5) {
+            buildActionNames(assets, dataBuffer);
+        } else if (i == 6) {
+            buildDataItemNames(assets, dataBuffer);
+        }
+    });
+
+    var inputBuffer = Buffer.from(dataBuffer.buffer.slice(0, dataBuffer.offset));
     var outputBuffer = Buffer.alloc(LZ4.encodeBound(inputBuffer.length));
     var compressedSize = LZ4.encodeBlock(inputBuffer, outputBuffer);
+
+    // console.log(assetRegions.map(x => x.length));
+    // outputBuffer = inputBuffer;
+    // compressedSize = outputBuffer.length;
 
     const compressedData = Buffer.alloc(4 + compressedSize);
     compressedData.writeUInt32LE(inputBuffer.length, 0); // write uncomprresed size at the beginning
@@ -1406,14 +1540,8 @@ class Assets {
 
         this.bitmaps = gui.bitmaps.filter(font => font.alwaysBuild);
 
-        while (true) {
-            const n = this.totalGuiAssets;
-            buildGuiDocumentData(this, false);
-            buildGuiStylesData(this, false);
-            if (n === this.totalGuiAssets) {
-                break;
-            }
-        }
+        buildGuiDocumentData(this, null);
+        buildGuiStylesData(this, null);
     }
 
     getDataItemIndex(object: any, propertyName: string) {
