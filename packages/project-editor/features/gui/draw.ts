@@ -2,6 +2,8 @@ import { observable, action } from "mobx";
 
 import { getColorRGB, blendColor, to16bitsColor } from "eez-studio-shared/color";
 
+import { getModificationTime, getId } from "project-editor/core/object";
+
 import { findFont } from "project-editor/features/gui/gui";
 import { Style, getStyleProperty } from "project-editor/features/gui/style";
 import { Font } from "project-editor/features/gui/font";
@@ -311,7 +313,9 @@ class TextDrawingInBackground {
     ) {
         const color = getColor();
         const backColor = getBackColor();
-        const id = `${text},${color},${backColor},${font._id},${font._modificationTime},${width},${height}`;
+        const id = `${text},${color},${backColor},${getId(font)},${getModificationTime(
+            font
+        )},${width},${height}`;
         const canvas = this.cacheMap.get(id);
         if (canvas) {
             ctx.drawImage(canvas, x, y);

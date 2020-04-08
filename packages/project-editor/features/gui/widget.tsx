@@ -34,7 +34,8 @@ import {
     getProperty,
     IOnSelectParams,
     asArray,
-    getChildOfObject
+    getChildOfObject,
+    getParent
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { DocumentStore, NavigationStore, IContextMenuContext } from "project-editor/core/store";
@@ -349,9 +350,9 @@ export class Widget extends EezObject {
     // Return immediate parent, which can be of type Page or Widget
     // (i.e. ContainerWidget, ListWidget, GridWidget, SelectWidget)
     get parent(): WidgetParent {
-        let parent = this._parent!;
+        let parent = getParent(this);
         if (isArray(parent)) {
-            parent = parent._parent!;
+            parent = getParent(parent);
         }
         return parent as WidgetParent;
     }
@@ -532,8 +533,8 @@ export class Widget extends EezObject {
                 );
             }
 
-            let parent = object._parent;
-            if (parent && parent._parent instanceof SelectWidget) {
+            let parent = getParent(object);
+            if (parent && getParent(parent) instanceof SelectWidget) {
                 additionalMenuItems.push(
                     new MenuItem({
                         label: "Replace Parent",
@@ -578,7 +579,7 @@ export class Widget extends EezObject {
 
         return DocumentStore.replaceObject(
             this,
-            loadObject(this._parent, selectWidgetJsObject, Widget)
+            loadObject(getParent(this), selectWidgetJsObject, Widget)
         );
     }
 
@@ -636,7 +637,7 @@ export class Widget extends EezObject {
 
         return DocumentStore.replaceObjects(
             fromWidgets,
-            loadObject(fromWidgets[0]._parent, containerWidgetJsObject, Widget)
+            loadObject(getParent(fromWidgets[0]), containerWidgetJsObject, Widget)
         );
     }
 
@@ -683,7 +684,7 @@ export class Widget extends EezObject {
             return DocumentStore.replaceObjects(
                 fromWidgets,
                 loadObject(
-                    fromWidgets[0]._parent,
+                    getParent(fromWidgets[0]),
                     {
                         type: "LayoutView",
                         left: createWidgetsResult.left,
@@ -726,7 +727,7 @@ export class Widget extends EezObject {
             return DocumentStore.replaceObjects(
                 fromWidgets,
                 loadObject(
-                    fromWidgets[0]._parent,
+                    getParent(fromWidgets[0]),
                     {
                         type: "LayoutView",
                         left: createWidgetsResult.left,
@@ -745,13 +746,13 @@ export class Widget extends EezObject {
     }
 
     replaceParent() {
-        let parent = this._parent;
+        let parent = getParent(this);
         if (parent) {
-            let selectWidget = parent._parent;
+            let selectWidget = getParent(parent);
             if (selectWidget instanceof SelectWidget) {
                 return DocumentStore.replaceObject(
                     selectWidget,
-                    cloneObject(selectWidget._parent, this)
+                    cloneObject(getParent(selectWidget), this)
                 );
             }
         }
@@ -1186,8 +1187,10 @@ export class SelectWidget extends Widget {
                 childLabel: (childObject: EezObject, childLabel: string) => {
                     let label;
 
-                    if (childObject._parent) {
-                        let selectWidgetProperties = childObject._parent!._parent as SelectWidget;
+                    if (getParent(childObject)) {
+                        let selectWidgetProperties = getParent(
+                            getParent(childObject)
+                        ) as SelectWidget;
 
                         label = selectWidgetProperties.getChildLabel(childObject as Widget);
                     }
@@ -1198,8 +1201,8 @@ export class SelectWidget extends Widget {
                 interceptAddObject: (widgets: EezArrayObject<Widget>, object: Widget) => {
                     object.left = 0;
                     object.top = 0;
-                    object.width = (widgets._parent as SelectWidget).width;
-                    object.height = (widgets._parent as SelectWidget).height;
+                    object.width = (getParent(widgets) as SelectWidget).width;
+                    object.height = (getParent(widgets) as SelectWidget).height;
                     return object;
                 }
             }
@@ -1555,7 +1558,7 @@ export class LayoutViewWidget extends Widget {
 
             return DocumentStore.replaceObject(
                 this,
-                loadObject(this._parent, containerWidgetJsObject, Widget)
+                loadObject(getParent(this), containerWidgetJsObject, Widget)
             );
         }
         return undefined;
@@ -1768,7 +1771,7 @@ export class TextWidget extends Widget {
 
         return DocumentStore.replaceObject(
             this,
-            loadObject(this._parent, displayDataWidgetJsObject, Widget)
+            loadObject(getParent(this), displayDataWidgetJsObject, Widget)
         );
     }
 }

@@ -21,7 +21,8 @@ import {
     NavigationComponent,
     PropertyProps,
     isAnyPropertyModified,
-    asArray
+    asArray,
+    getParent
 } from "project-editor/core/object";
 import {
     NavigationStore,
@@ -55,10 +56,10 @@ export function isWidgetParentOfStyle(object: EezObject) {
         if (isObjectInstanceOf(object, widgetClass.classInfo)) {
             return true;
         }
-        if (!object._parent) {
+        if (!getParent(object)) {
             return false;
         }
-        object = object._parent;
+        object = getParent(object);
     }
 }
 
@@ -972,7 +973,7 @@ export class Style extends EezObject {
                 );
             } else {
                 if (
-                    asArray(this._parent!).find(
+                    asArray(getParent(this)).find(
                         (object: Style) => object !== this && object.id === this.id
                     )
                 ) {

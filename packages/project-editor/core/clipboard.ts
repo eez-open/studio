@@ -6,7 +6,10 @@ import {
     isObject,
     isSubclassOf,
     getChildOfObject,
-    PropertyType
+    PropertyType,
+    getParent,
+    getClass,
+    getClassInfo
 } from "project-editor/core/object";
 import { loadObject, objectToJson } from "project-editor/core/serialization";
 import { DocumentStore } from "project-editor/core/store";
@@ -20,14 +23,14 @@ export interface SerializedData {
 
 export function objectToClipboardData(object: EezObject): string {
     return JSON.stringify({
-        objectClassName: object._class.name,
+        objectClassName: getClass(object).name,
         object: objectToJson(object)
     });
 }
 
 export function objectsToClipboardData(objects: EezObject[]): string {
     return JSON.stringify({
-        objectClassName: objects[0]._class.name,
+        objectClassName: getClass(objects[0]).name,
         objects: objects.map(object => objectToJson(object))
     });
 }
@@ -73,19 +76,19 @@ export function findPastePlaceInside(
     classInfo: ClassInfo,
     isSingleObject: boolean
 ) {
-    if (isArray(object) && isSubclassOf(classInfo, object._classInfo)) {
+    if (isArray(object) && isSubclassOf(classInfo, getClassInfo(object))) {
         return object;
     }
 
     if (isObject(object)) {
-        const findPastePlaceInside = object._classInfo.findPastePlaceInside;
+        const findPastePlaceInside = getClassInfo(object).findPastePlaceInside;
         if (findPastePlaceInside) {
             return findPastePlaceInside(object, classInfo, isSingleObject);
         }
     }
 
     // first, find among array properties
-    for (const propertyInfo of object._classInfo.properties) {
+    for (const propertyInfo of getClassInfo(object).properties) {
         if (
             propertyInfo.type === PropertyType.Array &&
             isSubclassOf(classInfo, propertyInfo.typeClass!.classInfo)
@@ -98,7 +101,7 @@ export function findPastePlaceInside(
     }
 
     // then, find among object properties
-    for (const propertyInfo of object._classInfo.properties) {
+    for (const propertyInfo of getClassInfo(object).properties) {
         if (
             propertyInfo.type == PropertyType.Object &&
             isSubclassOf(classInfo, propertyInfo.typeClass!.classInfo) &&
@@ -124,7 +127,7 @@ export function findPastePlaceInsideAndOutside(object: EezObject, serializedData
         return place;
     }
 
-    let parent = object._parent;
+    let parent = getParent(object);
     return (
         parent && findPastePlaceInside(parent, serializedData.classInfo, !!serializedData.object)
     );

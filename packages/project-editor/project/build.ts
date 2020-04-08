@@ -12,7 +12,8 @@ import {
     asArray,
     getProperty,
     IMessage,
-    getArrayAndObjectProperties
+    getArrayAndObjectProperties,
+    getPropertyInfo
 } from "project-editor/core/object";
 import { OutputSectionsStore } from "project-editor/core/store";
 import { Section, Type } from "project-editor/core/output";
@@ -405,8 +406,9 @@ var checkTransformer: (object: EezObject) => IMessage[] = createTransformer(
         }
 
         // call check from property definition
-        if (object._propertyInfo && object._propertyInfo.check) {
-            messages = messages.concat(object._propertyInfo.check(object));
+        const check = getPropertyInfo(object) && getPropertyInfo(object).check;
+        if (check) {
+            messages = messages.concat(check(object));
         }
 
         if (isArray(object)) {

@@ -28,7 +28,10 @@ import {
     getProperty,
     asArray,
     cloneObject,
-    NavigationComponent
+    NavigationComponent,
+    getParent,
+    getId,
+    getLabel
 } from "project-editor/core/object";
 import {
     DocumentStore,
@@ -182,7 +185,7 @@ export class GlyphSource extends EezObject {
     };
 
     toString() {
-        return this._label;
+        return getLabel(this);
     }
 }
 
@@ -419,7 +422,7 @@ export class Glyph extends EezObject {
     }
 
     getFont() {
-        return this._parent!._parent as Font;
+        return getParent(getParent(this)) as Font;
     }
 
     getPixel(x: number, y: number): number {
@@ -1179,7 +1182,7 @@ class GlyphComponent extends React.Component<
             >
                 <div>
                     <img src={this.props.glyph.image} />
-                    <div>{this.props.glyph._label}</div>
+                    <div>{getLabel(this.props.glyph)}</div>
                 </div>
             </li>
         );
@@ -1277,7 +1280,7 @@ class Glyphs extends React.Component<{
         const searchText = this.searchText.toLowerCase();
 
         let glyph = this.props.glyphs.find(
-            glyph => glyph._label.toLowerCase().indexOf(searchText) != -1
+            glyph => getLabel(glyph).toLowerCase().indexOf(searchText) != -1
         );
 
         if (glyph) {
@@ -1303,7 +1306,7 @@ class Glyphs extends React.Component<{
     render() {
         const glyphs: JSX.Element[] = this.props.glyphs.map(glyph => (
             <GlyphComponent
-                key={glyph._id}
+                key={getId(glyph)}
                 glyph={glyph}
                 isSelected={glyph == this.props.selectedGlyph}
                 onSelect={this.props.onSelectGlyph.bind(null, glyph)}
@@ -1584,7 +1587,7 @@ export class FontEditor
     }
 
     get selectedObject() {
-        if (this.selectedGlyph && this.selectedGlyph._parent == this.props.font.glyphs) {
+        if (this.selectedGlyph && getParent(this.selectedGlyph) == this.props.font.glyphs) {
             return this.selectedGlyph;
         } else {
             return this.props.font;
@@ -1621,7 +1624,7 @@ export class FontEditor
                 projectFilePath: ProjectStore.filePath!
             });
 
-            DocumentStore.replaceObject(font, loadObject(font._parent, newFont, Font));
+            DocumentStore.replaceObject(font, loadObject(getParent(font), newFont, Font));
 
             notification.info(`Font rebuilded.`);
         } catch (err) {
@@ -1823,7 +1826,7 @@ export class FontsNavigation extends NavigationComponent {
             if (object instanceof Font) {
                 return object;
             }
-            object = object._parent;
+            object = getParent(object);
         }
         return undefined;
     }

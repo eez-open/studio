@@ -43,7 +43,12 @@ import {
     getCommonProperties,
     getPropertySourceInfo,
     isAnyPropertyModified,
-    IPropertyGridGroupDefinition
+    IPropertyGridGroupDefinition,
+    getParent,
+    getKey,
+    getId,
+    getClassInfo,
+    getLabel
 } from "project-editor/core/object";
 
 import { replaceObjectReference } from "project-editor/core/search";
@@ -361,8 +366,8 @@ function isHighlightedProperty(object: EezObject, propertyInfo: PropertyInfo) {
         NavigationStore.selectedPanel && NavigationStore.selectedPanel.selectedObject;
     return !!(
         selectedObject &&
-        ((selectedObject._parent === object && selectedObject._key === propertyInfo.name) ||
-            isProperAncestor(selectedObject._parent!, getProperty(object, propertyInfo.name)))
+        ((getParent(selectedObject) === object && getKey(selectedObject) === propertyInfo.name) ||
+            isProperAncestor(getParent(selectedObject), getProperty(object, propertyInfo.name)))
     );
 }
 
@@ -370,8 +375,8 @@ function isPropertyInError(object: EezObject, propertyInfo: PropertyInfo) {
     return !!OutputSectionsStore.getSection(Section.CHECKS).messages.find(
         message =>
             message.object &&
-            message.object._parent === object &&
-            message.object._key === propertyInfo.name
+            getParent(message.object) === object &&
+            getKey(message.object) === propertyInfo.name
     );
 }
 
@@ -385,7 +390,7 @@ class ArrayElementProperty extends React.Component<{
         let object = this.props.object;
         if (object) {
             if (isValue(object)) {
-                object = object._parent as EezObject;
+                object = getParent(object);
             }
             DocumentStore.updateObject(object, propertyValues);
         }
@@ -429,7 +434,7 @@ class ArrayElementProperties extends React.Component<{
     render() {
         return (
             <tr>
-                {this.props.object._classInfo.properties.map(propertyInfo => (
+                {getClassInfo(this.props.object).properties.map(propertyInfo => (
                     <ArrayElementProperty
                         key={propertyInfo.name}
                         propertyInfo={propertyInfo}
@@ -517,7 +522,7 @@ class ArrayProperty extends React.Component<PropertyProps> {
                 <tbody>
                     {this.value &&
                         this.value.map(object => (
-                            <ArrayElementProperties key={object._id} object={object} />
+                            <ArrayElementProperties key={getId(object)} object={object} />
                         ))}
                 </tbody>
             </React.Fragment>
@@ -854,7 +859,7 @@ class Property extends React.Component<PropertyProps> {
                         validators: [
                             validators.unique(
                                 this.props.objects[0],
-                                asArray(this.props.objects[0]._parent!)
+                                asArray(getParent(this.props.objects[0]))
                             )
                         ].concat(this.props.propertyInfo.isOptional ? [] : [validators.required])
                     }
@@ -1061,10 +1066,10 @@ class Property extends React.Component<PropertyProps> {
 
                 let options = objects
                     .slice()
-                    .sort((a, b) => stringCompare(a._label, b._label))
+                    .sort((a, b) => stringCompare(getLabel(a), getLabel(b)))
                     .map(object => {
                         return (
-                            <option key={object._id} value={getProperty(object, "name")}>
+                            <option key={getId(object)} value={getProperty(object, "name")}>
                                 {objectToString(object)}
                             </option>
                         );
@@ -1688,7 +1693,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
 
         this.objects.forEach(object => {
             if (isValue(object)) {
-                object = object._parent as EezObject;
+                object = getParent(object);
             }
             DocumentStore.updateObject(object, propertyValues);
         });
@@ -1708,8 +1713,8 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             let object;
             if (isValue(objects[0])) {
                 // if given object is actually a value, we show the parent properties with the value highlighted
-                highlightedPropertyName = objects[0]._key;
-                object = objects[0]._parent as EezObject;
+                highlightedPropertyName = getKey(objects[0]);
+                object = getParent(objects[0]);
             } else {
                 object = objects[0];
             }
@@ -1728,7 +1733,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
         let groupForPropertiesWithoutGroupSpecified: IGroupProperties | undefined;
 
         const isPropertyMenuSupported = !objects.find(
-            object => !object._classInfo.isPropertyMenuSupported
+            object => !getClassInfo(object).isPropertyMenuSupported
         );
 
         let properties = getCommonProperties(objects);

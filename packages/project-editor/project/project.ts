@@ -8,7 +8,8 @@ import {
     EezObject,
     EezArrayObject,
     PropertyType,
-    getProperty
+    getProperty,
+    getClassInfo
 } from "project-editor/core/object";
 import { loadObject, objectToJson } from "project-editor/core/serialization";
 import * as output from "project-editor/core/output";
@@ -332,7 +333,7 @@ export class Project extends EezObject {
     callExtendObservableForAllOptionalProjectFeatures() {
         let optionalFeatures: any = {};
 
-        this._classInfo.properties.forEach(propertyInfo => {
+        getClassInfo(this).properties.forEach(propertyInfo => {
             if (propertyInfo.isOptional && !(propertyInfo.name in this)) {
                 optionalFeatures[propertyInfo.name] = getProperty(this, propertyInfo.name);
             }

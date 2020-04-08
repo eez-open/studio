@@ -5,19 +5,20 @@ import {
     EezObject,
     EezArrayObject,
     PropertyType,
-    PropertyInfo
+    PropertyInfo,
+    getId,
+    setId,
+    setParent,
+    setKey,
+    getNextChildId,
+    setPropertyInfo,
+    getClassInfo
 } from "project-editor/core/object";
 
 export function getChildId(parent: EezObject | undefined) {
     let id;
     if (parent) {
-        if (parent._lastChildId === undefined) {
-            parent._lastChildId = 1;
-        } else {
-            parent._lastChildId++;
-        }
-
-        id = parent._id + "." + parent._lastChildId;
+        id = getId(parent) + "." + getNextChildId(parent);
     } else {
         id = "1";
     }
@@ -28,10 +29,10 @@ export function getChildId(parent: EezObject | undefined) {
 function loadArrayObject(arrayObject: any, parent: any, propertyInfo: PropertyInfo) {
     const eezArray = new EezArrayObject<any>();
 
-    eezArray._id = getChildId(parent);
-    eezArray._parent = parent;
-    eezArray._key = propertyInfo.name;
-    eezArray._propertyInfo = propertyInfo;
+    setId(eezArray, getChildId(parent));
+    setParent(eezArray, parent);
+    setKey(eezArray, propertyInfo.name);
+    setPropertyInfo(eezArray, propertyInfo);
 
     eezArray._array = (arrayObject._array || arrayObject).map((object: any) =>
         loadObject(eezArray, object, propertyInfo.typeClass!)
@@ -69,10 +70,10 @@ export function loadObject(
         return new EezObject();
     }
 
-    const classInfo = object._classInfo;
+    const classInfo = getClassInfo(object);
 
-    object._id = getChildId(parent as EezObject);
-    object._parent = parent as EezObject;
+    setId(object, getChildId(parent as EezObject));
+    setParent(object, parent as EezObject);
 
     if (classInfo.beforeLoadHook) {
         classInfo.beforeLoadHook(object, jsObject);
@@ -96,7 +97,7 @@ export function loadObject(
             }
 
             if (childObject) {
-                childObject._key = propertyInfo.name;
+                setKey(childObject, propertyInfo.name);
                 (object as any)[propertyInfo.name] = childObject;
             }
         } else if (propertyInfo.type === PropertyType.Array) {

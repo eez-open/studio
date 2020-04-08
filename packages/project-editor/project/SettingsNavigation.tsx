@@ -5,7 +5,7 @@ import React from "react";
 import { Splitter } from "eez-studio-ui/splitter";
 import styled from "eez-studio-ui/styled-components";
 
-import { NavigationComponent, EezObject, getProperty } from "project-editor/core/object";
+import { NavigationComponent, EezObject, getProperty, getParent } from "project-editor/core/object";
 import { loadObject } from "project-editor/core/serialization";
 import { DocumentStore, NavigationStore } from "project-editor/core/store";
 
@@ -170,7 +170,7 @@ export class SettingsEditor extends React.Component<{ object: EezObject | undefi
                     body={<PropertyGrid objects={this.props.object ? [this.props.object] : []} />}
                 />
             );
-            if (this.props.object._parent === ProjectStore.project.settings.build.files) {
+            if (getParent(this.props.object) === ProjectStore.project.settings.build.files) {
                 return (
                     <Splitter
                         type="horizontal"

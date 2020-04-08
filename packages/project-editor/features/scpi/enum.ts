@@ -15,7 +15,9 @@ import {
     EezArrayObject,
     PropertyType,
     asArray,
-    getChildOfObject
+    getChildOfObject,
+    getParent,
+    getLabel
 } from "project-editor/core/object";
 
 import { ProjectStore } from "project-editor/core/store";
@@ -52,7 +54,7 @@ export class ScpiEnumMember extends EezObject {
         const messages: output.Message[] = [];
 
         if (this.name) {
-            const arr = asArray<ScpiEnumMember>(this._parent!);
+            const arr = asArray<ScpiEnumMember>(getParent(this));
             let thisIndex = -1;
             let otherIndex = -1;
             for (let i = 0; i < arr.length; ++i) {
@@ -74,30 +76,6 @@ export class ScpiEnumMember extends EezObject {
         } else {
             messages.push(output.propertyNotSetMessage(this, "name"));
         }
-
-        // if (this.value) {
-        //     const arr = asArray<ScpiEnumMember>(this._parent!);
-        //     let thisIndex = -1;
-        //     let otherIndex = -1;
-        //     for (let i = 0; i < arr.length; ++i) {
-        //         if (arr[i] === this) {
-        //             thisIndex = i;
-        //         } else if (arr[i] !== this && arr[i].value === this.value) {
-        //             otherIndex = i;
-        //         }
-        //     }
-        //     if (otherIndex !== -1 && thisIndex > otherIndex) {
-        //         messages.push(
-        //             new output.Message(
-        //                 output.Type.ERROR,
-        //                 `Value '${this.value}' is not unique`,
-        //                 getChildOfObject(this, "value")
-        //             )
-        //         );
-        //     }
-        // } else {
-        //     messages.push(output.propertyNotSetMessage(this, "value"));
-        // }
 
         return messages;
     }
@@ -190,9 +168,9 @@ export function getScpiEnumsAsDialogEnumItems(): EnumItems {
 
     return asArray(scpi.enums)
         .slice()
-        .sort((a, b) => stringCompare(a._label, b._label))
+        .sort((a, b) => stringCompare(getLabel(a), getLabel(b)))
         .map(scpiEnum => ({
             id: scpiEnum.name,
-            label: scpiEnum._label
+            label: getLabel(scpiEnum)
         }));
 }

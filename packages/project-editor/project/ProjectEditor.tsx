@@ -12,7 +12,10 @@ import {
     isArray,
     objectToString,
     findPropertyByChildObject,
-    isValue
+    isValue,
+    getParent,
+    getClassInfo,
+    getEditorComponent
 } from "project-editor/core/object";
 import {
     UndoManager,
@@ -217,7 +220,7 @@ class Editor extends React.Component<{}, {}> {
 
         let activeEditor = EditorsStore.activeEditor;
         if (activeEditor) {
-            let EditorComponent = activeEditor.object.editorComponent;
+            let EditorComponent = getEditorComponent(activeEditor.object);
             if (EditorComponent) {
                 editor = <EditorComponent editor={activeEditor} />;
             }
@@ -276,8 +279,8 @@ export class PropertiesPanel extends React.Component<
         if (objects.length === 1) {
             if (isValue(objects[0])) {
                 const object = objects[0];
-                const childObject = object._parent!;
-                const parent = childObject._parent;
+                const childObject = getParent(object);
+                const parent = getParent(childObject);
                 if (parent) {
                     const propertyInfo = findPropertyByChildObject(parent, childObject);
                     if (propertyInfo && !propertyInfo.hideInPropertyGrid) {
@@ -307,9 +310,9 @@ class Content extends React.Component<{}, {}> {
 
     @computed
     get hideInProperties() {
-        for (let object: EezObject | undefined = this.object; object; object = object._parent) {
-            if (!isArray(object) && object.editorComponent) {
-                return object._classInfo.hideInProperties;
+        for (let object: EezObject | undefined = this.object; object; object = getParent(object)) {
+            if (!isArray(object) && getEditorComponent(object)) {
+                return getClassInfo(object).hideInProperties;
             }
         }
         return false;

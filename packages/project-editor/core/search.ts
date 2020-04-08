@@ -10,7 +10,10 @@ import {
     asArray,
     getObjectPath,
     objectToString,
-    getObjectPropertyAsObject
+    getObjectPropertyAsObject,
+    getParent,
+    getKey,
+    getClassInfo
 } from "project-editor/core/object";
 import { DocumentStore, OutputSectionsStore } from "project-editor/core/store";
 
@@ -27,7 +30,7 @@ function* visitWithPause(parentObject: EezObject): IterableIterator<VisitResult>
             yield* visitWithPause(arrayOfObjects[i]);
         }
     } else {
-        for (const propertyInfo of parentObject._classInfo.properties) {
+        for (const propertyInfo of getClassInfo(parentObject).properties) {
             if (!propertyInfo.skipSearch) {
                 let value = getProperty(parentObject, propertyInfo.name);
                 if (value) {
@@ -55,7 +58,7 @@ function* visitWithoutPause(parentObject: EezObject): IterableIterator<VisitResu
             yield* visitWithoutPause(arrayOfObjects[i]);
         }
     } else {
-        for (const propertyInfo of parentObject._classInfo.properties) {
+        for (const propertyInfo of getClassInfo(parentObject).properties) {
             if (!propertyInfo.skipSearch) {
                 let value = getProperty(parentObject, propertyInfo.name);
                 if (value) {
@@ -151,7 +154,7 @@ function* searchForReference(
 ): IterableIterator<SearchResult> {
     let v = withPause ? visitWithPause(root) : visitWithoutPause(root);
 
-    let objectParent = object._parent;
+    let objectParent = getParent(object);
     if (!objectParent) {
         return;
     }
@@ -346,9 +349,9 @@ export function replaceObjectReference(object: EezObject, newValue: string) {
                 }
             }
 
-            let parent = searchValue._parent;
+            let parent = getParent(searchValue);
             if (parent) {
-                let key = searchValue._key;
+                let key = getKey(searchValue);
                 if (parent && key && typeof key == "string") {
                     DocumentStore.updateObject(parent, {
                         [key]: value

@@ -4,7 +4,13 @@ import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, getChildren, objectToString } from "project-editor/core/object";
+import {
+    EezObject,
+    getChildren,
+    objectToString,
+    getId,
+    getClassInfo
+} from "project-editor/core/object";
 import { NavigationStore } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +56,7 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
                 this.props.item
         });
 
-        let icon = this.props.item._classInfo.icon || "extension";
+        let icon = getClassInfo(this.props.item).icon || "extension";
 
         return (
             <NavigationMenuItemContainer
@@ -81,10 +87,10 @@ class Menu extends React.Component<{
 
     render() {
         let items = getChildren(this.props.navigationObject)
-            .filter(item => item._classInfo.icon)
+            .filter(item => getClassInfo(item).icon)
             .map(item => (
                 <NavigationMenuItem
-                    key={item._id}
+                    key={getId(item)}
                     navigationObject={this.props.navigationObject}
                     item={item}
                 />
@@ -120,11 +126,11 @@ export class MenuNavigation extends React.Component<
             this.props.navigationObject
         );
         if (selectedItem) {
-            let NavigationComponent = selectedItem._classInfo.navigationComponent;
+            let NavigationComponent = getClassInfo(selectedItem).navigationComponent;
             if (NavigationComponent) {
                 subNavigation = (
                     <NavigationComponent
-                        id={selectedItem._classInfo.navigationComponentId || this.props.id}
+                        id={getClassInfo(selectedItem).navigationComponentId || this.props.id}
                         navigationObject={selectedItem}
                     />
                 );

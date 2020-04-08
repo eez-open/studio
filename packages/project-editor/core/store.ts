@@ -35,7 +35,13 @@ import {
     getObjectFromStringPath,
     getObjectFromObjectId,
     isPropertyEnumerable,
-    isPartOfNavigation
+    isPartOfNavigation,
+    getParent,
+    getKey,
+    getId,
+    getClass,
+    getClassInfo,
+    getEditorComponent
 } from "project-editor/core/object";
 import {
     checkClipboard,
@@ -160,7 +166,7 @@ class NavigationStoreClass implements INavigationStore {
                 }
 
                 if (navigationItem) {
-                    navigationMap.set(navigationObject._id, navigationItem);
+                    navigationMap.set(getId(navigationObject), navigationItem);
                 }
             }
         }
@@ -222,7 +228,7 @@ class NavigationStoreClass implements INavigationStore {
 
         let object = selection[0];
 
-        for (let ancestor = object._parent; ancestor; ancestor = ancestor._parent) {
+        for (let ancestor = getParent(object); ancestor; ancestor = getParent(ancestor)) {
             let navigationItem = this.getNavigationSelectedItem(ancestor);
             if (navigationItem && !(navigationItem instanceof EezObject)) {
                 navigationItem.selectObjects(selection);
@@ -231,9 +237,9 @@ class NavigationStoreClass implements INavigationStore {
         }
 
         let iterObject = object;
-        let parent = iterObject._parent;
+        let parent = getParent(iterObject);
         while (iterObject && parent) {
-            let grandparent = parent._parent;
+            let grandparent = getParent(parent);
             if (!isArray(grandparent)) {
                 let navigationItem = this.getNavigationSelectedItem(parent);
                 if (navigationItem && !(navigationItem instanceof EezObject)) {
@@ -244,16 +250,16 @@ class NavigationStoreClass implements INavigationStore {
             }
 
             iterObject = parent;
-            parent = iterObject._parent;
+            parent = getParent(iterObject);
         }
     }
 
     isSelected(object: EezObject) {
         let iterObject = object;
-        let parent = iterObject._parent;
+        let parent = getParent(iterObject);
         while (iterObject && parent) {
-            if (parent._classInfo.navigationComponent) {
-                let grandparent = parent._parent;
+            if (getClassInfo(parent).navigationComponent) {
+                let grandparent = getParent(parent);
                 if (!isArray(grandparent)) {
                     let navigationItem = this.getNavigationSelectedItem(parent);
                     if (navigationItem && !(navigationItem instanceof EezObject)) {
@@ -268,22 +274,22 @@ class NavigationStoreClass implements INavigationStore {
                 }
             }
             iterObject = parent;
-            parent = iterObject._parent;
+            parent = getParent(iterObject);
         }
 
         return true;
     }
 
     getNavigationSelectedItem(navigationObject: EezObject): NavigationItem | undefined {
-        let item = this.navigationMap.get(navigationObject._id);
+        let item = this.navigationMap.get(getId(navigationObject));
 
         if (item && item instanceof EezObject) {
             // is this maybe deleted object?
-            item = DocumentStore.getObjectFromObjectId(item._id);
+            item = DocumentStore.getObjectFromObjectId(getId(item));
         }
 
         if (!item) {
-            let defaultNavigationKey = navigationObject._classInfo.defaultNavigationKey;
+            let defaultNavigationKey = getClassInfo(navigationObject).defaultNavigationKey;
             if (defaultNavigationKey) {
                 item = getProperty(navigationObject, defaultNavigationKey);
             }
@@ -316,13 +322,13 @@ class NavigationStoreClass implements INavigationStore {
 
     @action
     setNavigationSelectedItem(navigationObject: EezObject, navigationSelectedItem: NavigationItem) {
-        this.navigationMap.set(navigationObject._id, navigationSelectedItem);
+        this.navigationMap.set(getId(navigationObject), navigationSelectedItem);
 
         if (!isPartOfNavigation(navigationObject)) {
             return;
         }
 
-        let parent = navigationObject._parent;
+        let parent = getParent(navigationObject);
         if (parent) {
             this.setNavigationSelectedItem(parent, navigationObject);
         }
@@ -330,15 +336,13 @@ class NavigationStoreClass implements INavigationStore {
 
     showObject(objectToShow: EezObject) {
         this.setSelection([objectToShow]);
-        for (let object: EezObject | undefined = objectToShow; object; object = object._parent) {
-            if (object.editorComponent) {
+        for (let object: EezObject | undefined = objectToShow; object; object = getParent(object)) {
+            if (getEditorComponent(object)) {
                 const editor = EditorsStore.openEditor(object);
                 setTimeout(() => {
                     if (editor && editor.state) {
                         editor.state.selectObject(
-                            isValue(objectToShow)
-                                ? (objectToShow._parent as EezObject)
-                                : objectToShow
+                            isValue(objectToShow) ? getParent(objectToShow) : objectToShow
                         );
                     }
                 }, 0);
@@ -364,13 +368,13 @@ export class Editor implements IEditor {
 
     @computed
     get id() {
-        return this.object._id;
+        return getId(this.object);
     }
 
     @computed
     get title() {
         if (isArrayElement(this.object)) {
-            return `${this.object._class.name}: ${objectToString(this.object)}`;
+            return `${getClass(this.object).name}: ${objectToString(this.object)}`;
         } else {
             return objectToString(this.object);
         }
@@ -403,22 +407,22 @@ class EditorsStoreClass {
                 let navigationItem = NavigationStore.getNavigationSelectedItem(object);
                 while (navigationItem) {
                     if (navigationItem instanceof EezObject) {
-                        if (!isArray(navigationItem) && navigationItem.editorComponent) {
+                        if (!isArray(navigationItem) && getEditorComponent(navigationItem)) {
                             this.openEditor(navigationItem);
                         }
                         navigationItem = NavigationStore.getNavigationSelectedItem(navigationItem);
                     } else {
                         let object = navigationItem.selectedObject;
-                        if (object && !isArray(object) && object.editorComponent) {
+                        if (object && !isArray(object) && getEditorComponent(object)) {
                             this.openEditor(object);
-                        } else if (navigationItem.object.editorComponent) {
+                        } else if (getEditorComponent(navigationItem.object)) {
                             this.openEditor(navigationItem.object);
                         }
                         return;
                     }
                 }
 
-                object = object._parent;
+                object = getParent(object);
             }
         });
 
@@ -459,7 +463,7 @@ class EditorsStoreClass {
                         newEditor.object = object;
                         newEditor.active = editor.active;
                         newEditor.permanent = editor.permanent;
-                        const createEditorState = object._classInfo.createEditorState;
+                        const createEditorState = getClassInfo(object).createEditorState;
                         if (createEditorState) {
                             newEditor.state = createEditorState(object);
                             if (editor.state) {
@@ -542,7 +546,7 @@ class EditorsStoreClass {
         nonPermanentEditor.permanent = openAsPermanentEditor;
         nonPermanentEditor.object = object;
         nonPermanentEditor.active = true;
-        const createEditorState = object._classInfo.createEditorState;
+        const createEditorState = getClassInfo(object).createEditorState;
         if (createEditorState) {
             nonPermanentEditor.state = createEditorState(object);
         } else {
@@ -940,8 +944,8 @@ class DocumentStoreClass {
     }
 
     addObject(parentObject: EezObject, object: any) {
-        if (parentObject._parent && parentObject._key) {
-            const propertyInfo = findPropertyByName(parentObject._parent, parentObject._key);
+        if (getParent(parentObject) && getKey(parentObject)) {
+            const propertyInfo = findPropertyByName(getParent(parentObject), getKey(parentObject));
             if (propertyInfo && propertyInfo.interceptAddObject) {
                 object = propertyInfo.interceptAddObject(parentObject, object);
             }
@@ -985,13 +989,13 @@ class DocumentStoreClass {
         let values: any = {};
 
         let oldValues: any;
-        if (object._classInfo.afterUpdateObjectHook) {
+        if (getClassInfo(object).afterUpdateObjectHook) {
             oldValues = {};
         }
 
         for (let propertyName in inputValues) {
             if (inputValues.hasOwnProperty(propertyName)) {
-                if (object._classInfo.afterUpdateObjectHook) {
+                if (getClassInfo(object).afterUpdateObjectHook) {
                     oldValues[propertyName] = getProperty(object, propertyName);
                 }
 
@@ -1041,8 +1045,9 @@ class DocumentStoreClass {
             values
         );
 
-        if (object._classInfo.afterUpdateObjectHook) {
-            object._classInfo.afterUpdateObjectHook(object, inputValues, oldValues);
+        const afterUpdateObjectHook = getClassInfo(object).afterUpdateObjectHook;
+        if (afterUpdateObjectHook) {
+            afterUpdateObjectHook(object, inputValues, oldValues);
         }
     }
 
@@ -1071,7 +1076,7 @@ class DocumentStoreClass {
     }
 
     replaceObject(object: EezObject, replaceWithObject: EezObject) {
-        if (object._parent !== replaceWithObject._parent) {
+        if (getParent(object) !== getParent(replaceWithObject)) {
             console.error("assert failed");
         }
 
@@ -1086,7 +1091,7 @@ class DocumentStoreClass {
     }
 
     replaceObjects(objects: EezObject[], replaceWithObject: EezObject) {
-        if (objects[0]._parent !== replaceWithObject._parent) {
+        if (getParent(objects[0]) !== getParent(replaceWithObject)) {
             console.error("assert failed");
         }
 
@@ -1135,7 +1140,7 @@ export function extendContextMenu(
 }
 
 export function canAdd(object: EezObject) {
-    return (isArrayElement(object) || isArray(object)) && object._classInfo.newItem != undefined;
+    return (isArrayElement(object) || isArray(object)) && getClassInfo(object).newItem != undefined;
 }
 
 function canDuplicate(object: EezObject) {
@@ -1143,12 +1148,12 @@ function canDuplicate(object: EezObject) {
 }
 
 function isOptional(object: EezObject) {
-    let parent = object._parent;
+    let parent = getParent(object);
     if (!parent) {
         return false;
     }
 
-    let property: PropertyInfo | undefined = findPropertyByName(parent, object._key!);
+    let property: PropertyInfo | undefined = findPropertyByName(parent, getKey(object));
 
     if (property == undefined) {
         return false;
@@ -1170,7 +1175,7 @@ export function canCopy(object: EezObject) {
 }
 
 export function canContainChildren(object: EezObject) {
-    for (const propertyInfo of object._classInfo.properties) {
+    for (const propertyInfo of getClassInfo(object).properties) {
         if (
             isPropertyEnumerable(object, propertyInfo) &&
             (propertyInfo.type === PropertyType.Array || propertyInfo.type === PropertyType.Object)
@@ -1193,12 +1198,12 @@ export function canPaste(object: EezObject) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export async function addItem(object: EezObject) {
-    const parent = isArray(object) ? object : object._parent;
+    const parent = isArray(object) ? object : getParent(object);
     if (!parent) {
         return null;
     }
 
-    const parentClassInfo = parent._classInfo;
+    const parentClassInfo = getClassInfo(parent);
     if (!parentClassInfo.newItem) {
         return null;
     }
@@ -1208,13 +1213,13 @@ export async function addItem(object: EezObject) {
         newObjectProperties = await parentClassInfo.newItem(parent);
     } catch (err) {
         if (err !== undefined) {
-            notification.error(`Adding ${parent._class.name} failed: ${err}!`);
+            notification.error(`Adding ${getClass(parent).name} failed: ${err}!`);
         }
         return null;
     }
 
     if (!newObjectProperties) {
-        console.log(`Canceled adding ${parent._class.name}`);
+        console.log(`Canceled adding ${getClass(parent).name}`);
         return null;
     }
 
@@ -1233,7 +1238,7 @@ export function pasteItem(object: EezObject) {
                 if (c.serializedData.object) {
                     if (
                         isArray(c.pastePlace as EezObject) &&
-                        object._parent === (c.pastePlace as EezObject)
+                        getParent(object) === (c.pastePlace as EezObject)
                     ) {
                         return DocumentStore.insertObject(
                             c.pastePlace as EezObject,
@@ -1277,7 +1282,7 @@ export function copyItem(object: EezObject) {
 }
 
 function duplicateItem(object: EezObject) {
-    let parent = object._parent as EezObject;
+    let parent = getParent(object) as EezObject;
     return DocumentStore.addObject(parent, toJS(object));
 }
 

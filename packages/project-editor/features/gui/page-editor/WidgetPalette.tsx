@@ -5,7 +5,14 @@ import classNames from "classnames";
 
 import { humanize } from "eez-studio-shared/string";
 
-import { EezObject, EezClass, getClassesDerivedFrom } from "project-editor/core/object";
+import {
+    EezObject,
+    EezClass,
+    getClassesDerivedFrom,
+    setId,
+    getClass,
+    getClassInfo
+} from "project-editor/core/object";
 import { loadObject } from "project-editor/core/serialization";
 import { objectToClipboardData, setClipboardData } from "project-editor/core/clipboard";
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -56,7 +63,7 @@ class PaletteItem extends React.Component<PaletteItemProps> {
         let protoObject = new this.props.widgetClass();
         let object = loadObject(
             undefined,
-            JSON.parse(JSON.stringify(protoObject._classInfo.defaultValue!)),
+            JSON.parse(JSON.stringify(getClassInfo(protoObject).defaultValue!)),
             this.props.widgetClass
         );
 
@@ -64,7 +71,7 @@ class PaletteItem extends React.Component<PaletteItemProps> {
             (object as any).style = "default";
         }
 
-        object._id = "WidgetPaletteItem";
+        setId(object, "WidgetPaletteItem");
 
         setClipboardData(event, objectToClipboardData(object));
 
@@ -88,7 +95,7 @@ class PaletteItem extends React.Component<PaletteItemProps> {
             selected: this.props.selected,
             dragging:
                 DragAndDropManager.dragObject &&
-                DragAndDropManager.dragObject._class === this.props.widgetClass
+                getClass(DragAndDropManager.dragObject) === this.props.widgetClass
         });
 
         let icon = this.props.widgetClass.classInfo.icon;

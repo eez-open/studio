@@ -16,7 +16,8 @@ import {
     PropertyType,
     PropertyInfo,
     asArray,
-    getChildOfObject
+    getChildOfObject,
+    getParent
 } from "project-editor/core/object";
 
 import { IParameterType, ParameterTypeType, ResponseType } from "instrument/scpi";
@@ -325,7 +326,7 @@ export class ScpiParameter extends EezObject {
         const messages: output.Message[] = [];
 
         if (this.name) {
-            const arr = asArray<ScpiParameter>(this._parent!);
+            const arr = asArray<ScpiParameter>(getParent(this));
             let thisIndex = -1;
             let otherIndex = -1;
             for (let i = 0; i < arr.length; ++i) {
@@ -349,7 +350,7 @@ export class ScpiParameter extends EezObject {
         }
 
         if (!this.isOptional) {
-            const arr = asArray<ScpiParameter>(this._parent!);
+            const arr = asArray<ScpiParameter>(getParent(this));
             for (let i = 0; arr[i] !== this && i < arr.length; ++i) {
                 if (arr[i].isOptional) {
                     messages.push(
@@ -423,7 +424,7 @@ export class ScpiResponse extends EezObject {
     check(object: EezObject) {
         const messages: output.Message[] = [];
 
-        const command: ScpiCommand = this._parent as ScpiCommand;
+        const command: ScpiCommand = getParent(this) as ScpiCommand;
         if (command.isQuery) {
             if (!this.type) {
                 messages.push(output.propertyNotSetMessage(this, "type"));

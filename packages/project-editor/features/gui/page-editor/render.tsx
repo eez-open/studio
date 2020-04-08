@@ -3,6 +3,8 @@ import { observer, inject } from "mobx-react";
 
 import { Rect } from "eez-studio-shared/geometry";
 
+import { getId } from "project-editor/core/object";
+
 import { DataContext } from "project-editor/features/data/data";
 import { IDesignerContext } from "project-editor/features/gui/page-editor/designer-interfaces";
 
@@ -70,7 +72,7 @@ export class WidgetComponent extends React.Component<{
             height
         };
 
-        const dataDesignerObjectId = designerContext ? widget._id : undefined;
+        const dataDesignerObjectId = designerContext ? getId(widget) : undefined;
 
         if (widget instanceof Widget) {
             const canvas = widget.draw(rect, dataContext);
@@ -134,7 +136,9 @@ export class WidgetContainerComponent extends React.Component<{
         const { widgets, dataContext } = this.props;
 
         return widgets.map((widget, i) => {
-            return <WidgetComponent key={widget._id} widget={widget} dataContext={dataContext} />;
+            return (
+                <WidgetComponent key={getId(widget)} widget={widget} dataContext={dataContext} />
+            );
         });
     }
 }

@@ -4,7 +4,7 @@ import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-ui/action";
 
-import { EezObject, objectToString } from "project-editor/core/object";
+import { EezObject, objectToString, getClassInfo } from "project-editor/core/object";
 import { EditorsStore, NavigationStore, addItem, canAdd } from "project-editor/core/store";
 import {
     TreeObjectAdapter,
@@ -84,7 +84,7 @@ interface TreeNavigationPanelProps {
 @observer
 export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProps, {}> {
     static navigationTreeFilter(object: EezObject) {
-        const classInfo = object._classInfo;
+        const classInfo = getClassInfo(object);
         return (
             classInfo.showInNavigation ||
             !!classInfo.navigationComponent ||

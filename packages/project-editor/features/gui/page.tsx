@@ -24,7 +24,8 @@ import {
     specificGroup,
     EditorComponent,
     NavigationComponent,
-    asArray
+    asArray,
+    getParent
 } from "project-editor/core/object";
 import {
     TreeObjectAdapter,
@@ -135,7 +136,7 @@ export class PageTabState implements IEditorState {
     @action
     selectObject(object: EezObject) {
         let ancestor: EezObject | undefined;
-        for (ancestor = object; ancestor; ancestor = ancestor._parent) {
+        for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
             let item = this.widgetContainerDisplayItem.getObjectAdapter(ancestor);
             if (item) {
                 this.widgetContainerDisplayItem.selectItems([item]);
@@ -338,7 +339,7 @@ export class PageOrientation extends EezObject {
 
     @computed
     get closePageIfTouchedOutside() {
-        return (this._parent as Page).closePageIfTouchedOutside;
+        return (getParent(this) as Page).closePageIfTouchedOutside;
     }
 }
 

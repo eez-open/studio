@@ -24,7 +24,14 @@ import {
 } from "project-editor/features/gui/page-editor/bounding-rects";
 import styled from "eez-studio-ui/styled-components";
 
-import { EezObject, isObjectInstanceOf, isAncestor } from "project-editor/core/object";
+import {
+    EezObject,
+    isObjectInstanceOf,
+    isAncestor,
+    getParent,
+    setParent,
+    getId
+} from "project-editor/core/object";
 import {
     DocumentStore,
     NavigationStore,
@@ -66,7 +73,7 @@ export class EditorObject implements IBaseObject {
     }
 
     get id() {
-        return this.object._id;
+        return getId(this.object);
     }
 
     @computed
@@ -312,7 +319,7 @@ class PageDocument implements IDocument {
         ids.forEach(id => {
             const editorObject = this.findObjectById(id);
             if (editorObject) {
-                const parent = editorObject.object._parent!;
+                const parent = getParent(editorObject.object);
 
                 let group = editorObjectsGroupedByParent.get(parent);
 
@@ -442,7 +449,10 @@ export class PageEditor
                 return false;
             }
 
-            if (selectedObject._parent === object._parent || isAncestor(selectedObject, object)) {
+            if (
+                getParent(selectedObject) === getParent(object) ||
+                isAncestor(selectedObject, object)
+            ) {
                 return true;
             }
         }
@@ -504,7 +514,9 @@ export class PageEditor
 
         let viewState: IViewStatePersistantState = {
             transform,
-            selectedObjects: this.props.widgetContainer.selectedItems.map(item => item.object._id)
+            selectedObjects: this.props.widgetContainer.selectedItems.map(item =>
+                getId(item.object)
+            )
         };
 
         if (!this.savedViewState) {
@@ -565,7 +577,7 @@ export class PageEditor
 
             if (!this.pageEditorContext.dragWidget) {
                 this.pageEditorContext.dragWidget = widget;
-                this.pageEditorContext.dragWidget._parent = page.widgets;
+                setParent(this.pageEditorContext.dragWidget, page.widgets);
 
                 this.pageEditorContext.viewState.selectObjects([
                     this.pageEditorContext.document.findObjectById("WidgetPaletteItem")!
@@ -609,7 +621,7 @@ export class PageEditor
             dragSnapLines.clear();
 
             setTimeout(() => {
-                const objectAdapter = this.pageEditorContext.document.findObjectById(object._id);
+                const objectAdapter = this.pageEditorContext.document.findObjectById(getId(object));
                 if (objectAdapter) {
                     const viewState = this.pageEditorContext.viewState;
                     viewState.selectObjects([objectAdapter]);

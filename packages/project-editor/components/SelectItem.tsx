@@ -10,7 +10,8 @@ import {
     getProperty,
     PropertyType,
     getObjectFromPath,
-    IOnSelectParams
+    IOnSelectParams,
+    getClassInfo
 } from "project-editor/core/object";
 import {
     ProjectStore,
@@ -48,7 +49,7 @@ class SelectItemDialog extends React.Component<{
             onCancel
         } = this.props;
 
-        let NavigationComponent = collectionObject._classInfo.navigationComponent!;
+        let NavigationComponent = getClassInfo(collectionObject).navigationComponent!;
 
         return (
             <Dialog
@@ -60,7 +61,7 @@ class SelectItemDialog extends React.Component<{
             >
                 <SelectItemDialogDiv>
                     <NavigationComponent
-                        id={collectionObject!._classInfo.navigationComponentId! + "-dialog"}
+                        id={getClassInfo(collectionObject!).navigationComponentId! + "-dialog"}
                         navigationObject={collectionObject}
                         navigationStore={navigationStore}
                         dragAndDropManager={dragAndDropManager}
@@ -93,7 +94,7 @@ export async function onSelectItem(
                   );
 
         const navigationStore = new SimpleNavigationStoreClass(
-            collectionObject!._classInfo.findItemByName!(
+            getClassInfo(collectionObject!).findItemByName!(
                 propertyInfo.type === PropertyType.String
                     ? (object as Widget).style.fontName
                     : getProperty(object, propertyInfo.name)

@@ -97,7 +97,7 @@ export const validators = {
     },
 
     unique: (origObject: any, collection: any, message?: string) => {
-        return function(object: any, ruleName: string) {
+        return function (object: any, ruleName: string) {
             const value = object[ruleName];
             if (
                 (collection._array || collection).find(
@@ -119,7 +119,7 @@ export const validators = {
     },
 
     unit: (unit: keyof typeof UNITS) => {
-        return function(object: any, ruleName: string) {
+        return function (object: any, ruleName: string) {
             let value = UNITS[unit].parseValue(object[ruleName]);
             if (typeof value !== "number" || isNaN(value)) {
                 return VALIDATION_MESSAGE_INVALID_VALUE;

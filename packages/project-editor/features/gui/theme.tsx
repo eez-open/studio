@@ -10,7 +10,8 @@ import {
     registerClass,
     PropertyType,
     asArray,
-    getObjectFromObjectId
+    getObjectFromObjectId,
+    getParent
 } from "project-editor/core/object";
 import {
     NavigationStore,
@@ -84,7 +85,7 @@ class ColorItem extends React.Component<{
 
     @computed
     get colorIndex() {
-        return asArray(this.colorObject._parent!).indexOf(this.colorObject);
+        return asArray(getParent(this.colorObject)).indexOf(this.colorObject);
     }
 
     @computed
@@ -178,7 +179,7 @@ export class ThemesSideView extends React.Component<{
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique(theme, asArray(theme._parent!))
+                            validators.unique(theme, asArray(getParent(theme)))
                         ]
                     }
                 ]
@@ -217,7 +218,7 @@ export class ThemesSideView extends React.Component<{
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique(color, asArray(color._parent!))
+                            validators.unique(color, asArray(getParent(color)))
                         ]
                     }
                 ]
@@ -365,7 +366,7 @@ export class Color extends EezObject {
                     const colorIndex = asArray(gui.colors).indexOf(this);
                     const color = gui.getThemeColor(selectedTheme.id, this.id);
 
-                    gui.themes._array.forEach((theme: any, i: number) => {
+                    asArray(gui.themes).forEach((theme: any, i: number) => {
                         if (theme != selectedTheme) {
                             const colors = theme.colors.slice();
                             colors[colorIndex] = color;
@@ -444,12 +445,12 @@ export class Theme extends EezObject {
     };
 
     @computed get colors() {
-        const gui = this._parent!._parent as Gui;
+        const gui = getParent(getParent(this)) as Gui;
         return gui.colors.map(color => gui.getThemeColor(this.id, color.id));
     }
 
     set colors(value: string[]) {
-        const gui = this._parent!._parent as Gui;
+        const gui = getParent(getParent(this)) as Gui;
         for (let i = 0; i < value.length; i++) {
             gui.setThemeColor(this.id, asArray(gui.colors)[i].id, value[i]);
         }

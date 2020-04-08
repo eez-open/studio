@@ -23,7 +23,11 @@ import {
     PropertyInfo,
     isArrayElement,
     isObjectInstanceOf,
-    isPartOfNavigation
+    isPartOfNavigation,
+    getParent,
+    getId,
+    getClassInfo,
+    getLabel
 } from "project-editor/core/object";
 import { objectsToClipboardData } from "project-editor/core/clipboard";
 import {
@@ -120,13 +124,13 @@ export interface DisplayItemSelection extends DisplayItem {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getDisplayItemFromObjectId(item: DisplayItem, id: string): DisplayItem | undefined {
-    if (item.object._id == id) {
+    if (getId(item.object) == id) {
         return item;
     }
 
     let result = _find(item.children, (displayItemChild: any) => {
         let child: DisplayItem = displayItemChild;
-        return id === child.object._id || id.startsWith(child.object._id + ".");
+        return id === getId(child.object) || id.startsWith(getId(child.object) + ".");
     });
 
     if (result) {
@@ -141,7 +145,7 @@ export function reduceUntilCommonParent(
     items: DisplayItem[]
 ): DisplayItem[] {
     let objects = reduceObjectsUntilCommonParent(items.map(item => item.object));
-    let parentItems = objects.map(object => getDisplayItemFromObjectId(rootItem, object._id));
+    let parentItems = objects.map(object => getDisplayItemFromObjectId(rootItem, getId(object)));
     return parentItems.filter(item => item !== undefined) as DisplayItem[];
 }
 
@@ -221,7 +225,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             return asArray(this.object).map(child => this.transformer(child));
         }
 
-        let properties = this.object._classInfo.properties.filter(
+        let properties = getClassInfo(this.object).properties.filter(
             propertyInfo =>
                 (propertyInfo.type === PropertyType.Object ||
                     propertyInfo.type === PropertyType.Array) &&
@@ -325,7 +329,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
     @action
     selectObjectIds(objectIds: string[]) {
-        const currentlySelectedObjectIds = this.selectedItems.map(item => item.object._id);
+        const currentlySelectedObjectIds = this.selectedItems.map(item => getId(item.object));
         if (_isEqual(objectIds.sort(), currentlySelectedObjectIds.sort())) {
             return;
         }
@@ -429,13 +433,13 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             objectAdapter: ITreeObjectAdapter,
             id: string
         ): ITreeObjectAdapter | undefined {
-            if (objectAdapter.object._id == id) {
+            if (getId(objectAdapter.object) == id) {
                 return objectAdapter;
             }
 
             let result = _find(objectAdapter.children, (displayItemChild: any) => {
                 let child: DisplayItem = displayItemChild;
-                return id == child.object._id || id.startsWith(child.object._id + ".");
+                return id == getId(child.object) || id.startsWith(getId(child.object) + ".");
             });
             if (result) {
                 return getObjectAdapterFromObjectId(result as any, id);
@@ -445,11 +449,11 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
 
         if (objectAdapterOrObjectOrObjectId instanceof EezArrayObject) {
-            return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId._id);
+            return getObjectAdapterFromObjectId(this, getId(objectAdapterOrObjectOrObjectId));
         }
 
         if (objectAdapterOrObjectOrObjectId instanceof EezObject) {
-            return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId._id);
+            return getObjectAdapterFromObjectId(this, getId(objectAdapterOrObjectOrObjectId));
         }
 
         if (!(typeof objectAdapterOrObjectOrObjectId === "string")) {
@@ -478,7 +482,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
     }
 
     getParent(item: ITreeObjectAdapter) {
-        for (let parent = item.object._parent; parent; parent = parent._parent) {
+        for (let parent = getParent(item.object); parent; parent = getParent(parent)) {
             let parentObjectAdapter = this.getObjectAdapter(parent);
             if (parentObjectAdapter) {
                 return parentObjectAdapter;
@@ -503,7 +507,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                         return true;
                     }
 
-                    if (item.object._id.startsWith(child.object._id + ".")) {
+                    if (getId(item.object).startsWith(getId(child.object) + ".")) {
                         return true;
                     }
 
@@ -596,7 +600,8 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
 
         const allObjectsAreFromTheSameParent = !this.selectedItems.find(
-            selectedItem => selectedItem.object._parent !== this.selectedItems[0].object._parent
+            selectedItem =>
+                getParent(selectedItem.object) !== getParent(this.selectedItems[0].object)
         );
         if (allObjectsAreFromTheSameParent) {
             if (canPaste(this.selectedItems[0].object)) {
@@ -724,7 +729,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         if (selectedObjects.length > 0) {
             let i: number;
             for (i = 1; i < selectedObjects.length; i++) {
-                if (selectedObjects[i]._parent !== selectedObjects[0]._parent) {
+                if (getParent(selectedObjects[i]) !== getParent(selectedObjects[0])) {
                     break;
                 }
             }
@@ -851,11 +856,11 @@ export class TreeAdapter implements ITreeAdapter {
 
             if (sortDirection === "asc") {
                 itemChildren = itemChildren.sort((a, b) =>
-                    stringCompare(a.object._label, b.object._label)
+                    stringCompare(getLabel(a.object), getLabel(b.object))
                 );
             } else if (sortDirection === "desc") {
                 itemChildren = itemChildren.sort((a, b) =>
-                    stringCompare(b.object._label, a.object._label)
+                    stringCompare(getLabel(b.object), getLabel(a.object))
                 );
             }
 
@@ -905,7 +910,7 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     getItemId(item: ITreeObjectAdapter) {
-        return item.object._id;
+        return getId(item.object);
     }
 
     getItemFromId(id: string): ITreeObjectAdapter | undefined {
@@ -937,7 +942,7 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     selectObject(object: EezObject) {
-        const item = this.getItemFromId(object._id);
+        const item = this.getItemFromId(getId(object));
         if (item) {
             this.selectItem(item);
         }
@@ -945,7 +950,7 @@ export class TreeAdapter implements ITreeAdapter {
 
     selectObjects(objects: EezObject[]) {
         objects.forEach(object => {
-            const item = this.getItemFromId(object._id);
+            const item = this.getItemFromId(getId(object));
             if (item) {
                 this.selectItem(item);
             }
@@ -1059,7 +1064,7 @@ export class TreeAdapter implements ITreeAdapter {
             } else if (dropPosition == DropPosition.DROP_POSITION_INSIDE) {
                 let dropPlace = findPastePlaceInside(
                     dropItem.object,
-                    DragAndDropManager.dragObject._classInfo,
+                    getClassInfo(DragAndDropManager.dragObject),
                     true
                 );
                 if (dropPlace) {
@@ -1102,7 +1107,7 @@ export class TreeAdapter implements ITreeAdapter {
         if (
             !(
                 isArrayElement(dropItem.object) &&
-                isObjectInstanceOf(dragObject, dropItem.object._parent!._classInfo)
+                isObjectInstanceOf(dragObject, getClassInfo(getParent(dropItem.object)))
             )
         ) {
             return false;
@@ -1113,13 +1118,13 @@ export class TreeAdapter implements ITreeAdapter {
             return false;
         }
 
-        if (dropItem.object._parent === dragObject._parent) {
+        if (getParent(dropItem.object) === getParent(dragObject)) {
             if (dropPosition === DropPosition.DROP_POSITION_BEFORE) {
-                if (prevObjectId !== dragObject._id) {
+                if (prevObjectId !== getId(dragObject)) {
                     return true;
                 }
             } else if (dropPosition === DropPosition.DROP_POSITION_AFTER) {
-                if (nextObjectId !== dragObject._id) {
+                if (nextObjectId !== getId(dragObject)) {
                     return true;
                 }
             }
@@ -1133,7 +1138,7 @@ export class TreeAdapter implements ITreeAdapter {
     canDropInside(dropItem: ITreeObjectAdapter) {
         return !!findPastePlaceInside(
             dropItem.object,
-            DragAndDropManager.dragObject!._classInfo,
+            getClassInfo(DragAndDropManager.dragObject!),
             true
         );
     }
@@ -1233,11 +1238,11 @@ export class ListAdapter implements ITreeAdapter {
         let items = objects.map(object => new ListItem(object));
 
         if (this.sortDirection === "asc") {
-            return items.sort((a, b) => stringCompare(a.object._label, b.object._label));
+            return items.sort((a, b) => stringCompare(getLabel(a.object), getLabel(b.object)));
         }
 
         if (this.sortDirection === "desc") {
-            return items.sort((a, b) => stringCompare(b.object._label, a.object._label));
+            return items.sort((a, b) => stringCompare(getLabel(b.object), getLabel(a.object)));
         }
 
         return items;
@@ -1250,11 +1255,11 @@ export class ListAdapter implements ITreeAdapter {
     maxLevel = 0;
 
     getItemId(item: ListItem) {
-        return item.object._id;
+        return getId(item.object);
     }
 
     getItemFromId(id: string) {
-        return this.items.find(item => item.object._id === id);
+        return this.items.find(item => getId(item.object) === id);
     }
 
     getItemParent(item: ListItem) {
@@ -1281,7 +1286,7 @@ export class ListAdapter implements ITreeAdapter {
         const item = this.navigationStore.getNavigationSelectedItem(this.object);
 
         if (item instanceof EezObject) {
-            return this.getItemFromId(item._id);
+            return this.getItemFromId(getId(item));
         }
 
         return undefined;
@@ -1289,7 +1294,7 @@ export class ListAdapter implements ITreeAdapter {
 
     @action
     selectItem(item: ListItem): void {
-        if (item.object._parent && !isPartOfNavigation(item.object._parent)) {
+        if (getParent(item.object) && !isPartOfNavigation(getParent(item.object))) {
             this.navigationStore.setNavigationSelectedItem(this.object, item.object);
             return;
         }
@@ -1315,7 +1320,7 @@ export class ListAdapter implements ITreeAdapter {
     }
 
     selectObject(object: EezObject): void {
-        const item = this.getItemFromId(object._id);
+        const item = this.getItemFromId(getId(object));
         if (item) {
             this.selectItem(item);
         }
@@ -1323,7 +1328,7 @@ export class ListAdapter implements ITreeAdapter {
 
     selectObjects(objects: EezObject[]): void {
         objects.forEach(object => {
-            const item = this.getItemFromId(object._id);
+            const item = this.getItemFromId(getId(object));
             if (item) {
                 this.selectItem(item);
             }
@@ -1456,7 +1461,7 @@ export class ListAdapter implements ITreeAdapter {
         const dragObject = this.dragAndDropManager.dragObject!;
 
         // check: can't drop object if parent can't accept it
-        if (!isObjectInstanceOf(dragObject, this.object._classInfo)) {
+        if (!isObjectInstanceOf(dragObject, getClassInfo(this.object))) {
             return false;
         }
 
@@ -1465,13 +1470,13 @@ export class ListAdapter implements ITreeAdapter {
             return false;
         }
 
-        if (dropItem.object._parent === dragObject._parent) {
+        if (getParent(dropItem.object) === getParent(dragObject)) {
             if (dropPosition === DropPosition.DROP_POSITION_BEFORE) {
-                if (prevObjectId !== dragObject._id) {
+                if (prevObjectId !== getId(dragObject)) {
                     return true;
                 }
             } else if (dropPosition === DropPosition.DROP_POSITION_AFTER) {
-                if (nextObjectId !== dragObject._id) {
+                if (nextObjectId !== getId(dragObject)) {
                     return true;
                 }
             }

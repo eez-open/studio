@@ -9,7 +9,12 @@ import {
     getProperty,
     getHumanReadableObjectPath,
     isArrayElement,
-    findPropertyByName
+    findPropertyByName,
+    getParent,
+    getKey,
+    setModificationTime,
+    getClass,
+    getClassInfo
 } from "project-editor/core/object";
 import { loadObject } from "project-editor/core/serialization";
 
@@ -39,9 +44,9 @@ export interface ICommandContext {
 ////////////////////////////////////////////////////////////////////////////////
 
 function onObjectModified(object: EezObject) {
-    object._modificationTime = new Date().getTime();
-    if (object._parent) {
-        onObjectModified(object._parent);
+    setModificationTime(object, new Date().getTime());
+    if (getParent(object)) {
+        onObjectModified(getParent(object));
     }
 }
 
@@ -71,7 +76,7 @@ function getUniquePropertyValue(existingObjects: EezObject[], key: string, value
 function ensureUniqueProperties(parentObject: EezObject, objects: EezObject[]) {
     let existingObjects = asArray(parentObject).map((object: EezObject) => object);
     objects.forEach(object => {
-        for (const propertyInfo of object._classInfo.properties) {
+        for (const propertyInfo of getClassInfo(object).properties) {
             if (propertyInfo.unique) {
                 (object as any)[propertyInfo.name] = getUniquePropertyValue(
                     existingObjects,
@@ -88,7 +93,7 @@ function ensureUniqueProperties(parentObject: EezObject, objects: EezObject[]) {
 
 export let addObject = action(
     (context: ICommandContext, parentObject: EezObject, object: EezObject) => {
-        object = loadObject(parentObject, object, parentObject._class);
+        object = loadObject(parentObject, object, getClass(parentObject));
         ensureUniqueProperties(parentObject, [object]);
 
         context.undoManager.executeCommand({
@@ -113,7 +118,7 @@ export let addObject = action(
 
 export let addObjects = action(
     (context: ICommandContext, parentObject: EezObject, objects: EezObject[]) => {
-        objects = objects.map(object => loadObject(parentObject, object, parentObject._class));
+        objects = objects.map(object => loadObject(parentObject, object, getClass(parentObject)));
         ensureUniqueProperties(parentObject, objects);
 
         context.undoManager.executeCommand({
@@ -142,7 +147,7 @@ export let addObjects = action(
 
 export let insertObject = action(
     (context: ICommandContext, parentObject: EezObject, index: number, object: any) => {
-        object = loadObject(parentObject, object, parentObject._class);
+        object = loadObject(parentObject, object, getClass(parentObject));
         ensureUniqueProperties(parentObject, [object]);
 
         context.undoManager.executeCommand({
@@ -185,8 +190,9 @@ class UpdateCommand implements ICommand {
             }
 
             if (propertyInfo) {
-                if (object._classInfo.updateObjectValueHook) {
-                    const result = object._classInfo.updateObjectValueHook(
+                const updateObjectValueHook = getClassInfo(object).updateObjectValueHook;
+                if (updateObjectValueHook) {
+                    const result = updateObjectValueHook(
                         object,
                         propertyName,
                         values[propertyName]
@@ -254,7 +260,7 @@ export let updateObject = action((context: ICommandContext, object: EezObject, v
 });
 
 export let deleteObject = action((context: ICommandContext, object: any) => {
-    const parent = object._parent!;
+    const parent = getParent(object);
 
     if (isArrayElement(object)) {
         const array = asArray(parent);
@@ -277,7 +283,7 @@ export let deleteObject = action((context: ICommandContext, object: any) => {
         });
     } else {
         updateObject(context, parent, {
-            [object._key!]: undefined
+            [getKey(object)]: undefined
         });
     }
 });
@@ -290,7 +296,7 @@ export let deleteObjects = action((context: ICommandContext, objects: EezObject[
             undoIndexes = [];
             for (let i = 0; i < objects.length; i++) {
                 let object = objects[i];
-                let parent = object._parent!;
+                let parent = getParent(object);
 
                 if (isArrayElement(object)) {
                     const array = asArray(parent!);
@@ -299,7 +305,7 @@ export let deleteObjects = action((context: ICommandContext, objects: EezObject[
                     array.splice(index, 1);
                 } else {
                     undoIndexes.push(-1);
-                    (parent as any)[object._key as string] = undefined;
+                    (parent as any)[getKey(object)] = undefined;
                 }
                 onObjectModified(parent);
             }
@@ -308,13 +314,13 @@ export let deleteObjects = action((context: ICommandContext, objects: EezObject[
         undo: action(() => {
             for (let i = objects.length - 1; i >= 0; i--) {
                 let object = objects[i];
-                let parent = object._parent!;
+                let parent = getParent(object);
                 if (isArrayElement(object)) {
                     const array = asArray(parent);
                     let index = undoIndexes[i];
                     array.splice(index, 0, object);
                 } else {
-                    (parent as any)[object._key as string] = object;
+                    (parent as any)[getKey(object)] = object;
                 }
                 onObjectModified(parent);
             }
@@ -330,7 +336,7 @@ export let deleteObjects = action((context: ICommandContext, objects: EezObject[
 
 export let replaceObject = action(
     (context: ICommandContext, object: EezObject, replaceWithObject: EezObject) => {
-        let parent = object._parent!;
+        let parent = getParent(object);
         if (isArrayElement(object)) {
             const array = asArray(parent);
 
@@ -351,7 +357,7 @@ export let replaceObject = action(
             });
         } else {
             updateObject(context, parent as any, {
-                [object._key!]: replaceWithObject
+                [getKey(object)]: replaceWithObject
             });
         }
 
@@ -365,7 +371,7 @@ export let replaceObjects = action(
             return replaceObject(context, objects[0], replaceWithObject);
         }
 
-        const parent = objects[0]._parent;
+        const parent = getParent(objects[0]);
         const array = asArray(parent!);
         const index = array.indexOf(objects[0]);
 
@@ -413,7 +419,7 @@ export function insertObjectBefore(
     object: EezObject,
     objectToInsert: any
 ) {
-    const parent = object._parent!;
+    const parent = getParent(object);
     const array = asArray(parent);
     const index = array.indexOf(object);
     return insertObject(context, parent, index, objectToInsert);
@@ -424,7 +430,7 @@ export function insertObjectAfter(
     object: EezObject,
     objectToInsert: any
 ) {
-    const parent = object._parent!;
+    const parent = getParent(object);
     const array = asArray(parent);
     const index = array.indexOf(object);
     return insertObject(context, parent, index + 1, objectToInsert);
