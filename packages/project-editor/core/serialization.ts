@@ -124,13 +124,7 @@ export function objectToJson(
     space?: number,
     toJsHook?: (jsObject: any) => void
 ) {
-    let jsObject;
-    if (!Array.isArray(object) && object._parent) {
-        // do not serialize _parent
-        jsObject = toJS(Object.assign({}, object, { _parent: undefined }));
-    } else {
-        jsObject = toJS(object);
-    }
+    let jsObject = toJS(object);
 
     if (toJsHook) {
         toJsHook(jsObject);

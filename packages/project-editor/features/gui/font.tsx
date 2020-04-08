@@ -38,7 +38,8 @@ import {
     DocumentStore,
     NavigationStore,
     INavigationStore,
-    IPanel
+    IPanel,
+    createObjectNavigationItem
 } from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { ProjectStore } from "project-editor/core/store";
@@ -1566,7 +1567,10 @@ export class FontEditor
     @action.bound
     onSelectGlyph(glyph: Glyph) {
         if (this.props.navigationStore) {
-            this.props.navigationStore.setNavigationSelectedItem(this.props.font, glyph);
+            this.props.navigationStore.setNavigationSelectedItem(
+                this.props.font,
+                createObjectNavigationItem(glyph)!
+            );
         }
         this.selectedGlyph = glyph;
     }

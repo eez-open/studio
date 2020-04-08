@@ -20,7 +20,8 @@ import {
     SimpleNavigationStoreClass,
     DocumentStore,
     UndoManager,
-    IContextMenuContext
+    IContextMenuContext,
+    getObjectFromNavigationItem
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import { replaceObjectReference } from "project-editor/core/search";
@@ -93,7 +94,9 @@ class ColorItem extends React.Component<{
     get selectedTheme() {
         const gui = getProperty(ProjectStore.masterProject || ProjectStore.project, "gui") as Gui;
 
-        let selectedTheme = navigationStore.get().getNavigationSelectedItem(gui.themes) as Theme;
+        let selectedTheme = getObjectFromNavigationItem(
+            navigationStore.get().getNavigationSelectedItem(gui.themes)
+        ) as Theme;
         if (!selectedTheme) {
             selectedTheme = asArray(gui.themes)[0];
         }
@@ -339,57 +342,58 @@ export class Color extends EezObject {
                     name: result.values.name
                 });
             });
+        },
+
+        extendContextMenu: (
+            thisObject: Color,
+            context: IContextMenuContext,
+            objects: IEezObject[],
+            menuItems: Electron.MenuItem[]
+        ) => {
+            var additionalMenuItems: Electron.MenuItem[] = [];
+
+            additionalMenuItems.push(
+                new MenuItem({
+                    label: "Copy to other themes",
+                    click: () => {
+                        UndoManager.setCombineCommands(true);
+
+                        const gui = getProperty(
+                            ProjectStore.masterProject || ProjectStore.project,
+                            "gui"
+                        ) as Gui;
+
+                        const selectedTheme = getObjectFromNavigationItem(
+                            navigationStore.get().getNavigationSelectedItem(gui.themes)
+                        ) as Theme;
+
+                        const colorIndex = asArray(gui.colors).indexOf(thisObject);
+                        const color = gui.getThemeColor(selectedTheme.id, thisObject.id);
+
+                        asArray(gui.themes).forEach((theme: any, i: number) => {
+                            if (theme != selectedTheme) {
+                                const colors = theme.colors.slice();
+                                colors[colorIndex] = color;
+                                DocumentStore.updateObject(theme, {
+                                    colors
+                                });
+                            }
+                        });
+
+                        UndoManager.setCombineCommands(false);
+                    }
+                })
+            );
+
+            additionalMenuItems.push(
+                new MenuItem({
+                    type: "separator"
+                })
+            );
+
+            menuItems.unshift(...additionalMenuItems);
         }
     };
-
-    extendContextMenu(
-        context: IContextMenuContext,
-        objects: IEezObject[],
-        menuItems: Electron.MenuItem[]
-    ) {
-        var additionalMenuItems: Electron.MenuItem[] = [];
-
-        additionalMenuItems.push(
-            new MenuItem({
-                label: "Copy to other themes",
-                click: () => {
-                    UndoManager.setCombineCommands(true);
-
-                    const gui = getProperty(
-                        ProjectStore.masterProject || ProjectStore.project,
-                        "gui"
-                    ) as Gui;
-
-                    const selectedTheme = navigationStore
-                        .get()
-                        .getNavigationSelectedItem(gui.themes) as Theme;
-
-                    const colorIndex = asArray(gui.colors).indexOf(this);
-                    const color = gui.getThemeColor(selectedTheme.id, this.id);
-
-                    asArray(gui.themes).forEach((theme: any, i: number) => {
-                        if (theme != selectedTheme) {
-                            const colors = theme.colors.slice();
-                            colors[colorIndex] = color;
-                            DocumentStore.updateObject(theme, {
-                                colors
-                            });
-                        }
-                    });
-
-                    UndoManager.setCombineCommands(false);
-                }
-            })
-        );
-
-        additionalMenuItems.push(
-            new MenuItem({
-                type: "separator"
-            })
-        );
-
-        menuItems.unshift(...additionalMenuItems);
-    }
 }
 
 registerClass(Color);
@@ -463,7 +467,9 @@ registerClass(Theme);
 ////////////////////////////////////////////////////////////////////////////////
 
 function getThemedColorInGui(gui: Gui, colorValue: string): string | undefined {
-    let selectedTheme = navigationStore.get().getNavigationSelectedItem(gui.themes) as Theme;
+    let selectedTheme = getObjectFromNavigationItem(
+        navigationStore.get().getNavigationSelectedItem(gui.themes)
+    ) as Theme;
     if (!selectedTheme) {
         selectedTheme = asArray(gui.themes)[0];
     }

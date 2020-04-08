@@ -11,7 +11,11 @@ import {
     getId,
     getClassInfo
 } from "project-editor/core/object";
-import { NavigationStore } from "project-editor/core/store";
+import {
+    NavigationStore,
+    createObjectNavigationItem,
+    compareNavigationItem
+} from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,14 +50,18 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
     }
 
     onClick() {
-        NavigationStore.setNavigationSelectedItem(this.props.navigationObject, this.props.item);
+        NavigationStore.setNavigationSelectedItem(
+            this.props.navigationObject,
+            createObjectNavigationItem(this.props.item)!
+        );
     }
 
     render() {
         let className = classNames({
-            selected:
-                NavigationStore.getNavigationSelectedItem(this.props.navigationObject) ===
+            selected: compareNavigationItem(
+                NavigationStore.getNavigationSelectedItem(this.props.navigationObject),
                 this.props.item
+            )
         });
 
         let icon = getClassInfo(this.props.item).icon || "extension";

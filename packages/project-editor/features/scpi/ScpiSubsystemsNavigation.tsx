@@ -11,7 +11,7 @@ import {
     getAncestorOfType,
     EezArrayObject
 } from "project-editor/core/object";
-import { NavigationStore } from "project-editor/core/store";
+import { NavigationStore, getObjectFromNavigationItem } from "project-editor/core/store";
 
 import { ProjectStore } from "project-editor/core/store";
 
@@ -51,20 +51,30 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
         // return lastly selected ScpiCommand or ScpiSubsystem
         let subsystems = (getProperty(ProjectStore.project, "scpi") as Scpi).subsystems;
 
-        let subsystem = NavigationStore.getNavigationSelectedItem(subsystems) as ScpiSubsystem;
+        let subsystem = getObjectFromNavigationItem(
+            NavigationStore.getNavigationSelectedItem(subsystems)
+        ) as ScpiSubsystem;
+
         let commands =
             subsystem &&
-            (NavigationStore.getNavigationSelectedItem(subsystem) as EezArrayObject<ScpiCommand>);
+            (getObjectFromNavigationItem(
+                NavigationStore.getNavigationSelectedItem(subsystem)
+            ) as EezArrayObject<ScpiCommand>);
+
         let command =
-            commands && (NavigationStore.getNavigationSelectedItem(commands) as ScpiCommand);
+            commands &&
+            (getObjectFromNavigationItem(
+                NavigationStore.getNavigationSelectedItem(commands)
+            ) as ScpiCommand);
+
         return command || commands || subsystem;
     }
 
     render() {
         let subsystems = (getProperty(ProjectStore.project, "scpi") as Scpi).subsystems;
 
-        let selectedScpiSubsystem = NavigationStore.getNavigationSelectedItem(
-            subsystems
+        let selectedScpiSubsystem = getObjectFromNavigationItem(
+            NavigationStore.getNavigationSelectedItem(subsystems)
         ) as ScpiSubsystem;
 
         let additionalButtons;

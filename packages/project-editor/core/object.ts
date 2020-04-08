@@ -1,5 +1,5 @@
 import React from "react";
-import { observable } from "mobx";
+import { observable, IObservableValue } from "mobx";
 
 import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
@@ -242,6 +242,13 @@ export interface ClassInfo {
     afterUpdateObjectHook?: (object: IEezObject, changedProperties: any, oldValues: any) => void;
 
     creatableFromPalette?: boolean;
+
+    extendContextMenu?: (
+        object: IEezObject,
+        context: IContextMenuContext,
+        objects: IEezObject[],
+        menuItems: Electron.MenuItem[]
+    ) => void;
 }
 
 export function makeDerivedClassInfo(
@@ -296,38 +303,12 @@ export function makeDerivedClassInfo(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IEezObject {
-    _id: string;
-    _key?: string;
-    _parent?: IEezObject;
-    _lastChildId?: number;
-    _modificationTime?: number;
-    _propertyInfo?: PropertyInfo;
-
-    extendContextMenu: (
-        context: IContextMenuContext,
-        objects: IEezObject[],
-        menuItems: Electron.MenuItem[]
-    ) => void;
-}
+export type IEezObject = EezObject | EezArrayObject<EezObject>;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class EezObject implements IEezObject {
-    _id: string;
-    _key?: string;
-    _parent?: IEezObject;
-    _lastChildId?: number;
-    @observable _modificationTime?: number;
-    _propertyInfo?: PropertyInfo;
-
+export class EezObject {
     static classInfo: ClassInfo;
-
-    extendContextMenu(
-        context: IContextMenuContext,
-        objects: IEezObject[],
-        menuItems: Electron.MenuItem[]
-    ): void {}
 }
 
 export type EezClass = typeof EezObject;
@@ -340,20 +321,7 @@ export function registerClass(aClass: EezClass) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class EezArrayObject<T> implements IEezObject {
-    _id: string;
-    _key?: string;
-    _parent?: IEezObject;
-    _lastChildId?: number;
-    @observable _modificationTime?: number;
-    _propertyInfo?: PropertyInfo;
-
-    extendContextMenu(
-        context: IContextMenuContext,
-        objects: IEezObject[],
-        menuItems: Electron.MenuItem[]
-    ): void {}
-
+export class EezArrayObject<T> {
     @observable _array: T[] = [];
 
     get length() {
@@ -507,7 +475,7 @@ export function getChildren(parent: IEezObject): IEezObject[] {
 
 export function getClass(object: IEezObject) {
     if (object instanceof EezArrayObject) {
-        return object._propertyInfo!.typeClass!;
+        return getPropertyInfo(object).typeClass!;
     } else {
         return object.constructor as EezClass;
     }
@@ -517,53 +485,90 @@ export function getClassInfo(object: IEezObject): ClassInfo {
     return getClass(object).classInfo;
 }
 
+const objectMetaPropertiesMap = new Map<IEezObject, any>();
+
+(window as any).EEZStudio._objectMetaPropertiesMap = objectMetaPropertiesMap;
+
+function getObjectMetaProperty(object: IEezObject, propertyName: string): any {
+    let objectMetaProperties = objectMetaPropertiesMap.get(object);
+    return objectMetaProperties && objectMetaProperties[propertyName];
+}
+
+function setObjectMetaProperty(object: IEezObject, propertyName: string, propertyValue: any) {
+    let objectMetaProperties = objectMetaPropertiesMap.get(object);
+    if (!objectMetaProperties) {
+        objectMetaProperties = {};
+        objectMetaPropertiesMap.set(object, objectMetaProperties);
+    }
+    objectMetaProperties[propertyName] = propertyValue;
+}
+
 export function getId(object: IEezObject) {
-    return object._id;
+    return getObjectMetaProperty(object, "id");
 }
 
 export function setId(object: IEezObject, id: string) {
-    object._id = id;
+    return setObjectMetaProperty(object, "id", id);
 }
 
 export function getParent(object: IEezObject): IEezObject {
-    return object._parent!;
+    return getObjectMetaProperty(object, "parent");
 }
 
-export function setParent(object: IEezObject, childObject: IEezObject) {
-    object._parent = childObject;
+export function setParent(object: IEezObject, parentObject: IEezObject) {
+    return setObjectMetaProperty(object, "parent", parentObject);
 }
 
 export function getKey(object: IEezObject): string {
-    return object._key!;
+    return getObjectMetaProperty(object, "key");
 }
 
 export function setKey(object: IEezObject, key: string) {
-    object._key = key;
+    return setObjectMetaProperty(object, "key", key);
 }
 
 export function getModificationTime(object: IEezObject): number {
-    return object._modificationTime!;
+    let modificationTimeObservable: IObservableValue<number> = getObjectMetaProperty(
+        object,
+        "modificationTime"
+    );
+    if (!modificationTimeObservable) {
+        modificationTimeObservable = observable.box(0);
+        setObjectMetaProperty(object, "modificationTime", modificationTimeObservable);
+    }
+    return modificationTimeObservable.get();
 }
 
 export function setModificationTime(object: IEezObject, modificationTime: number) {
-    object._modificationTime = modificationTime;
+    let modificationTimeObservable: IObservableValue<number> = getObjectMetaProperty(
+        object,
+        "modificationTime"
+    );
+    if (modificationTimeObservable) {
+        modificationTimeObservable.set(modificationTime);
+    } else {
+        modificationTimeObservable = observable.box(modificationTime);
+        setObjectMetaProperty(object, "modificationTime", modificationTimeObservable);
+    }
 }
 
 export function getPropertyInfo(object: IEezObject): PropertyInfo {
-    return object._propertyInfo!;
+    return getObjectMetaProperty(object, "propertyInfo");
 }
 
 export function setPropertyInfo(object: IEezObject, propertyInfo: PropertyInfo) {
-    object._propertyInfo = propertyInfo;
+    return setObjectMetaProperty(object, "propertyInfo", propertyInfo);
 }
 
 export function getNextChildId(object: IEezObject) {
-    if (object._lastChildId === undefined) {
-        object._lastChildId = 1;
+    let lastChildId = getObjectMetaProperty(object, "lastChildId");
+    if (lastChildId == undefined) {
+        lastChildId = 1;
     } else {
-        object._lastChildId++;
+        lastChildId++;
     }
-    return object._lastChildId;
+    setObjectMetaProperty(object, "lastChildId", lastChildId);
+    return lastChildId;
 }
 
 export function getEditorComponent(object: IEezObject): typeof EditorComponent | undefined {

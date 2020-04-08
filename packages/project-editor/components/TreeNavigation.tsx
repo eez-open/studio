@@ -5,7 +5,13 @@ import { bind } from "bind-decorator";
 import { IconAction } from "eez-studio-ui/action";
 
 import { IEezObject, objectToString, getClassInfo } from "project-editor/core/object";
-import { EditorsStore, NavigationStore, addItem, canAdd } from "project-editor/core/store";
+import {
+    EditorsStore,
+    NavigationStore,
+    addItem,
+    canAdd,
+    createObjectAdapterNavigationItem
+} from "project-editor/core/store";
 import {
     TreeObjectAdapter,
     ITreeObjectAdapter,
@@ -114,7 +120,7 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
             setTimeout(() => {
                 NavigationStore.setNavigationSelectedItem(
                     this.props.navigationObject,
-                    newNavigationObjectAdapter
+                    createObjectAdapterNavigationItem(newNavigationObjectAdapter)!
                 );
             }, 0);
 

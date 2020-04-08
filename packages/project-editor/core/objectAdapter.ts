@@ -10,7 +10,6 @@ import {
     asArray,
     getProperty,
     IEezObject,
-    EezArrayObject,
     PropertyType,
     isAncestor,
     reduceUntilCommonParent as reduceObjectsUntilCommonParent,
@@ -27,8 +26,7 @@ import {
     getParent,
     getId,
     getClassInfo,
-    getLabel,
-    isEezObject
+    getLabel
 } from "project-editor/core/object";
 import { objectsToClipboardData } from "project-editor/core/clipboard";
 import {
@@ -46,7 +44,9 @@ import {
     canContainChildren,
     DocumentStore,
     NavigationStore,
-    INavigationStore
+    INavigationStore,
+    createObjectNavigationItem,
+    isObjectNavigationItem
 } from "project-editor/core/store";
 import {
     objectToClipboardData,
@@ -178,11 +178,7 @@ export interface ITreeObjectAdapter extends DisplayItem, DisplayItemSelection, I
     loadState(state: any): void;
     saveState(): void;
     getObjectAdapter(
-        objectAdapterOrObjectOrObjectId:
-            | ITreeObjectAdapter
-            | IEezObject
-            | EezArrayObject<IEezObject>
-            | string
+        objectAdapterOrObjectOrObjectId: IEezObject | string
     ): ITreeObjectAdapter | undefined;
     getAncestorObjectAdapter(object: IEezObject): ITreeObjectAdapter | undefined;
     getParent(item: ITreeObjectAdapter): ITreeObjectAdapter | undefined;
@@ -424,11 +420,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
     }
 
     getObjectAdapter(
-        objectAdapterOrObjectOrObjectId:
-            | ITreeObjectAdapter
-            | IEezObject
-            | EezArrayObject<IEezObject>
-            | string
+        objectAdapterOrObjectOrObjectId: IEezObject | string
     ): ITreeObjectAdapter | undefined {
         function getObjectAdapterFromObjectId(
             objectAdapter: ITreeObjectAdapter,
@@ -449,19 +441,11 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             return undefined;
         }
 
-        if (objectAdapterOrObjectOrObjectId instanceof EezArrayObject) {
-            return getObjectAdapterFromObjectId(this, getId(objectAdapterOrObjectOrObjectId));
+        if (typeof objectAdapterOrObjectOrObjectId === "string") {
+            return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId);
         }
 
-        if (isEezObject(objectAdapterOrObjectOrObjectId)) {
-            return getObjectAdapterFromObjectId(this, getId(objectAdapterOrObjectOrObjectId));
-        }
-
-        if (!(typeof objectAdapterOrObjectOrObjectId === "string")) {
-            return objectAdapterOrObjectOrObjectId;
-        }
-
-        return getObjectAdapterFromObjectId(this, objectAdapterOrObjectOrObjectId);
+        return getObjectAdapterFromObjectId(this, getId(objectAdapterOrObjectOrObjectId));
     }
 
     getAncestorObjectAdapter(object: IEezObject) {
@@ -1286,8 +1270,8 @@ export class ListAdapter implements ITreeAdapter {
     get selectedItem(): ListItem | undefined {
         const item = this.navigationStore.getNavigationSelectedItem(this.object);
 
-        if (isEezObject(item)) {
-            return this.getItemFromId(getId(item));
+        if (item && isObjectNavigationItem(item)) {
+            return this.getItemFromId(getId(item.object));
         }
 
         return undefined;
@@ -1296,7 +1280,10 @@ export class ListAdapter implements ITreeAdapter {
     @action
     selectItem(item: ListItem): void {
         if (getParent(item.object) && !isPartOfNavigation(getParent(item.object))) {
-            this.navigationStore.setNavigationSelectedItem(this.object, item.object);
+            this.navigationStore.setNavigationSelectedItem(
+                this.object,
+                createObjectNavigationItem(item.object)!
+            );
             return;
         }
 
@@ -1305,7 +1292,10 @@ export class ListAdapter implements ITreeAdapter {
             selectedItem.selected = false;
         }
 
-        this.navigationStore.setNavigationSelectedItem(this.object, item.object);
+        this.navigationStore.setNavigationSelectedItem(
+            this.object,
+            createObjectNavigationItem(item.object)!
+        );
 
         selectedItem = this.selectedItem;
         if (selectedItem) {

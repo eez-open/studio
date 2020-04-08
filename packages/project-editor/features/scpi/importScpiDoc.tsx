@@ -9,9 +9,14 @@ import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 
-import { EezArrayObject, getProperty, asArray, isEezObject } from "project-editor/core/object";
+import { EezArrayObject, getProperty, asArray } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/serialization";
-import { DocumentStore, UndoManager, NavigationStore } from "project-editor/core/store";
+import {
+    DocumentStore,
+    UndoManager,
+    NavigationStore,
+    createObjectNavigationItem
+} from "project-editor/core/store";
 
 import { IParameter, IParameterType, IEnum } from "instrument/scpi";
 
@@ -701,13 +706,13 @@ class FindChanges {
     }
 
     compareParameters(parameters1: IParameter[], parameters2: IParameter[]) {
-        const sortedParameters1: IParameter[] = toJS(
-            isEezObject(parameters1) ? objectToJS(parameters1) : parameters1
-        ).sort((a: IParameter, b: IParameter) => stringCompare(a.name, b.name));
+        const sortedParameters1: IParameter[] = parameters1.sort((a: IParameter, b: IParameter) =>
+            stringCompare(a.name, b.name)
+        );
 
-        const sortedParameters2: IParameter[] = toJS(
-            isEezObject(parameters2) ? objectToJS(parameters2) : parameters2
-        ).sort((a: IParameter, b: IParameter) => stringCompare(a.name, b.name));
+        const sortedParameters2: IParameter[] = parameters2.sort((a: IParameter, b: IParameter) =>
+            stringCompare(a.name, b.name)
+        );
 
         if (sortedParameters1.length !== sortedParameters2.length) {
             return false;
@@ -1131,7 +1136,10 @@ export class ImportScpiDocDialog extends React.Component<
         UndoManager.setCombineCommands(false);
 
         // always stay in scpi subsystems list view
-        NavigationStore.setNavigationSelectedItem(scpi, scpi.subsystems);
+        NavigationStore.setNavigationSelectedItem(
+            scpi,
+            createObjectNavigationItem(scpi.subsystems)!
+        );
 
         ProjectStore.backgroundCheckEnabled = true;
     }

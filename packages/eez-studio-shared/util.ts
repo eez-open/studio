@@ -3,7 +3,6 @@ import MomentModule from "moment";
 import stringify from "json-stable-stringify";
 
 import * as GeometryModule from "eez-studio-shared/geometry";
-import * as ModelObjectModule from "project-editor/core/object";
 
 import * as I10nModule from "eez-studio-shared/i10n";
 
@@ -56,7 +55,6 @@ export function formatTransferSpeed(speed: number) {
 
 export function objectClone(obj: any) {
     const { toJS } = require("mobx") as typeof MobXModule;
-    const { isEezObject } = require("project-editor/core/object") as typeof ModelObjectModule;
 
     let a: any = {};
     for (const key in obj) {
@@ -65,19 +63,11 @@ export function objectClone(obj: any) {
         }
     }
 
-    if (isEezObject(obj)) {
-        return JSON.parse(
-            JSON.stringify(toJS(a), (key: string, value: any) => {
-                return key.startsWith("$") || key.startsWith("_") ? undefined : value;
-            })
-        );
-    } else {
-        return JSON.parse(
-            JSON.stringify(toJS(a), (key: string, value: any) => {
-                return key.startsWith("$") ? undefined : value;
-            })
-        );
-    }
+    return JSON.parse(
+        JSON.stringify(toJS(a), (key: string, value: any) => {
+            return key.startsWith("$") ? undefined : value;
+        })
+    );
 }
 
 export function objectEqual<T>(a: T, b: T) {

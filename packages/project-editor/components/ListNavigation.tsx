@@ -24,7 +24,8 @@ import {
     deleteItem,
     canAdd,
     canDelete,
-    IPanel
+    IPanel,
+    getObjectFromNavigationItem
 } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { List } from "project-editor/components/List";
@@ -214,10 +215,12 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
     @computed
     get selectedObject() {
         const navigationStore = this.props.navigationStore || NavigationStore;
-        let selectedItem = navigationStore.getNavigationSelectedItem(
+        const navigationSelectedItem = navigationStore.getNavigationSelectedItem(
             this.props.navigationObject
-        ) as IEezObject;
-        return selectedItem || navigationStore.selectedObject;
+        );
+        return (
+            getObjectFromNavigationItem(navigationSelectedItem) || navigationStore.selectedObject
+        );
     }
 
     cutSelection() {

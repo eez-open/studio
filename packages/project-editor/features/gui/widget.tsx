@@ -308,7 +308,123 @@ export class Widget extends EezObject {
             delete jsObject.activeStyle;
         },
 
-        isPropertyMenuSupported: true
+        isPropertyMenuSupported: true,
+
+        extendContextMenu: (
+            thisObject: Widget,
+            context: IContextMenuContext,
+            objects: IEezObject[],
+            menuItems: Electron.MenuItem[]
+        ): void => {
+            var additionalMenuItems: Electron.MenuItem[] = [];
+
+            if (objects.length === 1) {
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Put in Select",
+                        click: () => {
+                            const selectWidget = (objects[0] as Widget).putInSelect();
+                            context.selectObject(selectWidget);
+                        }
+                    })
+                );
+            }
+
+            if (areAllChildrenOfTheSameParent(objects)) {
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Put in Container",
+                        click: () => {
+                            const containerWidget = Widget.putInContainer(objects as Widget[]);
+                            context.selectObject(containerWidget);
+                        }
+                    })
+                );
+
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Create Layout",
+                        click: async () => {
+                            const layoutWidget = await Widget.createLayout(objects as Widget[]);
+                            if (layoutWidget) {
+                                context.selectObject(layoutWidget);
+                            }
+                        }
+                    })
+                );
+
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Replace with Layout",
+                        click: async () => {
+                            const layoutWidget = await Widget.replaceWithLayout(
+                                objects as Widget[]
+                            );
+                            if (layoutWidget) {
+                                context.selectObject(layoutWidget);
+                            }
+                        }
+                    })
+                );
+            }
+
+            if (objects.length === 1) {
+                const object = objects[0];
+
+                if (object instanceof TextWidget) {
+                    additionalMenuItems.push(
+                        new MenuItem({
+                            label: "Convert to DisplayData",
+                            click: () => {
+                                const widget = object.convertToDisplayData();
+                                if (widget) {
+                                    context.selectObject(widget);
+                                }
+                            }
+                        })
+                    );
+                }
+
+                if (object instanceof LayoutViewWidget) {
+                    additionalMenuItems.push(
+                        new MenuItem({
+                            label: "Replace with Container",
+                            click: () => {
+                                const widget = object.replaceWithContainer();
+                                if (widget) {
+                                    context.selectObject(widget);
+                                }
+                            }
+                        })
+                    );
+                }
+
+                let parent = getParent(object);
+                if (parent && getParent(parent) instanceof SelectWidget) {
+                    additionalMenuItems.push(
+                        new MenuItem({
+                            label: "Replace Parent",
+                            click: () => {
+                                const widget = (object as Widget).replaceParent();
+                                if (widget) {
+                                    context.selectObject(widget);
+                                }
+                            }
+                        })
+                    );
+                }
+            }
+
+            if (additionalMenuItems.length > 0) {
+                additionalMenuItems.push(
+                    new MenuItem({
+                        type: "separator"
+                    })
+                );
+
+                menuItems.unshift(...additionalMenuItems);
+            }
+        }
     };
 
     @computed
@@ -446,119 +562,6 @@ export class Widget extends EezObject {
         }
 
         return messages;
-    }
-
-    extendContextMenu(
-        context: IContextMenuContext,
-        objects: IEezObject[],
-        menuItems: Electron.MenuItem[]
-    ): void {
-        var additionalMenuItems: Electron.MenuItem[] = [];
-
-        if (objects.length === 1) {
-            additionalMenuItems.push(
-                new MenuItem({
-                    label: "Put in Select",
-                    click: () => {
-                        const selectWidget = (objects[0] as Widget).putInSelect();
-                        context.selectObject(selectWidget);
-                    }
-                })
-            );
-        }
-
-        if (areAllChildrenOfTheSameParent(objects)) {
-            additionalMenuItems.push(
-                new MenuItem({
-                    label: "Put in Container",
-                    click: () => {
-                        const containerWidget = Widget.putInContainer(objects as Widget[]);
-                        context.selectObject(containerWidget);
-                    }
-                })
-            );
-
-            additionalMenuItems.push(
-                new MenuItem({
-                    label: "Create Layout",
-                    click: async () => {
-                        const layoutWidget = await Widget.createLayout(objects as Widget[]);
-                        if (layoutWidget) {
-                            context.selectObject(layoutWidget);
-                        }
-                    }
-                })
-            );
-
-            additionalMenuItems.push(
-                new MenuItem({
-                    label: "Replace with Layout",
-                    click: async () => {
-                        const layoutWidget = await Widget.replaceWithLayout(objects as Widget[]);
-                        if (layoutWidget) {
-                            context.selectObject(layoutWidget);
-                        }
-                    }
-                })
-            );
-        }
-
-        if (objects.length === 1) {
-            const object = objects[0];
-
-            if (object instanceof TextWidget) {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Convert to DisplayData",
-                        click: () => {
-                            const widget = object.convertToDisplayData();
-                            if (widget) {
-                                context.selectObject(widget);
-                            }
-                        }
-                    })
-                );
-            }
-
-            if (object instanceof LayoutViewWidget) {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Replace with Container",
-                        click: () => {
-                            const widget = object.replaceWithContainer();
-                            if (widget) {
-                                context.selectObject(widget);
-                            }
-                        }
-                    })
-                );
-            }
-
-            let parent = getParent(object);
-            if (parent && getParent(parent) instanceof SelectWidget) {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Replace Parent",
-                        click: () => {
-                            const widget = (object as Widget).replaceParent();
-                            if (widget) {
-                                context.selectObject(widget);
-                            }
-                        }
-                    })
-                );
-            }
-        }
-
-        if (additionalMenuItems.length > 0) {
-            additionalMenuItems.push(
-                new MenuItem({
-                    type: "separator"
-                })
-            );
-
-            menuItems.unshift(...additionalMenuItems);
-        }
     }
 
     putInSelect() {

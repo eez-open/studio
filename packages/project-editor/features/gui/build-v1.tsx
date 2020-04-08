@@ -7,13 +7,7 @@ import {
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
 import { ProjectStore, OutputSectionsStore } from "project-editor/core/store";
-import {
-    IEezObject,
-    EezArrayObject,
-    getProperty,
-    asArray,
-    isEezObject
-} from "project-editor/core/object";
+import { IEezObject, EezArrayObject, getProperty, asArray } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import { loadObject } from "project-editor/core/serialization";
 import { BuildResult } from "project-editor/core/extensions";
@@ -155,10 +149,7 @@ function getSelectedWidgetForSelectWidget(
     return undefined;
 }
 
-function createWidgetTree(
-    widgetContainerDisplayItemOrObject: DisplayItem | IEezObject,
-    draw: boolean
-) {
+function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
     function enumWidgets(widgetContainerDisplayItem: DisplayItem) {
         function enumWidget(
             parentNode: TreeNode | undefined,
@@ -244,11 +235,7 @@ function createWidgetTree(
         return enumWidget(undefined, widgetContainerDisplayItem, 0, 0);
     }
 
-    if (isEezObject(widgetContainerDisplayItemOrObject)) {
-        return enumWidgets(new TreeObjectAdapter(widgetContainerDisplayItemOrObject));
-    } else {
-        return enumWidgets(widgetContainerDisplayItemOrObject);
-    }
+    return enumWidgets(new TreeObjectAdapter(widgetContainer));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

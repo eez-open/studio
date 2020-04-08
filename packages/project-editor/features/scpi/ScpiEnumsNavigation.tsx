@@ -5,7 +5,7 @@ import { observer } from "mobx-react";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { NavigationComponent, getProperty } from "project-editor/core/object";
-import { NavigationStore } from "project-editor/core/store";
+import { NavigationStore, getObjectFromNavigationItem } from "project-editor/core/store";
 
 import { ProjectStore } from "project-editor/core/store";
 
@@ -33,7 +33,9 @@ export class ScpiEnumsNavigation extends NavigationComponent {
     render() {
         let enums = (getProperty(ProjectStore.project, "scpi") as Scpi).enums;
 
-        let selectedScpiEnum = NavigationStore.getNavigationSelectedItem(enums) as ScpiEnum;
+        let selectedScpiEnum = getObjectFromNavigationItem(
+            NavigationStore.getNavigationSelectedItem(enums)
+        ) as ScpiEnum;
 
         return (
             <Splitter

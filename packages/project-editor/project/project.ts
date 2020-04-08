@@ -373,10 +373,10 @@ export async function load(filePath: string) {
             if (err) {
                 reject(err);
             } else {
-                //console.time("load");
                 let projectJs = JSON.parse(data);
+                console.time("load");
                 let project = loadObject(undefined, projectJs, Project) as Project;
-                //console.timeEnd("load");
+                console.timeEnd("load");
 
                 resolve(project);
             }
