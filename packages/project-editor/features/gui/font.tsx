@@ -1773,6 +1773,17 @@ export class FontEditor
         NavigationStore.setSelectedPanel(this);
     }
 
+    @bind
+    onKeyDown(event: any) {
+        if (event.ctrlKey) {
+            if (event.keyCode == "C".charCodeAt(0)) {
+                this.copySelection();
+            } else if (event.keyCode == "V".charCodeAt(0)) {
+                this.pasteSelection();
+            }
+        }
+    }
+
     render() {
         const font = this.props.font;
 
@@ -1809,6 +1820,7 @@ export class FontEditor
                 sizes={`50%|50%`}
                 tabIndex={0}
                 onFocus={this.onFocus}
+                onKeyDown={this.onKeyDown}
             >
                 {glyphs}
                 <GlyphEditor glyph={this.selectedGlyph} />
