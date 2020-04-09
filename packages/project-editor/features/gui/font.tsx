@@ -2219,10 +2219,8 @@ export function findFont(fontName: any) {
         return font;
     }
 
-    if (ProjectStore.masterProject) {
-        if (ProjectStore.masterProject.gui) {
-            return findFontInGui(ProjectStore.project.gui, fontName);
-        }
+    if (ProjectStore.masterProject && ProjectStore.masterProject.gui) {
+        return findFontInGui(ProjectStore.masterProject.gui, fontName);
     }
 
     return undefined;

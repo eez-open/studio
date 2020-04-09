@@ -6,6 +6,7 @@ import classNames from "classnames";
 import { Icon } from "eez-studio-ui/icon";
 import { TabsView } from "eez-studio-ui/tabs";
 import styled from "eez-studio-ui/styled-components";
+import { IconAction } from "eez-studio-ui/action";
 
 import { UIStateStore, OutputSectionsStore, NavigationStore } from "project-editor/core/store";
 import { Message as OutputMessage, Type as MessageType } from "project-editor/core/output";
@@ -171,6 +172,13 @@ const OutputDiv = styled.div`
 const TabsViewContainer = styled.div`
     flex-grow: 0;
     flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+
+    > .EezStudio_Action {
+        background-color: ${props => props.theme.panelHeaderColor};
+        border-bottom: 1px solid ${props => props.theme.borderColor};
+    }
 `;
 
 @observer
@@ -184,7 +192,7 @@ export class Output extends React.Component<{}, {}> {
         NavigationStore.setSelectedPanel(OutputSectionsStore.activeSection);
     }
 
-    @action
+    @action.bound
     onKeyDown(event: any) {
         if (event.keyCode == 27) {
             // ESC KEY
@@ -192,11 +200,20 @@ export class Output extends React.Component<{}, {}> {
         }
     }
 
+    @action.bound onClose() {
+        UIStateStore.viewOptions.outputVisible = !UIStateStore.viewOptions.outputVisible;
+    }
+
     render() {
         return (
-            <OutputDiv tabIndex={0} onFocus={this.onFocus} onKeyDown={this.onKeyDown.bind(this)}>
+            <OutputDiv tabIndex={0} onFocus={this.onFocus} onKeyDown={this.onKeyDown}>
                 <TabsViewContainer>
                     <TabsView tabs={OutputSectionsStore.sections} />
+                    <IconAction
+                        icon="material:close"
+                        onClick={this.onClose}
+                        title="Close output panel"
+                    ></IconAction>
                 </TabsViewContainer>
                 <Messages />
             </OutputDiv>

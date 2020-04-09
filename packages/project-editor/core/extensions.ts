@@ -13,6 +13,7 @@ interface ExtensionImplementation {
         displayName?: string;
         type: PropertyType;
         typeClass: EezClass;
+        icon: string;
         create: () => any;
         check?: (object: IEezObject) => Message[];
         build?: (
@@ -30,7 +31,7 @@ interface ExtensionImplementation {
     };
 }
 
-type Category = "project-feature" | string;
+type Category = "project-feature";
 
 export interface Extension {
     name: string;

@@ -131,6 +131,7 @@ registerFeatureImplementation("shortcuts", {
         key: "shortcuts",
         type: PropertyType.Object,
         typeClass: Shortcuts,
+        icon: "playlist_play",
         create: () => {
             return {
                 shortcuts: []

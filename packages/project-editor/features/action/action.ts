@@ -99,6 +99,7 @@ registerFeatureImplementation("action", {
         key: "actions",
         type: PropertyType.Array,
         typeClass: Action,
+        icon: "code",
         create: () => [],
         check: (object: IEezObject[]) => {
             let messages: Message[] = [];

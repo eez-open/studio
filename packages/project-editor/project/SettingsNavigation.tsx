@@ -26,20 +26,6 @@ import { BuildFileEditor } from "project-editor/project/BuildFileEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ProjectFeatureDiv = styled.div`
-    padding: 10px;
-    margin-bottom: 20px;
-    h4 {
-        margin: 0;
-        border-bottom: 1px solid ${props => props.theme.borderColor};
-    }
-`;
-
-const ExtensionCardAuthor = styled.div`
-    margin-top: 5px;
-    font-size: 120%;
-`;
-
 @observer
 class ProjectFeature extends React.Component<
     {
@@ -116,23 +102,27 @@ class ProjectFeature extends React.Component<
         }
 
         return (
-            <ProjectFeatureDiv>
-                <div className="float-right" title="Feature version">
-                    v{this.props.extension.version}
+            <div className="card shadow-sm m-2 rounded" style={{ width: "18rem" }}>
+                <div className="card-body pb-5">
+                    <h5 className="card-title">
+                        <i
+                            className="material-icons card-img-top"
+                            style={{ fontSize: 32, display: "inline", marginRight: 5 }}
+                        >
+                            {
+                                this.props.extension.eezStudioExtension.implementation
+                                    .projectFeature.icon
+                            }
+                        </i>
+                        {this.props.extension.eezStudioExtension.displayName ||
+                            this.props.extension.name}
+                    </h5>
+                    <p className="card-text">{this.props.extension.description}.</p>
+                    <div style={{ position: "absolute", bottom: "1rem", right: "1rem" }}>
+                        {button}
+                    </div>
                 </div>
-                <h4 title="Feature name">
-                    {this.props.extension.eezStudioExtension.displayName ||
-                        this.props.extension.name}
-                </h4>
-                <div className="extension-card-description" title="Feature description">
-                    {this.props.extension.description}
-                </div>
-                <ExtensionCardAuthor title="Feature author">
-                    {button}
-                    <img src={this.props.extension.authorLogo} width="32" height="32" />{" "}
-                    {this.props.extension.author}
-                </ExtensionCardAuthor>
-            </ProjectFeatureDiv>
+            </div>
         );
     }
 }
@@ -155,16 +145,17 @@ const SettingsEditorDiv = styled.div`
 @observer
 export class SettingsEditor extends React.Component<{ object: IEezObject | undefined }, {}> {
     render() {
-        if (!this.props.object || this.props.object === ProjectStore.project.settings.general) {
+        const object = this.props.object || ProjectStore.project.settings.general;
+        if (object === ProjectStore.project.settings.general) {
             let projectFeatures = getExtensionsByCategory("project-feature").map(extension => (
                 <ProjectFeature key={extension.name} extension={extension} />
             ));
 
             return (
                 <SettingsEditorDiv>
-                    {this.props.object && <PropertyGrid objects={[this.props.object]} />}
+                    <PropertyGrid objects={[object]} />
                     <h3>Project features</h3>
-                    {projectFeatures}
+                    <div className="d-flex flex-wrap">{projectFeatures}</div>
                 </SettingsEditorDiv>
             );
         } else {
@@ -172,10 +163,10 @@ export class SettingsEditor extends React.Component<{ object: IEezObject | undef
                 <Panel
                     id="properties"
                     title="Properties"
-                    body={<PropertyGrid objects={this.props.object ? [this.props.object] : []} />}
+                    body={<PropertyGrid objects={object ? [object] : []} />}
                 />
             );
-            if (getParent(this.props.object) === ProjectStore.project.settings.build.files) {
+            if (getParent(object) === ProjectStore.project.settings.build.files) {
                 return (
                     <Splitter
                         type="horizontal"
@@ -183,7 +174,7 @@ export class SettingsEditor extends React.Component<{ object: IEezObject | undef
                         sizes={`100%|240px`}
                         childrenOverflow="hidden"
                     >
-                        <BuildFileEditor buildFile={this.props.object as BuildFile} />
+                        <BuildFileEditor buildFile={object as BuildFile} />
                         {properties}
                     </Splitter>
                 );

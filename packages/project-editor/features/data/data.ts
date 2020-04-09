@@ -139,6 +139,7 @@ registerFeatureImplementation("data", {
         key: "data",
         type: PropertyType.Array,
         typeClass: DataItem,
+        icon: "dns",
         create: () => {
             return [];
         },

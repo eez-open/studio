@@ -1,4 +1,4 @@
-import { observable, computed, extendObservable } from "mobx";
+import { observable, computed } from "mobx";
 import * as mobx from "mobx";
 
 import { getExtensionsByCategory } from "project-editor/core/extensions";
@@ -8,9 +8,7 @@ import {
     registerClass,
     IEezObject,
     EezObject,
-    PropertyType,
-    getProperty,
-    getClassInfo
+    PropertyType
 } from "project-editor/core/object";
 import { loadObject, objectToJson } from "project-editor/core/serialization";
 import * as output from "project-editor/core/output";
@@ -333,18 +331,6 @@ export class Project extends EezObject {
     static get classInfo(): ClassInfo {
         return getProjectClassInfo();
     }
-
-    callExtendObservableForAllOptionalProjectFeatures() {
-        let optionalFeatures: any = {};
-
-        getClassInfo(this).properties.forEach(propertyInfo => {
-            if (propertyInfo.isOptional && !(propertyInfo.name in this)) {
-                optionalFeatures[propertyInfo.name] = getProperty(this, propertyInfo.name);
-            }
-        });
-
-        extendObservable(this, optionalFeatures);
-    }
 }
 
 registerClass(Project);
@@ -400,9 +386,7 @@ export function save(filePath: string) {
         }
     };
 
-    //console.time("save");
     const json = objectToJson(ProjectStore.project, 2, toJsHook);
-    //console.timeEnd("save");
 
     return new Promise((resolve, reject) => {
         const fs = EEZStudio.electron.remote.require("fs");

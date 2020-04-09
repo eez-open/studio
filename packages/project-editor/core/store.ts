@@ -1655,10 +1655,6 @@ class ProjectStoreClass {
     }
 
     changeProject(projectFilePath: string | undefined, project?: Project, uiState?: Project) {
-        if (project) {
-            project.callExtendObservableForAllOptionalProjectFeatures();
-        }
-
         action(() => {
             this.filePath = projectFilePath;
         })();

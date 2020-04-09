@@ -617,6 +617,7 @@ registerFeatureImplementation("scpi", {
         key: "scpi",
         type: PropertyType.Object,
         typeClass: Scpi,
+        icon: "navigate_next",
         create: () => {
             return {
                 subsystems: [],

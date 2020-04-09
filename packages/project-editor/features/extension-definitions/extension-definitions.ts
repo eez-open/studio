@@ -250,6 +250,7 @@ registerFeatureImplementation("extension-definitions", {
         displayName: "IEXT definitions",
         type: PropertyType.Array,
         typeClass: ExtensionDefinition,
+        icon: "extension",
         create: () => {
             return [];
         },

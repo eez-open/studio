@@ -219,6 +219,7 @@ registerFeatureImplementation("gui", {
         key: "gui",
         type: PropertyType.Object,
         typeClass: Gui,
+        icon: "filter",
         create: () => {
             return {
                 pages: [],
