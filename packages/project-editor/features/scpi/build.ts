@@ -2,7 +2,7 @@ import { camelize } from "eez-studio-shared/string";
 
 import { Project, BuildConfiguration } from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
-import { Scpi, ScpiCommand } from "project-editor/features/scpi/scpi";
+import { ScpiCommand } from "project-editor/features/scpi/scpi";
 import { BuildResult } from "project-editor/core/extensions";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +26,7 @@ function getCommandFuncName(command: ScpiCommand) {
 }
 
 function buildScpiCommandsDecl(project: Project) {
-    let projectActions = (project as any).scpi as Scpi;
+    let projectActions = project.scpi;
 
     let commands: string[] = [];
 

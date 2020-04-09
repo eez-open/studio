@@ -1,12 +1,6 @@
 import { observable } from "mobx";
 
-import {
-    ClassInfo,
-    registerClass,
-    EezObject,
-    PropertyType,
-    getProperty
-} from "project-editor/core/object";
+import { ClassInfo, registerClass, EezObject, PropertyType } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/serialization";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
@@ -148,7 +142,7 @@ registerFeatureImplementation("shortcuts", {
             extensionDefinition: ExtensionDefinition,
             properties
         ) => {
-            let shortcuts = getProperty(project, "shortcuts") as Shortcuts;
+            let shortcuts = project.shortcuts;
             properties.shortcuts = objectToJS(
                 shortcuts.shortcuts.filter(
                     shortcut =>

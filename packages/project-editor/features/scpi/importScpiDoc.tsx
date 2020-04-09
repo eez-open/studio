@@ -22,7 +22,7 @@ import { IParameter, IParameterType, IEnum } from "instrument/scpi";
 
 import { ProjectStore } from "project-editor/core/store";
 
-import { Scpi, ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
+import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -742,9 +742,7 @@ class FindChanges {
         return new Promise<Changes>((resolve, reject) => {
             this.getCommandsFromScpiDoc()
                 .then(subsystems => {
-                    let existingSubsystems = objectToJS(
-                        (getProperty(ProjectStore.project, "scpi") as Scpi).subsystems
-                    );
+                    let existingSubsystems = objectToJS(ProjectStore.project.scpi.subsystems);
 
                     // added
                     let added = this.findMissingCommands(subsystems, existingSubsystems);
@@ -972,7 +970,7 @@ export class ImportScpiDocDialog extends React.Component<
 
         $(this.dialog).modal();
 
-        const scpi = getProperty(ProjectStore.project, "scpi") as Scpi;
+        const scpi = ProjectStore.project.scpi;
 
         const findChanges = new FindChanges(scpi.enums);
 
@@ -1035,7 +1033,7 @@ export class ImportScpiDocDialog extends React.Component<
 
         UndoManager.setCombineCommands(true);
 
-        const scpi = getProperty(ProjectStore.project, "scpi") as Scpi;
+        const scpi = ProjectStore.project.scpi;
 
         let existingSubsystems = scpi.subsystems;
 

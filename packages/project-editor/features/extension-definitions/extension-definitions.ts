@@ -9,8 +9,7 @@ import {
     registerClass,
     IEezObject,
     EezObject,
-    PropertyType,
-    getProperty
+    PropertyType
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 
@@ -208,10 +207,7 @@ export class ExtensionDefinition extends EezObject {
             messages.push(output.propertyNotSetMessage(this, "idfRevisionNumber"));
         }
 
-        let extensionDefinitions = getProperty(
-            ProjectStore.project,
-            "extensionDefinitions"
-        ) as ExtensionDefinition[];
+        let extensionDefinitions = ProjectStore.project.extensionDefinitions;
         if (
             extensionDefinitions.find(
                 extensionDefinition =>
@@ -236,10 +232,7 @@ export class ExtensionDefinition extends EezObject {
 registerClass(ExtensionDefinition);
 
 export function findExtensionDefinition(name: string) {
-    let extensionDefinitions = getProperty(
-        ProjectStore.project,
-        "extensionDefinitions"
-    ) as ExtensionDefinition[];
+    let extensionDefinitions = ProjectStore.project.extensionDefinitions;
     for (const extensionDefinition of extensionDefinitions) {
         if (extensionDefinition.name == name) {
             return extensionDefinition;

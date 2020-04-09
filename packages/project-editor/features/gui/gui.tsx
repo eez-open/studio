@@ -10,7 +10,6 @@ import {
     IEezObject,
     EezObject,
     PropertyType,
-    getProperty,
     NavigationComponent,
     PropertyInfo
 } from "project-editor/core/object";
@@ -38,12 +37,7 @@ export { findFont } from "project-editor/features/gui/font";
 @observer
 export class GuiNavigation extends NavigationComponent {
     render() {
-        return (
-            <MenuNavigation
-                id={this.props.id}
-                navigationObject={getProperty(ProjectStore.project, "gui")}
-            />
-        );
+        return <MenuNavigation id={this.props.id} navigationObject={ProjectStore.project.gui} />;
     }
 }
 

@@ -23,8 +23,10 @@ import "project-editor/project/builtInFeatures";
 
 import { Action } from "project-editor/features/action/action";
 import { DataItem } from "project-editor/features/data/data";
-
 import { Gui } from "project-editor/features/gui/gui";
+import { Scpi } from "project-editor/features/scpi/scpi";
+import { Shortcuts } from "project-editor/features/shortcuts/shortcuts";
+import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
@@ -310,6 +312,9 @@ export class Project extends EezObject {
     @observable data: DataItem[];
     @observable actions: Action[];
     @observable gui: Gui;
+    @observable scpi: Scpi;
+    @observable shortcuts: Shortcuts;
+    @observable extensionDefinitions: ExtensionDefinition[];
 
     @computed
     get dataItemsMap() {

@@ -5,7 +5,7 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { NavigationComponent, getProperty, getAncestorOfType } from "project-editor/core/object";
+import { NavigationComponent, getAncestorOfType } from "project-editor/core/object";
 import { NavigationStore, getObjectFromNavigationItem } from "project-editor/core/store";
 
 import { ProjectStore } from "project-editor/core/store";
@@ -16,7 +16,7 @@ import {
 } from "project-editor/components/ListNavigation";
 
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
-import { ScpiCommand, ScpiSubsystem, Scpi } from "project-editor/features/scpi/scpi";
+import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { ScpiSubsystemOrCommandEditor } from "project-editor/features/scpi/ScpiSubsystemOrCommandEditor";
 
 @observer
@@ -44,7 +44,7 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
         }
 
         // return lastly selected ScpiCommand or ScpiSubsystem
-        let subsystems = (getProperty(ProjectStore.project, "scpi") as Scpi).subsystems;
+        let subsystems = ProjectStore.project.scpi.subsystems;
 
         let subsystem = getObjectFromNavigationItem(
             NavigationStore.getNavigationSelectedItem(subsystems)
@@ -66,7 +66,7 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
     }
 
     render() {
-        let subsystems = (getProperty(ProjectStore.project, "scpi") as Scpi).subsystems;
+        let subsystems = ProjectStore.project.scpi.subsystems;
 
         let selectedScpiSubsystem = getObjectFromNavigationItem(
             NavigationStore.getNavigationSelectedItem(subsystems)

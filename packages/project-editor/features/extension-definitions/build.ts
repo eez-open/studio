@@ -14,8 +14,6 @@ import { Section, Type } from "project-editor/core/output";
 import { ProjectStore } from "project-editor/core/store";
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 
-import { Scpi } from "project-editor/features/scpi/scpi";
-
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
 function getInstrumentExtensionProperties(extensionDefinition: ExtensionDefinition) {
@@ -45,10 +43,7 @@ function getInstrumentExtensionProperties(extensionDefinition: ExtensionDefiniti
 }
 
 function getExtensionsToBuild() {
-    let extensionDefinitions = getProperty(
-        ProjectStore.project,
-        "extensionDefinitions"
-    ) as ExtensionDefinition[];
+    let extensionDefinitions = ProjectStore.project.extensionDefinitions;
 
     return (
         extensionDefinitions &&
@@ -126,7 +121,7 @@ export async function extensionDefinitionBuild() {
                 idfFilePath = ProjectStore.getAbsoluteFilePath(idfFileName);
             }
 
-            const scpi = getProperty(ProjectStore.project, "scpi") as Scpi;
+            const scpi = ProjectStore.project.scpi;
             const subsystems = objectToJS(scpi.subsystems);
             const enums = objectToJS(scpi.enums);
 

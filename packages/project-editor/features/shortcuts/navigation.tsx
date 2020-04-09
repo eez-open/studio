@@ -9,13 +9,13 @@ import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/heade
 import { IShortcut } from "shortcuts/interfaces";
 import { Shortcuts as ShortcutsComponent, ShortcutsToolbarButtons } from "shortcuts/shortcuts";
 
-import { NavigationComponent, getProperty } from "project-editor/core/object";
+import { NavigationComponent } from "project-editor/core/object";
 import { NavigationStore, DocumentStore } from "project-editor/core/store";
 
 import { ProjectStore } from "project-editor/core/store";
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
-import { Shortcuts, Shortcut } from "project-editor/features/shortcuts/shortcuts";
+import { Shortcut } from "project-editor/features/shortcuts/shortcuts";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +31,7 @@ export class ShortcutsNavigation extends NavigationComponent {
 
     @computed
     get shortcutsStore() {
-        const shortcuts = (getProperty(ProjectStore.project, "shortcuts") as Shortcuts).shortcuts;
+        const shortcuts = ProjectStore.project.shortcuts.shortcuts;
 
         let shortcutsMap = new Map<string, Shortcut>();
         shortcuts.forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
