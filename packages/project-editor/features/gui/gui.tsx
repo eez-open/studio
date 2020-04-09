@@ -253,44 +253,38 @@ registerFeatureImplementation("gui", {
         toJsHook: (jsObject: {
             gui: {
                 colors: {
-                    _array: {
-                        id: string;
-                    }[];
-                };
+                    id: string;
+                }[];
                 themes: {
-                    _array: {
-                        id: string;
-                        colors: string[];
-                    }[];
-                };
+                    id: string;
+                    colors: string[];
+                }[];
                 themeColors: any;
                 pages: {
-                    _array: {
-                        left: number;
-                        top: number;
+                    left: number;
+                    top: number;
+                    width: number;
+                    height: number;
+                    widgets: any[];
+                    landscape: {
+                        x: number;
+                        y: number;
                         width: number;
                         height: number;
                         widgets: any[];
-                        landscape: {
-                            x: number;
-                            y: number;
-                            width: number;
-                            height: number;
-                            widgets: any[];
-                        };
-                    }[];
-                };
+                    };
+                }[];
             };
         }) => {
             const gui = getProperty(ProjectStore.project, "gui") as Gui;
 
             if (gui) {
                 //
-                jsObject.gui.colors._array.forEach((color: any) => delete color.id);
+                jsObject.gui.colors.forEach((color: any) => delete color.id);
 
-                jsObject.gui.themes._array.forEach((theme: any, i: number) => {
+                jsObject.gui.themes.forEach((theme: any, i: number) => {
                     delete theme.id;
-                    theme.colors = gui.themes._array[i].colors;
+                    theme.colors = gui.themes[i].colors;
                 });
 
                 delete jsObject.gui.themeColors;

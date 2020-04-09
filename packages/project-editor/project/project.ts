@@ -1,4 +1,5 @@
 import { observable, computed, extendObservable } from "mobx";
+import * as mobx from "mobx";
 
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 import {
@@ -377,6 +378,9 @@ export async function load(filePath: string) {
                 console.time("load");
                 let project = loadObject(undefined, projectJs, Project) as Project;
                 console.timeEnd("load");
+
+                (window as any).EEZStudio.project = project;
+                (window as any).EEZStudio.mobx = mobx;
 
                 resolve(project);
             }

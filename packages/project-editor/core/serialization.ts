@@ -1,4 +1,4 @@
-import { toJS } from "mobx";
+import { toJS, observable } from "mobx";
 
 import {
     EezClass,
@@ -28,15 +28,15 @@ export function getChildId(parent: IEezObject | undefined) {
 }
 
 function loadArrayObject(arrayObject: any, parent: any, propertyInfo: PropertyInfo) {
-    const eezArray = new EezArrayObject<any>();
+    const eezArray: EezArrayObject<EezObject> = observable([]);
 
     setId(eezArray, getChildId(parent));
     setParent(eezArray, parent);
     setKey(eezArray, propertyInfo.name);
     setPropertyInfo(eezArray, propertyInfo);
 
-    eezArray._array = (arrayObject._array || arrayObject).map((object: any) =>
-        loadObject(eezArray, object, propertyInfo.typeClass!)
+    arrayObject.forEach((object: any) =>
+        eezArray.push(loadObject(eezArray, object, propertyInfo.typeClass!))
     );
 
     return eezArray;
@@ -135,9 +135,6 @@ export function objectToJson(
         (key: string | number, value: any) => {
             if (typeof key === "string" && key[0] === "_") {
                 return undefined;
-            }
-            if (value && typeof value === "object" && "_array" in value) {
-                return value._array;
             }
             return value;
         },

@@ -321,37 +321,7 @@ export function registerClass(aClass: EezClass) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class EezArrayObject<T> {
-    @observable _array: T[] = [];
-
-    get length() {
-        return this._array.length;
-    }
-
-    indexOf(value: T) {
-        return this._array.indexOf(value);
-    }
-
-    forEach(callback: (value: T, index: number, array: T[]) => void) {
-        this._array.forEach(callback);
-    }
-
-    map<U>(callback: (value: T, index: number, array: T[]) => U): U[] {
-        return this._array.map(callback);
-    }
-
-    find(callback: (value: T, index: number, array: T[]) => boolean) {
-        return this._array.find(callback);
-    }
-
-    filter(callback: (value: T, index: number, array: T[]) => boolean): T[] {
-        return this._array.filter(callback);
-    }
-
-    slice(start?: number | undefined, end?: number | undefined): T[] {
-        return this._array.slice(start, end);
-    }
-}
+export type EezArrayObject<T> = T[];
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -385,7 +355,10 @@ registerClass(EezValueObject);
 ////////////////////////////////////////////////////////////////////////////////
 
 export function isEezObject(object: any): object is IEezObject {
-    return object instanceof EezObject || object instanceof EezArrayObject;
+    return (
+        object instanceof EezObject ||
+        (Array.isArray(object) && (object.length == 0 || isEezObject(object[0])))
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -442,11 +415,11 @@ export function isObject(object: IEezObject | undefined) {
 }
 
 export function isArray(object: IEezObject | undefined): object is EezArrayObject<IEezObject> {
-    return !!object && !isValue(object) && object instanceof EezArrayObject;
+    return !!object && !isValue(object) && Array.isArray(object);
 }
 
 export function asArray<T = IEezObject>(object: IEezObject | EezArrayObject<T>) {
-    return object && ((object as EezArrayObject<T>)._array as T[]);
+    return object as T[];
 }
 
 export function getChildren(parent: IEezObject): IEezObject[] {
@@ -474,7 +447,7 @@ export function getChildren(parent: IEezObject): IEezObject[] {
 }
 
 export function getClass(object: IEezObject) {
-    if (object instanceof EezArrayObject) {
+    if (isArray(object)) {
         return getPropertyInfo(object).typeClass!;
     } else {
         return object.constructor as EezClass;
@@ -645,7 +618,7 @@ export function reduceUntilCommonParent(objects: IEezObject[]): IEezObject[] {
 }
 
 export function isArrayElement(object: IEezObject) {
-    return getParent(object) instanceof EezArrayObject;
+    return isArray(getParent(object));
 }
 
 export function findPropertyByNameInObject(object: IEezObject, propertyName: string) {
@@ -706,7 +679,7 @@ export function getPropertyAsString(object: IEezObject, propertyInfo: PropertyIn
     if (typeof value === "string") {
         return value;
     }
-    if (value instanceof EezArrayObject) {
+    if (isArray(value)) {
         return asArray(value as EezArrayObject<IEezObject>)
             .map(object => getLabel(object))
             .join(", ");
@@ -737,7 +710,7 @@ export function objectToString(object: IEezObject) {
     if (
         object &&
         getParent(object) &&
-        getParent(object) instanceof EezArrayObject &&
+        isArray(getParent(object)) &&
         getParent(getParent(object)) &&
         getKey(getParent(object))
     ) {

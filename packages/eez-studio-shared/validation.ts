@@ -100,7 +100,7 @@ export const validators = {
         return function (object: any, ruleName: string) {
             const value = object[ruleName];
             if (
-                (collection._array || collection).find(
+                collection.find(
                     (element: any) => element !== origObject && element[ruleName] === value
                 )
             ) {
