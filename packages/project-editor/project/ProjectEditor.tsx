@@ -30,7 +30,6 @@ import { startSearch } from "project-editor/core/search";
 import { Section } from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/core/store";
-import { Debug } from "project-editor/core/debug";
 
 import { IconAction } from "eez-studio-ui/action";
 import { Panel } from "project-editor/components/Panel";
@@ -447,20 +446,6 @@ export class ProjectEditor extends React.Component<{}, {}> {
                 {statusBar}
             </MainContent>
         );
-
-        if (UIStateStore.viewOptions.debugVisible) {
-            mainContent = (
-                <Splitter
-                    type="horizontal"
-                    persistId="project-editor/debug"
-                    sizes={`100%|240px`}
-                    childrenOverflow="hidden"
-                >
-                    {mainContent}
-                    <Debug key="debugPanel" />
-                </Splitter>
-            );
-        }
 
         return (
             <ProjectEditorContainer>

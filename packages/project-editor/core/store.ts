@@ -667,17 +667,12 @@ export class ViewOptions {
     @observable
     outputVisible: boolean = true;
 
-    @observable
-    debugVisible: boolean = false;
-
     @action
     load(viewOptions: any) {
         if (viewOptions) {
             this.outputVisible = viewOptions.outputVisible;
-            this.debugVisible = viewOptions.debugVisible;
         } else {
             this.outputVisible = true;
-            this.debugVisible = false;
         }
     }
 
@@ -1921,12 +1916,6 @@ export function init() {
         "toggleOutput",
         action(
             () => (UIStateStore.viewOptions.outputVisible = !UIStateStore.viewOptions.outputVisible)
-        )
-    );
-    EEZStudio.electron.ipcRenderer.on(
-        "toggleDebug",
-        action(
-            () => (UIStateStore.viewOptions.debugVisible = !UIStateStore.viewOptions.debugVisible)
         )
     );
 

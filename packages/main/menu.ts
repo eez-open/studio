@@ -60,7 +60,7 @@ const darwinAppMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Quit",
             accelerator: "Command+Q",
-            click: function() {
+            click: function () {
                 setForceQuit();
                 app.quit();
             }
@@ -79,7 +79,7 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
     {
         label: "New Project",
         accelerator: "CmdOrCtrl+N",
-        click: function(item, focusedWindow) {
+        click: function (item, focusedWindow) {
             createNewProjectWindow();
         }
     },
@@ -89,7 +89,7 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
     {
         label: "Open...",
         accelerator: "CmdOrCtrl+O",
-        click: async function(item: any, focusedWindow: any) {
+        click: async function (item: any, focusedWindow: any) {
             const result = await dialog.showOpenDialog({
                 properties: ["openFile"],
                 filters: [
@@ -111,7 +111,7 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
         id: "save",
         label: "Save",
         accelerator: "CmdOrCtrl+S",
-        click: function(item: any, focusedWindow: any) {
+        click: function (item: any, focusedWindow: any) {
             if (focusedWindow) {
                 focusedWindow.webContents.send("save");
             }
@@ -120,7 +120,7 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
     {
         label: "Save As",
         accelerator: "CmdOrCtrl+Shift+S",
-        click: function(item: any, focusedWindow: any) {
+        click: function (item: any, focusedWindow: any) {
             if (focusedWindow) {
                 focusedWindow.webContents.send("saveAs");
             }
@@ -132,7 +132,7 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
     {
         label: "Check",
         accelerator: "CmdOrCtrl+K",
-        click: function(item: any, focusedWindow: any) {
+        click: function (item: any, focusedWindow: any) {
             if (focusedWindow) {
                 focusedWindow.webContents.send("check");
             }
@@ -141,7 +141,7 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
     {
         label: "Build",
         accelerator: "CmdOrCtrl+B",
-        click: function(item: any, focusedWindow: any) {
+        click: function (item: any, focusedWindow: any) {
             if (focusedWindow) {
                 focusedWindow.webContents.send("build");
             }
@@ -149,7 +149,7 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
     },
     {
         label: "Build Extensions",
-        click: function(item: any, focusedWindow: any) {
+        click: function (item: any, focusedWindow: any) {
             if (focusedWindow) {
                 focusedWindow.webContents.send("build-extensions");
             }
@@ -161,7 +161,7 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
     {
         label: "Close Window",
         accelerator: "CmdOrCtrl+W",
-        click: function(item: any, focusedWindow: any) {
+        click: function (item: any, focusedWindow: any) {
             if (focusedWindow) {
                 focusedWindow.webContents.send("beforeClose");
             }
@@ -176,7 +176,7 @@ if (os.platform() != "darwin") {
         },
         {
             label: "Exit",
-            click: function(item: any, focusedWindow: any) {
+            click: function (item: any, focusedWindow: any) {
                 setForceQuit();
                 app.quit();
             }
@@ -229,7 +229,7 @@ const homeFileMenu: Electron.MenuItemConstructorOptions = {
         [
             {
                 label: "Import Instrument Definition...",
-                click: async function(item: any, focusedWindow: any) {
+                click: async function (item: any, focusedWindow: any) {
                     const result = await dialog.showOpenDialog({
                         properties: ["openFile"],
                         filters: [
@@ -261,7 +261,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
             id: "undo",
             label: "Undo",
             accelerator: "CmdOrCtrl+Z",
-            click: function(item, focusedWindow) {
+            click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     const win = findWindowByBrowserWindow(focusedWindow);
                     if (win !== undefined && win.state.undo != null) {
@@ -277,7 +277,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
             id: "redo",
             label: "Redo",
             accelerator: "Shift+CmdOrCtrl+Z",
-            click: function(item, focusedWindow) {
+            click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     const win = findWindowByBrowserWindow(focusedWindow);
                     if (win !== undefined && win.state.redo != null) {
@@ -295,7 +295,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Cut",
             accelerator: "CmdOrCtrl+X",
-            click: function(item, focusedWindow) {
+            click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("cut");
                 }
@@ -304,7 +304,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Copy",
             accelerator: "CmdOrCtrl+C",
-            click: function(item, focusedWindow) {
+            click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("copy");
                 }
@@ -313,7 +313,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Paste",
             accelerator: "CmdOrCtrl+V",
-            click: function(item, focusedWindow) {
+            click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("paste");
                 }
@@ -322,7 +322,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Delete",
             accelerator: "Delete",
-            click: function(item, focusedWindow) {
+            click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("delete");
                 }
@@ -383,7 +383,7 @@ const helpMenu: Electron.MenuItemConstructorOptions = {
 function buildFileMenu(windowType: WindowType) {
     fileRecentSubmenu.submenu = settings.mru.map(mru => ({
         label: mru.filePath,
-        click: function() {
+        click: function () {
             if (fs.existsSync(mru.filePath)) {
                 openFile(mru.filePath);
             } else {
@@ -441,7 +441,7 @@ function buildViewMenu(windowType: WindowType) {
             {
                 label: "Home",
                 accelerator: "Ctrl+Shift+H",
-                click: function() {
+                click: function () {
                     openWindow({ url: "home/index.html" });
                 }
             },
@@ -456,23 +456,15 @@ function buildViewMenu(windowType: WindowType) {
             {
                 label: "Toggle Output",
                 accelerator: "Ctrl+Shift+O",
-                click: function(item, focusedWindow) {
+                click: function (item, focusedWindow) {
                     if (focusedWindow) {
                         focusedWindow.webContents.send("toggleOutput");
                     }
                 }
             },
             {
-                label: "Toggle Debug",
-                click: function(item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("toggleDebug");
-                    }
-                }
-            },
-            {
                 label: "Toggle Experimental Layout",
-                click: function(item, focusedWindow) {
+                click: function (item, focusedWindow) {
                     if (focusedWindow) {
                         focusedWindow.webContents.send("toggleExperimentalLayout");
                     }
@@ -488,7 +480,7 @@ function buildViewMenu(windowType: WindowType) {
         {
             label: "Reload",
             accelerator: "CmdOrCtrl+R",
-            click: function(item, focusedWindow) {
+            click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("reload");
                 }
@@ -496,14 +488,14 @@ function buildViewMenu(windowType: WindowType) {
         },
         {
             label: "Toggle Full Screen",
-            accelerator: (function() {
+            accelerator: (function () {
                 if (os.platform() == "darwin") {
                     return "Ctrl+Command+F";
                 } else {
                     return "F11";
                 }
             })(),
-            click: function(item, focusedWindow) {
+            click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.setFullScreen(!focusedWindow.isFullScreen());
                 }
@@ -511,14 +503,14 @@ function buildViewMenu(windowType: WindowType) {
         },
         {
             label: "Toggle Developer Tools",
-            accelerator: (function() {
+            accelerator: (function () {
                 if (os.platform() == "darwin") {
                     return "Alt+Command+I";
                 } else {
                     return "Ctrl+Shift+I";
                 }
             })(),
-            click: function(item, focusedWindow: any) {
+            click: function (item, focusedWindow: any) {
                 if (focusedWindow) {
                     focusedWindow.toggleDevTools();
                 }
@@ -529,7 +521,7 @@ function buildViewMenu(windowType: WindowType) {
         },
         {
             label: "Test",
-            click: function() {
+            click: function () {
                 openWindow({ url: "test/index.html" });
             }
         },
@@ -557,7 +549,7 @@ function buildViewMenu(windowType: WindowType) {
             },
             {
                 label: "Project Metrics...",
-                click: function(item, focusedWindow) {
+                click: function (item, focusedWindow) {
                     if (focusedWindow) {
                         focusedWindow.webContents.send("showProjectMetrics");
                     }
@@ -610,7 +602,7 @@ autorun(() => {
     }
 });
 
-ipcMain.on("getReservedKeybindings", function(event: any) {
+ipcMain.on("getReservedKeybindings", function (event: any) {
     const menuTemplate = buildMenuTemplate("instrument", undefined);
 
     let keybindings: string[] = [];
