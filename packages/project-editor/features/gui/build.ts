@@ -1650,6 +1650,11 @@ class Assets {
             } else {
                 const style = styleNameOrObject;
 
+                const keys = Object.keys(style);
+                if (keys.length == 1 && style.inheritFrom) {
+                    return this.getStyleIndex(style.inheritFrom);
+                }
+
                 let parentStyle: Style | undefined = style;
                 while (true) {
                     if (!parentStyle.inheritFrom) {
