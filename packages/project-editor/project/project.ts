@@ -8,7 +8,6 @@ import {
     registerClass,
     IEezObject,
     EezObject,
-    EezArrayObject,
     PropertyType,
     getProperty,
     getClassInfo
@@ -24,6 +23,8 @@ import "project-editor/project/builtInFeatures";
 
 import { Action } from "project-editor/features/action/action";
 import { DataItem } from "project-editor/features/data/data";
+
+import { Gui } from "project-editor/features/gui/gui";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
@@ -142,14 +143,9 @@ function isFilesPropertyEnumerable() {
 }
 
 export class Build extends EezObject {
-    @observable
-    configurations: EezArrayObject<BuildConfiguration>;
-
-    @observable
-    files: EezArrayObject<BuildFile>;
-
-    @observable
-    destinationFolder?: string;
+    @observable configurations: BuildConfiguration[];
+    @observable files: BuildFile[];
+    @observable destinationFolder?: string;
 
     static classInfo: ClassInfo = {
         label: () => "Build",
@@ -311,8 +307,9 @@ function getProjectClassInfo() {
 
 export class Project extends EezObject {
     @observable settings: Settings;
-    @observable data: EezArrayObject<DataItem>;
-    @observable actions: EezArrayObject<Action>;
+    @observable data: DataItem[];
+    @observable actions: Action[];
+    @observable gui: Gui;
 
     @computed
     get dataItemsMap() {

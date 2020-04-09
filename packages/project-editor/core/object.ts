@@ -303,7 +303,7 @@ export function makeDerivedClassInfo(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type IEezObject = EezObject | EezArrayObject<EezObject>;
+export type IEezObject = EezObject | EezObject[];
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -318,10 +318,6 @@ let classes = new Map<string, EezClass>();
 export function registerClass(aClass: EezClass) {
     classes.set(aClass.name, aClass);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-export type EezArrayObject<T> = T[];
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -414,17 +410,13 @@ export function isObject(object: IEezObject | undefined) {
     return !!object && !isValue(object) && !isArray(object);
 }
 
-export function isArray(object: IEezObject | undefined): object is EezArrayObject<IEezObject> {
+export function isArray(object: IEezObject | undefined): object is IEezObject[] {
     return !!object && !isValue(object) && Array.isArray(object);
-}
-
-export function asArray<T = IEezObject>(object: IEezObject | EezArrayObject<T>) {
-    return object as T[];
 }
 
 export function getChildren(parent: IEezObject): IEezObject[] {
     if (isArray(parent)) {
-        return asArray(parent);
+        return parent;
     } else {
         let properties = getClassInfo(parent).properties.filter(
             propertyInfo =>
@@ -439,7 +431,7 @@ export function getChildren(parent: IEezObject): IEezObject[] {
             properties[0].type === PropertyType.Array &&
             !(properties[0].showOnlyChildrenInTree === false)
         ) {
-            return asArray(getProperty(parent, properties[0].name));
+            return getProperty(parent, properties[0].name);
         }
 
         return properties.map(propertyInfo => getProperty(parent, propertyInfo.name));
@@ -680,9 +672,7 @@ export function getPropertyAsString(object: IEezObject, propertyInfo: PropertyIn
         return value;
     }
     if (isArray(value)) {
-        return asArray(value as EezArrayObject<IEezObject>)
-            .map(object => getLabel(object))
-            .join(", ");
+        return (value as IEezObject[]).map(object => getLabel(object)).join(", ");
     }
     return objectToString(value);
 }
@@ -741,7 +731,7 @@ export function getChildOfObject(
             elementIndex = key;
         }
 
-        const array = asArray(object);
+        const array = object as IEezObject[];
 
         if (elementIndex !== undefined && elementIndex >= 0 && elementIndex < array.length) {
             return array[elementIndex];

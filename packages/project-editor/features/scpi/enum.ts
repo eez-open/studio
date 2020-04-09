@@ -13,9 +13,7 @@ import {
     ClassInfo,
     IEezObject,
     EezObject,
-    EezArrayObject,
     PropertyType,
-    asArray,
     getChildOfObject,
     getParent,
     getLabel
@@ -55,7 +53,7 @@ export class ScpiEnumMember extends EezObject {
         const messages: output.Message[] = [];
 
         if (this.name) {
-            const arr = asArray<ScpiEnumMember>(getParent(this));
+            const arr = getParent(this) as ScpiEnumMember[];
             let thisIndex = -1;
             let otherIndex = -1;
             for (let i = 0; i < arr.length; ++i) {
@@ -89,13 +87,11 @@ export class ScpiEnum extends EezObject {
     name: string;
 
     @observable
-    members: EezArrayObject<ScpiEnumMember>;
+    members: ScpiEnumMember[];
 
     static classInfo: ClassInfo = {
         label: (scpiEnum: ScpiEnum) => {
-            return `${scpiEnum.name} (${asArray(scpiEnum.members)
-                .map(member => member.name)
-                .join("|")})`;
+            return `${scpiEnum.name} (${scpiEnum.members.map(member => member.name).join("|")})`;
         },
         properties: [
             {
@@ -117,10 +113,7 @@ export class ScpiEnum extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique({}, asArray(parent))
-                            ]
+                            validators: [validators.required, validators.unique({}, parent)]
                         }
                     ]
                 },
@@ -156,8 +149,8 @@ export function findScpiEnum(enumeration: string) {
     const scpi = (ProjectStore.project as any).scpi as Scpi;
 
     for (let i = 0; i < scpi.enums.length; ++i) {
-        if (asArray(scpi.enums)[i].name === enumeration) {
-            return asArray(scpi.enums)[i];
+        if (scpi.enums[i].name === enumeration) {
+            return scpi.enums[i];
         }
     }
 
@@ -167,7 +160,7 @@ export function findScpiEnum(enumeration: string) {
 export function getScpiEnumsAsDialogEnumItems(): EnumItems {
     const scpi = (ProjectStore.project as any).scpi as Scpi;
 
-    return asArray(scpi.enums)
+    return scpi.enums
         .slice()
         .sort((a, b) => stringCompare(getLabel(a), getLabel(b)))
         .map(scpiEnum => ({

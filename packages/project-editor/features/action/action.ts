@@ -6,8 +6,7 @@ import {
     registerClass,
     IEezObject,
     EezObject,
-    PropertyType,
-    asArray
+    PropertyType
 } from "project-editor/core/object";
 import { Message, Type } from "project-editor/core/output";
 
@@ -72,10 +71,7 @@ export class Action extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique({}, asArray(parent))
-                            ]
+                            validators: [validators.required, validators.unique({}, parent)]
                         }
                     ]
                 },
@@ -104,10 +100,10 @@ registerFeatureImplementation("action", {
         type: PropertyType.Array,
         typeClass: Action,
         create: () => [],
-        check: (object: IEezObject) => {
+        check: (object: IEezObject[]) => {
             let messages: Message[] = [];
 
-            if (asArray(object).length > 32000) {
+            if (object.length > 32000) {
                 messages.push(new Message(Type.ERROR, "Max. 32000 actions are supported", object));
             }
 

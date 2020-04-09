@@ -4,7 +4,6 @@ import {
     ClassInfo,
     registerClass,
     EezObject,
-    EezArrayObject,
     PropertyType,
     getProperty
 } from "project-editor/core/object";
@@ -109,7 +108,7 @@ registerClass(Shortcut);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Shortcuts extends EezObject {
-    @observable shortcuts: EezArrayObject<Shortcut>;
+    @observable shortcuts: Shortcut[];
 
     static classInfo: ClassInfo = {
         label: () => "Shortcuts",

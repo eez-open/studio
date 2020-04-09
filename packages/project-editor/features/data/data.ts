@@ -9,8 +9,7 @@ import {
     registerClass,
     IEezObject,
     EezObject,
-    PropertyType,
-    asArray
+    PropertyType
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 
@@ -112,10 +111,7 @@ export class DataItem extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique({}, asArray(parent))
-                            ]
+                            validators: [validators.required, validators.unique({}, parent)]
                         }
                     ]
                 },
@@ -146,10 +142,10 @@ registerFeatureImplementation("data", {
         create: () => {
             return [];
         },
-        check: (object: IEezObject) => {
+        check: (object: IEezObject[]) => {
             let messages: output.Message[] = [];
 
-            if (asArray(object).length > 32000) {
+            if (object.length > 32000) {
                 messages.push(
                     new output.Message(
                         output.Type.ERROR,

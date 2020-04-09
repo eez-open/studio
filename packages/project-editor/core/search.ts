@@ -7,7 +7,6 @@ import {
     PropertyType,
     getProperty,
     isArray,
-    asArray,
     getObjectPath,
     objectToString,
     getObjectPropertyAsObject,
@@ -25,7 +24,7 @@ type VisitResult = EezValueObject | null;
 
 function* visitWithPause(parentObject: IEezObject): IterableIterator<VisitResult> {
     if (isArray(parentObject)) {
-        let arrayOfObjects = asArray(parentObject);
+        let arrayOfObjects = parentObject as IEezObject[];
         for (let i = 0; i < arrayOfObjects.length; i++) {
             yield* visitWithPause(arrayOfObjects[i]);
         }
@@ -53,7 +52,7 @@ function* visitWithPause(parentObject: IEezObject): IterableIterator<VisitResult
 
 function* visitWithoutPause(parentObject: IEezObject): IterableIterator<VisitResult> {
     if (isArray(parentObject)) {
-        let arrayOfObjects = asArray(parentObject);
+        let arrayOfObjects = parentObject as IEezObject[];
         for (let i = 0; i < arrayOfObjects.length; i++) {
             yield* visitWithoutPause(arrayOfObjects[i]);
         }

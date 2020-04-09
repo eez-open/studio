@@ -2,7 +2,6 @@ const LZ4 = require("lz4");
 
 import { strToColor16 } from "eez-studio-shared/color";
 
-import { getProperty, asArray } from "project-editor/core/object";
 import { OutputSectionsStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
@@ -15,7 +14,7 @@ import { Project, BuildConfiguration } from "project-editor/project/project";
 import { DataItem } from "project-editor/features/data/data";
 import { Action } from "project-editor/features/action/action";
 
-import { Gui, findStyle, findFont, findBitmap } from "project-editor/features/gui/gui";
+import { findStyle, findFont, findBitmap } from "project-editor/features/gui/gui";
 import { getData as getBitmapData, Bitmap } from "project-editor/features/gui/bitmap";
 import { Style, getStyleProperty } from "project-editor/features/gui/style";
 import * as Widget from "project-editor/features/gui/widget";
@@ -750,9 +749,7 @@ function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer | null) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiThemesEnum(assets: Assets) {
-    let gui = getProperty(assets.project, "gui") as Gui;
-
-    let themes = gui.themes.map(
+    let themes = assets.project.gui.themes.map(
         (theme, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "THEME_ID_",
@@ -767,9 +764,7 @@ function buildGuiThemesEnum(assets: Assets) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiColorsEnum(assets: Assets) {
-    let gui = getProperty(assets.project, "gui") as Gui;
-
-    let colors = gui.colors.map(
+    let colors = assets.project.gui.colors.map(
         (color, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "COLOR_ID_",
@@ -893,9 +888,9 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         // widgets
         let widgets: Widget.Widget[] | undefined;
         if (object instanceof Page) {
-            widgets = asArray(object.widgets);
+            widgets = object.widgets;
         } else {
-            widgets = asArray((object as Widget.ContainerWidget).widgets);
+            widgets = (object as Widget.ContainerWidget).widgets;
         }
 
         let childWidgets = new ObjectList();
@@ -1392,9 +1387,7 @@ function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
         let themes = new ObjectList();
 
         if (!ProjectStore.masterProject) {
-            let gui = getProperty(assets.project, "gui") as Gui;
-
-            gui.themes.forEach(theme => {
+            assets.project.gui.themes.forEach(theme => {
                 themes.addItem(buildTheme(theme));
             });
         }
@@ -1518,7 +1511,7 @@ class Assets {
                 action.usedIn.indexOf(buildConfiguration.name) !== -1
         );
 
-        const gui = getProperty(project, "gui") as Gui;
+        const gui = project.gui;
 
         this.pages = gui.pages.filter(
             page =>
@@ -1730,8 +1723,7 @@ class Assets {
     ) {
         let color = getStyleProperty(style, propertyName, false);
 
-        let gui = getProperty(this.project, "gui") as Gui;
-        let colors = asArray(gui.colors);
+        let colors = ProjectStore.project.gui.colors;
 
         for (let i = 0; i < colors.length; i++) {
             if (colors[i].name === color) {
@@ -1751,9 +1743,7 @@ class Assets {
     }
 
     reportUnusedAssets() {
-        let gui = getProperty(this.project, "gui") as Gui;
-
-        gui.styles.forEach(style => {
+        this.project.gui.styles.forEach(style => {
             if (
                 !this.styles.find(usedStyle => {
                     if (!usedStyle) {
@@ -1784,7 +1774,7 @@ class Assets {
             }
         });
 
-        gui.fonts.forEach(font => {
+        this.project.gui.fonts.forEach(font => {
             if (this.fonts.indexOf(font) === -1) {
                 OutputSectionsStore.write(
                     output.Section.OUTPUT,
@@ -1795,7 +1785,7 @@ class Assets {
             }
         });
 
-        gui.bitmaps.forEach(bitmap => {
+        this.project.gui.bitmaps.forEach(bitmap => {
             if (this.bitmaps.indexOf(bitmap) === -1) {
                 OutputSectionsStore.write(
                     output.Section.OUTPUT,

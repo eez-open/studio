@@ -27,12 +27,10 @@ import { Section } from "project-editor/core/output";
 import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
 import {
     IEezObject,
-    EezArrayObject,
     PropertyInfo,
     PropertyType,
     isPropertyHidden,
     getProperty,
-    asArray,
     isValue,
     objectToString,
     getInheritedValue,
@@ -460,7 +458,7 @@ class ArrayProperty extends React.Component<PropertyProps> {
     @computed
     get value() {
         return (this.props.objects[0] as any)[this.props.propertyInfo.name] as
-            | EezArrayObject<IEezObject>
+            | IEezObject[]
             | undefined;
     }
 
@@ -476,9 +474,7 @@ class ArrayProperty extends React.Component<PropertyProps> {
                 [this.props.propertyInfo.name]: []
             });
 
-            value = (this.props.objects[0] as any)[this.props.propertyInfo.name] as EezArrayObject<
-                IEezObject
-            >;
+            value = (this.props.objects[0] as any)[this.props.propertyInfo.name] as IEezObject[];
         }
 
         const typeClass = this.props.propertyInfo.typeClass!;
@@ -859,7 +855,7 @@ class Property extends React.Component<PropertyProps> {
                         validators: [
                             validators.unique(
                                 this.props.objects[0],
-                                asArray(getParent(this.props.objects[0]))
+                                getParent(this.props.objects[0])
                             )
                         ].concat(this.props.propertyInfo.isOptional ? [] : [validators.required])
                     }
@@ -1056,9 +1052,9 @@ class Property extends React.Component<PropertyProps> {
                 let objects: IEezObject[] = [];
 
                 if (propertyInfo.referencedObjectCollectionPath) {
-                    objects = asArray(
-                        DocumentStore.getObjectFromPath(propertyInfo.referencedObjectCollectionPath)
-                    );
+                    objects = DocumentStore.getObjectFromPath(
+                        propertyInfo.referencedObjectCollectionPath
+                    ) as IEezObject[];
                     if (!objects) {
                         objects = [];
                     }

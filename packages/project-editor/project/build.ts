@@ -9,7 +9,6 @@ import { getExtensionsByCategory, BuildResult } from "project-editor/core/extens
 import {
     IEezObject,
     isArray,
-    asArray,
     getProperty,
     IMessage,
     getArrayAndObjectProperties,
@@ -203,9 +202,9 @@ async function generateFiles(
     } else {
         const build = ProjectStore.project.settings.build;
 
-        for (const buildFile of asArray(build.files)) {
+        for (const buildFile of build.files) {
             if (buildFile.fileName.indexOf("<configuration>") !== -1) {
-                for (const configuration of asArray(build.configurations)) {
+                for (const configuration of build.configurations) {
                     await generateFile(
                         configurationBuildResults[configuration.name],
                         buildFile.template,
@@ -274,9 +273,7 @@ export async function build({ onlyCheck }: { onlyCheck: boolean }) {
             ProjectStore.project.settings.build.configurations.length > 0 &&
             !ProjectStore.masterProject
         ) {
-            for (const configuration of asArray(
-                ProjectStore.project.settings.build.configurations
-            )) {
+            for (const configuration of ProjectStore.project.settings.build.configurations) {
                 OutputSectionsStore.write(
                     Section.OUTPUT,
                     Type.INFO,
@@ -290,7 +287,7 @@ export async function build({ onlyCheck }: { onlyCheck: boolean }) {
         } else {
             const selectedBuildConfiguration =
                 ProjectStore.selectedBuildConfiguration ||
-                asArray(ProjectStore.project.settings.build.configurations)[0];
+                ProjectStore.project.settings.build.configurations[0];
             if (selectedBuildConfiguration) {
                 OutputSectionsStore.write(
                     Section.OUTPUT,
@@ -413,7 +410,7 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
 
         if (isArray(object)) {
             // check array elements
-            for (const childObject of asArray(object)) {
+            for (const childObject of object) {
                 messages = messages.concat(checkTransformer(childObject));
             }
         } else {

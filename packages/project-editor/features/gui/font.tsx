@@ -24,10 +24,8 @@ import {
     IEezObject,
     EezObject,
     registerClass,
-    EezArrayObject,
     PropertyType,
     getProperty,
-    asArray,
     cloneObject,
     NavigationComponent,
     getParent,
@@ -50,7 +48,7 @@ import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";
 import { FontProperties as FontValue } from "font-services/interfaces";
 
-import { Gui, getGui } from "project-editor/features/gui/gui";
+import { Gui } from "project-editor/features/gui/gui";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1144,7 +1142,7 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
                 <GlyphSelectFieldContainerDiv ref={(ref: any) => (this.glyphsContainer = ref)}>
                     <Glyphs
                         ref={ref => (this.glyphs = ref!)}
-                        glyphs={asArray(this.font.glyphs)}
+                        glyphs={this.font.glyphs}
                         selectedGlyph={this.selectedGlyph}
                         onSelectGlyph={this.onSelectGlyph.bind(this)}
                         onDoubleClickGlyph={this.onDoubleClickGlyph.bind(this)}
@@ -1640,10 +1638,7 @@ export class FontEditor
     @action.bound
     onAddGlyph() {
         const font = this.props.font;
-        let newGlyph = cloneObject(
-            undefined,
-            asArray(font.glyphs)[font.glyphs.length - 1]
-        ) as Glyph;
+        let newGlyph = cloneObject(undefined, font.glyphs[font.glyphs.length - 1]) as Glyph;
         newGlyph.encoding = newGlyph.encoding + 1;
         newGlyph = DocumentStore.addObject(font.glyphs, newGlyph) as Glyph;
         this.selectedGlyph = newGlyph;
@@ -1653,7 +1648,7 @@ export class FontEditor
     onDeleteGlyph() {
         const font = this.props.font;
         let selectedGlyph = this.selectedGlyph;
-        if (selectedGlyph && asArray(font.glyphs)[font.glyphs.length - 1] == selectedGlyph) {
+        if (selectedGlyph && font.glyphs[font.glyphs.length - 1] == selectedGlyph) {
             DocumentStore.deleteObject(selectedGlyph);
         }
     }
@@ -1694,8 +1689,8 @@ export class FontEditor
 
                 const font = this.props.font;
 
-                let glyphWidth = asArray(font.glyphs)[0].width;
-                let glyphHeight = asArray(font.glyphs)[0].height;
+                let glyphWidth = font.glyphs[0].width;
+                let glyphHeight = font.glyphs[0].height;
 
                 const darkest =
                     imageData[
@@ -1716,31 +1711,31 @@ export class FontEditor
                     return pixelArray;
                 }
 
-                asArray(font.glyphs)[0].glyphBitmap = {
+                font.glyphs[0].glyphBitmap = {
                     pixelArray: getPixelArray(0, 0),
                     width: glyphWidth,
                     height: glyphHeight
                 };
 
-                asArray(font.glyphs)[1].glyphBitmap = {
+                font.glyphs[1].glyphBitmap = {
                     pixelArray: getPixelArray(Math.round((image.width - glyphWidth) / 2), 0),
                     width: glyphWidth,
                     height: glyphHeight
                 };
 
-                asArray(font.glyphs)[2].glyphBitmap = {
+                font.glyphs[2].glyphBitmap = {
                     pixelArray: getPixelArray(image.width - glyphWidth, 0),
                     width: glyphWidth,
                     height: glyphHeight
                 };
 
-                asArray(font.glyphs)[3].glyphBitmap = {
+                font.glyphs[3].glyphBitmap = {
                     pixelArray: getPixelArray(0, (image.height - glyphHeight) / 2),
                     width: glyphWidth,
                     height: glyphHeight
                 };
 
-                asArray(font.glyphs)[4].glyphBitmap = {
+                font.glyphs[4].glyphBitmap = {
                     pixelArray: getPixelArray(
                         image.width - glyphWidth,
                         (image.height - glyphHeight) / 2
@@ -1749,13 +1744,13 @@ export class FontEditor
                     height: glyphHeight
                 };
 
-                asArray(font.glyphs)[5].glyphBitmap = {
+                font.glyphs[5].glyphBitmap = {
                     pixelArray: getPixelArray(0, image.height - glyphHeight),
                     width: glyphWidth,
                     height: glyphHeight
                 };
 
-                asArray(font.glyphs)[6].glyphBitmap = {
+                font.glyphs[6].glyphBitmap = {
                     pixelArray: getPixelArray(
                         Math.round((image.width - glyphWidth) / 2),
                         image.height - glyphHeight
@@ -1764,7 +1759,7 @@ export class FontEditor
                     height: glyphHeight
                 };
 
-                asArray(font.glyphs)[7].glyphBitmap = {
+                font.glyphs[7].glyphBitmap = {
                     pixelArray: getPixelArray(image.width - glyphWidth, image.height - glyphHeight),
                     width: glyphWidth,
                     height: glyphHeight
@@ -1785,13 +1780,13 @@ export class FontEditor
         const selectedGlyph = this.selectedGlyph;
 
         let onDeleteGlyph: (() => void) | undefined;
-        if (selectedGlyph && asArray(font.glyphs)[font.glyphs.length - 1] == this.selectedGlyph) {
+        if (selectedGlyph && font.glyphs[font.glyphs.length - 1] == this.selectedGlyph) {
             onDeleteGlyph = this.onDeleteGlyph;
         }
 
         const glyphs = (
             <Glyphs
-                glyphs={asArray(this.glyphs)}
+                glyphs={this.glyphs}
                 selectedGlyph={this.selectedGlyph}
                 onSelectGlyph={this.onSelectGlyph}
                 onDoubleClickGlyph={this.props.onDoubleClickItem || this.onBrowseGlyph}
@@ -1987,7 +1982,7 @@ export class Font extends EezObject {
     descent: number;
 
     @observable
-    glyphs: EezArrayObject<Glyph>;
+    glyphs: Glyph[];
 
     @observable screenOrientation: string;
 
@@ -2081,10 +2076,7 @@ export class Font extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique(undefined, asArray(parent))
-                            ]
+                            validators: [validators.required, validators.unique(undefined, parent)]
                         },
                         {
                             name: "filePath",
@@ -2200,7 +2192,7 @@ registerClass(Font);
 
 export function findFontInGui(gui: Gui, fontName: any) {
     let fonts = (gui && gui.fonts) || [];
-    for (const font of asArray(fonts)) {
+    for (const font of fonts) {
         if (font.name == fontName) {
             return font;
         }
@@ -2210,16 +2202,14 @@ export function findFontInGui(gui: Gui, fontName: any) {
 }
 
 export function findFont(fontName: any) {
-    let gui = getGui();
-    const font = findFontInGui(gui, fontName);
+    const font = findFontInGui(ProjectStore.project.gui, fontName);
     if (font) {
         return font;
     }
 
     if (ProjectStore.masterProject) {
-        const gui = (ProjectStore.masterProject as any).gui as Gui;
-        if (gui) {
-            return findFontInGui(gui, fontName);
+        if (ProjectStore.masterProject.gui) {
+            return findFontInGui(ProjectStore.project.gui, fontName);
         }
     }
 

@@ -18,7 +18,6 @@ import { confirm } from "project-editor/core/util";
 
 import {
     IEezObject,
-    asArray,
     PropertyInfo,
     PropertyType,
     IEditorState,
@@ -1316,7 +1315,7 @@ export function pasteItem(object: IEezObject) {
                     ) {
                         return DocumentStore.insertObject(
                             c.pastePlace as IEezObject,
-                            asArray(c.pastePlace as IEezObject).indexOf(object) + 1,
+                            (c.pastePlace as IEezObject[]).indexOf(object) + 1,
                             objectToJS(c.serializedData.object)
                         );
                     } else {
@@ -1654,7 +1653,7 @@ class ProjectStoreClass {
             );
         if (!configuration) {
             if (this.project.settings.build.configurations.length > 0) {
-                configuration = asArray(this.project.settings.build.configurations)[0];
+                configuration = this.project.settings.build.configurations[0];
             }
         }
         return configuration;

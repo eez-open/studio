@@ -15,7 +15,6 @@ import {
     IEezObject,
     EezObject,
     registerClass,
-    EezArrayObject,
     ClassInfo,
     PropertyInfo,
     PropertyType,
@@ -32,9 +31,7 @@ import {
     IPropertyGridGroupDefinition,
     areAllChildrenOfTheSameParent,
     isAncestor,
-    getProperty,
     IOnSelectParams,
-    asArray,
     getChildOfObject,
     getParent
 } from "project-editor/core/object";
@@ -62,7 +59,7 @@ import { ProjectStore } from "project-editor/core/store";
 // import * as data from "project-editor/features/data/data";
 
 import { Page } from "project-editor/features/gui/page";
-import { Gui, findPage, findBitmap } from "project-editor/features/gui/gui";
+import { findPage, findBitmap } from "project-editor/features/gui/gui";
 import { Style, getStyleProperty } from "project-editor/features/gui/style";
 import { findDataItem, DataContext, dataContext } from "project-editor/features/data/data";
 import { findAction } from "project-editor/features/action/action";
@@ -646,7 +643,7 @@ export class Widget extends EezObject {
     }
 
     static async createLayout(fromWidgets: Widget[]) {
-        const layouts = (getProperty(ProjectStore.project, "gui") as Gui).pages;
+        const layouts = ProjectStore.project.gui.pages;
 
         try {
             const result = await showGenericDialog({
@@ -850,7 +847,7 @@ interface IContainerWidget extends IWidget {
 
 export class ContainerWidget extends Widget {
     @observable name: string;
-    @observable widgets: EezArrayObject<Widget>;
+    @observable widgets: Widget[];
     @observable overlay: string;
     @observable shadow: boolean;
 
@@ -901,7 +898,7 @@ export class ContainerWidget extends Widget {
         return (
             <WidgetContainerComponent
                 containerWidget={this}
-                widgets={asArray(this.widgets)}
+                widgets={this.widgets}
                 dataContext={dataContext}
             />
         );
@@ -1176,8 +1173,7 @@ registerClass(GridWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class SelectWidget extends Widget {
-    @observable
-    widgets: EezArrayObject<Widget>;
+    @observable widgets: Widget[];
 
     _lastSelectedIndexInSelectWidget: number | undefined;
 
@@ -1202,7 +1198,7 @@ export class SelectWidget extends Widget {
                     return `${label || "???"} ➔ ${childLabel}`;
                 },
 
-                interceptAddObject: (widgets: EezArrayObject<Widget>, object: Widget) => {
+                interceptAddObject: (widgets: Widget[], object: Widget) => {
                     object.left = 0;
                     object.top = 0;
                     object.width = (getParent(widgets) as SelectWidget).width;
@@ -1304,7 +1300,7 @@ export class SelectWidget extends Widget {
         if (this.data) {
             let index: number = dataContext.getEnumValue(this.data);
             if (index >= 0 && index < this.widgets.length) {
-                return asArray(this.widgets)[index];
+                return this.widgets[index];
             }
         }
         return undefined;
@@ -1317,10 +1313,7 @@ export class SelectWidget extends Widget {
             for (let i = 0; i < this.widgets.length; ++i) {
                 if (
                     selectedObjects.find(selectedObject =>
-                        isAncestor(
-                            (selectedObject as EditorObject).object,
-                            asArray(this.widgets)[i]
-                        )
+                        isAncestor((selectedObject as EditorObject).object, this.widgets[i])
                     )
                 ) {
                     this._lastSelectedIndexInSelectWidget = i;
@@ -1367,7 +1360,7 @@ export class SelectWidget extends Widget {
             return null;
         }
 
-        const selectedWidget = asArray(this.widgets)[index];
+        const selectedWidget = this.widgets[index];
 
         return (
             <WidgetContainerComponent

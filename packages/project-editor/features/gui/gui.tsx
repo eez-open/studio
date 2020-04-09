@@ -9,9 +9,7 @@ import {
     registerClass,
     IEezObject,
     EezObject,
-    EezArrayObject,
     PropertyType,
-    asArray,
     getProperty,
     NavigationComponent,
     PropertyInfo
@@ -52,26 +50,13 @@ export class GuiNavigation extends NavigationComponent {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Gui extends EezObject {
-    @observable
-    storyboard: string;
-
-    @observable
-    pages: EezArrayObject<Page>;
-
-    @observable
-    styles: EezArrayObject<Style>;
-
-    @observable
-    fonts: EezArrayObject<Font>;
-
-    @observable
-    bitmaps: EezArrayObject<Bitmap>;
-
-    @observable
-    colors: EezArrayObject<Color>;
-
-    @observable
-    themes: EezArrayObject<Theme>;
+    @observable storyboard: string;
+    @observable pages: Page[];
+    @observable styles: Style[];
+    @observable fonts: Font[];
+    @observable bitmaps: Bitmap[];
+    @observable colors: Color[];
+    @observable themes: Theme[];
 
     static classInfo: ClassInfo = {
         label: () => "GUI",
@@ -104,10 +89,10 @@ export class Gui extends EezObject {
                 enumerable: (object: IEezObject, propertyInfo: PropertyInfo) => {
                     return !ProjectStore.masterProjectEnabled;
                 },
-                check: (object: IEezObject) => {
+                check: (object: IEezObject[]) => {
                     let messages: output.Message[] = [];
 
-                    if (asArray(object).length > 255) {
+                    if (object.length > 255) {
                         messages.push(
                             new output.Message(
                                 output.Type.ERROR,
@@ -125,10 +110,10 @@ export class Gui extends EezObject {
                 type: PropertyType.Array,
                 typeClass: Bitmap,
                 hideInPropertyGrid: true,
-                check: (object: IEezObject) => {
+                check: (object: IEezObject[]) => {
                     let messages: output.Message[] = [];
 
-                    if (asArray(object).length > 255) {
+                    if (object.length > 255) {
                         messages.push(
                             new output.Message(
                                 output.Type.ERROR,
@@ -276,8 +261,7 @@ registerFeatureImplementation("gui", {
                 }[];
             };
         }) => {
-            const gui = getProperty(ProjectStore.project, "gui") as Gui;
-
+            const gui = ProjectStore.project.gui;
             if (gui) {
                 //
                 jsObject.gui.colors.forEach((color: any) => delete color.id);
@@ -295,18 +279,13 @@ registerFeatureImplementation("gui", {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function getGui() {
-    return ProjectStore.project && (getProperty(ProjectStore.project, "gui") as Gui);
-}
-
 export function getPages() {
-    let gui = getGui();
-    return (gui && gui.pages) || [];
+    return (ProjectStore.project.gui && ProjectStore.project.gui.pages) || [];
 }
 
 export function findPage(pageName: string) {
     let pages = getPages();
-    for (const page of asArray(pages)) {
+    for (const page of pages) {
         if (page.name == pageName) {
             return page;
         }
@@ -315,9 +294,8 @@ export function findPage(pageName: string) {
 }
 
 export function findBitmap(bitmapName: any) {
-    let gui = getGui();
-    let bitmaps = (gui && gui.bitmaps) || [];
-    for (const bitmap of asArray(bitmaps)) {
+    let bitmaps = (ProjectStore.project.gui && ProjectStore.project.gui.bitmaps) || [];
+    for (const bitmap of bitmaps) {
         if (bitmap.name == bitmapName) {
             return bitmap;
         }

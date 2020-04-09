@@ -5,12 +5,7 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import {
-    NavigationComponent,
-    getProperty,
-    getAncestorOfType,
-    EezArrayObject
-} from "project-editor/core/object";
+import { NavigationComponent, getProperty, getAncestorOfType } from "project-editor/core/object";
 import { NavigationStore, getObjectFromNavigationItem } from "project-editor/core/store";
 
 import { ProjectStore } from "project-editor/core/store";
@@ -59,7 +54,7 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
             subsystem &&
             (getObjectFromNavigationItem(
                 NavigationStore.getNavigationSelectedItem(subsystem)
-            ) as EezArrayObject<ScpiCommand>);
+            ) as ScpiCommand[]);
 
         let command =
             commands &&

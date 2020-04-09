@@ -22,7 +22,6 @@ import {
     NavigationComponent,
     PropertyProps,
     isAnyPropertyModified,
-    asArray,
     getParent
 } from "project-editor/core/object";
 import {
@@ -43,7 +42,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { Project } from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
-import { Gui, getGui, findFont } from "project-editor/features/gui/gui";
+import { findFont } from "project-editor/features/gui/gui";
 import { drawText } from "project-editor/features/gui/draw";
 import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
 
@@ -102,7 +101,7 @@ export class StylesNavigation extends NavigationComponent {
     @computed
     get navigationObject() {
         if (ProjectStore.masterProject) {
-            return (getProperty(ProjectStore.masterProject, "gui") as Gui).styles;
+            return ProjectStore.masterProject.gui.styles;
         }
         return this.props.navigationObject;
     }
@@ -305,7 +304,10 @@ const inheritFromProperty: PropertyInfo = {
                                             type: "string",
                                             validators: [
                                                 validators.required,
-                                                validators.unique({}, asArray(getGui().styles))
+                                                validators.unique(
+                                                    {},
+                                                    ProjectStore.project.gui.styles
+                                                )
                                             ]
                                         }
                                     ]
@@ -330,7 +332,10 @@ const inheritFromProperty: PropertyInfo = {
 
                                 objectPropertyValues.inheritFrom = result.values.name;
 
-                                DocumentStore.addObject(getGui().styles, stylePropertyValues);
+                                DocumentStore.addObject(
+                                    ProjectStore.project.gui.styles,
+                                    stylePropertyValues
+                                );
                                 DocumentStore.updateObject(object, objectPropertyValues);
 
                                 UndoManager.setCombineCommands(false);
@@ -974,8 +979,8 @@ export class Style extends EezObject {
                 );
             } else {
                 if (
-                    asArray(getParent(this)).find(
-                        (object: Style) => object !== this && object.id === this.id
+                    (getParent(this) as Style[]).find(
+                        style => style !== this && style.id === this.id
                     )
                 ) {
                     messages.push(output.propertyNotUniqueMessage(this, "id"));
@@ -1196,15 +1201,14 @@ export function findStyle(styleName: string | undefined) {
         return undefined;
     }
 
-    const style = getGui().stylesMap.get(styleName);
+    const style = ProjectStore.project.gui.stylesMap.get(styleName);
     if (style) {
         return style;
     }
 
     if (ProjectStore.masterProject) {
-        const gui = (ProjectStore.masterProject as any).gui as Gui;
-        if (gui) {
-            const style = gui.stylesMap.get(styleName);
+        if (ProjectStore.masterProject.gui) {
+            const style = ProjectStore.masterProject.gui.stylesMap.get(styleName);
             if (style && style.id != undefined) {
                 return style;
             }

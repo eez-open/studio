@@ -9,10 +9,8 @@ import {
     registerClass,
     IEezObject,
     EezObject,
-    EezArrayObject,
     PropertyType,
-    getProperty,
-    asArray
+    getProperty
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 
@@ -174,10 +172,7 @@ export class ExtensionDefinition extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique({}, asArray(parent))
-                            ]
+                            validators: [validators.required, validators.unique({}, parent)]
                         }
                     ]
                 },
@@ -216,7 +211,7 @@ export class ExtensionDefinition extends EezObject {
         let extensionDefinitions = getProperty(
             ProjectStore.project,
             "extensionDefinitions"
-        ) as EezArrayObject<ExtensionDefinition>;
+        ) as ExtensionDefinition[];
         if (
             extensionDefinitions.find(
                 extensionDefinition =>
@@ -244,8 +239,8 @@ export function findExtensionDefinition(name: string) {
     let extensionDefinitions = getProperty(
         ProjectStore.project,
         "extensionDefinitions"
-    ) as EezArrayObject<ExtensionDefinition>;
-    for (const extensionDefinition of asArray(extensionDefinitions)) {
+    ) as ExtensionDefinition[];
+    for (const extensionDefinition of extensionDefinitions) {
         if (extensionDefinition.name == name) {
             return extensionDefinition;
         }

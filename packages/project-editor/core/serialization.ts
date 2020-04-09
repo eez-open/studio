@@ -4,7 +4,6 @@ import {
     EezClass,
     IEezObject,
     EezObject,
-    EezArrayObject,
     PropertyType,
     PropertyInfo,
     getId,
@@ -28,7 +27,7 @@ export function getChildId(parent: IEezObject | undefined) {
 }
 
 function loadArrayObject(arrayObject: any, parent: any, propertyInfo: PropertyInfo) {
-    const eezArray: EezArrayObject<EezObject> = observable([]);
+    const eezArray: EezObject[] = observable([]);
 
     setId(eezArray, getChildId(parent));
     setParent(eezArray, parent);

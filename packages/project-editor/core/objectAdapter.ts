@@ -7,7 +7,6 @@ import { stringCompare } from "eez-studio-shared/string";
 
 import {
     isArray,
-    asArray,
     getProperty,
     IEezObject,
     PropertyType,
@@ -219,7 +218,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
     @computed
     get children(): TreeObjectAdapterChildren {
         if (isArray(this.object)) {
-            return asArray(this.object).map(child => this.transformer(child));
+            return this.object.map(child => this.transformer(child));
         }
 
         let properties = getClassInfo(this.object).properties.filter(
@@ -235,7 +234,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             properties[0].type === PropertyType.Array &&
             !(properties[0].showOnlyChildrenInTree === false)
         ) {
-            return asArray(getProperty(this.object, properties[0].name)).map(child =>
+            return (getProperty(this.object, properties[0].name) as IEezObject[]).map(child =>
                 this.transformer(child)
             );
         }
@@ -1206,7 +1205,7 @@ export class ListAdapter implements ITreeAdapter {
 
     @computed
     get items() {
-        let objects = asArray(this.object);
+        let objects = this.object as IEezObject[];
 
         const filter = this.filter;
         if (filter) {

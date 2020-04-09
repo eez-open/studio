@@ -7,7 +7,7 @@ import {
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
 import { ProjectStore, OutputSectionsStore } from "project-editor/core/store";
-import { IEezObject, EezArrayObject, getProperty, asArray } from "project-editor/core/object";
+import { IEezObject } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import { loadObject } from "project-editor/core/serialization";
 import { BuildResult } from "project-editor/core/extensions";
@@ -17,7 +17,6 @@ import { Project, BuildConfiguration } from "project-editor/project/project";
 
 import * as data from "project-editor/features/data/data";
 
-import { Gui } from "project-editor/features/gui/gui";
 import { getData as getBitmapData, BitmapData } from "project-editor/features/gui/bitmap";
 import { Font } from "project-editor/features/gui/font";
 import { Style } from "project-editor/features/gui/style";
@@ -450,36 +449,36 @@ function getItem(
 }
 
 function getPageLayoutIndex(object: any, propertyName: string) {
-    const gui = getProperty(ProjectStore.project, "gui") as Gui;
+    const gui = ProjectStore.project.gui;
     const pages = gui.pages.filter(page => page.isUsedAsCustomWidget);
     return getItem(pages, object, propertyName);
 }
 
 function getDataItemIndex(object: any, propertyName: string) {
-    const dataItems = asArray((ProjectStore.project as Project).data);
+    const dataItems = (ProjectStore.project as Project).data;
     return getItem(dataItems, object, propertyName);
 }
 
 function getActionIndex(object: any, propertyName: string) {
-    const actions = asArray((ProjectStore.project as Project).actions);
+    const actions = (ProjectStore.project as Project).actions;
     return getItem(actions, object, propertyName);
 }
 
 function getBitmapIndex(object: any, propertyName: string) {
-    const gui = getProperty(ProjectStore.project, "gui") as Gui;
-    const bitmaps = asArray(gui.bitmaps);
+    const gui = ProjectStore.project.gui;
+    const bitmaps = gui.bitmaps;
     return getItem(bitmaps, object, propertyName);
 }
 
 function getFontIndex(object: any, propertyName: string) {
-    const gui = getProperty(ProjectStore.project, "gui") as Gui;
-    const fonts = asArray(gui.fonts);
+    const gui = ProjectStore.project.gui;
+    const fonts = gui.fonts;
     return getItem(fonts, object, propertyName);
 }
 
 function getStyleIndex(object: any, propertyName: string) {
-    const gui = getProperty(ProjectStore.project, "gui") as Gui;
-    const styles = asArray(gui.styles);
+    const gui = ProjectStore.project.gui;
+    const styles = gui.styles;
 
     let itemName = object[propertyName];
     if (itemName.inheritFrom) {
@@ -502,8 +501,8 @@ function getStyleIndex(object: any, propertyName: string) {
 }
 
 function getDefaultStyleIndex() {
-    const gui = getProperty(ProjectStore.project, "gui") as Gui;
-    const styles = asArray(gui.styles);
+    const gui = ProjectStore.project.gui;
+    const styles = gui.styles;
     for (let i = 0; i < styles.length; i++) {
         if (styles[i].name === "default") {
             if (++i > 255) {
@@ -527,9 +526,7 @@ function buildWidgetText(text: string) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiFontsEnum(project: Project) {
-    let gui = getProperty(project, "gui") as Gui;
-
-    let fonts = gui.fonts.map(
+    let fonts = project.gui.fonts.map(
         font =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "FONT_ID_",
@@ -645,12 +642,10 @@ export function getFontData(font: Font) {
 }
 
 function buildGuiFontsDef(project: Project) {
-    let gui = getProperty(project, "gui") as Gui;
-
     let fontItemDataList: string[] = [];
     let fontItemList: string[] = [];
 
-    gui.fonts.forEach(font => {
+    project.gui.fonts.forEach(font => {
         let fontItemDataName = projectBuild.getName(
             "font_data_",
             font.name,
@@ -684,9 +679,7 @@ function buildGuiFontsDef(project: Project) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiBitmapsEnum(project: Project) {
-    let gui = getProperty(project, "gui") as Gui;
-
-    let bitmaps = gui.bitmaps.map(
+    let bitmaps = project.gui.bitmaps.map(
         bitmap =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "BITMAP_ID_",
@@ -712,7 +705,7 @@ function buildGuiBitmapsDecl(project: Project) {
 
 function buildGuiBitmapsDef(project: Project) {
     return new Promise<string>((resolve, reject) => {
-        let gui = getProperty(project, "gui") as Gui;
+        let gui = project.gui;
 
         if (gui.bitmaps.length === 0) {
             resolve(`Bitmap bitmaps[] = {
@@ -723,7 +716,7 @@ function buildGuiBitmapsDef(project: Project) {
 
         let getBitmapDataPromises: Promise<BitmapData>[] = [];
         for (let i = 0; i < gui.bitmaps.length; i++) {
-            getBitmapDataPromises.push(getBitmapData(asArray(gui.bitmaps)[i]));
+            getBitmapDataPromises.push(getBitmapData(gui.bitmaps[i]));
         }
 
         Promise.all(getBitmapDataPromises).then(bitmapsData => {
@@ -738,10 +731,10 @@ function buildGuiBitmapsDef(project: Project) {
             }[] = [];
             for (let i = 0; i < gui.bitmaps.length; i++) {
                 bitmaps.push({
-                    name: asArray(gui.bitmaps)[i].name,
+                    name: gui.bitmaps[i].name,
                     width: bitmapsData[i].width,
                     height: bitmapsData[i].height,
-                    pixels: fixDataForMegaBootloader(bitmapsData[i].pixels, asArray(gui.bitmaps)[i])
+                    pixels: fixDataForMegaBootloader(bitmapsData[i].pixels, gui.bitmaps[i])
                 });
             }
 
@@ -929,9 +922,7 @@ class Int16 extends Field {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiStylesEnum(project: Project) {
-    let gui = getProperty(project, "gui") as Gui;
-
-    let styles = gui.styles.map(
+    let styles = project.gui.styles.map(
         style =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "STYLE_ID_",
@@ -1018,11 +1009,9 @@ function buildGuiStylesDef(project: Project) {
     }
 
     function build() {
-        let gui = getProperty(project, "gui") as Gui;
-
         let styles = new ObjectList();
 
-        gui.styles.forEach(style => {
+        project.gui.styles.forEach(style => {
             styles.addItem(buildStyle(style));
         });
 
@@ -1170,7 +1159,7 @@ function buildWidget(object: Widget.Widget | Page) {
     if (type == WIDGET_TYPE_CONTAINER) {
         specific = new Struct();
 
-        let widgets: EezArrayObject<Widget.Widget>;
+        let widgets: Widget.Widget[];
         if (object instanceof Widget.ContainerWidget) {
             widgets = object.widgets;
         } else {
@@ -1577,9 +1566,7 @@ function buildWidget(object: Widget.Widget | Page) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiPagesEnum(project: Project) {
-    let gui = getProperty(project, "gui") as Gui;
-
-    let pages = asArray(gui.pages)
+    let pages = project.gui.pages
         .filter(page => !page.isUsedAsCustomWidget)
         .map(
             widget =>
@@ -1640,10 +1627,8 @@ function buildGuiDocumentDef(project: Project, orientation: "portrait" | "landsc
     }
 
     function build() {
-        let gui = getProperty(project, "gui") as Gui;
-
         let customWidgets = new ObjectList();
-        asArray(gui.pages)
+        project.gui.pages
             .filter(page => page.isUsedAsCustomWidget)
             .forEach(customWidget => {
                 customWidgets.addItem(buildCustomWidget(customWidget));
@@ -1651,7 +1636,7 @@ function buildGuiDocumentDef(project: Project, orientation: "portrait" | "landsc
         document.addField(customWidgets);
 
         let pages = new ObjectList();
-        asArray(gui.pages)
+        project.gui.pages
             .filter(page => !page.isUsedAsCustomWidget)
             .forEach(page => {
                 pages.addItem(buildPage(page));

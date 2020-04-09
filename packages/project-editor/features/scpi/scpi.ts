@@ -13,10 +13,8 @@ import {
     registerClass,
     IEezObject,
     EezObject,
-    EezArrayObject,
     PropertyType,
     PropertyInfo,
-    asArray,
     getChildOfObject,
     getParent
 } from "project-editor/core/object";
@@ -139,17 +137,10 @@ const ScpiParameterTable = styled.table`
 `;
 
 export class ScpiParameter extends EezObject {
-    @observable
-    name: string;
-
-    @observable
-    type: EezArrayObject<ScpiParameterType>;
-
-    @observable
-    isOptional: string;
-
-    @observable
-    description: string;
+    @observable name: string;
+    @observable type: ScpiParameterType[];
+    @observable isOptional: string;
+    @observable description: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -327,7 +318,7 @@ export class ScpiParameter extends EezObject {
         const messages: output.Message[] = [];
 
         if (this.name) {
-            const arr = asArray<ScpiParameter>(getParent(this));
+            const arr = getParent(this) as ScpiParameter[];
             let thisIndex = -1;
             let otherIndex = -1;
             for (let i = 0; i < arr.length; ++i) {
@@ -351,7 +342,7 @@ export class ScpiParameter extends EezObject {
         }
 
         if (!this.isOptional) {
-            const arr = asArray<ScpiParameter>(getParent(this));
+            const arr = getParent(this) as ScpiParameter[];
             for (let i = 0; arr[i] !== this && i < arr.length; ++i) {
                 if (arr[i].isOptional) {
                     messages.push(
@@ -450,8 +441,8 @@ export class ScpiCommand extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable helpLink?: string;
-    @observable usedIn: string[] | undefined;
-    @observable parameters: EezArrayObject<ScpiParameter>;
+    @observable usedIn?: string[];
+    @observable parameters: ScpiParameter[];
     @observable response?: ScpiResponse;
 
     get isQuery() {
@@ -501,10 +492,7 @@ export class ScpiCommand extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique({}, asArray(parent))
-                            ]
+                            validators: [validators.required, validators.unique({}, parent)]
                         }
                     ]
                 },
@@ -538,7 +526,7 @@ export class ScpiSubsystem extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable helpLink?: string;
-    @observable commands: EezArrayObject<ScpiCommand>;
+    @observable commands: ScpiCommand[];
 
     static classInfo: ClassInfo = {
         properties: [
@@ -570,10 +558,7 @@ export class ScpiSubsystem extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique({}, asArray(parent))
-                            ]
+                            validators: [validators.required, validators.unique({}, parent)]
                         }
                     ]
                 },
@@ -596,8 +581,8 @@ registerClass(ScpiSubsystem);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Scpi extends EezObject {
-    @observable subsystems: EezArrayObject<ScpiSubsystem>;
-    @observable enums: EezArrayObject<ScpiEnum>;
+    @observable subsystems: ScpiSubsystem[];
+    @observable enums: ScpiEnum[];
 
     static classInfo: ClassInfo = {
         label: () => "SCPI",

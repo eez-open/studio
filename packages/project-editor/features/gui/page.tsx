@@ -15,7 +15,6 @@ import {
     ClassInfo,
     PropertyInfo,
     registerClass,
-    EezArrayObject,
     PropertyType,
     isSubclassOf,
     IEditorState,
@@ -25,7 +24,6 @@ import {
     specificGroup,
     EditorComponent,
     NavigationComponent,
-    asArray,
     getParent
 } from "project-editor/core/object";
 import {
@@ -279,7 +277,7 @@ export class PageOrientation extends EezObject {
     @observable width: number;
     @observable height: number;
     @observable style?: string;
-    @observable widgets: EezArrayObject<Widget>;
+    @observable widgets: Widget[];
 
     static classInfo: ClassInfo = {
         properties: [
@@ -352,7 +350,7 @@ export class Page extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable style?: string;
-    @observable widgets: EezArrayObject<Widget>;
+    @observable widgets: Widget[];
     @observable usedIn: string[] | undefined;
     @observable closePageIfTouchedOutside: boolean;
 
@@ -545,7 +543,7 @@ export class Page extends EezObject {
         return (
             <WidgetContainerComponent
                 containerWidget={this}
-                widgets={asArray(this.widgets)}
+                widgets={this.widgets}
                 dataContext={new DataContext(dataContext, this.dataContextOverridesObject)}
             />
         );

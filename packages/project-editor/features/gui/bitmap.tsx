@@ -9,7 +9,6 @@ import {
     EezObject,
     registerClass,
     PropertyType,
-    asArray,
     NavigationComponent
 } from "project-editor/core/object";
 import { NavigationStore } from "project-editor/core/store";
@@ -160,10 +159,7 @@ export class Bitmap extends EezObject implements IBitmap {
                         {
                             name: "name",
                             type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique({}, asArray(parent))
-                            ]
+                            validators: [validators.required, validators.unique({}, parent)]
                         },
                         {
                             name: "imageFilePath",

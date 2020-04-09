@@ -9,7 +9,7 @@ import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 
-import { EezArrayObject, getProperty, asArray } from "project-editor/core/object";
+import { getProperty } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/serialization";
 import {
     DocumentStore,
@@ -159,11 +159,7 @@ class FindChanges {
     findEnum(suggestedEnumName: string, members: string): string {
         // find in existing enums
         for (let i = 0; i < this.existingEnums.length; ++i) {
-            if (
-                asArray(this.existingEnums[i].members)
-                    .map(member => member.name)
-                    .join("|") === members
-            ) {
+            if (this.existingEnums[i].members.map(member => member.name).join("|") === members) {
                 return this.existingEnums[i].name;
             }
         }
@@ -822,12 +818,9 @@ class FindChanges {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function findCommandInScpiSubsystems(
-    subsystems: EezArrayObject<ScpiSubsystem>,
-    commandName: string
-) {
-    for (const subsystem of asArray(subsystems)) {
-        for (const command of asArray(subsystem.commands)) {
+function findCommandInScpiSubsystems(subsystems: ScpiSubsystem[], commandName: string) {
+    for (const subsystem of subsystems) {
+        for (const command of subsystem.commands) {
             if (command.name === commandName) {
                 return {
                     subsystem: subsystem,
@@ -981,7 +974,7 @@ export class ImportScpiDocDialog extends React.Component<
 
         const scpi = getProperty(ProjectStore.project, "scpi") as Scpi;
 
-        const findChanges = new FindChanges(asArray(scpi.enums));
+        const findChanges = new FindChanges(scpi.enums);
 
         findChanges
             .getChanges()

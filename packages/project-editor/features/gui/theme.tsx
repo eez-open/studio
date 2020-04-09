@@ -4,13 +4,11 @@ import { observer } from "mobx-react";
 
 import { guid } from "eez-studio-shared/guid";
 import {
-    getProperty,
     ClassInfo,
     IEezObject,
     EezObject,
     registerClass,
     PropertyType,
-    asArray,
     getObjectFromObjectId,
     getParent
 } from "project-editor/core/object";
@@ -87,18 +85,18 @@ class ColorItem extends React.Component<{
 
     @computed
     get colorIndex() {
-        return asArray(getParent(this.colorObject)).indexOf(this.colorObject);
+        return (getParent(this.colorObject) as Color[]).indexOf(this.colorObject);
     }
 
     @computed
     get selectedTheme() {
-        const gui = getProperty(ProjectStore.masterProject || ProjectStore.project, "gui") as Gui;
+        const gui = (ProjectStore.masterProject || ProjectStore.project).gui;
 
         let selectedTheme = getObjectFromNavigationItem(
             navigationStore.get().getNavigationSelectedItem(gui.themes)
         ) as Theme;
         if (!selectedTheme) {
-            selectedTheme = asArray(gui.themes)[0];
+            selectedTheme = gui.themes[0];
         }
 
         return selectedTheme!;
@@ -183,7 +181,7 @@ export class ThemesSideView extends React.Component<{
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique(theme, asArray(getParent(theme)))
+                            validators.unique(theme, getParent(theme))
                         ]
                     }
                 ]
@@ -222,7 +220,7 @@ export class ThemesSideView extends React.Component<{
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique(color, asArray(getParent(color)))
+                            validators.unique(color, getParent(color))
                         ]
                     }
                 ]
@@ -252,7 +250,7 @@ export class ThemesSideView extends React.Component<{
             return null;
         }
 
-        const gui = getProperty(ProjectStore.masterProject || ProjectStore.project, "gui") as Gui;
+        const gui = (ProjectStore.masterProject || ProjectStore.project).gui;
 
         const themes = (
             <ListNavigation
@@ -328,10 +326,7 @@ export class Color extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique({}, asArray(parent))
-                            ]
+                            validators: [validators.required, validators.unique({}, parent)]
                         }
                     ]
                 },
@@ -358,19 +353,16 @@ export class Color extends EezObject {
                     click: () => {
                         UndoManager.setCombineCommands(true);
 
-                        const gui = getProperty(
-                            ProjectStore.masterProject || ProjectStore.project,
-                            "gui"
-                        ) as Gui;
+                        const gui = (ProjectStore.masterProject || ProjectStore.project).gui;
 
                         const selectedTheme = getObjectFromNavigationItem(
                             navigationStore.get().getNavigationSelectedItem(gui.themes)
                         ) as Theme;
 
-                        const colorIndex = asArray(gui.colors).indexOf(thisObject);
+                        const colorIndex = gui.colors.indexOf(thisObject);
                         const color = gui.getThemeColor(selectedTheme.id, thisObject.id);
 
-                        asArray(gui.themes).forEach((theme: any, i: number) => {
+                        gui.themes.forEach((theme: any, i: number) => {
                             if (theme != selectedTheme) {
                                 const colors = theme.colors.slice();
                                 colors[colorIndex] = color;
@@ -432,10 +424,7 @@ export class Theme extends EezObject {
                         {
                             name: "name",
                             type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique({}, asArray(parent))
-                            ]
+                            validators: [validators.required, validators.unique({}, parent)]
                         }
                     ]
                 },
@@ -457,7 +446,7 @@ export class Theme extends EezObject {
     set colors(value: string[]) {
         const gui = getParent(getParent(this)) as Gui;
         for (let i = 0; i < value.length; i++) {
-            gui.setThemeColor(this.id, asArray(gui.colors)[i].id, value[i]);
+            gui.setThemeColor(this.id, gui.colors[i].id, value[i]);
         }
     }
 }
@@ -471,7 +460,7 @@ function getThemedColorInGui(gui: Gui, colorValue: string): string | undefined {
         navigationStore.get().getNavigationSelectedItem(gui.themes)
     ) as Theme;
     if (!selectedTheme) {
-        selectedTheme = asArray(gui.themes)[0];
+        selectedTheme = gui.themes[0];
     }
     if (!selectedTheme) {
         return colorValue;
@@ -495,7 +484,7 @@ export function getThemedColor(colorValue: string): string {
         return colorValue;
     }
 
-    const gui = getProperty(ProjectStore.masterProject || ProjectStore.project, "gui") as Gui;
+    const gui = (ProjectStore.masterProject || ProjectStore.project).gui;
     let color = getThemedColorInGui(gui, colorValue);
     if (color) {
         return color;

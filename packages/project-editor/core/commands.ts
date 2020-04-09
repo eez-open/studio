@@ -5,7 +5,6 @@ import { humanize } from "eez-studio-shared/string";
 
 import {
     IEezObject,
-    asArray,
     getProperty,
     getHumanReadableObjectPath,
     isArrayElement,
@@ -78,7 +77,7 @@ function getUniquePropertyValue(
 
 // ensure that unique properties are unique inside parent
 function ensureUniqueProperties(parentObject: IEezObject, objects: IEezObject[]) {
-    let existingObjects = asArray(parentObject).map((object: IEezObject) => object);
+    let existingObjects = (parentObject as IEezObject[]).map((object: IEezObject) => object);
     objects.forEach(object => {
         for (const propertyInfo of getClassInfo(object).properties) {
             if (propertyInfo.unique) {
@@ -102,12 +101,12 @@ export let addObject = action(
 
         context.undoManager.executeCommand({
             execute: action(() => {
-                asArray(parentObject).push(object);
+                (parentObject as IEezObject[]).push(object);
                 onObjectModified(parentObject);
             }),
 
             undo: action(() => {
-                asArray(parentObject).pop();
+                (parentObject as IEezObject[]).pop();
                 onObjectModified(parentObject);
             }),
 
@@ -127,13 +126,13 @@ export let addObjects = action(
 
         context.undoManager.executeCommand({
             execute: action(() => {
-                asArray(parentObject).push(...objects);
+                (parentObject as IEezObject[]).push(...objects);
                 onObjectModified(parentObject);
             }),
 
             undo: action(() => {
                 for (let i = 0; i < objects.length; i++) {
-                    asArray(parentObject).pop();
+                    (parentObject as IEezObject[]).pop();
                 }
                 onObjectModified(parentObject);
             }),
@@ -156,12 +155,12 @@ export let insertObject = action(
 
         context.undoManager.executeCommand({
             execute: action(() => {
-                asArray(parentObject).splice(index, 0, object);
+                (parentObject as IEezObject[]).splice(index, 0, object);
                 onObjectModified(parentObject);
             }),
 
             undo: action(() => {
-                asArray(parentObject).splice(index, 1);
+                (parentObject as IEezObject[]).splice(index, 1);
                 onObjectModified(parentObject);
             }),
 
@@ -267,7 +266,7 @@ export let deleteObject = action((context: ICommandContext, object: any) => {
     const parent = getParent(object);
 
     if (isArrayElement(object)) {
-        const array = asArray(parent);
+        const array = parent as IEezObject[];
         const index = array.indexOf(object);
 
         context.undoManager.executeCommand({
@@ -303,7 +302,7 @@ export let deleteObjects = action((context: ICommandContext, objects: IEezObject
                 let parent = getParent(object);
 
                 if (isArrayElement(object)) {
-                    const array = asArray(parent!);
+                    const array = parent as IEezObject[];
                     let index = array.indexOf(object);
                     undoIndexes.push(index);
                     array.splice(index, 1);
@@ -320,7 +319,7 @@ export let deleteObjects = action((context: ICommandContext, objects: IEezObject
                 let object = objects[i];
                 let parent = getParent(object);
                 if (isArrayElement(object)) {
-                    const array = asArray(parent);
+                    const array = parent as IEezObject[];
                     let index = undoIndexes[i];
                     array.splice(index, 0, object);
                 } else {
@@ -342,7 +341,7 @@ export let replaceObject = action(
     (context: ICommandContext, object: IEezObject, replaceWithObject: IEezObject) => {
         let parent = getParent(object);
         if (isArrayElement(object)) {
-            const array = asArray(parent);
+            const array = parent as IEezObject[];
 
             let index = array.indexOf(object);
 
@@ -376,7 +375,7 @@ export let replaceObjects = action(
         }
 
         const parent = getParent(objects[0]);
-        const array = asArray(parent!);
+        const array = parent as IEezObject[];
         const index = array.indexOf(objects[0]);
 
         let undoIndexes: number[];
@@ -424,7 +423,7 @@ export function insertObjectBefore(
     objectToInsert: any
 ) {
     const parent = getParent(object);
-    const array = asArray(parent);
+    const array = parent as IEezObject[];
     const index = array.indexOf(object);
     return insertObject(context, parent, index, objectToInsert);
 }
@@ -435,7 +434,7 @@ export function insertObjectAfter(
     objectToInsert: any
 ) {
     const parent = getParent(object);
-    const array = asArray(parent);
+    const array = parent as IEezObject[];
     const index = array.indexOf(object);
     return insertObject(context, parent, index + 1, objectToInsert);
 }
