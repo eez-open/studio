@@ -23,25 +23,28 @@ import { metrics } from "project-editor/features/data/metrics";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DataItem extends EezObject {
-    @observable
+export interface IDataItem {
     name: string;
-    @observable
     description?: string;
-    @observable
     type: "integer" | "float" | "boolean" | "string" | "enum" | "list";
-    @observable
     enumItems: string;
-    @observable
     defaultValue: string;
-    @observable
     defaultValueList: string;
-    @observable
     defaultMinValue: number;
-    @observable
     defaultMaxValue: number;
-    @observable
     usedIn: string[] | undefined;
+}
+
+export class DataItem extends EezObject implements IDataItem {
+    @observable name: string;
+    @observable description?: string;
+    @observable type: "integer" | "float" | "boolean" | "string" | "enum" | "list";
+    @observable enumItems: string;
+    @observable defaultValue: string;
+    @observable defaultValueList: string;
+    @observable defaultMinValue: number;
+    @observable defaultMaxValue: number;
+    @observable usedIn: string[] | undefined;
 
     static classInfo: ClassInfo = {
         properties: [

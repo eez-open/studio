@@ -859,16 +859,16 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
     result.addField(new UInt16(action));
 
     // x
-    result.addField(new Int16(object.rect.left || 0));
+    result.addField(new Int16(object.left || 0));
 
     // y
-    result.addField(new Int16(object.rect.top || 0));
+    result.addField(new Int16(object.top || 0));
 
     // width
-    result.addField(new Int16(object.rect.width || 0));
+    result.addField(new Int16(object.width || 0));
 
     // height
-    result.addField(new Int16(object.rect.height || 0));
+    result.addField(new Int16(object.height || 0));
 
     // style
     let style: number;

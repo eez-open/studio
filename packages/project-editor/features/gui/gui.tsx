@@ -20,11 +20,11 @@ import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
-import { Page } from "project-editor/features/gui/page";
-import { Style, findStyle } from "project-editor/features/gui/style";
-import { Font } from "project-editor/features/gui/font";
-import { Bitmap } from "project-editor/features/gui/bitmap";
-import { Theme, Color } from "project-editor/features/gui/theme";
+import { Page, IPage } from "project-editor/features/gui/page";
+import { Style, IStyle, findStyle } from "project-editor/features/gui/style";
+import { Font, IFont } from "project-editor/features/gui/font";
+import { Bitmap, IBitmap } from "project-editor/features/gui/bitmap";
+import { Theme, ITheme, Color, IColor } from "project-editor/features/gui/theme";
 
 import { build } from "project-editor/features/gui/build";
 import { metrics } from "project-editor/features/gui/metrics";
@@ -43,7 +43,17 @@ export class GuiNavigation extends NavigationComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Gui extends EezObject {
+export interface IGui {
+    storyboard: string;
+    pages: IPage[];
+    styles: IStyle[];
+    fonts: IFont[];
+    bitmaps: IBitmap[];
+    colors: IColor[];
+    themes: ITheme[];
+}
+
+export class Gui extends EezObject implements IGui {
     @observable storyboard: string;
     @observable pages: Page[];
     @observable styles: Style[];

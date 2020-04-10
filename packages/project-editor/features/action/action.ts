@@ -22,17 +22,20 @@ import { metrics } from "project-editor/features/action/metrics";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Action extends EezObject {
-    @observable
+export interface IAction {
     name: string;
-    @observable
     description?: string;
-    @observable
     implementationType: "native";
-    @observable
     implementation?: string;
-    @observable
     usedIn: string[] | undefined;
+}
+
+export class Action extends EezObject implements IAction {
+    @observable name: string;
+    @observable description?: string;
+    @observable implementationType: "native";
+    @observable implementation?: string;
+    @observable usedIn: string[] | undefined;
 
     static classInfo: ClassInfo = {
         properties: [

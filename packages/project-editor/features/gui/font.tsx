@@ -291,6 +291,16 @@ export interface EditorImageHitTestResult {
     rect: Rect;
 }
 
+interface IGlyph {
+    encoding: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    dx: number;
+    glyphBitmap?: GlyphBitmap;
+}
+
 export class Glyph extends EezObject {
     @observable encoding: number;
     @observable x: number;
@@ -1941,11 +1951,14 @@ export class FontsNavigation extends NavigationComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class FontSource extends EezObject {
-    @observable
+export interface IFontSource {
     filePath: string;
-    @observable
     size?: number;
+}
+
+export class FontSource extends EezObject implements IFontSource {
+    @observable filePath: string;
+    @observable size?: number;
 
     static classInfo: ClassInfo = {
         getClass: (jsObject: any) => {
@@ -1977,29 +1990,30 @@ registerClass(FontSource);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Font extends EezObject {
-    @observable
+export interface IFont {
     name: string;
-    @observable
     description?: string;
-    @observable
-    source?: FontSource;
-    @observable
+    source?: IFontSource;
     bpp: number;
-    @observable
     height: number;
-    @observable
     ascent: number;
-    @observable
     descent: number;
-
-    @observable
-    glyphs: Glyph[];
-
-    @observable screenOrientation: string;
-
-    @observable
+    glyphs: IGlyph[];
+    screenOrientation: string;
     alwaysBuild: boolean;
+}
+
+export class Font extends EezObject implements IFont {
+    @observable name: string;
+    @observable description?: string;
+    @observable source?: FontSource;
+    @observable bpp: number;
+    @observable height: number;
+    @observable ascent: number;
+    @observable descent: number;
+    @observable glyphs: Glyph[];
+    @observable screenOrientation: string;
+    @observable alwaysBuild: boolean;
 
     static classInfo: ClassInfo = {
         properties: [

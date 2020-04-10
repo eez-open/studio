@@ -49,7 +49,7 @@ import { WidgetContainerComponent } from "project-editor/features/gui/page-edito
 
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
 
-import { Widget } from "project-editor/features/gui/widget";
+import { Widget, IWidget } from "project-editor/features/gui/widget";
 
 import { findStyle } from "project-editor/features/gui/gui";
 import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
@@ -346,7 +346,27 @@ registerClass(PageOrientation);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Page extends EezObject {
+export interface IPage {
+    name: string;
+    description?: string;
+    style?: string;
+    widgets: IWidget[];
+    usedIn: string[] | undefined;
+    closePageIfTouchedOutside: boolean;
+
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+
+    portrait: PageOrientation;
+
+    isUsedAsCustomWidget: boolean;
+
+    dataContextOverrides: string;
+}
+
+export class Page extends EezObject implements IPage {
     @observable name: string;
     @observable description?: string;
     @observable style?: string;

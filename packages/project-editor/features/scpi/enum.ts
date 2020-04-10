@@ -25,12 +25,14 @@ import { ScpiEnumsNavigation } from "project-editor/features/scpi/ScpiEnumsNavig
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ScpiEnumMember extends EezObject {
-    @observable
+export interface IScpiEnumMember {
     name: string;
-
-    @observable
     value: string;
+}
+
+export class ScpiEnumMember extends EezObject {
+    @observable name: string;
+    @observable value: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -80,12 +82,14 @@ export class ScpiEnumMember extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ScpiEnum extends EezObject {
-    @observable
+export interface IScpiEnum {
     name: string;
+    members: IScpiEnumMember[];
+}
 
-    @observable
-    members: ScpiEnumMember[];
+export class ScpiEnum extends EezObject implements IScpiEnum {
+    @observable name: string;
+    @observable members: ScpiEnumMember[];
 
     static classInfo: ClassInfo = {
         label: (scpiEnum: ScpiEnum) => {

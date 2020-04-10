@@ -78,7 +78,7 @@ export class EditorObject implements IBaseObject {
 
     @computed
     get rect() {
-        return this.object.rect;
+        return this.object;
     }
 
     set rect(value: Rect) {
@@ -210,7 +210,7 @@ const dragSnapLines = new DragSnapLines();
 @observer
 class DragSnapLinesOverlay extends React.Component {
     get dragWidgetRect() {
-        return dragSnapLines.dragWidget!.rect;
+        return dragSnapLines.dragWidget!;
     }
 
     render() {
@@ -239,10 +239,10 @@ const DragWidget = observer(
             <WidgetComponent
                 widget={pageEditorContext.dragWidget}
                 rect={{
-                    left: page.rect.left + pageEditorContext.dragWidget.rect.left,
-                    top: page.rect.top + pageEditorContext.dragWidget.rect.top,
-                    width: pageEditorContext.dragWidget.rect.width,
-                    height: pageEditorContext.dragWidget.rect.height
+                    left: page.rect.left + pageEditorContext.dragWidget.left,
+                    top: page.rect.top + pageEditorContext.dragWidget.top,
+                    width: pageEditorContext.dragWidget.width,
+                    height: pageEditorContext.dragWidget.height
                 }}
                 dataContext={dataContext}
             />
@@ -591,15 +591,15 @@ export class PageEditor
             const transform = this.pageEditorContext.viewState.transform;
 
             const p = transform.clientToPagePoint({
-                x: event.nativeEvent.clientX - (widget.rect.width * transform.scale) / 2,
-                y: event.nativeEvent.clientY - (widget.rect.height * transform.scale) / 2
+                x: event.nativeEvent.clientX - (widget.width * transform.scale) / 2,
+                y: event.nativeEvent.clientY - (widget.height * transform.scale) / 2
             });
 
             const { left, top } = dragSnapLines.snapLines!.dragSnap(
                 p.x,
                 p.y,
-                widget.rect.width,
-                widget.rect.height
+                widget.width,
+                widget.height
             );
 
             widget.left = Math.round(left - page.rect.left);

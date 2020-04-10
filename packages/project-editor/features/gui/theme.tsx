@@ -299,7 +299,12 @@ export class ThemesSideView extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Color extends EezObject {
+export class IColor {
+    id: string;
+    name: string;
+}
+
+export class Color extends EezObject implements IColor {
     @observable id: string;
     @observable name: string;
 
@@ -392,7 +397,12 @@ registerClass(Color);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Theme extends EezObject {
+export interface ITheme {
+    id: string;
+    name: string;
+}
+
+export class Theme extends EezObject implements ITheme {
     @observable id: string;
     @observable name: string;
 

@@ -60,7 +60,7 @@ import { ProjectStore } from "project-editor/core/store";
 
 import { Page } from "project-editor/features/gui/page";
 import { findPage, findBitmap } from "project-editor/features/gui/gui";
-import { Style, getStyleProperty } from "project-editor/features/gui/style";
+import { Style, IStyle, getStyleProperty } from "project-editor/features/gui/style";
 import { findDataItem, DataContext, dataContext } from "project-editor/features/data/data";
 import { findAction } from "project-editor/features/action/action";
 import {
@@ -185,10 +185,23 @@ function migrateStyleProperty(jsObject: any, propertyName: string, propertyName2
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type WidgetParent = Page | Widget;
+// Return immediate parent, which can be of type Page or Widget
+// (i.e. ContainerWidget, ListWidget, GridWidget, SelectWidget)
+export function getWidgetParent(widget: Widget) {
+    let parent = getParent(widget);
+    if (isArray(parent)) {
+        parent = getParent(parent);
+    }
+    return parent as Widget | Page;
+}
 
-interface IWidget {
+////////////////////////////////////////////////////////////////////////////////
+
+export interface IWidget {
     type: string;
+    style: IStyle;
+    data?: string;
+    action?: string;
 
     left: number;
     top: number;
@@ -196,7 +209,7 @@ interface IWidget {
     height: number;
 }
 
-export class Widget extends EezObject {
+export class Widget extends EezObject implements IWidget {
     @observable type: string;
     @observable style: Style;
     @observable data?: string;
@@ -430,25 +443,15 @@ export class Widget extends EezObject {
         let y = this.top;
 
         for (
-            let parent = this.parent;
+            let parent = getWidgetParent(this);
             parent && !(parent instanceof Page);
-            parent = parent.parent
+            parent = getWidgetParent(parent)
         ) {
             x += parent.left;
             y += parent.top;
         }
 
         return `${x}, ${y}`;
-    }
-
-    @computed
-    get rect() {
-        return {
-            left: this.left,
-            top: this.top,
-            width: this.width,
-            height: this.height
-        };
     }
 
     @computed
@@ -461,19 +464,9 @@ export class Widget extends EezObject {
         return this.style;
     }
 
-    // Return immediate parent, which can be of type Page or Widget
-    // (i.e. ContainerWidget, ListWidget, GridWidget, SelectWidget)
-    get parent(): WidgetParent {
-        let parent = getParent(this);
-        if (isArray(parent)) {
-            parent = getParent(parent);
-        }
-        return parent as WidgetParent;
-    }
-
     // If this widget is immediate child of SelectWidgetProperties parent return that parent.
     get selectParent(): SelectWidget | undefined {
-        const parent = this.parent;
+        const parent = getWidgetParent(this);
         if (parent instanceof SelectWidget) {
             return parent;
         }
@@ -483,7 +476,7 @@ export class Widget extends EezObject {
     check() {
         let messages: output.Message[] = [];
 
-        if (this.rect.left < 0) {
+        if (this.left < 0) {
             messages.push(
                 new output.Message(
                     output.Type.ERROR,
@@ -493,7 +486,7 @@ export class Widget extends EezObject {
             );
         }
 
-        if (this.rect.top < 0) {
+        if (this.top < 0) {
             messages.push(
                 new output.Message(
                     output.Type.ERROR,
@@ -503,7 +496,7 @@ export class Widget extends EezObject {
             );
         }
 
-        if (this.parent && this.rect.left + this.rect.width > this.parent.rect.width) {
+        if (this.left + this.width > getWidgetParent(this).width) {
             messages.push(
                 new output.Message(
                     output.Type.ERROR,
@@ -513,7 +506,7 @@ export class Widget extends EezObject {
             );
         }
 
-        if (this.parent && this.rect.top + this.rect.height > this.parent.rect.height) {
+        if (this.top + this.height > getWidgetParent(this).height) {
             messages.push(
                 new output.Message(
                     output.Type.ERROR,
@@ -566,10 +559,10 @@ export class Widget extends EezObject {
 
         var selectWidgetJsObject = Object.assign({}, SelectWidget.classInfo.defaultValue);
 
-        selectWidgetJsObject.left = this.rect.left;
-        selectWidgetJsObject.top = this.rect.top;
-        selectWidgetJsObject.width = this.rect.width;
-        selectWidgetJsObject.height = this.rect.height;
+        selectWidgetJsObject.left = this.left;
+        selectWidgetJsObject.top = this.top;
+        selectWidgetJsObject.width = this.width;
+        selectWidgetJsObject.height = this.height;
 
         thisWidgetJsObject.left = 0;
         delete thisWidgetJsObject.left_;
@@ -585,17 +578,17 @@ export class Widget extends EezObject {
     }
 
     static createWidgets(fromWidgets: Widget[]) {
-        let x1 = fromWidgets[0].rect.left;
-        let y1 = fromWidgets[0].rect.top;
-        let x2 = fromWidgets[0].rect.left + fromWidgets[0].rect.width;
-        let y2 = fromWidgets[0].rect.top + fromWidgets[0].rect.height;
+        let x1 = fromWidgets[0].left;
+        let y1 = fromWidgets[0].top;
+        let x2 = fromWidgets[0].left + fromWidgets[0].width;
+        let y2 = fromWidgets[0].top + fromWidgets[0].height;
 
         for (let i = 1; i < fromWidgets.length; i++) {
             let widget = fromWidgets[i];
-            x1 = Math.min(widget.rect.left, x1);
-            y1 = Math.min(widget.rect.top, y1);
-            x2 = Math.max(widget.rect.left + widget.rect.width, x2);
-            y2 = Math.max(widget.rect.top + widget.rect.height, y2);
+            x1 = Math.min(widget.left, x1);
+            y1 = Math.min(widget.top, y1);
+            x2 = Math.max(widget.left + widget.width, x2);
+            y2 = Math.max(widget.top + widget.height, y2);
         }
 
         const widgets = [];
@@ -604,9 +597,9 @@ export class Widget extends EezObject {
             let widget = fromWidgets[i];
             let widgetJsObject = objectToJS(widget);
 
-            widgetJsObject.left = fromWidgets[i].rect.left - x1;
+            widgetJsObject.left = fromWidgets[i].left - x1;
             delete widgetJsObject.left_;
-            widgetJsObject.top = fromWidgets[i].rect.top - y1;
+            widgetJsObject.top = fromWidgets[i].top - y1;
             delete widgetJsObject.top_;
 
             widgets.push(widgetJsObject);
@@ -841,15 +834,18 @@ registerClass(Widget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface IContainerWidget extends IWidget {
+export interface IContainerWidget extends IWidget {
+    name?: string;
     widgets: IWidget[];
+    overlay?: string;
+    shadow?: boolean;
 }
 
-export class ContainerWidget extends Widget {
-    @observable name: string;
+export class ContainerWidget extends Widget implements IContainerWidget {
+    @observable name?: string;
     @observable widgets: Widget[];
-    @observable overlay: string;
-    @observable shadow: boolean;
+    @observable overlay?: string;
+    @observable shadow?: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         label: (widget: ContainerWidget) => {
@@ -884,6 +880,9 @@ export class ContainerWidget extends Widget {
 
         defaultValue: {
             type: "Container",
+            style: {
+                inheritFrom: "default"
+            },
             widgets: [],
             left: 0,
             top: 0,
@@ -931,7 +930,13 @@ registerClass(ContainerWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ListWidget extends Widget {
+export interface IListWidget extends IWidget {
+    itemWidget?: IWidget;
+    listType?: string;
+    gap?: number;
+}
+
+export class ListWidget extends Widget implements IListWidget {
     @observable itemWidget?: Widget;
     @observable listType?: string;
     @observable gap?: number;
@@ -1008,8 +1013,6 @@ export class ListWidget extends Widget {
             return null;
         }
 
-        const itemRect = itemWidget.rect;
-
         const dataValue = this.data ? dataContext.get(this.data) : 0;
 
         if (!dataValue || !Array.isArray(dataValue)) {
@@ -1023,9 +1026,9 @@ export class ListWidget extends Widget {
             const gap = this.gap || 0;
 
             if (this.listType === "horizontal") {
-                xListItem += i * (itemRect.width + gap);
+                xListItem += i * (itemWidget.width + gap);
             } else {
-                yListItem += i * (itemRect.height + gap);
+                yListItem += i * (itemWidget.height + gap);
             }
 
             return (
@@ -1035,8 +1038,8 @@ export class ListWidget extends Widget {
                     rect={{
                         left: xListItem,
                         top: yListItem,
-                        width: itemRect.width,
-                        height: itemRect.height
+                        width: itemWidget.width,
+                        height: itemWidget.height
                     }}
                     dataContext={new DataContext(dataContext, dataValue[i])}
                 />
@@ -1049,7 +1052,12 @@ registerClass(ListWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GridWidget extends Widget {
+export interface IGridWidget extends IWidget {
+    itemWidget?: IWidget;
+    gridFlow?: string;
+}
+
+export class GridWidget extends Widget implements IGridWidget {
     @observable itemWidget?: Widget;
     @observable gridFlow?: string;
 
@@ -1120,7 +1128,6 @@ export class GridWidget extends Widget {
         }
 
         const gridRect = rect;
-        const itemRect = itemWidget.rect;
 
         const dataValue = this.data ? dataContext.get(this.data) : 0;
 
@@ -1129,8 +1136,8 @@ export class GridWidget extends Widget {
         }
 
         return _range(dataValue.length).map(i => {
-            const rows = Math.floor(gridRect.width / itemRect.width);
-            const cols = Math.floor(gridRect.height / itemRect.height);
+            const rows = Math.floor(gridRect.width / itemWidget.width);
+            const cols = Math.floor(gridRect.height / itemWidget.height);
 
             let row;
             let col;
@@ -1148,8 +1155,8 @@ export class GridWidget extends Widget {
                 }
             }
 
-            let xListItem = row * itemRect.width;
-            let yListItem = col * itemRect.height;
+            let xListItem = row * itemWidget.width;
+            let yListItem = col * itemWidget.height;
 
             return (
                 <WidgetComponent
@@ -1158,8 +1165,8 @@ export class GridWidget extends Widget {
                     rect={{
                         left: xListItem,
                         top: yListItem,
-                        width: itemRect.width,
-                        height: itemRect.height
+                        width: itemWidget.width,
+                        height: itemWidget.height
                     }}
                     dataContext={new DataContext(dataContext, dataValue[i])}
                 />
@@ -1172,7 +1179,11 @@ registerClass(GridWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class SelectWidget extends Widget {
+export interface ISelectWidget extends IWidget {
+    widgets: IWidget[];
+}
+
+export class SelectWidget extends Widget implements ISelectWidget {
     @observable widgets: Widget[];
 
     _lastSelectedIndexInSelectWidget: number | undefined;
@@ -1397,7 +1408,12 @@ class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class LayoutViewWidget extends Widget {
+export interface ILayoutViewWidget extends IWidget {
+    layout: string;
+    context?: string;
+}
+
+export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
     @observable layout: string;
     @observable context?: string;
 
@@ -1579,7 +1595,12 @@ const hideIfNotProjectVersion1: Partial<PropertyInfo> = {
     hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion !== "v1"
 };
 
-export class DisplayDataWidget extends Widget {
+export interface IDisplayDataWidget extends IWidget {
+    focusStyle: IStyle;
+    displayOption: DisplayOption;
+}
+
+export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
     @observable focusStyle: Style;
     @observable displayOption: DisplayOption;
 
@@ -1698,7 +1719,13 @@ registerClass(DisplayDataWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class TextWidget extends Widget {
+export interface ITextWidget extends IWidget {
+    text?: string;
+    ignoreLuminocity: boolean;
+    focusStyle: IStyle;
+}
+
+export class TextWidget extends Widget implements ITextWidget {
     @observable text?: string;
     @observable ignoreLuminocity: boolean;
     @observable focusStyle: Style;
@@ -1993,7 +2020,13 @@ export const indentationGroup: IPropertyGridGroupDefinition = {
     position: 5
 };
 
-export class MultilineTextWidget extends Widget {
+export interface IMultilineTextWidget extends IWidget {
+    text?: string;
+    firstLineIndent: number;
+    hangingIndent: number;
+}
+
+export class MultilineTextWidget extends Widget implements IMultilineTextWidget {
     @observable text?: string;
     @observable firstLineIndent: number;
     @observable hangingIndent: number;
@@ -2086,7 +2119,12 @@ registerClass(MultilineTextWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class RectangleWidget extends Widget {
+export interface IRectangleWidget extends IWidget {
+    ignoreLuminocity: boolean;
+    invertColors: boolean;
+}
+
+export class RectangleWidget extends Widget implements IRectangleWidget {
     @observable
     ignoreLuminocity: boolean;
     @observable
@@ -2223,7 +2261,11 @@ class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class BitmapWidget extends Widget {
+export interface IBitmapWidget extends IWidget {
+    bitmap?: string;
+}
+
+export class BitmapWidget extends Widget implements IBitmapWidget {
     @observable
     bitmap?: string;
 
@@ -2369,7 +2411,13 @@ registerClass(BitmapWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ButtonWidget extends Widget {
+export interface IButtonWidget extends IWidget {
+    text?: string;
+    enabled?: string;
+    disabledStyle: IStyle;
+}
+
+export class ButtonWidget extends Widget implements IButtonWidget {
     @observable
     text?: string;
     @observable
@@ -2430,7 +2478,12 @@ registerClass(ButtonWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ToggleButtonWidget extends Widget {
+export interface IToggleButtonWidget extends IWidget {
+    text1?: string;
+    text2?: string;
+}
+
+export class ToggleButtonWidget extends Widget implements IToggleButtonWidget {
     @observable
     text1?: string;
     @observable
@@ -2488,7 +2541,11 @@ registerClass(ToggleButtonWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ButtonGroupWidget extends Widget {
+export interface IButtonGroupWidget extends IWidget {
+    selectedStyle: IStyle;
+}
+
+export class ButtonGroupWidget extends Widget implements IButtonGroupWidget {
     @observable selectedStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
@@ -2592,7 +2649,16 @@ registerClass(ButtonGroupWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class BarGraphWidget extends Widget {
+export interface IBarGraphWidget extends IWidget {
+    orientation?: string;
+    textStyle: IStyle;
+    line1Data?: string;
+    line1Style: IStyle;
+    line2Data?: string;
+    line2Style: IStyle;
+}
+
+export class BarGraphWidget extends Widget implements IBarGraphWidget {
     @observable orientation?: string;
     @observable textStyle: Style;
     @observable line1Data?: string;
@@ -2784,7 +2850,13 @@ registerClass(BarGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class YTGraphWidget extends Widget {
+export interface IYTGraphWidget extends IWidget {
+    y1Style: IStyle;
+    y2Data?: string;
+    y2Style: IStyle;
+}
+
+export class YTGraphWidget extends Widget implements IYTGraphWidget {
     @observable y1Style: Style;
     @observable y2Data?: string;
     @observable y2Style: Style;
@@ -2878,7 +2950,13 @@ registerClass(YTGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class UpDownWidget extends Widget {
+export interface IUpDownWidget extends IWidget {
+    buttonsStyle: IStyle;
+    downButtonText?: string;
+    upButtonText?: string;
+}
+
+export class UpDownWidget extends Widget implements IUpDownWidget {
     @observable buttonsStyle: Style;
     @observable downButtonText?: string;
     @observable upButtonText?: string;
@@ -2971,7 +3049,17 @@ registerClass(UpDownWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ListGraphWidget extends Widget {
+export interface IListGraphWidget extends IWidget {
+    dwellData?: string;
+    y1Data?: string;
+    y1Style: IStyle;
+    y2Data?: string;
+    y2Style: IStyle;
+    cursorData?: string;
+    cursorStyle: IStyle;
+}
+
+export class ListGraphWidget extends Widget implements IListGraphWidget {
     @observable dwellData?: string;
     @observable y1Data?: string;
     @observable y1Style: Style;
@@ -3096,7 +3184,11 @@ registerClass(ListGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class AppViewWidget extends Widget {
+export interface IAppViewWidget extends IWidget {
+    page: string;
+}
+
+export class AppViewWidget extends Widget implements IAppViewWidget {
     @observable
     page: string;
 
@@ -3139,7 +3231,14 @@ registerClass(AppViewWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ScrollBarWidget extends Widget {
+export interface IScrollBarWidget extends IWidget {
+    thumbStyle: IStyle;
+    buttonsStyle: IStyle;
+    leftButtonText?: string;
+    rightButtonText?: string;
+}
+
+export class ScrollBarWidget extends Widget implements IScrollBarWidget {
     @observable thumbStyle: Style;
     @observable buttonsStyle: Style;
     @observable leftButtonText?: string;
@@ -3283,7 +3382,9 @@ registerClass(ScrollBarWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ProgressWidget extends Widget {
+export interface IProgressWidget extends IWidget {}
+
+export class ProgressWidget extends Widget implements IProgressWidget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         defaultValue: {
             type: "Progress",
@@ -3328,7 +3429,9 @@ registerClass(ProgressWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class CanvasWidget extends Widget {
+export interface ICanvasWidget extends IWidget {}
+
+export class CanvasWidget extends Widget implements ICanvasWidget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         defaultValue: {
             type: "Canvas",

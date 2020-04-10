@@ -38,7 +38,21 @@ registerClass(ShortcutAction);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Shortcut extends EezObject {
+export interface IShortcut {
+    id: string;
+    name: string;
+    usedIn: string[] | undefined;
+    action: ShortcutAction;
+    keybinding: string;
+    groupName: string;
+    showInToolbar: boolean;
+    toolbarButtonPosition: number;
+    toolbarButtonColor: string;
+    requiresConfirmation: boolean;
+    selected: boolean;
+}
+
+export class Shortcut extends EezObject implements IShortcut {
     id: string;
     @observable name: string;
     @observable usedIn: string[] | undefined;
@@ -101,7 +115,11 @@ registerClass(Shortcut);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Shortcuts extends EezObject {
+export interface IShortcuts {
+    shortcuts: IShortcut[];
+}
+
+export class Shortcuts extends EezObject implements IShortcuts {
     @observable shortcuts: Shortcut[];
 
     static classInfo: ClassInfo = {

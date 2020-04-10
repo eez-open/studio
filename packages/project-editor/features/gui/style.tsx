@@ -613,7 +613,31 @@ function getInheritedValue(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Style extends EezObject {
+export interface IStyle {
+    id?: number | undefined;
+    name?: string;
+    description?: string;
+    inheritFrom?: string;
+    font?: string;
+    alignHorizontal?: string;
+    alignVertical?: string;
+    color?: string;
+    backgroundColor?: string;
+    activeColor?: string;
+    activeBackgroundColor?: string;
+    focusColor?: string;
+    focusBackgroundColor?: string;
+    borderSize?: string;
+    borderRadius?: number;
+    borderColor?: string;
+    padding?: string;
+    margin?: string;
+    opacity?: number;
+    blink?: boolean;
+    alwaysBuild?: boolean;
+}
+
+export class Style extends EezObject implements IStyle {
     @observable id: number | undefined;
     @observable name: string;
     @observable description?: string;

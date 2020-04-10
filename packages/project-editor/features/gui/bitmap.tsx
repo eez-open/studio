@@ -103,10 +103,13 @@ export class BitmapsNavigation extends NavigationComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface IBitmap {
+export interface IBitmap {
     name: string;
+    description?: string;
     image: string;
     bpp: number;
+    alwaysBuild: boolean;
+    style?: string;
 }
 
 export class Bitmap extends EezObject implements IBitmap {
@@ -197,7 +200,8 @@ export class Bitmap extends EezObject implements IBitmap {
                                 resolve({
                                     name: result.values.name,
                                     image: "data:image/png;base64," + data,
-                                    bpp: result.values.bpp
+                                    bpp: result.values.bpp,
+                                    alwaysBuild: false
                                 });
                             }
                         }

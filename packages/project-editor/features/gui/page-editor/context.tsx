@@ -24,7 +24,7 @@ import {
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 import { Transform } from "project-editor/features/gui/page-editor/transform";
 
-import { Widget } from "project-editor/features/gui/widget";
+import { Widget, getWidgetParent } from "project-editor/features/gui/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -245,7 +245,7 @@ class ViewState implements IViewState {
         const boundingRect = builder.getRect();
 
         const allWidgetsAreFromTheSameParent = !widgets.find(
-            widget => widget.parent !== widgets[0].parent
+            widget => getWidgetParent(widget) !== getWidgetParent(widgets[0])
         );
 
         UndoManager.setCombineCommands(true);
@@ -275,7 +275,7 @@ class ViewState implements IViewState {
                 } else if (where === "end-x") {
                     DocumentStore.updateObject(widget, {
                         left:
-                            widget.parent.width -
+                            getWidgetParent(widget).width -
                             boundingRect.width +
                             widget.left -
                             boundingRect.left
@@ -287,7 +287,7 @@ class ViewState implements IViewState {
                 } else if (where === "end-y") {
                     DocumentStore.updateObject(widget, {
                         top:
-                            widget.parent.height -
+                            getWidgetParent(widget).height -
                             boundingRect.height +
                             widget.top -
                             boundingRect.top

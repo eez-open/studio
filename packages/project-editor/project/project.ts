@@ -19,26 +19,31 @@ import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
 
 import "project-editor/project/builtInFeatures";
 
-import { Action } from "project-editor/features/action/action";
-import { DataItem } from "project-editor/features/data/data";
-import { Gui } from "project-editor/features/gui/gui";
-import { Scpi } from "project-editor/features/scpi/scpi";
-import { Shortcuts } from "project-editor/features/shortcuts/shortcuts";
-import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
+import { Action, IAction } from "project-editor/features/action/action";
+import { DataItem, IDataItem } from "project-editor/features/data/data";
+import { Gui, IGui } from "project-editor/features/gui/gui";
+import { Scpi, IScpi } from "project-editor/features/scpi/scpi";
+import { Shortcuts, IShortcuts } from "project-editor/features/shortcuts/shortcuts";
+import {
+    ExtensionDefinition,
+    IExtensionDefinition
+} from "project-editor/features/extension-definitions/extension-definitions";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class BuildConfiguration extends EezObject {
-    @observable
+export interface IBuildConfiguration {
     name: string;
-    @observable
     description: string;
-    @observable
     properties: string;
-    @observable
     screenOrientation: "landscape" | "portrait";
+}
+export class BuildConfiguration extends EezObject implements IBuildConfiguration {
+    @observable name: string;
+    @observable description: string;
+    @observable properties: string;
+    @observable screenOrientation: "landscape" | "portrait";
 
     static classInfo: ClassInfo = {
         properties: [
@@ -95,7 +100,13 @@ registerClass(BuildConfiguration);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class BuildFile extends EezObject {
+export interface IBuildFile {
+    fileName: string;
+    description?: string;
+    template: string;
+}
+
+export class BuildFile extends EezObject implements IBuildFile {
     @observable fileName: string;
     @observable description?: string;
     @observable template: string;
@@ -142,7 +153,12 @@ function isFilesPropertyEnumerable() {
     );
 }
 
-export class Build extends EezObject {
+export interface IBuild {
+    files: IBuildFile[];
+    configurations: IBuildConfiguration[];
+}
+
+export class Build extends EezObject implements IBuild {
     @observable configurations: BuildConfiguration[];
     @observable files: BuildFile[];
     @observable destinationFolder?: string;
@@ -177,15 +193,16 @@ registerClass(Build);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class General extends EezObject {
-    @observable
+export interface IGeneral {
     projectVersion: "v1" | "v2";
-
-    @observable
     scpiDocFolder?: string;
-
-    @observable
     masterProject: string;
+}
+
+export class General extends EezObject implements IGeneral {
+    @observable projectVersion: "v1" | "v2";
+    @observable scpiDocFolder?: string;
+    @observable masterProject: string;
 
     static classInfo: ClassInfo = {
         label: () => "General",
@@ -218,7 +235,13 @@ registerClass(General);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Settings extends EezObject {
+export interface ISettings {
+    build: IBuild;
+    general: IGeneral;
+    scpiHelpFolder?: string;
+}
+
+export class Settings extends EezObject implements ISettings {
     @observable general: General;
     @observable build: Build;
     @observable scpiHelpFolder?: string;
@@ -305,7 +328,17 @@ function getProjectClassInfo() {
     return projectClassInfo;
 }
 
-export class Project extends EezObject {
+export interface IProject {
+    settings: ISettings;
+    actions: IAction[];
+    data: IDataItem[];
+    scpi: IScpi;
+    gui: IGui;
+    shortcuts: IShortcuts;
+    extensionDefinitions: IExtensionDefinition[];
+}
+
+export class Project extends EezObject implements IProject {
     @observable settings: Settings;
     @observable data: DataItem[];
     @observable actions: Action[];
