@@ -434,6 +434,87 @@ export class Widget extends EezObject implements IWidget {
 
                 menuItems.unshift(...additionalMenuItems);
             }
+        },
+
+        check: (object: Widget) => {
+            let messages: output.Message[] = [];
+
+            if (object.left < 0) {
+                messages.push(
+                    new output.Message(
+                        output.Type.ERROR,
+                        "Widget is outside of its parent",
+                        getChildOfObject(object, "left")
+                    )
+                );
+            }
+
+            if (object.top < 0) {
+                messages.push(
+                    new output.Message(
+                        output.Type.ERROR,
+                        "Widget is outside of its parent",
+                        getChildOfObject(object, "top")
+                    )
+                );
+            }
+
+            if (object.left + object.width > getWidgetParent(object).width) {
+                messages.push(
+                    new output.Message(
+                        output.Type.ERROR,
+                        "Widget is outside of its parent",
+                        getChildOfObject(object, "width")
+                    )
+                );
+            }
+
+            if (object.top + object.height > getWidgetParent(object).height) {
+                messages.push(
+                    new output.Message(
+                        output.Type.ERROR,
+                        "Widget is outside of its parent",
+                        getChildOfObject(object, "height")
+                    )
+                );
+            }
+
+            let selectParent = object.selectParent;
+            if (selectParent) {
+                if (object.width != selectParent.width) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.WARNING,
+                            "Child of select has different width",
+                            object
+                        )
+                    );
+                }
+
+                if (object.height != selectParent.height) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.WARNING,
+                            "Child of select has different height",
+                            object
+                        )
+                    );
+                }
+            }
+
+            if (object.data) {
+                if (!findDataItem(object.data)) {
+                    messages.push(output.propertyNotFoundMessage(object, "data"));
+                }
+            }
+
+            if (object.action) {
+                if (!findAction(object.action)) {
+                    messages.push(output.propertyNotFoundMessage(object, "action"));
+                }
+            }
+
+            return messages;
         }
     };
 
@@ -471,87 +552,6 @@ export class Widget extends EezObject implements IWidget {
             return parent;
         }
         return undefined;
-    }
-
-    check() {
-        let messages: output.Message[] = [];
-
-        if (this.left < 0) {
-            messages.push(
-                new output.Message(
-                    output.Type.ERROR,
-                    "Widget is outside of its parent",
-                    getChildOfObject(this, "left")
-                )
-            );
-        }
-
-        if (this.top < 0) {
-            messages.push(
-                new output.Message(
-                    output.Type.ERROR,
-                    "Widget is outside of its parent",
-                    getChildOfObject(this, "top")
-                )
-            );
-        }
-
-        if (this.left + this.width > getWidgetParent(this).width) {
-            messages.push(
-                new output.Message(
-                    output.Type.ERROR,
-                    "Widget is outside of its parent",
-                    getChildOfObject(this, "width")
-                )
-            );
-        }
-
-        if (this.top + this.height > getWidgetParent(this).height) {
-            messages.push(
-                new output.Message(
-                    output.Type.ERROR,
-                    "Widget is outside of its parent",
-                    getChildOfObject(this, "height")
-                )
-            );
-        }
-
-        let selectParent = this.selectParent;
-        if (selectParent) {
-            if (this.width != selectParent.width) {
-                messages.push(
-                    new output.Message(
-                        output.Type.WARNING,
-                        "Child of select has different width",
-                        this
-                    )
-                );
-            }
-
-            if (this.height != selectParent.height) {
-                messages.push(
-                    new output.Message(
-                        output.Type.WARNING,
-                        "Child of select has different height",
-                        this
-                    )
-                );
-            }
-        }
-
-        if (this.data) {
-            if (!findDataItem(this.data)) {
-                messages.push(output.propertyNotFoundMessage(this, "data"));
-            }
-        }
-
-        if (this.action) {
-            if (!findAction(this.action)) {
-                messages.push(output.propertyNotFoundMessage(this, "action"));
-            }
-        }
-
-        return messages;
     }
 
     putInSelect() {
@@ -890,7 +890,19 @@ export class ContainerWidget extends Widget implements IContainerWidget {
             height: 32
         } as IContainerWidget,
 
-        icon: "_images/widgets/Container.png"
+        icon: "_images/widgets/Container.png",
+
+        check: (object: ContainerWidget) => {
+            let messages: output.Message[] = [];
+
+            if (object.overlay) {
+                if (!findDataItem(object.overlay)) {
+                    messages.push(output.propertyNotFoundMessage(object, "overlay"));
+                }
+            }
+
+            return messages;
+        }
     });
 
     render(rect: Rect, dataContext: DataContext) {
@@ -911,18 +923,6 @@ export class ContainerWidget extends Widget implements IContainerWidget {
             }
             style.opacity = getStyleProperty(this.style, "opacity") / 255;
         }
-    }
-
-    check() {
-        let messages: output.Message[] = [];
-
-        if (this.overlay) {
-            if (!findDataItem(this.overlay)) {
-                messages.push(output.propertyNotFoundMessage(this, "overlay"));
-            }
-        }
-
-        return super.check().concat(messages);
     }
 }
 
@@ -988,24 +988,24 @@ export class ListWidget extends Widget implements IListWidget {
             gap: 0
         },
 
-        icon: "_images/widgets/List.png"
+        icon: "_images/widgets/List.png",
+
+        check: (object: ListWidget) => {
+            let messages: output.Message[] = [];
+
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
+            }
+
+            if (!object.itemWidget) {
+                messages.push(
+                    new output.Message(output.Type.ERROR, "List item widget is missing", object)
+                );
+            }
+
+            return messages;
+        }
     });
-
-    check() {
-        let messages: output.Message[] = [];
-
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (!this.itemWidget) {
-            messages.push(
-                new output.Message(output.Type.ERROR, "List item widget is missing", this)
-            );
-        }
-
-        return super.check().concat(messages);
-    }
 
     render(rect: Rect, dataContext: DataContext) {
         const itemWidget = this.itemWidget;
@@ -1102,24 +1102,24 @@ export class GridWidget extends Widget implements IGridWidget {
             height: 64
         },
 
-        icon: "_images/widgets/Grid.png"
+        icon: "_images/widgets/Grid.png",
+
+        check: (object: GridWidget) => {
+            let messages: output.Message[] = [];
+
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
+            }
+
+            if (!object.itemWidget) {
+                messages.push(
+                    new output.Message(output.Type.ERROR, "Grid item widget is missing", object)
+                );
+            }
+
+            return messages;
+        }
     });
-
-    check() {
-        let messages: output.Message[] = [];
-
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (!this.itemWidget) {
-            messages.push(
-                new output.Message(output.Type.ERROR, "Grid item widget is missing", this)
-            );
-        }
-
-        return super.check().concat(messages);
-    }
 
     render(rect: Rect, dataContext: DataContext) {
         const itemWidget = this.itemWidget;
@@ -1228,49 +1228,49 @@ export class SelectWidget extends Widget implements ISelectWidget {
             height: 32
         },
 
-        icon: "_images/widgets/Select.png"
-    });
+        icon: "_images/widgets/Select.png",
 
-    check() {
-        let messages: output.Message[] = [];
+        check: (object: SelectWidget) => {
+            let messages: output.Message[] = [];
 
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
-        } else {
-            let dataItem = findDataItem(this.data);
-            if (dataItem) {
-                let enumItems: string[] = [];
-                if (dataItem.type == "enum") {
-                    try {
-                        enumItems = JSON.parse(dataItem.enumItems || "[]");
-                    } catch (err) {
-                        enumItems = [];
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
+            } else {
+                let dataItem = findDataItem(object.data);
+                if (dataItem) {
+                    let enumItems: string[] = [];
+                    if (dataItem.type == "enum") {
+                        try {
+                            enumItems = JSON.parse(dataItem.enumItems || "[]");
+                        } catch (err) {
+                            enumItems = [];
+                        }
+                    } else if (dataItem.type == "boolean") {
+                        enumItems = ["0", "1"];
                     }
-                } else if (dataItem.type == "boolean") {
-                    enumItems = ["0", "1"];
-                }
-                if (enumItems.length > this.widgets.length) {
-                    messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
-                            "Some select children are missing",
-                            this
-                        )
-                    );
-                } else if (enumItems.length < this.widgets.length) {
-                    messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
-                            "Too many select children defined",
-                            this
-                        )
-                    );
+                    if (enumItems.length > object.widgets.length) {
+                        messages.push(
+                            new output.Message(
+                                output.Type.ERROR,
+                                "Some select children are missing",
+                                object
+                            )
+                        );
+                    } else if (enumItems.length < object.widgets.length) {
+                        messages.push(
+                            new output.Message(
+                                output.Type.ERROR,
+                                "Too many select children defined",
+                                object
+                            )
+                        );
+                    }
                 }
             }
-        }
 
-        return super.check().concat(messages);
-    }
+            return messages;
+        }
+    });
 
     getChildLabel(childObject: Widget) {
         if (this.widgets) {
@@ -1451,43 +1451,47 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
             height: 32
         },
 
-        icon: "_images/widgets/LayoutView.png"
-    });
+        icon: "_images/widgets/LayoutView.png",
 
-    check() {
-        let messages: output.Message[] = [];
+        check: (object: LayoutViewWidget) => {
+            let messages: output.Message[] = [];
 
-        if (!this.data && !this.layout) {
-            messages.push(
-                new output.Message(output.Type.ERROR, "Either layout or data must be set", this)
-            );
-        } else {
-            if (this.data && this.layout) {
+            if (!object.data && !object.layout) {
                 messages.push(
                     new output.Message(
                         output.Type.ERROR,
-                        "Both layout and data set, only layout is used",
-                        this
+                        "Either layout or data must be set",
+                        object
                     )
                 );
-            }
+            } else {
+                if (object.data && object.layout) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Both layout and data set, only layout is used",
+                            object
+                        )
+                    );
+                }
 
-            if (this.layout) {
-                let layout = findPage(this.layout);
-                if (!layout) {
-                    messages.push(output.propertyNotFoundMessage(this, "layout"));
+                if (object.layout) {
+                    let layout = findPage(object.layout);
+                    if (!layout) {
+                        messages.push(output.propertyNotFoundMessage(object, "layout"));
+                    }
                 }
             }
-        }
 
-        if (this.context) {
-            if (!findDataItem(this.context)) {
-                messages.push(output.propertyNotFoundMessage(this, "context"));
+            if (object.context) {
+                if (!findDataItem(object.context)) {
+                    messages.push(output.propertyNotFoundMessage(object, "context"));
+                }
             }
-        }
 
-        return super.check().concat(messages);
-    }
+            return messages;
+        }
+    });
 
     get layoutPage() {
         let layout;
@@ -1652,24 +1656,24 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
             displayOption: 0
         },
 
-        icon: "_images/widgets/Data.png"
-    });
+        icon: "_images/widgets/Data.png",
 
-    check() {
-        let messages: output.Message[] = [];
+        check: (object: DisplayDataWidget) => {
+            let messages: output.Message[] = [];
 
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (this.displayOption === undefined) {
-            if ((ProjectStore.project as Project).settings.general.projectVersion !== "v1") {
-                messages.push(output.propertyNotSetMessage(this, "displayOption"));
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
             }
-        }
 
-        return super.check().concat(messages);
-    }
+            if (object.displayOption === undefined) {
+                if ((ProjectStore.project as Project).settings.general.projectVersion !== "v1") {
+                    messages.push(output.propertyNotSetMessage(object, "displayOption"));
+                }
+            }
+
+            return messages;
+        }
+    });
 
     draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         let text = (this.data && (dataContext.get(this.data) as string)) || "";
@@ -1765,18 +1769,18 @@ export class TextWidget extends Widget implements ITextWidget {
             height: 32
         },
 
-        icon: "_images/widgets/Text.png"
-    });
+        icon: "_images/widgets/Text.png",
 
-    check() {
-        let messages: output.Message[] = [];
+        check: (object: TextWidget) => {
+            let messages: output.Message[] = [];
 
-        if (!this.text && !this.data) {
-            messages.push(output.propertyNotSetMessage(this, "text"));
+            if (!object.text && !object.data) {
+                messages.push(output.propertyNotSetMessage(object, "text"));
+            }
+
+            return messages;
         }
-
-        return super.check().concat(messages);
-    }
+    });
 
     draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         let text = this.text ? this.text : this.data ? (dataContext.get(this.data) as string) : "";
@@ -2071,18 +2075,18 @@ export class MultilineTextWidget extends Widget implements IMultilineTextWidget 
             hangingIndent: 0
         },
 
-        icon: "_images/widgets/MultilineText.png"
-    });
+        icon: "_images/widgets/MultilineText.png",
 
-    check() {
-        let messages: output.Message[] = [];
+        check: (object: MultilineTextWidget) => {
+            let messages: output.Message[] = [];
 
-        if (!this.text && !this.data) {
-            messages.push(output.propertyNotSetMessage(this, "text"));
+            if (!object.text && !object.data) {
+                messages.push(output.propertyNotSetMessage(object, "text"));
+            }
+
+            return messages;
         }
-
-        return super.check().concat(messages);
-    }
+    });
 
     draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         let text = (this.data ? (dataContext.get(this.data) as string) : this.text) || "";
@@ -2154,18 +2158,18 @@ export class RectangleWidget extends Widget implements IRectangleWidget {
             height: 32
         },
 
-        icon: "_images/widgets/Rectangle.png"
-    });
+        icon: "_images/widgets/Rectangle.png",
 
-    check() {
-        let messages: output.Message[] = [];
+        check: (object: RectangleWidget) => {
+            let messages: output.Message[] = [];
 
-        if (this.data) {
-            messages.push(output.propertySetButNotUsedMessage(this, "data"));
+            if (object.data) {
+                messages.push(output.propertySetButNotUsedMessage(object, "data"));
+            }
+
+            return messages;
         }
-
-        return super.check().concat(messages);
-    }
+    });
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
         const w = rect.width;
@@ -2292,37 +2296,41 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
 
         defaultValue: { type: "Bitmap", left: 0, top: 0, width: 64, height: 32 },
 
-        icon: "_images/widgets/Bitmap.png"
-    });
+        icon: "_images/widgets/Bitmap.png",
 
-    check() {
-        let messages: output.Message[] = [];
+        check: (object: BitmapWidget) => {
+            let messages: output.Message[] = [];
 
-        if (!this.data && !this.bitmap) {
-            messages.push(
-                new output.Message(output.Type.ERROR, "Either bitmap or data must be set", this)
-            );
-        } else {
-            if (this.data && this.bitmap) {
+            if (!object.data && !object.bitmap) {
                 messages.push(
                     new output.Message(
                         output.Type.ERROR,
-                        "Both bitmap and data set, only bitmap is used",
-                        this
+                        "Either bitmap or data must be set",
+                        object
                     )
                 );
-            }
+            } else {
+                if (object.data && object.bitmap) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Both bitmap and data set, only bitmap is used",
+                            object
+                        )
+                    );
+                }
 
-            if (this.bitmap) {
-                let bitmap = findBitmap(this.bitmap);
-                if (!bitmap) {
-                    messages.push(output.propertyNotFoundMessage(this, "bitmap"));
+                if (object.bitmap) {
+                    let bitmap = findBitmap(object.bitmap);
+                    if (!bitmap) {
+                        messages.push(output.propertyNotFoundMessage(object, "bitmap"));
+                    }
                 }
             }
-        }
 
-        return super.check().concat(messages);
-    }
+            return messages;
+        }
+    });
 
     @computed
     get bitmapObject() {
@@ -2442,26 +2450,26 @@ export class ButtonWidget extends Widget implements IButtonWidget {
 
         defaultValue: { type: "Button", left: 0, top: 0, width: 32, height: 32 },
 
-        icon: "_images/widgets/Button.png"
-    });
+        icon: "_images/widgets/Button.png",
 
-    check() {
-        let messages: output.Message[] = [];
+        check: (object: ButtonWidget) => {
+            let messages: output.Message[] = [];
 
-        if (!this.text && !this.data) {
-            messages.push(output.propertyNotSetMessage(this, "text"));
-        }
-
-        if (this.enabled) {
-            if (!findDataItem(this.enabled)) {
-                messages.push(output.propertyNotFoundMessage(this, "enabled"));
+            if (!object.text && !object.data) {
+                messages.push(output.propertyNotSetMessage(object, "text"));
             }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "enabled"));
-        }
 
-        return super.check().concat(messages);
-    }
+            if (object.enabled) {
+                if (!findDataItem(object.enabled)) {
+                    messages.push(output.propertyNotFoundMessage(object, "enabled"));
+                }
+            } else {
+                messages.push(output.propertyNotSetMessage(object, "enabled"));
+            }
+
+            return messages;
+        }
+    });
 
     draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         let text = this.data && dataContext.get(this.data);
@@ -2511,26 +2519,26 @@ export class ToggleButtonWidget extends Widget implements IToggleButtonWidget {
             height: 32
         },
 
-        icon: "_images/widgets/ToggleButton.png"
+        icon: "_images/widgets/ToggleButton.png",
+
+        check: (object: ToggleButtonWidget) => {
+            let messages: output.Message[] = [];
+
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
+            }
+
+            if (!object.text1) {
+                messages.push(output.propertyNotSetMessage(object, "text1"));
+            }
+
+            if (!object.text2) {
+                messages.push(output.propertyNotSetMessage(object, "text2"));
+            }
+
+            return messages;
+        }
     });
-
-    check() {
-        let messages: output.Message[] = [];
-
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (!this.text1) {
-            messages.push(output.propertyNotSetMessage(this, "text1"));
-        }
-
-        if (!this.text2) {
-            messages.push(output.propertyNotSetMessage(this, "text2"));
-        }
-
-        return super.check().concat(messages);
-    }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
         return drawText(this.text1 || "", rect.width, rect.height, this.style, false);
@@ -2550,6 +2558,7 @@ export class ButtonGroupWidget extends Widget implements IButtonGroupWidget {
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [makeStylePropertyInfo("selectedStyle")],
+
         defaultValue: {
             type: "ButtonGroup",
             left: 0,
@@ -2558,18 +2567,18 @@ export class ButtonGroupWidget extends Widget implements IButtonGroupWidget {
             height: 32
         },
 
-        icon: "_images/widgets/ButtonGroup.png"
-    });
+        icon: "_images/widgets/ButtonGroup.png",
 
-    check() {
-        let messages: output.Message[] = [];
+        check: (object: ButtonGroupWidget) => {
+            let messages: output.Message[] = [];
 
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
+            }
+
+            return messages;
         }
-
-        return super.check().concat(messages);
-    }
+    });
 
     draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         let buttonLabels = (this.data && dataContext.getValueList(this.data)) || [];
@@ -2709,34 +2718,34 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
             orientation: "left-right"
         },
 
-        icon: "_images/widgets/BarGraph.png"
+        icon: "_images/widgets/BarGraph.png",
+
+        check: (object: BarGraphWidget) => {
+            let messages: output.Message[] = [];
+
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
+            }
+
+            if (object.line1Data) {
+                if (!findDataItem(object.line1Data)) {
+                    messages.push(output.propertyNotFoundMessage(object, "line1Data"));
+                }
+            } else {
+                messages.push(output.propertyNotSetMessage(object, "line1Data"));
+            }
+
+            if (object.line2Data) {
+                if (!findDataItem(object.line2Data)) {
+                    messages.push(output.propertyNotFoundMessage(object, "line2Data"));
+                }
+            } else {
+                messages.push(output.propertyNotSetMessage(object, "line2Data"));
+            }
+
+            return messages;
+        }
     });
-
-    check() {
-        let messages: output.Message[] = [];
-
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (this.line1Data) {
-            if (!findDataItem(this.line1Data)) {
-                messages.push(output.propertyNotFoundMessage(this, "line1Data"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "line1Data"));
-        }
-
-        if (this.line2Data) {
-            if (!findDataItem(this.line2Data)) {
-                messages.push(output.propertyNotFoundMessage(this, "line2Data"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "line2Data"));
-        }
-
-        return super.check().concat(messages);
-    }
 
     draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         let barGraphWidget = this;
@@ -2881,28 +2890,28 @@ export class YTGraphWidget extends Widget implements IYTGraphWidget {
             height: 32
         },
 
-        icon: "_images/widgets/YTGraph.png"
-    });
+        icon: "_images/widgets/YTGraph.png",
 
-    check() {
-        let messages: output.Message[] = [];
+        check: (object: YTGraphWidget) => {
+            let messages: output.Message[] = [];
 
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (ProjectStore.project.settings.general.projectVersion === "v1") {
-            if (this.y2Data) {
-                if (!findDataItem(this.y2Data)) {
-                    messages.push(output.propertyNotFoundMessage(this, "y2Data"));
-                }
-            } else {
-                messages.push(output.propertyNotSetMessage(this, "y2Data"));
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
             }
-        }
 
-        return super.check().concat(messages);
-    }
+            if (ProjectStore.project.settings.general.projectVersion === "v1") {
+                if (object.y2Data) {
+                    if (!findDataItem(object.y2Data)) {
+                        messages.push(output.propertyNotFoundMessage(object, "y2Data"));
+                    }
+                } else {
+                    messages.push(output.propertyNotSetMessage(object, "y2Data"));
+                }
+            }
+
+            return messages;
+        }
+    });
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
         let ytGraphWidget = this;
@@ -2982,26 +2991,26 @@ export class UpDownWidget extends Widget implements IUpDownWidget {
             downButtonText: "<"
         },
 
-        icon: "_images/widgets/UpDown.png"
+        icon: "_images/widgets/UpDown.png",
+
+        check: (object: UpDownWidget) => {
+            let messages: output.Message[] = [];
+
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
+            }
+
+            if (!object.downButtonText) {
+                messages.push(output.propertyNotSetMessage(object, "downButtonText"));
+            }
+
+            if (!object.upButtonText) {
+                messages.push(output.propertyNotSetMessage(object, "upButtonText"));
+            }
+
+            return messages;
+        }
     });
-
-    check() {
-        let messages: output.Message[] = [];
-
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (!this.downButtonText) {
-            messages.push(output.propertyNotSetMessage(this, "downButtonText"));
-        }
-
-        if (!this.upButtonText) {
-            messages.push(output.propertyNotSetMessage(this, "upButtonText"));
-        }
-
-        return super.check().concat(messages);
-    }
 
     draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         let upDownWidget = this;
@@ -3093,50 +3102,50 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
             height: 32
         },
 
-        icon: "_images/widgets/ListGraph.png"
+        icon: "_images/widgets/ListGraph.png",
+
+        check: (object: ListGraphWidget) => {
+            let messages: output.Message[] = [];
+
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
+            }
+
+            if (object.dwellData) {
+                if (!findDataItem(object.dwellData)) {
+                    messages.push(output.propertyNotFoundMessage(object, "dwellData"));
+                }
+            } else {
+                messages.push(output.propertyNotSetMessage(object, "dwellData"));
+            }
+
+            if (object.y1Data) {
+                if (!findDataItem(object.y1Data)) {
+                    messages.push(output.propertyNotFoundMessage(object, "y1Data"));
+                }
+            } else {
+                messages.push(output.propertyNotSetMessage(object, "y1Data"));
+            }
+
+            if (object.y2Data) {
+                if (!findDataItem(object.y2Data)) {
+                    messages.push(output.propertyNotFoundMessage(object, "y2Data"));
+                }
+            } else {
+                messages.push(output.propertyNotSetMessage(object, "y2Data"));
+            }
+
+            if (object.cursorData) {
+                if (!findDataItem(object.cursorData)) {
+                    messages.push(output.propertyNotFoundMessage(object, "cursorData"));
+                }
+            } else {
+                messages.push(output.propertyNotSetMessage(object, "cursorData"));
+            }
+
+            return messages;
+        }
     });
-
-    check() {
-        let messages: output.Message[] = [];
-
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (this.dwellData) {
-            if (!findDataItem(this.dwellData)) {
-                messages.push(output.propertyNotFoundMessage(this, "dwellData"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "dwellData"));
-        }
-
-        if (this.y1Data) {
-            if (!findDataItem(this.y1Data)) {
-                messages.push(output.propertyNotFoundMessage(this, "y1Data"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "y1Data"));
-        }
-
-        if (this.y2Data) {
-            if (!findDataItem(this.y2Data)) {
-                messages.push(output.propertyNotFoundMessage(this, "y2Data"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "y2Data"));
-        }
-
-        if (this.cursorData) {
-            if (!findDataItem(this.cursorData)) {
-                messages.push(output.propertyNotFoundMessage(this, "cursorData"));
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "cursorData"));
-        }
-
-        return super.check().concat(messages);
-    }
 
     draw(rect: Rect): HTMLCanvasElement | undefined {
         let listGraphWidget = this;
@@ -3195,18 +3204,18 @@ export class AppViewWidget extends Widget implements IAppViewWidget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         defaultValue: { type: "AppView", left: 0, top: 0, width: 64, height: 32 },
 
-        icon: "_images/widgets/AppView.png"
-    });
+        icon: "_images/widgets/AppView.png",
 
-    check() {
-        let messages: output.Message[] = [];
+        check: (object: AppViewWidget) => {
+            let messages: output.Message[] = [];
 
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
+            }
+
+            return messages;
         }
-
-        return super.check().concat(messages);
-    }
+    });
 
     render(rect: Rect, dataContext: DataContext) {
         if (!this.data) {
@@ -3262,26 +3271,26 @@ export class ScrollBarWidget extends Widget implements IScrollBarWidget {
             rightButtonText: ">"
         },
 
-        icon: "_images/widgets/UpDown.png"
+        icon: "_images/widgets/UpDown.png",
+
+        check: (object: ScrollBarWidget) => {
+            let messages: output.Message[] = [];
+
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
+            }
+
+            if (!object.leftButtonText) {
+                messages.push(output.propertyNotSetMessage(object, "leftButtonText"));
+            }
+
+            if (!object.rightButtonText) {
+                messages.push(output.propertyNotSetMessage(object, "rightButtonText"));
+            }
+
+            return messages;
+        }
     });
-
-    check() {
-        let messages: output.Message[] = [];
-
-        if (!this.data) {
-            messages.push(output.propertyNotSetMessage(this, "data"));
-        }
-
-        if (!this.leftButtonText) {
-            messages.push(output.propertyNotSetMessage(this, "leftButtonText"));
-        }
-
-        if (!this.rightButtonText) {
-            messages.push(output.propertyNotSetMessage(this, "rightButtonText"));
-        }
-
-        return super.check().concat(messages);
-    }
 
     draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
         let widget = this;

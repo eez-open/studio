@@ -10,7 +10,7 @@ export interface IEnum {
     members: IEnumMember[];
 }
 
-export type ParameterTypeType =
+export type IParameterTypeType =
     | "any"
     | "nr1"
     | "nr2"
@@ -22,7 +22,7 @@ export type ParameterTypeType =
     | "discrete";
 
 export interface IParameterType {
-    type: ParameterTypeType;
+    type: IParameterTypeType;
     enumeration?: string;
 }
 
@@ -109,7 +109,7 @@ export function getSdlParameterType(parameterType: IParameterType) {
     return "<UnknownType />";
 }
 
-export function getSdlSemanticType(responseType: ResponseType | ParameterTypeType) {
+export function getSdlSemanticType(responseType: ResponseType | IParameterTypeType) {
     if (responseType === "nr1") {
         return "Integer";
     }

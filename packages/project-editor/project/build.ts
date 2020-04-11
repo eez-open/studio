@@ -12,7 +12,8 @@ import {
     getProperty,
     IMessage,
     getArrayAndObjectProperties,
-    getPropertyInfo
+    getPropertyInfo,
+    getClassInfo
 } from "project-editor/core/object";
 import { OutputSectionsStore } from "project-editor/core/store";
 import { Section, Type } from "project-editor/core/output";
@@ -398,14 +399,17 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
         let messages: IMessage[] = [];
 
         // call check method of the object
-        if ((object as any).check) {
-            messages = messages.concat((object as any).check());
+        if (!isArray(object)) {
+            const classCheckMethod = getClassInfo(object).check;
+            if (classCheckMethod) {
+                messages = messages.concat(classCheckMethod(object));
+            }
         }
 
         // call check from property definition
-        const check = getPropertyInfo(object) && getPropertyInfo(object).check;
-        if (check) {
-            messages = messages.concat(check(object));
+        const propertyCheckMethod = getPropertyInfo(object) && getPropertyInfo(object).check;
+        if (propertyCheckMethod) {
+            messages = messages.concat(propertyCheckMethod(object));
         }
 
         if (isArray(object)) {

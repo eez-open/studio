@@ -271,6 +271,15 @@ export class PagesNavigation extends NavigationComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface IPageOrientation {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    style?: string;
+    widgets: IWidget[];
+}
+
 export class PageOrientation extends EezObject {
     @observable x: number;
     @observable y: number;
@@ -351,7 +360,7 @@ export interface IPage {
     description?: string;
     style?: string;
     widgets: IWidget[];
-    usedIn: string[] | undefined;
+    usedIn?: string[];
     closePageIfTouchedOutside: boolean;
 
     left: number;
@@ -359,7 +368,7 @@ export interface IPage {
     width: number;
     height: number;
 
-    portrait: PageOrientation;
+    portrait: IPageOrientation;
 
     isUsedAsCustomWidget: boolean;
 
@@ -371,7 +380,7 @@ export class Page extends EezObject implements IPage {
     @observable description?: string;
     @observable style?: string;
     @observable widgets: Widget[];
-    @observable usedIn: string[] | undefined;
+    @observable usedIn?: string[];
     @observable closePageIfTouchedOutside: boolean;
 
     @observable left: number;
@@ -503,18 +512,23 @@ export class Page extends EezObject implements IPage {
         },
         editorComponent: PageEditor,
         navigationComponent: PagesNavigation,
-        icon: "filter_none"
-    };
+        icon: "filter_none",
+        check: (object: Page) => {
+            let messages: output.Message[] = [];
 
-    @computed
-    get rect() {
-        return {
-            left: this.left,
-            top: this.top,
-            width: this.width,
-            height: this.height
-        };
-    }
+            if (object.dataContextOverrides) {
+                try {
+                    JSON.parse(object.dataContextOverrides);
+                } catch {
+                    messages.push(
+                        output.propertyInvalidValueMessage(object, "dataContextOverrides")
+                    );
+                }
+            }
+
+            return messages;
+        }
+    };
 
     getResizeHandlers(): IResizeHandler[] | undefined | false {
         return [
@@ -543,20 +557,6 @@ export class Page extends EezObject implements IPage {
         } catch {
             return undefined;
         }
-    }
-
-    check() {
-        let messages: output.Message[] = [];
-
-        if (this.dataContextOverrides) {
-            try {
-                JSON.parse(this.dataContextOverrides);
-            } catch {
-                messages.push(output.propertyInvalidValueMessage(this, "dataContextOverrides"));
-            }
-        }
-
-        return messages;
     }
 
     render(rect: Rect, dataContext: DataContext) {

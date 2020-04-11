@@ -693,7 +693,131 @@ export class Style extends EezObject implements IStyle {
         isEditorSupported: (object: IEezObject) => !isWidgetParentOfStyle(object),
         navigationComponent: StylesNavigation,
         icon: "format_color_fill",
-        defaultValue: {}
+        defaultValue: {},
+        check: (object: Style) => {
+            let messages: output.Message[] = [];
+
+            if (object.id != undefined) {
+                if (!(object.id > 0 || object.id < 32768)) {
+                    messages.push(
+                        new output.Message(
+                            MessageType.ERROR,
+                            `"Id": invalid value, should be greater then 0 and less then 32768.`,
+                            getChildOfObject(object, "id")
+                        )
+                    );
+                } else {
+                    if (
+                        (getParent(object) as Style[]).find(
+                            style => style !== object && style.id === object.id
+                        )
+                    ) {
+                        messages.push(output.propertyNotUniqueMessage(object, "id"));
+                    }
+                }
+            }
+
+            if (object.inheritFrom && !findStyle(object.inheritFrom)) {
+                messages.push(output.propertyNotFoundMessage(object, "inheritFrom"));
+            } else {
+                // if (!object.fontName) {
+                //     messages.push(output.propertyNotFoundMessage(object, "font"));
+                // }
+
+                let borderSizeError = Style.getRect(object.borderSizeProperty).error;
+                if (borderSizeError) {
+                    messages.push(
+                        new output.Message(
+                            MessageType.ERROR,
+                            `"Border size": ${borderSizeError}.`,
+                            getChildOfObject(object, "borderSize")
+                        )
+                    );
+                }
+
+                let borderRadius = object.borderRadiusProperty;
+                if (borderRadius < 0) {
+                    messages.push(output.propertyInvalidValueMessage(object, "borderRadius"));
+                }
+
+                let alignHorizontal = object.alignHorizontalProperty;
+                if (
+                    alignHorizontal != "left" &&
+                    alignHorizontal != "center" &&
+                    alignHorizontal != "right" &&
+                    alignHorizontal != "left-right"
+                ) {
+                    messages.push(output.propertyInvalidValueMessage(object, "alignHorizontal"));
+                }
+
+                let alignVertical = object.alignVerticalProperty;
+                if (
+                    alignVertical != "top" &&
+                    alignVertical != "center" &&
+                    alignVertical != "bottom"
+                ) {
+                    messages.push(output.propertyInvalidValueMessage(object, "alignVertical"));
+                }
+
+                if (isNaN(object.color16)) {
+                    messages.push(output.propertyInvalidValueMessage(object, "color"));
+                }
+
+                if (isNaN(object.backgroundColor16)) {
+                    messages.push(output.propertyInvalidValueMessage(object, "backgroundColor"));
+                }
+
+                if ((ProjectStore.project as Project).settings.general.projectVersion !== "v1") {
+                    if (isNaN(object.activeColor16)) {
+                        messages.push(output.propertyInvalidValueMessage(object, "activeColor"));
+                    }
+
+                    if (isNaN(object.activeBackgroundColor16)) {
+                        messages.push(
+                            output.propertyInvalidValueMessage(object, "activeBackgroundColor")
+                        );
+                    }
+
+                    if (isNaN(object.focusColor16)) {
+                        messages.push(output.propertyInvalidValueMessage(object, "focusColor"));
+                    }
+
+                    if (isNaN(object.focusBackgroundColor16)) {
+                        messages.push(
+                            output.propertyInvalidValueMessage(object, "focusBackgroundColor")
+                        );
+                    }
+                }
+
+                if (isNaN(object.borderColor16)) {
+                    messages.push(output.propertyInvalidValueMessage(object, "borderColor"));
+                }
+
+                let paddingError = Style.getRect(object.paddingProperty).error;
+                if (paddingError) {
+                    messages.push(
+                        new output.Message(
+                            MessageType.ERROR,
+                            `"Padding": ${paddingError}.`,
+                            getChildOfObject(object, "padding")
+                        )
+                    );
+                }
+
+                let marginError = Style.getRect(object.marginProperty).error;
+                if (marginError) {
+                    messages.push(
+                        new output.Message(
+                            MessageType.ERROR,
+                            `"Margin": ${marginError}.`,
+                            getChildOfObject(object, "margin")
+                        )
+                    );
+                }
+            }
+
+            return messages;
+        }
     };
 
     @computed
@@ -987,125 +1111,6 @@ export class Style extends EezObject implements IStyle {
     @computed
     get blinkProperty(): number {
         return getStyleProperty(this, "blink");
-    }
-
-    check() {
-        let messages: output.Message[] = [];
-
-        if (this.id != undefined) {
-            if (!(this.id > 0 || this.id < 32768)) {
-                messages.push(
-                    new output.Message(
-                        MessageType.ERROR,
-                        `"Id": invalid value, should be greater then 0 and less then 32768.`,
-                        getChildOfObject(this, "id")
-                    )
-                );
-            } else {
-                if (
-                    (getParent(this) as Style[]).find(
-                        style => style !== this && style.id === this.id
-                    )
-                ) {
-                    messages.push(output.propertyNotUniqueMessage(this, "id"));
-                }
-            }
-        }
-
-        if (this.inheritFrom && !findStyle(this.inheritFrom)) {
-            messages.push(output.propertyNotFoundMessage(this, "inheritFrom"));
-        } else {
-            // if (!this.fontName) {
-            //     messages.push(output.propertyNotFoundMessage(this, "font"));
-            // }
-
-            let borderSizeError = Style.getRect(this.borderSizeProperty).error;
-            if (borderSizeError) {
-                messages.push(
-                    new output.Message(
-                        MessageType.ERROR,
-                        `"Border size": ${borderSizeError}.`,
-                        getChildOfObject(this, "borderSize")
-                    )
-                );
-            }
-
-            let borderRadius = this.borderRadiusProperty;
-            if (borderRadius < 0) {
-                messages.push(output.propertyInvalidValueMessage(this, "borderRadius"));
-            }
-
-            let alignHorizontal = this.alignHorizontalProperty;
-            if (
-                alignHorizontal != "left" &&
-                alignHorizontal != "center" &&
-                alignHorizontal != "right" &&
-                alignHorizontal != "left-right"
-            ) {
-                messages.push(output.propertyInvalidValueMessage(this, "alignHorizontal"));
-            }
-
-            let alignVertical = this.alignVerticalProperty;
-            if (alignVertical != "top" && alignVertical != "center" && alignVertical != "bottom") {
-                messages.push(output.propertyInvalidValueMessage(this, "alignVertical"));
-            }
-
-            if (isNaN(this.color16)) {
-                messages.push(output.propertyInvalidValueMessage(this, "color"));
-            }
-
-            if (isNaN(this.backgroundColor16)) {
-                messages.push(output.propertyInvalidValueMessage(this, "backgroundColor"));
-            }
-
-            if ((ProjectStore.project as Project).settings.general.projectVersion !== "v1") {
-                if (isNaN(this.activeColor16)) {
-                    messages.push(output.propertyInvalidValueMessage(this, "activeColor"));
-                }
-
-                if (isNaN(this.activeBackgroundColor16)) {
-                    messages.push(
-                        output.propertyInvalidValueMessage(this, "activeBackgroundColor")
-                    );
-                }
-
-                if (isNaN(this.focusColor16)) {
-                    messages.push(output.propertyInvalidValueMessage(this, "focusColor"));
-                }
-
-                if (isNaN(this.focusBackgroundColor16)) {
-                    messages.push(output.propertyInvalidValueMessage(this, "focusBackgroundColor"));
-                }
-            }
-
-            if (isNaN(this.borderColor16)) {
-                messages.push(output.propertyInvalidValueMessage(this, "borderColor"));
-            }
-
-            let paddingError = Style.getRect(this.paddingProperty).error;
-            if (paddingError) {
-                messages.push(
-                    new output.Message(
-                        MessageType.ERROR,
-                        `"Padding": ${paddingError}.`,
-                        getChildOfObject(this, "padding")
-                    )
-                );
-            }
-
-            let marginError = Style.getRect(this.marginProperty).error;
-            if (marginError) {
-                messages.push(
-                    new output.Message(
-                        MessageType.ERROR,
-                        `"Margin": ${marginError}.`,
-                        getChildOfObject(this, "margin")
-                    )
-                );
-            }
-        }
-
-        return messages;
     }
 
     compareTo(otherStyle: Style): boolean {

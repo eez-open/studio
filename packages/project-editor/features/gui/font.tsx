@@ -193,18 +193,18 @@ registerClass(GlyphSource);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface GlyphBitmap {
+export interface IGlyphBitmap {
     width: number;
     height: number;
     pixelArray: number[];
 }
 
-function getPixelByteIndex(glyphBitmap: GlyphBitmap, x: number, y: number): number {
+function getPixelByteIndex(glyphBitmap: IGlyphBitmap, x: number, y: number): number {
     return y * Math.floor((glyphBitmap.width + 7) / 8) + Math.floor(x / 8);
 }
 
 export function getPixel(
-    glyphBitmap: GlyphBitmap | undefined,
+    glyphBitmap: IGlyphBitmap | undefined,
     x: number,
     y: number,
     bpp: number
@@ -221,7 +221,7 @@ export function getPixel(
 }
 
 function setPixelInplace(
-    glyphBitmap: GlyphBitmap,
+    glyphBitmap: IGlyphBitmap,
     x: number,
     y: number,
     color: number,
@@ -244,7 +244,7 @@ function setPixelInplace(
 }
 
 export function setPixel(
-    glyphBitmap: GlyphBitmap,
+    glyphBitmap: IGlyphBitmap,
     x: number,
     y: number,
     color: number,
@@ -260,7 +260,7 @@ export function setPixel(
     return result;
 }
 
-function resizeGlyphBitmap(glyphBitmap: GlyphBitmap, width: number, height: number, bpp: number) {
+function resizeGlyphBitmap(glyphBitmap: IGlyphBitmap, width: number, height: number, bpp: number) {
     let result = {
         width: width,
         height: height,
@@ -291,14 +291,14 @@ export interface EditorImageHitTestResult {
     rect: Rect;
 }
 
-interface IGlyph {
+export interface IGlyph {
     encoding: number;
     x: number;
     y: number;
     width: number;
     height: number;
     dx: number;
-    glyphBitmap?: GlyphBitmap;
+    glyphBitmap?: IGlyphBitmap;
 }
 
 export class Glyph extends EezObject {
@@ -310,7 +310,7 @@ export class Glyph extends EezObject {
     @observable dx: number;
 
     @observable
-    glyphBitmap?: GlyphBitmap;
+    glyphBitmap?: IGlyphBitmap;
 
     static classInfo: ClassInfo = {
         label: (glyph: Glyph) => {

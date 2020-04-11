@@ -19,7 +19,7 @@ import {
     getParent
 } from "project-editor/core/object";
 
-import { IParameterType, ParameterTypeType, ResponseType } from "instrument/scpi";
+import { IParameterType, IParameterTypeType, ResponseType } from "instrument/scpi";
 
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
@@ -38,7 +38,7 @@ import {
 
 export class ScpiParameterType extends EezObject implements IParameterType {
     @observable
-    type: ParameterTypeType;
+    type: IParameterTypeType;
 
     @observable
     enumeration?: string;
@@ -92,11 +92,11 @@ export class ScpiParameterType extends EezObject implements IParameterType {
     }
 }
 
-function getScpiType(object: ScpiParameter, type: ParameterTypeType) {
+function getScpiType(object: ScpiParameter, type: IParameterTypeType) {
     return object.type.find(scpiType => scpiType.type === type);
 }
 
-function isScpiType(object: ScpiParameter, type: ParameterTypeType) {
+function isScpiType(object: ScpiParameter, type: IParameterTypeType) {
     return !!getScpiType(object, type);
 }
 
@@ -137,9 +137,9 @@ const ScpiParameterTable = styled.table`
     }
 `;
 
-interface IScpiParameter {
+export interface IScpiParameter {
     name: string;
-    type: ScpiParameterType[];
+    type: IParameterType[];
     isOptional: string;
     description: string;
 }
@@ -375,7 +375,7 @@ export class ScpiParameter extends EezObject implements IScpiParameter {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface IScpiResponse {
+export interface IScpiResponse {
     type: ResponseType;
     enumeration?: string;
     description?: string;

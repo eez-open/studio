@@ -27,7 +27,7 @@ export interface IAction {
     description?: string;
     implementationType: "native";
     implementation?: string;
-    usedIn: string[] | undefined;
+    usedIn?: string[];
 }
 
 export class Action extends EezObject implements IAction {
@@ -35,7 +35,7 @@ export class Action extends EezObject implements IAction {
     @observable description?: string;
     @observable implementationType: "native";
     @observable implementation?: string;
-    @observable usedIn: string[] | undefined;
+    @observable usedIn?: string[];
 
     static classInfo: ClassInfo = {
         properties: [

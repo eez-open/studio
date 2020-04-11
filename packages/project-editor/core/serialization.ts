@@ -133,6 +133,7 @@ export function objectToJson(
         jsObject,
         (key: string | number, value: any) => {
             if (typeof key === "string" && key[0] === "_") {
+                console.log(key, value);
                 return undefined;
             }
             return value;

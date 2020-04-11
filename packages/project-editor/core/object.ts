@@ -249,6 +249,8 @@ export interface ClassInfo {
         objects: IEezObject[],
         menuItems: Electron.MenuItem[]
     ) => void;
+
+    check?: (object: IEezObject) => IMessage[];
 }
 
 export function makeDerivedClassInfo(
@@ -293,6 +295,14 @@ export function makeDerivedClassInfo(
         derivedClassInfoProperties.beforeLoadHook = (object: IEezObject, jsObject: any) => {
             baseBeforeLoadHook(object, jsObject);
             derivedBeforeLoadHook(object, jsObject);
+        };
+    }
+
+    const baseCheck = baseClassInfo.check;
+    const derivedCheck = derivedClassInfoProperties.check;
+    if (baseCheck && derivedCheck) {
+        derivedClassInfoProperties.check = (object: IEezObject) => {
+            return baseCheck(object).concat(derivedCheck(object));
         };
     }
 

@@ -156,22 +156,6 @@ export class Gui extends EezObject implements IGui {
             }
         ],
         beforeLoadHook: (object: Gui, jsObject: any) => {
-            if (jsObject.widgets) {
-                jsObject.pages.push(
-                    ...jsObject.widgets.map((widgetType: any) => ({
-                        name: widgetType.name,
-                        description: widgetType.description,
-                        style: widgetType.style,
-                        widgets: widgetType.widgets,
-                        left: 0,
-                        top: 0,
-                        width: widgetType.width,
-                        height: widgetType.height,
-                        isUsedAsCustomWidget: true
-                    }))
-                );
-            }
-
             if (jsObject.colors) {
                 for (const color of jsObject.colors) {
                     color.id = guid();
@@ -250,20 +234,6 @@ registerFeatureImplementation("gui", {
                     colors: string[];
                 }[];
                 themeColors: any;
-                pages: {
-                    left: number;
-                    top: number;
-                    width: number;
-                    height: number;
-                    widgets: any[];
-                    landscape: {
-                        x: number;
-                        y: number;
-                        width: number;
-                        height: number;
-                        widgets: any[];
-                    };
-                }[];
             };
         }) => {
             const gui = ProjectStore.project.gui;

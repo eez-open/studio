@@ -46,38 +46,38 @@ export class ScpiEnumMember extends EezObject {
             }
         ],
 
-        defaultValue: {}
-    };
+        defaultValue: {},
 
-    check() {
-        const messages: output.Message[] = [];
+        check: (object: ScpiEnumMember) => {
+            const messages: output.Message[] = [];
 
-        if (this.name) {
-            const arr = getParent(this) as ScpiEnumMember[];
-            let thisIndex = -1;
-            let otherIndex = -1;
-            for (let i = 0; i < arr.length; ++i) {
-                if (arr[i] === this) {
-                    thisIndex = i;
-                } else if (arr[i] !== this && arr[i].name === this.name) {
-                    otherIndex = i;
+            if (object.name) {
+                const arr = getParent(object) as ScpiEnumMember[];
+                let thisIndex = -1;
+                let otherIndex = -1;
+                for (let i = 0; i < arr.length; ++i) {
+                    if (arr[i] === object) {
+                        thisIndex = i;
+                    } else if (arr[i] !== object && arr[i].name === object.name) {
+                        otherIndex = i;
+                    }
                 }
+                if (otherIndex !== -1 && thisIndex > otherIndex) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            `Member name '${object.name}' is not unique`,
+                            getChildOfObject(object, "name")
+                        )
+                    );
+                }
+            } else {
+                messages.push(output.propertyNotSetMessage(object, "name"));
             }
-            if (otherIndex !== -1 && thisIndex > otherIndex) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        `Member name '${this.name}' is not unique`,
-                        getChildOfObject(this, "name")
-                    )
-                );
-            }
-        } else {
-            messages.push(output.propertyNotSetMessage(this, "name"));
-        }
 
-        return messages;
-    }
+            return messages;
+        }
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,21 +128,20 @@ export class ScpiEnum extends EezObject implements IScpiEnum {
         },
         navigationComponent: ScpiEnumsNavigation,
         navigationComponentId: "scpi-enums",
-        icon: "format_list_numbered"
+        icon: "format_list_numbered",
+        check: (object: IScpiEnum) => {
+            const messages: output.Message[] = [];
+
+            // TODO this check is removed because it is too slow
+            // if (!isReferenced(this)) {
+            //     messages.push(
+            //         new output.Message(output.Type.WARNING, "enum not used in the project", this)
+            //     );
+            // }
+
+            return messages;
+        }
     };
-
-    check() {
-        const messages: output.Message[] = [];
-
-        // TODO this check is removed because it is too slow
-        // if (!isReferenced(this)) {
-        //     messages.push(
-        //         new output.Message(output.Type.WARNING, "enum not used in the project", this)
-        //     );
-        // }
-
-        return messages;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

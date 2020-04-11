@@ -239,8 +239,8 @@ const DragWidget = observer(
             <WidgetComponent
                 widget={pageEditorContext.dragWidget}
                 rect={{
-                    left: page.rect.left + pageEditorContext.dragWidget.left,
-                    top: page.rect.top + pageEditorContext.dragWidget.top,
+                    left: page.left + pageEditorContext.dragWidget.left,
+                    top: page.top + pageEditorContext.dragWidget.top,
                     width: pageEditorContext.dragWidget.width,
                     height: pageEditorContext.dragWidget.height
                 }}
@@ -304,8 +304,8 @@ class PageDocument implements IDocument {
     resetTransform(transform: ITransform) {
         const page = this.rootObject.object as Page;
         transform.translate = {
-            x: -page.rect.width / 2,
-            y: -page.rect.height / 2
+            x: -page.width / 2,
+            y: -page.height / 2
         };
         transform.scale = 1;
     }
@@ -602,8 +602,8 @@ export class PageEditor
                 widget.height
             );
 
-            widget.left = Math.round(left - page.rect.left);
-            widget.top = Math.round(top - page.rect.top);
+            widget.left = Math.round(left - page.left);
+            widget.top = Math.round(top - page.top);
         }
     }
 

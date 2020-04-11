@@ -78,22 +78,21 @@ export class BuildConfiguration extends EezObject implements IBuildConfiguration
                 name: "Configuration"
             });
         },
-        showInNavigation: true
-    };
+        showInNavigation: true,
+        check: (object: IBuildConfiguration) => {
+            let messages: output.Message[] = [];
 
-    check() {
-        let messages: output.Message[] = [];
-
-        if (this.properties) {
-            try {
-                JSON.parse(this.properties);
-            } catch (err) {
-                messages.push(output.propertyInvalidValueMessage(this, "properties"));
+            if (object.properties) {
+                try {
+                    JSON.parse(object.properties);
+                } catch (err) {
+                    messages.push(output.propertyInvalidValueMessage(object, "properties"));
+                }
             }
-        }
 
-        return messages;
-    }
+            return messages;
+        }
+    };
 }
 
 registerClass(BuildConfiguration);

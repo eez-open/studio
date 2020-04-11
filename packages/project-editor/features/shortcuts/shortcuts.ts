@@ -12,6 +12,11 @@ import { ShortcutsNavigation } from "project-editor/features/shortcuts/navigatio
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface IShortcutAction {
+    type: IActionType;
+    data: string;
+}
+
 export class ShortcutAction extends EezObject {
     @observable type: IActionType;
     @observable data: string;
@@ -41,8 +46,8 @@ registerClass(ShortcutAction);
 export interface IShortcut {
     id: string;
     name: string;
-    usedIn: string[] | undefined;
-    action: ShortcutAction;
+    usedIn?: string[];
+    action: IShortcutAction;
     keybinding: string;
     groupName: string;
     showInToolbar: boolean;
@@ -55,7 +60,7 @@ export interface IShortcut {
 export class Shortcut extends EezObject implements IShortcut {
     id: string;
     @observable name: string;
-    @observable usedIn: string[] | undefined;
+    @observable usedIn?: string[];
     @observable action: ShortcutAction;
     @observable keybinding: string;
     groupName: string;

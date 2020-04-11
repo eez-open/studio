@@ -32,7 +32,7 @@ export interface IDataItem {
     defaultValueList: string;
     defaultMinValue: number;
     defaultMaxValue: number;
-    usedIn: string[] | undefined;
+    usedIn?: string[];
 }
 
 export class DataItem extends EezObject implements IDataItem {
@@ -44,7 +44,7 @@ export class DataItem extends EezObject implements IDataItem {
     @observable defaultValueList: string;
     @observable defaultMinValue: number;
     @observable defaultMaxValue: number;
-    @observable usedIn: string[] | undefined;
+    @observable usedIn?: string[];
 
     static classInfo: ClassInfo = {
         properties: [

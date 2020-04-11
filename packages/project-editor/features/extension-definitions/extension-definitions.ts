@@ -210,48 +210,48 @@ export class ExtensionDefinition extends EezObject implements IExtensionDefiniti
         navigationComponent: ListNavigationWithProperties,
         hideInProperties: true,
         navigationComponentId: "extension-definitions",
-        icon: "extension"
-    };
+        icon: "extension",
+        check: (object: ExtensionDefinition) => {
+            let messages: output.Message[] = [];
 
-    check() {
-        let messages: output.Message[] = [];
-
-        if (!this.extensionName) {
-            messages.push(output.propertyNotSetMessage(this, "extensionName"));
-        }
-
-        if (!this.idn) {
-            messages.push(output.propertyNotSetMessage(this, "idn"));
-        }
-
-        if (!this.idfGuid) {
-            messages.push(output.propertyNotSetMessage(this, "idfGuid"));
-        }
-
-        if (!this.idfRevisionNumber) {
-            messages.push(output.propertyNotSetMessage(this, "idfRevisionNumber"));
-        }
-
-        let extensionDefinitions = ProjectStore.project.extensionDefinitions;
-        if (
-            extensionDefinitions.find(
-                extensionDefinition =>
-                    extensionDefinition !== this && extensionDefinition.idfGuid === this.idfGuid
-            )
-        ) {
-            messages.push(output.propertyNotUniqueMessage(this, "idfGuid"));
-        }
-
-        if (this.properties) {
-            try {
-                JSON.parse(this.properties);
-            } catch (err) {
-                messages.push(output.propertyInvalidValueMessage(this, "properties"));
+            if (!object.extensionName) {
+                messages.push(output.propertyNotSetMessage(object, "extensionName"));
             }
-        }
 
-        return messages;
-    }
+            if (!object.idn) {
+                messages.push(output.propertyNotSetMessage(object, "idn"));
+            }
+
+            if (!object.idfGuid) {
+                messages.push(output.propertyNotSetMessage(object, "idfGuid"));
+            }
+
+            if (!object.idfRevisionNumber) {
+                messages.push(output.propertyNotSetMessage(object, "idfRevisionNumber"));
+            }
+
+            let extensionDefinitions = ProjectStore.project.extensionDefinitions;
+            if (
+                extensionDefinitions.find(
+                    extensionDefinition =>
+                        extensionDefinition !== object &&
+                        extensionDefinition.idfGuid === object.idfGuid
+                )
+            ) {
+                messages.push(output.propertyNotUniqueMessage(object, "idfGuid"));
+            }
+
+            if (object.properties) {
+                try {
+                    JSON.parse(object.properties);
+                } catch (err) {
+                    messages.push(output.propertyInvalidValueMessage(object, "properties"));
+                }
+            }
+
+            return messages;
+        }
+    };
 }
 
 registerClass(ExtensionDefinition);
