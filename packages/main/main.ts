@@ -1,4 +1,4 @@
-require("app-module-path").addPath(__dirname + "/..");
+import "./fix-path";
 
 import { app, BrowserWindow } from "electron";
 import { configure } from "mobx";
@@ -16,14 +16,14 @@ configure({ enforceActions: "observed" });
 let setupFinished: boolean = false;
 let projectFilePath: string | undefined;
 
-app.on("ready", async function() {
+app.on("ready", async function () {
     // make sure there is only one instance of this application
     // var gotTheLock = app.requestSingleInstanceLock();
     // if (!gotTheLock) {
     //     app.quit();
     //     return;
     // }
-    app.on("second-instance", function(event, commandLine, workingDirectory) {
+    app.on("second-instance", function (event, commandLine, workingDirectory) {
         const projectFilePath = commandLine[commandLine.length - 1];
         if (projectFilePath.toLowerCase().endsWith(".eez-project")) {
             openFile(projectFilePath);
@@ -66,19 +66,19 @@ app.on("ready", async function() {
 });
 
 // Quit when all windows are closed.
-app.on("window-all-closed", function() {
+app.on("window-all-closed", function () {
     if (setupFinished) {
         app.quit();
     }
 });
 
-app.on("quit", function() {
+app.on("quit", function () {
     const { saveSettings } = require("main/settings") as typeof SettingsModule;
     saveSettings();
 });
 
-app.on("will-finish-launching", function() {
-    app.on("open-file", function(event, path) {
+app.on("will-finish-launching", function () {
+    app.on("open-file", function (event, path) {
         event.preventDefault();
         if (path.toLowerCase().endsWith(".eez-project")) {
             if (app.isReady()) {

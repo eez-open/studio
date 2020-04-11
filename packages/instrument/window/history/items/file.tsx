@@ -595,7 +595,7 @@ export class FileHistoryItem extends HistoryItem {
 
     @computed
     get fileState(): FileState {
-        return JSON.parse(this.message);
+        return this.message ? JSON.parse(this.message) : {};
     }
 
     @computed

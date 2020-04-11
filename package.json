@@ -30,7 +30,8 @@
         "tsc-version": "tsc --version",
         "electron-version": "electron --version",
         "build2": "node installation/build-installation-new.js",
-        "build-all": "npm run build && npm run build-extra-resource-json && npm run build2"
+        "build-all": "npm run build && npm run build-extra-resource-json && npm run build2",
+        "build-with-babel": "babel packages --out-dir dist --extensions \".ts,.tsx,.js\" --source-maps inline"
     },
     "prettier": {
         "printWidth": 100,
@@ -39,6 +40,14 @@
         "arrowParens": "avoid"
     },
     "devDependencies": {
+        "@babel/cli": "^7.8.4",
+        "@babel/core": "^7.9.0",
+        "@babel/plugin-proposal-class-properties": "^7.8.3",
+        "@babel/plugin-proposal-decorators": "^7.8.3",
+        "@babel/polyfill": "^7.8.7",
+        "@babel/preset-env": "^7.9.5",
+        "@babel/preset-typescript": "^7.9.0",
+        "@babel/preset-react": "^7.9.4",
         "@types/archiver": "^2.1.2",
         "@types/better-sqlite3": "^5.4.0",
         "@types/bootstrap": "^4.3.2",
@@ -62,6 +71,7 @@
         "@types/styled-components": "5.0.1",
         "@types/tinycolor2": "^1.4.2",
         "@types/usb": "^1.5.1",
+        "@types/serialport": "^8.0.0",
         "concurrently": "^5.1.0",
         "electron": "8.2.0",
         "electron-builder": "^22.4.1",
@@ -83,7 +93,6 @@
         "typescript": "^3.8.3"
     },
     "dependencies": {
-        "@types/serialport": "^8.0.0",
         "app-module-path": "^2.2.0",
         "archiver": "^2.1.1",
         "better-sqlite3": "^6.0.1",
