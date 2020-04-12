@@ -90,8 +90,7 @@ class DlogWaveformAxisModel implements IAxisModel {
         return this.maxValue;
     }
 
-    @observable
-    dynamic: {
+    @observable dynamic: {
         zoomMode: ZoomMode;
         from: number;
         to: number;
@@ -101,8 +100,7 @@ class DlogWaveformAxisModel implements IAxisModel {
         to: 0
     };
 
-    @observable
-    fixed: {
+    @observable fixed: {
         zoomMode: ZoomMode;
         subdivisionOffset: number;
         subdivisonScale: number;
@@ -439,8 +437,7 @@ export class DlogWaveform extends FileHistoryItem {
         return this.dlog.dataOffset;
     }
 
-    @observable
-    charts: IDlogChart = [];
+    @observable charts: IDlogChart = [];
 
     @computed
     get description() {

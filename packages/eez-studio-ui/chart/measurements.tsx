@@ -450,11 +450,8 @@ class Measurement {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class MeasurementsModel {
-    @observable
-    measurements: IMeasurementDefinition[] = [];
-
-    @observable
-    chartPanelsViewState: string | undefined;
+    @observable measurements: IMeasurementDefinition[] = [];
+    @observable chartPanelsViewState: string | undefined;
 
     constructor(props?: {
         measurements?: (string | IMeasurementDefinition)[];
@@ -541,7 +538,7 @@ export class MeasurementsController {
                             },
                             document.createElement("div")
                         );
-                        goldenLayout.registerComponent("MeasurementValue", function() {});
+                        goldenLayout.registerComponent("MeasurementValue", function () {});
                         goldenLayout.init();
 
                         const existingChartMeasurementIds = goldenLayout.root
@@ -621,11 +618,8 @@ export class MeasurementsController {
         );
     }
 
-    @observable
-    measurements: Measurement[];
-
-    @observable
-    measurementsInterval: { x1: number; x2: number } | undefined;
+    @observable measurements: Measurement[];
+    @observable measurementsInterval: { x1: number; x2: number } | undefined;
 
     timeoutId: any;
 
@@ -698,8 +692,7 @@ export class MeasurementsController {
         return this.measurements.find(measurement => measurement.measurementId === measurementId);
     }
 
-    @observable
-    chartPanelsViewState: string | undefined;
+    @observable chartPanelsViewState: string | undefined;
 
     get defaultChartPanelViewState() {
         const charts = this.measurements.filter(measurement => measurement.resultType === "chart");
@@ -1136,7 +1129,7 @@ export class ChartMeasurements extends React.Component<{
     registerComponents(factory: any) {
         const measurementsController = this.props.measurementsController;
 
-        factory.registerComponent("MeasurementValue", function(container: any, props: any) {
+        factory.registerComponent("MeasurementValue", function (container: any, props: any) {
             const measurement = measurementsController.findMeasurementById(props.measurementId);
             if (measurement) {
                 ReactDOM.render(
@@ -1185,7 +1178,7 @@ export class ChartMeasurements extends React.Component<{
                 },
                 document.createElement("div")
             );
-            goldenLayout.registerComponent("MeasurementValue", function() {});
+            goldenLayout.registerComponent("MeasurementValue", function () {});
             goldenLayout.init();
 
             goldenLayout.root

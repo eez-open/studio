@@ -1511,14 +1511,10 @@ export interface IViewOptions {
 export class GlobalViewOptions {
     static LOCAL_STORAGE_ITEM_ID = "shared/ui/chart/globalViewOptions";
 
-    @observable
-    enableZoomAnimations: boolean = true;
-    @observable
-    blackBackground: boolean = false;
-    @observable
-    renderAlgorithm: WaveformRenderAlgorithm = "minmax";
-    @observable
-    showSampledData: boolean = false;
+    @observable enableZoomAnimations: boolean = true;
+    @observable blackBackground: boolean = false;
+    @observable renderAlgorithm: WaveformRenderAlgorithm = "minmax";
+    @observable showSampledData: boolean = false;
 
     constructor() {
         const globalViewOptionsJSON = localStorage.getItem(GlobalViewOptions.LOCAL_STORAGE_ITEM_ID);
@@ -1569,10 +1565,8 @@ export abstract class ChartsController {
         );
     }
 
-    @observable
-    chartViewWidth: number | undefined;
-    @observable
-    chartViewHeight: number | undefined;
+    @observable chartViewWidth: number | undefined;
+    @observable chartViewHeight: number | undefined;
 
     @computed
     get xAxisLabelTextsHeight() {
@@ -2368,12 +2362,9 @@ class PanMouseHandler implements MouseHandler {
 class ZoomToRectMouseHandler implements MouseHandler {
     constructor(private chartController: ChartController) {}
 
-    @observable
-    startPoint: Point;
-    @observable
-    endPoint: Point;
-    @observable
-    orientation: "x" | "y" | "both" | undefined = undefined;
+    @observable startPoint: Point;
+    @observable endPoint: Point;
+    @observable orientation: "x" | "y" | "both" | undefined = undefined;
 
     cursor: "default";
 
@@ -2516,27 +2507,18 @@ class CursorPopover extends React.Component<{ cursor: ICursor }, {}> {
 }
 
 class Cursor implements ICursor {
-    @observable
-    visible: boolean = false;
-    @observable
-    lineController: ILineController;
-    @observable
-    time: number;
-    @observable
-    value: number;
-    @observable
-    valueIndex: number;
-    @observable
-    addPoint: boolean;
-    @observable
-    error: string | undefined;
+    @observable visible: boolean = false;
+    @observable lineController: ILineController;
+    @observable time: number;
+    @observable value: number;
+    @observable valueIndex: number;
+    @observable addPoint: boolean;
+    @observable error: string | undefined;
     cursorElement: EventTarget | null;
     cursorPopover: any;
 
-    @observable
-    fillColor: string | undefined;
-    @observable
-    strokeColor: string | undefined;
+    @observable fillColor: string | undefined;
+    @observable strokeColor: string | undefined;
 
     constructor(private chartView: ChartView) {}
 
@@ -2757,8 +2739,7 @@ export class ChartView extends React.Component<
     svg: SVGSVGElement;
     deltaY: number = 0;
     cursor = new Cursor(this);
-    @observable
-    mouseHandler: MouseHandler | undefined;
+    @observable mouseHandler: MouseHandler | undefined;
     clipId = "c_" + guid();
     draggable = new Draggable(this);
 
@@ -3159,7 +3140,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
     registerComponents(factory: any) {
         const chartsController = this.props.chartsController;
 
-        factory.registerComponent("RulersDockView", function(container: any, props: any) {
+        factory.registerComponent("RulersDockView", function (container: any, props: any) {
             ReactDOM.render(
                 <ThemeProvider theme={theme}>
                     <RulersDockView chartsController={chartsController} {...props} />
@@ -3168,7 +3149,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             );
         });
 
-        factory.registerComponent("MeasurementsDockView", function(container: any, props: any) {
+        factory.registerComponent("MeasurementsDockView", function (container: any, props: any) {
             ReactDOM.render(
                 <ThemeProvider theme={theme}>
                     <MeasurementsDockView
@@ -3180,7 +3161,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             );
         });
 
-        factory.registerComponent("ChartViewOptions", function(
+        factory.registerComponent("ChartViewOptions", function (
             container: any,
             props: ChartViewOptionsProps
         ) {

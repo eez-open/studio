@@ -156,8 +156,7 @@ const WidgetPaletteDiv = styled.div`
 
 @observer
 export class WidgetPalette extends React.Component {
-    @observable
-    selectedWidgetClass: EezClass | undefined;
+    @observable selectedWidgetClass: EezClass | undefined;
 
     @action.bound
     onSelect(widgetClass: EezClass | undefined) {

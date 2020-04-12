@@ -29,11 +29,8 @@ export interface ITerminalState {
 }
 
 class TerminalState {
-    @observable
-    _command: string = "";
-
-    @observable
-    selectedSession: ISession | undefined;
+    @observable _command: string = "";
+    @observable selectedSession: ISession | undefined;
 
     get command() {
         return this._command;

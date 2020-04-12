@@ -214,8 +214,7 @@ export class Bitmap extends EezObject implements IBitmap {
         icon: "image"
     };
 
-    @observable
-    private _imageElement: HTMLImageElement | null = null;
+    @observable private _imageElement: HTMLImageElement | null = null;
     private _imageElementImage: string;
 
     @computed

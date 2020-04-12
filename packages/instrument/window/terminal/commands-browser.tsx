@@ -53,11 +53,8 @@ export class CommandSyntax extends React.Component<
     },
     {}
 > {
-    @observable
-    parameterValues = new Map<string, string>();
-
-    @observable
-    errors = new Map<string, string[]>();
+    @observable parameterValues = new Map<string, string>();
+    @observable errors = new Map<string, string[]>();
 
     addError(parameterName: string, error: string) {
         const parameterErrors = this.errors.get(parameterName);
@@ -299,11 +296,8 @@ export class CommandsBrowser extends React.Component<
     },
     {}
 > {
-    @observable
-    selectedNode: ICommandNode;
-
-    @observable
-    searchText: string = "";
+    @observable selectedNode: ICommandNode;
+    @observable searchText: string = "";
 
     @computed
     get foundNodes(): IListNode[] {

@@ -901,12 +901,9 @@ type Section = "added" | "deleted" | "moved" | "updated" | "newEnums";
 const SECTIONS: Section[] = ["added", "deleted", "moved", "updated", "newEnums"];
 
 @observer
-export class ImportScpiDocDialog extends React.Component<
-    {
-        onHidden: () => void;
-    },
-    {}
-> {
+export class ImportScpiDocDialog extends React.Component<{
+    onHidden: () => void;
+}> {
     constructor(props: any) {
         super(props);
     }
@@ -918,10 +915,8 @@ export class ImportScpiDocDialog extends React.Component<
     updatedSelectAllCheckbox: HTMLInputElement;
     newEnumsSelectAllCheckbox: HTMLInputElement;
 
-    @observable
-    changes: Changes;
-    @observable
-    selectedChanges: Changes = {
+    @observable changes: Changes;
+    @observable selectedChanges: Changes = {
         subsystems: [],
         added: [],
         deleted: [],
@@ -929,10 +924,8 @@ export class ImportScpiDocDialog extends React.Component<
         updated: [],
         newEnums: []
     };
-    @observable
-    error: any;
-    @observable
-    activeTab: Section;
+    @observable error: any;
+    @observable activeTab: Section;
     selectAllCheckboxDisposers: {
         added?: Lambda;
         deleted?: Lambda;

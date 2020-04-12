@@ -20,11 +20,9 @@ interface IMruItem {
 }
 
 class Settings {
-    @observable
-    mru: IMruItem[];
+    @observable mru: IMruItem[];
 
-    @observable
-    windowStates: {
+    @observable windowStates: {
         [key: string]: WindowState;
     };
 
@@ -194,12 +192,12 @@ export function settingsRegisterWindow(windowId: string, window: Electron.Browse
     window.on("close", closeHandler);
 }
 
-ipcMain.on("getMruFilePath", function(event: any) {
+ipcMain.on("getMruFilePath", function (event: any) {
     var mruItem = settings.mru[0];
     event.returnValue = mruItem ? mruItem.filePath : null;
 });
 
-ipcMain.on("setMruFilePath", function(event: any, mruItemFilePath: string) {
+ipcMain.on("setMruFilePath", function (event: any, mruItemFilePath: string) {
     action(() => {
         var i = findMruIndex(mruItemFilePath);
         if (i != -1) {
@@ -264,38 +262,38 @@ export function setTimeFormat(value: string) {
     saveSettings();
 }
 
-ipcMain.on("saveSettings", function() {
+ipcMain.on("saveSettings", function () {
     saveSettings();
 });
 
-ipcMain.on("getDbPath", function(event: any) {
+ipcMain.on("getDbPath", function (event: any) {
     event.returnValue = getDbPath();
 });
 
-ipcMain.on("setDbPath", function(event: any, dbPath: string) {
+ipcMain.on("setDbPath", function (event: any, dbPath: string) {
     setDbPath(dbPath);
 });
 
-ipcMain.on("getLocale", function(event: any) {
+ipcMain.on("getLocale", function (event: any) {
     event.returnValue = getLocale();
 });
 
-ipcMain.on("setLocale", function(event: any, value: string) {
+ipcMain.on("setLocale", function (event: any, value: string) {
     setLocale(value);
 });
 
-ipcMain.on("getDateFormat", function(event: any) {
+ipcMain.on("getDateFormat", function (event: any) {
     event.returnValue = getDateFormat();
 });
 
-ipcMain.on("setDateFormat", function(event: any, value: string) {
+ipcMain.on("setDateFormat", function (event: any, value: string) {
     setDateFormat(value);
 });
 
-ipcMain.on("getTimeFormat", function(event: any) {
+ipcMain.on("getTimeFormat", function (event: any) {
     event.returnValue = getTimeFormat();
 });
 
-ipcMain.on("setTimeFormat", function(event: any, value: string) {
+ipcMain.on("setTimeFormat", function (event: any, value: string) {
     setTimeFormat(value);
 });

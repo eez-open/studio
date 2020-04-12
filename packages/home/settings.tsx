@@ -52,26 +52,13 @@ class SettingsController {
     activeDateFormat = getDateFormat();
     activeTimeFormat = getTimeFormat();
 
-    @observable
-    databasePath: string = getDbPath();
-
-    @observable
-    locale: string = getLocale();
-
-    @observable
-    dateFormat: string = getDateFormat();
-
-    @observable
-    timeFormat: string = getTimeFormat();
-
-    @observable
-    databaseSize: number;
-
-    @observable
-    timeOfLastDatabaseCompactOperation: Date;
-
-    @observable
-    _isCompactDatabaseAdvisable: boolean;
+    @observable databasePath: string = getDbPath();
+    @observable locale: string = getLocale();
+    @observable dateFormat: string = getDateFormat();
+    @observable timeFormat: string = getTimeFormat();
+    @observable databaseSize: number;
+    @observable timeOfLastDatabaseCompactOperation: Date;
+    @observable _isCompactDatabaseAdvisable: boolean;
 
     constructor() {
         var fs = require("fs");
@@ -190,14 +177,9 @@ const CompactDatabaseDialogTable = styled.table`
 
 @observer
 class CompactDatabaseDialog extends React.Component<{}, {}> {
-    @observable
-    sizeBefore: number;
-
-    @observable
-    sizeAfter: number | undefined;
-
-    @observable
-    sizeReduced: number | undefined;
+    @observable sizeBefore: number;
+    @observable sizeAfter: number | undefined;
+    @observable sizeReduced: number | undefined;
 
     constructor(props: any) {
         super(props);

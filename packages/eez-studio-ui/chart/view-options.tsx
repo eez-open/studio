@@ -17,15 +17,10 @@ interface DynamicSubdivisionOptionsProps {
 
 @observer
 class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOptionsProps> {
-    @observable
-    xAxisSteps: string;
-    @observable
-    xAxisStepsError: boolean;
-
-    @observable
-    yAxisSteps: string[];
-    @observable
-    yAxisStepsError: boolean[];
+    @observable xAxisSteps: string;
+    @observable xAxisStepsError: boolean;
+    @observable yAxisSteps: string[];
+    @observable yAxisStepsError: boolean[];
 
     constructor(props: DynamicSubdivisionOptionsProps) {
         super(props);
@@ -181,17 +176,11 @@ interface FixedSubdivisionOptionsProps {
 
 @observer
 class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsProps> {
-    @observable
-    majorSubdivisionHorizontal: number;
-    @observable
-    majorSubdivisionVertical: number;
-    @observable
-    minorSubdivisionHorizontal: number;
-    @observable
-    minorSubdivisionVertical: number;
-
-    @observable
-    majorSubdivisionHorizontalError: boolean;
+    @observable majorSubdivisionHorizontal: number;
+    @observable majorSubdivisionVertical: number;
+    @observable minorSubdivisionHorizontal: number;
+    @observable minorSubdivisionVertical: number;
+    @observable majorSubdivisionHorizontalError: boolean;
 
     constructor(props: FixedSubdivisionOptionsProps) {
         super(props);

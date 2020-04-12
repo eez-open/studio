@@ -53,8 +53,7 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
         this.shortcut = objectClone(props.shortcut);
     }
 
-    @observable
-    shortcut: Partial<IShortcut>;
+    @observable shortcut: Partial<IShortcut>;
     wasValidated: boolean = false;
 
     validator = makeValidator({
@@ -130,8 +129,7 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
         ]
     });
 
-    @observable
-    codeError: string | undefined = this.props.codeError;
+    @observable codeError: string | undefined = this.props.codeError;
 
     @computed
     get codeErrors() {

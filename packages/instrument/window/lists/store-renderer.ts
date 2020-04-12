@@ -108,7 +108,10 @@ class ListViewOptions implements IViewOptions {
         type: "dynamic",
         steps: {
             x: [0.01, 0.1, 1, 10],
-            y: [[0.1, 1, 10], [0.01, 0.1, 1]]
+            y: [
+                [0.1, 1, 10],
+                [0.01, 0.1, 1]
+            ]
         },
         majorSubdivision: {
             horizontal: 24,
@@ -379,15 +382,13 @@ export class ListAxisModel implements IAxisModel {
         return this.maxValue;
     }
 
-    @observable
-    dynamic: {
+    @observable dynamic: {
         zoomMode: ZoomMode;
         from: number;
         to: number;
     };
 
-    @observable
-    fixed: {
+    @observable fixed: {
         zoomMode: ZoomMode;
         subdivisionOffset: number;
         subdivisonScale: number;

@@ -33,11 +33,9 @@ export class HistoryItem implements IHistoryItem {
     oid: string;
     date: Date;
     type: string;
-    @observable
-    message: string;
+    @observable message: string;
     _data: any;
-    @observable
-    selected: boolean;
+    @observable selected: boolean;
     deleted: boolean;
 
     constructor(activityLogEntry: IActivityLogEntry, public appStore: IAppStore) {

@@ -193,8 +193,7 @@ export class NavigationStore {
     }
 
     //
-    @observable
-    private _selectedListId: string | undefined;
+    @observable private _selectedListId: string | undefined;
 
     get selectedListId() {
         return this._selectedListId;
@@ -224,8 +223,7 @@ export class NavigationStore {
     }
 
     //
-    @observable
-    private _selectedScriptId: string | undefined;
+    @observable private _selectedScriptId: string | undefined;
 
     get selectedScriptId() {
         return this._selectedScriptId;

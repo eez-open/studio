@@ -241,8 +241,7 @@ export class MultiWaveform extends HistoryItem {
 
     xAxisModel = new WaveformTimeAxisModel(this);
 
-    @observable
-    waveformLinks: IWaveformLink[];
+    @observable waveformLinks: IWaveformLink[];
 
     viewOptions: ViewOptions;
 
@@ -373,10 +372,8 @@ class WaveformLinkProperties {
         );
     }
 
-    @observable
-    props: IWaveformLink;
-    @observable
-    errors: boolean = false;
+    @observable props: IWaveformLink;
+    @observable errors: boolean = false;
 
     async checkValidity() {
         return true;
@@ -447,8 +444,8 @@ class MultiWaveformConfigurationDialog extends React.Component<
         }
     );
 
-    @observable.shallow
-    selectedWaveform: IJoinedWaveformLinkAndDefinitionProperties = this.waveforms[0];
+    @observable.shallow selectedWaveform: IJoinedWaveformLinkAndDefinitionProperties = this
+        .waveforms[0];
 
     @computed
     get waveformListNodes(): IListNode[] {

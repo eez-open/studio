@@ -145,13 +145,16 @@ export function browseGlyph(glyph: Glyph) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GlyphSource extends EezObject {
-    @observable
+export interface IGlyphSource {
     filePath?: string;
-    @observable
     size?: number;
-    @observable
     encoding?: number;
+}
+
+export class GlyphSource extends EezObject implements IGlyphSource {
+    @observable filePath?: string;
+    @observable size?: number;
+    @observable encoding?: number;
 
     static classInfo: ClassInfo = {
         label: (glyphSource: GlyphSource) => {
@@ -299,6 +302,7 @@ export interface IGlyph {
     height: number;
     dx: number;
     glyphBitmap?: IGlyphBitmap;
+    source?: IGlyphSource;
 }
 
 export class Glyph extends EezObject {
@@ -308,9 +312,8 @@ export class Glyph extends EezObject {
     @observable width: number;
     @observable height: number;
     @observable dx: number;
-
-    @observable
-    glyphBitmap?: IGlyphBitmap;
+    @observable glyphBitmap?: IGlyphBitmap;
+    @observable source?: GlyphSource;
 
     static classInfo: ClassInfo = {
         label: (glyph: Glyph) => {
@@ -385,9 +388,6 @@ export class Glyph extends EezObject {
 
         return resizeGlyphBitmap(this.glyphBitmap, this.width, this.height, font.bpp).pixelArray;
     }
-
-    @observable
-    source?: GlyphSource;
 
     @computed
     get image(): string {
@@ -1410,16 +1410,12 @@ class Glyphs extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class GlyphEditor extends React.Component<
-    {
-        glyph: Glyph | undefined;
-    },
-    {}
-> {
+class GlyphEditor extends React.Component<{
+    glyph: Glyph | undefined;
+}> {
     div: HTMLDivElement;
 
-    @observable
-    hitTestResult: EditorImageHitTestResult | undefined = undefined;
+    @observable hitTestResult: EditorImageHitTestResult | undefined = undefined;
     isLeftButtonDown: boolean = false;
     lastToggledPixel:
         | {
@@ -1569,8 +1565,7 @@ export class FontEditor
         return font.glyphs;
     }
 
-    @observable
-    selectedGlyph: Glyph | undefined;
+    @observable selectedGlyph: Glyph | undefined;
 
     @action.bound
     onSelectGlyph(glyph: Glyph) {

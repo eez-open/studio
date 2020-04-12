@@ -48,11 +48,8 @@ interface ChartPreviewProps {
 
 @observer
 export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
-    @observable
-    data: ChartData = this.props.data;
-
-    @observable
-    zoom: boolean = false;
+    @observable data: ChartData = this.props.data;
+    @observable zoom: boolean = false;
 
     @action.bound
     toggleZoom() {

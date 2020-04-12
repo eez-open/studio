@@ -28,8 +28,7 @@ export class AnswerHistoryItemComponent extends React.Component<
     },
     {}
 > {
-    @observable
-    showAll: boolean = false;
+    @observable showAll: boolean = false;
 
     render() {
         let message = this.props.historyItem.message.trim();

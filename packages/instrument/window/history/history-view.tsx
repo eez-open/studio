@@ -363,8 +363,7 @@ export class HistoryView extends React.Component<{
     history: HistoryListComponent | null;
     sideDock: SideDock | null;
 
-    @observable
-    searchText: string = "";
+    @observable searchText: string = "";
 
     @bind
     frameAnimation() {
@@ -411,7 +410,7 @@ export class HistoryView extends React.Component<{
     registerComponents(factory: any) {
         const appStore = this.props.appStore;
 
-        factory.registerComponent("SearchResults", function(container: any, props: any) {
+        factory.registerComponent("SearchResults", function (container: any, props: any) {
             ReactDOM.render(
                 <ThemeProvider theme={theme}>
                     <div
@@ -429,7 +428,7 @@ export class HistoryView extends React.Component<{
             );
         });
 
-        factory.registerComponent("Filters", function(container: any, props: any) {
+        factory.registerComponent("Filters", function (container: any, props: any) {
             ReactDOM.render(
                 <ThemeProvider theme={theme}>
                     <FiltersComponent appStore={appStore} />
@@ -438,7 +437,7 @@ export class HistoryView extends React.Component<{
             );
         });
 
-        factory.registerComponent("Calendar", function(container: any, props: any) {
+        factory.registerComponent("Calendar", function (container: any, props: any) {
             ReactDOM.render(
                 <ThemeProvider theme={theme}>
                     <div
@@ -454,7 +453,7 @@ export class HistoryView extends React.Component<{
             );
         });
 
-        factory.registerComponent("Sessions", function(container: any, props: any) {
+        factory.registerComponent("Sessions", function (container: any, props: any) {
             ReactDOM.render(
                 <ThemeProvider theme={theme}>
                     <div

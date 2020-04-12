@@ -28,8 +28,7 @@ interface ConnectionPropertiesProps {
 class Devices {
     neverEnumerated = true;
 
-    @observable
-    serialPortPaths: {
+    @observable serialPortPaths: {
         path: string;
         description: string;
     }[] = [];

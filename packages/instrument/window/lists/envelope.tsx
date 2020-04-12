@@ -1102,9 +1102,7 @@ export class EnvelopeLineController extends LineController {
 
     onDragStart(chartView: ChartView, event: PointerEvent): MouseHandler | undefined {
         let valueIndex = parseInt(
-            $(event.target!)
-                .closest("[data-value-index]")
-                .attr("data-value-index") || ""
+            $(event.target!).closest("[data-value-index]").attr("data-value-index") || ""
         );
 
         let lineControllerId = $(event.target!)
@@ -1587,8 +1585,7 @@ interface EnvelopeDetailsViewProps {
 
 @observer
 export class EnvelopeDetailsView extends React.Component<EnvelopeDetailsViewProps, {}> {
-    @observable
-    list: EnvelopeList = this.props.list;
+    @observable list: EnvelopeList = this.props.list;
 
     @computed
     get chartsController() {

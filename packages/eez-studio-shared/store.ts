@@ -48,7 +48,7 @@ export function createStoreObjectsCollection<
         updateObject(changes: Partial<T>, op: StoreOperation, options?: IStoreOperationOptions) {
             const object = objects.get(changes.id!);
             if (object) {
-                _each(changes, function(value: any, key: string) {
+                _each(changes, function (value: any, key: string) {
                     (object as any)[key] = value;
                 });
             }
@@ -765,11 +765,8 @@ interface ITransaction {
 }
 
 class UndoManager {
-    @observable.shallow
-    undoStack: ITransaction[] = [];
-
-    @observable.shallow
-    redoStack: ITransaction[] = [];
+    @observable.shallow undoStack: ITransaction[] = [];
+    @observable.shallow redoStack: ITransaction[] = [];
 
     currentTransaction: ITransaction | undefined;
     pendingTransactions: (() => void)[] = [];

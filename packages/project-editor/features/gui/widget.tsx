@@ -2129,10 +2129,8 @@ export interface IRectangleWidget extends IWidget {
 }
 
 export class RectangleWidget extends Widget implements IRectangleWidget {
-    @observable
-    ignoreLuminocity: boolean;
-    @observable
-    invertColors: boolean;
+    @observable ignoreLuminocity: boolean;
+    @observable invertColors: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
@@ -2270,8 +2268,7 @@ export interface IBitmapWidget extends IWidget {
 }
 
 export class BitmapWidget extends Widget implements IBitmapWidget {
-    @observable
-    bitmap?: string;
+    @observable bitmap?: string;
 
     get label() {
         return this.bitmap ? `${this.type}: ${this.bitmap}` : this.type;
@@ -2426,12 +2423,9 @@ export interface IButtonWidget extends IWidget {
 }
 
 export class ButtonWidget extends Widget implements IButtonWidget {
-    @observable
-    text?: string;
-    @observable
-    enabled?: string;
-    @observable
-    disabledStyle: Style;
+    @observable text?: string;
+    @observable enabled?: string;
+    @observable disabledStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
@@ -2492,10 +2486,8 @@ export interface IToggleButtonWidget extends IWidget {
 }
 
 export class ToggleButtonWidget extends Widget implements IToggleButtonWidget {
-    @observable
-    text1?: string;
-    @observable
-    text2?: string;
+    @observable text1?: string;
+    @observable text2?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
@@ -3198,8 +3190,7 @@ export interface IAppViewWidget extends IWidget {
 }
 
 export class AppViewWidget extends Widget implements IAppViewWidget {
-    @observable
-    page: string;
+    @observable page: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         defaultValue: { type: "AppView", left: 0, top: 0, width: 64, height: 32 },

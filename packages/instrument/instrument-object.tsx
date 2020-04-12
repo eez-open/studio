@@ -158,20 +158,13 @@ export class InstrumentObject {
 
     id: string;
 
-    @observable
-    instrumentExtensionId: string;
-    @observable
-    label: string | undefined;
-    @observable
-    idn: string | undefined;
-    @observable
-    lastConnection: ConnectionParameters | undefined;
-    @observable
-    autoConnect: boolean;
-    @observable
-    lastFileUploadInstructions: IFileUploadInstructions | undefined;
-    @observable
-    selectedShortcutGroups: string[];
+    @observable instrumentExtensionId: string;
+    @observable label: string | undefined;
+    @observable idn: string | undefined;
+    @observable lastConnection: ConnectionParameters | undefined;
+    @observable autoConnect: boolean;
+    @observable lastFileUploadInstructions: IFileUploadInstructions | undefined;
+    @observable selectedShortcutGroups: string[];
 
     connection: IConnection;
 
@@ -189,8 +182,7 @@ export class InstrumentObject {
     // This complication with extension loading
     // is because we want to load extension only
     // when and if needed.
-    @observable
-    _extension: IExtension | undefined;
+    @observable _extension: IExtension | undefined;
     _loadingExtension: boolean;
     @computed
     get extension() {

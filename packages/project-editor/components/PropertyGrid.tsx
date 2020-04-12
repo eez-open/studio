@@ -205,8 +205,7 @@ class PropertyMenu extends React.Component<PropertyProps> {
 class CodeEditorProperty extends React.Component<
     PropertyProps & { mode: CodeEditorMode; showLabel?: boolean }
 > {
-    @observable
-    value: string = this.getValue();
+    @observable value: string = this.getValue();
 
     editor: CodeEditor;
 
@@ -718,8 +717,7 @@ class Property extends React.Component<PropertyProps> {
     input: HTMLInputElement;
     select: HTMLSelectElement;
 
-    @observable
-    _value: any = undefined;
+    @observable _value: any = undefined;
 
     @disposeOnUnmount
     changeDocumentDisposer = autorun(() => {

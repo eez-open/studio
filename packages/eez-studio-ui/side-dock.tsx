@@ -141,8 +141,7 @@ export class SideDock extends React.Component<{
 }> {
     static defaultProps = { width: 240 };
 
-    @observable
-    isOpen: boolean;
+    @observable isOpen: boolean;
 
     dockablePanels: DockablePanels | null;
 

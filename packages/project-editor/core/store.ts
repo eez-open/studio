@@ -194,11 +194,8 @@ export class SimpleNavigationStoreClass implements INavigationStore {
 }
 
 class NavigationStoreClass implements INavigationStore {
-    @observable
-    navigationMap = new Map<string, NavigationItem>();
-
-    @observable
-    selectedPanel: IPanel | undefined;
+    @observable navigationMap = new Map<string, NavigationItem>();
+    @observable selectedPanel: IPanel | undefined;
 
     load(map: { [stringPath: string]: string }) {
         let navigationMap = new Map<string, NavigationItem>();
@@ -424,14 +421,10 @@ class NavigationStoreClass implements INavigationStore {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Editor implements IEditor {
-    @observable
-    object: IEezObject;
-    @observable
-    active: boolean;
-    @observable
-    permanent: boolean;
-    @observable
-    state: IEditorState | undefined;
+    @observable object: IEezObject;
+    @observable active: boolean;
+    @observable permanent: boolean;
+    @observable state: IEditorState | undefined;
 
     loading = false;
 
@@ -465,8 +458,7 @@ export class Editor implements IEditor {
 }
 
 class EditorsStoreClass {
-    @observable
-    editors: Editor[] = [];
+    @observable editors: Editor[] = [];
 
     constructor() {
         // open editor when navigation selection has changed
@@ -664,8 +656,7 @@ class EditorsStoreClass {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ViewOptions {
-    @observable
-    outputVisible: boolean = true;
+    @observable outputVisible: boolean = true;
 
     @action
     load(viewOptions: any) {
@@ -685,29 +676,14 @@ export class ViewOptions {
 ////////////////////////////////////////////////////////////////////////////////
 
 class UIStateStoreClass {
-    @observable
-    viewOptions: ViewOptions = new ViewOptions();
-
-    @observable
-    selectedBuildConfiguration: string;
-
-    @observable
-    features: any;
-
-    @observable
-    objects = new Map<string, any>();
-
-    @observable
-    savedState: any;
-
-    @observable
-    searchPattern: string;
-
-    @observable
-    searchMatchCase: boolean;
-
-    @observable
-    searchMatchWholeWord: boolean;
+    @observable viewOptions: ViewOptions = new ViewOptions();
+    @observable selectedBuildConfiguration: string;
+    @observable features: any;
+    @observable objects = new Map<string, any>();
+    @observable savedState: any;
+    @observable searchPattern: string;
+    @observable searchMatchCase: boolean;
+    @observable searchMatchWholeWord: boolean;
 
     constructor() {
         autorun(() => {
@@ -833,12 +809,9 @@ interface IUndoItem {
 }
 
 export class UndoManagerClass {
-    @observable
-    undoStack: IUndoItem[] = [];
-    @observable
-    redoStack: IUndoItem[] = [];
-    @observable
-    commands: ICommand[] = [];
+    @observable undoStack: IUndoItem[] = [];
+    @observable redoStack: IUndoItem[] = [];
+    @observable commands: ICommand[] = [];
 
     private selectionBeforeFirstCommand: any;
     public combineCommands: boolean = false;
@@ -966,11 +939,8 @@ export class UndoManagerClass {
 ////////////////////////////////////////////////////////////////////////////////
 
 class DocumentStoreClass {
-    @observable
-    private _document: IEezObject | undefined;
-
-    @observable
-    modified: boolean = false;
+    @observable private _document: IEezObject | undefined;
+    @observable modified: boolean = false;
 
     @computed
     get document(): IEezObject {
@@ -1551,11 +1521,8 @@ function getUIStateFilePath(projectFilePath: string) {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ProjectStoreClass {
-    @observable
-    filePath: string | undefined;
-
-    @observable
-    backgroundCheckEnabled = true;
+    @observable filePath: string | undefined;
+    @observable backgroundCheckEnabled = true;
 
     constructor() {
         autorun(() => {

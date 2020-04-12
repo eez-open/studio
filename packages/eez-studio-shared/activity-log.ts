@@ -340,11 +340,7 @@ export const activityLogStore = createStore({
 
         if (filterSpecification.oids !== undefined) {
             whereClause +=
-                "oid IN (" +
-                Array(filterSpecification.oids.length)
-                    .fill("?")
-                    .join(",") +
-                ")";
+                "oid IN (" + Array(filterSpecification.oids.length).fill("?").join(",") + ")";
             params.push(...filterSpecification.oids.map(oid => parseInt(oid)));
         }
 
@@ -447,10 +443,8 @@ export function logGet(store: IStore, id: string) {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ActiveSession {
-    @observable
-    id: string | undefined;
-    @observable
-    message: string | undefined;
+    @observable id: string | undefined;
+    @observable message: string | undefined;
 
     constructor() {
         activityLogStore.watch(

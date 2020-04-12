@@ -36,20 +36,13 @@ import { BaseList, createInstrumentLists } from "instrument/window/lists/store-r
 ////////////////////////////////////////////////////////////////////////////////
 
 export class InstrumentAppStore implements IEditor {
-    @observable
-    instrument: InstrumentObject | undefined = undefined;
-
-    @observable
-    helpVisible: boolean = false;
-
-    @observable
-    filters: Filters = new Filters();
-
-    @observable
-    selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined = undefined;
-
-    @observable
-    selectedHistoryItems = new Map<string, boolean>();
+    @observable instrument: InstrumentObject | undefined = undefined;
+    @observable helpVisible: boolean = false;
+    @observable filters: Filters = new Filters();
+    @observable selectHistoryItemsSpecification:
+        | SelectHistoryItemsSpecification
+        | undefined = undefined;
+    @observable selectedHistoryItems = new Map<string, boolean>();
 
     navigationStore = new NavigationStore(this);
     scriptsModel = new ScriptsModel(this);

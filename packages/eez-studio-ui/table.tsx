@@ -109,8 +109,7 @@ const StyledTable = styled.table`
 
 @observer
 export class Table extends React.Component<ITableProps> {
-    @observable
-    sortOrder: ISortOrderItem[];
+    @observable sortOrder: ISortOrderItem[];
 
     @disposeOnUnmount
     saveSortOrderDisposer: IReactionDisposer;

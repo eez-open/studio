@@ -85,8 +85,7 @@ export class DeletedHistoryItemsView extends React.Component<{
     animationFrameRequestId: any;
     history: HistoryListComponent | null;
     sideDock: SideDock | null;
-    @observable
-    searchText: string = "";
+    @observable searchText: string = "";
 
     @bind
     frameAnimation() {
@@ -120,7 +119,7 @@ export class DeletedHistoryItemsView extends React.Component<{
     registerComponents(factory: any) {
         const appStore = this.props.appStore;
 
-        factory.registerComponent("SearchResults", function(container: any, props: any) {
+        factory.registerComponent("SearchResults", function (container: any, props: any) {
             ReactDOM.render(
                 <ThemeProvider theme={theme}>
                     <div
@@ -138,7 +137,7 @@ export class DeletedHistoryItemsView extends React.Component<{
             );
         });
 
-        factory.registerComponent("Calendar", function(container: any, props: any) {
+        factory.registerComponent("Calendar", function (container: any, props: any) {
             ReactDOM.render(
                 <ThemeProvider theme={theme}>
                     <div

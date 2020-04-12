@@ -100,8 +100,7 @@ export interface LongOperation {
 }
 
 export class Connection extends ConnectionBase implements CommunicationInterfaceHost {
-    @observable
-    _state: ConnectionState = ConnectionState.IDLE;
+    @observable _state: ConnectionState = ConnectionState.IDLE;
     get state() {
         return this._state;
     }
@@ -111,8 +110,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         })();
     }
 
-    @observable
-    _errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
+    @observable _errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
     get errorCode() {
         return this._errorCode;
     }
@@ -122,8 +120,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         })();
     }
 
-    @observable
-    _error: string | undefined;
+    @observable _error: string | undefined;
     get error() {
         return this._error;
     }
@@ -684,7 +681,7 @@ export class IpcConnection extends ConnectionBase {
 export function setupIpcServer() {
     const { ipcMain } = require("electron");
 
-    ipcMain.on("instrument/connection/connect", function(
+    ipcMain.on("instrument/connection/connect", function (
         event: any,
         arg: {
             instrumentId: string;
@@ -700,7 +697,7 @@ export function setupIpcServer() {
         }
     });
 
-    ipcMain.on("instrument/connection/disconnect", function(
+    ipcMain.on("instrument/connection/disconnect", function (
         event: any,
         arg: {
             instrumentId: string;
@@ -712,7 +709,7 @@ export function setupIpcServer() {
         }
     });
 
-    ipcMain.on("instrument/connection/destroy", function(
+    ipcMain.on("instrument/connection/destroy", function (
         event: any,
         arg: {
             instrumentId: string;
@@ -724,7 +721,7 @@ export function setupIpcServer() {
         }
     });
 
-    ipcMain.on("instrument/connection/send", function(
+    ipcMain.on("instrument/connection/send", function (
         event: any,
         arg: {
             instrumentId: string;
@@ -738,7 +735,7 @@ export function setupIpcServer() {
         }
     });
 
-    ipcMain.on("instrument/connection/upload", function(
+    ipcMain.on("instrument/connection/upload", function (
         event: any,
         arg: {
             instrumentId: string;
@@ -773,7 +770,7 @@ export function setupIpcServer() {
         }
     });
 
-    ipcMain.on("instrument/connection/abort-long-operation", function(
+    ipcMain.on("instrument/connection/abort-long-operation", function (
         event: any,
         arg: {
             instrumentId: string;
@@ -785,7 +782,7 @@ export function setupIpcServer() {
         }
     });
 
-    ipcMain.on("instrument/connection/dismiss-error", function(
+    ipcMain.on("instrument/connection/dismiss-error", function (
         event: any,
         arg: {
             instrumentId: string;
@@ -797,7 +794,7 @@ export function setupIpcServer() {
         }
     });
 
-    ipcMain.on("instrument/connection/acquire", function(
+    ipcMain.on("instrument/connection/acquire", function (
         event: any,
         arg: {
             instrumentId: string;
@@ -813,7 +810,7 @@ export function setupIpcServer() {
         }
     });
 
-    ipcMain.on("instrument/connection/release", function(
+    ipcMain.on("instrument/connection/release", function (
         event: any,
         arg: {
             instrumentId: string;

@@ -24,8 +24,7 @@ class AddInstrumentDialog extends React.Component<
         this.selectedInstrumentExtension = instrumentExtensions.get()[0];
     }
 
-    @observable
-    selectedInstrumentExtension: IExtension;
+    @observable selectedInstrumentExtension: IExtension;
 
     renderNode(node: IListNode) {
         let instrumentExtension = node.data as IExtension;

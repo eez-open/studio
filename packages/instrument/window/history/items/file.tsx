@@ -88,8 +88,7 @@ const FileHistoryItemDiv = styled(HistoryItemDiv)`
 class ImagePreview extends React.Component<{
     src: string;
 }> {
-    @observable
-    zoom: boolean = false;
+    @observable zoom: boolean = false;
 
     @action.bound
     toggleZoom() {
@@ -118,16 +117,10 @@ let getPdfTempDirPathPromise = getTempDirPath();
 class PdfPreview extends React.Component<{
     historyItem: HistoryItem;
 }> {
-    @observable
-    thumbnail: string;
-
-    @observable
-    url: string;
-
+    @observable thumbnail: string;
+    @observable url: string;
     webView: any;
-
-    @observable
-    zoom: boolean = false;
+    @observable zoom: boolean = false;
 
     @action.bound
     toggleZoom() {

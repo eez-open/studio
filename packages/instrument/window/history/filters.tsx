@@ -13,26 +13,16 @@ import { IAppStore, History } from "instrument/window/history/history";
 import { IHistoryItem } from "instrument/window/history/item";
 
 export class Filters {
-    @observable
-    session: boolean = true;
-    @observable
-    connectsAndDisconnects: boolean = true;
-    @observable
-    scpi: boolean = true;
-    @observable
-    downloadedFiles: boolean = true;
-    @observable
-    uploadedFiles: boolean = true;
-    @observable
-    attachedFiles: boolean = true;
-    @observable
-    charts: boolean = true;
-    @observable
-    lists: boolean = true;
-    @observable
-    notes: boolean = true;
-    @observable
-    launchedScripts: boolean = true;
+    @observable session: boolean = true;
+    @observable connectsAndDisconnects: boolean = true;
+    @observable scpi: boolean = true;
+    @observable downloadedFiles: boolean = true;
+    @observable uploadedFiles: boolean = true;
+    @observable attachedFiles: boolean = true;
+    @observable charts: boolean = true;
+    @observable lists: boolean = true;
+    @observable notes: boolean = true;
+    @observable launchedScripts: boolean = true;
 
     filterActivityLogEntry(activityLogEntry: IActivityLogEntry): boolean {
         if (this.session) {
@@ -164,26 +154,16 @@ export class Filters {
 }
 
 export class FilterStats {
-    @observable
-    session = 0;
-    @observable
-    connectsAndDisconnects = 0;
-    @observable
-    scpi = 0;
-    @observable
-    downloadedFiles = 0;
-    @observable
-    uploadedFiles = 0;
-    @observable
-    attachedFiles = 0;
-    @observable
-    charts = 0;
-    @observable
-    lists = 0;
-    @observable
-    notes = 0;
-    @observable
-    launchedScripts = 0;
+    @observable session = 0;
+    @observable connectsAndDisconnects = 0;
+    @observable scpi = 0;
+    @observable downloadedFiles = 0;
+    @observable uploadedFiles = 0;
+    @observable attachedFiles = 0;
+    @observable charts = 0;
+    @observable lists = 0;
+    @observable notes = 0;
+    @observable launchedScripts = 0;
 
     constructor(public history: History) {
         scheduleTask("Get filter stats", Priority.Lowest, async () => {

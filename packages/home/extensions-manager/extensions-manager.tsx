@@ -153,11 +153,8 @@ class ExtensionsVersionsCatalogBuilder {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ExtensionsManagerStore {
-    @observable
-    selectedExtension: IExtension | undefined;
-
-    @observable
-    _viewFilter: ViewFilter | undefined;
+    @observable selectedExtension: IExtension | undefined;
+    @observable _viewFilter: ViewFilter | undefined;
 
     @computed
     get viewFilter() {
@@ -327,8 +324,9 @@ export class ExtensionInMasterView extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 function confirmMessage(extension: IExtension) {
-    return `You are about to install version ${extension.version} of the '${extension.displayName ||
-        extension.name}' extension.`;
+    return `You are about to install version ${extension.version} of the '${
+        extension.displayName || extension.name
+    }' extension.`;
 }
 
 const BUTTON_INSTRUCTIONS = `
@@ -339,8 +337,7 @@ const BUTTONS = ["OK", "Cancel"];
 
 @observer
 class MasterView extends React.Component {
-    @observable
-    isUpdatingAll: boolean = false;
+    @observable isUpdatingAll: boolean = false;
 
     async installExtension() {
         const result = await EEZStudio.electron.remote.dialog.showOpenDialog({
@@ -367,9 +364,7 @@ class MasterView extends React.Component {
                         return (
                             (await confirmWithButtons(
                                 confirmMessage(newExtension),
-                                `The newer version ${
-                                    existingExtension.version
-                                } is already installed.${BUTTON_INSTRUCTIONS}`,
+                                `The newer version ${existingExtension.version} is already installed.${BUTTON_INSTRUCTIONS}`,
                                 BUTTONS
                             )) === 0
                         );
@@ -381,9 +376,7 @@ class MasterView extends React.Component {
                         return (
                             (await confirmWithButtons(
                                 confirmMessage(newExtension),
-                                `The older version ${
-                                    existingExtension.version
-                                } is already installed.${BUTTON_INSTRUCTIONS}`,
+                                `The older version ${existingExtension.version} is already installed.${BUTTON_INSTRUCTIONS}`,
                                 BUTTONS
                             )) === 0
                         );
@@ -534,10 +527,8 @@ interface ExtensionSectionsProps {
 
 @observer
 export class ExtensionSections extends React.Component<ExtensionSectionsProps, {}> {
-    @observable
-    activeSection: SectionType = "properties";
-    @observable
-    propertiesComponent: JSX.Element | undefined;
+    @observable activeSection: SectionType = "properties";
+    @observable propertiesComponent: JSX.Element | undefined;
 
     constructor(props: ExtensionSectionsProps) {
         super(props);
@@ -671,15 +662,17 @@ export function downloadAndInstallExtension(
         req.open("GET", extensionToInstall.download!);
 
         notification.update(progressToastId, {
-            render: `Downloading "${extensionToInstall.displayName ||
-                extensionToInstall.name}" extension package ...`,
+            render: `Downloading "${
+                extensionToInstall.displayName || extensionToInstall.name
+            }" extension package ...`,
             type: notification.INFO
         });
 
         req.addEventListener("progress", event => {
             notification.update(progressToastId, {
-                render: `Downloading "${extensionToInstall.displayName ||
-                    extensionToInstall.name}" extension package: ${event.loaded} of ${event.total}`,
+                render: `Downloading "${
+                    extensionToInstall.displayName || extensionToInstall.name
+                }" extension package: ${event.loaded} of ${event.total}`,
                 type: notification.INFO
             });
         });
@@ -690,8 +683,9 @@ export function downloadAndInstallExtension(
             if (extensionToInstall.sha256) {
                 if (sha256(extensionZipFileData) !== extensionToInstall.sha256) {
                     notification.update(progressToastId, {
-                        render: `Failed to install "${extensionToInstall.displayName ||
-                            extensionToInstall.name}" extension because package file hash doesn't match.`,
+                        render: `Failed to install "${
+                            extensionToInstall.displayName || extensionToInstall.name
+                        }" extension because package file hash doesn't match.`,
                         type: notification.ERROR
                     });
                     reject();
@@ -703,14 +697,16 @@ export function downloadAndInstallExtension(
                 .then(extension => {
                     if (extension) {
                         notification.update(progressToastId, {
-                            render: `Extension "${extension.displayName ||
-                                extension.name}" installed`,
+                            render: `Extension "${
+                                extension.displayName || extension.name
+                            }" installed`,
                             type: notification.SUCCESS
                         });
                     } else {
                         notification.update(progressToastId, {
-                            render: `Failed to install "${extensionToInstall.displayName ||
-                                extensionToInstall.name}" extension`,
+                            render: `Failed to install "${
+                                extensionToInstall.displayName || extensionToInstall.name
+                            }" extension`,
                             type: notification.ERROR
                         });
                     }
@@ -719,8 +715,9 @@ export function downloadAndInstallExtension(
                 .catch(error => {
                     console.error("Extension download error", error);
                     notification.update(progressToastId, {
-                        render: `Failed to install "${extensionToInstall.displayName ||
-                            extensionToInstall.name}" extension.`,
+                        render: `Failed to install "${
+                            extensionToInstall.displayName || extensionToInstall.name
+                        }" extension.`,
                         type: notification.ERROR
                     });
                     reject();
@@ -730,8 +727,9 @@ export function downloadAndInstallExtension(
         req.addEventListener("error", error => {
             console.error("Extension download error", error);
             notification.update(progressToastId, {
-                render: `Failed to download "${extensionToInstall.displayName ||
-                    extensionToInstall.name}" extension package.`,
+                render: `Failed to download "${
+                    extensionToInstall.displayName || extensionToInstall.name
+                }" extension package.`,
                 type: notification.ERROR
             });
             reject();
@@ -783,8 +781,7 @@ const ExtensionDetailsHeaderPropertiesNameAndVersion = styled.div`
 
 @observer
 export class DetailsView extends React.Component {
-    @observable
-    selectedVersion: string;
+    @observable selectedVersion: string;
 
     constructor(props: any) {
         super(props);

@@ -194,8 +194,7 @@ class GenericChartXAxisModel implements IAxisModel {
         return 1e15;
     }
 
-    @observable
-    dynamic: {
+    @observable dynamic: {
         zoomMode: ZoomMode;
         from: number;
         to: number;
@@ -205,8 +204,7 @@ class GenericChartXAxisModel implements IAxisModel {
         to: 0
     };
 
-    @observable
-    fixed: {
+    @observable fixed: {
         zoomMode: ZoomMode;
         subdivisionOffset: number;
         subdivisonScale: number;
@@ -263,8 +261,7 @@ class GenericChartYAxisModel implements IAxisModel {
         return this.data.yAxes.unit;
     }
 
-    @observable
-    dynamic: {
+    @observable dynamic: {
         zoomMode: ZoomMode;
         from: number;
         to: number;
@@ -274,8 +271,7 @@ class GenericChartYAxisModel implements IAxisModel {
         to: 0
     };
 
-    @observable
-    fixed: {
+    @observable fixed: {
         zoomMode: ZoomMode;
         subdivisionOffset: number;
         subdivisonScale: number;
@@ -315,8 +311,7 @@ class GenericChartViewOptions implements IViewOptions {
         }
     }
 
-    @observable
-    axesLines: IViewOptionsAxesLines = {
+    @observable axesLines: IViewOptionsAxesLines = {
         type: "dynamic",
         steps: {
             x: [],
@@ -334,10 +329,8 @@ class GenericChartViewOptions implements IViewOptions {
         defaultZoomMode: "default"
     };
 
-    @observable
-    showAxisLabels: boolean = true;
-    @observable
-    showZoomButtons: boolean = true;
+    @observable showAxisLabels: boolean = true;
+    @observable showZoomButtons: boolean = true;
 
     setAxesLinesType(type: IViewOptionsAxesLinesType) {
         this.axesLines.type = type;

@@ -56,11 +56,8 @@ export class Dialog extends React.Component<
     },
     {}
 > {
-    @observable
-    disableButtons = false;
-
-    @observable
-    open = true;
+    @observable disableButtons = false;
+    @observable open = true;
 
     @action
     closeDialog() {

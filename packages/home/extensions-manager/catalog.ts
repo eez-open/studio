@@ -24,8 +24,7 @@ interface ICatalogVersion {
 }
 
 class ExtensionsCatalog {
-    @observable
-    catalog: IExtension[] = [];
+    @observable catalog: IExtension[] = [];
     catalogVersion: ICatalogVersion;
 
     constructor() {

@@ -91,8 +91,7 @@ export class ViewOptions implements IViewOptions {
         }
     }
 
-    @observable
-    axesLines: IViewOptionsAxesLines = {
+    @observable axesLines: IViewOptionsAxesLines = {
         type: "dynamic",
         steps: {
             x: [],
@@ -110,10 +109,8 @@ export class ViewOptions implements IViewOptions {
         defaultZoomMode: "default"
     };
 
-    @observable
-    showAxisLabels: boolean = true;
-    @observable
-    showZoomButtons: boolean = true;
+    @observable showAxisLabels: boolean = true;
+    @observable showZoomButtons: boolean = true;
 
     setAxesLinesType(type: IViewOptionsAxesLinesType) {
         this.axesLines.type = type;
@@ -194,8 +191,7 @@ export class WaveformAxisModel implements IAxisModel {
         return UNITS[this.waveform.waveformDefinition.unitName];
     }
 
-    @observable
-    dynamic: {
+    @observable dynamic: {
         zoomMode: ZoomMode;
         from: number;
         to: number;
@@ -205,8 +201,7 @@ export class WaveformAxisModel implements IAxisModel {
         to: 0
     };
 
-    @observable
-    fixed: {
+    @observable fixed: {
         zoomMode: ZoomMode;
         subdivisionOffset: number;
         subdivisonScale: number;
@@ -555,11 +550,9 @@ export class Waveform extends FileHistoryItem {
         return JSON.parse(this.message);
     }
 
-    @observable.shallow
-    waveformDefinition = this.getDefaultWaveformDefinition();
+    @observable.shallow waveformDefinition = this.getDefaultWaveformDefinition();
 
-    @observable
-    length: number = 0;
+    @observable length: number = 0;
 
     get format() {
         return this.waveformDefinition.format;
@@ -780,8 +773,7 @@ export class WaveformDefinitionProperties {
         this.propsValidated = objectClone(this.waveformDefinition);
     }
 
-    @observable
-    props: {
+    @observable props: {
         samplingRate: string;
         format: WaveformFormat;
         unit: IUnit;
@@ -791,8 +783,7 @@ export class WaveformDefinitionProperties {
 
     propsValidated: IWaveformDefinition;
 
-    @observable
-    errors: boolean;
+    @observable errors: boolean;
 
     validator = makeValidator({
         samplingRate: [

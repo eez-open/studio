@@ -50,8 +50,7 @@ export class Canvas extends React.Component<{
         return this.props.designerContext!;
     }
 
-    @observable
-    _mouseHandler: IMouseHandler | undefined;
+    @observable _mouseHandler: IMouseHandler | undefined;
     get mouseHandler() {
         return this._mouseHandler;
     }
@@ -412,9 +411,7 @@ export class Canvas extends React.Component<{
                                     left: pageRect.left,
                                     top: pageRect.top
                                 }}
-                                viewBox={`${pageRect.left}, ${pageRect.top}, ${pageRect.width}, ${
-                                    pageRect.height
-                                }`}
+                                viewBox={`${pageRect.left}, ${pageRect.top}, ${pageRect.width}, ${pageRect.height}`}
                             >
                                 <line
                                     x1={pageRect.left}

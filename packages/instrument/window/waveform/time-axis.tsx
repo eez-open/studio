@@ -50,8 +50,7 @@ export class WaveformTimeAxisModel implements IAxisModel {
         return 1e15;
     }
 
-    @observable
-    dynamic: {
+    @observable dynamic: {
         zoomMode: ZoomMode;
         from: number;
         to: number;
@@ -61,8 +60,7 @@ export class WaveformTimeAxisModel implements IAxisModel {
         to: 0
     };
 
-    @observable
-    fixed: {
+    @observable fixed: {
         zoomMode: ZoomMode;
         subdivisionOffset: number;
         subdivisonScale: number;

@@ -107,8 +107,7 @@ class ColorItem extends React.Component<{
         return this.selectedTheme.colors[this.colorIndex];
     }
 
-    @observable
-    changedThemeColor: string | undefined;
+    @observable changedThemeColor: string | undefined;
 
     onChangeTimeout: any;
 

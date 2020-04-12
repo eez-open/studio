@@ -54,13 +54,9 @@ export class HistorySessions {
         });
     }
 
-    @observable
-    sessions: ISession[] = [];
-    @observable
-    selectedSession: ISession | undefined;
-
-    @observable
-    activeSession: SessionHistoryItem | undefined;
+    @observable sessions: ISession[] = [];
+    @observable selectedSession: ISession | undefined;
+    @observable activeSession: SessionHistoryItem | undefined;
 
     @action
     async load() {

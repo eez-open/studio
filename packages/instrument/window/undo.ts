@@ -25,9 +25,7 @@ export class UndoManager {
     transactionLabel: string;
     @observable.shallow undoStack: ICommand[] = [];
     @observable.shallow redoStack: ICommand[] = [];
-
     @observable.shallow _model: IModel | undefined;
-
     autorunDisposer: any;
 
     constructor() {

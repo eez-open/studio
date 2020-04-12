@@ -1145,8 +1145,7 @@ export class TreeAdapter implements ITreeAdapter {
 class ListItem {
     constructor(public object: IEezObject) {}
 
-    @observable
-    selected: boolean = false;
+    @observable selected: boolean = false;
 
     get item() {
         return this;

@@ -25,17 +25,12 @@ import { Transform } from "home/designer/transform";
 class ViewState implements IViewState {
     document: IDocument;
 
-    @observable
-    transform = new Transform({
+    @observable transform = new Transform({
         scale: 1,
         translate: { x: 0, y: 0 }
     });
-
-    @observable
-    isIdle: boolean = true;
-
-    @observable
-    _selectedObjects: IBaseObject[] = [];
+    @observable isIdle: boolean = true;
+    @observable _selectedObjects: IBaseObject[] = [];
 
     persistentStateReactionDisposer: IReactionDisposer;
     selectedObjectsReactionDisposer: IReactionDisposer;
@@ -228,8 +223,7 @@ export class DesignerContext implements IDesignerContext {
     document: IDocument;
     viewState: ViewState = new ViewState();
 
-    @observable
-    options: IDesignerOptions = {};
+    @observable options: IDesignerOptions = {};
 
     filterSnapLines: ((node: IBaseObject) => boolean) | undefined;
 

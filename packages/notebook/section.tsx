@@ -46,11 +46,8 @@ import { showDeletedNotebooksDialog } from "notebook/deleted-notebooks-dialog";
 ////////////////////////////////////////////////////////////////////////////////
 
 class NotebooksHomeSectionStore {
-    @observable
-    private _selectedNotebook: INotebook | undefined;
-
-    @observable
-    showDeletedHistoryItems = false;
+    @observable private _selectedNotebook: INotebook | undefined;
+    @observable showDeletedHistoryItems = false;
 
     constructor() {
         autorun(() => {
@@ -273,11 +270,8 @@ class MasterView extends React.Component {
 class AppStore implements IAppStore {
     constructor(public notebookId: string) {}
 
-    @observable
-    selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
-
-    @observable
-    selectedHistoryItems = new Map<string, boolean>();
+    @observable selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
+    @observable selectedHistoryItems = new Map<string, boolean>();
 
     instrument: {
         id: string;

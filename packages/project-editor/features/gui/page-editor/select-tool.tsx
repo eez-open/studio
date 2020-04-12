@@ -158,8 +158,7 @@ export const selectToolHandler: IToolHandler = {
 };
 
 export class RubberBandSelectionMouseHandler extends MouseHandler {
-    @observable
-    rubberBendRect: Rect | undefined;
+    @observable rubberBendRect: Rect | undefined;
 
     down(context: IDesignerContext, event: MouseEvent) {
         super.down(context, event);

@@ -37,11 +37,8 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScpiParameterType extends EezObject implements IParameterType {
-    @observable
-    type: IParameterTypeType;
-
-    @observable
-    enumeration?: string;
+    @observable type: IParameterTypeType;
+    @observable enumeration?: string;
 
     static classInfo: ClassInfo = {
         label: (scpiType: ScpiParameterType) => {

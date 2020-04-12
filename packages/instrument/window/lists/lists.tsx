@@ -295,8 +295,7 @@ export class SelectChannelDialog extends React.Component<
     },
     {}
 > {
-    @observable
-    channelIndex: number = 0;
+    @observable channelIndex: number = 0;
 
     @bind
     handleSubmit() {

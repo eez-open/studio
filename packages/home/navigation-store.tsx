@@ -29,8 +29,7 @@ export class NavigationStore {
     deletedHistoryItemsNavigationItem: IRootNavigationItem;
     shortcutsAndGroupsNavigationItem: IRootNavigationItem;
 
-    @observable
-    private _mainNavigationSelectedItemId: string;
+    @observable private _mainNavigationSelectedItemId: string;
 
     mainHistoryView: HistoryView | undefined;
 
@@ -84,9 +83,7 @@ export class NavigationStore {
             if (tabs && tabs.activeTab) {
                 if (tabs.activeTab === tabs.homeTab) {
                     if (this.mainNavigationSelectedItem) {
-                        document.title = `${
-                            this.mainNavigationSelectedItem.title
-                        } - Home - EEZ Studio`;
+                        document.title = `${this.mainNavigationSelectedItem.title} - Home - EEZ Studio`;
                     } else {
                         document.title = `Home - EEZ Studio`;
                     }

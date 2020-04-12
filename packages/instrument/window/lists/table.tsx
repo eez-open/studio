@@ -259,8 +259,9 @@ export class TableLineView extends React.Component<
 
         for (let i = 0; i < size; i++) {
             if (i === 0) {
-                path = `M${chartLeft + xAxisController.valueToPx(0)} ${chartBottom -
-                    yAxisController.valueToPx((values.length > 0 && values[0]) || 0)}`;
+                path = `M${chartLeft + xAxisController.valueToPx(0)} ${
+                    chartBottom - yAxisController.valueToPx((values.length > 0 && values[0]) || 0)
+                }`;
             } else {
                 if (i < values.length) {
                     path += " v " + -(values[i] - (values[i - 1] || 0)) * yAxisController.scale;
@@ -418,8 +419,7 @@ const CellTd = styled.td`
 
 @observer
 class Cell extends React.Component<CellProps, {}> {
-    @observable
-    value: string = Cell.getValue(this.props);
+    @observable value: string = Cell.getValue(this.props);
 
     static getValue(props: CellProps): string {
         if (props.value === undefined) {
@@ -441,9 +441,7 @@ class Cell extends React.Component<CellProps, {}> {
     static focusNext(element: HTMLElement, offset: number) {
         element.blur();
         setTimeout(() => {
-            let cells = $(element)
-                .parents("tbody")
-                .find("td");
+            let cells = $(element).parents("tbody").find("td");
 
             let nextCellIndex = cells.index(element) + offset;
 
@@ -553,8 +551,7 @@ export class Table extends React.Component<
     },
     {}
 > {
-    @observable
-    error: string | undefined;
+    @observable error: string | undefined;
 
     @computed
     get data() {
@@ -777,8 +774,7 @@ interface TableDetailsViewProps {
 
 @observer
 export class TableDetailsView extends React.Component<TableDetailsViewProps, {}> {
-    @observable
-    list: TableList = this.props.list;
+    @observable list: TableList = this.props.list;
 
     @computed
     get chartsController() {
@@ -933,8 +929,7 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
         }
     }
 
-    @observable
-    error: string | undefined;
+    @observable error: string | undefined;
 
     @action.bound
     setError(error: string | undefined) {

@@ -184,9 +184,7 @@ export class EditorObject implements IBaseObject {
 ////////////////////////////////////////////////////////////////////////////////
 
 class DragSnapLines {
-    @observable
-    snapLines: SnapLines | undefined;
-
+    @observable snapLines: SnapLines | undefined;
     pageEditorContext: PageEditorDesignerContext | undefined;
     dragWidget: Widget | undefined;
 
@@ -253,8 +251,7 @@ const DragWidget = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 class PageEditorDesignerContext extends DesignerContext {
-    @observable
-    dragWidget: Widget | undefined;
+    @observable dragWidget: Widget | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -386,18 +383,11 @@ interface PageEditorProps {
 }
 
 @observer
-export class PageEditor
-    extends React.Component<
-        PageEditorProps,
-        {
-            hasError: boolean;
-        }
-    >
+export class PageEditor extends React.Component<PageEditorProps, { hasError: boolean }>
     implements IPanel {
     pageEditorContext: PageEditorDesignerContext = new PageEditorDesignerContext();
 
-    @observable
-    pageDocument: PageDocument;
+    @observable pageDocument: PageDocument;
 
     @observable options: IDesignerOptions;
 
