@@ -602,7 +602,7 @@ function getInheritedValue(
     }
 
     if (styleObject.inheritFrom) {
-        let inheritFromStyleObject = findStyle(styleObject.inheritFrom);
+        let inheritFromStyleObject = findStyle(styleObject.inheritFrom, true);
         if (inheritFromStyleObject) {
             return getInheritedValue(inheritFromStyleObject, propertyName, translateThemedColors);
         }
@@ -1225,7 +1225,7 @@ export function drawStylePreview(canvas: HTMLCanvasElement, style: Style, text: 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findStyle(styleName: string | undefined) {
+export function findStyle(styleName: string | undefined, allInMasterProject: boolean = false) {
     if (!styleName) {
         return undefined;
     }
@@ -1238,7 +1238,7 @@ export function findStyle(styleName: string | undefined) {
     if (ProjectStore.masterProject) {
         if (ProjectStore.masterProject.gui) {
             const style = ProjectStore.masterProject.gui.stylesMap.get(styleName);
-            if (style && style.id != undefined) {
+            if (style && (allInMasterProject || style.id != undefined)) {
                 return style;
             }
         }
