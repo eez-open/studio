@@ -5,35 +5,36 @@ export function getColorRGB(color: string) {
 }
 
 export function addAlphaToColor(color: string, alpha: number) {
-    return tinycolor(color)
-        .setAlpha(alpha)
-        .toRgbString();
+    return tinycolor(color).setAlpha(alpha).toRgbString();
 }
 
-export function blendColor(fgColor: string, bgColor: string, alpha: number) {
-    const fg = tinycolor(fgColor).toRgb();
-    var added = [fg.r, fg.g, fg.b, alpha];
+export function blendColor(
+    fgColor: { r: number; g: number; b: number },
+    bgColor: { r: number; g: number; b: number },
+    alpha: number,
+    mixedColor: { r: number; g: number; b: number }
+) {
+    if (alpha == 0) {
+        return bgColor;
+    }
 
-    const bg = tinycolor(bgColor).toRgb();
-    var base = [bg.r, bg.g, bg.b, 1 - alpha];
+    if (alpha == 1) {
+        return fgColor;
+    }
 
-    var mix = [];
+    var alphaAdded = alpha;
+    var alphaBase = 1 - alpha;
 
-    mix[3] = 1 - (1 - added[3]) * (1 - base[3]); // alpha
+    alpha = 1 - (1 - alpha) * alpha;
 
-    mix[0] = Math.round(
-        (added[0] * added[3]) / mix[3] + (base[0] * base[3] * (1 - added[3])) / mix[3]
-    ); // red
+    var a = alphaAdded / alpha;
+    var b = (alphaBase * (1 - alphaAdded)) / alpha;
 
-    mix[1] = Math.round(
-        (added[1] * added[3]) / mix[3] + (base[1] * base[3] * (1 - added[3])) / mix[3]
-    ); // green
+    mixedColor.r = Math.round(fgColor.r * a + bgColor.r * b);
+    mixedColor.g = Math.round(fgColor.g * a + bgColor.g * b);
+    mixedColor.b = Math.round(fgColor.b * a + bgColor.b * b);
 
-    mix[2] = Math.round(
-        (added[2] * added[3]) / mix[3] + (base[2] * base[3] * (1 - added[3])) / mix[3]
-    ); // blue
-
-    return mix;
+    return mixedColor;
 }
 
 export function strToColor16(colorStr: string) {

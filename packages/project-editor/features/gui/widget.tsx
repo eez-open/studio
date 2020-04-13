@@ -72,7 +72,7 @@ import {
     styleIsVertAlignTop,
     styleIsVertAlignBottom,
     styleGetFont,
-    textDrawingInBackground
+    drawStr
 } from "project-editor/features/gui/draw";
 import * as draw from "project-editor/features/gui/draw";
 import { Font } from "project-editor/features/gui/font";
@@ -1859,7 +1859,7 @@ class MultilineTextRender {
                     draw.setColor(getStyleProperty(this.style, "color"));
                 }
 
-                textDrawingInBackground.drawStr(
+                drawStr(
                     this.ctx,
                     this.line,
                     x + this.lineIndent,

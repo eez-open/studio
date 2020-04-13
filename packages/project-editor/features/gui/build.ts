@@ -97,7 +97,7 @@ export function getFontData(font: Font, dataBuffer: DataBuffer) {
                 dataBuffer.packInt8(glyph.x);
                 dataBuffer.packInt8(glyph.y);
 
-                dataBuffer.packNumberArray(glyph.glyphBitmap.pixelArray);
+                dataBuffer.packArray(glyph.glyphBitmap.pixelArray);
             } else {
                 dataBuffer.packInt8(255);
             }
@@ -206,12 +206,9 @@ export class DataBuffer {
         this.packUInt8AtOffset(offset + 3, value >> 24);
     }
 
-    packArray(array: Uint8Array) {
-        array.forEach(x => this.packUInt8(x));
-    }
-
-    packNumberArray(array: number[]) {
-        array.forEach(x => this.packUInt8(x));
+    packArray(array: Uint8Array | number[]) {
+        this.buffer.set(array, this.offset);
+        this.offset += array.length;
     }
 
     addPadding(dataLength: number, length: number) {
@@ -1650,24 +1647,15 @@ class Assets {
             } else {
                 const style = styleNameOrObject;
 
-                const keys = Object.keys(style);
-                if (keys.length == 1 && style.inheritFrom) {
-                    return this.getStyleIndex(style.inheritFrom);
-                }
-
-                let parentStyle: Style | undefined = style;
-                while (true) {
-                    if (!parentStyle.inheritFrom) {
-                        break;
-                    }
-
-                    parentStyle = findStyle(parentStyle.inheritFrom);
-                    if (!parentStyle) {
-                        break;
-                    }
-
-                    if (style.compareTo(parentStyle)) {
-                        return this.getStyleIndex(parentStyle.name);
+                if (style.inheritFrom) {
+                    const parentStyle = findStyle(style.inheritFrom);
+                    if (parentStyle) {
+                        if (style.compareTo(parentStyle)) {
+                            if (style.id != undefined) {
+                                return style.id;
+                            }
+                            return this.getStyleIndex(parentStyle.name);
+                        }
                     }
                 }
 

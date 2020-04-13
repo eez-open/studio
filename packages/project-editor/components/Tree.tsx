@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
@@ -54,36 +54,34 @@ const DropVerticalMarkDiv = styled.div`
     border-left: 1px solid ${props => props.theme.dropPlaceColor};
 `;
 
-interface DropMarkProps {
-    left: number;
-    top: number;
-    width: number;
-    verticalConnectionLineHeight: number | undefined;
-}
-
-@observer
-class DropMark extends React.Component<DropMarkProps, {}> {
-    render() {
-        const { left, top, width, verticalConnectionLineHeight } = this.props;
-
-        return (
-            <DropMarkDiv style={{ left, top, width }}>
-                <DropHorizontalMarkDiv>
-                    <DropHorizontalMarkLeftArrowDiv />
-                    <DropHorizontalMarkRightArrowDiv />
-                </DropHorizontalMarkDiv>
-                {verticalConnectionLineHeight !== undefined && (
-                    <DropVerticalMarkDiv
-                        style={{
-                            top: -verticalConnectionLineHeight + "px",
-                            height: verticalConnectionLineHeight - 4 + "px"
-                        }}
-                    />
-                )}
-            </DropMarkDiv>
-        );
-    }
-}
+const DropMark = observer(
+    ({
+        left,
+        top,
+        width,
+        verticalConnectionLineHeight
+    }: {
+        left: number;
+        top: number;
+        width: number;
+        verticalConnectionLineHeight: number | undefined;
+    }) => (
+        <DropMarkDiv style={{ left, top, width }}>
+            <DropHorizontalMarkDiv>
+                <DropHorizontalMarkLeftArrowDiv />
+                <DropHorizontalMarkRightArrowDiv />
+            </DropHorizontalMarkDiv>
+            {verticalConnectionLineHeight !== undefined && (
+                <DropVerticalMarkDiv
+                    style={{
+                        top: -verticalConnectionLineHeight + "px",
+                        height: verticalConnectionLineHeight - 4 + "px"
+                    }}
+                />
+            )}
+        </DropMarkDiv>
+    )
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,166 +137,57 @@ const TreeRowDiv = styled.div`
     }
 `;
 
-interface TreeRowProps {
-    treeAdapter: ITreeAdapter;
-    item: ITreeItem;
-    level: number;
-    draggable: boolean;
-    collapsable: boolean;
-    onEditItem?: (itemId: string) => void;
-    renderItem?: (itemId: string) => React.ReactNode;
-}
+const TreeRow = observer(
+    ({
+        treeAdapter,
+        item,
+        level,
+        draggable,
+        onDragStart,
+        onDrag,
+        onDragEnd,
+        onClick,
+        onMouseUp,
+        onDoubleClick,
+        collapsable,
+        onToggleCollapse,
+        onEditItem,
+        renderItem
+    }: {
+        treeAdapter: ITreeAdapter;
+        item: ITreeItem;
+        level: number;
+        draggable: boolean;
+        onDragStart: (event: any) => void;
+        onDrag: (event: any) => void;
+        onDragEnd: (event: any) => void;
+        onClick: (event: any) => void;
+        onMouseUp: (event: any) => void;
+        onDoubleClick: (event: any) => void;
+        collapsable: boolean;
+        onToggleCollapse: (event: any) => void;
+        onEditItem?: (itemId: string) => void;
+        renderItem?: (itemId: string) => React.ReactNode;
+    }) => {
+        const ref = useRef<HTMLDivElement>(null);
 
-@observer
-class TreeRow extends React.Component<TreeRowProps, {}> {
-    row: HTMLDivElement;
-    index: number;
-    ensureVisibleTimeout: any;
+        let ensureVisibleTimeout: any;
 
-    ensureVisible() {
-        if (this.ensureVisibleTimeout) {
-            clearTimeout(this.ensureVisibleTimeout);
-        }
-
-        this.ensureVisibleTimeout = setTimeout(() => {
-            this.ensureVisibleTimeout = undefined;
-
-            if (
-                !(
-                    this.props.treeAdapter.draggableAdapter &&
-                    this.props.treeAdapter.draggableAdapter.isDragging
-                )
-            ) {
-                if (hasClass(this.row, "selected")) {
-                    (this.row as any).scrollIntoViewIfNeeded();
-                }
-            }
-        }, 100);
-    }
-
-    componentDidMount() {
-        this.ensureVisible();
-    }
-
-    componentDidUpdate() {
-        this.ensureVisible();
-    }
-
-    @bind
-    onDragStart(event: any) {
-        this.props.treeAdapter.draggableAdapter!.onDragStart(this.props.item, event);
-    }
-
-    @bind
-    onDrag(event: any) {
-        this.props.treeAdapter.draggableAdapter!.onDrag(this.props.item, event);
-    }
-
-    @bind
-    onDragEnd(event: any) {
-        this.props.treeAdapter.draggableAdapter!.onDragEnd(event);
-    }
-
-    @bind
-    onMouseUp(event: React.MouseEvent<HTMLDivElement>) {
-        if (event.button === 2) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            if (!this.props.treeAdapter.isSelected(this.props.item)) {
-                this.props.treeAdapter.selectItem(this.props.item);
+        useEffect(() => {
+            if (ensureVisibleTimeout) {
+                clearTimeout(ensureVisibleTimeout);
             }
 
-            setTimeout(() => {
-                this.props.treeAdapter.showSelectionContextMenu();
-            });
-        }
-    }
+            ensureVisibleTimeout = setTimeout(() => {
+                ensureVisibleTimeout = undefined;
 
-    @bind
-    onTriangleClick(event: any) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        this.props.treeAdapter.selectItem(this.props.item);
-        this.props.treeAdapter.collapsableAdapter!.toggleExpanded(this.props.item);
-    }
-
-    @bind
-    onClick(e: React.MouseEvent<HTMLDivElement>) {
-        if (e.shiftKey) {
-            const $treeDiv = $(this.row).parent();
-            const $selectedItems = $treeDiv.find(".tree-row.selected");
-            if ($selectedItems.length > 0) {
-                let $rows = $treeDiv.find(".tree-row");
-
-                let iFirst = $rows.index($selectedItems.first());
-                let iLast = $rows.index($selectedItems.last());
-                let iThisItem = $rows.index(
-                    $treeDiv.find(
-                        `.tree-row[data-object-id="${this.props.treeAdapter.getItemId(
-                            this.props.item
-                        )}"]`
-                    )
-                );
-
-                let iFrom;
-                let iTo;
-                if (iThisItem <= iFirst) {
-                    iFrom = iThisItem;
-                    iTo = iLast;
-                } else if (iThisItem >= iLast) {
-                    iFrom = iFirst;
-                    iTo = iThisItem;
-                } else if (iThisItem - iFirst > iLast - iThisItem) {
-                    iFrom = iFirst;
-                    iTo = iThisItem;
-                } else {
-                    iFrom = iThisItem;
-                    iTo = iLast;
-                }
-
-                const items: ITreeItem[] = [];
-                for (let i = iFrom; i <= iTo; i++) {
-                    const id = $($rows.get(i)).attr("data-object-id");
-                    if (id) {
-                        const item = this.props.treeAdapter.getItemFromId(id);
-                        if (item) {
-                            items.push(item);
-                        }
+                if (!(treeAdapter.draggableAdapter && treeAdapter.draggableAdapter.isDragging)) {
+                    if (hasClass(ref.current, "selected")) {
+                        ref.current!.scrollIntoView({ block: "center" });
                     }
                 }
-
-                this.props.treeAdapter.selectItems(items);
-                return;
-            } else {
-                this.props.treeAdapter.selectItem(this.props.item);
-            }
-        } else if (e.ctrlKey) {
-            this.props.treeAdapter.toggleSelected(this.props.item);
-        } else {
-            this.props.treeAdapter.selectItem(this.props.item);
-        }
-    }
-
-    @bind
-    onDoubleClick(e: any) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.props.treeAdapter.onDoubleClick(this.props.item);
-    }
-
-    render() {
-        const {
-            treeAdapter,
-            item,
-            collapsable,
-            level,
-            draggable,
-            onEditItem,
-            renderItem
-        } = this.props;
+            }, 100);
+        }, []);
 
         let className = classNames("tree-row", {
             selected: treeAdapter.isSelected(item),
@@ -318,7 +207,7 @@ class TreeRow extends React.Component<TreeRowProps, {}> {
                     }
                     size={18}
                     className="tree-row-triangle"
-                    onClick={this.onTriangleClick}
+                    onClick={onToggleCollapse}
                 />
             );
         } else {
@@ -327,17 +216,17 @@ class TreeRow extends React.Component<TreeRowProps, {}> {
 
         return (
             <TreeRowDiv
-                ref={(ref: any) => (this.row = ref!)}
+                ref={ref}
                 data-object-id={treeAdapter.getItemId(item)}
                 className={className}
                 style={{ paddingLeft: level * 20 }}
-                onMouseUp={this.onMouseUp}
-                onClick={this.onClick}
-                onDoubleClick={triangle ? this.onTriangleClick : this.onDoubleClick}
+                onMouseUp={onMouseUp}
+                onClick={onClick}
+                onDoubleClick={onDoubleClick}
                 draggable={draggable}
-                onDragStart={this.onDragStart}
-                onDrag={this.onDrag}
-                onDragEnd={this.onDragEnd}
+                onDragStart={onDragStart}
+                onDrag={onDrag}
+                onDragEnd={onDragEnd}
             >
                 {onEditItem && (
                     <Icon
@@ -358,38 +247,7 @@ class TreeRow extends React.Component<TreeRowProps, {}> {
             </TreeRowDiv>
         );
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-class TreeRows extends React.Component<{
-    treeAdapter: ITreeAdapter;
-    onEditItem?: (itemId: string) => void;
-    renderItem?: (itemId: string) => React.ReactNode;
-}> {
-    @computed
-    get allRows() {
-        return this.props.treeAdapter.allRows;
-    }
-
-    render() {
-        const { treeAdapter, onEditItem, renderItem } = this.props;
-
-        return this.allRows.map(row => (
-            <TreeRow
-                key={this.props.treeAdapter.getItemId(row.item)}
-                treeAdapter={treeAdapter}
-                item={row.item}
-                level={row.level}
-                draggable={row.draggable}
-                collapsable={row.collapsable}
-                onEditItem={onEditItem}
-                renderItem={renderItem}
-            />
-        ));
-    }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -404,6 +262,7 @@ const TreeDiv = styled.div`
     & > div {
         position: absolute;
         min-width: calc(100% - 10px);
+        padding-bottom: 5px;
     }
 
     &.zero-level .tree-row-label {
@@ -463,6 +322,11 @@ export class Tree extends React.Component<TreeProps, {}> {
     @observable dropMarkTop: number;
     @observable dropMarkWidth: number;
     @observable dropMarkVerticalConnectionLineHeight: number | undefined;
+
+    @computed
+    get allRows() {
+        return this.props.treeAdapter.allRows;
+    }
 
     UNSAFE_componentWillReceiveProps(nextProps: TreeProps) {
         this.setState({
@@ -628,7 +492,9 @@ export class Tree extends React.Component<TreeProps, {}> {
 
                     const $nextRow = $allRows.eq(rowIndexAtCursor + 1);
                     const nextObjectId = $nextRow.attr("data-object-id");
-                    let nextItem = treeAdapter.getItemFromId(nextObjectId!)!;
+                    let nextItem = nextObjectId
+                        ? treeAdapter.getItemFromId(nextObjectId!)
+                        : undefined;
                     let nextItemParent = nextItem && treeAdapter.getItemParent(nextItem);
 
                     if (event.nativeEvent.clientY < rowRect.top + rowRect.height / 2) {
@@ -644,13 +510,13 @@ export class Tree extends React.Component<TreeProps, {}> {
                             !draggableAdapter.isAncestorOfDragObject(dropItem) &&
                             !(
                                 rowIndexAtCursor + 1 < $allRows.length &&
-                                treeAdapter.isAncestor(nextItem, dropItem)
+                                treeAdapter.isAncestor(nextItem!, dropItem)
                             )
                         ) {
                             dropPosition = DropPosition.DROP_POSITION_INSIDE;
                             canDrop = true;
                         } else if (dropItem === nextItemParent) {
-                            dropItem = nextItem;
+                            dropItem = nextItem!;
                             dropPosition = DropPosition.DROP_POSITION_BEFORE;
                             checks();
                         } else {
@@ -689,7 +555,7 @@ export class Tree extends React.Component<TreeProps, {}> {
 
                             if (canDropToItem) {
                                 if (treeAdapter.getItemParent(canDropToItem) === nextItemParent) {
-                                    dropItem = nextItem;
+                                    dropItem = nextItem!;
                                     dropPosition = DropPosition.DROP_POSITION_BEFORE;
                                     checks();
                                 } else {
@@ -778,6 +644,126 @@ export class Tree extends React.Component<TreeProps, {}> {
         }
     }
 
+    @bind
+    onRowDragStart(event: any) {
+        let item = this.props.treeAdapter.getItemFromId($(event.target).attr("data-object-id")!);
+        this.props.treeAdapter.draggableAdapter!.onDragStart(item!, event);
+    }
+
+    @bind
+    onRowDrag(event: any) {
+        let item = this.props.treeAdapter.getItemFromId($(event.target).attr("data-object-id")!);
+        this.props.treeAdapter.draggableAdapter!.onDrag(item!, event);
+    }
+
+    @bind
+    onRowDragEnd(event: any) {
+        this.props.treeAdapter.draggableAdapter!.onDragEnd(event);
+    }
+
+    @bind
+    onRowClick(event: React.MouseEvent<HTMLDivElement>) {
+        const $rowDiv = $(event.target).closest(".tree-row[data-object-id]");
+        let item = this.props.treeAdapter.getItemFromId($rowDiv.attr("data-object-id")!)!;
+        if (event.shiftKey) {
+            const $treeDiv = $rowDiv.parent();
+            const $selectedItems = $treeDiv.find(".tree-row.selected");
+            if ($selectedItems.length > 0) {
+                let $rows = $treeDiv.find(".tree-row");
+
+                let iFirst = $rows.index($selectedItems.first() as JQuery<HTMLElement>);
+                let iLast = $rows.index($selectedItems.last() as JQuery<HTMLElement>);
+                let iThisItem = $rows.index(
+                    $treeDiv.find(
+                        `.tree-row[data-object-id="${this.props.treeAdapter.getItemId(item)}"]`
+                    ) as JQuery<HTMLElement>
+                );
+
+                let iFrom;
+                let iTo;
+                if (iThisItem <= iFirst) {
+                    iFrom = iThisItem;
+                    iTo = iLast;
+                } else if (iThisItem >= iLast) {
+                    iFrom = iFirst;
+                    iTo = iThisItem;
+                } else if (iThisItem - iFirst > iLast - iThisItem) {
+                    iFrom = iFirst;
+                    iTo = iThisItem;
+                } else {
+                    iFrom = iThisItem;
+                    iTo = iLast;
+                }
+
+                const items: ITreeItem[] = [];
+                for (let i = iFrom; i <= iTo; i++) {
+                    const id = $($rows.get(i)).attr("data-object-id");
+                    if (id) {
+                        const item = this.props.treeAdapter.getItemFromId(id);
+                        if (item) {
+                            items.push(item);
+                        }
+                    }
+                }
+
+                this.props.treeAdapter.selectItems(items);
+                return;
+            } else {
+                this.props.treeAdapter.selectItem(item);
+            }
+        } else if (event.ctrlKey) {
+            this.props.treeAdapter.toggleSelected(item);
+        } else {
+            this.props.treeAdapter.selectItem(item);
+        }
+    }
+
+    @bind
+    onRowMouseUp(event: React.MouseEvent<HTMLDivElement>) {
+        if (event.button === 2) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const $rowDiv = $(event.target).closest(".tree-row[data-object-id]");
+            let item = this.props.treeAdapter.getItemFromId($rowDiv.attr("data-object-id")!)!;
+
+            if (!this.props.treeAdapter.isSelected(item)) {
+                this.props.treeAdapter.selectItem(item);
+            }
+
+            setTimeout(() => {
+                this.props.treeAdapter.showSelectionContextMenu();
+            });
+        }
+    }
+
+    @bind
+    onRowDoubleClick(event: any) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const $rowDiv = $(event.target).closest(".tree-row[data-object-id]");
+        let item = this.props.treeAdapter.getItemFromId($rowDiv.attr("data-object-id")!)!;
+        let row = this.props.treeAdapter.allRows.find(row => row.item == item)!;
+        if (row.collapsable) {
+            this.props.treeAdapter.selectItem(item);
+            this.props.treeAdapter.collapsableAdapter!.toggleExpanded(item);
+        } else {
+            this.props.treeAdapter.onDoubleClick(item);
+        }
+    }
+
+    @bind
+    onRowToggleCollapse(event: any) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const $rowDiv = $(event.target).closest(".tree-row[data-object-id]");
+        let item = this.props.treeAdapter.getItemFromId($rowDiv.attr("data-object-id")!)!;
+        this.props.treeAdapter.selectItem(item);
+        this.props.treeAdapter.collapsableAdapter!.toggleExpanded(item);
+    }
+
     onContextMenu(event: React.MouseEvent) {
         event.preventDefault();
         event.stopPropagation();
@@ -811,11 +797,26 @@ export class Tree extends React.Component<TreeProps, {}> {
                                 : "auto"
                     }}
                 >
-                    <TreeRows
-                        treeAdapter={treeAdapter}
-                        onEditItem={onEditItem}
-                        renderItem={renderItem}
-                    />
+                    {this.allRows.map(row => (
+                        <TreeRow
+                            key={treeAdapter.getItemId(row.item)}
+                            treeAdapter={treeAdapter}
+                            item={row.item}
+                            level={row.level}
+                            draggable={row.draggable}
+                            onDragStart={this.onRowDragStart}
+                            onDrag={this.onRowDrag}
+                            onDragEnd={this.onRowDragEnd}
+                            onClick={this.onRowClick}
+                            onMouseUp={this.onRowMouseUp}
+                            onDoubleClick={this.onRowDoubleClick}
+                            collapsable={row.collapsable}
+                            onToggleCollapse={this.onRowToggleCollapse}
+                            onEditItem={onEditItem}
+                            renderItem={renderItem}
+                        />
+                    ))}
+
                     {this.dropPosition && (
                         <DropMark
                             left={this.dropMarkLeft}

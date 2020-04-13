@@ -20,9 +20,11 @@ import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
+import { Project } from "project-editor/project/project";
+
 import { Page, IPage } from "project-editor/features/gui/page";
 import { Style, IStyle, findStyle } from "project-editor/features/gui/style";
-import { Font, IFont } from "project-editor/features/gui/font";
+import { Font, IFont, serializePixelArray } from "project-editor/features/gui/font";
 import { Bitmap, IBitmap } from "project-editor/features/gui/bitmap";
 import { Theme, ITheme, Color, IColor } from "project-editor/features/gui/theme";
 
@@ -224,18 +226,7 @@ registerFeatureImplementation("gui", {
         },
         build: build,
         metrics: metrics,
-        toJsHook: (jsObject: {
-            gui: {
-                colors: {
-                    id: string;
-                }[];
-                themes: {
-                    id: string;
-                    colors: string[];
-                }[];
-                themeColors: any;
-            };
-        }) => {
+        toJsHook: (jsObject: Project) => {
             const gui = ProjectStore.project.gui;
             if (gui) {
                 //
@@ -247,6 +238,16 @@ registerFeatureImplementation("gui", {
                 });
 
                 delete jsObject.gui.themeColors;
+
+                jsObject.gui.fonts.forEach(font =>
+                    font.glyphs.forEach(glyph => {
+                        if (glyph.glyphBitmap && glyph.glyphBitmap.pixelArray) {
+                            (glyph.glyphBitmap as any).pixelArray = serializePixelArray(
+                                glyph.glyphBitmap.pixelArray
+                            );
+                        }
+                    })
+                );
             }
         }
     }

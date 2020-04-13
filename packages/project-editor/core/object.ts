@@ -1,5 +1,4 @@
 import React from "react";
-import { observable, IObservableValue } from "mobx";
 
 import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
@@ -500,31 +499,6 @@ export function getKey(object: IEezObject): string {
 
 export function setKey(object: IEezObject, key: string) {
     return setObjectMetaProperty(object, "key", key);
-}
-
-export function getModificationTime(object: IEezObject): number {
-    let modificationTimeObservable: IObservableValue<number> = getObjectMetaProperty(
-        object,
-        "modificationTime"
-    );
-    if (!modificationTimeObservable) {
-        modificationTimeObservable = observable.box(0);
-        setObjectMetaProperty(object, "modificationTime", modificationTimeObservable);
-    }
-    return modificationTimeObservable.get();
-}
-
-export function setModificationTime(object: IEezObject, modificationTime: number) {
-    let modificationTimeObservable: IObservableValue<number> = getObjectMetaProperty(
-        object,
-        "modificationTime"
-    );
-    if (modificationTimeObservable) {
-        modificationTimeObservable.set(modificationTime);
-    } else {
-        modificationTimeObservable = observable.box(modificationTime);
-        setObjectMetaProperty(object, "modificationTime", modificationTimeObservable);
-    }
 }
 
 export function getPropertyInfo(object: IEezObject): PropertyInfo {

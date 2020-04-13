@@ -394,8 +394,8 @@ export async function load(filePath: string) {
             if (err) {
                 reject(err);
             } else {
-                let projectJs = JSON.parse(data);
                 console.time("load");
+                let projectJs = JSON.parse(data);
                 let project = loadObject(undefined, projectJs, Project) as Project;
                 console.timeEnd("load");
 

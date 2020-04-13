@@ -5,7 +5,7 @@ import { bind } from "bind-decorator";
 
 import { formatNumber } from "eez-studio-shared/util";
 import { Rect } from "eez-studio-shared/geometry";
-import { _minBy, _maxBy } from "eez-studio-shared/algorithm";
+import { _minBy, _maxBy, _range } from "eez-studio-shared/algorithm";
 import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -122,7 +122,7 @@ export function browseGlyph(glyph: Glyph) {
             ]
         },
         values: Object.assign({}, glyph.source && objectToJS(glyph.source), {
-            bpp: glyph.getFont().bpp
+            bpp: glyph.font.bpp
         }),
         opts: {
             jsPanel: {
@@ -202,7 +202,7 @@ export interface IGlyphBitmap {
     pixelArray: number[];
 }
 
-function getPixelByteIndex(glyphBitmap: IGlyphBitmap, x: number, y: number): number {
+export function getPixelByteIndex(glyphBitmap: IGlyphBitmap, x: number, y: number): number {
     return y * Math.floor((glyphBitmap.width + 7) / 8) + Math.floor(x / 8);
 }
 
@@ -305,6 +305,21 @@ export interface IGlyph {
     source?: IGlyphSource;
 }
 
+export function serializePixelArray(pixelArrayAsNumberArray: number[]) {
+    return pixelArrayAsNumberArray.map(pixel => pixel.toString(16).padStart(2, "0")).join("");
+}
+
+function deserializePixelArray(pixelArray: string | number[]) {
+    if (typeof pixelArray != "string") {
+        return pixelArray;
+    }
+    const pixelArrayAsNumberArray = new Array(pixelArray.length / 2);
+    for (let i = 0; i < pixelArrayAsNumberArray.length; i++) {
+        pixelArrayAsNumberArray[i] = parseInt(pixelArray.substr(2 * i, 2), 16);
+    }
+    return pixelArrayAsNumberArray;
+}
+
 export class Glyph extends EezObject {
     @observable encoding: number;
     @observable x: number;
@@ -363,12 +378,17 @@ export class Glyph extends EezObject {
                     jsObject.width != jsObject.glyphBitmap.width ||
                     jsObject.height != jsObject.glyphBitmap.height
                 ) {
-                    console.log(jsObject);
                     if (jsObject.width == 0 && jsObject.height == 0) {
                         jsObject.glyphBitmap.width = 0;
                         jsObject.glyphBitmap.height = 0;
                         jsObject.glyphBitmap.pixelArray = [];
                     }
+                }
+
+                if (jsObject.glyphBitmap.pixelArray) {
+                    jsObject.glyphBitmap.pixelArray = deserializePixelArray(
+                        jsObject.glyphBitmap.pixelArray
+                    );
                 }
             }
         }
@@ -384,14 +404,14 @@ export class Glyph extends EezObject {
             return this.glyphBitmap.pixelArray;
         }
 
-        const font = this.getFont();
+        const font = this.font;
 
         return resizeGlyphBitmap(this.glyphBitmap, this.width, this.height, font.bpp).pixelArray;
     }
 
     @computed
     get image(): string {
-        let font = this.getFont();
+        let font = this.font;
 
         let canvasWidth = this.glyphBitmap ? this.dx : 1;
         let canvasHeight = font.height;
@@ -431,18 +451,13 @@ export class Glyph extends EezObject {
         return canvas.toDataURL();
     }
 
-    getFont() {
+    @computed
+    get font() {
         return getParent(getParent(this)) as Font;
     }
 
     getPixel(x: number, y: number): number {
-        if (!this.glyphBitmap) {
-            return 0;
-        }
-
-        let font = this.getFont();
-
-        return getPixel(this.glyphBitmap, x, y, font.bpp);
+        return getPixel(this.glyphBitmap, x, y, this.font.bpp);
     }
 
     @computed
@@ -451,7 +466,7 @@ export class Glyph extends EezObject {
             return "";
         }
 
-        let font = this.getFont();
+        let font = this.font;
 
         let canvas = document.createElement("canvas");
 
@@ -839,7 +854,7 @@ export class Glyph extends EezObject {
 
     @computed
     get topLeftOffset() {
-        let font = this.getFont();
+        let font = this.font;
 
         let fontAscent = font.ascent || 0;
 
@@ -1437,7 +1452,7 @@ class GlyphEditor extends React.Component<{
                 };
             }
 
-            const font = this.props.glyph.getFont();
+            const font = this.props.glyph.font;
 
             const newGlyphBitmap = setPixel(
                 glyphBitmap,
@@ -2205,6 +2220,13 @@ export class Font extends EezObject implements IFont {
         findItemByName: findFont,
         icon: "font_download"
     };
+
+    @computed
+    get glyphsMap() {
+        const map = new Map<number, Glyph>();
+        this.glyphs.forEach(glyph => map.set(glyph.encoding, glyph));
+        return map;
+    }
 }
 
 registerClass(Font);

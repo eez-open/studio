@@ -574,10 +574,17 @@ const propertiesMap: { [propertyName: string]: PropertyInfo } = _zipObject(
 function getInheritedValue(
     styleObject: Style,
     propertyName: string,
+    visited: Style[],
     translateThemedColors?: boolean
 ): InheritedValue {
     if (translateThemedColors == undefined) {
         translateThemedColors = true;
+    }
+
+    if (visited.indexOf(styleObject) != -1) {
+        return undefined;
+    } else {
+        visited.push(styleObject);
     }
 
     let value = getProperty(styleObject, propertyName);
@@ -604,7 +611,12 @@ function getInheritedValue(
     if (styleObject.inheritFrom) {
         let inheritFromStyleObject = findStyle(styleObject.inheritFrom, true);
         if (inheritFromStyleObject) {
-            return getInheritedValue(inheritFromStyleObject, propertyName, translateThemedColors);
+            return getInheritedValue(
+                inheritFromStyleObject,
+                propertyName,
+                visited,
+                translateThemedColors
+            );
         }
     }
 
@@ -618,6 +630,8 @@ export interface IStyle {
     name?: string;
     description?: string;
     inheritFrom?: string;
+    alwaysBuild?: boolean;
+
     font?: string;
     alignHorizontal?: string;
     alignVertical?: string;
@@ -634,7 +648,6 @@ export interface IStyle {
     margin?: string;
     opacity?: number;
     blink?: boolean;
-    alwaysBuild?: boolean;
 }
 
 export class Style extends EezObject implements IStyle {
@@ -642,6 +655,8 @@ export class Style extends EezObject implements IStyle {
     @observable name: string;
     @observable description?: string;
     @observable inheritFrom?: string;
+    @observable alwaysBuild: boolean;
+
     @observable font?: string;
     @observable alignHorizontal?: string;
     @observable alignVertical?: string;
@@ -658,7 +673,6 @@ export class Style extends EezObject implements IStyle {
     @observable margin?: string;
     @observable opacity: number;
     @observable blink?: boolean;
-    @observable alwaysBuild: boolean;
 
     static classInfo: ClassInfo = {
         properties,
@@ -688,7 +702,7 @@ export class Style extends EezObject implements IStyle {
         },
         findItemByName: findStyle,
         getInheritedValue: (styleObject: Style, propertyName: string) =>
-            getInheritedValue(styleObject, propertyName, false),
+            getInheritedValue(styleObject, propertyName, [], false),
         navigationComponentId: "styles",
         isEditorSupported: (object: IEezObject) => !isWidgetParentOfStyle(object),
         navigationComponent: StylesNavigation,
@@ -1192,7 +1206,7 @@ export function getStyleProperty(
         style = styleNameOrObject;
     }
 
-    let inheritedValue = getInheritedValue(style, propertyName, translateThemedColors);
+    let inheritedValue = getInheritedValue(style, propertyName, [], translateThemedColors);
     if (inheritedValue) {
         return inheritedValue.value;
     }

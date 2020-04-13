@@ -11,7 +11,6 @@ import {
     findPropertyByNameInObject,
     getParent,
     getKey,
-    setModificationTime,
     getClass,
     getClassInfo
 } from "project-editor/core/object";
@@ -41,13 +40,6 @@ export interface ICommandContext {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-function onObjectModified(object: IEezObject) {
-    setModificationTime(object, new Date().getTime());
-    if (getParent(object)) {
-        onObjectModified(getParent(object));
-    }
-}
 
 function getUniquePropertyValue(
     existingObjects: IEezObject[],
@@ -102,12 +94,10 @@ export let addObject = action(
         context.undoManager.executeCommand({
             execute: action(() => {
                 (parentObject as IEezObject[]).push(object);
-                onObjectModified(parentObject);
             }),
 
             undo: action(() => {
                 (parentObject as IEezObject[]).pop();
-                onObjectModified(parentObject);
             }),
 
             get description() {
@@ -127,14 +117,12 @@ export let addObjects = action(
         context.undoManager.executeCommand({
             execute: action(() => {
                 (parentObject as IEezObject[]).push(...objects);
-                onObjectModified(parentObject);
             }),
 
             undo: action(() => {
                 for (let i = 0; i < objects.length; i++) {
                     (parentObject as IEezObject[]).pop();
                 }
-                onObjectModified(parentObject);
             }),
 
             get description() {
@@ -156,12 +144,10 @@ export let insertObject = action(
         context.undoManager.executeCommand({
             execute: action(() => {
                 (parentObject as IEezObject[]).splice(index, 0, object);
-                onObjectModified(parentObject);
             }),
 
             undo: action(() => {
                 (parentObject as IEezObject[]).splice(index, 1);
-                onObjectModified(parentObject);
             }),
 
             get description() {
@@ -228,13 +214,11 @@ class UpdateCommand implements ICommand {
     @action
     execute() {
         UpdateCommand.assignValues(this.object, this.newValues);
-        onObjectModified(this.object);
     }
 
     @action
     undo() {
         UpdateCommand.assignValues(this.object, this.oldValues);
-        onObjectModified(this.object);
     }
 
     @computed
@@ -272,12 +256,10 @@ export let deleteObject = action((context: ICommandContext, object: any) => {
         context.undoManager.executeCommand({
             execute: action(() => {
                 array.splice(index, 1);
-                onObjectModified(parent);
             }),
 
             undo: action(() => {
                 array.splice(index, 0, object);
-                onObjectModified(parent);
             }),
 
             get description() {
@@ -310,7 +292,6 @@ export let deleteObjects = action((context: ICommandContext, objects: IEezObject
                     undoIndexes.push(-1);
                     (parent as any)[getKey(object)] = undefined;
                 }
-                onObjectModified(parent);
             }
         }),
 
@@ -325,7 +306,6 @@ export let deleteObjects = action((context: ICommandContext, objects: IEezObject
                 } else {
                     (parent as any)[getKey(object)] = object;
                 }
-                onObjectModified(parent);
             }
         }),
 

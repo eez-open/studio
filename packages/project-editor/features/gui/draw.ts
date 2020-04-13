@@ -1,12 +1,10 @@
-import { observable, action } from "mobx";
+import tinycolor from "tinycolor2";
 
-import { getColorRGB, blendColor, to16bitsColor } from "eez-studio-shared/color";
-
-import { getModificationTime, getId } from "project-editor/core/object";
+import { blendColor, to16bitsColor } from "eez-studio-shared/color";
 
 import { findFont } from "project-editor/features/gui/gui";
 import { Style, getStyleProperty } from "project-editor/features/gui/style";
-import { Font } from "project-editor/features/gui/font";
+import { Font, getPixelByteIndex } from "project-editor/features/gui/font";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -91,7 +89,7 @@ export function drawVLine(ctx: CanvasRenderingContext2D, x: number, y: number, l
 }
 
 function getGlyph(font: Font, encoding: number) {
-    return font && font.glyphs.find(glyph => glyph.encoding == encoding);
+    return font && font.glyphsMap.get(encoding);
 }
 
 function measureGlyph(encoding: number, font: Font): number {
@@ -142,32 +140,61 @@ function drawGlyph(
     let height = glyph.height;
 
     if (width > 0 && height > 0) {
-        if (font.bpp === 8) {
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const color = blendColor(fgColor, bgColor, glyph.getPixel(x, y) / 255);
-                    const i = (y * MAX_GLYPH_WIDTH + x) * 4;
-                    pixelData[i + 0] = color[0];
-                    pixelData[i + 1] = color[1];
-                    pixelData[i + 2] = color[2];
+        let i = 0;
+        const offset = (MAX_GLYPH_WIDTH - width) * 4;
+        const fgColorRgb = tinycolor(fgColor).toRgb();
+        const bgColorRgb = tinycolor(bgColor).toRgb();
+        const pixelArray = glyph.glyphBitmap.pixelArray;
+        if (pixelArray) {
+            if (font.bpp === 8) {
+                let pixelArrayIndex = 0;
+                const pixelArrayOffset = glyph.glyphBitmap.width - width;
+                const mixedColor = { r: 0, g: 0, b: 0 };
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const color = blendColor(
+                            fgColorRgb,
+                            bgColorRgb,
+                            pixelArray[pixelArrayIndex++] / 255,
+                            mixedColor
+                        );
+                        pixelData[i++] = color.r;
+                        pixelData[i++] = color.g;
+                        pixelData[i++] = color.b;
+                        i++;
+                    }
+                    i += offset;
+                    pixelArrayIndex += pixelArrayOffset;
+                }
+            } else {
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const pixel =
+                            pixelArray[getPixelByteIndex(glyph.glyphBitmap, x, y)] &
+                            (0x80 >> x % 8);
+                        if (pixel) {
+                            pixelData[i++] = fgColorRgb.r;
+                            pixelData[i++] = fgColorRgb.g;
+                            pixelData[i++] = fgColorRgb.b;
+                        } else {
+                            pixelData[i++] = bgColorRgb.r;
+                            pixelData[i++] = bgColorRgb.g;
+                            pixelData[i++] = bgColorRgb.b;
+                        }
+                        i++;
+                    }
+                    i += offset;
                 }
             }
         } else {
-            const fgColorRGB = getColorRGB(fgColor);
-            const bgColorRGB = getColorRGB(bgColor);
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
-                    const i = (y * MAX_GLYPH_WIDTH + x) * 4;
-                    if (glyph.getPixel(x, y)) {
-                        pixelData[i + 0] = fgColorRGB.r;
-                        pixelData[i + 1] = fgColorRGB.g;
-                        pixelData[i + 2] = fgColorRGB.b;
-                    } else {
-                        pixelData[i + 0] = bgColorRGB.r;
-                        pixelData[i + 1] = bgColorRGB.g;
-                        pixelData[i + 2] = bgColorRGB.b;
-                    }
+                    pixelData[i++] = bgColorRgb.r;
+                    pixelData[i++] = bgColorRgb.g;
+                    pixelData[i++] = bgColorRgb.b;
+                    i++;
                 }
+                i += offset;
             }
         }
         ctx.putImageData(pixelImageData, x_glyph, y_glyph, 0, 0, width, height);
@@ -181,6 +208,8 @@ export function drawStr(
     text: string,
     x: number,
     y: number,
+    width: number,
+    height: number,
     font: Font
 ) {
     if (!pixelImageData) {
@@ -251,92 +280,6 @@ export function drawOnCanvas(
     callback(ctx);
     return canvas;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-const MAX_CACHE_SIZE = 2000;
-
-class TextDrawingInBackground {
-    @observable cache: string[] = [];
-    @observable cacheMap: Map<string, HTMLCanvasElement> = new Map<string, HTMLCanvasElement>();
-    @observable tasks: {
-        id: string;
-        text: string;
-        font: Font;
-        width: number;
-        height: number;
-        color: string;
-        backColor: string;
-    }[] = [];
-
-    requestAnimationFrameId: any;
-
-    runTasks = action(() => {
-        this.requestAnimationFrameId = undefined;
-        const beginTime = new Date().getTime();
-        while (true) {
-            const task = this.tasks.shift();
-            if (!task) {
-                return;
-            }
-
-            let canvas = document.createElement("canvas");
-            canvas.width = task.width;
-            canvas.height = task.height;
-            let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-            setColor(task.color);
-            setBackColor(task.backColor);
-            drawStr(ctx, task.text, 0, 0, task.font);
-
-            this.cache.push(task.id);
-            this.cacheMap.set(task.id, canvas);
-
-            if (this.cache.length > MAX_CACHE_SIZE) {
-                this.cacheMap.delete(this.cache.shift()!);
-            }
-
-            if (new Date().getTime() - beginTime > 100) {
-                this.requestAnimationFrameId = window.requestAnimationFrame(this.runTasks);
-                return;
-            }
-        }
-    });
-
-    drawStr(
-        ctx: CanvasRenderingContext2D,
-        text: string,
-        x: number,
-        y: number,
-        width: number,
-        height: number,
-        font: Font
-    ) {
-        const color = getColor();
-        const backColor = getBackColor();
-        const id = `${text},${color},${backColor},${getId(font)},${getModificationTime(
-            font
-        )},${width},${height}`;
-        const canvas = this.cacheMap.get(id);
-        if (canvas) {
-            ctx.drawImage(canvas, x, y);
-        } else {
-            this.tasks.push({
-                id,
-                text,
-                font,
-                width,
-                height,
-                color,
-                backColor
-            });
-            if (!this.requestAnimationFrameId) {
-                this.requestAnimationFrameId = window.requestAnimationFrame(this.runTasks);
-            }
-        }
-    }
-}
-
-export const textDrawingInBackground = new TextDrawingInBackground();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -436,7 +379,7 @@ export function drawText(
                 setBackColor(styleBackgroundColor);
                 setColor(styleColor);
             }
-            textDrawingInBackground.drawStr(ctx, text, x_offset, y_offset, width, height, font);
+            drawStr(ctx, text, x_offset, y_offset, width, height, font);
         }
     });
 }
