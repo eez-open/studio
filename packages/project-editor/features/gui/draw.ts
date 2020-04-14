@@ -3,7 +3,7 @@ import tinycolor from "tinycolor2";
 import { blendColor, to16bitsColor } from "eez-studio-shared/color";
 
 import { findFont } from "project-editor/features/gui/gui";
-import { Style, getStyleProperty } from "project-editor/features/gui/style";
+import { Style } from "project-editor/features/gui/style";
 import { Font, getPixelByteIndex } from "project-editor/features/gui/font";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -238,148 +238,131 @@ export function drawBitmap(
 ////////////////////////////////////////////////////////////////////////////////
 
 export function styleGetBorderRadius(style: Style) {
-    return getStyleProperty(style, "borderRadius");
+    return style.borderRadiusProperty;
 }
 
 export function styleIsHorzAlignLeft(style: Style) {
-    return getStyleProperty(style, "alignHorizontal") == "left";
+    return style.alignHorizontalProperty == "left";
 }
 
 export function styleIsHorzAlignRight(style: Style) {
-    return getStyleProperty(style, "alignHorizontal") == "right";
+    return style.alignHorizontalProperty == "right";
 }
 
 export function styleIsHorzAlignLeftRight(style: Style) {
-    return getStyleProperty(style, "alignHorizontal") == "left-right";
+    return style.alignHorizontalProperty == "left-right";
 }
 
 export function styleIsVertAlignTop(style: Style) {
-    return getStyleProperty(style, "alignVertical") == "top";
+    return style.alignVerticalProperty == "top";
 }
 
 export function styleIsVertAlignBottom(style: Style) {
-    return getStyleProperty(style, "alignVertical") == "bottom";
+    return style.alignVerticalProperty == "bottom";
 }
 
 export function styleGetFont(style: Style) {
-    let font = getStyleProperty(style, "font");
+    let font = style.fontName;
     return font && findFont(font);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawOnCanvas(
-    w: number,
-    h: number,
-    callback: (ctx: CanvasRenderingContext2D) => void
-) {
-    let canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    callback(ctx);
-    return canvas;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 export function drawText(
+    ctx: CanvasRenderingContext2D,
     text: string,
+    x: number,
+    y: number,
     w: number,
     h: number,
     style: Style,
     inverse: boolean,
     overrideBackgroundColor?: string
 ) {
-    return drawOnCanvas(w, h, (ctx: CanvasRenderingContext2D) => {
-        let x1 = 0;
-        let y1 = 0;
-        let x2 = w - 1;
-        let y2 = h - 1;
+    let x1 = x;
+    let y1 = y;
+    let x2 = x + w - 1;
+    let y2 = y + h - 1;
 
-        const borderSize = style.borderSizeRect;
-        let borderRadius = styleGetBorderRadius(style) || 0;
-        if (
-            borderSize.top > 0 ||
-            borderSize.right > 0 ||
-            borderSize.bottom > 0 ||
-            borderSize.left > 0
-        ) {
-            setColor(getStyleProperty(style, "borderColor"));
-            fillRect(ctx, x1, y1, x2, y2, borderRadius);
-            x1 += borderSize.left;
-            y1 += borderSize.top;
-            x2 -= borderSize.right;
-            y2 -= borderSize.bottom;
-            borderRadius = Math.max(
-                borderRadius -
-                    Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
-                0
-            );
-        }
-
-        const styleColor = getStyleProperty(style, "color");
-        const styleBackgroundColor =
-            overrideBackgroundColor !== undefined
-                ? overrideBackgroundColor
-                : getStyleProperty(style, "backgroundColor");
-
-        let backgroundColor = inverse ? styleColor : styleBackgroundColor;
-        setColor(backgroundColor);
+    const borderSize = style.borderSizeRect;
+    let borderRadius = styleGetBorderRadius(style) || 0;
+    if (
+        borderSize.top > 0 ||
+        borderSize.right > 0 ||
+        borderSize.bottom > 0 ||
+        borderSize.left > 0
+    ) {
+        setColor(style.borderColorProperty);
         fillRect(ctx, x1, y1, x2, y2, borderRadius);
+        x1 += borderSize.left;
+        y1 += borderSize.top;
+        x2 -= borderSize.right;
+        y2 -= borderSize.bottom;
+        borderRadius = Math.max(
+            borderRadius -
+                Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
+            0
+        );
+    }
 
-        const font = styleGetFont(style);
-        if (!font) {
-            return;
+    const styleColor = style.colorProperty;
+    const styleBackgroundColor =
+        overrideBackgroundColor !== undefined
+            ? overrideBackgroundColor
+            : style.backgroundColorProperty;
+
+    let backgroundColor = inverse ? styleColor : styleBackgroundColor;
+    setColor(backgroundColor);
+    fillRect(ctx, x1, y1, x2, y2, borderRadius);
+
+    const font = styleGetFont(style);
+    if (!font) {
+        return;
+    }
+
+    try {
+        text = JSON.parse('"' + text + '"');
+    } catch (e) {
+        console.log(e, text);
+    }
+
+    let width = measureStr(text, font, 0);
+    let height = font.height;
+
+    if (width > 0 && height > 0) {
+        const horizontallyFits = width <= x2 - x1 + 1;
+
+        let x_offset: number;
+        if (styleIsHorzAlignLeft(style) || (styleIsHorzAlignLeftRight(style) && horizontallyFits)) {
+            x_offset = x1 + style.paddingRect.left;
+        } else if (
+            styleIsHorzAlignRight(style) ||
+            (styleIsHorzAlignLeftRight(style) && !horizontallyFits)
+        ) {
+            x_offset = x2 - style.paddingRect.right - width;
+        } else {
+            x_offset = Math.floor(x1 + (x2 - x1 + 1 - width) / 2);
+            if (x_offset < x1) {
+                x_offset = x1;
+            }
         }
 
-        try {
-            text = JSON.parse('"' + text + '"');
-        } catch (e) {
-            console.log(e, text);
+        let y_offset: number;
+        if (styleIsVertAlignTop(style)) {
+            y_offset = y1 + style.paddingRect.top;
+        } else if (styleIsVertAlignBottom(style)) {
+            y_offset = y2 - style.paddingRect.bottom - height;
+        } else {
+            y_offset = Math.floor(y1 + (y2 - y1 + 1 - height) / 2);
         }
 
-        let width = measureStr(text, font, 0);
-        let height = font.height;
-
-        if (width > 0 && height > 0) {
-            const horizontallyFits = width <= x2 - x1 + 1;
-
-            let x_offset: number;
-            if (
-                styleIsHorzAlignLeft(style) ||
-                (styleIsHorzAlignLeftRight(style) && horizontallyFits)
-            ) {
-                x_offset = x1 + style.paddingRect.left;
-            } else if (
-                styleIsHorzAlignRight(style) ||
-                (styleIsHorzAlignLeftRight(style) && !horizontallyFits)
-            ) {
-                x_offset = x2 - style.paddingRect.right - width;
-            } else {
-                x_offset = Math.floor(x1 + (x2 - x1 + 1 - width) / 2);
-                if (x_offset < x1) {
-                    x_offset = x1;
-                }
-            }
-
-            let y_offset: number;
-            if (styleIsVertAlignTop(style)) {
-                y_offset = y1 + style.paddingRect.top;
-            } else if (styleIsVertAlignBottom(style)) {
-                y_offset = y2 - style.paddingRect.bottom - height;
-            } else {
-                y_offset = Math.floor(y1 + (y2 - y1 + 1 - height) / 2);
-            }
-
-            if (inverse) {
-                setBackColor(styleColor);
-                setColor(styleBackgroundColor);
-            } else {
-                setBackColor(styleBackgroundColor);
-                setColor(styleColor);
-            }
-            drawStr(ctx, text, x_offset, y_offset, width, height, font);
+        if (inverse) {
+            setBackColor(styleColor);
+            setColor(styleBackgroundColor);
+        } else {
+            setBackColor(styleBackgroundColor);
+            setColor(styleColor);
         }
-    });
+        drawStr(ctx, text, x_offset, y_offset, width, height, font);
+    }
 }

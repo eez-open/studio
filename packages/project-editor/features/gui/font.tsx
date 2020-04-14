@@ -313,6 +313,9 @@ function deserializePixelArray(pixelArray: string | number[]) {
     if (typeof pixelArray != "string") {
         return pixelArray;
     }
+    if (pixelArray.length == 0) {
+        return [];
+    }
     const pixelArrayAsNumberArray = new Array(pixelArray.length / 2);
     for (let i = 0; i < pixelArrayAsNumberArray.length; i++) {
         pixelArrayAsNumberArray[i] = parseInt(pixelArray.substr(2 * i, 2), 16);
@@ -385,7 +388,7 @@ export class Glyph extends EezObject {
                     }
                 }
 
-                if (jsObject.glyphBitmap.pixelArray) {
+                if (jsObject.glyphBitmap.pixelArray != undefined) {
                     jsObject.glyphBitmap.pixelArray = deserializePixelArray(
                         jsObject.glyphBitmap.pixelArray
                     );

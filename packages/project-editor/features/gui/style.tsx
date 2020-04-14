@@ -1219,19 +1219,11 @@ export function drawStylePreview(canvas: HTMLCanvasElement, style: Style, text: 
     if (ctx) {
         ctx.save();
         if (canvas.width > canvas.height) {
-            ctx.drawImage(drawText(text, canvas.width / 2, canvas.height, style, false), 0, 0);
-            ctx.drawImage(
-                drawText(text, canvas.width / 2, canvas.height, style, true),
-                canvas.width / 2,
-                0
-            );
+            drawText(ctx, text, 0, 0, canvas.width / 2, canvas.height, style, false);
+            drawText(ctx, text, canvas.width / 2, 0, canvas.width / 2, canvas.height, style, true);
         } else {
-            ctx.drawImage(drawText(text, canvas.width, canvas.height / 2, style, false), 0, 0);
-            ctx.drawImage(
-                drawText(text, canvas.width, canvas.height / 2, style, true),
-                0,
-                canvas.height / 2
-            );
+            drawText(ctx, text, 0, 0, canvas.width, canvas.height / 2, style, false);
+            drawText(ctx, text, 0, canvas.height / 2, canvas.width, canvas.height / 2, style, true);
         }
         ctx.restore();
     }

@@ -74,18 +74,21 @@ export class WidgetComponent extends React.Component<{
 
         const dataDesignerObjectId = designerContext ? getId(widget) : undefined;
 
-        if (widget instanceof Widget) {
-            const canvas = widget.draw(rect, dataContext);
-            if (canvas) {
-                style.imageRendering = "pixelated";
-                return (
-                    <img
-                        data-designer-object-id={dataDesignerObjectId}
-                        style={style}
-                        src={canvas.toDataURL()}
-                    />
-                );
-            }
+        if (widget instanceof Widget && widget.draw) {
+            style.imageRendering = "pixelated";
+
+            let canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            widget.draw(canvas.getContext("2d")!, rect, dataContext);
+
+            return (
+                <img
+                    data-designer-object-id={dataDesignerObjectId}
+                    style={style}
+                    src={canvas.toDataURL()}
+                />
+            );
         }
 
         try {

@@ -60,11 +60,10 @@ import { ProjectStore } from "project-editor/core/store";
 
 import { Page } from "project-editor/features/gui/page";
 import { findPage, findBitmap } from "project-editor/features/gui/gui";
-import { Style, IStyle, getStyleProperty } from "project-editor/features/gui/style";
+import { Style, IStyle } from "project-editor/features/gui/style";
 import { findDataItem, DataContext, dataContext } from "project-editor/features/data/data";
 import { findAction } from "project-editor/features/action/action";
 import {
-    drawOnCanvas,
     drawText,
     styleGetBorderRadius,
     styleIsHorzAlignLeft,
@@ -753,9 +752,7 @@ export class Widget extends EezObject implements IWidget {
         return undefined;
     }
 
-    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
-        return undefined;
-    }
+    draw?: (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => void;
 
     render(
         rect: Rect,
@@ -825,7 +822,7 @@ export class Widget extends EezObject implements IWidget {
     open() {}
 
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
-        const backgroundColor = getStyleProperty(this.style, "backgroundColor");
+        const backgroundColor = this.style.backgroundColorProperty;
         style.backgroundColor = to16bitsColor(backgroundColor);
     }
 }
@@ -921,7 +918,7 @@ export class ContainerWidget extends Widget implements IContainerWidget {
             if (this.shadow) {
                 style.boxShadow = "1px 1px 8px 1px rgba(0,0,0,0.5)";
             }
-            style.opacity = getStyleProperty(this.style, "opacity") / 255;
+            style.opacity = this.style.opacityProperty / 255;
         }
     }
 }
@@ -1675,7 +1672,7 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
         }
     });
 
-    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         let text = (this.data && (dataContext.get(this.data) as string)) || "";
 
         function findStartOfFraction() {
@@ -1715,8 +1712,8 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
             text = text.substr(0, i);
         }
 
-        return drawText(text, rect.width, rect.height, this.style, false);
-    }
+        drawText(ctx, text, 0, 0, rect.width, rect.height, this.style, false);
+    };
 }
 
 registerClass(DisplayDataWidget);
@@ -1782,10 +1779,10 @@ export class TextWidget extends Widget implements ITextWidget {
         }
     });
 
-    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         let text = this.text ? this.text : this.data ? (dataContext.get(this.data) as string) : "";
-        return drawText(text, rect.width, rect.height, this.style, false);
-    }
+        drawText(ctx, text, 0, 0, rect.width, rect.height, this.style, false);
+    };
 
     convertToDisplayData() {
         var displayDataWidgetJsObject = Object.assign(
@@ -1852,11 +1849,11 @@ class MultilineTextRender {
                 }
 
                 if (this.inverse) {
-                    draw.setBackColor(getStyleProperty(this.style, "color"));
-                    draw.setColor(getStyleProperty(this.style, "backgroundColor"));
+                    draw.setBackColor(this.style.colorProperty);
+                    draw.setColor(this.style.backgroundColorProperty);
                 } else {
-                    draw.setBackColor(getStyleProperty(this.style, "backgroundColor"));
-                    draw.setColor(getStyleProperty(this.style, "color"));
+                    draw.setBackColor(this.style.backgroundColorProperty);
+                    draw.setColor(this.style.colorProperty);
                 }
 
                 drawStr(
@@ -1957,7 +1954,7 @@ class MultilineTextRender {
             borderSize.bottom > 0 ||
             borderSize.left > 0
         ) {
-            draw.setColor(getStyleProperty(this.style, "borderColor"));
+            draw.setColor(this.style.borderColorProperty);
             draw.fillRect(this.ctx, this.x1, this.y1, this.x2, this.y2, borderRadius);
             this.x1 += borderSize.left;
             this.y1 += borderSize.top;
@@ -1971,8 +1968,8 @@ class MultilineTextRender {
         }
 
         let backgroundColor = this.inverse
-            ? getStyleProperty(this.style, "color")
-            : getStyleProperty(this.style, "backgroundColor");
+            ? this.style.colorProperty
+            : this.style.backgroundColorProperty;
         draw.setColor(backgroundColor);
         draw.fillRect(this.ctx, this.x1, this.y1, this.x2, this.y2, borderRadius);
 
@@ -2088,7 +2085,7 @@ export class MultilineTextWidget extends Widget implements IMultilineTextWidget 
         }
     });
 
-    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         let text = (this.data ? (dataContext.get(this.data) as string) : this.text) || "";
 
         const w = rect.width;
@@ -2096,27 +2093,25 @@ export class MultilineTextWidget extends Widget implements IMultilineTextWidget 
         const style = this.style;
         const inverse = false;
 
-        return drawOnCanvas(w, h, (ctx: CanvasRenderingContext2D) => {
-            let x1 = 0;
-            let y1 = 0;
-            let x2 = w - 1;
-            let y2 = h - 1;
+        let x1 = 0;
+        let y1 = 0;
+        let x2 = w - 1;
+        let y2 = h - 1;
 
-            var multilineTextRender = new MultilineTextRender(
-                ctx,
-                text,
-                x1,
-                y1,
-                x2,
-                y2,
-                style,
-                inverse,
-                this.firstLineIndent || 0,
-                this.hangingIndent || 0
-            );
-            multilineTextRender.render();
-        });
-    }
+        var multilineTextRender = new MultilineTextRender(
+            ctx,
+            text,
+            x1,
+            y1,
+            x2,
+            y2,
+            style,
+            inverse,
+            this.firstLineIndent || 0,
+            this.hangingIndent || 0
+        );
+        multilineTextRender.render();
+    };
 }
 
 registerClass(MultilineTextWidget);
@@ -2169,55 +2164,48 @@ export class RectangleWidget extends Widget implements IRectangleWidget {
         }
     });
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         const w = rect.width;
         const h = rect.height;
         const style = this.style;
         const inverse = this.invertColors;
 
         if (w > 0 && h > 0) {
-            return drawOnCanvas(w, h, (ctx: CanvasRenderingContext2D) => {
-                let x1 = 0;
-                let y1 = 0;
-                let x2 = w - 1;
-                let y2 = h - 1;
+            let x1 = 0;
+            let y1 = 0;
+            let x2 = w - 1;
+            let y2 = h - 1;
 
-                const borderSize = style.borderSizeRect;
-                let borderRadius = styleGetBorderRadius(style) || 0;
-                if (
-                    borderSize.top > 0 ||
-                    borderSize.right > 0 ||
-                    borderSize.bottom > 0 ||
-                    borderSize.left > 0
-                ) {
-                    draw.setColor(getStyleProperty(style, "borderColor"));
-                    draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-                    x1 += borderSize.left;
-                    y1 += borderSize.top;
-                    x2 -= borderSize.right;
-                    y2 -= borderSize.bottom;
-                    borderRadius = Math.max(
-                        borderRadius -
-                            Math.max(
-                                borderSize.top,
-                                borderSize.right,
-                                borderSize.bottom,
-                                borderSize.left
-                            ),
-                        0
-                    );
-                }
-
-                draw.setColor(
-                    inverse
-                        ? getStyleProperty(style, "backgroundColor")
-                        : getStyleProperty(style, "color")
-                );
+            const borderSize = style.borderSizeRect;
+            let borderRadius = styleGetBorderRadius(style) || 0;
+            if (
+                borderSize.top > 0 ||
+                borderSize.right > 0 ||
+                borderSize.bottom > 0 ||
+                borderSize.left > 0
+            ) {
+                draw.setColor(style.borderColorProperty);
                 draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-            });
+                x1 += borderSize.left;
+                y1 += borderSize.top;
+                x2 -= borderSize.right;
+                y2 -= borderSize.bottom;
+                borderRadius = Math.max(
+                    borderRadius -
+                        Math.max(
+                            borderSize.top,
+                            borderSize.right,
+                            borderSize.bottom,
+                            borderSize.left
+                        ),
+                    0
+                );
+            }
+
+            draw.setColor(inverse ? style.backgroundColorProperty : style.colorProperty);
+            draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
         }
-        return undefined;
-    }
+    };
 }
 
 registerClass(RectangleWidget);
@@ -2346,7 +2334,7 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
             : undefined;
     }
 
-    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         const w = rect.width;
         const h = rect.height;
         const style = this.style;
@@ -2358,58 +2346,52 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
         if (bitmap) {
             const imageElement = bitmap.imageElement;
             if (!imageElement) {
-                return undefined;
+                return;
             }
 
-            return drawOnCanvas(w, h, (ctx: CanvasRenderingContext2D) => {
-                let x1 = 0;
-                let y1 = 0;
-                let x2 = w - 1;
-                let y2 = h - 1;
+            let x1 = 0;
+            let y1 = 0;
+            let x2 = w - 1;
+            let y2 = h - 1;
 
-                if (bitmap.bpp !== 32) {
-                    let backgroundColor = inverse
-                        ? getStyleProperty(style, "color")
-                        : getStyleProperty(style, "backgroundColor");
-                    draw.setColor(backgroundColor);
-                    draw.fillRect(ctx, x1, y1, x2, y2, 0);
-                }
+            if (bitmap.bpp !== 32) {
+                let backgroundColor = inverse ? style.colorProperty : style.backgroundColorProperty;
+                draw.setColor(backgroundColor);
+                draw.fillRect(ctx, x1, y1, x2, y2, 0);
+            }
 
-                let width = imageElement.width;
-                let height = imageElement.height;
+            let width = imageElement.width;
+            let height = imageElement.height;
 
-                let x_offset: number;
-                if (styleIsHorzAlignLeft(style)) {
-                    x_offset = x1 + style.paddingRect.left;
-                } else if (styleIsHorzAlignRight(style)) {
-                    x_offset = x2 - style.paddingRect.right - width;
-                } else {
-                    x_offset = Math.floor(x1 + (x2 - x1 - width) / 2);
-                }
+            let x_offset: number;
+            if (styleIsHorzAlignLeft(style)) {
+                x_offset = x1 + style.paddingRect.left;
+            } else if (styleIsHorzAlignRight(style)) {
+                x_offset = x2 - style.paddingRect.right - width;
+            } else {
+                x_offset = Math.floor(x1 + (x2 - x1 - width) / 2);
+            }
 
-                let y_offset: number;
-                if (styleIsVertAlignTop(style)) {
-                    y_offset = y1 + style.paddingRect.top;
-                } else if (styleIsVertAlignBottom(style)) {
-                    y_offset = y2 - style.paddingRect.bottom - height;
-                } else {
-                    y_offset = Math.floor(y1 + (y2 - y1 - height) / 2);
-                }
+            let y_offset: number;
+            if (styleIsVertAlignTop(style)) {
+                y_offset = y1 + style.paddingRect.top;
+            } else if (styleIsVertAlignBottom(style)) {
+                y_offset = y2 - style.paddingRect.bottom - height;
+            } else {
+                y_offset = Math.floor(y1 + (y2 - y1 - height) / 2);
+            }
 
-                if (inverse) {
-                    draw.setBackColor(getStyleProperty(style, "color"));
-                    draw.setColor(getStyleProperty(style, "backgroundColor"));
-                } else {
-                    draw.setBackColor(getStyleProperty(style, "backgroundColor"));
-                    draw.setColor(getStyleProperty(style, "color"));
-                }
+            if (inverse) {
+                draw.setBackColor(style.colorProperty);
+                draw.setColor(style.backgroundColorProperty);
+            } else {
+                draw.setBackColor(style.backgroundColorProperty);
+                draw.setColor(style.colorProperty);
+            }
 
-                draw.drawBitmap(ctx, imageElement, x_offset, y_offset, width, height);
-            });
+            draw.drawBitmap(ctx, imageElement, x_offset, y_offset, width, height);
         }
-
-        return undefined;
-    }
+    };
 }
 
 registerClass(BitmapWidget);
@@ -2465,15 +2447,15 @@ export class ButtonWidget extends Widget implements IButtonWidget {
         }
     });
 
-    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         let text = this.data && dataContext.get(this.data);
         if (!text) {
             text = this.text;
         }
         let style =
             this.enabled && dataContext.getBool(this.enabled) ? this.style : this.disabledStyle;
-        return drawText(text, rect.width, rect.height, style, false);
-    }
+        drawText(ctx, text, 0, 0, rect.width, rect.height, style, false);
+    };
 }
 
 registerClass(ButtonWidget);
@@ -2532,9 +2514,9 @@ export class ToggleButtonWidget extends Widget implements IToggleButtonWidget {
         }
     });
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
-        return drawText(this.text1 || "", rect.width, rect.height, this.style, false);
-    }
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+        drawText(ctx, this.text1 || "", 0, 0, rect.width, rect.height, this.style, false);
+    };
 }
 
 registerClass(ToggleButtonWidget);
@@ -2572,78 +2554,86 @@ export class ButtonGroupWidget extends Widget implements IButtonGroupWidget {
         }
     });
 
-    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         let buttonLabels = (this.data && dataContext.getValueList(this.data)) || [];
         let selectedButton = (this.data && dataContext.get(this.data)) || 0;
 
-        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
-            let x = 0;
-            let y = 0;
-            let w = rect.width;
-            let h = rect.height;
+        let x = 0;
+        let y = 0;
+        let w = rect.width;
+        let h = rect.height;
 
-            if (w > h) {
-                // horizontal orientation
-                let buttonWidth = Math.floor(w / buttonLabels.length);
-                x += Math.floor((w - buttonWidth * buttonLabels.length) / 2);
-                let buttonHeight = h;
-                for (let i = 0; i < buttonLabels.length; i++) {
-                    ctx.drawImage(
-                        i == selectedButton
-                            ? drawText(
-                                  buttonLabels[i],
-                                  buttonWidth,
-                                  buttonHeight,
-                                  this.selectedStyle,
-                                  false
-                              )
-                            : drawText(
-                                  buttonLabels[i],
-                                  buttonWidth,
-                                  buttonHeight,
-                                  this.style,
-                                  false
-                              ),
+        if (w > h) {
+            // horizontal orientation
+            let buttonWidth = Math.floor(w / buttonLabels.length);
+            x += Math.floor((w - buttonWidth * buttonLabels.length) / 2);
+            let buttonHeight = h;
+            for (let i = 0; i < buttonLabels.length; i++) {
+                if (i == selectedButton) {
+                    drawText(
+                        ctx,
+                        buttonLabels[i],
                         x,
-                        y
+                        y,
+                        buttonWidth,
+                        buttonHeight,
+                        this.selectedStyle,
+                        false
                     );
-                    x += buttonWidth;
-                }
-            } else {
-                // vertical orientation
-                let buttonWidth = w;
-                let buttonHeight = Math.floor(h / buttonLabels.length);
-
-                y += Math.floor((h - buttonHeight * buttonLabels.length) / 2);
-
-                let labelHeight = Math.min(buttonWidth, buttonHeight);
-                let yOffset = Math.floor((buttonHeight - labelHeight) / 2);
-
-                for (let i = 0; i < buttonLabels.length; i++) {
-                    ctx.drawImage(
-                        i == selectedButton
-                            ? drawText(
-                                  buttonLabels[i],
-                                  buttonWidth,
-                                  labelHeight,
-                                  this.selectedStyle,
-                                  false
-                              )
-                            : drawText(
-                                  buttonLabels[i],
-                                  buttonWidth,
-                                  labelHeight,
-                                  this.style,
-                                  false
-                              ),
+                } else {
+                    drawText(
+                        ctx,
+                        buttonLabels[i],
                         x,
-                        y + yOffset
+                        y,
+                        buttonWidth,
+                        buttonHeight,
+                        this.style,
+                        false
                     );
-                    y += buttonHeight;
                 }
+                x += buttonWidth;
             }
-        });
-    }
+        } else {
+            // vertical orientation
+            let buttonWidth = w;
+            let buttonHeight = Math.floor(h / buttonLabels.length);
+
+            y += Math.floor((h - buttonHeight * buttonLabels.length) / 2);
+
+            let labelHeight = Math.min(buttonWidth, buttonHeight);
+            let yOffset = Math.floor((buttonHeight - labelHeight) / 2);
+
+            y += yOffset;
+
+            for (let i = 0; i < buttonLabels.length; i++) {
+                if (i == selectedButton) {
+                    drawText(
+                        ctx,
+                        buttonLabels[i],
+                        x,
+                        y,
+                        buttonWidth,
+                        labelHeight,
+                        this.selectedStyle,
+                        false
+                    );
+                } else {
+                    drawText(
+                        ctx,
+                        buttonLabels[i],
+                        x,
+                        y,
+                        buttonWidth,
+                        labelHeight,
+                        this.style,
+                        false
+                    );
+                }
+                y += buttonHeight;
+            }
+        }
+    };
 }
 
 registerClass(ButtonGroupWidget);
@@ -2739,112 +2729,116 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
         }
     });
 
-    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         let barGraphWidget = this;
         let style = barGraphWidget.style;
 
-        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
-            let min = (barGraphWidget.data && dataContext.getMin(barGraphWidget.data)) || 0;
-            let max = (barGraphWidget.data && dataContext.getMax(barGraphWidget.data)) || 0;
-            let valueText = (barGraphWidget.data && dataContext.get(barGraphWidget.data)) || "0";
-            let value = parseFloat(valueText);
+        let min = (barGraphWidget.data && dataContext.getMin(barGraphWidget.data)) || 0;
+        let max = (barGraphWidget.data && dataContext.getMax(barGraphWidget.data)) || 0;
+        let valueText = (barGraphWidget.data && dataContext.get(barGraphWidget.data)) || "0";
+        let value = parseFloat(valueText);
+        if (isNaN(value)) {
+            value = 0;
+        }
+        let horizontal =
+            barGraphWidget.orientation == "left-right" ||
+            barGraphWidget.orientation == "right-left";
+
+        let d = horizontal ? rect.width : rect.height;
+
+        function calcPos(value: number) {
+            let pos = Math.round((value * d) / (max - min));
+            if (pos < 0) {
+                pos = 0;
+            }
+            if (pos > d) {
+                pos = d;
+            }
+            return pos;
+        }
+
+        let pos = calcPos(value);
+
+        if (barGraphWidget.orientation == "left-right") {
+            draw.setColor(style.colorProperty);
+            draw.fillRect(ctx, 0, 0, pos - 1, rect.height - 1);
+            draw.setColor(style.backgroundColorProperty);
+            draw.fillRect(ctx, pos, 0, rect.width - 1, rect.height - 1);
+        } else if (barGraphWidget.orientation == "right-left") {
+            draw.setColor(style.backgroundColorProperty);
+            draw.fillRect(ctx, 0, 0, rect.width - pos - 1, rect.height - 1);
+            draw.setColor(style.colorProperty);
+            draw.fillRect(ctx, rect.width - pos, 0, rect.width - 1, rect.height - 1);
+        } else if (barGraphWidget.orientation == "top-bottom") {
+            draw.setColor(style.colorProperty);
+            draw.fillRect(ctx, 0, 0, rect.width - 1, pos - 1);
+            draw.setColor(style.backgroundColorProperty);
+            draw.fillRect(ctx, 0, pos, rect.width - 1, rect.height - 1);
+        } else {
+            draw.setColor(style.backgroundColorProperty);
+            draw.fillRect(ctx, 0, 0, rect.width - 1, rect.height - pos - 1);
+            draw.setColor(style.colorProperty);
+            draw.fillRect(ctx, 0, rect.height - pos, rect.width - 1, rect.height - 1);
+        }
+
+        if (horizontal) {
+            let textStyle = barGraphWidget.textStyle;
+            const font = styleGetFont(textStyle);
+            if (font) {
+                let w = draw.measureStr(valueText, font, rect.width);
+                w += style.paddingRect.left;
+
+                if (w > 0 && rect.height > 0) {
+                    let backgroundColor: string;
+                    let x: number;
+
+                    if (pos + w <= rect.width) {
+                        backgroundColor = style.backgroundColorProperty;
+                        x = pos;
+                    } else {
+                        backgroundColor = style.colorProperty;
+                        x = pos - w - style.paddingRect.right;
+                    }
+
+                    drawText(
+                        ctx,
+                        valueText,
+                        x,
+                        0,
+                        w,
+                        rect.height,
+                        textStyle,
+                        false,
+                        backgroundColor
+                    );
+                }
+            }
+        }
+
+        function drawLine(lineData: string | undefined, lineStyle: Style) {
+            let value = (lineData && parseFloat(dataContext.get(lineData))) || 0;
             if (isNaN(value)) {
                 value = 0;
             }
-            let horizontal =
-                barGraphWidget.orientation == "left-right" ||
-                barGraphWidget.orientation == "right-left";
-
-            let d = horizontal ? rect.width : rect.height;
-
-            function calcPos(value: number) {
-                let pos = Math.round((value * d) / (max - min));
-                if (pos < 0) {
-                    pos = 0;
-                }
-                if (pos > d) {
-                    pos = d;
-                }
-                return pos;
-            }
-
             let pos = calcPos(value);
-
+            if (pos == d) {
+                pos = d - 1;
+            }
+            draw.setColor(lineStyle.colorProperty);
             if (barGraphWidget.orientation == "left-right") {
-                draw.setColor(getStyleProperty(style, "color"));
-                draw.fillRect(ctx, 0, 0, pos - 1, rect.height - 1);
-                draw.setColor(getStyleProperty(style, "backgroundColor"));
-                draw.fillRect(ctx, pos, 0, rect.width - 1, rect.height - 1);
+                draw.drawVLine(ctx, pos, 0, rect.height - 1);
             } else if (barGraphWidget.orientation == "right-left") {
-                draw.setColor(getStyleProperty(style, "backgroundColor"));
-                draw.fillRect(ctx, 0, 0, rect.width - pos - 1, rect.height - 1);
-                draw.setColor(getStyleProperty(style, "color"));
-                draw.fillRect(ctx, rect.width - pos, 0, rect.width - 1, rect.height - 1);
+                draw.drawVLine(ctx, rect.width - pos, 0, rect.height - 1);
             } else if (barGraphWidget.orientation == "top-bottom") {
-                draw.setColor(getStyleProperty(style, "color"));
-                draw.fillRect(ctx, 0, 0, rect.width - 1, pos - 1);
-                draw.setColor(getStyleProperty(style, "backgroundColor"));
-                draw.fillRect(ctx, 0, pos, rect.width - 1, rect.height - 1);
+                draw.drawHLine(ctx, 0, pos, rect.width - 1);
             } else {
-                draw.setColor(getStyleProperty(style, "backgroundColor"));
-                draw.fillRect(ctx, 0, 0, rect.width - 1, rect.height - pos - 1);
-                draw.setColor(getStyleProperty(style, "color"));
-                draw.fillRect(ctx, 0, rect.height - pos, rect.width - 1, rect.height - 1);
+                draw.drawHLine(ctx, 0, rect.height - pos, rect.width - 1);
             }
+        }
 
-            if (horizontal) {
-                let textStyle = barGraphWidget.textStyle;
-                const font = styleGetFont(textStyle);
-                if (font) {
-                    let w = draw.measureStr(valueText, font, rect.width);
-                    w += style.paddingRect.left;
-
-                    if (w > 0 && rect.height > 0) {
-                        let backgroundColor: string;
-                        let x: number;
-
-                        if (pos + w <= rect.width) {
-                            backgroundColor = getStyleProperty(style, "backgroundColor");
-                            x = pos;
-                        } else {
-                            backgroundColor = getStyleProperty(style, "color");
-                            x = pos - w - style.paddingRect.right;
-                        }
-
-                        ctx.drawImage(
-                            drawText(valueText, w, rect.height, textStyle, false, backgroundColor),
-                            x,
-                            0
-                        );
-                    }
-                }
-            }
-
-            function drawLine(lineData: string | undefined, lineStyle: Style) {
-                let value = (lineData && parseFloat(dataContext.get(lineData))) || 0;
-                if (isNaN(value)) {
-                    value = 0;
-                }
-                let pos = calcPos(value);
-                if (pos == d) {
-                    pos = d - 1;
-                }
-                draw.setColor(getStyleProperty(lineStyle, "color"));
-                if (barGraphWidget.orientation == "left-right") {
-                    draw.drawVLine(ctx, pos, 0, rect.height - 1);
-                } else if (barGraphWidget.orientation == "right-left") {
-                    draw.drawVLine(ctx, rect.width - pos, 0, rect.height - 1);
-                } else if (barGraphWidget.orientation == "top-bottom") {
-                    draw.drawHLine(ctx, 0, pos, rect.width - 1);
-                } else {
-                    draw.drawHLine(ctx, 0, rect.height - pos, rect.width - 1);
-                }
-            }
-
-            drawLine(barGraphWidget.line1Data, barGraphWidget.line1Style);
-            drawLine(barGraphWidget.line2Data, barGraphWidget.line2Style);
-        });
-    }
+        drawLine(barGraphWidget.line1Data, barGraphWidget.line1Style);
+        drawLine(barGraphWidget.line2Data, barGraphWidget.line2Style);
+    };
 }
 
 registerClass(BarGraphWidget);
@@ -2905,46 +2899,39 @@ export class YTGraphWidget extends Widget implements IYTGraphWidget {
         }
     });
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         let ytGraphWidget = this;
         let style = ytGraphWidget.style;
 
-        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
-            let x1 = 0;
-            let y1 = 0;
-            let x2 = rect.width - 1;
-            let y2 = rect.height - 1;
+        let x1 = 0;
+        let y1 = 0;
+        let x2 = rect.width - 1;
+        let y2 = rect.height - 1;
 
-            const borderSize = style.borderSizeRect;
-            let borderRadius = styleGetBorderRadius(style) || 0;
-            if (
-                borderSize.top > 0 ||
-                borderSize.right > 0 ||
-                borderSize.bottom > 0 ||
-                borderSize.left > 0
-            ) {
-                draw.setColor(getStyleProperty(style, "borderColor"));
-                draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-                x1 += borderSize.left;
-                y1 += borderSize.top;
-                x2 -= borderSize.right;
-                y2 -= borderSize.bottom;
-                borderRadius = Math.max(
-                    borderRadius -
-                        Math.max(
-                            borderSize.top,
-                            borderSize.right,
-                            borderSize.bottom,
-                            borderSize.left
-                        ),
-                    0
-                );
-            }
-
-            draw.setColor(getStyleProperty(style, "backgroundColor"));
+        const borderSize = style.borderSizeRect;
+        let borderRadius = styleGetBorderRadius(style) || 0;
+        if (
+            borderSize.top > 0 ||
+            borderSize.right > 0 ||
+            borderSize.bottom > 0 ||
+            borderSize.left > 0
+        ) {
+            draw.setColor(style.borderColorProperty);
             draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-        });
-    }
+            x1 += borderSize.left;
+            y1 += borderSize.top;
+            x2 -= borderSize.right;
+            y2 -= borderSize.bottom;
+            borderRadius = Math.max(
+                borderRadius -
+                    Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
+                0
+            );
+        }
+
+        draw.setColor(style.backgroundColorProperty);
+        draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+    };
 }
 
 registerClass(YTGraphWidget);
@@ -3004,46 +2991,50 @@ export class UpDownWidget extends Widget implements IUpDownWidget {
         }
     });
 
-    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         let upDownWidget = this;
         let style = upDownWidget.style;
         let buttonsStyle = upDownWidget.buttonsStyle;
 
-        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
-            const buttonsFont = styleGetFont(buttonsStyle);
-            if (!buttonsFont) {
-                return;
-            }
+        const buttonsFont = styleGetFont(buttonsStyle);
+        if (!buttonsFont) {
+            return;
+        }
 
-            let downButtonCanvas = drawText(
-                upDownWidget.downButtonText || "<",
-                buttonsFont.height,
-                rect.height,
-                buttonsStyle,
-                false
-            );
-            ctx.drawImage(downButtonCanvas, 0, 0);
+        drawText(
+            ctx,
+            upDownWidget.downButtonText || "<",
+            0,
+            0,
+            buttonsFont.height,
+            rect.height,
+            buttonsStyle,
+            false
+        );
 
-            let text = upDownWidget.data ? (dataContext.get(upDownWidget.data) as string) : "";
-            let textCanvas = drawText(
-                text,
-                rect.width - 2 * buttonsFont.height,
-                rect.height,
-                style,
-                false
-            );
-            ctx.drawImage(textCanvas, buttonsFont.height, 0);
+        let text = upDownWidget.data ? (dataContext.get(upDownWidget.data) as string) : "";
+        drawText(
+            ctx,
+            text,
+            buttonsFont.height,
+            0,
+            rect.width - 2 * buttonsFont.height,
+            rect.height,
+            style,
+            false
+        );
 
-            let upButonCanvas = drawText(
-                upDownWidget.upButtonText || ">",
-                buttonsFont.height,
-                rect.height,
-                buttonsStyle,
-                false
-            );
-            ctx.drawImage(upButonCanvas, rect.width - buttonsFont.height, 0);
-        });
-    }
+        drawText(
+            ctx,
+            upDownWidget.upButtonText || ">",
+            rect.width - buttonsFont.height,
+            0,
+            buttonsFont.height,
+            rect.height,
+            buttonsStyle,
+            false
+        );
+    };
 }
 
 registerClass(UpDownWidget);
@@ -3139,46 +3130,39 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
         }
     });
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         let listGraphWidget = this;
         let style = listGraphWidget.style;
 
-        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
-            let x1 = 0;
-            let y1 = 0;
-            let x2 = rect.width - 1;
-            let y2 = rect.height - 1;
+        let x1 = 0;
+        let y1 = 0;
+        let x2 = rect.width - 1;
+        let y2 = rect.height - 1;
 
-            const borderSize = style.borderSizeRect;
-            let borderRadius = styleGetBorderRadius(style) || 0;
-            if (
-                borderSize.top > 0 ||
-                borderSize.right > 0 ||
-                borderSize.bottom > 0 ||
-                borderSize.left > 0
-            ) {
-                draw.setColor(getStyleProperty(style, "borderColor"));
-                draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-                x1 += borderSize.left;
-                y1 += borderSize.top;
-                x2 -= borderSize.right;
-                y2 -= borderSize.bottom;
-                borderRadius = Math.max(
-                    borderRadius -
-                        Math.max(
-                            borderSize.top,
-                            borderSize.right,
-                            borderSize.bottom,
-                            borderSize.left
-                        ),
-                    0
-                );
-            }
-
-            draw.setColor(getStyleProperty(style, "backgroundColor"));
+        const borderSize = style.borderSizeRect;
+        let borderRadius = styleGetBorderRadius(style) || 0;
+        if (
+            borderSize.top > 0 ||
+            borderSize.right > 0 ||
+            borderSize.bottom > 0 ||
+            borderSize.left > 0
+        ) {
+            draw.setColor(style.borderColorProperty);
             draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-        });
-    }
+            x1 += borderSize.left;
+            y1 += borderSize.top;
+            x2 -= borderSize.right;
+            y2 -= borderSize.bottom;
+            borderRadius = Math.max(
+                borderRadius -
+                    Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
+                0
+            );
+        }
+
+        draw.setColor(style.backgroundColorProperty);
+        draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+    };
 }
 
 registerClass(ListGraphWidget);
@@ -3283,99 +3267,90 @@ export class ScrollBarWidget extends Widget implements IScrollBarWidget {
         }
     });
 
-    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         let widget = this;
 
-        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
-            const buttonsFont = styleGetFont(widget.buttonsStyle);
-            if (!buttonsFont) {
-                return;
-            }
+        const buttonsFont = styleGetFont(widget.buttonsStyle);
+        if (!buttonsFont) {
+            return;
+        }
 
-            let isHorizontal = rect.width > rect.height;
+        let isHorizontal = rect.width > rect.height;
 
-            let buttonSize = isHorizontal ? rect.height : rect.width;
+        let buttonSize = isHorizontal ? rect.height : rect.width;
 
-            // draw left button
-            let leftButtonCanvas = drawText(
-                widget.leftButtonText || "<",
-                isHorizontal ? buttonSize : rect.width,
-                isHorizontal ? rect.height : buttonSize,
-                widget.buttonsStyle,
-                false
-            );
-            ctx.drawImage(leftButtonCanvas, 0, 0);
+        // draw left button
+        drawText(
+            ctx,
+            widget.leftButtonText || "<",
+            0,
+            0,
+            isHorizontal ? buttonSize : rect.width,
+            isHorizontal ? rect.height : buttonSize,
+            widget.buttonsStyle,
+            false
+        );
 
-            // draw track
-            let x;
-            let y;
-            let width;
-            let height;
+        // draw track
+        let x;
+        let y;
+        let width;
+        let height;
 
-            if (isHorizontal) {
-                x = buttonSize;
-                y = 0;
-                width = rect.width - 2 * buttonSize;
-                height = rect.height;
-            } else {
-                x = 0;
-                y = buttonSize;
-                width = rect.width;
-                height = rect.height - 2 * buttonSize;
-            }
+        if (isHorizontal) {
+            x = buttonSize;
+            y = 0;
+            width = rect.width - 2 * buttonSize;
+            height = rect.height;
+        } else {
+            x = 0;
+            y = buttonSize;
+            width = rect.width;
+            height = rect.height - 2 * buttonSize;
+        }
 
-            draw.setColor(getStyleProperty(this.style, "color"));
-            draw.fillRect(ctx, x, y, x + width - 1, y + height - 1, 0);
+        draw.setColor(this.style.colorProperty);
+        draw.fillRect(ctx, x, y, x + width - 1, y + height - 1, 0);
 
-            // draw thumb
-            const [size, position, pageSize] = (widget.data && dataContext.get(widget.data)) || [
-                100,
-                25,
-                20
-            ];
+        // draw thumb
+        const [size, position, pageSize] = (widget.data && dataContext.get(widget.data)) || [
+            100,
+            25,
+            20
+        ];
 
-            let xThumb;
-            let widthThumb;
-            let yThumb;
-            let heightThumb;
+        let xThumb;
+        let widthThumb;
+        let yThumb;
+        let heightThumb;
 
-            if (isHorizontal) {
-                xThumb = Math.floor((position * width) / size);
-                widthThumb = Math.max(Math.floor((pageSize * width) / size), buttonSize);
-                yThumb = y;
-                heightThumb = height;
-            } else {
-                xThumb = x;
-                widthThumb = width;
-                yThumb = Math.floor((position * height) / size);
-                heightThumb = Math.max(Math.floor((pageSize * height) / size), buttonSize);
-            }
+        if (isHorizontal) {
+            xThumb = Math.floor((position * width) / size);
+            widthThumb = Math.max(Math.floor((pageSize * width) / size), buttonSize);
+            yThumb = y;
+            heightThumb = height;
+        } else {
+            xThumb = x;
+            widthThumb = width;
+            yThumb = Math.floor((position * height) / size);
+            heightThumb = Math.max(Math.floor((pageSize * height) / size), buttonSize);
+        }
 
-            draw.setColor(getStyleProperty(this.thumbStyle, "color"));
-            draw.fillRect(
-                ctx,
-                xThumb,
-                yThumb,
-                xThumb + widthThumb - 1,
-                yThumb + heightThumb - 1,
-                0
-            );
+        draw.setColor(this.thumbStyle.colorProperty);
+        draw.fillRect(ctx, xThumb, yThumb, xThumb + widthThumb - 1, yThumb + heightThumb - 1, 0);
 
-            // draw right button
-            let rightButonCanvas = drawText(
-                widget.rightButtonText || ">",
-                isHorizontal ? buttonSize : rect.width,
-                isHorizontal ? rect.height : buttonSize,
-                widget.buttonsStyle,
-                false
-            );
-            ctx.drawImage(
-                rightButonCanvas,
-                isHorizontal ? rect.width - buttonSize : 0,
-                isHorizontal ? 0 : rect.height - buttonSize
-            );
-        });
-    }
+        // draw right button
+        drawText(
+            ctx,
+            widget.rightButtonText || ">",
+            isHorizontal ? rect.width - buttonSize : 0,
+            isHorizontal ? 0 : rect.height - buttonSize,
+            isHorizontal ? buttonSize : rect.width,
+            isHorizontal ? rect.height : buttonSize,
+            widget.buttonsStyle,
+            false
+        );
+    };
 }
 
 registerClass(ScrollBarWidget);
@@ -3397,32 +3372,30 @@ export class ProgressWidget extends Widget implements IProgressWidget {
         icon: "_images/widgets/Progress.png"
     });
 
-    draw(rect: Rect, dataContext: DataContext): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         let widget = this;
 
-        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
-            let isHorizontal = rect.width > rect.height;
+        let isHorizontal = rect.width > rect.height;
 
-            draw.setColor(getStyleProperty(this.style, "backgroundColor"));
-            draw.fillRect(ctx, 0, 0, rect.width - 1, rect.height - 1, 0);
+        draw.setColor(this.style.backgroundColorProperty);
+        draw.fillRect(ctx, 0, 0, rect.width - 1, rect.height - 1, 0);
 
-            // draw thumb
-            const percent = (widget.data && dataContext.get(widget.data)) || 25;
-            draw.setColor(getStyleProperty(this.style, "color"));
-            if (isHorizontal) {
-                draw.fillRect(ctx, 0, 0, (percent * rect.width) / 100 - 1, rect.height - 1, 0);
-            } else {
-                draw.fillRect(
-                    ctx,
-                    0,
-                    rect.height - (percent * rect.height) / 100,
-                    rect.width - 1,
-                    rect.height - 1,
-                    0
-                );
-            }
-        });
-    }
+        // draw thumb
+        const percent = (widget.data && dataContext.get(widget.data)) || 25;
+        draw.setColor(this.style.colorProperty);
+        if (isHorizontal) {
+            draw.fillRect(ctx, 0, 0, (percent * rect.width) / 100 - 1, rect.height - 1, 0);
+        } else {
+            draw.fillRect(
+                ctx,
+                0,
+                rect.height - (percent * rect.height) / 100,
+                rect.width - 1,
+                rect.height - 1,
+                0
+            );
+        }
+    };
 }
 
 registerClass(ProgressWidget);
@@ -3444,20 +3417,18 @@ export class CanvasWidget extends Widget implements ICanvasWidget {
         icon: "_images/widgets/Canvas.png"
     });
 
-    draw(rect: Rect): HTMLCanvasElement | undefined {
+    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
         let widget = this;
         let style = widget.style;
 
-        return drawOnCanvas(rect.width, rect.height, (ctx: CanvasRenderingContext2D) => {
-            let x1 = 0;
-            let y1 = 0;
-            let x2 = rect.width - 1;
-            let y2 = rect.height - 1;
+        let x1 = 0;
+        let y1 = 0;
+        let x2 = rect.width - 1;
+        let y2 = rect.height - 1;
 
-            draw.setColor(getStyleProperty(style, "backgroundColor"));
-            draw.fillRect(ctx, x1, y1, x2, y2, 0);
-        });
-    }
+        draw.setColor(style.backgroundColorProperty);
+        draw.fillRect(ctx, x1, y1, x2, y2, 0);
+    };
 }
 
 registerClass(CanvasWidget);
