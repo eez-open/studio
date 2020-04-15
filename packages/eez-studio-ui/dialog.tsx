@@ -151,6 +151,7 @@ export interface IDialogOptions {
         title: string;
         width: number;
     };
+    fieldsEnclosureDiv?: React.ComponentType;
 }
 
 export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {

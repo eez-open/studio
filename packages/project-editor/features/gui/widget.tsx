@@ -905,7 +905,6 @@ export class ContainerWidget extends Widget implements IContainerWidget {
     render(rect: Rect, dataContext: DataContext) {
         return (
             <WidgetContainerComponent
-                containerWidget={this}
                 widgets={this.widgets}
                 dataContext={dataContext}
             />
@@ -1372,7 +1371,6 @@ export class SelectWidget extends Widget implements ISelectWidget {
 
         return (
             <WidgetContainerComponent
-                containerWidget={this}
                 widgets={[selectedWidget]}
                 dataContext={dataContext}
             />

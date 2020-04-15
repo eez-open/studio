@@ -121,13 +121,19 @@ let MAX_GLYPH_HEIGHT = 256;
 let pixelImageData: ImageData;
 let pixelData: Uint8ClampedArray;
 
-function drawGlyph(
+export function drawGlyph(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
     encoding: number,
     font: Font
 ): number {
+    if (!pixelImageData) {
+        pixelImageData = ctx.createImageData(MAX_GLYPH_WIDTH, MAX_GLYPH_HEIGHT);
+        pixelData = pixelImageData.data;
+        pixelData.fill(255);
+    }
+
     let glyph = getGlyph(font, encoding);
     if (!glyph || !glyph.glyphBitmap) {
         return 0;
@@ -212,12 +218,6 @@ export function drawStr(
     height: number,
     font: Font
 ) {
-    if (!pixelImageData) {
-        pixelImageData = ctx.createImageData(MAX_GLYPH_WIDTH, MAX_GLYPH_HEIGHT);
-        pixelData = pixelImageData.data;
-        pixelData.fill(255);
-    }
-
     for (let i = 0; i < text.length; i++) {
         let encoding = text.charCodeAt(i);
         x += drawGlyph(ctx, x, y, encoding, font);

@@ -2,6 +2,7 @@ import React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
+import classNames from "classnames";
 
 import { formatNumber } from "eez-studio-shared/util";
 import { Rect } from "eez-studio-shared/geometry";
@@ -49,6 +50,7 @@ import rebuildFont from "font-services/font-rebuild";
 import { FontProperties as FontValue } from "font-services/interfaces";
 
 import { Gui } from "project-editor/features/gui/gui";
+import { drawGlyph, setColor, setBackColor } from "project-editor/features/gui/draw";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,6 +63,30 @@ function formatEncoding(encoding: number) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const SelectGlyphDialogFieldsEnclosureDiv = styled.div`
+    width: 100%;
+    height: 100%;
+
+    > table {
+        width: 100%;
+        height: 100%;
+
+        > tbody > tr:nth-child(3) > td:nth-child(2) {
+            width: 100%;
+            height: 100%;
+            position: relative;
+
+            > div {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+            }
+        }
+    }
+`;
 
 export function browseGlyph(glyph: Glyph) {
     function isFont(obj: any) {
@@ -128,7 +154,8 @@ export function browseGlyph(glyph: Glyph) {
             jsPanel: {
                 title,
                 width: 1200
-            }
+            },
+            fieldsEnclosureDiv: SelectGlyphDialogFieldsEnclosureDiv
         }
     }).then(result => {
         return {
@@ -413,45 +440,11 @@ export class Glyph extends EezObject {
     }
 
     @computed
-    get image(): string {
-        let font = this.font;
-
-        let canvasWidth = this.glyphBitmap ? this.dx : 1;
-        let canvasHeight = font.height;
-
-        canvasWidth = canvasWidth || 1;
-        canvasHeight = canvasHeight || 1;
-
-        let canvas = document.createElement("canvas");
-        canvas.setAttribute("width", canvasWidth.toString());
-        canvas.setAttribute("height", canvasHeight.toString());
-
-        let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-
-        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-        if (this.glyphBitmap) {
-            ctx.fillStyle = "black";
-
-            let xOffset = this.x;
-            let yOffset = font.ascent - (this.y + this.height);
-
-            for (let x = 0; x < this.width; x++) {
-                for (let y = 0; y < this.height; y++) {
-                    const pixelValue = getPixel(this.glyphBitmap, x, y, font.bpp);
-                    if (font.bpp === 8) {
-                        ctx.globalAlpha = pixelValue / 255;
-                        ctx.fillRect(x + xOffset, y + yOffset, 1, 1);
-                    } else {
-                        if (pixelValue) {
-                            ctx.fillRect(x + xOffset, y + yOffset, 1, 1);
-                        }
-                    }
-                }
-            }
-        }
-
-        return canvas.toDataURL();
+    get imageSize() {
+        return {
+            width: this.font.maxDx || 0,
+            height: this.font.height || 0
+        };
     }
 
     @computed
@@ -1023,11 +1016,18 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
     }
 
     componentDidMount() {
-        this.loadFont();
+        this.delayedLoadFont();
     }
 
     componentDidUpdate() {
-        this.loadFont();
+        this.delayedLoadFont();
+    }
+
+    delayedLoadFont() {
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+        }
+        this.timeoutId = setTimeout(() => this.loadFont(), 100);
     }
 
     @action
@@ -1092,43 +1092,38 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
                     )
                 );
             } else {
-                if (this.timeoutId) {
-                    clearTimeout(this.timeoutId);
-                }
-                this.timeoutId = setTimeout(() => {
-                    extractFont({
-                        absoluteFilePath: ProjectStore.getAbsoluteFilePath(fontFilePath),
-                        relativeFilePath: fontFilePath,
-                        bpp: fontBpp,
-                        size: fontSize,
-                        threshold: fontThreshold,
-                        createGlyphs: true
+                extractFont({
+                    absoluteFilePath: ProjectStore.getAbsoluteFilePath(fontFilePath),
+                    relativeFilePath: fontFilePath,
+                    bpp: fontBpp,
+                    size: fontSize,
+                    threshold: fontThreshold,
+                    createGlyphs: true
+                })
+                    .then((fontValue: FontValue) => {
+                        const font: Font = loadObject(undefined, fontValue, Font) as Font;
+
+                        GlyphSelectFieldType.putFontInCache(
+                            font,
+                            fontFilePath,
+                            fontBpp,
+                            fontSize,
+                            fontThreshold
+                        );
+
+                        this.onChange(
+                            font,
+                            font.glyphs.find(
+                                glyph =>
+                                    glyph.encoding ==
+                                    this.props.values[this.props.fieldProperties.name]
+                            )
+                        );
                     })
-                        .then((fontValue: FontValue) => {
-                            const font: Font = loadObject(undefined, fontValue, Font) as Font;
-
-                            GlyphSelectFieldType.putFontInCache(
-                                font,
-                                fontFilePath,
-                                fontBpp,
-                                fontSize,
-                                fontThreshold
-                            );
-
-                            this.onChange(
-                                font,
-                                font.glyphs.find(
-                                    glyph =>
-                                        glyph.encoding ==
-                                        this.props.values[this.props.fieldProperties.name]
-                                )
-                            );
-                        })
-                        .catch(error => {
-                            console.error(error);
-                            this.onChange(undefined, undefined);
-                        });
-                }, 1000);
+                    .catch(error => {
+                        console.error(error);
+                        this.onChange(undefined, undefined);
+                    });
 
                 this.isLoading = true;
                 this.font = undefined;
@@ -1185,104 +1180,139 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class GlyphComponent extends React.Component<
-    {
+const GlyphComponent = observer(
+    ({
+        glyph,
+        isSelected,
+        onSelect,
+        onDoubleClick
+    }: {
         glyph: Glyph;
         isSelected: boolean;
         onSelect: () => void;
         onDoubleClick: () => void;
-    },
-    {}
-> {
-    render() {
-        let classes: string[] = [];
-        if (this.props.isSelected) {
-            classes.push("selected");
-        }
+    }) => {
+        const refDiv = React.useRef<HTMLDivElement>(null);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = (glyph.glyphBitmap && glyph.glyphBitmap.width) || 1;
+        canvas.height = glyph.font.height || 1;
+        let ctx = canvas.getContext("2d")!;
+        setColor("black");
+        setBackColor("white");
+        drawGlyph(ctx, -glyph.x, 0, glyph.encoding, glyph.font);
+
+        React.useEffect(() => {
+            if (refDiv.current) {
+                if (refDiv.current.children[0]) {
+                    refDiv.current.replaceChild(canvas, refDiv.current.children[0]);
+                } else {
+                    refDiv.current.appendChild(canvas);
+                }
+            }
+        });
 
         return (
             <li
-                key={this.props.glyph.encoding}
-                className={classes.join(" ")}
-                onClick={this.props.onSelect}
-                onDoubleClick={this.props.onDoubleClick}
+                key={glyph.encoding}
+                className={classNames({
+                    selected: isSelected
+                })}
+                onClick={onSelect}
+                onDoubleClick={onDoubleClick}
             >
                 <div>
-                    <img src={this.props.glyph.image} />
-                    <div>{getLabel(this.props.glyph)}</div>
+                    <div
+                        style={{
+                            width: glyph.font.maxDx,
+                            height: glyph.font.height,
+                            textAlign: "center"
+                        }}
+                        ref={refDiv}
+                    ></div>
+                    <div
+                        style={{
+                            position: "relative",
+                            width: 100,
+                            overflow: "visible",
+                            whiteSpace: "nowrap"
+                        }}
+                    >
+                        {getLabel(glyph)}
+                    </div>
                 </div>
             </li>
         );
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const Toolbar = styled.div`
-    flex-wrap: nowrap;
-
-    & > input {
-        width: 200px;
-        margin-left: 4px;
-        margin-top: 3px;
-    }
-`;
 
 const GlyphsDiv = styled.div`
     display: flex;
     flex-direction: column;
     overflow: hidden;
 
-    ul {
+    > div:nth-child(1) {
+        flex-grow: 0;
+        flex-shrink: 0;
         padding: 5px;
+        background-color: ${props => props.theme.panelHeaderColor};
+        border-bottom: 1px solid ${props => props.theme.borderColor};
+        > div {
+            flex-wrap: nowrap;
+
+            > input {
+                margin-left: 4px;
+                margin-top: 3px;
+                width: 100%;
+                height: 28px;
+            }
+        }
     }
 
-    li {
-        display: inline-block;
-        margin: 5px;
-        border: 2px solid #eee;
-        padding: 5px;
-        background-color: white;
-        cursor: pointer;
-    }
+    > div:nth-child(2) {
+        flex-grow: 1;
+        overflow: auto;
 
-    li.selected {
-        border: 2px solid ${props => props.theme.selectionBackgroundColor};
-    }
+        ul {
+            list-style: none;
+            padding: 5px;
+            display: flex;
+            flex-wrap: wrap;
+        }
 
-    li > div {
-        display: flex;
-        align-items: center;
-        flex-direction: column;
-    }
+        li {
+            margin: 5px;
+            border: 2px solid #eee;
+            padding: 5px;
+            background-color: white;
+            cursor: pointer;
 
-    li > div > img {
-        flex: 1;
-    }
+            &.selected {
+                border: 2px solid ${props => props.theme.selectionBackgroundColor};
+            }
 
-    li > div > div {
-        font-size: 80%;
-        font-family: monospace;
-    }
-`;
+            & > div {
+                display: flex;
+                align-items: center;
+                flex-direction: column;
 
-const GlyphsFilterDiv = styled.div`
-    flex-grow: 0;
-    flex-shrink: 0;
-    padding: 5px;
-    background-color: ${props => props.theme.panelHeaderColor};
-    border-bottom: 1px solid ${props => props.theme.borderColor};
-    input {
-        width: 100%;
-        height: 28px;
-    }
-`;
+                & > div {
+                    text-align: center;
+                }
 
-const GlyphsContentDiv = styled.div`
-    flex-grow: 1;
-    display: flex;
-    overflow: auto;
+                & > div {
+                    position: "relative";
+                    width: 100px;
+                    overflow: visible;
+                    white-space: nowrap;
+                    font-size: 80%;
+                    font-family: monospace;
+                }
+            }
+        }
+    }
 `;
 
 @observer
@@ -1325,10 +1355,12 @@ class Glyphs extends React.Component<{
     }
 
     ensureVisible() {
-        const $selectedGlyph = $(this.list).find(".selected");
-        if ($selectedGlyph.length == 1) {
-            ($selectedGlyph[0] as any).scrollIntoViewIfNeeded();
-        }
+        setTimeout(() => {
+            const $selectedGlyph = $(this.list).find(".selected");
+            if ($selectedGlyph.length == 1) {
+                $selectedGlyph[0].scrollIntoView({ block: "nearest", behavior: "auto" });
+            }
+        }, 100);
     }
 
     render() {
@@ -1403,8 +1435,8 @@ class Glyphs extends React.Component<{
 
         return (
             <GlyphsDiv>
-                <GlyphsFilterDiv>
-                    <Toolbar className="btn-toolbar" role="toolbar">
+                <div>
+                    <div className="btn-toolbar" role="toolbar">
                         <SearchInput
                             searchText={this.searchText}
                             onChange={this.onSearchChange}
@@ -1415,11 +1447,11 @@ class Glyphs extends React.Component<{
                         {addGlyphButton}
                         {deleteGlyphButton}
                         {createShadowButton}
-                    </Toolbar>
-                </GlyphsFilterDiv>
-                <GlyphsContentDiv>
+                    </div>
+                </div>
+                <div>
                     <ul ref={ref => (this.list = ref!)}>{glyphs}</ul>
-                </GlyphsContentDiv>
+                </div>
             </GlyphsDiv>
         );
     }
@@ -1583,7 +1615,15 @@ export class FontEditor
         return font.glyphs;
     }
 
-    @observable selectedGlyph: Glyph | undefined;
+    @observable _selectedGlyph: Glyph | undefined;
+
+    get selectedGlyph() {
+        let selectedGlyph = this._selectedGlyph;
+        if (selectedGlyph && selectedGlyph.font != this.props.font) {
+            selectedGlyph = this.props.font.glyphsMap.get(selectedGlyph.encoding);
+        }
+        return selectedGlyph;
+    }
 
     @action.bound
     onSelectGlyph(glyph: Glyph) {
@@ -1593,7 +1633,7 @@ export class FontEditor
                 createObjectNavigationItem(glyph)!
             );
         }
-        this.selectedGlyph = glyph;
+        this._selectedGlyph = glyph;
     }
 
     @bind
@@ -1664,7 +1704,7 @@ export class FontEditor
         let newGlyph = cloneObject(undefined, font.glyphs[font.glyphs.length - 1]) as Glyph;
         newGlyph.encoding = newGlyph.encoding + 1;
         newGlyph = DocumentStore.addObject(font.glyphs, newGlyph) as Glyph;
-        this.selectedGlyph = newGlyph;
+        this._selectedGlyph = newGlyph;
     }
 
     @action.bound
@@ -1811,10 +1851,9 @@ export class FontEditor
         const font = this.props.font;
 
         const isDialog = !!this.props.navigationStore;
-        const selectedGlyph = this.selectedGlyph;
 
         let onDeleteGlyph: (() => void) | undefined;
-        if (selectedGlyph && font.glyphs[font.glyphs.length - 1] == this.selectedGlyph) {
+        if (this.selectedGlyph && font.glyphs[font.glyphs.length - 1] == this.selectedGlyph) {
             onDeleteGlyph = this.onDeleteGlyph;
         }
 
@@ -1825,7 +1864,9 @@ export class FontEditor
                 onSelectGlyph={this.onSelectGlyph}
                 onDoubleClickGlyph={this.props.onDoubleClickItem || this.onBrowseGlyph}
                 onRebuildGlyphs={!isDialog ? this.onRebuildGlyphs : undefined}
-                onBrowseGlyph={isDialog && selectedGlyph ? this.onBrowseSelectedGlyph : undefined}
+                onBrowseGlyph={
+                    isDialog && this.selectedGlyph ? this.onBrowseSelectedGlyph : undefined
+                }
                 onAddGlyph={this.onAddGlyph}
                 onDeleteGlyph={onDeleteGlyph}
                 onCreateShadow={!isDialog ? this.onCreateShadow : undefined}
@@ -2229,6 +2270,11 @@ export class Font extends EezObject implements IFont {
         const map = new Map<number, Glyph>();
         this.glyphs.forEach(glyph => map.set(glyph.encoding, glyph));
         return map;
+    }
+
+    @computed
+    get maxDx() {
+        return Math.max(...this.glyphs.map(glyph => glyph.dx)) || 0;
     }
 }
 

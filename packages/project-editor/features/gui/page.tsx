@@ -562,7 +562,6 @@ export class Page extends EezObject implements IPage {
     render(rect: Rect, dataContext: DataContext) {
         return (
             <WidgetContainerComponent
-                containerWidget={this}
                 widgets={this.widgets}
                 dataContext={new DataContext(dataContext, this.dataContextOverridesObject)}
             />

@@ -330,7 +330,7 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
     }
 
     render() {
-        let properties = (
+        let fields = (
             <PropertyList>
                 {this.props.dialogDefinition.fields
                     .filter(fieldProperties => {
@@ -482,8 +482,18 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
             </PropertyList>
         );
 
-        if (this.props.opts && this.props.opts.jsPanel) {
-            properties = <div style={{ padding: 10, width: "100%" }}>{properties}</div>;
+        if (this.props.opts) {
+            if (this.props.opts.fieldsEnclosureDiv) {
+                fields = (
+                    <this.props.opts.fieldsEnclosureDiv>
+                        {fields}
+                    </this.props.opts.fieldsEnclosureDiv>
+                );
+            }
+
+            if (this.props.opts.jsPanel) {
+                fields = <div style={{ padding: 10, width: "100%" }}>{fields}</div>;
+            }
         }
 
         if (!this.props.embedded) {
@@ -500,11 +510,11 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             {this.props.dialogDefinition.error}
                         </div>
                     )}
-                    {properties}
+                    {fields}
                 </Dialog>
             );
         } else {
-            return properties;
+            return fields;
         }
     }
 }
