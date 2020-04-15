@@ -26,49 +26,17 @@ export const WidgetComponent = inject("designerContext")(
             rect?: Rect;
             designerContext?: IDesignerContext;
         }) => {
-            function cleanUpValue(value: any) {
-                if (value == undefined) {
-                    return undefined;
-                }
-                if (typeof value === "string") {
-                    value = value.trim();
-                    if (!value) {
-                        return undefined;
-                    }
-                    const numValue = Number(value);
-                    if (!isNaN(numValue)) {
-                        return numValue;
-                    }
-                }
-                return value;
-            }
-
-            let left;
-            let top;
-            let width;
-            let height;
-            if (rect) {
-                ({ left, top, width, height } = rect);
-            } else {
-                left = cleanUpValue(widget.left);
-                top = cleanUpValue(widget.top);
-                width = cleanUpValue(widget.width);
-                height = cleanUpValue(widget.height);
-                rect = {
-                    left,
-                    top,
-                    width,
-                    height
-                };
+            if (!rect) {
+                rect = widget;
             }
 
             const style: React.CSSProperties = {
                 display: "block",
                 position: "absolute",
-                left,
-                top,
-                width,
-                height
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height
             };
 
             const dataDesignerObjectId = designerContext ? getId(widget) : undefined;
@@ -91,8 +59,8 @@ export const WidgetComponent = inject("designerContext")(
                 canvas = document.createElement("canvas");
                 canvas.style.imageRendering = "pixelated";
                 canvas.style.display = "block";
-                canvas.width = width;
-                canvas.height = height;
+                canvas.width = rect.width;
+                canvas.height = rect.height;
                 widget.draw!(canvas.getContext("2d")!, rect, dataContext);
 
                 return (

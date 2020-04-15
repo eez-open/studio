@@ -1857,13 +1857,16 @@ export class FontEditor
             onDeleteGlyph = this.onDeleteGlyph;
         }
 
+        //const onRebuildGlyphs = !isDialog ? this.onRebuildGlyphs : undefined
+        const onRebuildGlyphs = undefined;
+
         const glyphs = (
             <Glyphs
                 glyphs={this.glyphs}
                 selectedGlyph={this.selectedGlyph}
                 onSelectGlyph={this.onSelectGlyph}
                 onDoubleClickGlyph={this.props.onDoubleClickItem || this.onBrowseGlyph}
-                onRebuildGlyphs={!isDialog ? this.onRebuildGlyphs : undefined}
+                onRebuildGlyphs={onRebuildGlyphs}
                 onBrowseGlyph={
                     isDialog && this.selectedGlyph ? this.onBrowseSelectedGlyph : undefined
                 }
