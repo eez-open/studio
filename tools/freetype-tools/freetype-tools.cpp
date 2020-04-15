@@ -104,7 +104,7 @@ extern "C" FontExtractState *create_font_extract_state(const char *fontFilePath,
     // clang-format off
     EM_ASM({
         FS.mkdir("/fonts" + $0);
-        FS.mount(NODEFS, { root: Pointer_stringify($1) }, "/fonts" + $0);
+        FS.mount(NODEFS, { root: UTF8ToString($1) }, "/fonts" + $0);
     }, g_id, dir_name(fontFilePath).c_str());
     // clang-format on
 

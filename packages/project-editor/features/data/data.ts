@@ -83,7 +83,10 @@ export class DataItem extends EezObject implements IDataItem {
             },
             {
                 name: "enumItems",
-                type: PropertyType.JSON
+                type: PropertyType.JSON,
+                hideInPropertyGrid: (object: DataItem) => {
+                    return object.type != "enum";
+                }
             },
             {
                 name: "defaultValue",

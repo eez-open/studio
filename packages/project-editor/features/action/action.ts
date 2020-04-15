@@ -55,11 +55,15 @@ export class Action extends EezObject implements IAction {
                     {
                         id: "native"
                     }
-                ]
+                ],
+                hideInPropertyGrid: () =>
+                    ProjectStore.project.settings.general.projectVersion !== "v1"
             },
             {
                 name: "implementation",
-                type: PropertyType.Cpp
+                type: PropertyType.Cpp,
+                hideInPropertyGrid: () =>
+                    ProjectStore.project.settings.general.projectVersion !== "v1"
             },
             {
                 name: "usedIn",

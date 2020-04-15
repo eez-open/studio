@@ -33,8 +33,8 @@ function getWidgetType(widgetClass: EezClass) {
 ////////////////////////////////////////////////////////////////////////////////
 
 const WidgetDiv = styled.div`
-    margin: 5px;
-    padding: 5px;
+    margin: 2px;
+    padding: 2px;
     width: 85px;
     height: 75px;
     cursor: -webkit-grab;
@@ -120,6 +120,7 @@ class PaletteItem extends React.Component<PaletteItemProps> {
 const WidgetPaletteDiv = styled.div`
     overflow: auto;
     padding: 5px;
+    padding-right: 0;
     flex-grow: 1;
 
     display: flex;
