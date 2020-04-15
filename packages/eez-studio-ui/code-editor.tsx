@@ -48,10 +48,7 @@ function createEditor(
                 editor.container.style.opacity = 1;
             }
             editor.setValue(value || "");
-            editor
-                .getSession()
-                .getUndoManager()
-                .reset();
+            editor.getSession().getUndoManager().reset();
             editor.selection.moveTo(lineNumber - 1, columnNumber - 1);
 
             resolve(editor);
@@ -84,31 +81,19 @@ function insertText(editor: any, text: string) {
 }
 
 function canUndo(editor: any) {
-    return editor
-        .getSession()
-        .getUndoManager()
-        .hasUndo();
+    return editor.getSession().getUndoManager().hasUndo();
 }
 
 function undo(editor: any) {
-    editor
-        .getSession()
-        .getUndoManager()
-        .undo();
+    editor.getSession().getUndoManager().undo();
 }
 
 function canRedo(editor: any) {
-    return editor
-        .getSession()
-        .getUndoManager()
-        .hasRedo();
+    return editor.getSession().getUndoManager().hasRedo();
 }
 
 function redo(editor: any) {
-    editor
-        .getSession()
-        .getUndoManager()
-        .redo();
+    editor.getSession().getUndoManager().redo();
 }
 
 function onEditorEvent(editor: any, eventName: string, handler: any) {

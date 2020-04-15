@@ -721,13 +721,15 @@ class Property extends React.Component<PropertyProps> {
 
     @disposeOnUnmount
     changeDocumentDisposer = autorun(() => {
-        const getPropertyValueResult = getPropertyValue(
-            this.props.objects,
-            this.props.propertyInfo
-        );
-        runInAction(() => {
-            this._value = getPropertyValueResult ? getPropertyValueResult.value : undefined;
-        });
+        if (ProjectStore.project) {
+            const getPropertyValueResult = getPropertyValue(
+                this.props.objects,
+                this.props.propertyInfo
+            );
+            runInAction(() => {
+                this._value = getPropertyValueResult ? getPropertyValueResult.value : undefined;
+            });
+        }
     });
 
     @bind
