@@ -111,6 +111,7 @@ class LoadExtensionTask extends EventEmitter {
 const loadExtensionTasks = new Map<string, LoadExtensionTask>();
 
 async function loadAndRegisterExtension(folder: string) {
+    console.log(folder);
     const loadExtensionTask = loadExtensionTasks.get(folder);
     if (loadExtensionTask) {
         if (loadExtensionTask.isFinished) {
@@ -532,15 +533,15 @@ export function exportExtension(extension: IExtension, destFilePath: string) {
             }
         });
 
-        output.on("close", function() {
+        output.on("close", function () {
             resolve();
         });
 
-        archive.on("warning", function(err: any) {
+        archive.on("warning", function (err: any) {
             reject(err);
         });
 
-        archive.on("error", function(err: any) {
+        archive.on("error", function (err: any) {
             reject(err);
         });
 
