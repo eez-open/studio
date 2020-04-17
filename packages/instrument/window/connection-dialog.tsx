@@ -1,5 +1,6 @@
 import SerialPortModule from "serialport";
 import React from "react";
+import ReactDOM from "react-dom";
 import { observable, action, runInAction, reaction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
@@ -92,7 +93,9 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
         $(this.div).modal();
 
         $(this.div).on("hidden.bs.modal", () => {
-            (this.div.parentElement as HTMLElement).remove();
+            const parent = this.div.parentElement as HTMLElement;
+            ReactDOM.unmountComponentAtNode(parent);
+            parent.remove();
         });
 
         this.disposer = reaction(

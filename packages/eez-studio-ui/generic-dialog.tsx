@@ -1,4 +1,5 @@
 import React from "react";
+import ReactDOM from "react-dom";
 import { computed } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
@@ -528,7 +529,7 @@ export function showGenericDialog(conf: {
     opts?: IDialogOptions;
 }) {
     return new Promise<GenericDialogResult>((resolve, reject) => {
-        const modalDialog = showDialog(
+        const [modalDialog, element] = showDialog(
             <GenericDialog
                 dialogDefinition={conf.dialogDefinition}
                 dialogContext={undefined}
@@ -538,6 +539,7 @@ export function showGenericDialog(conf: {
                     conf.showOkButton === undefined || conf.showOkButton
                         ? values => {
                               if (modalDialog) {
+                                  ReactDOM.unmountComponentAtNode(element);
                                   modalDialog.close();
                               }
                               resolve(values);
@@ -546,6 +548,7 @@ export function showGenericDialog(conf: {
                 }
                 onCancel={() => {
                     if (modalDialog) {
+                        ReactDOM.unmountComponentAtNode(element);
                         modalDialog.close();
                     }
                     reject();

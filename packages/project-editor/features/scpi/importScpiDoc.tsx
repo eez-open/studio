@@ -1493,7 +1493,12 @@ export function showImportScpiDocDialog() {
     document.body.appendChild(el);
     ReactDOM.render(
         <ThemeProvider theme={theme}>
-            <ImportScpiDocDialog onHidden={() => el.remove()} />
+            <ImportScpiDocDialog
+                onHidden={() => {
+                    ReactDOM.unmountComponentAtNode(el);
+                    el.remove();
+                }}
+            />
         </ThemeProvider>,
         el
     );

@@ -187,9 +187,9 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
             resizeit: {},
             closeOnBackdrop: false
         });
-        return dialog;
+        return [dialog, element];
     } else {
         document.body.appendChild(element);
-        return undefined;
+        return [undefined, element];
     }
 }

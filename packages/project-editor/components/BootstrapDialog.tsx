@@ -1,4 +1,5 @@
 import React from "react";
+import ReactDOM from "react-dom";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import classNames from "classnames";
@@ -56,7 +57,9 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
         });
 
         $(this.div).on("hidden.bs.modal", () => {
-            (this.div.parentElement as HTMLElement).remove();
+            const parent = this.div.parentElement as HTMLElement;
+            ReactDOM.unmountComponentAtNode(parent);
+            parent.remove();
         });
 
         $(this.div).modal();

@@ -1,4 +1,5 @@
 import React from "react";
+import ReactDOM from "react-dom";
 import { observer } from "mobx-react";
 
 import { showDialog, Dialog } from "eez-studio-ui/dialog";
@@ -145,16 +146,18 @@ export async function onSelectItem(
                 [propertyInfo.name]: value
             });
 
+            ReactDOM.unmountComponentAtNode(element);
             modalDialog.close();
 
             return true;
         };
 
         const onCancel = () => {
+            ReactDOM.unmountComponentAtNode(element);
             modalDialog.close();
         };
 
-        const modalDialog = showDialog(
+        const [modalDialog, element] = showDialog(
             <SelectItemDialog
                 collectionObject={collectionObject}
                 navigationStore={navigationStore}
