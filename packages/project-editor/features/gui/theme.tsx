@@ -30,7 +30,7 @@ import { Splitter } from "eez-studio-ui/splitter";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore, UIStateStore } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { Gui } from "project-editor/features/gui/gui";
 
@@ -244,6 +244,10 @@ export class ThemesSideView extends React.Component<{
             });
     };
 
+    onClose = action(() => {
+        UIStateStore.viewOptions.themesVisible = false;
+    });
+
     render() {
         if (ProjectStore.masterProjectEnabled && !ProjectStore.masterProject) {
             return null;
@@ -259,6 +263,7 @@ export class ThemesSideView extends React.Component<{
                 searchInput={false}
                 editable={!ProjectStore.masterProject}
                 navigationStore={navigationStore.get()}
+                onClose={this.onClose}
             />
         );
 

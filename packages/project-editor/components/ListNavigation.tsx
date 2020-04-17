@@ -47,6 +47,7 @@ const SortableTitleDiv = styled.div`
 
     background-repeat: no-repeat;
     background-position: center left;
+    background-position-y: 2px;
     padding-left: 20px;
     cursor: pointer;
 
@@ -179,6 +180,7 @@ interface ListNavigationProps {
     searchInput?: boolean;
     editable?: boolean;
     filter?: (object: IEezObject) => boolean;
+    onClose?: () => void;
 }
 
 @observer
@@ -297,6 +299,18 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
                     navigationObject={this.props.navigationObject}
                     navigationStore={this.props.navigationStore}
                 />
+            );
+        }
+
+        if (this.props.onClose) {
+            buttons.push(
+                <IconAction
+                    key="close"
+                    icon="material:close"
+                    iconSize={16}
+                    onClick={this.props.onClose}
+                    title="Close themes panel"
+                ></IconAction>
             );
         }
 

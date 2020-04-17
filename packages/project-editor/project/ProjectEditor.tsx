@@ -235,6 +235,10 @@ const EditorsDiv = styled.div`
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    > div:nth-child(1) {
+        background-color: ${props => props.theme.panelHeaderColor};
+        border-bottom: 1px solid ${props => props.theme.borderColor};
+    }
 `;
 
 @observer
@@ -255,7 +259,7 @@ export class Editors extends React.Component<{}, {}> {
 
 @observer
 export class PropertiesPanel extends React.Component<
-    { object: IEezObject | undefined; navigationStore?: INavigationStore },
+    { object: IEezObject | undefined; navigationStore?: INavigationStore; buttons?: JSX.Element[] },
     {}
 > {
     render() {
@@ -290,7 +294,12 @@ export class PropertiesPanel extends React.Component<
         }
 
         return (
-            <Panel id="properties" title="Properties" body={<PropertyGrid objects={objects} />} />
+            <Panel
+                id="properties"
+                title="Properties"
+                body={<PropertyGrid objects={objects} />}
+                buttons={this.props.buttons}
+            />
         );
     }
 }

@@ -20,7 +20,7 @@ import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { findStyle } from "project-editor/features/gui/gui";
-import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
+import { getThemedColor } from "project-editor/features/gui/theme";
 
 import { ProjectStore } from "project-editor/core/store";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
@@ -88,14 +88,13 @@ export class BitmapsNavigation extends NavigationComponent {
         return (
             <Splitter
                 type="horizontal"
-                persistId={`project-editor/bitmaps`}
-                sizes={`240px|100%|400px|240px`}
-                childrenOverflow="hidden|hidden|hidden|hidden"
+                persistId={"project-editor/bitmaps"}
+                sizes={"240px|100%|400px"}
+                childrenOverflow={"hidden|hidden|hidden"}
             >
                 <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
                 {this.bitmap ? <BitmapEditor bitmap={this.bitmap} /> : <div />}
                 <PropertiesPanel object={this.bitmap} />
-                <ThemesSideView />
             </Splitter>
         );
     }

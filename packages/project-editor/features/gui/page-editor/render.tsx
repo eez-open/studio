@@ -1,8 +1,6 @@
 import React from "react";
 import { observer, inject } from "mobx-react";
 
-import { Rect } from "eez-studio-shared/geometry";
-
 import { getId } from "project-editor/core/object";
 
 import { DataContext } from "project-editor/features/data/data";
@@ -18,25 +16,23 @@ export const WidgetComponent = inject("designerContext")(
         ({
             widget,
             dataContext,
-            rect,
+            left,
+            top,
             designerContext
         }: {
             widget: Widget | Page;
             dataContext: DataContext;
-            rect?: Rect;
+            left?: number;
+            top?: number;
             designerContext?: IDesignerContext;
         }) => {
-            if (!rect) {
-                rect = widget;
-            }
-
             const style: React.CSSProperties = {
                 display: "block",
                 position: "absolute",
-                left: rect.left,
-                top: rect.top,
-                width: rect.width,
-                height: rect.height
+                left: left != undefined ? left : widget.left,
+                top: top != undefined ? top : widget.top,
+                width: widget.width,
+                height: widget.height
             };
 
             const dataDesignerObjectId = designerContext ? getId(widget) : undefined;
@@ -57,11 +53,11 @@ export const WidgetComponent = inject("designerContext")(
 
             if (widget instanceof Widget && widget.draw) {
                 canvas = document.createElement("canvas");
+                canvas.width = widget.width;
+                canvas.height = widget.height;
                 canvas.style.imageRendering = "pixelated";
                 canvas.style.display = "block";
-                canvas.width = rect.width;
-                canvas.height = rect.height;
-                widget.draw!(canvas.getContext("2d")!, rect, dataContext);
+                widget.draw!(canvas.getContext("2d")!, dataContext);
 
                 return (
                     <div
@@ -78,7 +74,7 @@ export const WidgetComponent = inject("designerContext")(
 
                 return (
                     <div data-designer-object-id={dataDesignerObjectId} style={style}>
-                        {widget.render(rect, dataContext, designerContext)}
+                        {widget.render(dataContext, designerContext)}
                     </div>
                 );
             } catch (err) {
@@ -86,20 +82,15 @@ export const WidgetComponent = inject("designerContext")(
                 return (
                     <div
                         data-designer-object-id={dataDesignerObjectId}
-                        style={{
-                            position: "absolute",
-                            left: rect.left,
-                            top: rect.top,
-                            width: rect.width,
-                            height: rect.height,
-                            border: "1px dashed red",
+                        style={Object.assign(style, {
                             display: "flex",
+                            border: "1px dashed red",
                             justifyContent: "center",
                             alignItems: "center",
                             textAlign: "center",
                             color: "red",
                             padding: 10
-                        }}
+                        })}
                     >
                         Failed to render widget!
                     </div>

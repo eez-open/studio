@@ -435,11 +435,12 @@ export class Editor implements IEditor {
 
     @computed
     get title() {
-        if (isArrayElement(this.object)) {
-            return `${getClass(this.object).name}: ${objectToString(this.object)}`;
-        } else {
-            return objectToString(this.object);
-        }
+        // if (isArrayElement(this.object)) {
+        //     return `${getClass(this.object).name}: ${objectToString(this.object)}`;
+        // } else {
+        //     return objectToString(this.object);
+        // }
+        return objectToString(this.object);
     }
 
     @action
@@ -657,13 +658,16 @@ class EditorsStoreClass {
 
 export class ViewOptions {
     @observable outputVisible: boolean = true;
+    @observable themesVisible: boolean = true;
 
     @action
     load(viewOptions: any) {
         if (viewOptions) {
             this.outputVisible = viewOptions.outputVisible;
+            this.themesVisible = viewOptions.themesVisible;
         } else {
             this.outputVisible = true;
+            this.themesVisible = true;
         }
     }
 

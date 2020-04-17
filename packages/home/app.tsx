@@ -13,14 +13,14 @@ import { getAppStore } from "home/history";
 
 const SessionInfoContainer = styled.div`
     flex-grow: 0;
-    border-bottom: 1px solid ${props => props.theme.borderColor};
     padding: 5px 10px;
-    background: ${props => props.theme.panelHeaderColor};
 `;
 
 const AppHeader: typeof Header = styled(Header)`
     display: flex;
     flex-direction: row;
+    background-color: ${props => props.theme.panelHeaderColor};
+    border-bottom: 1px solid ${props => props.theme.borderColor};
 ` as any;
 
 const TabContainer = styled.div`

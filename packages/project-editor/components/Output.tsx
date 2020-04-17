@@ -174,10 +174,11 @@ const TabsViewContainer = styled.div`
     flex-shrink: 0;
     display: flex;
     justify-content: space-between;
+    background-color: ${props => props.theme.panelHeaderColor};
+    border-bottom: 1px solid ${props => props.theme.borderColor};
 
     > .EezStudio_Action {
-        background-color: ${props => props.theme.panelHeaderColor};
-        border-bottom: 1px solid ${props => props.theme.borderColor};
+        margin-right: 8px;
     }
 `;
 
@@ -211,6 +212,7 @@ export class Output extends React.Component<{}, {}> {
                     <TabsView tabs={OutputSectionsStore.sections} />
                     <IconAction
                         icon="material:close"
+                        iconSize={16}
                         onClick={this.onClose}
                         title="Close output panel"
                     ></IconAction>

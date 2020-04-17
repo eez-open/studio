@@ -236,12 +236,8 @@ const DragWidget = observer(
         return pageEditorContext.dragWidget ? (
             <WidgetComponent
                 widget={pageEditorContext.dragWidget}
-                rect={{
-                    left: page.left + pageEditorContext.dragWidget.left,
-                    top: page.top + pageEditorContext.dragWidget.top,
-                    width: pageEditorContext.dragWidget.width,
-                    height: pageEditorContext.dragWidget.height
-                }}
+                left={page.left + pageEditorContext.dragWidget.left}
+                top={page.top + pageEditorContext.dragWidget.top}
                 dataContext={dataContext}
             />
         ) : null;

@@ -151,9 +151,7 @@ class TabView extends React.Component<
 const TabsViewContainer = styled.div`
     flex-grow: 1;
     display: flex;
-    background-color: ${props => props.theme.panelHeaderColor};
-    height: 45px;
-    border-bottom: 1px solid ${props => props.theme.borderColor};
+    height: 37px;
     margin: 0;
     white-space: nowrap;
     overflow-x: auto;
@@ -179,7 +177,8 @@ const TabsViewContainer = styled.div`
     }
 
     & > div {
-        height: 45px;
+        min-width: 100px;
+        height: 37px;
         border-right: 1px solid ${props => props.theme.borderColor};
         padding-left: 10px;
         padding-right: 10px;
@@ -199,12 +198,17 @@ const TabsViewContainer = styled.div`
         & > div {
             display: flex;
             align-items: center;
-            height: 38px;
+            width: 100%;
+            height: 30px;
+            padding-top: 4px;
+            align-content: space-between;
 
             & > span.title {
+                flex-grow: 1;
                 max-width: 200px;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                text-align: center;
             }
 
             & > i.close {
@@ -212,6 +216,7 @@ const TabsViewContainer = styled.div`
                 position: relative;
                 font-size: 14px;
                 padding-left: 6px;
+                padding-top: 3px;
 
                 &:hover {
                     color: red;

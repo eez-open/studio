@@ -5,9 +5,9 @@ import { bind } from "bind-decorator";
 
 import { _find } from "eez-studio-shared/algorithm";
 import { to16bitsColor } from "eez-studio-shared/color";
-import { Rect } from "eez-studio-shared/geometry";
 
 import { Splitter } from "eez-studio-ui/splitter";
+import { IconAction } from "eez-studio-ui/action";
 
 import {
     IEezObject,
@@ -31,7 +31,7 @@ import {
     ITreeObjectAdapter,
     TreeAdapter
 } from "project-editor/core/objectAdapter";
-import { NavigationStore, EditorsStore, IPanel } from "project-editor/core/store";
+import { NavigationStore, EditorsStore, IPanel, UIStateStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
@@ -241,6 +241,20 @@ export class PagesNavigation extends NavigationComponent {
             </Splitter>
         );
 
+        const buttons: JSX.Element[] = [];
+
+        if (!UIStateStore.viewOptions.themesVisible) {
+            buttons.push(
+                <IconAction
+                    key="show-themes"
+                    icon="material:palette"
+                    iconSize={16}
+                    onClick={action(() => (UIStateStore.viewOptions.themesVisible = true))}
+                    title="Show themes panel"
+                ></IconAction>
+            );
+        }
+
         const properties = (
             <Splitter
                 type="vertical"
@@ -248,7 +262,7 @@ export class PagesNavigation extends NavigationComponent {
                 sizes={`100%|200px`}
                 childrenOverflow="hidden|hidden"
             >
-                <PropertiesPanel object={this.selectedObject} />
+                <PropertiesPanel object={this.selectedObject} buttons={buttons} />
                 <Panel id="widgets" title="Widgets Palette" body={<WidgetPalette />} />
             </Splitter>
         );
@@ -256,14 +270,18 @@ export class PagesNavigation extends NavigationComponent {
         return (
             <Splitter
                 type="horizontal"
-                persistId={`project-editor/pages`}
-                sizes={`240px|100%|400px|240px`}
-                childrenOverflow="hidden|hidden|hidden|hidden"
+                persistId={`project-editor/pages${
+                    UIStateStore.viewOptions.themesVisible ? "" : "-without-themes"
+                }`}
+                sizes={`240px|100%|400px${UIStateStore.viewOptions.themesVisible ? "|240px" : ""}`}
+                childrenOverflow={`hidden|hidden|hidden${
+                    UIStateStore.viewOptions.themesVisible ? "|hidden" : ""
+                }`}
             >
                 {navigation}
                 <Editors />
                 {properties}
-                <ThemesSideView />
+                {UIStateStore.viewOptions.themesVisible && <ThemesSideView />}
             </Splitter>
         );
     }
@@ -559,7 +577,7 @@ export class Page extends EezObject implements IPage {
         }
     }
 
-    render(rect: Rect, dataContext: DataContext) {
+    render(dataContext: DataContext) {
         return (
             <WidgetContainerComponent
                 widgets={this.widgets}

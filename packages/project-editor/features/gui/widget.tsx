@@ -6,7 +6,6 @@ import { bind } from "bind-decorator";
 import { _find, _range } from "eez-studio-shared/algorithm";
 import { to16bitsColor } from "eez-studio-shared/color";
 import { humanize } from "eez-studio-shared/string";
-import { Rect } from "eez-studio-shared/geometry";
 import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -752,13 +751,9 @@ export class Widget extends EezObject implements IWidget {
         return undefined;
     }
 
-    draw?: (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => void;
+    draw?: (ctx: CanvasRenderingContext2D, dataContext: DataContext) => void;
 
-    render(
-        rect: Rect,
-        dataContext: DataContext,
-        designerContext?: IDesignerContext
-    ): React.ReactNode {
+    render(dataContext: DataContext, designerContext?: IDesignerContext): React.ReactNode {
         return undefined;
     }
 
@@ -902,13 +897,8 @@ export class ContainerWidget extends Widget implements IContainerWidget {
         }
     });
 
-    render(rect: Rect, dataContext: DataContext) {
-        return (
-            <WidgetContainerComponent
-                widgets={this.widgets}
-                dataContext={dataContext}
-            />
-        );
+    render(dataContext: DataContext) {
+        return <WidgetContainerComponent widgets={this.widgets} dataContext={dataContext} />;
     }
 
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
@@ -1003,7 +993,7 @@ export class ListWidget extends Widget implements IListWidget {
         }
     });
 
-    render(rect: Rect, dataContext: DataContext) {
+    render(dataContext: DataContext) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
@@ -1031,12 +1021,8 @@ export class ListWidget extends Widget implements IListWidget {
                 <WidgetComponent
                     key={i}
                     widget={itemWidget}
-                    rect={{
-                        left: xListItem,
-                        top: yListItem,
-                        width: itemWidget.width,
-                        height: itemWidget.height
-                    }}
+                    left={xListItem}
+                    top={yListItem}
                     dataContext={new DataContext(dataContext, dataValue[i])}
                 />
             );
@@ -1117,13 +1103,11 @@ export class GridWidget extends Widget implements IGridWidget {
         }
     });
 
-    render(rect: Rect, dataContext: DataContext) {
+    render(dataContext: DataContext) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
         }
-
-        const gridRect = rect;
 
         const dataValue = this.data ? dataContext.get(this.data) : 0;
 
@@ -1132,8 +1116,8 @@ export class GridWidget extends Widget implements IGridWidget {
         }
 
         return _range(dataValue.length).map(i => {
-            const rows = Math.floor(gridRect.width / itemWidget.width);
-            const cols = Math.floor(gridRect.height / itemWidget.height);
+            const rows = Math.floor(this.width / itemWidget.width);
+            const cols = Math.floor(this.height / itemWidget.height);
 
             let row;
             let col;
@@ -1158,12 +1142,8 @@ export class GridWidget extends Widget implements IGridWidget {
                 <WidgetComponent
                     key={i}
                     widget={itemWidget}
-                    rect={{
-                        left: xListItem,
-                        top: yListItem,
-                        width: itemWidget.width,
-                        height: itemWidget.height
-                    }}
+                    left={xListItem}
+                    top={yListItem}
                     dataContext={new DataContext(dataContext, dataValue[i])}
                 />
             );
@@ -1361,7 +1341,7 @@ export class SelectWidget extends Widget implements ISelectWidget {
         return -1;
     }
 
-    render(rect: Rect, dataContext: DataContext, designerContext?: IDesignerContext) {
+    render(dataContext: DataContext, designerContext?: IDesignerContext) {
         const index = this.getSelectedIndex(dataContext, designerContext);
         if (index === -1) {
             return null;
@@ -1369,12 +1349,7 @@ export class SelectWidget extends Widget implements ISelectWidget {
 
         const selectedWidget = this.widgets[index];
 
-        return (
-            <WidgetContainerComponent
-                widgets={[selectedWidget]}
-                dataContext={dataContext}
-            />
-        );
+        return <WidgetContainerComponent widgets={[selectedWidget]} dataContext={dataContext} />;
     }
 }
 
@@ -1540,7 +1515,7 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
         return layout;
     }
 
-    render(rect: Rect, dataContext: DataContext): React.ReactNode {
+    render(dataContext: DataContext): React.ReactNode {
         const layoutPage = this.getLayoutPage(dataContext);
         if (!layoutPage) {
             return null;
@@ -1670,7 +1645,7 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
         }
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
         let text = (this.data && (dataContext.get(this.data) as string)) || "";
 
         function findStartOfFraction() {
@@ -1710,7 +1685,7 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
             text = text.substr(0, i);
         }
 
-        drawText(ctx, text, 0, 0, rect.width, rect.height, this.style, false);
+        drawText(ctx, text, 0, 0, this.width, this.height, this.style, false);
     };
 }
 
@@ -1777,9 +1752,9 @@ export class TextWidget extends Widget implements ITextWidget {
         }
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
         let text = this.text ? this.text : this.data ? (dataContext.get(this.data) as string) : "";
-        drawText(ctx, text, 0, 0, rect.width, rect.height, this.style, false);
+        drawText(ctx, text, 0, 0, this.width, this.height, this.style, false);
     };
 
     convertToDisplayData() {
@@ -2083,11 +2058,11 @@ export class MultilineTextWidget extends Widget implements IMultilineTextWidget 
         }
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
         let text = (this.data ? (dataContext.get(this.data) as string) : this.text) || "";
 
-        const w = rect.width;
-        const h = rect.height;
+        const w = this.width;
+        const h = this.height;
         const style = this.style;
         const inverse = false;
 
@@ -2162,9 +2137,9 @@ export class RectangleWidget extends Widget implements IRectangleWidget {
         }
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
-        const w = rect.width;
-        const h = rect.height;
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
+        const w = this.width;
+        const h = this.height;
         const style = this.style;
         const inverse = this.invertColors;
 
@@ -2332,9 +2307,9 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
             : undefined;
     }
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
-        const w = rect.width;
-        const h = rect.height;
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
+        const w = this.width;
+        const h = this.height;
         const style = this.style;
 
         const bitmap = this.getBitmapObject(dataContext);
@@ -2445,14 +2420,14 @@ export class ButtonWidget extends Widget implements IButtonWidget {
         }
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
         let text = this.data && dataContext.get(this.data);
         if (!text) {
             text = this.text;
         }
         let style =
             this.enabled && dataContext.getBool(this.enabled) ? this.style : this.disabledStyle;
-        drawText(ctx, text, 0, 0, rect.width, rect.height, style, false);
+        drawText(ctx, text, 0, 0, this.width, this.height, style, false);
     };
 }
 
@@ -2512,8 +2487,8 @@ export class ToggleButtonWidget extends Widget implements IToggleButtonWidget {
         }
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
-        drawText(ctx, this.text1 || "", 0, 0, rect.width, rect.height, this.style, false);
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
+        drawText(ctx, this.text1 || "", 0, 0, this.width, this.height, this.style, false);
     };
 }
 
@@ -2552,14 +2527,14 @@ export class ButtonGroupWidget extends Widget implements IButtonGroupWidget {
         }
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
         let buttonLabels = (this.data && dataContext.getValueList(this.data)) || [];
         let selectedButton = (this.data && dataContext.get(this.data)) || 0;
 
         let x = 0;
         let y = 0;
-        let w = rect.width;
-        let h = rect.height;
+        let w = this.width;
+        let h = this.height;
 
         if (w > h) {
             // horizontal orientation
@@ -2727,7 +2702,7 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
         }
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
         let barGraphWidget = this;
         let style = barGraphWidget.style;
 
@@ -2742,7 +2717,7 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
             barGraphWidget.orientation == "left-right" ||
             barGraphWidget.orientation == "right-left";
 
-        let d = horizontal ? rect.width : rect.height;
+        let d = horizontal ? this.width : this.height;
 
         function calcPos(value: number) {
             let pos = Math.round((value * d) / (max - min));
@@ -2759,38 +2734,38 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
 
         if (barGraphWidget.orientation == "left-right") {
             draw.setColor(style.colorProperty);
-            draw.fillRect(ctx, 0, 0, pos - 1, rect.height - 1);
+            draw.fillRect(ctx, 0, 0, pos - 1, this.height - 1);
             draw.setColor(style.backgroundColorProperty);
-            draw.fillRect(ctx, pos, 0, rect.width - 1, rect.height - 1);
+            draw.fillRect(ctx, pos, 0, this.width - 1, this.height - 1);
         } else if (barGraphWidget.orientation == "right-left") {
             draw.setColor(style.backgroundColorProperty);
-            draw.fillRect(ctx, 0, 0, rect.width - pos - 1, rect.height - 1);
+            draw.fillRect(ctx, 0, 0, this.width - pos - 1, this.height - 1);
             draw.setColor(style.colorProperty);
-            draw.fillRect(ctx, rect.width - pos, 0, rect.width - 1, rect.height - 1);
+            draw.fillRect(ctx, this.width - pos, 0, this.width - 1, this.height - 1);
         } else if (barGraphWidget.orientation == "top-bottom") {
             draw.setColor(style.colorProperty);
-            draw.fillRect(ctx, 0, 0, rect.width - 1, pos - 1);
+            draw.fillRect(ctx, 0, 0, this.width - 1, pos - 1);
             draw.setColor(style.backgroundColorProperty);
-            draw.fillRect(ctx, 0, pos, rect.width - 1, rect.height - 1);
+            draw.fillRect(ctx, 0, pos, this.width - 1, this.height - 1);
         } else {
             draw.setColor(style.backgroundColorProperty);
-            draw.fillRect(ctx, 0, 0, rect.width - 1, rect.height - pos - 1);
+            draw.fillRect(ctx, 0, 0, this.width - 1, this.height - pos - 1);
             draw.setColor(style.colorProperty);
-            draw.fillRect(ctx, 0, rect.height - pos, rect.width - 1, rect.height - 1);
+            draw.fillRect(ctx, 0, this.height - pos, this.width - 1, this.height - 1);
         }
 
         if (horizontal) {
             let textStyle = barGraphWidget.textStyle;
             const font = styleGetFont(textStyle);
             if (font) {
-                let w = draw.measureStr(valueText, font, rect.width);
+                let w = draw.measureStr(valueText, font, this.width);
                 w += style.paddingRect.left;
 
-                if (w > 0 && rect.height > 0) {
+                if (w > 0 && this.height > 0) {
                     let backgroundColor: string;
                     let x: number;
 
-                    if (pos + w <= rect.width) {
+                    if (pos + w <= this.width) {
                         backgroundColor = style.backgroundColorProperty;
                         x = pos;
                     } else {
@@ -2804,7 +2779,7 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
                         x,
                         0,
                         w,
-                        rect.height,
+                        this.height,
                         textStyle,
                         false,
                         backgroundColor
@@ -2824,15 +2799,17 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
             }
             draw.setColor(lineStyle.colorProperty);
             if (barGraphWidget.orientation == "left-right") {
-                draw.drawVLine(ctx, pos, 0, rect.height - 1);
+                draw.drawVLine(ctx, pos, 0, widget.height - 1);
             } else if (barGraphWidget.orientation == "right-left") {
-                draw.drawVLine(ctx, rect.width - pos, 0, rect.height - 1);
+                draw.drawVLine(ctx, widget.width - pos, 0, widget.height - 1);
             } else if (barGraphWidget.orientation == "top-bottom") {
-                draw.drawHLine(ctx, 0, pos, rect.width - 1);
+                draw.drawHLine(ctx, 0, pos, widget.width - 1);
             } else {
-                draw.drawHLine(ctx, 0, rect.height - pos, rect.width - 1);
+                draw.drawHLine(ctx, 0, widget.height - pos, widget.width - 1);
             }
         }
+
+        const widget = this;
 
         drawLine(barGraphWidget.line1Data, barGraphWidget.line1Style);
         drawLine(barGraphWidget.line2Data, barGraphWidget.line2Style);
@@ -2897,14 +2874,14 @@ export class YTGraphWidget extends Widget implements IYTGraphWidget {
         }
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
         let ytGraphWidget = this;
         let style = ytGraphWidget.style;
 
         let x1 = 0;
         let y1 = 0;
-        let x2 = rect.width - 1;
-        let y2 = rect.height - 1;
+        let x2 = this.width - 1;
+        let y2 = this.height - 1;
 
         const borderSize = style.borderSizeRect;
         let borderRadius = styleGetBorderRadius(style) || 0;
@@ -2989,7 +2966,7 @@ export class UpDownWidget extends Widget implements IUpDownWidget {
         }
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
         let upDownWidget = this;
         let style = upDownWidget.style;
         let buttonsStyle = upDownWidget.buttonsStyle;
@@ -3005,7 +2982,7 @@ export class UpDownWidget extends Widget implements IUpDownWidget {
             0,
             0,
             buttonsFont.height,
-            rect.height,
+            this.height,
             buttonsStyle,
             false
         );
@@ -3016,8 +2993,8 @@ export class UpDownWidget extends Widget implements IUpDownWidget {
             text,
             buttonsFont.height,
             0,
-            rect.width - 2 * buttonsFont.height,
-            rect.height,
+            this.width - 2 * buttonsFont.height,
+            this.height,
             style,
             false
         );
@@ -3025,10 +3002,10 @@ export class UpDownWidget extends Widget implements IUpDownWidget {
         drawText(
             ctx,
             upDownWidget.upButtonText || ">",
-            rect.width - buttonsFont.height,
+            this.width - buttonsFont.height,
             0,
             buttonsFont.height,
-            rect.height,
+            this.height,
             buttonsStyle,
             false
         );
@@ -3128,14 +3105,14 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
         }
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
         let listGraphWidget = this;
         let style = listGraphWidget.style;
 
         let x1 = 0;
         let y1 = 0;
-        let x2 = rect.width - 1;
-        let y2 = rect.height - 1;
+        let x2 = this.width - 1;
+        let y2 = this.height - 1;
 
         const borderSize = style.borderSizeRect;
         let borderRadius = styleGetBorderRadius(style) || 0;
@@ -3190,7 +3167,7 @@ export class AppViewWidget extends Widget implements IAppViewWidget {
         }
     });
 
-    render(rect: Rect, dataContext: DataContext) {
+    render(dataContext: DataContext) {
         if (!this.data) {
             return null;
         }
@@ -3205,7 +3182,7 @@ export class AppViewWidget extends Widget implements IAppViewWidget {
             return null;
         }
 
-        return page.render(rect, dataContext);
+        return page.render(dataContext);
     }
 }
 
@@ -3265,7 +3242,7 @@ export class ScrollBarWidget extends Widget implements IScrollBarWidget {
         }
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
         let widget = this;
 
         const buttonsFont = styleGetFont(widget.buttonsStyle);
@@ -3273,9 +3250,9 @@ export class ScrollBarWidget extends Widget implements IScrollBarWidget {
             return;
         }
 
-        let isHorizontal = rect.width > rect.height;
+        let isHorizontal = this.width > this.height;
 
-        let buttonSize = isHorizontal ? rect.height : rect.width;
+        let buttonSize = isHorizontal ? this.height : this.width;
 
         // draw left button
         drawText(
@@ -3283,8 +3260,8 @@ export class ScrollBarWidget extends Widget implements IScrollBarWidget {
             widget.leftButtonText || "<",
             0,
             0,
-            isHorizontal ? buttonSize : rect.width,
-            isHorizontal ? rect.height : buttonSize,
+            isHorizontal ? buttonSize : this.width,
+            isHorizontal ? this.height : buttonSize,
             widget.buttonsStyle,
             false
         );
@@ -3298,13 +3275,13 @@ export class ScrollBarWidget extends Widget implements IScrollBarWidget {
         if (isHorizontal) {
             x = buttonSize;
             y = 0;
-            width = rect.width - 2 * buttonSize;
-            height = rect.height;
+            width = this.width - 2 * buttonSize;
+            height = this.height;
         } else {
             x = 0;
             y = buttonSize;
-            width = rect.width;
-            height = rect.height - 2 * buttonSize;
+            width = this.width;
+            height = this.height - 2 * buttonSize;
         }
 
         draw.setColor(this.style.colorProperty);
@@ -3341,10 +3318,10 @@ export class ScrollBarWidget extends Widget implements IScrollBarWidget {
         drawText(
             ctx,
             widget.rightButtonText || ">",
-            isHorizontal ? rect.width - buttonSize : 0,
-            isHorizontal ? 0 : rect.height - buttonSize,
-            isHorizontal ? buttonSize : rect.width,
-            isHorizontal ? rect.height : buttonSize,
+            isHorizontal ? this.width - buttonSize : 0,
+            isHorizontal ? 0 : this.height - buttonSize,
+            isHorizontal ? buttonSize : this.width,
+            isHorizontal ? this.height : buttonSize,
             widget.buttonsStyle,
             false
         );
@@ -3370,26 +3347,26 @@ export class ProgressWidget extends Widget implements IProgressWidget {
         icon: "_images/widgets/Progress.png"
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
         let widget = this;
 
-        let isHorizontal = rect.width > rect.height;
+        let isHorizontal = this.width > this.height;
 
         draw.setColor(this.style.backgroundColorProperty);
-        draw.fillRect(ctx, 0, 0, rect.width - 1, rect.height - 1, 0);
+        draw.fillRect(ctx, 0, 0, this.width - 1, this.height - 1, 0);
 
         // draw thumb
         const percent = (widget.data && dataContext.get(widget.data)) || 25;
         draw.setColor(this.style.colorProperty);
         if (isHorizontal) {
-            draw.fillRect(ctx, 0, 0, (percent * rect.width) / 100 - 1, rect.height - 1, 0);
+            draw.fillRect(ctx, 0, 0, (percent * this.width) / 100 - 1, this.height - 1, 0);
         } else {
             draw.fillRect(
                 ctx,
                 0,
-                rect.height - (percent * rect.height) / 100,
-                rect.width - 1,
-                rect.height - 1,
+                this.height - (percent * this.height) / 100,
+                this.width - 1,
+                this.height - 1,
                 0
             );
         }
@@ -3415,14 +3392,14 @@ export class CanvasWidget extends Widget implements ICanvasWidget {
         icon: "_images/widgets/Canvas.png"
     });
 
-    draw = (ctx: CanvasRenderingContext2D, rect: Rect, dataContext: DataContext) => {
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
         let widget = this;
         let style = widget.style;
 
         let x1 = 0;
         let y1 = 0;
-        let x2 = rect.width - 1;
-        let y2 = rect.height - 1;
+        let x2 = this.width - 1;
+        let y2 = this.height - 1;
 
         draw.setColor(style.backgroundColorProperty);
         draw.fillRect(ctx, x1, y1, x2, y2, 0);
