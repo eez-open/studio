@@ -165,6 +165,7 @@ function renderColorItem(itemId: string) {
 export class ThemesSideView extends React.Component<{
     navigationStore?: INavigationStore;
     dragAndDropManager?: DragAndDropManagerClass;
+    hasCloseButton?: boolean;
 }> {
     onEditThemeName = (itemId: string) => {
         const theme = getObjectFromObjectId(
@@ -263,7 +264,7 @@ export class ThemesSideView extends React.Component<{
                 searchInput={false}
                 editable={!ProjectStore.masterProject}
                 navigationStore={navigationStore.get()}
-                onClose={this.onClose}
+                onClose={this.props.hasCloseButton ? this.onClose : undefined}
             />
         );
 

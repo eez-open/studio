@@ -281,7 +281,7 @@ export class PagesNavigation extends NavigationComponent {
                 {navigation}
                 <Editors />
                 {properties}
-                {UIStateStore.viewOptions.themesVisible && <ThemesSideView />}
+                {UIStateStore.viewOptions.themesVisible && <ThemesSideView hasCloseButton={true} />}
             </Splitter>
         );
     }
