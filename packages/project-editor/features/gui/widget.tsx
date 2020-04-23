@@ -1650,14 +1650,27 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
 
         function findStartOfFraction() {
             let i;
-            for (i = 0; text[i] && (text[i] == "-" || (text[i] >= "0" && text[i] <= "9")); i++) {}
+            for (
+                i = 0;
+                text[i] &&
+                (text[i] == "<" ||
+                    text[i] == " " ||
+                    text[i] == "-" ||
+                    (text[i] >= "0" && text[i] <= "9"));
+                i++
+            ) {}
             return i;
         }
 
         function findStartOfUnit(i: number) {
             for (
                 i = 0;
-                text[i] && (text[i] == "-" || (text[i] >= "0" && text[i] <= "9") || text[i] == ".");
+                text[i] &&
+                (text[i] == "<" ||
+                    text[i] == " " ||
+                    text[i] == "-" ||
+                    (text[i] >= "0" && text[i] <= "9") ||
+                    text[i] == ".");
                 i++
             ) {}
             return i;
@@ -1684,6 +1697,8 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
             let i = findStartOfUnit(0);
             text = text.substr(0, i);
         }
+
+        text = text.trim();
 
         drawText(ctx, text, 0, 0, this.width, this.height, this.style, false);
     };

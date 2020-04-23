@@ -1077,11 +1077,19 @@ class Property extends React.Component<PropertyProps> {
                     this._value &&
                     !objects.find(object => getProperty(object, "name") == this._value)
                 ) {
-                    options.unshift(
-                        <option key="__not_found" value={this._value}>
-                            {this._value}
-                        </option>
-                    );
+                    if (typeof this._value == "object") {
+                        options.unshift(
+                            <option key="__not_found" value={getProperty(this._value, "name")}>
+                                {objectToString(this._value)}
+                            </option>
+                        );
+                    } else {
+                        options.unshift(
+                            <option key="__not_found" value={this._value}>
+                                {this._value}
+                            </option>
+                        );
+                    }
                 }
 
                 return (
