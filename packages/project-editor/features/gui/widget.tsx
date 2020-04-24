@@ -2399,11 +2399,7 @@ export class ButtonWidget extends Widget implements IButtonWidget {
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
-            {
-                name: "text",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            },
+            makeTextPropertyInfo("text"),
             makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("disabledStyle")
         ],
@@ -3404,7 +3400,17 @@ export class CanvasWidget extends Widget implements ICanvasWidget {
             height: 32
         },
 
-        icon: "_images/widgets/Canvas.png"
+        icon: "_images/widgets/Canvas.png",
+
+        check: (object: DisplayDataWidget) => {
+            let messages: output.Message[] = [];
+
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
+            }
+
+            return messages;
+        }
     });
 
     draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
