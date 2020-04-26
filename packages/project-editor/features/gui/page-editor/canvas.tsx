@@ -377,8 +377,8 @@ export class Canvas extends React.Component<{
 
         const boundingOffsetRect = this.boundingOffsetRect;
 
-        const xt = transform.translate.x + transform.clientRect.width / 2;
-        const yt = transform.translate.y + transform.clientRect.height / 2;
+        const xt = Math.round(transform.translate.x + transform.clientRect.width / 2);
+        const yt = Math.round(transform.translate.y + transform.clientRect.height / 2);
 
         return (
             <CanvasDiv

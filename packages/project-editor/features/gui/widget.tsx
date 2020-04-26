@@ -1698,7 +1698,9 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
             text = text.substr(0, i);
         }
 
-        text = text.trim();
+        if (typeof text === "string") {
+            text = text.trim();
+        }
 
         drawText(ctx, text, 0, 0, this.width, this.height, this.style, false);
     };
