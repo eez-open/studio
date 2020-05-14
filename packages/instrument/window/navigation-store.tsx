@@ -125,8 +125,6 @@ export class NavigationStore {
             }
         };
 
-        this._mainNavigationSelectedItem = this.terminalNavigationItem;
-
         autorun(() => {
             if (
                 this.mainNavigationSelectedItem === this.deletedHistoryItemsNavigationItem &&
@@ -144,13 +142,46 @@ export class NavigationStore {
     }
 
     @computed
+    get overviewNavigationItem() {
+        const isBB3 =
+            this.appStore.instrument &&
+            this.appStore.instrument.instrumentExtensionId ==
+                "687b6dee-2093-4c36-afb7-cfc7ea2bf262";
+
+        const isBB3Simulator =
+            this.appStore.instrument &&
+            this.appStore.instrument.instrumentExtensionId ==
+                "7cab6860-e593-4ba2-ee68-57fe84460fa4";
+
+        if (isBB3 || isBB3Simulator) {
+            return {
+                id: "overview",
+                icon: "material:dashboard",
+                title: "Overview",
+                renderContent: () => {
+                    return <div />;
+                },
+                renderToolbarButtons: () => {
+                    return <div />;
+                }
+            };
+        }
+
+        return undefined;
+    }
+
+    @computed
     get navigationItems() {
-        let navigationItems = [
-            this.terminalNavigationItem,
-            this.deletedHistoryItemsNavigationItem,
-            this.scriptsNavigationItem,
-            this.shortcutsAndGroupsNavigationItem
-        ];
+        let navigationItems: IInstrumentWindowNavigationItem[] = [];
+
+        if (this.overviewNavigationItem) {
+            navigationItems.push(this.overviewNavigationItem);
+        }
+
+        navigationItems.push(this.terminalNavigationItem);
+        navigationItems.push(this.deletedHistoryItemsNavigationItem);
+        navigationItems.push(this.scriptsNavigationItem);
+        navigationItems.push(this.shortcutsAndGroupsNavigationItem);
 
         if (this.appStore.instrument && this.appStore.instrument.listsProperty) {
             navigationItems.push(this.listsNavigationItem);
@@ -159,8 +190,17 @@ export class NavigationStore {
         return navigationItems;
     }
 
+    @computed
     get mainNavigationSelectedItem() {
-        return this._mainNavigationSelectedItem;
+        if (this._mainNavigationSelectedItem) {
+            return this._mainNavigationSelectedItem;
+        }
+
+        if (this.overviewNavigationItem) {
+            return this.overviewNavigationItem;
+        }
+
+        return this.terminalNavigationItem;
     }
 
     set mainNavigationSelectedItem(value: IInstrumentWindowNavigationItem) {

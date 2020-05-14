@@ -111,7 +111,6 @@ class LoadExtensionTask extends EventEmitter {
 const loadExtensionTasks = new Map<string, LoadExtensionTask>();
 
 async function loadAndRegisterExtension(folder: string) {
-    console.log(folder);
     const loadExtensionTask = loadExtensionTasks.get(folder);
     if (loadExtensionTask) {
         if (loadExtensionTask.isFinished) {
