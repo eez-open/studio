@@ -9,8 +9,6 @@ declare const EEZStudio: {
 
 declare module "quill";
 
-declare module "react-visibility-sensor";
-
 //
 interface HTMLCanvasElement {
     transferControlToOffscreen(): HTMLCanvasElement;
