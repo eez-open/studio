@@ -5,7 +5,6 @@ import { bind } from "bind-decorator";
 
 import { VerticalHeaderWithBody, Header, Body } from "eez-studio-ui/header-with-body";
 import { Splitter } from "eez-studio-ui/splitter";
-import { TransitionGroup, BounceEntranceTransition } from "eez-studio-ui/transitions";
 import styled from "eez-studio-ui/styled-components";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
@@ -186,17 +185,11 @@ export class WorkbenchDocument extends React.Component {
     render() {
         return (
             <WorkbenchCanvas toolHandler={selectToolHandler}>
-                <TransitionGroup
-                    component="div"
-                    className="EezStudio_Layer"
-                    style={{ pointerEvents: "none" }}
-                >
+                <div className="EezStudio_Layer" style={{ pointerEvents: "none" }}>
                     {workbenchDocument.objects.map(obj => (
-                        <BounceEntranceTransition key={obj.id}>
-                            <ObjectComponent object={obj} />
-                        </BounceEntranceTransition>
+                        <ObjectComponent key={obj.id} object={obj} />
                     ))}
-                </TransitionGroup>
+                </div>
             </WorkbenchCanvas>
         );
     }

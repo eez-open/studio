@@ -1,9 +1,7 @@
 @import "vars.less";
 @import "quill.less";
-@import "transitions.less";
 @import "goldenlayout.less";
-
-@import "goldenlayout.less";
+@import "animate.less";
 
 * {
     user-select: none;
@@ -623,4 +621,10 @@ input[type="color"] {
 .EezStudio_ChartView_Cursor.EezStudio_ChartView_Cursor_AddPoint rect {
     stroke-opacity: 0;
     cursor: copy;
+}
+
+.EezStudio_PulseTransition {
+    animation-name: flash;
+    animation-duration: 1s;
+    animation-fill-mode: both;
 }
