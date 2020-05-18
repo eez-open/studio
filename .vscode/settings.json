@@ -16,5 +16,6 @@
         "xiosbase": "cpp",
         "xlocale": "cpp"
     },
-    "typescript.tsdk": "node_modules\\typescript\\lib"
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "workbench.editor.enablePreview": false
 }

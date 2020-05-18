@@ -32,6 +32,7 @@ class Devices {
     @observable serialPortPaths: {
         path: string;
         description: string;
+        uniqueId: string;
     }[] = [];
 
     @observable usbDevices: {
@@ -166,7 +167,8 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                 devices.serialPortPaths = [
                     {
                         path: "",
-                        description: ""
+                        description: "",
+                        uniqueId: ""
                     }
                 ].concat(
                     ports.map(port => {
@@ -178,7 +180,8 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                             description:
                                 port.path +
                                 (port.manufacturer ? " - " + port.manufacturer : "") +
-                                (port.productId ? " - " + port.productId : "")
+                                (port.productId ? " - " + port.productId : ""),
+                            uniqueId: port.pnpId || port.path
                         };
                     })
                 );
@@ -277,7 +280,7 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                     }
                 >
                     {devices.serialPortPaths.map(serialPortPath => (
-                        <option key={serialPortPath.path} value={serialPortPath.path}>
+                        <option key={serialPortPath.uniqueId} value={serialPortPath.path}>
                             {serialPortPath.description}
                         </option>
                     ))}

@@ -7,6 +7,10 @@ import { InstrumentObject } from "instrument/instrument-object";
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { getConnection } from "instrument/window/connection";
 
+const FIRMWARE_RELEASES_URL = "https://api.github.com/repos/eez-open/modular-psu-firmware/releases";
+const SCRIPTS_CATALOG_URL =
+    "https://github.com/eez-open/modular-psu-firmware/raw/master/scripts/scripts-catalog.json";
+
 interface IMcu {
     firmwareVersion: string;
 }
@@ -23,6 +27,11 @@ interface IOverview {
     slots: Slots;
 }
 
+interface IScript {
+    name: string;
+    version: string;
+}
+
 function removeQuotes(str: string) {
     if (str.length >= 2 && str[0] == '"' && str[str.length - 1] == '"') {
         return str.substr(1, str.length - 2);
@@ -31,6 +40,10 @@ function removeQuotes(str: string) {
 }
 
 class Overview implements IOverview {
+    @observable mcu: IMcu;
+    @observable slots: Slots;
+    @observable scripts: IScript[];
+
     constructor(private appStore: InstrumentAppStore, instrument: InstrumentObject) {
         Object.assign(this, instrument.custom.overview);
 
@@ -43,12 +56,15 @@ class Overview implements IOverview {
         if (!this.slots) {
             this.slots = [];
         }
+
+        if (!this.scripts) {
+            this.scripts = [];
+        }
     }
 
-    @observable mcu: IMcu;
-    @observable slots: Slots;
-
     async refresh() {
+        this.loadScriptsCatalog();
+
         const connection = getConnection(this.appStore);
 
         if (!connection.isConnected) {
@@ -79,8 +95,23 @@ class Overview implements IOverview {
 
         ////////////////////////////
 
-        const scripts = await connection.query('MMEM:CAT? "/Scripts"');
-        console.log(scripts.split(","));
+        const filesInScriptsFolderAsOneString = await connection.query('MMEM:CAT? "/Scripts"');
+        const filesInScriptsFolderAsArray = removeQuotes(filesInScriptsFolderAsOneString).split(
+            '","'
+        );
+        const oldScripts = this.scripts;
+        const newScripts: IScript[] = [];
+        filesInScriptsFolderAsArray.forEach(fileInfoLine => {
+            const fileName = fileInfoLine.split(",")[0];
+            if (fileName.toLowerCase().endsWith(".py")) {
+                const scriptName = fileName.substring(0, fileName.length - 3);
+                const oldScript = oldScripts.find(oldScript => oldScript.name == scriptName);
+                newScripts.push({
+                    name: scriptName,
+                    version: oldScript ? oldScript.version : "unknown"
+                });
+            }
+        });
 
         ////////////////////////////
 
@@ -91,12 +122,14 @@ class Overview implements IOverview {
         runInAction(() => {
             this.mcu.firmwareVersion = firmwareVersion;
             this.slots = slots;
+            this.scripts = newScripts;
         });
+    }
 
-        ///////////////////////////////////////////////////////
-        var req = new XMLHttpRequest();
+    loadFirmwareReleases() {
+        let req = new XMLHttpRequest();
         req.responseType = "json";
-        req.open("GET", "https://api.github.com/repos/mvladic/modular-psu-firmware/releases");
+        req.open("GET", FIRMWARE_RELEASES_URL);
 
         req.addEventListener("load", async () => {
             console.log(req.response);
@@ -107,7 +140,22 @@ class Overview implements IOverview {
         });
 
         req.send();
-        ///////////////////////////////////////////////////////
+    }
+
+    loadScriptsCatalog() {
+        let req = new XMLHttpRequest();
+        req.responseType = "json";
+        req.open("GET", SCRIPTS_CATALOG_URL);
+
+        req.addEventListener("load", async () => {
+            console.log(req.response);
+        });
+
+        req.addEventListener("error", error => {
+            console.error(error);
+        });
+
+        req.send();
     }
 }
 
@@ -135,24 +183,46 @@ export function render(appStore: InstrumentAppStore) {
     return (
         <div>
             <h1>Firmware version: {instrumentOverview.mcu.firmwareVersion}</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Slot #</th>
-                        <th>Model</th>
-                        <th>Version</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {instrumentOverview.slots.map((slot, i) => (
-                        <tr key={i}>
-                            <td>{i + 1}</td>
-                            <td>{slot ? slot.model : "None"}</td>
-                            <td>{slot ? slot.version : "-"}</td>
+            <section>
+                <h3>Modules:</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Slot #</th>
+                            <th>Model</th>
+                            <th>Version</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {instrumentOverview.slots.map((slot, i) => (
+                            <tr key={i}>
+                                <td>{i + 1}</td>
+                                <td>{slot ? slot.model : "None"}</td>
+                                <td>{slot ? slot.version : "-"}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </section>
+            <section>
+                <h3>Scripts:</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Script name</th>
+                            <th>Version</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {instrumentOverview.scripts.map(script => (
+                            <tr key={script.name}>
+                                <td>{script.name}</td>
+                                <td>{script.version}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </section>
         </div>
     );
 }
