@@ -14,6 +14,8 @@ import { HistoryView, showSessionsList } from "instrument/window/history/history
 
 import * as ListsModule from "instrument/window/lists/lists";
 
+import * as Bb3Module from "instrument/bb3";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IInstrumentWindowNavigationItem extends IRootNavigationItem {
@@ -121,7 +123,7 @@ export class NavigationStore {
                 const {
                     toolbarButtonsRender
                 } = require("instrument/window/lists/lists") as typeof ListsModule;
-                return appStore.instrument ? toolbarButtonsRender(this.appStore) : <div />;
+                return toolbarButtonsRender(this.appStore);
             }
         };
 
@@ -143,26 +145,28 @@ export class NavigationStore {
 
     @computed
     get overviewNavigationItem() {
-        const isBB3 =
+        const isBb3 =
             this.appStore.instrument &&
             this.appStore.instrument.instrumentExtensionId ==
                 "687b6dee-2093-4c36-afb7-cfc7ea2bf262";
 
-        const isBB3Simulator =
+        const isBb3Simulator =
             this.appStore.instrument &&
             this.appStore.instrument.instrumentExtensionId ==
                 "7cab6860-e593-4ba2-ee68-57fe84460fa4";
 
-        if (isBB3 || isBB3Simulator) {
+        if (isBb3 || isBb3Simulator) {
             return {
                 id: "overview",
                 icon: "material:dashboard",
                 title: "Overview",
                 renderContent: () => {
-                    return <div />;
+                    const { render } = require("instrument/bb3") as typeof Bb3Module;
+                    return render(this.appStore);
                 },
                 renderToolbarButtons: () => {
-                    return <div />;
+                    const { toolbarButtonsRender } = require("instrument/bb3") as typeof Bb3Module;
+                    return toolbarButtonsRender(this.appStore);
                 }
             };
         }

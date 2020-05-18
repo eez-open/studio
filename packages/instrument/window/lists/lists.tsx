@@ -638,5 +638,5 @@ export function render(appStore: InstrumentAppStore) {
 }
 
 export function toolbarButtonsRender(appStore: InstrumentAppStore) {
-    return <ListsButtons appStore={appStore} />;
+    return appStore.instrument ? <ListsButtons appStore={appStore} /> : <div />;
 }

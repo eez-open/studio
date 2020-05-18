@@ -160,7 +160,6 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
         const SerialPort = require("serialport") as typeof SerialPortModule;
         try {
             const ports = await SerialPort.list();
-            console.log(ports);
             runInAction(() => {
                 let found;
 

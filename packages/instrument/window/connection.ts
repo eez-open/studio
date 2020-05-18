@@ -18,13 +18,9 @@ export function getConnectionParametersInfo(connectionParameters: ConnectionPara
     }
 
     if (connectionParameters.type === "ethernet") {
-        return `${connectionParameters.ethernetParameters.address}:${
-            connectionParameters.ethernetParameters.port
-        }`;
+        return `${connectionParameters.ethernetParameters.address}:${connectionParameters.ethernetParameters.port}`;
     } else if (connectionParameters.type === "serial") {
-        return `${connectionParameters.serialParameters.port}:${
-            connectionParameters.serialParameters.baudRate
-        }`;
+        return `${connectionParameters.serialParameters.port}:${connectionParameters.serialParameters.baudRate}`;
     } else {
         return `USBTMC`;
     }
@@ -97,7 +93,7 @@ class Connection {
     }
 
     query(query: string) {
-        return new Promise((resolve, reject) => {
+        return new Promise<any>((resolve, reject) => {
             this.resolveCallback = resolve;
             this.rejectCallback = reject;
             this.instrument.connection.send(query);

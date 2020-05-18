@@ -61,6 +61,7 @@ export interface IInstrumentObjectProps {
     autoConnect: boolean;
     lastFileUploadInstructions?: IFileUploadInstructions;
     selectedShortcutGroups: string[];
+    custom?: any;
 }
 
 const UNKNOWN_INSTRUMENT_EXTENSION: IExtension = {
@@ -133,6 +134,8 @@ export class InstrumentObject {
             this.selectedShortcutGroups = ["Default"];
         }
 
+        this.custom = props.custom || {};
+
         this.connection = createConnection(this);
 
         autorun(() => {
@@ -165,6 +168,7 @@ export class InstrumentObject {
     @observable autoConnect: boolean;
     @observable lastFileUploadInstructions: IFileUploadInstructions | undefined;
     @observable selectedShortcutGroups: string[];
+    @observable custom: any;
 
     connection: IConnection;
 
