@@ -2,7 +2,7 @@ import React from "react";
 import { action } from "mobx";
 import { observer } from "mobx-react";
 
-import { Script } from "/script";
+import { Script } from "instrument/bb3/objects/Script";
 
 export const SelectScriptVersion = observer(({ script }: { script: Script }) => {
     if (!script.versions) {
