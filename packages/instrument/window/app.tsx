@@ -17,7 +17,7 @@ import { IInstrumentWindowNavigationItem } from "instrument/window/navigation-st
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ConnectionBar: typeof PanelHeader = styled(PanelHeader)`
+const ConnectionBar = styled(PanelHeader)`
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -61,7 +61,7 @@ const ConnectionBar: typeof PanelHeader = styled(PanelHeader)`
         margin-left: 50px;
         flex-grow: 1;
     }
-` as any;
+`;
 
 ////////////////////////////////////////////////////////////////////////////////
 

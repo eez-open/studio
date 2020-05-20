@@ -366,11 +366,11 @@ const PageEditorCanvasContainer = styled.div`
     }
 `;
 
-const PageEditorCanvas: typeof Canvas = styled(Canvas)`
+const PageEditorCanvas = styled(Canvas)`
     position: absolute;
     width: 100%;
     height: 100%;
-` as any;
+`;
 
 interface PageEditorProps {
     widgetContainer: ITreeObjectAdapter;

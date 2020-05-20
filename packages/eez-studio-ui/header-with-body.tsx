@@ -12,12 +12,12 @@ export class Header extends React.Component<{
     }
 }
 
-export const PanelHeader: typeof Header = styled(Header)`
+export const PanelHeader = styled(Header)`
     padding: 6px 10px;
     border: 0 solid ${props => props.theme.borderColor};
     border-bottom-width: 1px;
     background-color: ${props => props.theme.panelHeaderColor};
-` as any;
+`;
 
 export class ToolbarHeader extends React.Component<{
     className?: string;

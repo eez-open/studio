@@ -267,14 +267,14 @@ const HomeSettingsBody = styled.div`
     max-width: 640px;
 `;
 
-const HomeSettingsBar: typeof PanelHeader = styled(PanelHeader)`
+const HomeSettingsBar = styled(PanelHeader)`
     position: absolute;
     bottom: 0;
     width: 100%;
     text-align: right;
     border-bottom-width: 0;
     border-top-width: 1px;
-` as any;
+`;
 
 const DatabaseCompactDiv = styled.div`
     margin-top: 10px;

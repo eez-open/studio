@@ -741,7 +741,7 @@ export function downloadAndInstallExtension(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ExtensionDetailsHeader: typeof Header = styled(Header)`
+const ExtensionDetailsHeader = styled(Header)`
     display: flex;
     flex-direction: row;
     padding: 10px;
@@ -755,7 +755,7 @@ const ExtensionDetailsHeader: typeof Header = styled(Header)`
         font-size: 100%;
         white-space: pre-wrap;
     }
-` as any;
+`;
 
 const ExtensionDetailsHeaderImageContainer = styled.div`
     flex-grow: 0;

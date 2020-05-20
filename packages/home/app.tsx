@@ -16,12 +16,12 @@ const SessionInfoContainer = styled.div`
     padding: 5px 10px;
 `;
 
-const AppHeader: typeof Header = styled(Header)`
+const AppHeader = styled(Header)`
     display: flex;
     flex-direction: row;
     background-color: ${props => props.theme.panelHeaderColor};
     border-bottom: 1px solid ${props => props.theme.borderColor};
-` as any;
+`;
 
 const TabContainer = styled.div`
     flex-grow: 1;

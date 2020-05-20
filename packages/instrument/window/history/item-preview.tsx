@@ -11,7 +11,7 @@ import { VerticalHeaderWithBody, PanelHeader, Body } from "eez-studio-ui/header-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ZoomedPreviewBody: typeof VerticalHeaderWithBody = styled(VerticalHeaderWithBody)`
+const ZoomedPreviewBody = styled(VerticalHeaderWithBody)`
     .EezStudio_Toolbar {
         margin-top: 0;
     }
@@ -45,7 +45,7 @@ const ZoomedPreviewBody: typeof VerticalHeaderWithBody = styled(VerticalHeaderWi
             }
         }
     }
-` as any;
+`;
 
 @observer
 class ZoomedPreview extends React.Component<{

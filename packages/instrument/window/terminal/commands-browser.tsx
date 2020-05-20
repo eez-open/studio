@@ -267,13 +267,13 @@ const CommandSyntaxes = styled.div`
     }
 `;
 
-const CommandsBrowserTree: typeof VerticalHeaderWithBody = styled(VerticalHeaderWithBody)`
+const CommandsBrowserTree = styled(VerticalHeaderWithBody)`
     > div:nth-child(1) {
         padding: 1px;
         padding-top: 2px;
         border-bottom: 1px solid ${props => props.theme.borderColor};
     }
-` as any;
+`;
 
 const CommandsBrowserSyntax = styled.div``;
 

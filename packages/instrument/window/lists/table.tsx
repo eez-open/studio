@@ -713,16 +713,16 @@ export class Table extends React.Component<
     }
 }
 
-const TableListEditorToolbarHeader: typeof ToolbarHeader = styled(ToolbarHeader)`
+const TableListEditorToolbarHeader = styled(ToolbarHeader)`
     justify-content: flex-start;
     background-color: white;
-` as any;
+`;
 
-const TableListEditorBody: typeof Body = styled(Body)`
+const TableListEditorBody = styled(Body)`
     overflow-x: hidden !important;
-` as any;
+`;
 
-const TableListEditorTable: typeof Table = styled(Table)`
+const TableListEditorTable = styled(Table)`
     border-bottom: 1px solid ${props => props.theme.tableBorderColor};
     border-collapse: collapse;
 
@@ -766,7 +766,7 @@ const TableListEditorTable: typeof Table = styled(Table)`
     tr:last-child td {
         border-bottom: none;
     }
-` as any;
+`;
 
 interface TableDetailsViewProps {
     list: TableList;
