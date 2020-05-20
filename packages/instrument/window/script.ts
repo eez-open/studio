@@ -373,7 +373,7 @@ function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
 
 export function executeShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
     if (isShorcutRunning()) {
-        error("Shortcut is running!");
+        error("Shortcut is running!", undefined);
         return;
     }
 
