@@ -530,7 +530,9 @@ export function insertScpiQueryIntoCode(appStore: InstrumentAppStore, scpiQuery:
 }
 
 export async function importScript(appStore: InstrumentAppStore, filePath: string) {
-    if (!filePath.toLowerCase().endsWith(".py")) {
+    const isMicroPython = filePath.toLowerCase().endsWith(".py");
+    const isJavaScript = filePath.toLowerCase().endsWith(".js");
+    if (!isMicroPython && !isJavaScript) {
         return false;
     }
 
@@ -561,7 +563,7 @@ export async function importScript(appStore: InstrumentAppStore, filePath: strin
         scriptId = appStore.shortcutsStore.addShortcut({
             name,
             action: {
-                type: "micropython",
+                type: isMicroPython ? "micropython" : "javascript",
                 data: scriptSourceText
             },
             keybinding: "",
