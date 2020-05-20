@@ -1,3 +1,5 @@
+import { observable, runInAction } from "mobx";
+
 import { format } from "eez-studio-shared/units";
 import {
     IActivityLogEntry,
@@ -8,7 +10,7 @@ import {
 } from "eez-studio-shared/activity-log";
 
 import * as NotificationModule from "eez-studio-ui/notification";
-import { info, confirm } from "eez-studio-ui/dialog-electron";
+import { info, confirm, error } from "eez-studio-ui/dialog-electron";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { validators } from "eez-studio-shared/validation";
@@ -53,6 +55,8 @@ class ScpiSession {
     set scriptError(value: string) {
         NotificationModule.error(value);
     }
+
+    _stop() {}
 }
 
 function prepareScpiModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
@@ -80,6 +84,7 @@ function prepareScpiModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
 class JavaScriptSession {
     scriptLogId: string | undefined;
     scriptMessage: IScriptHistoryItemMessage;
+    _isStopped = false;
 
     constructor(private instrument: InstrumentObject, shortcut: IShortcut) {
         this.scriptMessage = {
@@ -249,6 +254,14 @@ class JavaScriptSession {
         );
         this.scriptLogId = undefined;
     }
+
+    get isStopped() {
+        return this._isStopped;
+    }
+
+    _stop() {
+        this._isStopped = true;
+    }
 }
 
 function prepareJavaScriptModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
@@ -306,6 +319,10 @@ function prepareModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
     }
 }
 
+type Session = ScpiSession | JavaScriptSession;
+
+const activeShortcut = observable.box<Session | undefined>(undefined);
+
 function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
     let run;
 
@@ -317,10 +334,18 @@ function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
 
     const modules = prepareModules(appStore, shortcut);
 
+    runInAction(() => {
+        activeShortcut.set(modules.session);
+    });
+
     run(shortcut.action.data, modules)
         .then(() => {
             modules.session._scriptDone = true;
             console.log("Script execution done!");
+
+            runInAction(() => {
+                activeShortcut.set(undefined);
+            });
         })
         .catch(err => {
             console.error(err);
@@ -339,10 +364,19 @@ function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
             if (shortcut.action.type === "javascript") {
                 showScriptError(appStore, shortcut, err.message, lineNumber, columnNumber);
             }
+
+            runInAction(() => {
+                activeShortcut.set(undefined);
+            });
         });
 }
 
 export function executeShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
+    if (isShorcutRunning()) {
+        error("Shortcut is running!");
+        return;
+    }
+
     if (!getConnection(appStore).isConnected) {
         info("Not connected to the instrument.", undefined);
         return;
@@ -354,5 +388,16 @@ export function executeShortcut(appStore: InstrumentAppStore, shortcut: IShortcu
         );
     } else {
         doExecuteShortcut(appStore, shortcut);
+    }
+}
+
+export function isShorcutRunning() {
+    return !!activeShortcut.get();
+}
+
+export function stopActiveShortcut() {
+    const session = activeShortcut.get();
+    if (session) {
+        session._stop();
     }
 }

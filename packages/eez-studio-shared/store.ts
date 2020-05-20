@@ -100,7 +100,7 @@ export const types = {
         toDB: (value: any) => value
     },
     object: {
-        fromDB: (value: any) => JSON.parse(value),
+        fromDB: (value: any) => (value ? JSON.parse(value) : undefined),
         toDB: (value: any) => JSON.stringify(toJS(value))
     },
     date: {

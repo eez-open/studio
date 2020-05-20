@@ -6,12 +6,17 @@ import classnames from "classnames";
 export class Toolbar extends React.Component<
     {
         className?: string;
+        style?: React.CSSProperties;
     },
     {}
 > {
     render() {
         let className = classnames("EezStudio_Toolbar", this.props.className);
 
-        return <div className={className}>{this.props.children}</div>;
+        return (
+            <div className={className} style={this.props.style}>
+                {this.props.children}
+            </div>
+        );
     }
 }

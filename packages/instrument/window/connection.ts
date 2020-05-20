@@ -3,6 +3,7 @@ import { bind } from "bind-decorator";
 import { InstrumentObject } from "instrument/instrument-object";
 
 import { ConnectionParameters } from "instrument/connection/interface";
+import { IFileUploadInstructions } from "instrument/connection/file-upload";
 
 import { showConnectionDialog } from "instrument/window/connection-dialog";
 
@@ -28,7 +29,7 @@ export function getConnectionParametersInfo(connectionParameters: ConnectionPara
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class Connection {
+export class Connection {
     resolveCallback: ((result: any) => void) | undefined;
     rejectCallback: ((result: any) => void) | undefined;
 
@@ -98,6 +99,14 @@ class Connection {
             this.rejectCallback = reject;
             this.instrument.connection.send(query);
         });
+    }
+
+    upload(
+        instructions: IFileUploadInstructions,
+        onSuccess?: () => void,
+        onError?: (error: any) => void
+    ) {
+        this.instrument.connection.upload(instructions, onSuccess, onError);
     }
 
     onValue(value: any) {

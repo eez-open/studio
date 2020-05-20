@@ -14,7 +14,7 @@ import { detectFileType, SAMPLE_LENGTH } from "instrument/connection/file-type";
 
 export interface IFileUploadInstructions {
     sourceFilePath?: string;
-    sourceData?: string;
+    sourceData?: string | ArrayBuffer | Buffer;
     sourceFileType?: string;
 
     destinationFileName: string;
@@ -35,6 +35,15 @@ export interface IFileUploadInstructions {
 }
 
 export async function upload(oid: number, instructions: IFileUploadInstructions) {}
+
+function arrayBufferToBuffer(ab: ArrayBuffer): Buffer {
+    var buffer = new Buffer(ab.byteLength);
+    var view = new Uint8Array(ab);
+    for (var i = 0; i < buffer.length; ++i) {
+        buffer[i] = view[i];
+    }
+    return buffer;
+}
 
 export class FileUpload extends FileTransfer {
     fd: any | undefined;
@@ -97,7 +106,13 @@ export class FileUpload extends FileTransfer {
                     mime: fileType.mime
                 };
             } else {
-                this.fileData = Buffer.from(this.instructions.sourceData!, "utf8");
+                const sourceData = this.instructions.sourceData!;
+                this.fileData =
+                    typeof sourceData == "string"
+                        ? Buffer.from(sourceData, "utf8")
+                        : sourceData instanceof ArrayBuffer
+                        ? arrayBufferToBuffer(sourceData)
+                        : sourceData;
                 this.fileDataLength = this.fileData.length;
                 if (this.instructions.sourceFileType) {
                     this.fileType = this.instructions.sourceFileType;
@@ -217,7 +232,7 @@ export class FileUpload extends FileTransfer {
 
             return buffer.toString("binary");
         } else {
-            return this.fileData!.slice(position, position + length);
+            return this.fileData!.slice(position, position + length).toString("binary");
         }
     }
 

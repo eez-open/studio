@@ -921,6 +921,18 @@ export class InstrumentObject {
 
         return undefined;
     }
+
+    @action
+    setCustomProperty(customPropertyName: string, customPropertyValue: any) {
+        beginTransaction(`Change instrument ${customPropertyName} custom property`);
+        store.updateObject({
+            id: this.id,
+            custom: Object.assign(toJS(this.custom), {
+                [customPropertyName]: customPropertyValue
+            })
+        });
+        commitTransaction();
+    }
 }
 
 export const store = createStore({
@@ -996,7 +1008,11 @@ export const store = createStore({
         `DROP TABLE "instrument/version";
         CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
         INSERT INTO versions(tableName, version) VALUES ('instrument', 5);
-        `
+        `,
+
+        // version 6
+        `ALTER TABLE instrument ADD COLUMN custom TEXT;
+        UPDATE versions SET version = 6 WHERE tableName = 'instrument';`
     ],
     properties: {
         id: types.id,
@@ -1007,7 +1023,8 @@ export const store = createStore({
         lastConnection: types.object,
         autoConnect: types.boolean,
         lastFileUploadInstructions: types.object,
-        selectedShortcutGroups: types.object
+        selectedShortcutGroups: types.object,
+        custom: types.object
     },
     create(props: IInstrumentObjectProps) {
         return new InstrumentObject(props);

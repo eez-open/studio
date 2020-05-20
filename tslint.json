@@ -5,7 +5,7 @@
         "no-unused-variable": true,
         "curly": true,
         "class-name": true,
-        "semicolon": true,
+        "semicolon": false,
         "triple-equals": false,
         "arrow-parens": false,
         "trailing-comma": false,

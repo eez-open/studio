@@ -24,6 +24,7 @@ import { parseScpiValue, ResponseType } from "instrument/scpi";
 const CONF_HOUSEKEEPING_INTERVAL = 100;
 const CONF_IDN_EXPECTED_TIMEOUT = 1000;
 const CONF_COMBINE_IF_BELOW_MS = 250;
+const CONF_START_LONG_OPERATION_TIMEOUT = 5000;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -444,22 +445,41 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     }
 
     startLongOperation(createLongOperation: () => LongOperation) {
-        if (this.state !== ConnectionState.CONNECTED || !this.communicationInterface) {
-            throw "not connected";
-        }
+        const startTime = new Date().getTime();
 
-        if (this.longOperation) {
-            if (
-                this.longOperation instanceof FileDownload ||
-                this.longOperation instanceof FileUpload
-            ) {
-                throw "file transfer in progress";
-            } else {
-                throw "another operation in progress";
+        const doStartLongOperation = (createLongOperation: () => LongOperation) => {
+            if (this.state !== ConnectionState.CONNECTED || !this.communicationInterface) {
+                return "not connected";
             }
-        }
 
-        this.longOperation = createLongOperation();
+            if (this.longOperation) {
+                if (
+                    this.longOperation instanceof FileDownload ||
+                    this.longOperation instanceof FileUpload
+                ) {
+                    return "file transfer in progress";
+                } else {
+                    return "another operation in progress";
+                }
+            }
+
+            this.longOperation = createLongOperation();
+            return null;
+        };
+
+        const callDoStartLongOperationUntilTimeout = () => {
+            const err = doStartLongOperation(createLongOperation);
+            if (err) {
+                const currentTime = new Date().getTime();
+                if (currentTime - startTime > CONF_START_LONG_OPERATION_TIMEOUT) {
+                    throw err;
+                } else {
+                    setTimeout(callDoStartLongOperationUntilTimeout, 10);
+                }
+            }
+        };
+
+        callDoStartLongOperationUntilTimeout();
     }
 
     upload(
@@ -654,6 +674,12 @@ export class IpcConnection extends ConnectionBase {
             instrumentId: this.instrument.id,
             instructions,
             callbackWindowId: EEZStudio.electron.remote.getCurrentWindow().id
+        });
+    }
+
+    async isLongOperationInProgress() {
+        EEZStudio.electron.ipcRenderer.send("instrument/connection/abort-long-operation", {
+            instrumentId: this.instrument.id
         });
     }
 

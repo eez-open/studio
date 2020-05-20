@@ -61,13 +61,11 @@ const ShortcutsToolbarContainer: typeof Toolbar = styled(Toolbar)`
 ` as any;
 
 @observer
-export class ShortcutsToolbar extends React.Component<
-    {
-        appStore: InstrumentAppStore;
-        executeShortcut: (shortcut: IShortcut) => void;
-    },
-    {}
-> {
+export class ShortcutsToolbar extends React.Component<{
+    appStore: InstrumentAppStore;
+    style?: React.CSSProperties;
+    executeShortcut: (shortcut: IShortcut) => void;
+}> {
     @computed
     get shortcuts() {
         return Array.from(this.props.appStore.shortcutsStore.instrumentShortcuts.get().values())
@@ -94,7 +92,7 @@ export class ShortcutsToolbar extends React.Component<
         }
 
         return (
-            <ShortcutsToolbarContainer>
+            <ShortcutsToolbarContainer style={this.props.style}>
                 {this.shortcuts.map(shortcut => (
                     <ShortcutButton
                         key={shortcut.id}

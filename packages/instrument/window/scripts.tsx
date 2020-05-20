@@ -24,7 +24,7 @@ import { SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } from "shortcuts/shortcuts";
 import { DEFAULT_TOOLBAR_BUTTON_COLOR } from "shortcuts/toolbar-button-colors";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
-import { executeShortcut } from "instrument/window/script";
+import { executeShortcut, isShorcutRunning, stopActiveShortcut } from "instrument/window/script";
 import { IModel } from "instrument/window/undo";
 
 import { Terminal } from "instrument/window/terminal/terminal";
@@ -435,7 +435,8 @@ export function toolbarButtonsRender(appStore: InstrumentAppStore) {
                     onClick={scriptsModel.upload}
                 />
             )}
-            {scriptsModel.selectedScript &&
+            {!isShorcutRunning() &&
+                scriptsModel.selectedScript &&
                 appStore.instrument!.connection.isConnected &&
                 (scriptsModel.selectedScript.action.type === "scpi-commands" ||
                     scriptsModel.selectedScript.action.type === "javascript") && (
@@ -447,6 +448,15 @@ export function toolbarButtonsRender(appStore: InstrumentAppStore) {
                         onClick={scriptsModel.run}
                     />
                 )}
+            {isShorcutRunning() && (
+                <ButtonAction
+                    text="Stop"
+                    icon="material:stop"
+                    className="btn-danger"
+                    title="Stop"
+                    onClick={stopActiveShortcut}
+                />
+            )}
             <ButtonAction
                 text={scriptsModel.terminalVisible ? "Hide Terminal" : "Show Terminal"}
                 className="btn-secondary"
