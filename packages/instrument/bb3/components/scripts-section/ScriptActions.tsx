@@ -5,7 +5,7 @@ import { Loader } from "eez-studio-ui/loader";
 
 import { getConnection } from "instrument/window/connection";
 
-import { Script } from "instrument/bb3/objects/script";
+import { Script } from "instrument/bb3/objects/Script";
 
 export const ScriptActions = observer(({ script }: { script: Script }) => {
     if (!getConnection(script.instrumentOverview.appStore).isConnected) {

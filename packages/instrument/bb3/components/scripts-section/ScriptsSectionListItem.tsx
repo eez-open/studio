@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 
 import { styled } from "eez-studio-ui/styled-components";
 
-import { Script } from "instrument/bb3/objects/script";
+import { Script } from "instrument/bb3/objects/Script";
 
 import { SelectScriptVersion } from "instrument/bb3/components/scripts-section/SelectScriptVersion";
 import { ScriptActions } from "instrument/bb3/components/scripts-section/ScriptActions";
