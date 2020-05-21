@@ -2,12 +2,17 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { compareVersions } from "eez-studio-shared/util";
+import { Loader } from "eez-studio-ui/loader";
 import { FIRMWARE_RELEASES_PAGE, FIRMWARE_UPGRADE_PAGE } from "instrument/bb3/conf";
 import { openLink } from "instrument/bb3/helpers";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import { Section } from "instrument/bb3/components/Section";
 
 export const ReleaseInfo = observer(({ bb3Instrument }: { bb3Instrument: BB3Instrument }) => {
+    if (bb3Instrument.refreshInProgress) {
+        return <Loader />;
+    }
+
     if (!bb3Instrument.mcu.firmwareVersion) {
         return null;
     }

@@ -1,6 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
 
+import { Loader } from "eez-studio-ui/loader";
+
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 
 import { Section } from "instrument/bb3/components/Section";
@@ -28,7 +30,13 @@ export const ScriptsSection = observer(({ bb3Instrument }: { bb3Instrument: BB3I
                     <ScriptsSectionGlobalActions bb3Instrument={bb3Instrument} />
                 </HeaderControls>
             }
-            body={<ScriptsSectionList scripts={bb3Instrument.selectedScriptsCollection} />}
+            body={
+                bb3Instrument.refreshInProgress ? (
+                    <Loader />
+                ) : (
+                    <ScriptsSectionList scripts={bb3Instrument.selectedScriptsCollection} />
+                )
+            }
         />
     );
 });

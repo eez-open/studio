@@ -10,6 +10,8 @@ import { removeQuotes } from "instrument/bb3/helpers";
 import { Script } from "instrument/bb3/objects/Script";
 import { ScriptsCatalog } from "instrument/bb3/objects/ScriptsCatalog";
 
+import { IHistoryItem } from "instrument/window/history/item";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 interface IMcu {
@@ -161,6 +163,8 @@ export class BB3Instrument {
 
     @observable latestFirmwareVersion: string | undefined;
 
+    @observable latestHistoryItem: IHistoryItem | undefined;
+
     constructor(
         public scriptsCatalog: ScriptsCatalog,
         public appStore: InstrumentAppStore,
@@ -204,6 +208,25 @@ export class BB3Instrument {
         autorun(() => {
             if (getConnection(appStore).isConnected) {
                 setTimeout(() => this.refresh(), 100);
+            }
+        });
+
+        reaction(
+            () => scriptsCatalog.scriptItems,
+            state => {
+                this.refreshScripts(this.scriptsOnInstrument);
+            }
+        );
+
+        autorun(() => {
+            if (appStore.history.items.length > 0) {
+                const historyItem = appStore.history.items[appStore.history.items.length - 1];
+                if (!this.latestHistoryItem || historyItem.date >= this.latestHistoryItem.date) {
+                    runInAction(() => {
+                        this.latestHistoryItem = historyItem;
+                        console.log(this.latestHistoryItem);
+                    });
+                }
             }
         });
     }

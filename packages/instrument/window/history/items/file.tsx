@@ -49,6 +49,7 @@ const FileHistoryItemDiv = styled(HistoryItemDiv)`
     flex-direction: row;
     background-color: lightsteelblue;
     padding: 10px;
+    overflow: auto;
 
     .EezStudio_Toolbar {
         margin-top: 5px;
