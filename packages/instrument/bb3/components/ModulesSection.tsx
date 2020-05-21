@@ -2,15 +2,14 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { InstrumentOverview } from "instrument/bb3/objects/InstrumentOverview";
+import { Section } from "instrument/bb3/components/Section";
 
 export const ModulesSection = observer(
     ({ instrumentOverview }: { instrumentOverview: InstrumentOverview }) => {
         return (
-            <section>
-                <header>
-                    <h5>Modules</h5>
-                </header>
-                <div>
+            <Section
+                title="Modules"
+                body={
                     <table className="table">
                         <thead>
                             <tr>
@@ -29,8 +28,8 @@ export const ModulesSection = observer(
                             ))}
                         </tbody>
                     </table>
-                </div>
-            </section>
+                }
+            />
         );
     }
 );

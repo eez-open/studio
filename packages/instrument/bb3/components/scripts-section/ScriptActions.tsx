@@ -17,10 +17,10 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
     }
 
     return (
-        <div>
+        <div style={{ whiteSpace: "nowrap" }}>
             {script.canInstall && (
                 <button
-                    className="btn btn-sm btn-success"
+                    className="btn btn-sm btn-primary"
                     onClick={script.install}
                     disabled={script.instrumentOverview.installAllScriptsInProgress}
                 >
@@ -29,7 +29,7 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
             )}
             {script.canUninstall && (
                 <button
-                    className="btn btn-sm btn-danger"
+                    className="btn btn-sm btn-secondary"
                     onClick={script.uninstall}
                     disabled={script.instrumentOverview.installAllScriptsInProgress}
                 >
@@ -38,7 +38,7 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
             )}
             {script.canUpdate && (
                 <button
-                    className="btn btn-sm btn-success"
+                    className="btn btn-sm btn-primary"
                     onClick={script.update}
                     disabled={script.instrumentOverview.installAllScriptsInProgress}
                 >
@@ -47,7 +47,7 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
             )}
             {script.canReplace && (
                 <button
-                    className="btn btn-sm btn-success"
+                    className="btn btn-sm btn-primary"
                     onClick={script.replace}
                     disabled={script.instrumentOverview.installAllScriptsInProgress}
                 >

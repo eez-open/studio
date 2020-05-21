@@ -38,7 +38,7 @@ const ContentContainer = styled.div`
 
 export const ScriptsSectionListItem = observer(({ script }: { script: Script }) => {
     return (
-        <div>
+        <div className="list-group-item">
             <TitleContainer>
                 <h5>{script.name}</h5>
                 <SelectScriptVersion script={script} />

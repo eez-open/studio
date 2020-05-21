@@ -200,9 +200,9 @@ export class NavigationStore {
             return this._mainNavigationSelectedItem;
         }
 
-        // if (this.overviewNavigationItem) {
-        //     return this.overviewNavigationItem;
-        // }
+        if (this.overviewNavigationItem) {
+            return this.overviewNavigationItem;
+        }
 
         return this.terminalNavigationItem;
     }

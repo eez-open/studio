@@ -5,6 +5,7 @@ import { compareVersions } from "eez-studio-shared/util";
 import { FIRMWARE_RELEASES_PAGE, FIRMWARE_UPGRADE_PAGE } from "instrument/bb3/conf";
 import { openLink } from "instrument/bb3/helpers";
 import { InstrumentOverview } from "instrument/bb3/objects/InstrumentOverview";
+import { Section } from "instrument/bb3/components/Section";
 
 export const ReleaseInfo = observer(
     ({ instrumentOverview }: { instrumentOverview: InstrumentOverview }) => {
@@ -13,11 +14,12 @@ export const ReleaseInfo = observer(
         }
 
         if (!instrumentOverview.latestFirmwareVersion) {
-            return (
-                <div className="alert alert-danger" role="alert">
-                    Could not get info about the latest firmware version!
-                </div>
-            );
+            // return (
+            //     <div className="alert alert-danger" role="alert">
+            //         Could not get info about the latest firmware version!
+            //     </div>
+            // );
+            return null;
         }
 
         if (
@@ -52,15 +54,10 @@ export const ReleaseInfo = observer(
 export const FirmwareVersionSection = observer(
     ({ instrumentOverview }: { instrumentOverview: InstrumentOverview }) => {
         return (
-            <section>
-                <header>
-                    <h5>Firmware version</h5>
-                </header>
-                <div className="p-4">
-                    <h5>{instrumentOverview.mcu.firmwareVersion}</h5>
-                    <ReleaseInfo instrumentOverview={instrumentOverview} />
-                </div>
-            </section>
+            <Section
+                title={`Firmware version ${instrumentOverview.mcu.firmwareVersion}`}
+                body={<ReleaseInfo instrumentOverview={instrumentOverview} />}
+            />
         );
     }
 );

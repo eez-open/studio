@@ -6,13 +6,13 @@ import { executeShortcut } from "instrument/window/script";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 
+import { Section } from "instrument/bb3/components/Section";
+
 export const ShortcutsSection = observer(({ appStore }: { appStore: InstrumentAppStore }) => {
     return (
-        <section>
-            <header>
-                <h5>Shortcuts</h5>
-            </header>
-            <div>
+        <Section
+            title="Shortcuts"
+            body={
                 <ShortcutsToolbar
                     appStore={appStore}
                     executeShortcut={shortcut => {
@@ -23,7 +23,7 @@ export const ShortcutsSection = observer(({ appStore }: { appStore: InstrumentAp
                         backgroundColor: "white"
                     }}
                 />
-            </div>
-        </section>
+            }
+        />
     );
 });

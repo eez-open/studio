@@ -62,7 +62,6 @@ function findLatestFirmwareReleases(intstrumentOverview: InstrumentOverview) {
                 });
             }
         }
-        console.log(req.response);
     });
 
     req.addEventListener("error", error => {
@@ -200,7 +199,7 @@ export class InstrumentOverview {
 
         autorun(() => {
             if (getConnection(appStore).isConnected) {
-                setTimeout(() => this.refresh());
+                setTimeout(() => this.refresh(), 100);
             }
         });
     }

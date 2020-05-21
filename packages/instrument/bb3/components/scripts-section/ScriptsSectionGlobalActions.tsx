@@ -17,7 +17,7 @@ export const ScriptsSectionGlobalActions = observer(
 
         return (
             <button
-                className="btn btn-sm btn-success"
+                className="btn btn-sm btn-primary"
                 onClick={instrumentOverview.installAllScripts}
             >
                 Install All
