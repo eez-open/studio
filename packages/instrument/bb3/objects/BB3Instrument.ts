@@ -31,7 +31,7 @@ interface IScriptOnInstrument {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function findLatestFirmwareReleases(intstrumentOverview: InstrumentOverview) {
+function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
     let req = new XMLHttpRequest();
     req.responseType = "json";
     req.open("GET", FIRMWARE_RELEASES_URL);
@@ -52,13 +52,13 @@ function findLatestFirmwareReleases(intstrumentOverview: InstrumentOverview) {
 
             if (latestRealeaseVersion) {
                 runInAction(() => {
-                    intstrumentOverview.latestFirmwareVersion = latestRealeaseVersion;
+                    bb3Instrument.latestFirmwareVersion = latestRealeaseVersion;
                 });
             } else {
                 console.error("not found latest release version");
 
                 runInAction(() => {
-                    intstrumentOverview.latestFirmwareVersion = undefined;
+                    bb3Instrument.latestFirmwareVersion = undefined;
                 });
             }
         }
@@ -68,7 +68,7 @@ function findLatestFirmwareReleases(intstrumentOverview: InstrumentOverview) {
         console.error(error);
 
         runInAction(() => {
-            intstrumentOverview.latestFirmwareVersion = undefined;
+            bb3Instrument.latestFirmwareVersion = undefined;
         });
     });
 
@@ -147,7 +147,9 @@ type ScriptsCollectionType =
     | "installedCatalogScriptsCollection"
     | "instrumentScriptsNotInCatalogCollection";
 
-export class InstrumentOverview {
+export class BB3Instrument {
+    static CUSTOM_PROPERTY_NAME = "bb3";
+
     @observable mcu: IMcu;
     @observable slots: ISlots;
     @observable scripts: Script[];
@@ -164,22 +166,24 @@ export class InstrumentOverview {
         public appStore: InstrumentAppStore,
         instrument: InstrumentObject
     ) {
-        if (instrument.custom.overview.mcu) {
-            this.mcu = instrument.custom.overview.mcu;
+        const bb3Properties = instrument.custom[BB3Instrument.CUSTOM_PROPERTY_NAME];
+
+        if (bb3Properties?.mcu) {
+            this.mcu = bb3Properties.mcu;
         } else {
             this.mcu = {
                 firmwareVersion: ""
             };
         }
 
-        if (instrument.custom.overview.slots) {
-            this.slots = instrument.custom.overview.slots;
+        if (bb3Properties?.slots) {
+            this.slots = bb3Properties.slots;
         } else {
             this.slots = [];
         }
 
-        if (instrument.custom.overview.scriptsOnInstrument) {
-            this.refreshScripts(instrument.custom.overview.scriptsOnInstrument);
+        if (bb3Properties?.scriptsOnInstrument) {
+            this.refreshScripts(bb3Properties.scriptsOnInstrument);
         } else {
             this.scripts = [];
         }
@@ -193,7 +197,7 @@ export class InstrumentOverview {
                 scriptsOnInstrument: toJS(this.scriptsOnInstrument)
             }),
             state => {
-                instrument.setCustomProperty("overview", state);
+                instrument.setCustomProperty(BB3Instrument.CUSTOM_PROPERTY_NAME, state);
             }
         );
 

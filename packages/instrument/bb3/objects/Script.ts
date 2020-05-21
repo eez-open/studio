@@ -4,7 +4,7 @@ import { compareVersions } from "eez-studio-shared/util";
 
 import { getConnection, Connection } from "instrument/window/connection";
 
-import { InstrumentOverview } from "instrument/bb3/objects/InstrumentOverview";
+import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import {
     ICatalogScriptItem,
     ICatalogScriptItemVersion
@@ -89,7 +89,7 @@ export class Script {
     @observable _selectedVersion: string | undefined;
 
     constructor(
-        public instrumentOverview: InstrumentOverview,
+        public bb3Instrument: BB3Instrument,
         scriptOnInstrument: IScriptOnInstrument | undefined,
         public catalogScriptItem: ICatalogScriptItem | undefined
     ) {
@@ -173,7 +173,7 @@ export class Script {
             return;
         }
 
-        const connection = getConnection(this.instrumentOverview.appStore);
+        const connection = getConnection(this.bb3Instrument.appStore);
         if (!connection.isConnected) {
             return;
         }
@@ -214,7 +214,7 @@ export class Script {
             return;
         }
 
-        const connection = getConnection(this.instrumentOverview.appStore);
+        const connection = getConnection(this.bb3Instrument.appStore);
         if (!connection.isConnected) {
             return;
         }

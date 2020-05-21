@@ -144,7 +144,7 @@ export class NavigationStore {
     }
 
     @computed
-    get overviewNavigationItem() {
+    get startPageNavigationItem() {
         const isBb3 =
             this.appStore.instrument &&
             this.appStore.instrument.instrumentExtensionId ==
@@ -157,9 +157,9 @@ export class NavigationStore {
 
         if (isBb3 || isBb3Simulator) {
             return {
-                id: "overview",
+                id: "start-page",
                 icon: "material:dashboard",
-                title: "Overview",
+                title: "Start Page",
                 renderContent: () => {
                     const { render } = require("instrument/bb3") as typeof Bb3Module;
                     return render(this.appStore);
@@ -178,8 +178,8 @@ export class NavigationStore {
     get navigationItems() {
         let navigationItems: IInstrumentWindowNavigationItem[] = [];
 
-        if (this.overviewNavigationItem) {
-            navigationItems.push(this.overviewNavigationItem);
+        if (this.startPageNavigationItem) {
+            navigationItems.push(this.startPageNavigationItem);
         }
 
         navigationItems.push(this.terminalNavigationItem);
@@ -200,8 +200,8 @@ export class NavigationStore {
             return this._mainNavigationSelectedItem;
         }
 
-        if (this.overviewNavigationItem) {
-            return this.overviewNavigationItem;
+        if (this.startPageNavigationItem) {
+            return this.startPageNavigationItem;
         }
 
         return this.terminalNavigationItem;

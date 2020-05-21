@@ -3,23 +3,20 @@ import { observer } from "mobx-react";
 
 import { getConnection } from "instrument/window/connection";
 
-import { InstrumentOverview } from "instrument/bb3/objects/InstrumentOverview";
+import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 
 export const ScriptsSectionGlobalActions = observer(
-    ({ instrumentOverview }: { instrumentOverview: InstrumentOverview }) => {
-        if (!getConnection(instrumentOverview.appStore).isConnected) {
+    ({ bb3Instrument }: { bb3Instrument: BB3Instrument }) => {
+        if (!getConnection(bb3Instrument.appStore).isConnected) {
             return null;
         }
 
-        if (!instrumentOverview.canInstallAllScripts) {
+        if (!bb3Instrument.canInstallAllScripts) {
             return null;
         }
 
         return (
-            <button
-                className="btn btn-sm btn-primary"
-                onClick={instrumentOverview.installAllScripts}
-            >
+            <button className="btn btn-sm btn-primary" onClick={bb3Instrument.installAllScripts}>
                 Install All
             </button>
         );

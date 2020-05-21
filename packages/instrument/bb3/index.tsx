@@ -4,30 +4,30 @@ import { ButtonAction } from "eez-studio-ui/action";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 
-import { scriptsCatalog, instrumentOverviewsMap } from "instrument/bb3/global-objects";
-import { InstrumentOverview } from "instrument/bb3/objects/InstrumentOverview";
-import { Overview } from "instrument/bb3/components/Overview";
+import { scriptsCatalog, bb3InstrumentsMap } from "instrument/bb3/global-objects";
+import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
+import { StartPage } from "instrument/bb3/components/StartPage";
 
-function getInstrumentOverview(appStore: InstrumentAppStore) {
+function getBB3Instrument(appStore: InstrumentAppStore) {
     if (!appStore.instrument) {
         return undefined;
     }
-    let instrumentOverview = instrumentOverviewsMap.get(appStore.instrument.id);
-    if (!instrumentOverview) {
-        instrumentOverview = new InstrumentOverview(scriptsCatalog, appStore, appStore.instrument);
-        instrumentOverviewsMap.set(appStore.instrument.id, instrumentOverview);
+    let bb3Instrument = bb3InstrumentsMap.get(appStore.instrument.id);
+    if (!bb3Instrument) {
+        bb3Instrument = new BB3Instrument(scriptsCatalog, appStore, appStore.instrument);
+        bb3InstrumentsMap.set(appStore.instrument.id, bb3Instrument);
     }
-    return instrumentOverview;
+    return bb3Instrument;
 }
 
 export function render(appStore: InstrumentAppStore) {
-    const instrumentOverview = getInstrumentOverview(appStore);
+    const bb3Instrument = getBB3Instrument(appStore);
 
-    if (!instrumentOverview) {
+    if (!bb3Instrument) {
         return <div />;
     }
 
-    return <Overview appStore={appStore} instrumentOverview={instrumentOverview} />;
+    return <StartPage appStore={appStore} bb3Instrument={bb3Instrument} />;
 }
 
 export function toolbarButtonsRender(appStore: InstrumentAppStore) {
@@ -44,9 +44,9 @@ export function toolbarButtonsRender(appStore: InstrumentAppStore) {
                     className="btn-secondary"
                     title="Refresh"
                     onClick={() => {
-                        const instrumentOverview = getInstrumentOverview(appStore);
-                        if (instrumentOverview) {
-                            instrumentOverview.refresh();
+                        const bb3Instrument = getBB3Instrument(appStore);
+                        if (bb3Instrument) {
+                            bb3Instrument.refresh();
                         }
                     }}
                 />

@@ -8,7 +8,7 @@ import { getConnection } from "instrument/window/connection";
 import { Script } from "instrument/bb3/objects/Script";
 
 export const ScriptActions = observer(({ script }: { script: Script }) => {
-    if (!getConnection(script.instrumentOverview.appStore).isConnected) {
+    if (!getConnection(script.bb3Instrument.appStore).isConnected) {
         return null;
     }
 
@@ -22,7 +22,7 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
                 <button
                     className="btn btn-sm btn-primary"
                     onClick={script.install}
-                    disabled={script.instrumentOverview.installAllScriptsInProgress}
+                    disabled={script.bb3Instrument.installAllScriptsInProgress}
                 >
                     Install
                 </button>
@@ -31,7 +31,7 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
                 <button
                     className="btn btn-sm btn-secondary"
                     onClick={script.uninstall}
-                    disabled={script.instrumentOverview.installAllScriptsInProgress}
+                    disabled={script.bb3Instrument.installAllScriptsInProgress}
                 >
                     Uninstall
                 </button>
@@ -40,7 +40,7 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
                 <button
                     className="btn btn-sm btn-primary"
                     onClick={script.update}
-                    disabled={script.instrumentOverview.installAllScriptsInProgress}
+                    disabled={script.bb3Instrument.installAllScriptsInProgress}
                 >
                     Update
                 </button>
@@ -49,7 +49,7 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
                 <button
                     className="btn btn-sm btn-primary"
                     onClick={script.replace}
-                    disabled={script.instrumentOverview.installAllScriptsInProgress}
+                    disabled={script.bb3Instrument.installAllScriptsInProgress}
                 >
                     Replace
                 </button>

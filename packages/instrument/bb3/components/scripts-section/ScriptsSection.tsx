@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 
-import { InstrumentOverview } from "instrument/bb3/objects/InstrumentOverview";
+import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 
 import { Section } from "instrument/bb3/components/Section";
 import { ScriptsSectionSelectView } from "instrument/bb3/components/scripts-section/ScriptsSectionSelectView";
@@ -18,19 +18,17 @@ const HeaderControls = styled.div`
     align-items: center;
 `;
 
-export const ScriptsSection = observer(
-    ({ instrumentOverview }: { instrumentOverview: InstrumentOverview }) => {
-        return (
-            <Section
-                title="MicroPython Scripts"
-                titleControls={
-                    <HeaderControls>
-                        <ScriptsSectionSelectView instrumentOverview={instrumentOverview} />
-                        <ScriptsSectionGlobalActions instrumentOverview={instrumentOverview} />
-                    </HeaderControls>
-                }
-                body={<ScriptsSectionList scripts={instrumentOverview.selectedScriptsCollection} />}
-            />
-        );
-    }
-);
+export const ScriptsSection = observer(({ bb3Instrument }: { bb3Instrument: BB3Instrument }) => {
+    return (
+        <Section
+            title="MicroPython Scripts"
+            titleControls={
+                <HeaderControls>
+                    <ScriptsSectionSelectView bb3Instrument={bb3Instrument} />
+                    <ScriptsSectionGlobalActions bb3Instrument={bb3Instrument} />
+                </HeaderControls>
+            }
+            body={<ScriptsSectionList scripts={bb3Instrument.selectedScriptsCollection} />}
+        />
+    );
+});

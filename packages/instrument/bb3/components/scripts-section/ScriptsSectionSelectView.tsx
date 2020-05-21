@@ -2,11 +2,11 @@ import React from "react";
 import { action } from "mobx";
 import { observer } from "mobx-react";
 
-import { InstrumentOverview } from "instrument/bb3/objects/InstrumentOverview";
+import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 
 export const ScriptsSectionSelectView = observer(
-    ({ instrumentOverview }: { instrumentOverview: InstrumentOverview }) => {
-        if (instrumentOverview.allScriptsCollection.length == 0) {
+    ({ bb3Instrument }: { bb3Instrument: BB3Instrument }) => {
+        if (bb3Instrument.allScriptsCollection.length == 0) {
             return null;
         }
 
@@ -14,43 +14,42 @@ export const ScriptsSectionSelectView = observer(
             <label className="form-check-label">
                 <select
                     className="form-control form-control-sm"
-                    value={instrumentOverview.selectedScriptsCollectionType}
+                    value={bb3Instrument.selectedScriptsCollectionType}
                     onChange={action((event: React.ChangeEvent<HTMLSelectElement>) => {
-                        instrumentOverview.selectedScriptsCollectionType = event.currentTarget
+                        bb3Instrument.selectedScriptsCollectionType = event.currentTarget
                             .value as any;
                     })}
                 >
                     <option value="allScriptsCollection">
-                        All scripts ({instrumentOverview.allScriptsCollection.length})
+                        All scripts ({bb3Instrument.allScriptsCollection.length})
                     </option>
-                    {instrumentOverview.catalogScriptsCollection.length > 0 && (
+                    {bb3Instrument.catalogScriptsCollection.length > 0 && (
                         <option value="catalogScriptsCollection">
-                            Scripts from catalog (
-                            {instrumentOverview.catalogScriptsCollection.length})
+                            Scripts from catalog ({bb3Instrument.catalogScriptsCollection.length})
                         </option>
                     )}
-                    {instrumentOverview.instrumentScriptsCollection.length > 0 && (
+                    {bb3Instrument.instrumentScriptsCollection.length > 0 && (
                         <option value="instrumentScriptsCollection">
                             Scripts on instrument (
-                            {instrumentOverview.instrumentScriptsCollection.length})
+                            {bb3Instrument.instrumentScriptsCollection.length})
                         </option>
                     )}
-                    {instrumentOverview.notInstalledCatalogScriptsCollection.length > 0 && (
+                    {bb3Instrument.notInstalledCatalogScriptsCollection.length > 0 && (
                         <option value="notInstalledCatalogScriptsCollection">
                             Not installed scripts from catalog (
-                            {instrumentOverview.notInstalledCatalogScriptsCollection.length})
+                            {bb3Instrument.notInstalledCatalogScriptsCollection.length})
                         </option>
                     )}
-                    {instrumentOverview.installedCatalogScriptsCollection.length > 0 && (
+                    {bb3Instrument.installedCatalogScriptsCollection.length > 0 && (
                         <option value="installedCatalogScriptsCollection">
                             Installed scripts from catalog (
-                            {instrumentOverview.installedCatalogScriptsCollection.length})
+                            {bb3Instrument.installedCatalogScriptsCollection.length})
                         </option>
                     )}
-                    {instrumentOverview.instrumentScriptsNotInCatalogCollection.length > 0 && (
+                    {bb3Instrument.instrumentScriptsNotInCatalogCollection.length > 0 && (
                         <option value="instrumentScriptsNotInCatalogCollection">
                             Scripts on instrument but not from catalog (
-                            {instrumentOverview.instrumentScriptsNotInCatalogCollection.length})
+                            {bb3Instrument.instrumentScriptsNotInCatalogCollection.length})
                         </option>
                     )}
                 </select>
