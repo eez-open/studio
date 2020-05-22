@@ -21,34 +21,33 @@ export const ScriptsSectionSelectView = observer(
                     })}
                 >
                     <option value="allScriptsCollection">
-                        All scripts ({bb3Instrument.allScriptsCollection.length})
+                        All ({bb3Instrument.allScriptsCollection.length})
                     </option>
                     {bb3Instrument.catalogScriptsCollection.length > 0 && (
                         <option value="catalogScriptsCollection">
-                            Scripts from catalog ({bb3Instrument.catalogScriptsCollection.length})
+                            From catalog ({bb3Instrument.catalogScriptsCollection.length})
                         </option>
                     )}
                     {bb3Instrument.instrumentScriptsCollection.length > 0 && (
                         <option value="instrumentScriptsCollection">
-                            Scripts on instrument (
-                            {bb3Instrument.instrumentScriptsCollection.length})
+                            On instrument ({bb3Instrument.instrumentScriptsCollection.length})
                         </option>
                     )}
                     {bb3Instrument.notInstalledCatalogScriptsCollection.length > 0 && (
                         <option value="notInstalledCatalogScriptsCollection">
-                            Not installed scripts from catalog (
+                            Not installed from catalog (
                             {bb3Instrument.notInstalledCatalogScriptsCollection.length})
                         </option>
                     )}
                     {bb3Instrument.installedCatalogScriptsCollection.length > 0 && (
                         <option value="installedCatalogScriptsCollection">
-                            Installed scripts from catalog (
+                            Installed from catalog (
                             {bb3Instrument.installedCatalogScriptsCollection.length})
                         </option>
                     )}
                     {bb3Instrument.instrumentScriptsNotInCatalogCollection.length > 0 && (
                         <option value="instrumentScriptsNotInCatalogCollection">
-                            Scripts on instrument but not from catalog (
+                            On instrument but not from catalog (
                             {bb3Instrument.instrumentScriptsNotInCatalogCollection.length})
                         </option>
                     )}

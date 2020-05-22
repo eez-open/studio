@@ -209,7 +209,7 @@ export function parseScpiValue(data: string) {
         return value;
     }
 
-    if (data.startsWith("**ERROR:")) {
+    if (data.startsWith("**ERROR")) {
         return {
             error: data
         };

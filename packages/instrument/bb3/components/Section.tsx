@@ -5,7 +5,7 @@ import { styled } from "eez-studio-ui/styled-components";
 
 const HeaderContainer = styled.header`
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
     padding-bottom: 10px;
 
@@ -29,7 +29,7 @@ export const Section = observer(
         return (
             <section>
                 <HeaderContainer>
-                    <h4>{title}</h4>
+                    <h4 className="text-truncate">{title}</h4>
                     {titleControls}
                 </HeaderContainer>
                 <div>{body}</div>

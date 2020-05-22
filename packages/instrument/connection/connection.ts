@@ -393,35 +393,53 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     }
 
     send(command: string, options?: ISendOptions): void {
-        if (!options || options.log === undefined || options.log) {
-            this.logRequest(command);
-        }
-
-        if (this.state !== ConnectionState.CONNECTED || !this.communicationInterface) {
-            this.logAnswer("**ERROR: not connected\n");
-            return;
-        }
-
-        if (!options || !options.longOperation) {
-            if (this.longOperation) {
-                if (
-                    this.longOperation instanceof FileDownload ||
-                    this.longOperation instanceof FileUpload
-                ) {
-                    this.logAnswer("**ERROR: file transfer in progress\n");
-                } else {
-                    this.logAnswer("**ERROR: another operation in progress\n");
+        const doSend = () => {
+            if (!options || !options.longOperation) {
+                if (this.longOperation) {
+                    if (
+                        this.longOperation instanceof FileDownload ||
+                        this.longOperation instanceof FileUpload
+                    ) {
+                        return "**ERROR: file transfer in progress\n";
+                    } else {
+                        return "**ERROR: another operation in progress\n";
+                    }
                 }
-                return;
             }
-        }
 
-        this.expectedResponseType = options && options.queryResponseType;
+            if (!options || options.log === undefined || options.log) {
+                this.logRequest(command);
+            }
 
-        this.errorCode = ConnectionErrorCode.NONE;
-        this.error = undefined;
+            if (this.state !== ConnectionState.CONNECTED || !this.communicationInterface) {
+                this.logAnswer("**ERROR: not connected\n");
+                return null;
+            }
 
-        this.communicationInterface.write(command + "\n");
+            this.expectedResponseType = options && options.queryResponseType;
+
+            this.errorCode = ConnectionErrorCode.NONE;
+            this.error = undefined;
+
+            this.communicationInterface.write(command + "\n");
+            return null;
+        };
+
+        const startTime = new Date().getTime();
+
+        const callDoSendUntilTimeout = () => {
+            const err = doSend();
+            if (err) {
+                const currentTime = new Date().getTime();
+                if (currentTime - startTime > CONF_START_LONG_OPERATION_TIMEOUT) {
+                    throw err;
+                } else {
+                    setTimeout(callDoSendUntilTimeout, 0);
+                }
+            }
+        };
+
+        callDoSendUntilTimeout();
     }
 
     sendIdn() {
@@ -474,7 +492,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
                 if (currentTime - startTime > CONF_START_LONG_OPERATION_TIMEOUT) {
                     throw err;
                 } else {
-                    setTimeout(callDoStartLongOperationUntilTimeout, 10);
+                    setTimeout(callDoStartLongOperationUntilTimeout, 0);
                 }
             }
         };
@@ -508,6 +526,13 @@ export class Connection extends ConnectionBase implements CommunicationInterface
 
         this.state = ConnectionState.DISCONNECTING;
         this.communicationInterface.disconnect();
+
+        if (this.callbackWindowId) {
+            let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId);
+            browserWindow.webContents.send("instrument/connection/value", {
+                error: "connection is diconnected"
+            });
+        }
     }
 
     disconnected() {

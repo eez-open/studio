@@ -16,7 +16,10 @@ export const ScriptsSectionGlobalActions = observer(
         }
 
         return (
-            <button className="btn btn-sm btn-primary" onClick={bb3Instrument.installAllScripts}>
+            <button
+                className="btn btn-sm btn-primary text-nowrap"
+                onClick={bb3Instrument.installAllScripts}
+            >
                 Install All
             </button>
         );

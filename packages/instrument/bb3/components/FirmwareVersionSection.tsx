@@ -13,6 +13,14 @@ export const ReleaseInfo = observer(({ bb3Instrument }: { bb3Instrument: BB3Inst
         return <Loader />;
     }
 
+    if (bb3Instrument.mcu.firmwareVersion == undefined) {
+        return (
+            <div className="alert alert-danger" role="alert">
+                Failed to get info about the latest firmware version!
+            </div>
+        );
+    }
+
     if (!bb3Instrument.mcu.firmwareVersion) {
         return null;
     }

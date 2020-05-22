@@ -10,31 +10,30 @@ import { ScriptsSectionSelectView } from "instrument/bb3/components/scripts-sect
 import { ScriptsSectionGlobalActions } from "instrument/bb3/components/scripts-section/ScriptsSectionGlobalActions";
 import { ScriptsSectionList } from "instrument/bb3/components/scripts-section/ScriptsSectionList";
 
-import { styled } from "eez-studio-ui/styled-components";
-
-const HeaderControls = styled.div`
-    margin-left: 50px;
-    flex-grow: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-`;
-
 export const ScriptsSection = observer(({ bb3Instrument }: { bb3Instrument: BB3Instrument }) => {
     return (
         <Section
             title="MicroPython Scripts"
             titleControls={
-                <HeaderControls>
-                    <ScriptsSectionSelectView bb3Instrument={bb3Instrument} />
-                    <ScriptsSectionGlobalActions bb3Instrument={bb3Instrument} />
-                </HeaderControls>
+                bb3Instrument.refreshInProgress ? null : (
+                    <>
+                        <ScriptsSectionSelectView bb3Instrument={bb3Instrument} />
+                        <ScriptsSectionGlobalActions bb3Instrument={bb3Instrument} />
+                    </>
+                )
             }
             body={
                 bb3Instrument.refreshInProgress ? (
                     <Loader />
                 ) : (
-                    <ScriptsSectionList scripts={bb3Instrument.selectedScriptsCollection} />
+                    <>
+                        {bb3Instrument.scriptsOnInstrumentFetchError && (
+                            <div className="alert alert-danger" role="alert">
+                                Failed to get info about scripts on the instruments!
+                            </div>
+                        )}
+                        <ScriptsSectionList scripts={bb3Instrument.selectedScriptsCollection} />
+                    </>
                 )
             }
         />

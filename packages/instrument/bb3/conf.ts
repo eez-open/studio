@@ -8,3 +8,6 @@ export const FIRMWARE_UPGRADE_PAGE =
 
 export const SCRIPTS_CATALOG_URL =
     "https://github.com/eez-open/modular-psu-firmware/raw/master/scripts/scripts-catalog.json";
+
+export const MODULE_FIRMWARE_RELEASES_URL = (moduleType: string) =>
+    `https://api.github.com/repos/eez-open/dib-${moduleType.toLowerCase()}-fw/releases`;

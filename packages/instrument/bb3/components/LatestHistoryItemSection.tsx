@@ -1,8 +1,17 @@
 import React from "react";
 import { observer } from "mobx-react";
 
+import { styled } from "eez-studio-ui/styled-components";
+
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import { Section } from "instrument/bb3/components/Section";
+
+const Container = styled.div`
+    & > div {
+        margin: 0;
+        max-width: initial;
+    }
+`;
 
 export const LatestHistoryItemSection = observer(
     ({ bb3Instrument }: { bb3Instrument: BB3Instrument }) => {
@@ -12,7 +21,7 @@ export const LatestHistoryItemSection = observer(
         return (
             <Section
                 title="Latest history item"
-                body={bb3Instrument.latestHistoryItem.listItemElement}
+                body={<Container>{bb3Instrument.latestHistoryItem.listItemElement}</Container>}
             />
         );
     }

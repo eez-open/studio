@@ -4,6 +4,7 @@ import { compareVersions } from "eez-studio-shared/util";
 
 import { getConnection, Connection } from "instrument/window/connection";
 
+import { fetchFileUrl, IFetchedFile } from "instrument/bb3/helpers";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import {
     ICatalogScriptItem,
@@ -16,49 +17,11 @@ interface IScriptOnInstrument {
     files: string[];
 }
 
-interface IScriptFile {
-    fileName: string;
-    fileData: string | ArrayBuffer;
-}
-
 function fetchScriptFiles(catalogScriptItemVersion: ICatalogScriptItemVersion) {
-    return Promise.all(
-        catalogScriptItemVersion.files.map(
-            fileUri =>
-                new Promise<IScriptFile>((resolve, reject) => {
-                    let req = new XMLHttpRequest();
-                    req.responseType = "blob";
-                    req.open("GET", fileUri);
-
-                    req.addEventListener("load", () => {
-                        const decodedFileUri = decodeURIComponent(fileUri);
-                        const lastPathSeparatorIndex = decodedFileUri.lastIndexOf("/");
-                        const fileName = decodedFileUri.substr(lastPathSeparatorIndex + 1);
-
-                        const reader = new FileReader();
-
-                        reader.addEventListener("loadend", function () {
-                            if (!reader.result) {
-                                reject("no file data");
-                            } else {
-                                resolve({ fileName, fileData: reader.result });
-                            }
-                        });
-
-                        reader.readAsArrayBuffer(req.response);
-                    });
-
-                    req.addEventListener("error", error => {
-                        reject(error);
-                    });
-
-                    req.send();
-                })
-        )
-    );
+    return Promise.all(catalogScriptItemVersion.files.map(fetchFileUrl));
 }
 
-async function uploadScriptFilesToInstrument(connection: Connection, files: IScriptFile[]) {
+async function uploadScriptFilesToInstrument(connection: Connection, files: IFetchedFile[]) {
     for (const file of files) {
         await new Promise((resolve, reject) => {
             const sourceFileType = file.fileName.toLowerCase().endsWith(".py")

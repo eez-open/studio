@@ -5,8 +5,9 @@ import { getConnection, Connection } from "instrument/window/connection";
 import { InstrumentAppStore } from "instrument/window/app-store";
 
 import { compareVersions } from "eez-studio-shared/util";
-import { FIRMWARE_RELEASES_URL } from "instrument/bb3/conf";
+import { FIRMWARE_RELEASES_URL, MODULE_FIRMWARE_RELEASES_URL } from "instrument/bb3/conf";
 import { removeQuotes } from "instrument/bb3/helpers";
+import { Module, ModuleFirmwareRelease } from "instrument/bb3/objects/Module";
 import { Script } from "instrument/bb3/objects/Script";
 import { ScriptsCatalog } from "instrument/bb3/objects/ScriptsCatalog";
 
@@ -15,15 +16,8 @@ import { IHistoryItem } from "instrument/window/history/item";
 ////////////////////////////////////////////////////////////////////////////////
 
 interface IMcu {
-    firmwareVersion: string;
+    firmwareVersion: string | undefined;
 }
-
-interface ISlot {
-    model: string;
-    version: string;
-}
-
-type ISlots = (ISlot | undefined)[];
 
 interface IScriptOnInstrument {
     name: string;
@@ -77,20 +71,72 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
     req.send();
 }
 
-async function getModulesInfoFromInstrument(connection: Connection) {
-    let slots: ISlots = [];
-    const numChannels = await connection.query("SYST:CHAN?");
-    for (let i = 0; i < numChannels; i++) {
-        connection.command("INST CH" + (i + 1));
-        const slotIndex = await connection.query("SYST:CHAN:SLOT?");
-        const model = removeQuotes(await connection.query("SYST:CHAN:MOD?"));
-        const version = removeQuotes(await connection.query("SYST:CHAN:VERS?"));
-        slots[slotIndex - 1] = {
-            model,
-            version
-        };
+function getModuleFirmwareReleases(moduleType: string) {
+    return new Promise<ModuleFirmwareRelease[]>((resolve, reject) => {
+        // TODO exception!!!
+        if (moduleType.toUpperCase() == "DCM224") {
+            moduleType = "DCM220";
+        }
+
+        let req = new XMLHttpRequest();
+        req.responseType = "json";
+        req.open("GET", MODULE_FIRMWARE_RELEASES_URL(moduleType));
+
+        req.addEventListener("load", async () => {
+            resolve(
+                req.response.map((release: any) => ({
+                    version: release.tag_name.startsWith("v")
+                        ? release.tag_name.substr(1)
+                        : release.tag_name,
+                    url: release.assets[0].browser_download_url
+                }))
+            );
+        });
+
+        req.addEventListener("error", error => {
+            console.error(error);
+            // TODO better error handling
+            resolve([]);
+        });
+
+        req.send();
+    });
+}
+
+async function getModulesInfoFromInstrument(
+    bb3Instrument: BB3Instrument,
+    firmwareVersion: string,
+    connection: Connection
+) {
+    let modules: Module[] = [];
+
+    if (compareVersions(firmwareVersion, "1.0") > 0) {
+        const numSlots = await connection.query("SYST:SLOT?");
+        for (let i = 0; i < numSlots; i++) {
+            const moduleType = removeQuotes(await connection.query(`SYST:SLOT:MOD? ${i + 1}`));
+            if (moduleType) {
+                const moduleRevision = removeQuotes(
+                    await connection.query(`SYST:SLOT:VERS? ${i + 1}`)
+                );
+                const firmwareVersion = removeQuotes(
+                    await connection.query(`SYST:SLOT:FIRM? ${i + 1}`)
+                );
+
+                modules.push(
+                    new Module(
+                        bb3Instrument,
+                        i + 1,
+                        moduleType,
+                        moduleRevision,
+                        firmwareVersion,
+                        await getModuleFirmwareReleases(moduleType)
+                    )
+                );
+            }
+        }
     }
-    return slots;
+
+    return modules;
 }
 
 async function getScriptsOnTheInstrument(
@@ -153,7 +199,7 @@ export class BB3Instrument {
     static CUSTOM_PROPERTY_NAME = "bb3";
 
     @observable mcu: IMcu;
-    @observable slots: ISlots;
+    @observable modules: Module[] | undefined;
     @observable scripts: Script[];
 
     // UI state
@@ -164,6 +210,8 @@ export class BB3Instrument {
     @observable latestFirmwareVersion: string | undefined;
 
     @observable latestHistoryItem: IHistoryItem | undefined;
+
+    @observable scriptsOnInstrumentFetchError: boolean = false;
 
     constructor(
         public scriptsCatalog: ScriptsCatalog,
@@ -180,10 +228,20 @@ export class BB3Instrument {
             };
         }
 
-        if (bb3Properties?.slots) {
-            this.slots = bb3Properties.slots;
+        if (bb3Properties?.modules) {
+            this.modules = bb3Properties.modules.map(
+                (module: Module) =>
+                    new Module(
+                        this,
+                        module.slotIndex,
+                        module.moduleType,
+                        module.moduleRevision,
+                        module.firmwareVersion,
+                        []
+                    )
+            );
         } else {
-            this.slots = [];
+            this.modules = [];
         }
 
         if (bb3Properties?.scriptsOnInstrument) {
@@ -197,7 +255,14 @@ export class BB3Instrument {
         reaction(
             () => ({
                 mcu: toJS(this.mcu),
-                slots: toJS(this.slots),
+                modules: this.modules
+                    ? this.modules.map(module => ({
+                          slotIndex: module.slotIndex,
+                          moduleType: module.moduleType,
+                          moduleRevision: module.moduleRevision,
+                          firmwareVersion: module.firmwareVersion
+                      }))
+                    : [],
                 scriptsOnInstrument: toJS(this.scriptsOnInstrument)
             }),
             state => {
@@ -224,7 +289,6 @@ export class BB3Instrument {
                 if (!this.latestHistoryItem || historyItem.date >= this.latestHistoryItem.date) {
                     runInAction(() => {
                         this.latestHistoryItem = historyItem;
-                        console.log(this.latestHistoryItem);
                     });
                 }
             }
@@ -255,12 +319,32 @@ export class BB3Instrument {
 
             connection.acquire(false);
 
-            const firmwareVersion = removeQuotes(await connection.query("SYST:CPU:FIRM?"));
-            const slots = await getModulesInfoFromInstrument(connection);
-            const scriptsOnInstrument = await getScriptsOnTheInstrument(
-                connection,
-                this.scriptsOnInstrument
-            );
+            let firmwareVersion: string | undefined;
+            let modules: Module[] | undefined;
+            let scriptsOnInstrument: IScriptOnInstrument[] | undefined;
+
+            try {
+                firmwareVersion = removeQuotes(await connection.query("SYST:CPU:FIRM?"));
+            } catch (err) {
+                console.error("failed to get firmware version", err);
+            }
+
+            if (firmwareVersion) {
+                try {
+                    modules = await getModulesInfoFromInstrument(this, firmwareVersion, connection);
+                } catch (err) {
+                    console.error("failed to get slots info", err);
+                }
+
+                try {
+                    scriptsOnInstrument = await getScriptsOnTheInstrument(
+                        connection,
+                        this.scriptsOnInstrument
+                    );
+                } catch (err) {
+                    console.error("failed to get scripts on the instrument info", err);
+                }
+            }
 
             connection.release();
 
@@ -268,10 +352,15 @@ export class BB3Instrument {
 
             runInAction(() => {
                 this.mcu.firmwareVersion = firmwareVersion;
-                this.slots = slots;
+                this.modules = modules;
             });
 
-            this.refreshScripts(scriptsOnInstrument);
+            if (scriptsOnInstrument) {
+                this.scriptsOnInstrumentFetchError = false;
+                this.refreshScripts(scriptsOnInstrument);
+            } else {
+                this.scriptsOnInstrumentFetchError = true;
+            }
         } finally {
             this.setRefreshInProgress(false);
         }

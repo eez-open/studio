@@ -95,9 +95,13 @@ export class Connection {
 
     query(query: string) {
         return new Promise<any>((resolve, reject) => {
-            this.resolveCallback = resolve;
-            this.rejectCallback = reject;
-            this.instrument.connection.send(query);
+            if (this.isConnected) {
+                this.resolveCallback = resolve;
+                this.rejectCallback = reject;
+                this.instrument.connection.send(query);
+            } else {
+                reject("not connected");
+            }
         });
     }
 

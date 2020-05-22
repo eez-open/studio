@@ -20,7 +20,9 @@ export const ShortcutsSection = observer(({ appStore }: { appStore: InstrumentAp
                     }}
                     style={{
                         border: 0,
-                        backgroundColor: "white"
+                        backgroundColor: "white",
+                        padding: 0,
+                        margin: 0
                     }}
                 />
             }

@@ -17,7 +17,7 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
     }
 
     return (
-        <div style={{ whiteSpace: "nowrap" }}>
+        <div className="text-nowrap">
             {script.canInstall && (
                 <button
                     className="btn btn-sm btn-primary"
