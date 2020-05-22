@@ -28,6 +28,8 @@ export interface IWorkbenchObject extends IBaseObject {
     openEditor?(target: "tab" | "window" | "default"): void;
 
     saveRect(): void;
+
+    getIcon(): React.ReactNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

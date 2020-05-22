@@ -415,7 +415,10 @@ export function getObject(type: string, oid: string): IObject {
                 return null;
             },
             details: null,
-            isEditable: false
+            isEditable: false,
+            getIcon() {
+                return null;
+            }
         };
     }
 

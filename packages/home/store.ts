@@ -157,6 +157,10 @@ export class WorkbenchObject implements IWorkbenchObject {
             this.implementation.addToContextMenu(menu);
         }
     }
+
+    getIcon() {
+        return this.implementation.getIcon();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

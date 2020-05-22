@@ -81,7 +81,7 @@ export function createWindow(params: IWindowParams) {
 
     browserWindow.show();
 
-    browserWindow.on("close", function(event: any) {
+    browserWindow.on("close", function (event: any) {
         if (params.hideOnClose && windows.length > 1 && !forceQuit) {
             browserWindow.hide();
             event.preventDefault();
@@ -94,9 +94,12 @@ export function createWindow(params: IWindowParams) {
         }
     });
 
-    browserWindow.on("closed", function() {
+    browserWindow.on("closed", function () {
         action(() =>
-            windows.splice(windows.findIndex(win => win.browserWindow === browserWindow), 1)
+            windows.splice(
+                windows.findIndex(win => win.browserWindow === browserWindow),
+                1
+            )
         )();
 
         // if no visible window left, app can quit
@@ -104,6 +107,8 @@ export function createWindow(params: IWindowParams) {
             app.quit();
         }
     });
+
+    return browserWindow;
 }
 
 export function findWindowByParams(params: IWindowParams) {
@@ -122,8 +127,9 @@ export function openWindow(params: IWindowParams) {
     let win = findWindowByParams(params);
     if (win) {
         win.browserWindow.show();
+        return win.browserWindow;
     } else {
-        createWindow(params);
+        return createWindow(params);
     }
 }
 
@@ -163,11 +169,11 @@ export function getWindowType(win: IWindow | undefined) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ipcMain.on("openWindow", function(event: any, params: any) {
+ipcMain.on("openWindow", function (event: any, params: any) {
     openWindow(params);
 });
 
-ipcMain.on("focusWindow", function(event: any, params: any) {
+ipcMain.on("focusWindow", function (event: any, params: any) {
     let win = findWindowByParams(params);
     if (win) {
         win.browserWindow.focus();
@@ -177,7 +183,7 @@ ipcMain.on("focusWindow", function(event: any, params: any) {
     }
 });
 
-ipcMain.on("closeWindow", function(event: any, params: any) {
+ipcMain.on("closeWindow", function (event: any, params: any) {
     closeWindow(params);
 });
 
@@ -200,7 +206,7 @@ ipcMain.on("readyToClose", (event: any) => {
     }
 });
 
-app.on("browser-window-focus", function(
+app.on("browser-window-focus", function (
     event: Electron.Event,
     browserWindow: Electron.BrowserWindow
 ) {

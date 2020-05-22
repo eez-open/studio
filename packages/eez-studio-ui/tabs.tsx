@@ -204,6 +204,7 @@ const TabsViewContainer = styled.div`
             align-content: space-between;
 
             & > span.title {
+                padding-left: 5px;
                 flex-grow: 1;
                 max-width: 200px;
                 overflow: hidden;

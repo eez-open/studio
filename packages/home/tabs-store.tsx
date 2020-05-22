@@ -3,14 +3,17 @@ import { observable, action, runInAction, reaction, autorun } from "mobx";
 
 import { isRenderer } from "eez-studio-shared/util-electron";
 
-import { loadPreinstalledExtension } from "eez-studio-shared/extensions/extensions";
-import { IEditor } from "eez-studio-shared/extensions/extension";
+import { loadPreinstalledExtension, extensions } from "eez-studio-shared/extensions/extensions";
+import { IEditor, IHomeSection } from "eez-studio-shared/extensions/extension";
 
 import { Icon } from "eez-studio-ui/icon";
 import { ITab } from "eez-studio-ui/tabs";
 
 import { WorkbenchObject, workbenchObjects } from "home/store";
 import * as HomeComponentModule from "home/home-component";
+import * as HistoryModule from "home/history";
+import * as ShortcutsModule from "home/shortcuts";
+import { ExtensionsManager } from "home/extensions-manager/extensions-manager";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -29,8 +32,8 @@ class HomeTab implements IHomeTab {
     id = "home";
     title = (
         <React.Fragment>
-            <Icon icon="material: home" />
-            <span>Home</span>
+            <Icon icon="material:home" />
+            <span className="title">Home</span>
         </React.Fragment>
     );
 
@@ -42,6 +45,131 @@ class HomeTab implements IHomeTab {
     @action
     makeActive(): void {
         this.tabs.makeActive(this);
+    }
+
+    close() {
+        this.tabs.removeTab(this);
+    }
+}
+
+class HistoryTab implements IHomeTab {
+    constructor(public tabs: Tabs) {}
+
+    permanent: boolean = true;
+    @observable active: boolean = false;
+    loading: boolean = false;
+
+    id = "history";
+    title = (
+        <React.Fragment>
+            <Icon icon="material:history" />
+            <span className="title">History</span>
+        </React.Fragment>
+    );
+
+    render() {
+        const { HistorySection } = require("home/history") as typeof HistoryModule;
+        return <HistorySection />;
+    }
+
+    @action
+    makeActive(): void {
+        this.tabs.makeActive(this);
+    }
+
+    close() {
+        this.tabs.removeTab(this);
+    }
+}
+
+class ShortcutsAndGroupsTab implements IHomeTab {
+    constructor(public tabs: Tabs) {}
+
+    permanent: boolean = true;
+    @observable active: boolean = false;
+    loading: boolean = false;
+
+    id = "shortcutsAndGroups";
+    title = (
+        <React.Fragment>
+            <Icon icon="material:playlist_play" />
+            <span className="title">Shortcuts and Groups</span>
+        </React.Fragment>
+    );
+
+    render() {
+        const { ShortcutsAndGroups } = require("home/shortcuts") as typeof ShortcutsModule;
+        return <ShortcutsAndGroups />;
+    }
+
+    @action
+    makeActive(): void {
+        this.tabs.makeActive(this);
+    }
+
+    close() {
+        this.tabs.removeTab(this);
+    }
+}
+
+class ExtensionManagerTab implements IHomeTab {
+    constructor(public tabs: Tabs) {}
+
+    permanent: boolean = true;
+    @observable active: boolean = false;
+    loading: boolean = false;
+
+    id = "extensions";
+    title = (
+        <React.Fragment>
+            <Icon icon="material:extension" />
+            <span className="title">Extension Manager</span>
+        </React.Fragment>
+    );
+
+    render() {
+        return <ExtensionsManager />;
+    }
+
+    @action
+    makeActive(): void {
+        this.tabs.makeActive(this);
+    }
+
+    close() {
+        this.tabs.removeTab(this);
+    }
+}
+
+class HomeSectionTab implements IHomeTab {
+    constructor(public tabs: Tabs, public homeSection: IHomeSection) {
+        this.id = "homeSection_" + homeSection.id;
+        this.title = (
+            <React.Fragment>
+                <Icon icon={homeSection.icon} />
+                <span className="title">{homeSection.title}</span>
+            </React.Fragment>
+        );
+    }
+
+    permanent: boolean = true;
+    @observable active: boolean = false;
+    loading: boolean = false;
+
+    id: string;
+    title: JSX.Element;
+
+    render() {
+        return this.homeSection.renderContent();
+    }
+
+    @action
+    makeActive(): void {
+        this.tabs.makeActive(this);
+    }
+
+    close() {
+        this.tabs.removeTab(this);
     }
 }
 
@@ -79,7 +207,12 @@ class ObjectEditorTab implements IHomeTab {
     }
 
     get title() {
-        return this.object.name;
+        return (
+            <React.Fragment>
+                {this.object.getIcon()}
+                <span className="title">{this.object.name}</span>
+            </React.Fragment>
+        );
     }
 
     render() {
@@ -159,6 +292,52 @@ class Tabs {
 
             tabsToClose.forEach(tab => tab.close());
         });
+
+        EEZStudio.electron.ipcRenderer.on(
+            "viewHome",
+            action(() => {
+                if (!(this.tabs[0] instanceof HomeTab)) {
+                    this.tabs.splice(0, 0, new HomeTab(this));
+                }
+                this.tabs[0].makeActive();
+            })
+        );
+
+        [HistoryTab, ShortcutsAndGroupsTab, ExtensionManagerTab].forEach(TabClass =>
+            EEZStudio.electron.ipcRenderer.on(
+                "view" + TabClass.name.substr(0, TabClass.name.length - 3),
+                action(() => {
+                    for (const tab of this.tabs) {
+                        if (tab instanceof TabClass) {
+                            tab.makeActive();
+                            return;
+                        }
+                    }
+                    this.tabs.push(new TabClass(this));
+                    this.tabs[this.tabs.length - 1].makeActive();
+                })
+            )
+        );
+
+        EEZStudio.electron.ipcRenderer.on(
+            "viewHomeSectionTab",
+            action((sender: any, tabId: string) => {
+                extensions.forEach(extension => {
+                    if (extension.homeSections) {
+                        extension.homeSections.forEach(homeSection => {
+                            for (const tab of this.tabs) {
+                                if (tabId == "homeSection_" + homeSection.id) {
+                                    tab.makeActive();
+                                    return;
+                                }
+                            }
+                            this.tabs.push(new HomeSectionTab(this, homeSection));
+                            this.tabs[this.tabs.length - 1].makeActive();
+                        });
+                    }
+                });
+            })
+        );
     }
 
     findObjectTab(id: string) {

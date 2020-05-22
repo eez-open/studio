@@ -436,13 +436,55 @@ function buildEditMenu(windowType: WindowType, win: IWindow | undefined) {
 function buildViewMenu(windowType: WindowType) {
     let viewSubmenu: Electron.MenuItemConstructorOptions[] = [];
 
-    if (windowType !== "home") {
+    viewSubmenu.push({
+        label: "Home",
+        accelerator: "Ctrl+Shift+H",
+        click: function (item, focusedWindow) {
+            const win = findWindowByBrowserWindow(focusedWindow);
+            if (win) {
+                const windowType = getWindowType(win);
+                if (windowType == "home") {
+                    focusedWindow.webContents.send("viewHome");
+                } else {
+                    const browserWindow = openWindow({ url: "home/index.html" });
+                    browserWindow.webContents.send("viewHome");
+                }
+            }
+        }
+    });
+
+    if (windowType === "home") {
         viewSubmenu.push(
             {
-                label: "Home",
-                accelerator: "Ctrl+Shift+H",
-                click: function () {
-                    openWindow({ url: "home/index.html" });
+                label: "History",
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("viewHistory");
+                    }
+                }
+            },
+            {
+                label: "Shortcuts and Groups",
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("viewShortcutsAndGroups");
+                    }
+                }
+            },
+            {
+                label: "Noteboooks",
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("viewHomeSectionTab", "notebooks");
+                    }
+                }
+            },
+            {
+                label: "Extension Manager",
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("viewExtensionManager");
+                    }
                 }
             },
             {

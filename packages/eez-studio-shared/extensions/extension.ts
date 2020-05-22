@@ -38,6 +38,7 @@ export interface IObject {
     openEditor?(target: "tab" | "window" | "default"): void;
     afterDelete?(): void;
     addToContextMenu?(menu: Electron.Menu): void;
+    getIcon(): React.ReactNode;
 }
 
 export interface IExtensionProperties {
