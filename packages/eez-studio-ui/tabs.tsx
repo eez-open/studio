@@ -3,8 +3,11 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
 
+import { closestBySelector } from "eez-studio-shared/dom";
 import styled from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
+import { Icon } from "eez-studio-ui/icon";
+import { IconAction } from "eez-studio-ui/action";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -14,7 +17,9 @@ export interface ITab {
     active: boolean;
     permanent: boolean;
     id: string | number;
-    title: string | JSX.Element;
+    title: React.ReactNode;
+    tooltipTitle?: string;
+    icon?: React.ReactNode;
     loading: boolean;
     makeActive(): void;
     makePermanent?(): void;
@@ -106,7 +111,7 @@ class TabView extends React.Component<
     }
 
     render() {
-        let className = classNames({
+        let className = classNames("EezStudio_Tab", {
             active: this.props.tab.active,
             permanent: this.props.tab.permanent
         });
@@ -120,9 +125,21 @@ class TabView extends React.Component<
             );
         }
 
+        let icon;
+        if (typeof this.props.tab.icon == "string") {
+            icon = <Icon icon={this.props.tab.icon} />;
+        } else {
+            icon = this.props.tab.icon;
+        }
+
         let title;
         if (typeof this.props.tab.title === "string") {
-            title = <span className="title">{this.props.tab.title}</span>;
+            title = (
+                <>
+                    {icon}
+                    <span className="title">{this.props.tab.title}</span>
+                </>
+            );
         } else {
             title = this.props.tab.title;
         }
@@ -135,6 +152,7 @@ class TabView extends React.Component<
                 onClick={this.onClick}
                 onContextMenu={this.onContextMenu}
                 onDoubleClick={this.onDoubleClick}
+                title={this.props.tab.tooltipTitle}
             >
                 <div>
                     {title}
@@ -150,12 +168,112 @@ class TabView extends React.Component<
 
 const TabsViewContainer = styled.div`
     flex-grow: 1;
-    display: flex;
+
     height: 37px;
     margin: 0;
-    white-space: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
+
+    display: flex;
+    min-width: 0;
+    flex: 1;
+
+    & > div.EezStudio_Tab {
+        min-width: 0;
+        max-width: 200px;
+        flex: 1;
+
+        overflow: hidden;
+
+        height: 37px;
+        border-right: 1px solid ${props => props.theme.borderColor};
+        padding-left: 10px;
+        padding-right: 5px;
+        cursor: pointer;
+        font-style: italic;
+
+        &.permanent {
+            font-style: normal;
+        }
+
+        &.active {
+            background-color: white;
+            font-weight: bold;
+            border-bottom: 3px solid ${props => props.theme.selectionBackgroundColor};
+        }
+
+        & > div {
+            display: flex;
+            align-items: center;
+            height: 30px;
+            padding-top: 4px;
+            align-content: space-between;
+            white-space: nowrap;
+
+            & > span.title {
+                padding-left: 5px;
+                flex-grow: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                text-align: left;
+            }
+
+            & > i.close {
+                position: relative;
+                font-size: 14px;
+                padding-top: 3px;
+
+                &:hover {
+                    color: red;
+                }
+            }
+        }
+    }
+
+    & > div.EezStudio_AddTab {
+        position: relative;
+
+        & > button > i {
+            margin: 3px 4px;
+            padding: 3px;
+            cursor: pointer;
+            &:hover {
+                background: #ddd;
+            }
+        }
+
+        & > div {
+            position: absolute;
+
+            &.alignRight {
+                right: 0;
+            }
+
+            z-index: 1000;
+
+            padding: 5px;
+            overflow: hidden;
+
+            visibility: hidden;
+            &.open {
+                visibility: visible;
+            }
+
+            & > div {
+                transform: translateY(-100%);
+                opacity: 0;
+
+                padding: 10px;
+                background-color: white;
+                border-radius: 4px;
+                box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.25);
+            }
+
+            &.open > div {
+                transition: all 0.1s;
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    }
 
     &::-webkit-scrollbar {
         width: 0;
@@ -175,85 +293,84 @@ const TabsViewContainer = styled.div`
             background: ${props => props.theme.scrollThumbColor};
         }
     }
-
-    & > div {
-        min-width: 100px;
-        height: 37px;
-        border-right: 1px solid ${props => props.theme.borderColor};
-        padding-left: 10px;
-        padding-right: 10px;
-        cursor: pointer;
-        font-style: italic;
-
-        &.permanent {
-            font-style: normal;
-        }
-
-        &.active {
-            background-color: white;
-            font-weight: bold;
-            border-bottom: 3px solid ${props => props.theme.selectionBackgroundColor};
-        }
-
-        & > div {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            height: 30px;
-            padding-top: 4px;
-            align-content: space-between;
-
-            & > span.title {
-                padding-left: 5px;
-                flex-grow: 1;
-                max-width: 200px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                text-align: center;
-            }
-
-            & > i.close {
-                visibility: hidden;
-                position: relative;
-                font-size: 14px;
-                padding-left: 6px;
-                padding-top: 3px;
-
-                &:hover {
-                    color: red;
-                }
-            }
-        }
-
-        &.active > div > i.close,
-        &:hover > div > i.close {
-            visibility: visible;
-        }
-    }
 `;
 
-@observer
-export class TabsView extends React.Component<{ tabs: ITab[] }> {
-    div: HTMLElement;
+const AddTabButton = observer(
+    ({ popup, attention }: { popup: React.ReactNode; attention?: boolean }) => {
+        const [open, setOpen] = React.useState<boolean>(false);
+        const [alignRight, setAlignRight] = React.useState<boolean>(false);
 
-    onWheel(e: any) {
-        e.preventDefault();
-        e.stopPropagation();
+        const popupContainerRef = React.useRef<HTMLDivElement>(null);
 
-        $(this.div)[0].scrollLeft += e.deltaY;
-    }
+        React.useEffect(() => {
+            setTimeout(() => {
+                if (open && popupContainerRef && popupContainerRef.current) {
+                    var bounding = popupContainerRef.current.getBoundingClientRect();
+                    setAlignRight(bounding.right > window.innerWidth);
+                } else {
+                    setAlignRight(false);
+                }
+            });
+        }, [open, popupContainerRef, popupContainerRef.current]);
 
-    @bind
-    setRef(x: any) {
-        this.div = x;
-    }
+        React.useEffect(() => {
+            if (!open) {
+                return;
+            }
 
-    render() {
-        let tabs = this.props.tabs.map(tab => <TabView key={tab.id} tab={tab} />);
+            const onClick = (event: MouseEvent) => {
+                if (!closestBySelector(event.target, ".EezStudio_AddTab > button:first-child")) {
+                    if (open) {
+                        setTimeout(() => setOpen(false), 0);
+                    }
+                }
+            };
+
+            window.addEventListener("mouseup", onClick, true);
+            window.addEventListener("touchup", onClick, true);
+
+            return () => {
+                window.removeEventListener("mouseup", onClick, true);
+                window.removeEventListener("touchup", onClick, true);
+            };
+        }, [open]);
+
+        const addTabPopupClassName = classNames({ open, alignRight });
 
         return (
-            <TabsViewContainer ref={this.setRef} onWheel={this.onWheel.bind(this)}>
-                {tabs}
+            <div className="EezStudio_AddTab">
+                <IconAction
+                    icon="material:add"
+                    attention={attention}
+                    onClick={() => setOpen(!open)}
+                    title="Add Tab"
+                />
+                <div ref={popupContainerRef} className={addTabPopupClassName}>
+                    <div>{popup}</div>
+                </div>
+            </div>
+        );
+    }
+);
+
+@observer
+export class TabsView extends React.Component<{
+    tabs: ITab[];
+    addTabPopup?: React.ReactNode;
+    addTabAttention?: boolean;
+}> {
+    render() {
+        return (
+            <TabsViewContainer>
+                {this.props.tabs.map(tab => (
+                    <TabView key={tab.id} tab={tab} />
+                ))}
+                {this.props.addTabPopup && (
+                    <AddTabButton
+                        popup={this.props.addTabPopup}
+                        attention={this.props.addTabAttention}
+                    />
+                )}
             </TabsViewContainer>
         );
     }

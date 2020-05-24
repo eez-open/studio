@@ -83,14 +83,19 @@ function getModuleFirmwareReleases(moduleType: string) {
         req.open("GET", MODULE_FIRMWARE_RELEASES_URL(moduleType));
 
         req.addEventListener("load", async () => {
-            resolve(
-                req.response.map((release: any) => ({
-                    version: release.tag_name.startsWith("v")
-                        ? release.tag_name.substr(1)
-                        : release.tag_name,
-                    url: release.assets[0].browser_download_url
-                }))
-            );
+            if (Array.isArray(req.response)) {
+                resolve(
+                    req.response.map((release: any) => ({
+                        version: release.tag_name.startsWith("v")
+                            ? release.tag_name.substr(1)
+                            : release.tag_name,
+                        url: release.assets[0].browser_download_url
+                    }))
+                );
+            } else {
+                // TODO better error handling
+                resolve([]);
+            }
         });
 
         req.addEventListener("error", error => {

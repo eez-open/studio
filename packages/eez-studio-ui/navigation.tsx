@@ -31,17 +31,6 @@ const NavigationItemLi = styled.li`
     }
 `;
 
-const NavigationItemNeedsAttentionDiv = styled.div`
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    bottom: -3px;
-    right: -3px;
-    background-color: red;
-    border-radius: 3px;
-    box-shadow: 0px 0px 6px 2px rgba(255, 0, 0, 0.3);
-`;
-
 @observer
 export class NavigationItem extends React.Component<
     {
@@ -70,8 +59,7 @@ export class NavigationItem extends React.Component<
         return (
             <NavigationItemLi className={className}>
                 <a href="#" title={this.props.item.title} onClick={this.handleClick}>
-                    <Icon icon={this.props.item.icon!} />
-                    {this.props.item.attention && <NavigationItemNeedsAttentionDiv />}
+                    <Icon icon={this.props.item.icon!} attention={this.props.item.attention} />
                 </a>
             </NavigationItemLi>
         );

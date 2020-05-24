@@ -43,7 +43,7 @@ export class OutputSection implements IPanel {
     constructor(public id: number, public name: string, public scrollToBottom: boolean) {}
 
     @computed
-    get title(): string | JSX.Element {
+    get title(): string | React.ReactNode {
         if (this.id == Section.CHECKS) {
             return (
                 <React.Fragment>

@@ -38,7 +38,6 @@ import { ConnectionErrorCode, ConnectionParameters } from "instrument/connection
 import { IFileUploadInstructions } from "instrument/connection/file-upload";
 
 import * as UiPropertiesModule from "eez-studio-ui/properties";
-import { Icon } from "eez-studio-ui/icon";
 
 import * as AppStoreModule from "instrument/window/app-store";
 
@@ -936,9 +935,7 @@ export class InstrumentObject {
     }
 
     getIcon() {
-        return this.image ? (
-            <img src={this.image} width={24} height={24} style={{ objectFit: "contain" }} />
-        ) : null;
+        return this.image;
     }
 }
 

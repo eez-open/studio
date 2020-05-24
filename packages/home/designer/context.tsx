@@ -54,7 +54,7 @@ class ViewState implements IViewState {
     set(
         document: IDocument,
         viewStatePersistantState: IViewStatePersistantState,
-        onSavePersistantState: (viewStatePersistantState: IViewStatePersistantState) => void,
+        onSavePersistantState?: (viewStatePersistantState: IViewStatePersistantState) => void,
         lastViewState?: ViewState
     ) {
         if (this.persistentStateReactionDisposer) {
@@ -87,10 +87,12 @@ class ViewState implements IViewState {
             this.transform.clientRect = lastViewState.transform.clientRect;
         }
 
-        this.persistentStateReactionDisposer = reaction(
-            () => this.persistentState,
-            viewState => onSavePersistantState(viewState)
-        );
+        if (onSavePersistantState) {
+            this.persistentStateReactionDisposer = reaction(
+                () => this.persistentState,
+                viewState => onSavePersistantState(viewState)
+            );
+        }
     }
 
     get selectedObjects() {
@@ -231,7 +233,7 @@ export class DesignerContext implements IDesignerContext {
     set(
         document: IDocument,
         viewStatePersistantState: IViewStatePersistantState,
-        onSavePersistantState: (viewStatePersistantState: IViewStatePersistantState) => void,
+        onSavePersistantState?: (viewStatePersistantState: IViewStatePersistantState) => void,
         options?: IDesignerOptions,
         filterSnapLines?: (node: IBaseObject) => boolean
     ) {

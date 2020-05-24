@@ -14,39 +14,53 @@ export interface IListNode<T = any> {
 @observer
 export class ListItem extends React.Component<
     {
-        leftIcon?: string;
+        leftIcon?: React.ReactNode;
         leftIconSize?: number;
         leftIconClassName?: string;
-        label: JSX.Element | string;
-        rightIcon?: string;
+        label: React.ReactNode;
+        rightIcon?: React.ReactNode;
         rightIconSize?: number;
         rightIconClassName?: string;
     },
     {}
 > {
     render() {
+        let leftIcon;
+        if (this.props.leftIcon) {
+            if (typeof this.props.leftIcon == "string") {
+                leftIcon = (
+                    <Icon
+                        icon={this.props.leftIcon}
+                        size={this.props.leftIconSize}
+                        className={this.props.leftIconClassName}
+                    />
+                );
+            } else {
+                leftIcon = this.props.leftIcon;
+            }
+        }
+
+        let rightIcon;
+        if (this.props.rightIcon) {
+            if (typeof this.props.rightIcon == "string") {
+                rightIcon = (
+                    <Icon
+                        icon={this.props.rightIcon}
+                        size={this.props.rightIconSize}
+                        className={this.props.rightIconClassName}
+                    />
+                );
+            } else {
+                leftIcon = this.props.leftIcon;
+            }
+        }
+
         return (
-            <div className="EezStudio_ListItem">
-                <div>
-                    {this.props.leftIcon && (
-                        <Icon
-                            icon={this.props.leftIcon}
-                            size={this.props.leftIconSize}
-                            className={this.props.leftIconClassName}
-                        />
-                    )}
-                </div>
+            <>
+                <div>{leftIcon}</div>
                 <div>{this.props.label}</div>
-                <div>
-                    {this.props.rightIcon && (
-                        <Icon
-                            icon={this.props.rightIcon}
-                            size={this.props.rightIconSize}
-                            className={this.props.rightIconClassName}
-                        />
-                    )}
-                </div>
-            </div>
+                <div>{rightIcon}</div>
+            </>
         );
     }
 }

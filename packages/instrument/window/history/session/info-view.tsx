@@ -20,6 +20,9 @@ const SessionInfoContainer = styled.div`
     span:nth-child(2) {
         font-weight: 500;
     }
+    button {
+        white-space: nowrap;
+    }
 `;
 
 @observer
@@ -53,6 +56,7 @@ export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
                         text="Close"
                         title="Close active session"
                         onClick={this.onClose}
+                        className="btn-sm"
                     />
                     {viewSessionsList}
                 </React.Fragment>

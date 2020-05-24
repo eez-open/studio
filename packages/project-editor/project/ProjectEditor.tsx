@@ -345,7 +345,7 @@ const StatusBarItemSpan = styled.span`
 @observer
 class StatusBarItem extends React.Component<
     {
-        body: JSX.Element | string;
+        body: React.ReactNode;
         onClick: () => void;
     },
     {}

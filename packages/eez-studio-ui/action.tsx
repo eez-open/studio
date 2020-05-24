@@ -81,6 +81,7 @@ export class IconAction extends React.Component<
         style?: React.CSSProperties;
         color?: string;
         overlayText?: string;
+        attention?: boolean;
     },
     {}
 > {
@@ -99,6 +100,7 @@ export class IconAction extends React.Component<
                     size={this.props.iconSize}
                     style={style}
                     overlayText={this.props.overlayText}
+                    attention={this.props.attention}
                 />
             </Action>
         );

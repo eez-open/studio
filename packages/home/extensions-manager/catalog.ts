@@ -63,8 +63,18 @@ class ExtensionsCatalog {
     }
 
     async loadCatalogVersion() {
+        let catalogVersion;
+
         let catalogVersionPath = this.catalogVersionPath;
-        if (!(await fileExists(catalogVersionPath))) {
+        if (await fileExists(catalogVersionPath)) {
+            try {
+                catalogVersion = await readJsObjectFromFile(catalogVersionPath);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        if (!catalogVersion) {
             if (isDev) {
                 catalogVersionPath = path.resolve(
                     `${__dirname}/../../../extensions/catalog-version.json`
@@ -73,7 +83,8 @@ class ExtensionsCatalog {
                 catalogVersionPath = process.resourcesPath! + "/catalog-version.json";
             }
         }
-        const catalogVersion = await readJsObjectFromFile(catalogVersionPath);
+
+        catalogVersion = await readJsObjectFromFile(catalogVersionPath);
 
         catalogVersion.lastModified = new Date(catalogVersion.lastModified);
 
@@ -84,7 +95,10 @@ class ExtensionsCatalog {
         try {
             const catalogVersion = await this.downloadCatalogVersion();
 
-            if (catalogVersion.lastModified > this.catalogVersion.lastModified) {
+            if (
+                !this.catalogVersion ||
+                catalogVersion.lastModified > this.catalogVersion.lastModified
+            ) {
                 runInAction(() => (this.catalogVersion = catalogVersion));
                 this.downloadCatalog();
             } else {

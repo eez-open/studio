@@ -80,18 +80,6 @@ export class NavigationStore {
         this._mainNavigationSelectedItemId = this.workbenchNavigationItem.id;
 
         autorun(() => {
-            if (tabs && tabs.activeTab) {
-                if (tabs.activeTab === tabs.homeTab) {
-                    if (this.mainNavigationSelectedItem) {
-                        document.title = `${this.mainNavigationSelectedItem.title} - Home - EEZ Studio`;
-                    } else {
-                        document.title = `Home - EEZ Studio`;
-                    }
-                } else {
-                    document.title = `${tabs.activeTab.title} - Home - EEZ Studio`;
-                }
-            }
-
             if (
                 this.mainNavigationSelectedItem === this.deletedHistoryItemsNavigationItem &&
                 this.mainHistoryView &&
@@ -201,26 +189,32 @@ export class NavigationStore {
         });
     }
 
-    @action
-    navigateToHomeTab() {
-        tabs.makeActive(tabs.homeTab);
-    }
+    // @action
+    // navigateToHomeTab() {
+    //     tabs.makeActive(tabs.homeTab);
+    // }
 
     @action.bound
     navigateToHistory() {
-        this.navigateToHomeTab();
+        // this.navigateToHomeTab();
+        tabs.openTabById("history", true);
+
         this.mainNavigationSelectedItem = this.historyNavigationItem;
     }
 
     @action.bound
     navigateToDeletedHistoryItems() {
-        this.navigateToHomeTab();
+        // this.navigateToHomeTab();
+        tabs.openTabById("history", true);
+
         this.mainNavigationSelectedItem = this.deletedHistoryItemsNavigationItem;
     }
 
     @action.bound
     navigateToSessionsList() {
-        this.navigateToHomeTab();
+        //this.navigateToHomeTab();
+        tabs.openTabById("history", true);
+
         this.mainNavigationSelectedItem = this.historyNavigationItem;
         showSessionsList(this);
     }
@@ -231,7 +225,9 @@ export class NavigationStore {
         );
 
         if (section) {
-            this.navigateToHomeTab();
+            // this.navigateToHomeTab();
+            tabs.openTabById(sectionId, true);
+
             this.mainNavigationSelectedItem = section;
             if (itemId && section.selectItem) {
                 section.selectItem(itemId);

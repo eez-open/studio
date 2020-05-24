@@ -1,45 +1,73 @@
 import React from "react";
-import { observable, action, runInAction, reaction, autorun } from "mobx";
+import { observable, action, runInAction, reaction, autorun, computed } from "mobx";
 
 import { isRenderer } from "eez-studio-shared/util-electron";
 
 import { loadPreinstalledExtension, extensions } from "eez-studio-shared/extensions/extensions";
 import { IEditor, IHomeSection } from "eez-studio-shared/extensions/extension";
 
-import { Icon } from "eez-studio-ui/icon";
 import { ITab } from "eez-studio-ui/tabs";
+import { Icon } from "eez-studio-ui/icon";
 
 import { WorkbenchObject, workbenchObjects } from "home/store";
-import * as HomeComponentModule from "home/home-component";
+// import * as HomeComponentModule from "home/home-component";
+import * as DesignerModule from "home/designer/designer";
 import * as HistoryModule from "home/history";
 import * as ShortcutsModule from "home/shortcuts";
-import { ExtensionsManager } from "home/extensions-manager/extensions-manager";
+import * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
+import * as SettingsModule from "home/settings";
+import * as NavigationStoreModule from "home/navigation-store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IHomeTab extends ITab {
     editor?: IEditor;
     render(): JSX.Element;
+    attention?: boolean;
 }
 
-class HomeTab implements IHomeTab {
+////////////////////////////////////////////////////////////////////////////////
+
+// class HomeTab implements IHomeTab {
+//     constructor(public tabs: Tabs) {}
+
+//     permanent: boolean = true;
+//     @observable active: boolean = false;
+//     loading: boolean = false;
+
+//     id = "home";
+//     title = "Home";
+//     icon = "material:home";
+
+//     render() {
+//         const { HomeComponent } = require("home/home-component") as typeof HomeComponentModule;
+//         return <HomeComponent />;
+//     }
+
+//     @action
+//     makeActive(): void {
+//         this.tabs.makeActive(this);
+//     }
+
+//     close() {
+//         this.tabs.removeTab(this);
+//     }
+// }
+
+class WorkbenchTab implements IHomeTab {
     constructor(public tabs: Tabs) {}
 
     permanent: boolean = true;
     @observable active: boolean = false;
     loading: boolean = false;
 
-    id = "home";
-    title = (
-        <React.Fragment>
-            <Icon icon="material:home" />
-            <span className="title">Home</span>
-        </React.Fragment>
-    );
+    id = "workbench";
+    title = "Workbench";
+    icon = "material:developer_board";
 
     render() {
-        const { HomeComponent } = require("home/home-component") as typeof HomeComponentModule;
-        return <HomeComponent />;
+        const { Designer } = require("home/designer/designer") as typeof DesignerModule;
+        return <Designer />;
     }
 
     @action
@@ -60,16 +88,24 @@ class HistoryTab implements IHomeTab {
     loading: boolean = false;
 
     id = "history";
-    title = (
-        <React.Fragment>
-            <Icon icon="material:history" />
-            <span className="title">History</span>
-        </React.Fragment>
-    );
+    title = "History";
+    icon = "material:history";
 
     render() {
-        const { HistorySection } = require("home/history") as typeof HistoryModule;
-        return <HistorySection />;
+        const {
+            navigationStore
+        } = require("home/navigation-store") as typeof NavigationStoreModule;
+
+        if (
+            navigationStore.mainNavigationSelectedItem ==
+            navigationStore.deletedHistoryItemsNavigationItem
+        ) {
+            const { DeletedHistoryItemsSection } = require("home/history") as typeof HistoryModule;
+            return <DeletedHistoryItemsSection />;
+        } else {
+            const { HistorySection } = require("home/history") as typeof HistoryModule;
+            return <HistorySection />;
+        }
     }
 
     @action
@@ -90,12 +126,8 @@ class ShortcutsAndGroupsTab implements IHomeTab {
     loading: boolean = false;
 
     id = "shortcutsAndGroups";
-    title = (
-        <React.Fragment>
-            <Icon icon="material:playlist_play" />
-            <span className="title">Shortcuts and Groups</span>
-        </React.Fragment>
-    );
+    title = "Shortcuts and Groups";
+    icon = "material:playlist_play";
 
     render() {
         const { ShortcutsAndGroups } = require("home/shortcuts") as typeof ShortcutsModule;
@@ -120,14 +152,45 @@ class ExtensionManagerTab implements IHomeTab {
     loading: boolean = false;
 
     id = "extensions";
-    title = (
-        <React.Fragment>
-            <Icon icon="material:extension" />
-            <span className="title">Extension Manager</span>
-        </React.Fragment>
-    );
+    title = "Extension Manager";
+
+    @computed
+    get numNewVersions() {
+        const {
+            extensionsManagerStore
+        } = require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
+        return extensionsManagerStore.newVersions.length;
+    }
+
+    get icon() {
+        return <Icon icon="material:extension" attention={this.numNewVersions > 0} />;
+    }
+
+    @computed
+    get tooltipTitle() {
+        const {
+            extensionsManagerStore
+        } = require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
+
+        let title = this.title;
+        if (this.numNewVersions > 1) {
+            title += ` (${extensionsManagerStore.newVersions.length} new versions)`;
+        } else if (this.numNewVersions === 1) {
+            title += " (1 new version)";
+        }
+
+        return title;
+    }
+
+    @computed
+    get attention() {
+        return this.numNewVersions > 0;
+    }
 
     render() {
+        const {
+            ExtensionsManager
+        } = require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
         return <ExtensionsManager />;
     }
 
@@ -141,23 +204,68 @@ class ExtensionManagerTab implements IHomeTab {
     }
 }
 
-class HomeSectionTab implements IHomeTab {
-    constructor(public tabs: Tabs, public homeSection: IHomeSection) {
-        this.id = "homeSection_" + homeSection.id;
-        this.title = (
-            <React.Fragment>
-                <Icon icon={homeSection.icon} />
-                <span className="title">{homeSection.title}</span>
-            </React.Fragment>
-        );
-    }
+class SettingsTab implements IHomeTab {
+    constructor(public tabs: Tabs) {}
 
     permanent: boolean = true;
     @observable active: boolean = false;
     loading: boolean = false;
 
-    id: string;
-    title: JSX.Element;
+    id = "settings";
+    title = "Settings";
+
+    @computed
+    get attention() {
+        const { settingsController } = require("home/settings") as typeof SettingsModule;
+        return settingsController.isCompactDatabaseAdvisable;
+    }
+
+    get icon() {
+        return <Icon icon="material:settings" attention={this.attention} />;
+    }
+
+    get tooltipTitle() {
+        if (this.attention) {
+            const { COMPACT_DATABASE_MESSAGE } = require("home/settings") as typeof SettingsModule;
+            return COMPACT_DATABASE_MESSAGE;
+        } else {
+            return this.title;
+        }
+    }
+
+    render() {
+        const { Settings } = require("home/settings") as typeof SettingsModule;
+        return <Settings />;
+    }
+
+    @action
+    makeActive(): void {
+        this.tabs.makeActive(this);
+    }
+
+    close() {
+        this.tabs.removeTab(this);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class HomeSectionTab implements IHomeTab {
+    constructor(public tabs: Tabs, public homeSection: IHomeSection) {}
+
+    permanent: boolean = true;
+    @observable active: boolean = false;
+    loading: boolean = false;
+
+    get id() {
+        return "homeSection_" + this.homeSection.id;
+    }
+    get title() {
+        return this.homeSection.title;
+    }
+    get icon() {
+        return this.homeSection.icon;
+    }
 
     render() {
         return this.homeSection.renderContent();
@@ -172,6 +280,8 @@ class HomeSectionTab implements IHomeTab {
         this.tabs.removeTab(this);
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 class ObjectEditorTab implements IHomeTab {
     constructor(public tabs: Tabs, public object: WorkbenchObject) {
@@ -207,12 +317,11 @@ class ObjectEditorTab implements IHomeTab {
     }
 
     get title() {
-        return (
-            <React.Fragment>
-                {this.object.getIcon()}
-                <span className="title">{this.object.name}</span>
-            </React.Fragment>
-        );
+        return this.object.name;
+    }
+
+    get icon() {
+        return this.object.getIcon();
     }
 
     render() {
@@ -234,39 +343,37 @@ class ObjectEditorTab implements IHomeTab {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+interface ITabDefinition {
+    instance: IHomeTab;
+    open: () => IHomeTab;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 interface ISavedTab {
     id: string;
     active: boolean;
 }
 
 class Tabs {
-    @observable tabs: IHomeTab[] = [new HomeTab(this)];
+    @observable tabs: IHomeTab[] = [];
     @observable activeTab: IHomeTab;
 
     constructor() {
-        this.tabs[0].makeActive();
-
         loadPreinstalledExtension("instrument").then(() => {
             const tabsJSON = window.localStorage.getItem("home/tabs");
             if (tabsJSON) {
                 try {
                     const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
-
-                    savedTabs.forEach(savedTab => {
-                        if (savedTab.id === this.tabs[0].id) {
-                            if (savedTab.active) {
-                                this.tabs[0].makeActive();
-                            }
-                        } else {
-                            const object = workbenchObjects.get(savedTab.id);
-                            if (object) {
-                                const tab = this.addObjectTab(object);
-                                if (savedTab.active) {
-                                    tab.makeActive();
-                                }
-                            }
-                        }
-                    });
+                    if (savedTabs.length > 0) {
+                        savedTabs.forEach(savedTab => {
+                            this.openTabById(savedTab.id, savedTab.active);
+                        });
+                    } else {
+                        this.openTabById("workbench", true);
+                    }
                 } catch (err) {
                     console.error(err);
                 }
@@ -294,56 +401,93 @@ class Tabs {
         });
 
         EEZStudio.electron.ipcRenderer.on(
-            "viewHome",
-            action(() => {
-                if (!(this.tabs[0] instanceof HomeTab)) {
-                    this.tabs.splice(0, 0, new HomeTab(this));
-                }
-                this.tabs[0].makeActive();
-            })
-        );
-
-        [HistoryTab, ShortcutsAndGroupsTab, ExtensionManagerTab].forEach(TabClass =>
-            EEZStudio.electron.ipcRenderer.on(
-                "view" + TabClass.name.substr(0, TabClass.name.length - 3),
-                action(() => {
-                    for (const tab of this.tabs) {
-                        if (tab instanceof TabClass) {
-                            tab.makeActive();
-                            return;
-                        }
-                    }
-                    this.tabs.push(new TabClass(this));
-                    this.tabs[this.tabs.length - 1].makeActive();
-                })
-            )
-        );
-
-        EEZStudio.electron.ipcRenderer.on(
-            "viewHomeSectionTab",
+            "openTab",
             action((sender: any, tabId: string) => {
-                extensions.forEach(extension => {
-                    if (extension.homeSections) {
-                        extension.homeSections.forEach(homeSection => {
-                            for (const tab of this.tabs) {
-                                if (tabId == "homeSection_" + homeSection.id) {
-                                    tab.makeActive();
-                                    return;
-                                }
-                            }
-                            this.tabs.push(new HomeSectionTab(this, homeSection));
-                            this.tabs[this.tabs.length - 1].makeActive();
-                        });
-                    }
-                });
+                this.openTabById(tabId, true);
             })
         );
+
+        autorun(() => {
+            if (this.activeTab) {
+                document.title = `${this.activeTab.title} - Home - EEZ Studio`;
+            } else {
+                document.title = `Home - EEZ Studio`;
+            }
+        });
     }
 
-    findObjectTab(id: string) {
+    openTabById(tabId: string, makeActive: boolean) {
+        let tab = this.findTab(tabId);
+
+        if (!tab) {
+            const tabDefinition = this.allTabs.find(
+                tab => tab.instance.id == tabId || tab.instance.id == "homeSection_" + tabId
+            );
+            if (tabDefinition) {
+                tab = tabDefinition.open();
+            } else {
+                const object = workbenchObjects.get(tabId);
+                if (object) {
+                    tab = this.addObjectTab(object);
+                }
+            }
+        }
+
+        if (tab && makeActive) {
+            tab.makeActive();
+        }
+    }
+
+    @computed
+    get allTabs() {
+        const TabClassToTabDefinition = (TabClass: any) => ({
+            instance: new TabClass(this),
+            open: action(() => {
+                for (const tab of this.tabs) {
+                    if (tab instanceof TabClass) {
+                        return tab;
+                    }
+                }
+                const tab = new TabClass(this);
+                this.tabs.push(tab);
+                return tab;
+            })
+        });
+
+        const allTabs: ITabDefinition[] = [
+            // HomeTab,
+            WorkbenchTab,
+            HistoryTab,
+            ShortcutsAndGroupsTab
+        ].map(TabClassToTabDefinition);
+
+        extensions.forEach(extension => {
+            if (extension.homeSections) {
+                extension.homeSections.forEach(homeSection => {
+                    allTabs.push({
+                        instance: new HomeSectionTab(this, homeSection),
+                        open: action(() => {
+                            for (const tab of this.tabs) {
+                                if (tab.id == "homeSection_" + homeSection.id) {
+                                    return tab;
+                                }
+                            }
+                            const tab = new HomeSectionTab(this, homeSection);
+                            this.tabs.push(tab);
+                            return tab;
+                        })
+                    });
+                });
+            }
+        });
+
+        return allTabs.concat([ExtensionManagerTab, SettingsTab].map(TabClassToTabDefinition));
+    }
+
+    findTab(id: string) {
         for (let tabIndex = 0; tabIndex < this.tabs.length; tabIndex++) {
             const tab = this.tabs[tabIndex];
-            if (tab instanceof ObjectEditorTab && tab.id === id) {
+            if (tab.id === id) {
                 return tab;
             }
         }
@@ -390,9 +534,9 @@ class Tabs {
         }
     }
 
-    get homeTab() {
-        return this.tabs[0];
-    }
+    // get homeTab() {
+    //     return this.tabs[0];
+    // }
 }
 
 export let tabs: Tabs;

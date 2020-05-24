@@ -115,7 +115,7 @@ export class WorkbenchObject implements IWorkbenchObject {
         }
 
         if (target === "tab") {
-            const tab = tabs.findObjectTab(this.id);
+            const tab = tabs.findTab(this.id);
             if (tab) {
                 // tab already exists
                 tabs.makeActive(tab);
@@ -129,7 +129,7 @@ export class WorkbenchObject implements IWorkbenchObject {
             }
         } else {
             // close tab if open
-            const tab = tabs.findObjectTab(this.id);
+            const tab = tabs.findTab(this.id);
             if (tab) {
                 tabs.removeTab(tab);
             }

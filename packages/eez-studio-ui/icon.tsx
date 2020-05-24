@@ -22,6 +22,22 @@ const IconOverlay = styled.span`
     top: 12px;
 `;
 
+const AttentionContainer = styled.div`
+    display: inline-block;
+    position: relative;
+`;
+
+const AttentionDiv = styled.div`
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    bottom: -2px;
+    right: -2px;
+    background-color: red;
+    border-radius: 3px;
+    box-shadow: 0px 0px 6px 2px rgba(255, 0, 0, 0.3);
+`;
+
 @observer
 export class Icon extends React.Component<
     {
@@ -31,6 +47,7 @@ export class Icon extends React.Component<
         style?: React.CSSProperties;
         onClick?: (event: React.MouseEvent) => void;
         overlayText?: string;
+        attention?: boolean;
     },
     {}
 > {
@@ -38,6 +55,8 @@ export class Icon extends React.Component<
         const { icon, size, style, className, onClick } = this.props;
 
         let iconSize = size || 24;
+
+        let result;
 
         if (typeof icon === "string") {
             if (icon.startsWith(MATERIAL_PREFIX)) {
@@ -57,14 +76,14 @@ export class Icon extends React.Component<
                 );
 
                 if (this.props.overlayText) {
-                    return (
+                    result = (
                         <IconWithOverlayContainer>
                             {iconEl}
                             <IconOverlay>{this.props.overlayText}</IconOverlay>
                         </IconWithOverlayContainer>
                     );
                 } else {
-                    return iconEl;
+                    result = iconEl;
                 }
             } else {
                 let iconStyle: React.CSSProperties = {
@@ -74,7 +93,7 @@ export class Icon extends React.Component<
                     iconStyle = Object.assign(iconStyle, style);
                 }
 
-                return (
+                result = (
                     <img
                         src={icon}
                         width={iconSize}
@@ -86,7 +105,7 @@ export class Icon extends React.Component<
                 );
             }
         } else {
-            return React.cloneElement(icon, {
+            result = React.cloneElement(icon, {
                 className: classnames("EezStudio_Icon", className),
                 style,
                 width: iconSize,
@@ -94,5 +113,16 @@ export class Icon extends React.Component<
                 onClick: onClick
             });
         }
+
+        if (this.props.attention) {
+            return (
+                <AttentionContainer>
+                    {result}
+                    <AttentionDiv />
+                </AttentionContainer>
+            );
+        }
+
+        return result;
     }
 }

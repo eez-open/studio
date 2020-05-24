@@ -436,30 +436,28 @@ function buildEditMenu(windowType: WindowType, win: IWindow | undefined) {
 function buildViewMenu(windowType: WindowType) {
     let viewSubmenu: Electron.MenuItemConstructorOptions[] = [];
 
-    viewSubmenu.push({
-        label: "Home",
-        accelerator: "Ctrl+Shift+H",
-        click: function (item, focusedWindow) {
-            const win = findWindowByBrowserWindow(focusedWindow);
-            if (win) {
-                const windowType = getWindowType(win);
-                if (windowType == "home") {
-                    focusedWindow.webContents.send("viewHome");
-                } else {
-                    const browserWindow = openWindow({ url: "home/index.html" });
-                    browserWindow.webContents.send("viewHome");
+    if (windowType !== "home") {
+        viewSubmenu.push(
+            {
+                label: "Home",
+                accelerator: "Ctrl+Shift+H",
+                click: function (item, focusedWindow) {
+                    openWindow({ url: "home/index.html" });
                 }
+            },
+            {
+                type: "separator"
             }
-        }
-    });
+        );
+    }
 
     if (windowType === "home") {
         viewSubmenu.push(
             {
-                label: "History",
+                label: "Workbench",
                 click: function (item, focusedWindow) {
                     if (focusedWindow) {
-                        focusedWindow.webContents.send("viewHistory");
+                        focusedWindow.webContents.send("openTab", "workbench");
                     }
                 }
             },
@@ -467,7 +465,7 @@ function buildViewMenu(windowType: WindowType) {
                 label: "Shortcuts and Groups",
                 click: function (item, focusedWindow) {
                     if (focusedWindow) {
-                        focusedWindow.webContents.send("viewShortcutsAndGroups");
+                        focusedWindow.webContents.send("openTab", "shortcutsAndGroups");
                     }
                 }
             },
@@ -475,7 +473,7 @@ function buildViewMenu(windowType: WindowType) {
                 label: "Noteboooks",
                 click: function (item, focusedWindow) {
                     if (focusedWindow) {
-                        focusedWindow.webContents.send("viewHomeSectionTab", "notebooks");
+                        focusedWindow.webContents.send("openTab", "homeSection_notebooks");
                     }
                 }
             },
@@ -483,7 +481,15 @@ function buildViewMenu(windowType: WindowType) {
                 label: "Extension Manager",
                 click: function (item, focusedWindow) {
                     if (focusedWindow) {
-                        focusedWindow.webContents.send("viewExtensionManager");
+                        focusedWindow.webContents.send("openTab", "extensions");
+                    }
+                }
+            },
+            {
+                label: "Settings",
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("openTab", "settings");
                     }
                 }
             },
