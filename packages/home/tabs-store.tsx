@@ -1,6 +1,7 @@
 import React from "react";
 import { observable, action, runInAction, reaction, autorun, computed } from "mobx";
 
+import { onSimpleMessage } from "eez-studio-shared/util";
 import { isRenderer } from "eez-studio-shared/util-electron";
 
 import { loadPreinstalledExtension, extensions } from "eez-studio-shared/extensions/extensions";
@@ -9,14 +10,14 @@ import { IEditor, IHomeSection } from "eez-studio-shared/extensions/extension";
 import { ITab } from "eez-studio-ui/tabs";
 import { Icon } from "eez-studio-ui/icon";
 
+import { HistoryView, showSessionsList } from "instrument/window/history/history-view";
+
 import { WorkbenchObject, workbenchObjects } from "home/store";
-// import * as HomeComponentModule from "home/home-component";
 import * as DesignerModule from "home/designer/designer";
 import * as HistoryModule from "home/history";
 import * as ShortcutsModule from "home/shortcuts";
 import * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
 import * as SettingsModule from "home/settings";
-import * as NavigationStoreModule from "home/navigation-store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,32 +28,6 @@ export interface IHomeTab extends ITab {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// class HomeTab implements IHomeTab {
-//     constructor(public tabs: Tabs) {}
-
-//     permanent: boolean = true;
-//     @observable active: boolean = false;
-//     loading: boolean = false;
-
-//     id = "home";
-//     title = "Home";
-//     icon = "material:home";
-
-//     render() {
-//         const { HomeComponent } = require("home/home-component") as typeof HomeComponentModule;
-//         return <HomeComponent />;
-//     }
-
-//     @action
-//     makeActive(): void {
-//         this.tabs.makeActive(this);
-//     }
-
-//     close() {
-//         this.tabs.removeTab(this);
-//     }
-// }
 
 class WorkbenchTab implements IHomeTab {
     constructor(public tabs: Tabs) {}
@@ -92,14 +67,7 @@ class HistoryTab implements IHomeTab {
     icon = "material:history";
 
     render() {
-        const {
-            navigationStore
-        } = require("home/navigation-store") as typeof NavigationStoreModule;
-
-        if (
-            navigationStore.mainNavigationSelectedItem ==
-            navigationStore.deletedHistoryItemsNavigationItem
-        ) {
+        if (tabs.viewDeletedHistory) {
             const { DeletedHistoryItemsSection } = require("home/history") as typeof HistoryModule;
             return <DeletedHistoryItemsSection />;
         } else {
@@ -348,6 +316,7 @@ class ObjectEditorTab implements IHomeTab {
 interface ITabDefinition {
     instance: IHomeTab;
     open: () => IHomeTab;
+    selectItem?: (itemId: string) => void;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -414,15 +383,35 @@ class Tabs {
                 document.title = `Home - EEZ Studio`;
             }
         });
+
+        autorun(() => {
+            if (
+                this.activeTab &&
+                this.activeTab.id === "history" &&
+                this.mainHistoryView &&
+                this.mainHistoryView.props.appStore.deletedItemsHistory.deletedCount === 0
+            ) {
+                runInAction(() => (this.viewDeletedHistory = false));
+            }
+        });
+
+        onSimpleMessage("home/show-section", (args: { sectionId: string; itemId?: string }) => {
+            EEZStudio.electron.remote.getCurrentWindow().show();
+            this.navigateToTab(args.sectionId, args.itemId);
+        });
+    }
+
+    findTabDefinition(tabId: string) {
+        return this.allTabs.find(
+            tab => tab.instance.id == tabId || tab.instance.id == "homeSection_" + tabId
+        );
     }
 
     openTabById(tabId: string, makeActive: boolean) {
         let tab = this.findTab(tabId);
 
         if (!tab) {
-            const tabDefinition = this.allTabs.find(
-                tab => tab.instance.id == tabId || tab.instance.id == "homeSection_" + tabId
-            );
+            const tabDefinition = this.findTabDefinition(tabId);
             if (tabDefinition) {
                 tab = tabDefinition.open();
             } else {
@@ -475,7 +464,8 @@ class Tabs {
                             const tab = new HomeSectionTab(this, homeSection);
                             this.tabs.push(tab);
                             return tab;
-                        })
+                        }),
+                        selectItem: homeSection.selectItem
                     });
                 });
             }
@@ -534,9 +524,42 @@ class Tabs {
         }
     }
 
-    // get homeTab() {
-    //     return this.tabs[0];
-    // }
+    @observable viewDeletedHistory = false;
+
+    @action
+    navigateToHistory() {
+        this.openTabById("history", true);
+        this.viewDeletedHistory = false;
+    }
+
+    @action
+    navigateToDeletedHistoryItems() {
+        this.openTabById("history", true);
+        this.viewDeletedHistory = true;
+    }
+
+    @action
+    navigateToSessionsList() {
+        this.openTabById("history", true);
+        this.viewDeletedHistory = false;
+        showSessionsList(this);
+    }
+
+    mainHistoryView: HistoryView | undefined;
+
+    // @TODO remove this, not requred in home
+    selectedListId: string | undefined = undefined;
+
+    navigateToTab(tabId: string, itemId?: string) {
+        const tabDefinition = this.findTabDefinition(tabId);
+        if (tabDefinition) {
+            tabs.openTabById(tabId, true);
+
+            if (itemId && tabDefinition.selectItem) {
+                tabDefinition.selectItem(itemId);
+            }
+        }
+    }
 }
 
 export let tabs: Tabs;

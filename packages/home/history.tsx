@@ -16,8 +16,7 @@ import {
     DeletedHistoryItemsTools,
     DeletedHistoryItemsView
 } from "instrument/window/history/deleted-history-items-view";
-
-import { navigationStore } from "home/navigation-store";
+import { tabs } from "home/tabs-store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,7 +68,7 @@ class HomeAppStore implements IAppStore {
         this.selectedHistoryItems.clear();
     }
 
-    navigationStore = navigationStore;
+    navigationStore = tabs;
 
     findListIdByName(listName: string): string | undefined {
         // @todo

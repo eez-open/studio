@@ -587,7 +587,7 @@ export class InstrumentObject {
             this.label ||
             this.idn ||
             (this.extension && (this.extension.displayName || this.extension.name)) ||
-            "Unknown instrument"
+            ""
         );
     }
 
