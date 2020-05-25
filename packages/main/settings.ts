@@ -20,6 +20,8 @@ interface IMruItem {
 }
 
 class Settings {
+    firstTime: boolean;
+
     @observable mru: IMruItem[];
 
     @observable windowStates: {
@@ -41,6 +43,7 @@ function getSettingsFilePath() {
 
 export function loadSettings() {
     action(() => {
+        settings.firstTime = true;
         settings.mru = [];
         settings.windowStates = {};
 
@@ -49,6 +52,8 @@ export function loadSettings() {
 
             try {
                 let settingsJs: Settings = JSON.parse(data);
+
+                settings.firstTime = !!settingsJs.firstTime;
 
                 if (settingsJs.mru) {
                     settings.mru = settingsJs.mru.filter((mruItem: IMruItem) =>
@@ -262,6 +267,15 @@ export function setTimeFormat(value: string) {
     saveSettings();
 }
 
+export function getFirstTime() {
+    return settings.firstTime;
+}
+
+export function setFirstTime(value: boolean) {
+    settings.firstTime = value;
+    saveSettings();
+}
+
 ipcMain.on("saveSettings", function () {
     saveSettings();
 });
@@ -296,4 +310,13 @@ ipcMain.on("getTimeFormat", function (event: any) {
 
 ipcMain.on("setTimeFormat", function (event: any, value: string) {
     setTimeFormat(value);
+});
+
+ipcMain.on("getFirstTime", function (event: any) {
+    console.log("getFirstTime()", getFirstTime());
+    event.returnValue = getFirstTime();
+});
+
+ipcMain.on("setFirstTime", function (event: any, value: boolean) {
+    setFirstTime(value);
 });

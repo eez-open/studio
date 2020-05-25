@@ -14,7 +14,7 @@ import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 import { getObject } from "eez-studio-shared/extensions/extensions";
 import { IActivityLogEntryInfo } from "eez-studio-shared/extensions/extension";
 
-import { tabs } from "home/tabs-store";
+import * as TabsStoreModule from "home/tabs-store";
 
 import { instrumentStore } from "instrument/instrument-object";
 import { IWorkbenchObject } from "home/designer/store";
@@ -113,6 +113,8 @@ export class WorkbenchObject implements IWorkbenchObject {
             }
             target = "tab";
         }
+
+        const { tabs } = require("/home/tabs-store") as typeof TabsStoreModule;
 
         if (target === "tab") {
             const tab = tabs.findTab(this.id);

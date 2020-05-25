@@ -1,4 +1,5 @@
 import React from "react";
+import { computed } from "mobx";
 import { observer } from "mobx-react";
 
 import { stringCompare } from "eez-studio-shared/string";
@@ -15,7 +16,7 @@ import { tabs } from "home/tabs-store";
 import { getAppStore } from "home/history";
 
 import { workbenchObjects, WorkbenchObject } from "home/store";
-import { computed } from "mobx";
+import { Setup } from "home/setup";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -200,6 +201,10 @@ class AppComponent extends React.Component {
 
     render() {
         const appStore = getAppStore();
+
+        if (EEZStudio.electron.ipcRenderer.sendSync("getFirstTime")) {
+            return <Setup />;
+        }
 
         return (
             <VerticalHeaderWithBody>
