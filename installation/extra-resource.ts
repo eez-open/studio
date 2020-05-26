@@ -91,10 +91,17 @@ async function getExtraResource() {
 
     const extensions: string[] = [];
 
-    // advanced-measurements-extension
-    rows.push({
-        instrumentExtensionId: "b278d8da-1c17-4baa-9837-1761b2481c2b"
-    });
+    rows.push(
+        {
+            instrumentExtensionId: "b278d8da-1c17-4baa-9837-1761b2481c2b" // advanced-measurements-extension
+        },
+        {
+            instrumentExtensionId: "687b6dee-2093-4c36-afb7-cfc7ea2bf262" // bb3
+        },
+        {
+            instrumentExtensionId: "d0964223-a599-43f6-8aa2-4eb52f76a395" // h24005
+        }
+    );
 
     for (const row of rows) {
         const instrumentExtensionId = row.instrumentExtensionId;

@@ -3,7 +3,6 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
 
-import { closestBySelector } from "eez-studio-shared/dom";
 import styled from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 import { Icon } from "eez-studio-ui/icon";
@@ -231,7 +230,7 @@ const TabsViewContainer = styled.div`
     & > div.EezStudio_AddTab {
         position: relative;
 
-        & > button > i {
+        & > button {
             margin: 3px 4px;
             padding: 3px;
             cursor: pointer;
@@ -319,19 +318,24 @@ const AddTabButton = observer(
             }
 
             const onClick = (event: MouseEvent) => {
-                if (!closestBySelector(event.target, ".EezStudio_AddTab > button:first-child")) {
-                    if (open) {
-                        setTimeout(() => setOpen(false), 0);
-                    }
-                }
+                setOpen(false);
             };
 
-            window.addEventListener("mouseup", onClick, true);
-            window.addEventListener("touchup", onClick, true);
+            const element = document.createElement("div");
+            element.style.position = "fixed";
+            element.style.left = "0";
+            element.style.top = "0";
+            element.style.width = "100%";
+            element.style.height = "100%";
+            element.style.zIndex = "999";
+            element.style.background = "rgba(0,0,0,0.2)";
+            document.body.appendChild(element);
+
+            window.addEventListener("click", onClick, true);
 
             return () => {
-                window.removeEventListener("mouseup", onClick, true);
-                window.removeEventListener("touchup", onClick, true);
+                window.removeEventListener("click", onClick, true);
+                element.remove();
             };
         }, [open]);
 

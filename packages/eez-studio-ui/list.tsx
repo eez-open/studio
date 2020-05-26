@@ -72,6 +72,8 @@ export class List extends React.Component<
         selectNode?: (node: IListNode) => void;
         renderNode?: (node: IListNode) => JSX.Element;
         tabIndex?: any;
+        className?: string;
+        style?: React.CSSProperties;
     },
     {}
 > {
@@ -100,12 +102,12 @@ export class List extends React.Component<
             );
         });
 
-        let className = classNames("EezStudio_List", {
+        let className = classNames("EezStudio_List", this.props.className, {
             EezStudio_List_Selectable: !!this.props.selectNode
         });
 
         return (
-            <div className={className} tabIndex={tabIndex}>
+            <div className={className} style={this.props.style} tabIndex={tabIndex}>
                 {nodes}
             </div>
         );

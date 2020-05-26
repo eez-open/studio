@@ -46,7 +46,7 @@ export function toolbarButtonsRender(appStore: InstrumentAppStore) {
                     onClick={() => {
                         const bb3Instrument = getBB3Instrument(appStore);
                         if (bb3Instrument) {
-                            bb3Instrument.refresh();
+                            bb3Instrument.refresh(true);
                         }
                     }}
                 />

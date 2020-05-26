@@ -74,7 +74,7 @@ class WorkbenchDocument implements IDocument {
     }
 
     createObject(params: any) {
-        store.createObject(params);
+        return store.createObject(params);
     }
 
     objectFromPoint(point: Point) {

@@ -43,3 +43,6 @@ export const INFO = toast.TYPE.INFO;
 export const SUCCESS = toast.TYPE.SUCCESS;
 export const WARNING = toast.TYPE.WARNING;
 export const ERROR = toast.TYPE.ERROR;
+
+export type Type = typeof INFO | typeof SUCCESS | typeof WARNING | typeof ERROR;
+export type ProgressId = ToastId;

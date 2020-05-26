@@ -114,7 +114,7 @@ export class WorkbenchObject implements IWorkbenchObject {
             target = "tab";
         }
 
-        const { tabs } = require("/home/tabs-store") as typeof TabsStoreModule;
+        const { tabs } = require("home/tabs-store") as typeof TabsStoreModule;
 
         if (target === "tab") {
             const tab = tabs.findTab(this.id);

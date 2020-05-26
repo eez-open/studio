@@ -17,6 +17,7 @@ import { IHistoryItem } from "instrument/window/history/item";
 
 interface IMcu {
     firmwareVersion: string | undefined;
+    latestFirmwareVersion: string | undefined;
 }
 
 interface IScriptOnInstrument {
@@ -48,24 +49,16 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
 
             if (latestRealeaseVersion) {
                 runInAction(() => {
-                    bb3Instrument.latestFirmwareVersion = latestRealeaseVersion;
+                    bb3Instrument.mcu.latestFirmwareVersion = latestRealeaseVersion;
                 });
             } else {
                 console.error("not found latest release version");
-
-                runInAction(() => {
-                    bb3Instrument.latestFirmwareVersion = undefined;
-                });
             }
         }
     });
 
     req.addEventListener("error", error => {
         console.error(error);
-
-        runInAction(() => {
-            bb3Instrument.latestFirmwareVersion = undefined;
-        });
     });
 
     req.send();
@@ -73,7 +66,8 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
 
 function getModuleFirmwareReleases(moduleType: string) {
     return new Promise<ModuleFirmwareRelease[]>((resolve, reject) => {
-        // TODO exception!!!
+        // TODO this is exception, DCM224 shares the same repository with DCM220,
+        //      in the future this could be changed
         if (moduleType.toUpperCase() == "DCM224") {
             moduleType = "DCM220";
         }
@@ -111,7 +105,8 @@ function getModuleFirmwareReleases(moduleType: string) {
 async function getModulesInfoFromInstrument(
     bb3Instrument: BB3Instrument,
     firmwareVersion: string,
-    connection: Connection
+    connection: Connection,
+    forceRefresh: boolean
 ) {
     let modules: Module[] = [];
 
@@ -127,6 +122,23 @@ async function getModulesInfoFromInstrument(
                     await connection.query(`SYST:SLOT:FIRM? ${i + 1}`)
                 );
 
+                let allReleases: ModuleFirmwareRelease[];
+                if (bb3Instrument.isTimeForRefresh || forceRefresh) {
+                    allReleases = await getModuleFirmwareReleases(moduleType);
+                } else {
+                    const module = bb3Instrument.modules?.find(
+                        module =>
+                            module.moduleType == moduleType &&
+                            module.allReleases &&
+                            module.allReleases.length > 0
+                    );
+                    if (module) {
+                        allReleases = module.allReleases;
+                    } else {
+                        allReleases = [];
+                    }
+                }
+
                 modules.push(
                     new Module(
                         bb3Instrument,
@@ -134,7 +146,7 @@ async function getModulesInfoFromInstrument(
                         moduleType,
                         moduleRevision,
                         firmwareVersion,
-                        await getModuleFirmwareReleases(moduleType)
+                        allReleases
                     )
                 );
             }
@@ -203,6 +215,7 @@ type ScriptsCollectionType =
 export class BB3Instrument {
     static CUSTOM_PROPERTY_NAME = "bb3";
 
+    @observable timeOfLastRefresh: Date | undefined;
     @observable mcu: IMcu;
     @observable modules: Module[] | undefined;
     @observable scripts: Script[];
@@ -211,8 +224,6 @@ export class BB3Instrument {
     @observable selectedScriptsCollectionType: ScriptsCollectionType;
     @observable refreshInProgress: boolean = false;
     @observable installAllScriptsInProgress: boolean = false;
-
-    @observable latestFirmwareVersion: string | undefined;
 
     @observable latestHistoryItem: IHistoryItem | undefined;
 
@@ -225,11 +236,18 @@ export class BB3Instrument {
     ) {
         const bb3Properties = instrument.custom[BB3Instrument.CUSTOM_PROPERTY_NAME];
 
+        if (bb3Properties?.timeOfLastRefresh) {
+            this.timeOfLastRefresh = new Date(bb3Properties.timeOfLastRefresh);
+        } else {
+            this.timeOfLastRefresh = undefined;
+        }
+
         if (bb3Properties?.mcu) {
             this.mcu = bb3Properties.mcu;
         } else {
             this.mcu = {
-                firmwareVersion: ""
+                firmwareVersion: undefined,
+                latestFirmwareVersion: undefined
             };
         }
 
@@ -242,7 +260,7 @@ export class BB3Instrument {
                         module.moduleType,
                         module.moduleRevision,
                         module.firmwareVersion,
-                        []
+                        module.allReleases || []
                     )
             );
         } else {
@@ -259,13 +277,15 @@ export class BB3Instrument {
 
         reaction(
             () => ({
+                timeOfLastRefresh: this.timeOfLastRefresh,
                 mcu: toJS(this.mcu),
                 modules: this.modules
                     ? this.modules.map(module => ({
                           slotIndex: module.slotIndex,
                           moduleType: module.moduleType,
                           moduleRevision: module.moduleRevision,
-                          firmwareVersion: module.firmwareVersion
+                          firmwareVersion: module.firmwareVersion,
+                          allReleases: module.allReleases
                       }))
                     : [],
                 scriptsOnInstrument: toJS(this.scriptsOnInstrument)
@@ -277,7 +297,7 @@ export class BB3Instrument {
 
         autorun(() => {
             if (getConnection(appStore).isConnected) {
-                setTimeout(() => this.refresh(), 100);
+                setTimeout(() => this.refresh(false), 100);
             }
         });
 
@@ -304,14 +324,24 @@ export class BB3Instrument {
         this.refreshInProgress = value;
     }
 
-    async refresh() {
+    get isTimeForRefresh() {
+        const CONF_REFRESH_EVERY_MS = 24 * 60 * 60 * 1000;
+        return (
+            !this.timeOfLastRefresh ||
+            new Date().getTime() - this.timeOfLastRefresh.getTime() > CONF_REFRESH_EVERY_MS
+        );
+    }
+
+    async refresh(forceRefresh: boolean) {
         if (this.refreshInProgress) {
             return;
         }
 
         this.setRefreshInProgress(true);
         try {
-            findLatestFirmwareReleases(this);
+            if (forceRefresh || this.isTimeForRefresh) {
+                findLatestFirmwareReleases(this);
+            }
 
             this.scriptsCatalog.load();
 
@@ -336,7 +366,12 @@ export class BB3Instrument {
 
             if (firmwareVersion) {
                 try {
-                    modules = await getModulesInfoFromInstrument(this, firmwareVersion, connection);
+                    modules = await getModulesInfoFromInstrument(
+                        this,
+                        firmwareVersion,
+                        connection,
+                        forceRefresh
+                    );
                 } catch (err) {
                     console.error("failed to get slots info", err);
                 }
@@ -356,6 +391,7 @@ export class BB3Instrument {
             /////
 
             runInAction(() => {
+                this.timeOfLastRefresh = new Date();
                 this.mcu.firmwareVersion = firmwareVersion;
                 this.modules = modules;
             });

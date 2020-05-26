@@ -41,7 +41,7 @@ export const instrumentExtensions = computed(() => {
         .sort((a, b) => stringCompare(a.displayName || a.name, b.displayName || b.name));
 });
 
-function createInstrument(extension: IExtension) {
+export function createInstrument(extension: IExtension) {
     return {
         type: "instrument",
         oid: instrumentStore.createObject({

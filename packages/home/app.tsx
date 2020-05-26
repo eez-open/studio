@@ -202,7 +202,7 @@ class AppComponent extends React.Component {
     render() {
         const appStore = getAppStore();
 
-        if (EEZStudio.electron.ipcRenderer.sendSync("getFirstTime")) {
+        if (tabs.firstTime) {
             return <Setup />;
         }
 

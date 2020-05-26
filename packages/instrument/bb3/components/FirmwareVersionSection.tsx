@@ -25,17 +25,19 @@ export const ReleaseInfo = observer(({ bb3Instrument }: { bb3Instrument: BB3Inst
         return null;
     }
 
-    if (!bb3Instrument.latestFirmwareVersion) {
-        // return (
-        //     <div className="alert alert-danger" role="alert">
-        //         Could not get info about the latest firmware version!
-        //     </div>
-        // );
-        return null;
+    if (!bb3Instrument.mcu.latestFirmwareVersion) {
+        return (
+            <div className="alert alert-danger" role="alert">
+                Could not get info about the latest firmware version!
+            </div>
+        );
     }
 
     if (
-        compareVersions(bb3Instrument.latestFirmwareVersion, bb3Instrument.mcu.firmwareVersion) > 1
+        compareVersions(
+            bb3Instrument.mcu.latestFirmwareVersion,
+            bb3Instrument.mcu.firmwareVersion
+        ) > 1
     ) {
         return (
             <div className="alert alert-primary" role="alert">
@@ -63,7 +65,7 @@ export const FirmwareVersionSection = observer(
     ({ bb3Instrument }: { bb3Instrument: BB3Instrument }) => {
         return (
             <Section
-                title={`Firmware version ${bb3Instrument.mcu.firmwareVersion}`}
+                title={`Firmware version ${bb3Instrument.mcu.firmwareVersion || ""}`}
                 body={<ReleaseInfo bb3Instrument={bb3Instrument} />}
             />
         );

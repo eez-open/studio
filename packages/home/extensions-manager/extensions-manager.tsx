@@ -44,7 +44,7 @@ import { extensionsCatalog } from "home/extensions-manager/catalog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-enum ViewFilter {
+export enum ViewFilter {
     ALL,
     INSTALLED,
     NOT_INSTALLED,
@@ -152,7 +152,7 @@ class ExtensionsVersionsCatalogBuilder {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class ExtensionsManagerStore {
+export class ExtensionsManagerStore {
     @observable selectedExtension: IExtension | undefined;
     @observable _viewFilter: ViewFilter | undefined;
 
@@ -654,14 +654,23 @@ async function finishInstall(extensionZipPackageData: any) {
 
 export function downloadAndInstallExtension(
     extensionToInstall: IExtension,
-    progressToastId: notification.ToastId
+    progressId: notification.ProgressId,
+    progress: {
+        update(
+            progressId: string | number,
+            options: {
+                render: React.ReactNode;
+                type: notification.Type;
+            }
+        ): void;
+    } = notification
 ) {
     return new Promise<IExtension | undefined>((resolve, reject) => {
         var req = new XMLHttpRequest();
         req.responseType = "arraybuffer";
         req.open("GET", extensionToInstall.download!);
 
-        notification.update(progressToastId, {
+        progress.update(progressId, {
             render: `Downloading "${
                 extensionToInstall.displayName || extensionToInstall.name
             }" extension package ...`,
@@ -669,10 +678,10 @@ export function downloadAndInstallExtension(
         });
 
         req.addEventListener("progress", event => {
-            notification.update(progressToastId, {
+            progress.update(progressId, {
                 render: `Downloading "${
                     extensionToInstall.displayName || extensionToInstall.name
-                }" extension package: ${event.loaded} of ${event.total}`,
+                }" extension package: ${event.loaded} of ${event.total}.`,
                 type: notification.INFO
             });
         });
@@ -682,7 +691,7 @@ export function downloadAndInstallExtension(
 
             if (extensionToInstall.sha256) {
                 if (sha256(extensionZipFileData) !== extensionToInstall.sha256) {
-                    notification.update(progressToastId, {
+                    progress.update(progressId, {
                         render: `Failed to install "${
                             extensionToInstall.displayName || extensionToInstall.name
                         }" extension because package file hash doesn't match.`,
@@ -696,17 +705,17 @@ export function downloadAndInstallExtension(
             finishInstall(extensionZipFileData)
                 .then(extension => {
                     if (extension) {
-                        notification.update(progressToastId, {
+                        progress.update(progressId, {
                             render: `Extension "${
                                 extension.displayName || extension.name
-                            }" installed`,
+                            }" installed.`,
                             type: notification.SUCCESS
                         });
                     } else {
-                        notification.update(progressToastId, {
+                        progress.update(progressId, {
                             render: `Failed to install "${
                                 extensionToInstall.displayName || extensionToInstall.name
-                            }" extension`,
+                            }" extension.`,
                             type: notification.ERROR
                         });
                     }
@@ -714,7 +723,7 @@ export function downloadAndInstallExtension(
                 })
                 .catch(error => {
                     console.error("Extension download error", error);
-                    notification.update(progressToastId, {
+                    progress.update(progressId, {
                         render: `Failed to install "${
                             extensionToInstall.displayName || extensionToInstall.name
                         }" extension.`,
@@ -726,7 +735,7 @@ export function downloadAndInstallExtension(
 
         req.addEventListener("error", error => {
             console.error("Extension download error", error);
-            notification.update(progressToastId, {
+            progress.update(progressId, {
                 render: `Failed to download "${
                     extensionToInstall.displayName || extensionToInstall.name
                 }" extension package.`,

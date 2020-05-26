@@ -1,10 +1,13 @@
 import React from "react";
 import { observer } from "mobx-react";
 
+import { compareVersions } from "eez-studio-shared/util";
 import { styled } from "eez-studio-ui/styled-components";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
+
+import { getConnection } from "instrument/window/connection";
 
 import { FirmwareVersionSection } from "instrument/bb3/components/FirmwareVersionSection";
 import { ScriptsSection } from "instrument/bb3/components/scripts-section/ScriptsSection";
@@ -46,18 +49,31 @@ export const StartPage = observer(
         appStore: InstrumentAppStore;
         bb3Instrument: BB3Instrument;
     }) => {
+        console.log(bb3Instrument);
+
+        const isConnected = getConnection(appStore).isConnected;
+
         return (
             <StartPageContainer>
                 <div>
-                    <ShortcutsSection appStore={appStore} />
-                    <LatestHistoryItemSection bb3Instrument={bb3Instrument} />
+                    {isConnected && <ShortcutsSection appStore={appStore} />}
+                    {bb3Instrument.timeOfLastRefresh && (
+                        <LatestHistoryItemSection bb3Instrument={bb3Instrument} />
+                    )}
                 </div>
                 <div>
-                    <ScriptsSection bb3Instrument={bb3Instrument} />
+                    {bb3Instrument.timeOfLastRefresh && (
+                        <ScriptsSection bb3Instrument={bb3Instrument} />
+                    )}
                 </div>
                 <div>
-                    <FirmwareVersionSection bb3Instrument={bb3Instrument} />
-                    <ModulesSection bb3Instrument={bb3Instrument} />
+                    {bb3Instrument.mcu.firmwareVersion && (
+                        <FirmwareVersionSection bb3Instrument={bb3Instrument} />
+                    )}
+                    {bb3Instrument.mcu.firmwareVersion &&
+                        compareVersions(bb3Instrument.mcu.firmwareVersion, "1.0") > 0 && (
+                            <ModulesSection bb3Instrument={bb3Instrument} />
+                        )}
                 </div>
             </StartPageContainer>
         );

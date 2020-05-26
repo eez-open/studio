@@ -327,24 +327,28 @@ interface ISavedTab {
 }
 
 class Tabs {
+    @observable _firstTime: boolean;
     @observable tabs: IHomeTab[] = [];
     @observable activeTab: IHomeTab;
 
     constructor() {
+        this._firstTime = EEZStudio.electron.ipcRenderer.sendSync("getFirstTime");
+
         loadPreinstalledExtension("instrument").then(() => {
-            const tabsJSON = window.localStorage.getItem("home/tabs");
-            if (tabsJSON) {
-                try {
-                    const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
-                    if (savedTabs.length > 0) {
+            if (!this.firstTime) {
+                const tabsJSON = window.localStorage.getItem("home/tabs");
+                if (tabsJSON) {
+                    try {
+                        const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
                         savedTabs.forEach(savedTab => {
                             this.openTabById(savedTab.id, savedTab.active);
                         });
-                    } else {
-                        this.openTabById("workbench", true);
+                        if (this.tabs.length == 0) {
+                            this.openTabById("workbench", true);
+                        }
+                    } catch (err) {
+                        console.error(err);
                     }
-                } catch (err) {
-                    console.error(err);
                 }
             }
         });
@@ -399,6 +403,15 @@ class Tabs {
             EEZStudio.electron.remote.getCurrentWindow().show();
             this.navigateToTab(args.sectionId, args.itemId);
         });
+    }
+
+    get firstTime() {
+        return this._firstTime;
+    }
+
+    set firstTime(value: boolean) {
+        runInAction(() => (this._firstTime = false));
+        EEZStudio.electron.ipcRenderer.send("setFirstTime", false);
     }
 
     findTabDefinition(tabId: string) {

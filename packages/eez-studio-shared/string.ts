@@ -43,7 +43,7 @@ export function extname(string: string): string {
 export function camelize(string: string): string {
     string = string || "";
     string = string.trim();
-    string = string.replace(/(\-|_|\s)+(.)?/g, function(mathc, sep, c) {
+    string = string.replace(/(\-|_|\s)+(.)?/g, function (mathc, sep, c) {
         return c ? c.toUpperCase() : "";
     });
 
@@ -54,4 +54,13 @@ export function stringCompare(a: string, b: string) {
     a = a.toLocaleLowerCase();
     b = b.toLocaleLowerCase();
     return a < b ? -1 : a > b ? 1 : 0;
+}
+
+export function firstWord(string: string) {
+    string = string.trim();
+    const i = string.indexOf(" ");
+    if (i == -1) {
+        return string;
+    }
+    return string.substring(0, i);
 }

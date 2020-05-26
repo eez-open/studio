@@ -15,6 +15,7 @@ import {
     writeJsObjectToFile
 } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
+import { firstWord } from "eez-studio-shared/string";
 
 import { registerSource, sendMessage, watch } from "eez-studio-shared/notify";
 
@@ -34,6 +35,9 @@ import {
 import * as ShortcutsStoreModule from "shortcuts/shortcuts-store";
 import * as ShortcutsModule from "shortcuts/shortcuts";
 
+const CONF_EEZ_STUDIO_PROPERTY_NAME = "eez-studio";
+const CONF_MAIN_SCRIPT_PROPERTY_NAME = "main";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 async function loadExtension(extensionFolderPath: string): Promise<IExtension | undefined> {
@@ -41,9 +45,9 @@ async function loadExtension(extensionFolderPath: string): Promise<IExtension | 
     if (await fileExists(packageJsonFilePath)) {
         try {
             const packageJson = await readJsObjectFromFile(packageJsonFilePath);
-            const packageJsonEezStudio = packageJson["eez-studio"];
+            const packageJsonEezStudio = packageJson[CONF_EEZ_STUDIO_PROPERTY_NAME];
             if (packageJsonEezStudio) {
-                const mainScript = packageJsonEezStudio.main;
+                const mainScript = packageJsonEezStudio[CONF_MAIN_SCRIPT_PROPERTY_NAME];
                 if (mainScript) {
                     const extension: IExtension = require(extensionFolderPath + "/" + mainScript)
                         .default;
@@ -560,6 +564,20 @@ export function exportExtension(extension: IExtension, destFilePath: string) {
 
         archive.finalize();
     });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function getManufacturer(extension: IExtension) {
+    return firstWord(extension.displayName || extension.name);
+}
+
+export function isInstrumentExtension(extension: IExtension) {
+    const eezStudioProperties = (extension as any)[CONF_EEZ_STUDIO_PROPERTY_NAME];
+    if (eezStudioProperties) {
+        return !eezStudioProperties[CONF_MAIN_SCRIPT_PROPERTY_NAME];
+    }
+    return !!extension.properties;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

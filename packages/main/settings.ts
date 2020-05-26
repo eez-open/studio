@@ -313,7 +313,6 @@ ipcMain.on("setTimeFormat", function (event: any, value: string) {
 });
 
 ipcMain.on("getFirstTime", function (event: any) {
-    console.log("getFirstTime()", getFirstTime());
     event.returnValue = getFirstTime();
 });
 
