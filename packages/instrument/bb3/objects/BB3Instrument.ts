@@ -285,7 +285,7 @@ export class BB3Instrument {
                           moduleType: module.moduleType,
                           moduleRevision: module.moduleRevision,
                           firmwareVersion: module.firmwareVersion,
-                          allReleases: module.allReleases
+                          allReleases: module.allReleases.map(release => toJS(release))
                       }))
                     : [],
                 scriptsOnInstrument: toJS(this.scriptsOnInstrument)
@@ -297,7 +297,7 @@ export class BB3Instrument {
 
         autorun(() => {
             if (getConnection(appStore).isConnected) {
-                setTimeout(() => this.refresh(false), 100);
+                setTimeout(() => this.refresh(false), 50);
             }
         });
 

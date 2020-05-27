@@ -42,7 +42,6 @@ export const Section = observer(
             <section>
                 <HeaderContainer>
                     <div>
-                        <Icon icon="material:keyboard_arrow_down" />
                         <h4 className="text-truncate">{title}</h4>
                     </div>
                     {titleControls}

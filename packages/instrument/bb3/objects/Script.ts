@@ -65,10 +65,10 @@ export class Script {
             return this._selectedVersion;
         }
 
-        if (this.scriptOnInstrument && this.scriptOnInstrument.version) {
+        if (this.latestVersion) {
+            return this.latestVersion.version;
+        } else if (this.scriptOnInstrument && this.scriptOnInstrument.version) {
             return this.scriptOnInstrument.version;
-        } else if (this.catalogScriptItem) {
-            return this.catalogScriptItem.versions[0].version;
         }
 
         return undefined;
@@ -99,7 +99,15 @@ export class Script {
     @computed
     get versions() {
         if (this.catalogScriptItem) {
-            return this.catalogScriptItem.versions;
+            return this.catalogScriptItem.versions.reverse();
+        }
+        return undefined;
+    }
+
+    @computed
+    get latestVersion() {
+        if (this.versions) {
+            return this.versions[0];
         }
         return undefined;
     }
@@ -204,12 +212,14 @@ export class Script {
         return (
             this.scriptOnInstrument &&
             this.selectedVersion &&
-            (!this.scriptOnInstrument.version ||
-                compareVersions(this.scriptOnInstrument.version, this.selectedVersion) > 0)
+            this.scriptOnInstrument.version &&
+            compareVersions(this.selectedVersion, this.scriptOnInstrument.version) > 0
         );
     }
 
-    update = () => {};
+    update = () => {
+        this.replace();
+    };
 
     @computed
     get canReplace() {
@@ -217,9 +227,12 @@ export class Script {
             this.scriptOnInstrument &&
             this.selectedVersion &&
             this.scriptOnInstrument.version &&
-            compareVersions(this.scriptOnInstrument.version, this.selectedVersion) < 0
+            compareVersions(this.selectedVersion, this.scriptOnInstrument.version) < 0
         );
     }
 
-    replace = () => {};
+    replace = async () => {
+        this.uninstall();
+        await this.install();
+    };
 }

@@ -1,4 +1,4 @@
-import { observable, runInAction } from "mobx";
+import { observable, runInAction, autorun } from "mobx";
 import path from "path";
 
 import {
@@ -12,6 +12,8 @@ import {
 import * as notification from "eez-studio-ui/notification";
 
 import { IExtension } from "eez-studio-shared/extensions/extension";
+
+import { tabs } from "home/tabs-store";
 
 export const DEFAULT_EXTENSIONS_CATALOG_VERSION_DOWNLOAD_URL =
     "https://github.com/eez-open/studio-extensions/raw/master/build/catalog-version.json";
@@ -37,7 +39,13 @@ class ExtensionsCatalog {
         this.loadCatalogVersion()
             .then(catalogVersion => {
                 runInAction(() => (this.catalogVersion = catalogVersion));
-                this.checkNewVersionOfCatalog();
+
+                const dispose = autorun(() => {
+                    if (!tabs.firstTime) {
+                        dispose();
+                        this.checkNewVersionOfCatalog();
+                    }
+                });
             })
             .catch(error => notification.error(`Failed to load catalog version (${error})`));
     }

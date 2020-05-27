@@ -23,6 +23,11 @@ export const SelectScriptVersion = observer(({ script }: { script: Script }) => 
                     {script.versions.map(version => (
                         <option key={version.version} value={version.version}>
                             {version.version}
+                            {script.latestVersion &&
+                                version.version != script.latestVersion.version &&
+                                script.scriptOnInstrument &&
+                                version.version === script.scriptOnInstrument.version &&
+                                "*"}
                         </option>
                     ))}
                 </select>

@@ -31,6 +31,7 @@ const CONF_START_LONG_OPERATION_TIMEOUT = 5000;
 export enum ConnectionState {
     IDLE,
     CONNECTING,
+    TESTING,
     CONNECTED,
     DISCONNECTING
 }
@@ -65,6 +66,7 @@ abstract class ConnectionBase {
     get isTransitionState() {
         return (
             this.state === ConnectionState.CONNECTING ||
+            this.state === ConnectionState.TESTING ||
             this.state === ConnectionState.DISCONNECTING
         );
     }
@@ -215,7 +217,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     }
 
     connected() {
-        this.state = ConnectionState.CONNECTED;
+        this.state = ConnectionState.TESTING;
 
         log(
             activityLogStore,
@@ -300,6 +302,8 @@ export class Connection extends ConnectionBase implements CommunicationInterface
                 this.disconnect();
             } else {
                 this.instrument.setIdn(value);
+
+                this.state = ConnectionState.CONNECTED;
             }
         }
     }
@@ -411,7 +415,11 @@ export class Connection extends ConnectionBase implements CommunicationInterface
                 this.logRequest(command);
             }
 
-            if (this.state !== ConnectionState.CONNECTED || !this.communicationInterface) {
+            if (
+                (this.state !== ConnectionState.TESTING &&
+                    this.state !== ConnectionState.CONNECTED) ||
+                !this.communicationInterface
+            ) {
                 this.logAnswer("**ERROR: not connected\n");
                 return null;
             }
@@ -443,8 +451,10 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     }
 
     sendIdn() {
-        if (this.state !== ConnectionState.CONNECTED) {
-            console.error("invalid state (this.state !== ConnectionState.CONNECTED)");
+        if (this.state !== ConnectionState.TESTING && this.state !== ConnectionState.CONNECTED) {
+            console.error(
+                "invalid state (this.state !== ConnectionState.TESTING && this.state !== ConnectionState.CONNECTED)"
+            );
             return;
         }
 

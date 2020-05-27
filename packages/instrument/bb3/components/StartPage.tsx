@@ -53,18 +53,18 @@ export const StartPage = observer(
 
         const isConnected = getConnection(appStore).isConnected;
 
+        if (!bb3Instrument.timeOfLastRefresh) {
+            return null;
+        }
+
         return (
             <StartPageContainer>
                 <div>
                     {isConnected && <ShortcutsSection appStore={appStore} />}
-                    {bb3Instrument.timeOfLastRefresh && (
-                        <LatestHistoryItemSection bb3Instrument={bb3Instrument} />
-                    )}
+                    <LatestHistoryItemSection bb3Instrument={bb3Instrument} />
                 </div>
                 <div>
-                    {bb3Instrument.timeOfLastRefresh && (
-                        <ScriptsSection bb3Instrument={bb3Instrument} />
-                    )}
+                    <ScriptsSection bb3Instrument={bb3Instrument} />
                 </div>
                 <div>
                     {bb3Instrument.mcu.firmwareVersion && (
