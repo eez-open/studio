@@ -40,12 +40,16 @@ class ExtensionsCatalog {
             .then(catalogVersion => {
                 runInAction(() => (this.catalogVersion = catalogVersion));
 
-                const dispose = autorun(() => {
-                    if (!tabs.firstTime) {
-                        dispose();
-                        this.checkNewVersionOfCatalog();
-                    }
-                });
+                if (tabs.firstTime) {
+                    const dispose = autorun(() => {
+                        if (!tabs.firstTime) {
+                            dispose();
+                            this.checkNewVersionOfCatalog();
+                        }
+                    });
+                } else {
+                    this.checkNewVersionOfCatalog();
+                }
             })
             .catch(error => notification.error(`Failed to load catalog version (${error})`));
     }

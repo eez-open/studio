@@ -49,8 +49,6 @@ export const StartPage = observer(
         appStore: InstrumentAppStore;
         bb3Instrument: BB3Instrument;
     }) => {
-        console.log(bb3Instrument);
-
         const isConnected = getConnection(appStore).isConnected;
 
         if (!bb3Instrument.timeOfLastRefresh) {

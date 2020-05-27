@@ -202,6 +202,9 @@ export class Script {
 
         runInAction(() => {
             this.scriptOnInstrument = undefined;
+            if (!this.catalogScriptItem) {
+                this.bb3Instrument.scripts.splice(this.bb3Instrument.scripts.indexOf(this), 1);
+            }
         });
 
         this.setBusy(false);
