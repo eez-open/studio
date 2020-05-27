@@ -2,7 +2,6 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { styled } from "eez-studio-ui/styled-components";
-import { Icon } from "eez-studio-ui/icon";
 
 const HeaderContainer = styled.header`
     display: flex;
