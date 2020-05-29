@@ -47,6 +47,12 @@ export function createInstrumentListStore(appStore: InstrumentAppStore | null) {
             `DROP TABLE "instrument/list/version";
             CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
             INSERT INTO versions(tableName, version) VALUES ('instrument/list', 5);
+            `,
+
+            // version 6
+            // migrate version to versions table
+            `ALTER TABLE "instrument/list" ADD COLUMN "modifiedAt" INTEGER;
+            UPDATE versions SET version = 6 WHERE "tableName" = 'instrument/list';
             `
         ],
         properties: {
@@ -55,7 +61,8 @@ export function createInstrumentListStore(appStore: InstrumentAppStore | null) {
             name: types.string,
             description: types.string,
             type: types.string,
-            data: types.object
+            data: types.object,
+            modifiedAt: types.date
         },
         create: (props: any) => {
             if (appStore) {

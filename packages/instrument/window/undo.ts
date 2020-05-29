@@ -127,9 +127,7 @@ export class UndoManager {
                 throw "try to add command to undo stack for different object";
             }
 
-            if (transactionLabel !== this.transactionLabel) {
-                throw "try to add command to undo stack with different transaction label";
-            }
+            this.transactionLabel = transactionLabel;
         } else {
             this.dbObject = true;
             this.store = store;

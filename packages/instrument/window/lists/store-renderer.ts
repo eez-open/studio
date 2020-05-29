@@ -1,4 +1,4 @@
-import { observable, action, runInAction, toJS } from "mobx";
+import { observable, action, toJS } from "mobx";
 
 import { capitalize } from "eez-studio-shared/string";
 import { IUnit, VOLTAGE_UNIT, CURRENT_UNIT, POWER_UNIT } from "eez-studio-shared/units";
@@ -468,6 +468,7 @@ export abstract class BaseList {
     id: string;
     @observable name: string;
     @observable description: string;
+    @observable modifiedAt: Date | null;
 
     type: string;
     abstract data: BaseListData;
@@ -480,6 +481,7 @@ export abstract class BaseList {
         this.id = props.id;
         this.name = props.name;
         this.description = props.description;
+        this.modifiedAt = props.modifiedAt;
     }
 
     toJS() {
@@ -487,6 +489,7 @@ export abstract class BaseList {
             id: this.id,
             name: this.name,
             description: this.description,
+            modifiedAt: this.modifiedAt,
             type: this.type,
             data: this.data.toJS()
         };
@@ -504,6 +507,10 @@ export abstract class BaseList {
         if ("data" in changes) {
             this.data.applyChanges(changes.data);
         }
+
+        if ("modifiedAt" in changes) {
+            this.modifiedAt = new Date(changes.modifiedAt);
+        }
     }
 
     abstract getMaxTime(): number;
@@ -516,33 +523,4 @@ export abstract class BaseList {
     abstract renderDetailsView(): JSX.Element;
 
     abstract get tableListData(): ITableListData;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function createInstrumentLists(appStore: InstrumentAppStore) {
-    const instrumentLists = observable.map<string, BaseList>();
-
-    appStore.instrumentListStore.watch({
-        createObject(object: any) {
-            runInAction(() => instrumentLists.set(object.id, object));
-        },
-
-        updateObject(changes: any) {
-            const list = instrumentLists.get(changes.id);
-            if (list) {
-                runInAction(() => {
-                    list.applyChanges(changes);
-                });
-            }
-        },
-
-        deleteObject(object: any) {
-            runInAction(() => {
-                instrumentLists.delete(object.id);
-            });
-        }
-    });
-
-    return instrumentLists;
 }

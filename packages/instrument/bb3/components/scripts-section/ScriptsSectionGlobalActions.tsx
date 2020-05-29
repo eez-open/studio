@@ -11,7 +11,7 @@ export const ScriptsSectionGlobalActions = observer(
             return null;
         }
 
-        if (!bb3Instrument.canInstallAllScripts) {
+        if (!bb3Instrument.canInstallAllScripts || bb3Instrument.busy) {
             return null;
         }
 

@@ -4,17 +4,63 @@ import { compareVersions } from "eez-studio-shared/util";
 
 import { getConnection, Connection } from "instrument/window/connection";
 
-import { fetchFileUrl, IFetchedFile } from "instrument/bb3/helpers";
+import { fetchFileUrl, IFetchedFile, removeQuotes } from "instrument/bb3/helpers";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import {
     ICatalogScriptItem,
     ICatalogScriptItemVersion
 } from "instrument/bb3/objects/ScriptsCatalog";
 
-interface IScriptOnInstrument {
+export interface IScriptOnInstrument {
     name: string;
     version: string | undefined;
     files: string[];
+}
+
+export async function getScriptsOnTheInstrument(
+    connection: Connection,
+    previousScriptsOnInstrument: IScriptOnInstrument[] | undefined
+) {
+    const filesInFolderAsOneString = await connection.query('MMEM:CAT? "/Scripts"');
+    const filesInFolderAsArray = removeQuotes(filesInFolderAsOneString).split('","');
+
+    const scripts: IScriptOnInstrument[] = [];
+
+    filesInFolderAsArray.forEach(fileInfoLine => {
+        const fileName = fileInfoLine.split(",")[0];
+        if (fileName.toLowerCase().endsWith(".py")) {
+            const scriptName = fileName.substring(0, fileName.length - 3);
+
+            const previousScriptOnInstrument = previousScriptsOnInstrument
+                ? previousScriptsOnInstrument.find(oldScript => oldScript.name == scriptName)
+                : undefined;
+
+            scripts.push({
+                name: scriptName,
+                version: previousScriptOnInstrument
+                    ? previousScriptOnInstrument.version
+                    : undefined,
+                files: [fileName]
+            });
+        }
+    });
+
+    filesInFolderAsArray.forEach(fileInfoLine => {
+        const fileName = fileInfoLine.split(",")[0];
+
+        const indexOfExtension = fileName.indexOf(".");
+
+        const fileNameWithoutExtension =
+            indexOfExtension != -1 ? fileName.substr(0, indexOfExtension) : fileName;
+
+        const script = scripts.find(script => script.name == fileNameWithoutExtension);
+
+        if (script && script.files.indexOf(fileName) == -1) {
+            script.files.push(fileName);
+        }
+    });
+
+    return scripts;
 }
 
 function fetchScriptFiles(catalogScriptItemVersion: ICatalogScriptItemVersion) {
@@ -99,7 +145,7 @@ export class Script {
     @computed
     get versions() {
         if (this.catalogScriptItem) {
-            return this.catalogScriptItem.versions.reverse();
+            return this.catalogScriptItem.versions.slice().reverse();
         }
         return undefined;
     }
@@ -165,13 +211,10 @@ export class Script {
                     files: files.map(file => file.fileName)
                 };
             });
-        } catch (error) {
-            console.error(error);
+        } finally {
+            connection.release();
+            this.setBusy(false);
         }
-
-        connection.release();
-
-        this.setBusy(false);
     };
 
     @computed

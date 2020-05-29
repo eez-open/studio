@@ -100,6 +100,7 @@ export interface LongOperation {
     onData(data: string): void;
     isDone(): boolean;
     dataSurplus: string | undefined;
+    isQuery: boolean;
 }
 
 export class Connection extends ConnectionBase implements CommunicationInterfaceHost {
@@ -281,29 +282,34 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     }
 
     longOperationDone() {
-        this.sendValue({ logEntry: this.longOperation!.logEntry });
-        this.longOperation = undefined;
+        if (this.longOperation) {
+            if (this.longOperation.isQuery) {
+                this.sendValue({ logEntry: this.longOperation.logEntry });
+            }
+            this.longOperation = undefined;
+        }
     }
 
     onDataLineReceived(data: string) {
-        this.logAnswer(data);
+        data = data.trim();
+        if (data) {
+            const value = parseScpiValue(data);
 
-        const value = parseScpiValue(data);
+            this.sendValue(value);
 
-        this.sendValue(value);
+            if (this.idnExpected) {
+                clearTimeout(this.idnExpectedTimeout);
+                this.idnExpectedTimeout = undefined;
+                this.idnExpected = false;
 
-        if (this.idnExpected) {
-            clearTimeout(this.idnExpectedTimeout);
-            this.idnExpectedTimeout = undefined;
-            this.idnExpected = false;
+                if (typeof value !== "string") {
+                    this.setError(ConnectionErrorCode.NONE, "Invalid IDN value.");
+                    this.disconnect();
+                } else {
+                    this.instrument.setIdn(value);
 
-            if (typeof value !== "string") {
-                this.setError(ConnectionErrorCode.NONE, "Invalid IDN value.");
-                this.disconnect();
-            } else {
-                this.instrument.setIdn(value);
-
-                this.state = ConnectionState.CONNECTED;
+                    this.state = ConnectionState.CONNECTED;
+                }
             }
         }
     }

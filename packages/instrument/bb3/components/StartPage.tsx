@@ -10,9 +10,10 @@ import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import { getConnection } from "instrument/window/connection";
 
 import { FirmwareVersionSection } from "instrument/bb3/components/FirmwareVersionSection";
-import { ScriptsSection } from "instrument/bb3/components/scripts-section/ScriptsSection";
-import { ModulesSection } from "instrument/bb3/components/modules-section/ModulesSection";
 import { ShortcutsSection } from "instrument/bb3/components/ShortcutsSection";
+import { ModulesSection } from "instrument/bb3/components/modules-section/ModulesSection";
+import { ScriptsSection } from "instrument/bb3/components/scripts-section/ScriptsSection";
+import { ListsSection } from "instrument/bb3/components/lists-section/ListsSection";
 import { LatestHistoryItemSection } from "instrument/bb3/components/LatestHistoryItemSection";
 
 const GRID_GAP = 20;
@@ -26,10 +27,6 @@ const StartPageContainer = styled.div`
 
     @media (min-width: 1200px) {
         grid-template-columns: repeat(2, calc(100% / 2 - (2 - 1) * ${GRID_GAP}px / 2));
-    }
-
-    @media (min-width: 1600px) {
-        grid-template-columns: repeat(3, calc(100% / 3 - (3 - 1) * ${GRID_GAP}px / 3));
     }
 
     section {
@@ -60,11 +57,6 @@ export const StartPage = observer(
                 <div>
                     {isConnected && <ShortcutsSection appStore={appStore} />}
                     <LatestHistoryItemSection bb3Instrument={bb3Instrument} />
-                </div>
-                <div>
-                    <ScriptsSection bb3Instrument={bb3Instrument} />
-                </div>
-                <div>
                     {bb3Instrument.mcu.firmwareVersion && (
                         <FirmwareVersionSection bb3Instrument={bb3Instrument} />
                     )}
@@ -72,6 +64,10 @@ export const StartPage = observer(
                         compareVersions(bb3Instrument.mcu.firmwareVersion, "1.0") > 0 && (
                             <ModulesSection bb3Instrument={bb3Instrument} />
                         )}
+                </div>
+                <div>
+                    <ScriptsSection bb3Instrument={bb3Instrument} />
+                    {isConnected && <ListsSection bb3Instrument={bb3Instrument} />}
                 </div>
             </StartPageContainer>
         );

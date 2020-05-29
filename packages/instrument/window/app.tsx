@@ -4,16 +4,39 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import styled from "eez-studio-ui/styled-components";
-import { ButtonAction } from "eez-studio-ui/action";
+import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { AppRootComponent } from "eez-studio-ui/app";
 import { AlertDanger } from "eez-studio-ui/alert";
 import { Loader } from "eez-studio-ui/loader";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { PanelHeader } from "eez-studio-ui/header-with-body";
+import { Dialog, showDialog } from "eez-studio-ui/dialog";
+import { PropertyList, TextInputProperty } from "eez-studio-ui/properties";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { getConnection } from "instrument/window/connection";
 import { IInstrumentWindowNavigationItem } from "instrument/window/navigation-store";
+import { InstrumentObject } from "instrument/instrument-object";
+
+////////////////////////////////////////////////////////////////////////////////
+
+function EditInstrumentLabelDialog({ instrument }: { instrument: InstrumentObject }) {
+    const [label, setLabel] = React.useState(instrument.label || "");
+
+    return (
+        <Dialog
+            okButtonText="Connect"
+            onOk={() => {
+                instrument.setLabel(label.trim());
+                return true;
+            }}
+        >
+            <PropertyList>
+                <TextInputProperty key="label" name="Label" value={label} onChange={setLabel} />
+            </PropertyList>
+        </Dialog>
+    );
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -21,6 +44,16 @@ const ConnectionBar = styled(PanelHeader)`
     display: flex;
     flex-direction: row;
     align-items: center;
+
+    &:hover {
+        > div:nth-child(2) {
+            > div:nth-child(1) {
+                button {
+                    visibility: visible;
+                }
+            }
+        }
+    }
 
     > div:nth-child(1) {
         /* Instrument image */
@@ -37,7 +70,13 @@ const ConnectionBar = styled(PanelHeader)`
 
         /* Instrument name */
         > div:nth-child(1) {
+            display: flex;
+            align-items: center;
             font-weight: bold;
+            button {
+                visibility: hidden;
+                margin-left: 10px;
+            }
         }
 
         > div:nth-child(2) {
@@ -89,6 +128,11 @@ export class AppBar extends React.Component<
     @bind
     handleDisconnectClick() {
         this.instrument.connection.disconnect();
+    }
+
+    @bind
+    onEditInstrumentLabel() {
+        showDialog(<EditInstrumentLabelDialog instrument={this.props.appStore.instrument!} />);
     }
 
     render() {
@@ -151,11 +195,18 @@ export class AppBar extends React.Component<
         return (
             <ConnectionBar>
                 <div>
-                    <img src={this.instrument.image} draggable={false} />
+                    <img src={this.instrument.image} draggable={false} />{" "}
                 </div>
 
                 <div>
-                    <div>{this.instrument.name}</div>
+                    <div>
+                        <span>{this.instrument.name}</span>
+                        <IconAction
+                            icon="material:edit"
+                            onClick={this.onEditInstrumentLabel}
+                            title="Edit Instrument Label"
+                        ></IconAction>
+                    </div>
                     {connectionStatus}
                 </div>
 

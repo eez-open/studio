@@ -104,8 +104,11 @@ export const types = {
         toDB: (value: any) => JSON.stringify(toJS(value))
     },
     date: {
-        fromDB: (value: any) => new Date(value.toNumber()),
+        fromDB: (value: any) => (value ? new Date(value.toNumber()) : null),
         toDB: (value: any) => {
+            if (value == null) {
+                return null;
+            }
             if (typeof value === "string") {
                 return new Date(value).getTime();
             }

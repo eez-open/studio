@@ -19,7 +19,10 @@ import { checkMime, MIME_EEZ_LIST } from "instrument/connection/file-type";
 
 import { ChartPreview } from "instrument/window/chart-preview";
 
-import { createTableListFromData } from "instrument/window/lists/factory";
+import {
+    createTableListFromData,
+    createTableListFromHistoryItem
+} from "instrument/window/lists/factory";
 import { saveTableListData } from "instrument/window/lists/lists";
 
 import { IAppStore } from "instrument/window/history/history";
@@ -61,40 +64,8 @@ export class ListHistoryItemComponent extends React.Component<
         }
 
         if (this.props.historyItem.data && this.props.historyItem.instrument) {
-            const tableData: {
-                dwell: number[];
-                voltage: number[];
-                current: number[];
-            } = {
-                dwell: [],
-                voltage: [],
-                current: []
-            };
-
-            const data: string = this.props.historyItem.data.toString();
-
-            for (const line of data.split("\n").map(line => line.trim())) {
-                if (!line) {
-                    continue;
-                }
-
-                const values = line.split(",").map(value => value.trim());
-
-                if (values[0] !== "=") {
-                    tableData.dwell.push(parseFloat(values[0]));
-                }
-
-                if (values[1] !== "=") {
-                    tableData.voltage.push(parseFloat(values[1]));
-                }
-
-                if (values[2] !== "=") {
-                    tableData.current.push(parseFloat(values[2]));
-                }
-            }
-
-            return createTableListFromData(
-                tableData as any,
+            return createTableListFromHistoryItem(
+                this.props.historyItem,
                 this.props.historyItem.appStore! as any, // @todo remove need for any
                 this.props.historyItem.instrument
             );

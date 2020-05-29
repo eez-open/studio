@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, values, runInAction, action, toJS } from "mobx";
+import { observable, computed, runInAction, action, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import classNames from "classnames";
@@ -339,7 +339,7 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
                             validators.required,
                             validators.unique(
                                 this.list,
-                                values(this.list.$eez_noser_appStore.instrumentLists)
+                                this.list.$eez_noser_appStore.instrumentLists
                             )
                         ]
                     },

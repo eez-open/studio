@@ -1,4 +1,4 @@
-import { observable, computed, toJS, reaction, runInAction, action, autorun } from "mobx";
+import { observable, computed, reaction, runInAction, action, autorun, toJS } from "mobx";
 
 import { InstrumentObject } from "instrument/instrument-object";
 import { getConnection, Connection } from "instrument/window/connection";
@@ -8,8 +8,13 @@ import { compareVersions } from "eez-studio-shared/util";
 import { FIRMWARE_RELEASES_URL, MODULE_FIRMWARE_RELEASES_URL } from "instrument/bb3/conf";
 import { removeQuotes } from "instrument/bb3/helpers";
 import { Module, ModuleFirmwareRelease } from "instrument/bb3/objects/Module";
-import { Script } from "instrument/bb3/objects/Script";
+import {
+    Script,
+    IScriptOnInstrument,
+    getScriptsOnTheInstrument
+} from "instrument/bb3/objects/Script";
 import { ScriptsCatalog } from "instrument/bb3/objects/ScriptsCatalog";
+import { List, IListOnInstrument, getListsOnTheInstrument } from "instrument/bb3/objects/list";
 
 import { IHistoryItem } from "instrument/window/history/item";
 
@@ -18,12 +23,6 @@ import { IHistoryItem } from "instrument/window/history/item";
 interface IMcu {
     firmwareVersion: string | undefined;
     latestFirmwareVersion: string | undefined;
-}
-
-interface IScriptOnInstrument {
-    name: string;
-    version: string | undefined;
-    files: string[];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,52 +155,6 @@ async function getModulesInfoFromInstrument(
     return modules;
 }
 
-async function getScriptsOnTheInstrument(
-    connection: Connection,
-    previousScriptsOnInstrument: IScriptOnInstrument[] | undefined
-) {
-    const filesInScriptsFolderAsOneString = await connection.query('MMEM:CAT? "/Scripts"');
-    const filesInScriptsFolderAsArray = removeQuotes(filesInScriptsFolderAsOneString).split('","');
-
-    const scripts: IScriptOnInstrument[] = [];
-
-    filesInScriptsFolderAsArray.forEach(fileInfoLine => {
-        const fileName = fileInfoLine.split(",")[0];
-        if (fileName.toLowerCase().endsWith(".py")) {
-            const scriptName = fileName.substring(0, fileName.length - 3);
-
-            const previousScriptOnInstrument = previousScriptsOnInstrument
-                ? previousScriptsOnInstrument.find(oldScript => oldScript.name == scriptName)
-                : undefined;
-
-            scripts.push({
-                name: scriptName,
-                version: previousScriptOnInstrument
-                    ? previousScriptOnInstrument.version
-                    : undefined,
-                files: [fileName]
-            });
-        }
-    });
-
-    filesInScriptsFolderAsArray.forEach(fileInfoLine => {
-        const fileName = fileInfoLine.split(",")[0];
-
-        const indexOfExtension = fileName.indexOf(".");
-
-        const fileNameWithoutExtension =
-            indexOfExtension != -1 ? fileName.substr(0, indexOfExtension) : fileName;
-
-        const script = scripts.find(script => script.name == fileNameWithoutExtension);
-
-        if (script && script.files.indexOf(fileName) == -1) {
-            script.files.push(fileName);
-        }
-    });
-
-    return scripts;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 type ScriptsCollectionType =
@@ -219,15 +172,17 @@ export class BB3Instrument {
     @observable mcu: IMcu;
     @observable modules: Module[] | undefined;
     @observable scripts: Script[];
+    @observable lists: List[];
 
     // UI state
     @observable selectedScriptsCollectionType: ScriptsCollectionType;
     @observable refreshInProgress: boolean = false;
-    @observable installAllScriptsInProgress: boolean = false;
+    @observable busy: boolean = false;
 
     @observable latestHistoryItem: IHistoryItem | undefined;
 
     @observable scriptsOnInstrumentFetchError: boolean = false;
+    @observable listsOnInstrumentFetchError: boolean = false;
 
     constructor(
         public scriptsCatalog: ScriptsCatalog,
@@ -267,13 +222,23 @@ export class BB3Instrument {
             this.modules = [];
         }
 
-        if (bb3Properties?.scriptsOnInstrument) {
-            this.refreshScripts(bb3Properties.scriptsOnInstrument);
-        } else {
-            this.scripts = [];
-        }
+        this.refreshScripts(bb3Properties?.scriptsOnInstrument ?? []);
+        reaction(
+            () => scriptsCatalog.scriptItems,
+            state => {
+                this.refreshScripts(this.scriptsOnInstrument);
+            }
+        );
 
         this.selectedScriptsCollectionType = "allScriptsCollection";
+
+        this.refreshLists(bb3Properties?.listsOnInstrument ?? []);
+        reaction(
+            () => this.appStore.instrumentLists.map(list => list.name),
+            () => {
+                this.refreshLists(this.listsOnInstrument);
+            }
+        );
 
         reaction(
             () => ({
@@ -288,7 +253,8 @@ export class BB3Instrument {
                           allReleases: module.allReleases.map(release => toJS(release))
                       }))
                     : [],
-                scriptsOnInstrument: toJS(this.scriptsOnInstrument)
+                scriptsOnInstrument: toJS(this.scriptsOnInstrument),
+                listsOnInstrument: toJS(this.listsOnInstrument)
             }),
             state => {
                 instrument.setCustomProperty(BB3Instrument.CUSTOM_PROPERTY_NAME, state);
@@ -300,13 +266,6 @@ export class BB3Instrument {
                 setTimeout(() => this.refresh(false), 50);
             }
         });
-
-        reaction(
-            () => scriptsCatalog.scriptItems,
-            state => {
-                this.refreshScripts(this.scriptsOnInstrument);
-            }
-        );
 
         autorun(() => {
             if (appStore.history.items.length > 0) {
@@ -357,6 +316,7 @@ export class BB3Instrument {
             let firmwareVersion: string | undefined;
             let modules: Module[] | undefined;
             let scriptsOnInstrument: IScriptOnInstrument[] | undefined;
+            let listsOnInstrument: IListOnInstrument[] | undefined;
 
             try {
                 firmwareVersion = removeQuotes(await connection.query("SYST:CPU:FIRM?"));
@@ -384,6 +344,12 @@ export class BB3Instrument {
                 } catch (err) {
                     console.error("failed to get scripts on the instrument info", err);
                 }
+
+                try {
+                    listsOnInstrument = await getListsOnTheInstrument(connection);
+                } catch (err) {
+                    console.error("failed to get lists on the instrument info", err);
+                }
             }
 
             connection.release();
@@ -394,13 +360,16 @@ export class BB3Instrument {
                 this.timeOfLastRefresh = new Date();
                 this.mcu.firmwareVersion = firmwareVersion;
                 this.modules = modules;
+                this.scriptsOnInstrumentFetchError = !scriptsOnInstrument;
+                this.listsOnInstrumentFetchError = !listsOnInstrument;
             });
 
             if (scriptsOnInstrument) {
-                this.scriptsOnInstrumentFetchError = false;
                 this.refreshScripts(scriptsOnInstrument);
-            } else {
-                this.scriptsOnInstrumentFetchError = true;
+            }
+
+            if (listsOnInstrument) {
+                this.refreshLists(listsOnInstrument);
             }
         } finally {
             this.setRefreshInProgress(false);
@@ -425,19 +394,15 @@ export class BB3Instrument {
             }
         }
 
-        if (scriptsOnInstrument) {
-            for (let scriptOnInstrument of scriptsOnInstrument) {
-                const script = scripts.find(
-                    script =>
-                        script.catalogScriptItem &&
-                        script.catalogScriptItem.name == scriptOnInstrument.name
-                );
+        for (let scriptOnInstrument of scriptsOnInstrument) {
+            const script = scripts.find(
+                script => script.catalogScriptItem?.name == scriptOnInstrument.name
+            );
 
-                if (script) {
-                    script.scriptOnInstrument = scriptOnInstrument;
-                } else {
-                    scripts.push(new Script(this, scriptOnInstrument, undefined));
-                }
+            if (script) {
+                script.scriptOnInstrument = scriptOnInstrument;
+            } else {
+                scripts.push(new Script(this, scriptOnInstrument, undefined));
             }
         }
 
@@ -491,25 +456,98 @@ export class BB3Instrument {
     }
 
     @computed get canInstallAllScripts() {
-        return (
-            this.notInstalledCatalogScriptsCollection.length >= 2 &&
-            !this.installAllScriptsInProgress
-        );
+        return this.notInstalledCatalogScriptsCollection.length >= 2 && !this.busy;
     }
 
-    @action setInstallAllScriptsInProgress(value: boolean) {
-        this.installAllScriptsInProgress = value;
+    @action setBusy(value: boolean) {
+        this.busy = value;
     }
 
     installAllScripts = async () => {
         if (this.canInstallAllScripts) {
-            this.setInstallAllScriptsInProgress(true);
-
-            for (const script of this.notInstalledCatalogScriptsCollection) {
-                await script.install();
+            this.setBusy(true);
+            try {
+                for (const script of this.notInstalledCatalogScriptsCollection) {
+                    await script.install();
+                }
+            } finally {
+                this.setBusy(false);
             }
+        }
+    };
 
-            this.setInstallAllScriptsInProgress(false);
+    @action
+    refreshLists(listsOnInstrument: IListOnInstrument[]) {
+        const lists: List[] = [];
+
+        for (let studioList of this.appStore.instrumentLists) {
+            const list = this.lists.find(list => list.studioList == studioList);
+            if (list) {
+                lists.push(list);
+                list.listOnInstrument = undefined;
+            } else {
+                lists.push(new List(this, undefined, studioList));
+            }
+        }
+
+        for (let listOnInstrument of listsOnInstrument) {
+            const list = lists.find(list => list.studioList?.name == listOnInstrument.name);
+            if (list) {
+                list.listOnInstrument = listOnInstrument;
+            } else {
+                lists.push(new List(this, listOnInstrument, undefined));
+            }
+        }
+
+        this.lists = lists;
+    }
+
+    @computed
+    get listsOnInstrument() {
+        return this.lists
+            .filter(list => !!list.listOnInstrument)
+            .map(list => list.listOnInstrument) as IListOnInstrument[];
+    }
+
+    @computed
+    get canDownloadAllLists() {
+        return !this.busy && this.lists.filter(list => list.instrumentVersionNewer).length > 1;
+    }
+
+    downloadAllLists = async () => {
+        if (this.canDownloadAllLists) {
+            this.setBusy(true);
+            try {
+                for (const list of this.lists) {
+                    if (list.instrumentVersionNewer) {
+                        await list.download();
+                    }
+                }
+            } finally {
+                this.setBusy(false);
+            }
+        }
+    };
+
+    @computed
+    get canUploadAllLists() {
+        return !this.busy && this.lists.filter(list => list.studioVersionNewer).length > 1;
+    }
+
+    uploadAllLists = async () => {
+        if (this.canUploadAllLists) {
+            this.setBusy(true);
+            try {
+                for (const list of this.lists) {
+                    if (list.studioVersionNewer) {
+                        await list.upload();
+                    }
+                }
+
+                this.setBusy(false);
+            } finally {
+                this.setBusy(false);
+            }
         }
     };
 }

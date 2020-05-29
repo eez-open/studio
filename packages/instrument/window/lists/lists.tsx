@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, runInAction, toJS, values } from "mobx";
+import { observable, computed, action, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -12,6 +12,7 @@ import {
 import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { _range } from "eez-studio-shared/algorithm";
+import { formatDateTimeLong } from "eez-studio-shared/util";
 
 import { validators } from "eez-studio-shared/validation";
 
@@ -105,7 +106,7 @@ class MasterView extends React.Component<
 > {
     @computed
     get sortedLists() {
-        return Array.from(this.props.appStore.instrumentLists.values())
+        return this.props.appStore.instrumentLists
             .sort((a, b) => stringCompare(a.name, b.name))
             .map(list => ({
                 id: list.id,
@@ -130,7 +131,7 @@ class MasterView extends React.Component<
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique({}, values(this.props.appStore.instrumentLists))
+                            validators.unique({}, this.props.appStore.instrumentLists)
                         ]
                     },
                     {
@@ -242,12 +243,21 @@ class MasterView extends React.Component<
 export class DetailsView extends React.Component<{ list: BaseList | undefined }, {}> {
     render() {
         const { list } = this.props;
+
         const description = list && list.description;
+        const modifiedAtStr =
+            list && list.modifiedAt ? formatDateTimeLong(list.modifiedAt) : undefined;
+
         return (
             <VerticalHeaderWithBody>
-                {description && (
+                {(description || modifiedAtStr) && (
                     <PanelHeader>
-                        <Icon icon="material:comment" /> {description}
+                        <Icon icon="material:comment" /> <span className="">{description}</span>{" "}
+                        {modifiedAtStr && (
+                            <span className="font-weight-light">
+                                {description ? " - " : ""}Modified at {modifiedAtStr}
+                            </span>
+                        )}
                     </PanelHeader>
                 )}
                 <Body>{list && list.renderDetailsView()}</Body>
@@ -260,11 +270,9 @@ export class DetailsView extends React.Component<{ list: BaseList | undefined },
 export class ListsEditor extends React.Component<{ appStore: InstrumentAppStore }, {}> {
     @computed
     get selectedList() {
-        return this.props.appStore.navigationStore.selectedListId
-            ? this.props.appStore.instrumentLists.get(
-                  this.props.appStore.navigationStore.selectedListId
-              )
-            : undefined;
+        return this.props.appStore.instrumentLists.find(
+            list => list.id == this.props.appStore.navigationStore.selectedListId
+        );
     }
 
     render() {
@@ -336,7 +344,7 @@ async function selectChannel(label: string, numChannels: number) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getCsvDataColumnDefinitions(instrument: InstrumentObject) {
+export function getCsvDataColumnDefinitions(instrument: InstrumentObject) {
     return [
         {
             id: "dwell",
@@ -382,11 +390,9 @@ export async function saveTableListData(
 export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore }, {}> {
     @computed
     get selectedList() {
-        return this.props.appStore.navigationStore.selectedListId
-            ? this.props.appStore.instrumentLists.get(
-                  this.props.appStore.navigationStore.selectedListId
-              )
-            : undefined;
+        return this.props.appStore.instrumentLists.find(
+            list => list.id == this.props.appStore.navigationStore.selectedListId
+        );
     }
 
     @bind
@@ -422,7 +428,7 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.unique({}, values(this.props.appStore.instrumentLists))
+                                validators.unique({}, this.props.appStore.instrumentLists)
                             ]
                         },
                         {
@@ -511,7 +517,7 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique({}, values(this.props.appStore.instrumentLists))
+                            validators.unique({}, this.props.appStore.instrumentLists)
                         ]
                     },
                     {
@@ -580,6 +586,27 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
         }
     }
 
+    updateModifedAt() {
+        const list = this.selectedList;
+        if (list) {
+            let oldModifiedAt = list.modifiedAt;
+            let newModifedAt = new Date();
+            list.$eez_noser_appStore.undoManager.addCommand(
+                "Set list modifiedAt",
+                list.$eez_noser_appStore.instrumentListStore,
+                list,
+                {
+                    execute: action(() => {
+                        list.modifiedAt = newModifedAt;
+                    }),
+                    undo: action(() => {
+                        list.modifiedAt = oldModifiedAt;
+                    })
+                }
+            );
+        }
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -589,7 +616,10 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                         icon="material:save"
                         className="btn-secondary"
                         title="Save changes"
-                        onClick={this.props.appStore.undoManager.commit}
+                        onClick={() => {
+                            this.updateModifedAt();
+                            this.props.appStore.undoManager.commit();
+                        }}
                     />
                 )}
                 <ButtonAction
@@ -610,7 +640,7 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                 <ButtonAction
                     key="get"
                     text="Get"
-                    title="Get list from instrument"
+                    title="Get list from instrument channel"
                     className="btn-secondary"
                     enabled={this.props.appStore.instrument!.connection.isConnected}
                     onClick={this.getList}
@@ -618,7 +648,7 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                 <ButtonAction
                     key="send"
                     text="Send"
-                    title="Send list to instrument"
+                    title="Send list to instrument channel"
                     className="btn-secondary"
                     enabled={
                         this.props.appStore.instrument!.connection.isConnected &&

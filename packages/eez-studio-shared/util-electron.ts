@@ -42,7 +42,7 @@ export function localPathToFileUrl(localPath: string) {
 export function zipExtract(zipFilePath: string, destFolderPath: string) {
     return new Promise((resolve, reject) => {
         const extract = require("extract-zip");
-        extract(zipFilePath, { dir: destFolderPath }, function(err: any) {
+        extract(zipFilePath, { dir: destFolderPath }, function (err: any) {
             if (err) {
                 reject(err);
             } else {
@@ -71,7 +71,7 @@ export async function makeFolder(folderPath: string) {
 export function removeFolder(folderPath: string) {
     return new Promise((resolve, reject) => {
         const rimraf = require("rimraf");
-        rimraf(folderPath, function() {
+        rimraf(folderPath, function () {
             resolve();
         });
     });
@@ -109,7 +109,7 @@ export function copyFile(srcFilePath: string, destFilePath: string) {
 
 export function getFileSizeInBytes(filePath: string) {
     return new Promise<number>((resolve, reject) => {
-        fs.stat(filePath, function(err: any, stats: any) {
+        fs.stat(filePath, function (err: any, stats: any) {
             if (err) {
                 reject(err);
             } else {
@@ -237,11 +237,7 @@ export async function readCsvFile(filePath: string, columnDefinitions: ICsvColum
     return result;
 }
 
-export async function writeCsvFile(
-    filePath: string,
-    data: any,
-    columnDefinitions: ICsvColumnDefinition[]
-) {
+export function makeCsvData(data: any, columnDefinitions: ICsvColumnDefinition[]) {
     let rows = [];
 
     let n = data[columnDefinitions[0].id].length;
@@ -262,7 +258,15 @@ export async function writeCsvFile(
         rows.push(row.join(","));
     }
 
-    await writeTextFile(filePath, rows.join("\n"));
+    return rows.join("\n");
+}
+
+export async function writeCsvFile(
+    filePath: string,
+    data: any,
+    columnDefinitions: ICsvColumnDefinition[]
+) {
+    await writeTextFile(filePath, makeCsvData(data, columnDefinitions));
 }
 
 export async function writeTextFile(filePath: string, data: string) {
@@ -406,7 +410,7 @@ export function isValidPath(path: string, shortFileName: boolean) {
 export async function getTempFilePath(options?: any) {
     return new Promise<string>((resolve, reject) => {
         const tmp = require("tmp");
-        tmp.tmpName(options, function(err: any, path: string) {
+        tmp.tmpName(options, function (err: any, path: string) {
             if (err) {
                 reject(err);
             } else {
@@ -419,7 +423,7 @@ export async function getTempFilePath(options?: any) {
 export async function getTempDirPath(options?: any) {
     return new Promise<[string, () => void]>((resolve, reject) => {
         const tmp = require("tmp");
-        tmp.dir(options, function(err: any, path: string, cleanupCallback: () => void) {
+        tmp.dir(options, function (err: any, path: string, cleanupCallback: () => void) {
             if (err) {
                 reject(err);
             } else {

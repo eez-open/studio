@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, runInAction, values, toJS } from "mobx";
+import { observable, computed, action, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -1352,7 +1352,7 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                             validators.required,
                             validators.unique(
                                 this.list,
-                                values(this.list.$eez_noser_appStore.instrumentLists)
+                                this.list.$eez_noser_appStore.instrumentLists
                             )
                         ]
                     },

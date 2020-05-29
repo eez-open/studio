@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, reaction, ObservableMap, autorun, values } from "mobx";
+import { observable, action, runInAction, reaction, autorun } from "mobx";
 import { bind } from "bind-decorator";
 
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
@@ -31,7 +31,7 @@ import { Terminal } from "instrument/window/terminal/terminal";
 import { CommandsTree } from "instrument/window/terminal/commands-tree";
 
 import { createInstrumentListStore } from "instrument/window/lists/store";
-import { BaseList, createInstrumentLists } from "instrument/window/lists/store-renderer";
+import { BaseList } from "instrument/window/lists/store-renderer";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,7 +57,7 @@ export class InstrumentAppStore implements IEditor {
     undoManager = new UndoManager();
 
     instrumentListStore: IStore;
-    instrumentLists: ObservableMap<string, BaseList>;
+    @observable instrumentLists: BaseList[] = [];
 
     editor: JSX.Element | null = null;
 
@@ -103,7 +103,39 @@ export class InstrumentAppStore implements IEditor {
                 this.autorunDisposer = autorun(() => {
                     if (this.instrument!.listsProperty) {
                         this.instrumentListStore = createInstrumentListStore(this);
-                        this.instrumentLists = createInstrumentLists(this);
+
+                        const appStore = this;
+
+                        this.instrumentListStore.watch({
+                            createObject(object: any) {
+                                runInAction(() => appStore.instrumentLists.push(object));
+                            },
+
+                            updateObject(changes: any) {
+                                const list = appStore.instrumentLists.find(
+                                    list => list.id === changes.id
+                                );
+                                if (list) {
+                                    runInAction(() => {
+                                        list.applyChanges(changes);
+                                    });
+                                }
+                            },
+
+                            deleteObject(object: any) {
+                                const list = appStore.instrumentLists.find(
+                                    list => list.id === object.id
+                                );
+                                if (list) {
+                                    runInAction(() => {
+                                        appStore.instrumentLists.splice(
+                                            appStore.instrumentLists.indexOf(list),
+                                            1
+                                        );
+                                    });
+                                }
+                            }
+                        });
                     }
                 });
             })
@@ -227,10 +259,7 @@ export class InstrumentAppStore implements IEditor {
     }
 
     findListIdByName(listName: string) {
-        if (!this.instrumentLists) {
-            return undefined;
-        }
-        const list = values(this.instrumentLists).find(list => list.name === listName);
+        const list = this.instrumentLists.find(list => list.name === listName);
         if (list) {
             return list.id;
         }

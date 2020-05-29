@@ -54,6 +54,8 @@ export class FileUpload extends FileTransfer {
     fileType: { ext?: string; mime: string } | string;
     dataSurplus: string | undefined;
 
+    isQuery = false;
+
     constructor(
         connection: Connection,
         private instructions: IFileUploadInstructions,

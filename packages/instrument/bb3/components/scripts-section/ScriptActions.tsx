@@ -22,7 +22,7 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
                 <button
                     className="btn btn-sm btn-primary"
                     onClick={script.install}
-                    disabled={script.bb3Instrument.installAllScriptsInProgress}
+                    disabled={script.bb3Instrument.busy}
                 >
                     Install
                 </button>
@@ -31,7 +31,7 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
                 <button
                     className="btn btn-sm btn-secondary"
                     onClick={script.uninstall}
-                    disabled={script.bb3Instrument.installAllScriptsInProgress}
+                    disabled={script.bb3Instrument.busy}
                 >
                     Uninstall
                 </button>
@@ -40,7 +40,7 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
                 <button
                     className="btn btn-sm btn-primary"
                     onClick={script.update}
-                    disabled={script.bb3Instrument.installAllScriptsInProgress}
+                    disabled={script.bb3Instrument.busy}
                 >
                     Update
                 </button>
@@ -49,7 +49,7 @@ export const ScriptActions = observer(({ script }: { script: Script }) => {
                 <button
                     className="btn btn-sm btn-primary"
                     onClick={script.replace}
-                    disabled={script.bb3Instrument.installAllScriptsInProgress}
+                    disabled={script.bb3Instrument.busy}
                 >
                     Replace
                 </button>

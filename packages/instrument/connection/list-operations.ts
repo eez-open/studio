@@ -151,6 +151,8 @@ abstract class ListOperation {
 export class GetListOperation extends ListOperation {
     listData: any = {};
 
+    isQuery = true;
+
     constructor(connection: Connection, channelIndex: number, callbackWindowId: number) {
         super(connection, channelIndex, undefined, callbackWindowId);
 
@@ -216,6 +218,8 @@ export class GetListOperation extends ListOperation {
 
 export class SendListOperation extends ListOperation {
     dataReceived: string;
+
+    isQuery = false;
 
     constructor(
         connection: Connection,
@@ -327,7 +331,7 @@ function getListRenderer(instrumentId: string, channelIndex: number, callbackWin
 if (!isRenderer()) {
     const { ipcMain } = require("electron");
 
-    ipcMain.on("instrument/connection/get-list", function(
+    ipcMain.on("instrument/connection/get-list", function (
         event: any,
         arg: {
             instrumentId: string;
@@ -396,7 +400,7 @@ function sendListRenderer(
 if (!isRenderer()) {
     const { ipcMain } = require("electron");
 
-    ipcMain.on("instrument/connection/send-list", function(
+    ipcMain.on("instrument/connection/send-list", function (
         event: any,
         arg: {
             instrumentId: string;

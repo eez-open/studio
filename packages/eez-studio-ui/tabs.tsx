@@ -207,6 +207,10 @@ const TabsViewContainer = styled.div`
             align-content: space-between;
             white-space: nowrap;
 
+            & > img:first-child {
+                flex-shrink: 0;
+            }
+
             & > span.title {
                 padding-left: 5px;
                 flex-grow: 1;

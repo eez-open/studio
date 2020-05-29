@@ -24,6 +24,8 @@ export class FileDownload extends FileTransfer {
     dataSurplus: string | undefined;
     note: string | undefined;
 
+    isQuery = true;
+
     constructor(connection: Connection, data: string, private arbitraryBlock?: boolean) {
         super(connection);
 
