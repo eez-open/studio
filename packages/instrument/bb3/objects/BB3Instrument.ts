@@ -14,7 +14,7 @@ import {
     getScriptsOnTheInstrument
 } from "instrument/bb3/objects/Script";
 import { ScriptsCatalog } from "instrument/bb3/objects/ScriptsCatalog";
-import { List, IListOnInstrument, getListsOnTheInstrument } from "instrument/bb3/objects/list";
+import { List, IListOnInstrument, getListsOnTheInstrument } from "instrument/bb3/objects/List";
 
 import { IHistoryItem } from "instrument/window/history/item";
 
