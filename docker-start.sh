@@ -1,10 +1,10 @@
-rm -rf node_modules
-rm -rf builder-output
+#rm -rf node_modules
+#rm -rf builder-output
 
-npm run build
-npm run build-extra-resource-json
+#npm run build
+#npm run build-extra-resource-json
 
-rm -rf node_modules
+#rm -rf node_modules
 
 docker run --rm -ti \
     --env-file <(env | grep -iE 'DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|CIRCLE|TRAVIS_TAG|TRAVIS|TRAVIS_REPO_|TRAVIS_BUILD_|TRAVIS_BRANCH|TRAVIS_PULL_REQUEST_|APPVEYOR_|CSC_|GH_|GITHUB_|BT_|AWS_|STRIP|BUILD_') \
@@ -15,4 +15,3 @@ docker run --rm -ti \
     -v ~/.cache/electron:/root/.cache/electron \
     -v ~/.cache/electron-builder:/root/.cache/electron-builder \
     electronuserland/builder
-
