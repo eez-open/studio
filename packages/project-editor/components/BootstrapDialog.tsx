@@ -60,6 +60,7 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
             const parent = this.div.parentElement as HTMLElement;
             ReactDOM.unmountComponentAtNode(parent);
             parent.remove();
+            this.props.onCancel();
         });
 
         $(this.div).modal();
@@ -149,7 +150,6 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
                                     <button
                                         type="button"
                                         className="close float-right"
-                                        onClick={props.onCancel}
                                         disabled={props.disableButtons}
                                         aria-label="Close"
                                     >
