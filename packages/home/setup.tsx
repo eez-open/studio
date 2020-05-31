@@ -229,7 +229,6 @@ export const Setup = observer(() => {
                         Try Again
                     </button>
                 </div>
-                {notification.container}
             </div>
         );
     } else {
@@ -268,7 +267,6 @@ export const Setup = observer(() => {
                         Add
                     </button>
                 </div>
-                {notification.container}
             </div>
         );
     }

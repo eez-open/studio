@@ -661,6 +661,7 @@ export function downloadAndInstallExtension(
             options: {
                 render: React.ReactNode;
                 type: notification.Type;
+                autoClose?: number | false;
             }
         ): void;
     } = notification
@@ -695,7 +696,8 @@ export function downloadAndInstallExtension(
                         render: `Failed to install "${
                             extensionToInstall.displayName || extensionToInstall.name
                         }" extension because package file hash doesn't match.`,
-                        type: notification.ERROR
+                        type: notification.ERROR,
+                        autoClose: 5000
                     });
                     reject();
                     return;
@@ -709,14 +711,16 @@ export function downloadAndInstallExtension(
                             render: `Extension "${
                                 extension.displayName || extension.name
                             }" installed.`,
-                            type: notification.SUCCESS
+                            type: notification.SUCCESS,
+                            autoClose: 5000
                         });
                     } else {
                         progress.update(progressId, {
                             render: `Failed to install "${
                                 extensionToInstall.displayName || extensionToInstall.name
                             }" extension.`,
-                            type: notification.ERROR
+                            type: notification.ERROR,
+                            autoClose: 5000
                         });
                     }
                     resolve(extension);
@@ -727,7 +731,8 @@ export function downloadAndInstallExtension(
                         render: `Failed to install "${
                             extensionToInstall.displayName || extensionToInstall.name
                         }" extension.`,
-                        type: notification.ERROR
+                        type: notification.ERROR,
+                        autoClose: 5000
                     });
                     reject();
                 });
@@ -739,7 +744,8 @@ export function downloadAndInstallExtension(
                 render: `Failed to download "${
                     extensionToInstall.displayName || extensionToInstall.name
                 }" extension package.`,
-                type: notification.ERROR
+                type: notification.ERROR,
+                autoClose: 5000
             });
             reject();
         });

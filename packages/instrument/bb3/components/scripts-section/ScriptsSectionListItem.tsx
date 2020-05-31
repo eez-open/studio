@@ -40,11 +40,11 @@ export const ScriptsSectionListItem = observer(({ script }: { script: Script }) 
     return (
         <div className="list-group-item">
             <TitleContainer>
-                <h5>{script.name}</h5>
+                <div className="font-weight-bold">{script.name}</div>
                 <SelectScriptVersion script={script} />
             </TitleContainer>
             <ContentContainer>
-                <div className="text-secondary">{script.description}</div>
+                <div>{script.description}</div>
                 <ScriptActions script={script} />
             </ContentContainer>
         </div>

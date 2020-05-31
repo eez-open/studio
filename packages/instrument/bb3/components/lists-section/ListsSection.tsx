@@ -28,7 +28,9 @@ export const ListsSection = observer(({ bb3Instrument }: { bb3Instrument: BB3Ins
                                 Failed to get info about lists on the instruments!
                             </div>
                         )}
-                        {bb3Instrument.lists && <ListsSectionList lists={bb3Instrument.lists} />}
+                        {bb3Instrument.lists && (
+                            <ListsSectionList lists={bb3Instrument.sortedLists} />
+                        )}
                     </>
                 )
             }

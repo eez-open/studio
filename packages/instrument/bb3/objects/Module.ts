@@ -1,8 +1,6 @@
 import { observable, action, runInAction } from "mobx";
 
-import { getConnection } from "instrument/window/connection";
-
-import { fetchFileUrl } from "instrument/bb3/helpers";
+import { fetchFileUrl, useConnection } from "instrument/bb3/helpers";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 
 export interface ModuleFirmwareRelease {
@@ -12,7 +10,7 @@ export interface ModuleFirmwareRelease {
 
 export class Module {
     @observable
-    updateInProgress: boolean;
+    busy: boolean;
 
     @observable
     firmwareVersion: string;
@@ -29,8 +27,8 @@ export class Module {
     }
 
     @action
-    setUpdateInProgress(value: boolean) {
-        this.updateInProgress = value;
+    setBusy(value: boolean) {
+        this.busy = value;
     }
 
     async updateModuleFirmware(selectedFirmwareVersion: string) {
@@ -42,41 +40,33 @@ export class Module {
             return;
         }
 
-        const connection = getConnection(this.bb3Instrument.appStore);
-        if (!connection.isConnected) {
-            return;
-        }
+        await useConnection(
+            this,
+            async connection => {
+                const file = await fetchFileUrl(release.url);
 
-        this.setUpdateInProgress(true);
+                const uploadInstructions = Object.assign(
+                    {},
+                    connection.instrument.defaultFileUploadInstructions,
+                    {
+                        sourceData: file.fileData,
+                        sourceFileType: "application/octet-stream",
+                        destinationFileName: file.fileName,
+                        destinationFolderPath: "/Updates"
+                    }
+                );
 
-        connection.acquire(true);
+                await new Promise((resolve, reject) =>
+                    connection.upload(uploadInstructions, resolve, reject)
+                );
 
-        try {
-            const file = await fetchFileUrl(release.url);
+                connection.command(`DEBUG:DOWN:FIRM ${this.slotIndex},"/Updates/${file.fileName}"`);
 
-            const uploadInstructions = Object.assign(
-                {},
-                connection.instrument.defaultFileUploadInstructions,
-                {
-                    sourceData: file.fileData,
-                    sourceFileType: "application/octet-stream",
-                    destinationFileName: file.fileName,
-                    destinationFolderPath: "/Updates"
-                }
-            );
-
-            await new Promise((resolve, reject) =>
-                connection.upload(uploadInstructions, resolve, reject)
-            );
-
-            connection.command(`DEBUG:DOWN:FIRM ${this.slotIndex},"/Updates/${file.fileName}"`);
-
-            runInAction(() => {
-                this.firmwareVersion = selectedFirmwareVersion;
-            });
-        } finally {
-            connection.release();
-            this.setUpdateInProgress(false);
-        }
+                runInAction(() => {
+                    this.firmwareVersion = selectedFirmwareVersion;
+                });
+            },
+            true
+        );
     }
 }

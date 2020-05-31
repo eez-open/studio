@@ -20,7 +20,7 @@ export const LatestHistoryItemSection = observer(
         }
         return (
             <Section
-                title="Latest history item"
+                title="Latest history event"
                 body={<Container>{bb3Instrument.latestHistoryItem.listItemElement}</Container>}
             />
         );

@@ -5,12 +5,12 @@ import { objectClone } from "eez-studio-shared/util";
 import { makeCsvData, getValidFileNameFromFileName } from "eez-studio-shared/util-electron";
 
 import { BaseList } from "instrument/window/lists/store-renderer";
-import { getConnection, Connection } from "instrument/window/connection";
+import { Connection } from "instrument/window/connection";
 import { ListHistoryItem } from "instrument/window/history/items/list";
 import { createTableListFromHistoryItem } from "instrument/window/lists/factory";
 import { getCsvDataColumnDefinitions } from "instrument/window/lists/lists";
 
-import { removeQuotes } from "instrument/bb3/helpers";
+import { removeQuotes, useConnection } from "instrument/bb3/helpers";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 
 export interface IListOnInstrument {
@@ -84,12 +84,12 @@ export class List {
 
     @computed
     get instrumentVersionNewer() {
-        return !this.studioDate || this.instrumentDate! > this.studioDate;
+        return this.instrumentDate && (!this.studioDate || this.instrumentDate > this.studioDate);
     }
 
     @computed
     get studioVersionNewer() {
-        return !this.instrumentDate || this.studioDate! > this.instrumentDate;
+        return this.studioDate && (!this.instrumentDate || this.studioDate > this.instrumentDate);
     }
 
     get canDownload() {
@@ -106,42 +106,41 @@ export class List {
             return;
         }
 
-        const connection = getConnection(this.bb3Instrument.appStore);
-        if (!connection.isConnected) {
-            return;
-        }
+        await useConnection(
+            this,
+            async connection => {
+                const listHistoryItem: ListHistoryItem = await connection.query(
+                    `MMEMory:UPLoad? "/Lists/${this.fileName}"`
+                );
 
-        this.setBusy(true);
-        connection.acquire(false);
+                const tableList = createTableListFromHistoryItem(
+                    listHistoryItem,
+                    this.bb3Instrument.appStore,
+                    this.bb3Instrument.appStore.instrument!
+                );
 
-        try {
-            const listHistoryItem: ListHistoryItem = await connection.query(
-                `MMEMory:UPLoad? "/Lists/${this.fileName}"`
-            );
+                tableList.description = this.description;
+                tableList.modifiedAt = listOnInstrument.date;
 
-            const tableList = createTableListFromHistoryItem(
-                listHistoryItem,
-                this.bb3Instrument.appStore,
-                this.bb3Instrument.appStore.instrument!
-            );
+                if (this.studioList) {
+                    tableList.id = this.studioList.id;
+                    tableList.name = this.studioList.name;
+                    beginTransaction("Update instrument list");
+                    this.bb3Instrument.appStore.instrumentListStore.updateObject(
+                        objectClone(tableList)
+                    );
+                } else {
+                    tableList.name = listOnInstrument.name;
+                    beginTransaction("Import instrument list");
+                    this.bb3Instrument.appStore.instrumentListStore.createObject(
+                        objectClone(tableList)
+                    );
+                }
 
-            if (this.studioList) {
-                tableList.name = this.studioList.name;
-                beginTransaction("Update instrument list");
-            } else {
-                tableList.name = listOnInstrument.name;
-                beginTransaction("Import instrument list");
-            }
-
-            tableList.description = this.description;
-            tableList.modifiedAt = listOnInstrument.date;
-
-            this.bb3Instrument.appStore.instrumentListStore.createObject(objectClone(tableList));
-            commitTransaction();
-        } finally {
-            connection.release();
-            this.setBusy(false);
-        }
+                commitTransaction();
+            },
+            false
+        );
     };
 
     get canUpload() {
@@ -154,59 +153,52 @@ export class List {
             return;
         }
 
-        const connection = getConnection(this.bb3Instrument.appStore);
-        if (!connection.isConnected) {
-            return;
-        }
-
-        this.setBusy(true);
-        connection.acquire(false);
-
-        try {
-            const sourceData = makeCsvData(
-                studioList.tableListData,
-                getCsvDataColumnDefinitions(this.bb3Instrument.appStore.instrument!)
-            );
-
-            await new Promise((resolve, reject) => {
-                const uploadInstructions = Object.assign(
-                    {},
-                    connection.instrument.defaultFileUploadInstructions,
-                    {
-                        sourceData,
-                        sourceFileType: "application/octet-stream",
-                        destinationFileName: this.fileName,
-                        destinationFolderPath: "/Lists"
-                    }
+        await useConnection(
+            this,
+            async connection => {
+                const sourceData = makeCsvData(
+                    studioList.tableListData,
+                    getCsvDataColumnDefinitions(this.bb3Instrument.appStore.instrument!)
                 );
 
-                connection.upload(uploadInstructions, resolve, reject);
-            });
+                await new Promise((resolve, reject) => {
+                    const uploadInstructions = Object.assign(
+                        {},
+                        connection.instrument.defaultFileUploadInstructions,
+                        {
+                            sourceData,
+                            sourceFileType: "application/octet-stream",
+                            destinationFileName: this.fileName,
+                            destinationFolderPath: "/Lists"
+                        }
+                    );
 
-            const dateStr = await connection.query(`MMEMory:DATE? "/Lists/${this.fileName}"`);
-            const [year, month, day] = dateStr.split(",");
-            const timeStr = await connection.query(`MMEMory:TIME? "/Lists/${this.fileName}"`);
-            const [hours, minutes, seconds] = timeStr.split(",");
+                    connection.upload(uploadInstructions, resolve, reject);
+                });
 
-            const listOnInstrument = {
-                name: this.baseName,
-                date: new Date(year, month - 1, day, hours, minutes, seconds)
-            };
+                const dateStr = await connection.query(`MMEMory:DATE? "/Lists/${this.fileName}"`);
+                const [year, month, day] = dateStr.split(",");
+                const timeStr = await connection.query(`MMEMory:TIME? "/Lists/${this.fileName}"`);
+                const [hours, minutes, seconds] = timeStr.split(",");
 
-            runInAction(() => {
-                this.listOnInstrument = listOnInstrument;
-            });
+                const listOnInstrument = {
+                    name: this.baseName,
+                    date: new Date(year, month - 1, day, hours, minutes, seconds)
+                };
 
-            beginTransaction("Update instrument list modified date");
-            this.bb3Instrument.appStore.instrumentListStore.updateObject({
-                id: studioList.id,
-                modifiedAt: listOnInstrument.date
-            });
-            commitTransaction();
-        } finally {
-            connection.release();
-            this.setBusy(false);
-        }
+                runInAction(() => {
+                    this.listOnInstrument = listOnInstrument;
+                });
+
+                beginTransaction("Update instrument list modified date");
+                this.bb3Instrument.appStore.instrumentListStore.updateObject({
+                    id: studioList.id,
+                    modifiedAt: listOnInstrument.date
+                });
+                commitTransaction();
+            },
+            true
+        );
     };
 
     get canEdit() {

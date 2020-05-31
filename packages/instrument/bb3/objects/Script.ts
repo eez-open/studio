@@ -2,9 +2,9 @@ import { observable, computed, action, runInAction } from "mobx";
 
 import { compareVersions } from "eez-studio-shared/util";
 
-import { getConnection, Connection } from "instrument/window/connection";
+import { Connection } from "instrument/window/connection";
 
-import { fetchFileUrl, IFetchedFile, removeQuotes } from "instrument/bb3/helpers";
+import { fetchFileUrl, IFetchedFile, removeQuotes, useConnection } from "instrument/bb3/helpers";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import {
     ICatalogScriptItem,
@@ -190,31 +190,23 @@ export class Script {
             return;
         }
 
-        const connection = getConnection(this.bb3Instrument.appStore);
-        if (!connection.isConnected) {
-            return;
-        }
+        await useConnection(
+            this,
+            async connection => {
+                const files = await fetchScriptFiles(catalogScriptItemVersion);
 
-        this.setBusy(true);
+                await uploadScriptFilesToInstrument(connection, files);
 
-        connection.acquire(true);
-
-        try {
-            const files = await fetchScriptFiles(catalogScriptItemVersion);
-
-            await uploadScriptFilesToInstrument(connection, files);
-
-            runInAction(() => {
-                this.scriptOnInstrument = {
-                    name: catalogScriptItem.name,
-                    version: selectedVersion,
-                    files: files.map(file => file.fileName)
-                };
-            });
-        } finally {
-            connection.release();
-            this.setBusy(false);
-        }
+                runInAction(() => {
+                    this.scriptOnInstrument = {
+                        name: catalogScriptItem.name,
+                        version: selectedVersion,
+                        files: files.map(file => file.fileName)
+                    };
+                });
+            },
+            true
+        );
     };
 
     @computed
@@ -222,35 +214,31 @@ export class Script {
         return this.isInstalled;
     }
 
-    uninstall = () => {
+    uninstall = async () => {
         const scriptOnInstrument = this.scriptOnInstrument;
         if (!scriptOnInstrument) {
             return;
         }
 
-        const connection = getConnection(this.bb3Instrument.appStore);
-        if (!connection.isConnected) {
-            return;
-        }
+        await useConnection(
+            this,
+            async connection => {
+                for (const file of scriptOnInstrument.files) {
+                    connection.command(`MMEM:DEL "/Scripts/${file}"`);
+                }
 
-        this.setBusy(true);
-
-        connection.acquire(true);
-
-        for (const file of scriptOnInstrument.files) {
-            connection.command(`MMEM:DEL "/Scripts/${file}"`);
-        }
-
-        connection.release();
-
-        runInAction(() => {
-            this.scriptOnInstrument = undefined;
-            if (!this.catalogScriptItem) {
-                this.bb3Instrument.scripts.splice(this.bb3Instrument.scripts.indexOf(this), 1);
-            }
-        });
-
-        this.setBusy(false);
+                runInAction(() => {
+                    this.scriptOnInstrument = undefined;
+                    if (!this.catalogScriptItem) {
+                        this.bb3Instrument.scripts.splice(
+                            this.bb3Instrument.scripts.indexOf(this),
+                            1
+                        );
+                    }
+                });
+            },
+            true
+        );
     };
 
     @computed

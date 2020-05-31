@@ -4,7 +4,6 @@ import { observer } from "mobx-react";
 
 import styled from "eez-studio-ui/styled-components";
 import { TabsView } from "eez-studio-ui/tabs";
-import * as notification from "eez-studio-ui/notification";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import {
@@ -456,11 +455,6 @@ export class ProjectEditor extends React.Component<{}, {}> {
             </MainContent>
         );
 
-        return (
-            <ProjectEditorContainer>
-                {mainContent}
-                {notification.container}
-            </ProjectEditorContainer>
-        );
+        return <ProjectEditorContainer>{mainContent}</ProjectEditorContainer>;
     }
 }

@@ -124,7 +124,7 @@
         "react": "^16.13.1",
         "react-dom": "^16.13.1",
         "react-electron-web-view": "^2.0.1",
-        "react-toastify": "^5.5.0",
+        "react-toastify": "^6.0.5",
         "rimraf": "^3.0.2",
         "serialport": "^8.0.8",
         "sha256": "^0.2.0",

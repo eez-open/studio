@@ -5,6 +5,7 @@ import { configure } from "mobx";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
+import * as notification from "eez-studio-ui/notification";
 
 import { handleDragAndDrop } from "home/drag-and-drop";
 
@@ -38,7 +39,10 @@ async function main() {
     const { App } = await import("home/app");
     ReactDOM.render(
         <ThemeProvider theme={theme}>
-            <App />
+            <>
+                <App />
+                {notification.container}
+            </>
         </ThemeProvider>,
         document.getElementById("EezStudio_Content")
     );

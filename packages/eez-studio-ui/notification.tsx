@@ -1,22 +1,22 @@
 import React from "react";
 
-import { ToastContainer, toast, ToastPosition, UpdateOptions, ToastId } from "react-toastify";
+import { ToastContainer, toast, ToastOptions, UpdateOptions } from "react-toastify";
 
-export { ToastId } from "react-toastify";
+export type ToastId = React.ReactText;
 
-export function info(message: string, options?: UpdateOptions) {
+export function info(message: string, options?: ToastOptions) {
     return toast.info(message, options);
 }
 
-export function success(message: string, options?: UpdateOptions) {
+export function success(message: string, options?: ToastOptions) {
     return toast.success(message, options);
 }
 
-export function warn(message: string, options?: UpdateOptions) {
+export function warn(message: string, options?: ToastOptions) {
     return toast.warn(message, options);
 }
 
-export function error(message: string, options?: UpdateOptions) {
+export function error(message: string, options?: ToastOptions) {
     return toast.error(message, options);
 }
 
@@ -30,7 +30,7 @@ export function dismiss(toastId: number) {
 
 export const container = (
     <ToastContainer
-        position={ToastPosition.TOP_RIGHT}
+        position={"top-right"}
         autoClose={5000}
         hideProgressBar={true}
         newestOnTop={false}
@@ -39,10 +39,10 @@ export const container = (
     />
 );
 
-export const INFO = toast.TYPE.INFO;
-export const SUCCESS = toast.TYPE.SUCCESS;
-export const WARNING = toast.TYPE.WARNING;
-export const ERROR = toast.TYPE.ERROR;
+export const INFO = "info";
+export const SUCCESS = "success";
+export const WARNING = "warning";
+export const ERROR = "error";
 
 export type Type = typeof INFO | typeof SUCCESS | typeof WARNING | typeof ERROR;
 export type ProgressId = ToastId;

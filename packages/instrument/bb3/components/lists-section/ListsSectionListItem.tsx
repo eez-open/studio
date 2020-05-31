@@ -42,24 +42,25 @@ export const ListsSectionListItem = observer(({ list }: { list: List }) => {
     let modifiedInfo;
     if (instrumentDate && studioDate) {
         if (instrumentDate > studioDate) {
-            modifiedInfo = `Instrument version newer (${formatDateTimeLong(
+            modifiedInfo = `Instrument version is newer (${formatDateTimeLong(
                 instrumentDate
             )} > ${formatDateTimeLong(studioDate)})`;
         } else if (studioDate > instrumentDate) {
-            modifiedInfo = `Studio version newer (${formatDateTimeLong(
+            modifiedInfo = `Studio version is newer (${formatDateTimeLong(
                 studioDate
             )} > ${formatDateTimeLong(instrumentDate)})`;
         } else {
-            modifiedInfo = `Same versions (${formatDateTimeLong(instrumentDate)})`;
+            modifiedInfo = formatDateTimeLong(instrumentDate);
         }
     } else {
-        modifiedInfo = formatDateTimeLong((instrumentDate || studioDate)!);
+        const date = instrumentDate || studioDate;
+        modifiedInfo = date ? formatDateTimeLong(date) : null;
     }
 
     return (
         <div className="list-group-item">
             <TitleContainer>
-                <h5>{list.baseName}</h5>
+                <div className="font-weight-bold">{list.baseName}</div>
                 <div>{modifiedInfo}</div>
             </TitleContainer>
             <ContentContainer>

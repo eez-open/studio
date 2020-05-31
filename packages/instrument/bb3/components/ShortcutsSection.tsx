@@ -1,6 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
 
+import { theme } from "eez-studio-ui/theme";
+
 import { ShortcutsToolbar } from "instrument/window/terminal/toolbar";
 import { executeShortcut } from "instrument/window/script";
 
@@ -20,7 +22,7 @@ export const ShortcutsSection = observer(({ appStore }: { appStore: InstrumentAp
                     }}
                     style={{
                         border: 0,
-                        backgroundColor: "white",
+                        backgroundColor: theme.panelHeaderColor,
                         padding: 0,
                         margin: 0
                     }}

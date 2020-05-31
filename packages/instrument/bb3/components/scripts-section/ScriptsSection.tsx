@@ -6,7 +6,7 @@ import { Loader } from "eez-studio-ui/loader";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 
 import { Section } from "instrument/bb3/components/Section";
-import { ScriptsSectionSelectView } from "instrument/bb3/components/scripts-section/ScriptsSectionSelectView";
+//import { ScriptsSectionSelectView } from "instrument/bb3/components/scripts-section/ScriptsSectionSelectView";
 import { ScriptsSectionGlobalActions } from "instrument/bb3/components/scripts-section/ScriptsSectionGlobalActions";
 import { ScriptsSectionList } from "instrument/bb3/components/scripts-section/ScriptsSectionList";
 
@@ -17,7 +17,7 @@ export const ScriptsSection = observer(({ bb3Instrument }: { bb3Instrument: BB3I
             titleControls={
                 bb3Instrument.refreshInProgress ? null : (
                     <>
-                        <ScriptsSectionSelectView bb3Instrument={bb3Instrument} />
+                        {/*<ScriptsSectionSelectView bb3Instrument={bb3Instrument} />*/}
                         <ScriptsSectionGlobalActions bb3Instrument={bb3Instrument} />
                     </>
                 )
@@ -32,7 +32,7 @@ export const ScriptsSection = observer(({ bb3Instrument }: { bb3Instrument: BB3I
                                 Failed to get info about scripts on the instruments!
                             </div>
                         )}
-                        <ScriptsSectionList scripts={bb3Instrument.selectedScriptsCollection} />
+                        <ScriptsSectionList scripts={bb3Instrument.allScriptsCollection} />
                     </>
                 )
             }

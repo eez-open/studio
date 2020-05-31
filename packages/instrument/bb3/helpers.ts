@@ -1,3 +1,8 @@
+import * as notification from "eez-studio-ui/notification";
+
+import { getConnection, Connection } from "instrument/window/connection";
+import { BB3Instrument } from "./objects/BB3Instrument";
+
 export function removeQuotes(str: string) {
     if (str.length >= 2 && str[0] == '"' && str[str.length - 1] == '"') {
         return str.substr(1, str.length - 2);
@@ -45,4 +50,32 @@ export function fetchFileUrl(fileUrl: string) {
 
         req.send();
     });
+}
+
+export async function useConnection(
+    obj: {
+        bb3Instrument: BB3Instrument;
+        setBusy(value: boolean): void;
+    },
+    callback: (connection: Connection) => Promise<void>,
+    traceEnabled: boolean
+) {
+    const connection = getConnection(obj.bb3Instrument.appStore);
+    if (!connection.isConnected) {
+        return;
+    }
+
+    obj.setBusy(true);
+    try {
+        connection.acquire(traceEnabled);
+        try {
+            await callback(connection);
+        } finally {
+            connection.release();
+        }
+    } catch (err) {
+        notification.error(err.toString());
+    } finally {
+        obj.setBusy(false);
+    }
 }

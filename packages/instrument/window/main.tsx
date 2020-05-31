@@ -5,6 +5,7 @@ import { configure } from "mobx";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
+import * as notification from "eez-studio-ui/notification";
 
 import { instruments } from "instrument/instrument-object";
 
@@ -25,7 +26,12 @@ loadExtensions().then(() => {
         instrumentEditor.onActivate();
 
         ReactDOM.render(
-            <ThemeProvider theme={theme}>{instrumentEditor.render()}</ThemeProvider>,
+            <ThemeProvider theme={theme}>
+                <>
+                    {instrumentEditor.render()}
+                    {notification.container}
+                </>
+            </ThemeProvider>,
             document.getElementById("EezStudio_Content")
         );
     } else {

@@ -2,6 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { Loader } from "eez-studio-ui/loader";
+
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import { Section } from "instrument/bb3/components/Section";
 import { ModuleItem } from "instrument/bb3/components/modules-section/ModuleItem";
@@ -13,7 +14,7 @@ export const ModulesSection = observer(({ bb3Instrument }: { bb3Instrument: BB3I
         body = <Loader />;
     } else if (bb3Instrument.modules) {
         body = (
-            <table className="table">
+            <table className="table mb-0 border bg-white">
                 <thead>
                     <tr>
                         <th>Slot #</th>

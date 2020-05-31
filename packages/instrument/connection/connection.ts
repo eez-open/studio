@@ -291,6 +291,8 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     }
 
     onDataLineReceived(data: string) {
+        this.logAnswer(data);
+
         data = data.trim();
         if (data) {
             const value = parseScpiValue(data);
@@ -601,6 +603,9 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     acquire(callbackWindowId: number, traceEnabled: true) {
         if (!this.isConnected) {
             return "not connected";
+        }
+        if (this.callbackWindowId) {
+            return "connection resource is not available";
         }
         this.callbackWindowId = callbackWindowId;
         this.traceEnabled = traceEnabled;

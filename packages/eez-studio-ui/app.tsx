@@ -1,6 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-import classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import {
@@ -10,7 +9,7 @@ import {
     Body
 } from "eez-studio-ui/header-with-body";
 import { Navigation, INavigationItem } from "eez-studio-ui/navigation";
-import * as notification from "eez-studio-ui/notification";
+import { styled } from "eez-studio-ui/styled-components";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -18,6 +17,13 @@ export interface IRootNavigationItem extends INavigationItem {
     renderContent: () => JSX.Element;
     selectItem?: (itemId: string) => void;
 }
+
+const Container = styled.div`
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+`;
 
 @observer
 export class AppRootComponent extends React.Component<
@@ -58,10 +64,8 @@ export class AppRootComponent extends React.Component<
         //     devTools = <DevTools />;
         // }
 
-        let className = classNames("EezStudio_App", this.props.className);
-
         return (
-            <div className={className}>
+            <Container className={this.props.className}>
                 <VerticalHeaderWithBody>
                     <Header>{this.props.appBar}</Header>
                     <Body>
@@ -83,9 +87,8 @@ export class AppRootComponent extends React.Component<
                         </HorizontalHeaderWithBody>
                     </Body>
                 </VerticalHeaderWithBody>
-                {notification.container}
                 {devTools}
-            </div>
+            </Container>
         );
     }
 }

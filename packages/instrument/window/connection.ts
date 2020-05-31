@@ -96,7 +96,6 @@ export class Connection {
     query(query: string) {
         return new Promise<any>((resolve, reject) => {
             if (this.isConnected) {
-                console.log(query);
                 this.resolveCallback = resolve;
                 this.rejectCallback = reject;
                 this.instrument.connection.send(query);
@@ -115,7 +114,6 @@ export class Connection {
     }
 
     onValue(value: any) {
-        console.log("onValue", typeof value, `"${value}"`, typeof this.resolveCallback);
         if (value.logEntry !== undefined) {
             value = createHistoryItem(value.logEntry, this.appStore);
         }

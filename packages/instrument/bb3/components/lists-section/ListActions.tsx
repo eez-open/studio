@@ -22,8 +22,8 @@ export const ListActions = observer(({ list }: { list: List }) => {
             {list.canDownload && (
                 <button
                     className={classNames("btn btn-sm", {
-                        "btn-primary": list.instrumentVersionNewer,
-                        "btn-secondary": !list.instrumentVersionNewer
+                        "btn-primary": list.instrumentVersionNewer || !list.studioList,
+                        "btn-secondary": !(list.instrumentVersionNewer || !list.studioList)
                     })}
                     onClick={list.download}
                     disabled={list.bb3Instrument.busy}
@@ -35,8 +35,8 @@ export const ListActions = observer(({ list }: { list: List }) => {
             {list.canUpload && (
                 <button
                     className={classNames("btn btn-sm", {
-                        "btn-primary": list.studioVersionNewer,
-                        "btn-secondary": !list.studioVersionNewer
+                        "btn-primary": list.studioVersionNewer || !list.listOnInstrument,
+                        "btn-secondary": !(list.studioVersionNewer || !list.listOnInstrument)
                     })}
                     onClick={list.upload}
                     disabled={list.bb3Instrument.busy}

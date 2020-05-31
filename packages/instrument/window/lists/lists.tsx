@@ -107,6 +107,7 @@ class MasterView extends React.Component<
     @computed
     get sortedLists() {
         return this.props.appStore.instrumentLists
+            .slice()
             .sort((a, b) => stringCompare(a.name, b.name))
             .map(list => ({
                 id: list.id,

@@ -52,7 +52,7 @@ export const ModuleItem = observer(({ module }: { module: Module }) => {
     const versions = module.allReleases.map(release => release.version);
 
     let updateInfo;
-    if (module.updateInProgress) {
+    if (module.busy) {
         updateInfo = <Loader />;
     } else {
         updateInfo = (

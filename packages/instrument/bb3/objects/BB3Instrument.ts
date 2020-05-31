@@ -1,12 +1,14 @@
 import { observable, computed, reaction, runInAction, action, autorun, toJS } from "mobx";
 
+import { stringCompare } from "eez-studio-shared/string";
+
 import { InstrumentObject } from "instrument/instrument-object";
 import { getConnection, Connection } from "instrument/window/connection";
 import { InstrumentAppStore } from "instrument/window/app-store";
 
 import { compareVersions } from "eez-studio-shared/util";
 import { FIRMWARE_RELEASES_URL, MODULE_FIRMWARE_RELEASES_URL } from "instrument/bb3/conf";
-import { removeQuotes } from "instrument/bb3/helpers";
+import { removeQuotes, useConnection } from "instrument/bb3/helpers";
 import { Module, ModuleFirmwareRelease } from "instrument/bb3/objects/Module";
 import {
     Script,
@@ -65,12 +67,6 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
 
 function getModuleFirmwareReleases(moduleType: string) {
     return new Promise<ModuleFirmwareRelease[]>((resolve, reject) => {
-        // TODO this is exception, DCM224 shares the same repository with DCM220,
-        //      in the future this could be changed
-        if (moduleType.toUpperCase() == "DCM224") {
-            moduleType = "DCM220";
-        }
-
         let req = new XMLHttpRequest();
         req.responseType = "json";
         req.open("GET", MODULE_FIRMWARE_RELEASES_URL(moduleType));
@@ -171,8 +167,8 @@ export class BB3Instrument {
     @observable timeOfLastRefresh: Date | undefined;
     @observable mcu: IMcu;
     @observable modules: Module[] | undefined;
-    @observable scripts: Script[];
-    @observable lists: List[];
+    @observable scripts: Script[] = [];
+    @observable lists: List[] = [];
 
     // UI state
     @observable selectedScriptsCollectionType: ScriptsCollectionType;
@@ -296,84 +292,76 @@ export class BB3Instrument {
             return;
         }
 
-        this.setRefreshInProgress(true);
-        try {
-            if (forceRefresh || this.isTimeForRefresh) {
-                findLatestFirmwareReleases(this);
-            }
-
-            this.scriptsCatalog.load();
-
-            /////
-
-            const connection = getConnection(this.appStore);
-            if (!connection.isConnected) {
-                return;
-            }
-
-            connection.acquire(false);
-
-            let firmwareVersion: string | undefined;
-            let modules: Module[] | undefined;
-            let scriptsOnInstrument: IScriptOnInstrument[] | undefined;
-            let listsOnInstrument: IListOnInstrument[] | undefined;
-
-            try {
-                firmwareVersion = removeQuotes(await connection.query("SYST:CPU:FIRM?"));
-            } catch (err) {
-                console.error("failed to get firmware version", err);
-            }
-
-            if (firmwareVersion) {
-                try {
-                    modules = await getModulesInfoFromInstrument(
-                        this,
-                        firmwareVersion,
-                        connection,
-                        forceRefresh
-                    );
-                } catch (err) {
-                    console.error("failed to get slots info", err);
+        await useConnection(
+            {
+                bb3Instrument: this,
+                setBusy: (value: boolean) => {
+                    this.setRefreshInProgress(value);
+                }
+            },
+            async connection => {
+                if (forceRefresh || this.isTimeForRefresh) {
+                    findLatestFirmwareReleases(this);
                 }
 
-                try {
-                    scriptsOnInstrument = await getScriptsOnTheInstrument(
-                        connection,
-                        this.scriptsOnInstrument
-                    );
-                } catch (err) {
-                    console.error("failed to get scripts on the instrument info", err);
-                }
+                this.scriptsCatalog.load();
+
+                let firmwareVersion: string | undefined;
+                let modules: Module[] | undefined;
+                let scriptsOnInstrument: IScriptOnInstrument[] | undefined;
+                let listsOnInstrument: IListOnInstrument[] | undefined;
 
                 try {
-                    listsOnInstrument = await getListsOnTheInstrument(connection);
+                    firmwareVersion = removeQuotes(await connection.query("SYST:CPU:FIRM?"));
                 } catch (err) {
-                    console.error("failed to get lists on the instrument info", err);
+                    console.error("failed to get firmware version", err);
                 }
-            }
 
-            connection.release();
+                if (firmwareVersion) {
+                    try {
+                        modules = await getModulesInfoFromInstrument(
+                            this,
+                            firmwareVersion,
+                            connection,
+                            forceRefresh
+                        );
+                    } catch (err) {
+                        console.error("failed to get slots info", err);
+                    }
 
-            /////
+                    try {
+                        scriptsOnInstrument = await getScriptsOnTheInstrument(
+                            connection,
+                            this.scriptsOnInstrument
+                        );
+                    } catch (err) {
+                        console.error("failed to get scripts on the instrument info", err);
+                    }
 
-            runInAction(() => {
-                this.timeOfLastRefresh = new Date();
-                this.mcu.firmwareVersion = firmwareVersion;
-                this.modules = modules;
-                this.scriptsOnInstrumentFetchError = !scriptsOnInstrument;
-                this.listsOnInstrumentFetchError = !listsOnInstrument;
-            });
+                    try {
+                        listsOnInstrument = await getListsOnTheInstrument(connection);
+                    } catch (err) {
+                        console.error("failed to get lists on the instrument info", err);
+                    }
+                }
+                runInAction(() => {
+                    this.timeOfLastRefresh = new Date();
+                    this.mcu.firmwareVersion = firmwareVersion;
+                    this.modules = modules;
+                    this.scriptsOnInstrumentFetchError = !scriptsOnInstrument;
+                    this.listsOnInstrumentFetchError = !listsOnInstrument;
+                });
 
-            if (scriptsOnInstrument) {
-                this.refreshScripts(scriptsOnInstrument);
-            }
+                if (scriptsOnInstrument) {
+                    this.refreshScripts(scriptsOnInstrument);
+                }
 
-            if (listsOnInstrument) {
-                this.refreshLists(listsOnInstrument);
-            }
-        } finally {
-            this.setRefreshInProgress(false);
-        }
+                if (listsOnInstrument) {
+                    this.refreshLists(listsOnInstrument);
+                }
+            },
+            false
+        );
     }
 
     @action
@@ -418,34 +406,36 @@ export class BB3Instrument {
 
     @computed
     get allScriptsCollection() {
-        return this.scripts;
+        return this.scripts.slice().sort((a, b) => stringCompare(a.name, b.name));
     }
 
     @computed
     get catalogScriptsCollection() {
-        return this.scripts.filter(script => script.catalogScriptItem);
+        return this.allScriptsCollection.filter(script => script.catalogScriptItem);
     }
 
     @computed
     get instrumentScriptsCollection() {
-        return this.scripts.filter(script => script.scriptOnInstrument);
+        return this.allScriptsCollection.filter(script => script.scriptOnInstrument);
     }
 
     @computed
     get notInstalledCatalogScriptsCollection() {
-        return this.scripts.filter(
+        return this.allScriptsCollection.filter(
             script => script.catalogScriptItem && !script.scriptOnInstrument
         );
     }
 
     @computed
     get installedCatalogScriptsCollection() {
-        return this.scripts.filter(script => script.catalogScriptItem && script.scriptOnInstrument);
+        return this.allScriptsCollection.filter(
+            script => script.catalogScriptItem && script.scriptOnInstrument
+        );
     }
 
     @computed
     get instrumentScriptsNotInCatalogCollection() {
-        return this.scripts.filter(
+        return this.allScriptsCollection.filter(
             script => !script.catalogScriptItem && script.scriptOnInstrument
         );
     }
@@ -456,7 +446,7 @@ export class BB3Instrument {
     }
 
     @computed get canInstallAllScripts() {
-        return this.notInstalledCatalogScriptsCollection.length >= 2 && !this.busy;
+        return this.notInstalledCatalogScriptsCollection.length > 0 && !this.busy;
     }
 
     @action setBusy(value: boolean) {
@@ -503,6 +493,11 @@ export class BB3Instrument {
     }
 
     @computed
+    get sortedLists() {
+        return this.lists.slice().sort((a, b) => stringCompare(a.baseName, b.baseName));
+    }
+
+    @computed
     get listsOnInstrument() {
         return this.lists
             .filter(list => !!list.listOnInstrument)
@@ -511,14 +506,17 @@ export class BB3Instrument {
 
     @computed
     get canDownloadAllLists() {
-        return !this.busy && this.lists.filter(list => list.instrumentVersionNewer).length > 1;
+        return (
+            !this.busy &&
+            this.lists.filter(list => list.instrumentVersionNewer || !list.studioList).length > 0
+        );
     }
 
     downloadAllLists = async () => {
         if (this.canDownloadAllLists) {
             this.setBusy(true);
             try {
-                for (const list of this.lists) {
+                for (const list of this.sortedLists) {
                     if (list.instrumentVersionNewer) {
                         await list.download();
                     }
@@ -531,14 +529,17 @@ export class BB3Instrument {
 
     @computed
     get canUploadAllLists() {
-        return !this.busy && this.lists.filter(list => list.studioVersionNewer).length > 1;
+        return (
+            !this.busy &&
+            this.lists.filter(list => list.studioVersionNewer || !list.listOnInstrument).length > 0
+        );
     }
 
     uploadAllLists = async () => {
         if (this.canUploadAllLists) {
             this.setBusy(true);
             try {
-                for (const list of this.lists) {
+                for (const list of this.sortedLists) {
                     if (list.studioVersionNewer) {
                         await list.upload();
                     }
