@@ -10,6 +10,7 @@ const Container = styled.div`
     & > div {
         margin: 0;
         max-width: initial;
+        overflow: auto;
     }
 `;
 
