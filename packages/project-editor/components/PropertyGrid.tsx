@@ -46,7 +46,8 @@ import {
     getKey,
     getId,
     getClassInfo,
-    getLabel
+    getLabel,
+    getRootObject
 } from "project-editor/core/object";
 
 import { replaceObjectReference } from "project-editor/core/search";
@@ -64,6 +65,18 @@ const { Menu, MenuItem } = EEZStudio.electron.remote;
 export { PropertyProps } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+function isObjectReadOnly(object: IEezObject) {
+    return getRootObject(object) != ProjectStore.project;
+}
+
+function isAnyObjectReadOnly(objects: IEezObject[]) {
+    return !!objects.find(isObjectReadOnly);
+}
+
+function getPropertyName(propertyInfo: PropertyInfo) {
+    return propertyInfo.displayName ?? humanize(propertyInfo.name);
+}
 
 function getPropertyValue(objects: IEezObject[], propertyInfo: PropertyInfo) {
     if (objects.length === 0) {
@@ -182,6 +195,10 @@ class PropertyMenu extends React.Component<PropertyProps> {
     }
 
     render() {
+        if (this.props.readOnly) {
+            return null;
+        }
+
         let title = humanize(this.sourceInfo.source);
         if (this.sourceInfo.inheritedFrom) {
             title += " from " + objectToString(this.sourceInfo.inheritedFrom);
@@ -259,11 +276,11 @@ class CodeEditorProperty extends React.Component<
     }
 
     render() {
-        const { propertyInfo, showLabel } = this.props;
+        const { propertyInfo, showLabel, readOnly } = this.props;
         return (
             <React.Fragment>
                 {(showLabel == undefined || showLabel) && (
-                    <div>{propertyInfo.displayName || humanize(propertyInfo.name)}</div>
+                    <div>{getPropertyName(propertyInfo)}</div>
                 )}
                 <CodeEditor
                     ref={(ref: any) => (this.editor = ref)}
@@ -275,6 +292,7 @@ class CodeEditorProperty extends React.Component<
                     mode={this.props.mode}
                     minLines={2}
                     maxLines={50}
+                    readOnly={readOnly}
                 />
             </React.Fragment>
         );
@@ -287,6 +305,7 @@ class CodeEditorProperty extends React.Component<
 class ThemedColorInput extends React.Component<{
     value: any;
     onChange: (newValue: any) => void;
+    readOnly: boolean;
 }> {
     @bind
     onDragOver(event: React.DragEvent) {
@@ -316,7 +335,7 @@ class ThemedColorInput extends React.Component<{
     }
 
     render() {
-        const { value } = this.props;
+        const { value, readOnly } = this.props;
 
         const color = getThemedColor(value);
 
@@ -333,7 +352,13 @@ class ThemedColorInput extends React.Component<{
                 onDrop={this.onDrop}
                 onDragOver={this.onDragOver}
             >
-                <input type="color" hidden value={value} onChange={this.onChange} />
+                <input
+                    type="color"
+                    hidden
+                    value={value}
+                    onChange={this.onChange}
+                    readOnly={readOnly}
+                />
                 {value}
             </label>
         );
@@ -381,6 +406,7 @@ function isPropertyInError(object: IEezObject, propertyInfo: PropertyInfo) {
 class ArrayElementProperty extends React.Component<{
     propertyInfo: PropertyInfo;
     object: IEezObject;
+    readOnly: boolean;
 }> {
     @bind
     updateObject(propertyValues: Object) {
@@ -407,6 +433,7 @@ class ArrayElementProperty extends React.Component<{
                     <Property
                         propertyInfo={propertyInfo}
                         objects={[this.props.object]}
+                        readOnly={this.props.readOnly}
                         updateObject={this.updateObject}
                     />
                 </td>
@@ -420,6 +447,7 @@ class ArrayElementProperty extends React.Component<{
 @observer
 class ArrayElementProperties extends React.Component<{
     object: IEezObject;
+    readOnly: boolean;
     className?: string;
 }> {
     @bind
@@ -436,6 +464,7 @@ class ArrayElementProperties extends React.Component<{
                         key={propertyInfo.name}
                         propertyInfo={propertyInfo}
                         object={this.props.object}
+                        readOnly={this.props.readOnly}
                     />
                 ))}
                 <td>
@@ -509,7 +538,7 @@ class ArrayProperty extends React.Component<PropertyProps> {
                             .filter(propertyInfo => isArrayElementPropertyVisible(propertyInfo))
                             .map(propertyInfo => (
                                 <th key={propertyInfo.name} className={propertyInfo.name}>
-                                    {propertyInfo.displayName || humanize(propertyInfo.name)}
+                                    {getPropertyName(propertyInfo)}
                                 </th>
                             ))}
                     </tr>
@@ -517,7 +546,11 @@ class ArrayProperty extends React.Component<PropertyProps> {
                 <tbody>
                     {this.value &&
                         this.value.map(object => (
-                            <ArrayElementProperties key={getId(object)} object={object} />
+                            <ArrayElementProperties
+                                key={getId(object)}
+                                object={object}
+                                readOnly={this.props.readOnly}
+                            />
                         ))}
                 </tbody>
             </React.Fragment>
@@ -625,6 +658,7 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
                             object => (object as any)[propertyInfo.name]
                         )}
                         updateObject={this.updateObject}
+                        readOnly={this.props.readOnly}
                     />
                 );
             } else {
@@ -640,7 +674,7 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
                                 size={18}
                                 className="triangle"
                             />
-                            {propertyInfo.displayName || humanize(propertyInfo.name)}
+                            {getPropertyName(propertyInfo)}
                         </div>
                     </div>
                 );
@@ -651,7 +685,7 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
             <div className="embedded-property-grid collapsable">
                 <div onClick={this.toggleCollapsed}>
                     <Icon icon="material:keyboard_arrow_down" size={18} className="triangle" />
-                    {propertyInfo.displayName || humanize(propertyInfo.name)}
+                    {getPropertyName(propertyInfo)}
                 </div>
                 <PropertyGrid
                     objects={this.props.objects.map(object => (object as any)[propertyInfo.name])}
@@ -694,7 +728,7 @@ class PropertyName extends React.Component<PropertyProps> {
                             className="triangle"
                         />
                     )}
-                    {propertyInfo.displayName || humanize(propertyInfo.name)}
+                    {getPropertyName(propertyInfo)}
                     {isAnyPropertyModified({
                         ...this.props,
                         objects: this.props.objects.map(
@@ -704,7 +738,7 @@ class PropertyName extends React.Component<PropertyProps> {
                 </div>
             );
         } else {
-            return propertyInfo.displayName || humanize(propertyInfo.name);
+            return getPropertyName(propertyInfo);
         }
     }
 }
@@ -802,6 +836,10 @@ class Property extends React.Component<PropertyProps> {
 
     @action.bound
     changeValue(newValue: any) {
+        if (this.props.readOnly) {
+            return;
+        }
+
         if (this.props.propertyInfo.readOnlyInPropertyGrid) {
             return;
         }
@@ -908,7 +946,7 @@ class Property extends React.Component<PropertyProps> {
     }
 
     render() {
-        const propertyInfo = this.props.propertyInfo;
+        const { propertyInfo, readOnly } = this.props;
 
         if (propertyInfo.readOnlyInPropertyGrid) {
             const getPropertyValueAsStringResult = getPropertyValueAsString(
@@ -934,15 +972,17 @@ class Property extends React.Component<PropertyProps> {
                         value={this._value || ""}
                         readOnly
                     />
-                    <div className="input-group-append">
-                        <button
-                            className="btn btn-secondary"
-                            type="button"
-                            onClick={this.onEditUnique}
-                        >
-                            &hellip;
-                        </button>
-                    </div>
+                    {!readOnly && (
+                        <div className="input-group-append">
+                            <button
+                                className="btn btn-secondary"
+                                type="button"
+                                onClick={this.onEditUnique}
+                            >
+                                &hellip;
+                            </button>
+                        </div>
+                    )}
                 </div>
             );
         } else if (propertyInfo.type === PropertyType.MultilineText) {
@@ -953,6 +993,7 @@ class Property extends React.Component<PropertyProps> {
                     value={this._value || ""}
                     onChange={this.onChange}
                     style={{ resize: "none" }}
+                    readOnly={readOnly}
                 />
             );
         } else if (propertyInfo.type === PropertyType.JSON) {
@@ -981,127 +1022,153 @@ class Property extends React.Component<PropertyProps> {
                             value={value}
                             readOnly
                         />
-                        <div className="input-group-append">
-                            <button
-                                className="btn btn-secondary"
-                                type="button"
-                                title={this.props.propertyInfo.onSelectTitle}
-                                onClick={this.onSelect}
-                            >
-                                &hellip;
-                            </button>
-                        </div>
+                        {!readOnly && (
+                            <div className="input-group-append">
+                                <button
+                                    className="btn btn-secondary"
+                                    type="button"
+                                    title={this.props.propertyInfo.onSelectTitle}
+                                    onClick={this.onSelect}
+                                >
+                                    &hellip;
+                                </button>
+                            </div>
+                        )}
                     </div>
                 );
             } else {
                 return <EmbeddedPropertyGrid {...this.props} />;
             }
         } else if (propertyInfo.type === PropertyType.Enum) {
-            let options: JSX.Element[];
-
-            if (propertyInfo.enumItems) {
-                options = propertyInfo.enumItems.map(enumItem => {
-                    const id = enumItem.id.toString();
-                    return (
-                        <option key={id} value={id}>
-                            {enumItem.label || humanize(id)}
-                        </option>
-                    );
-                });
-            } else {
-                options = [];
-            }
-
-            options.unshift(<option key="__empty" value="" />);
-
-            return (
-                <select
-                    ref={(ref: any) => (this.select = ref)}
-                    className="form-control"
-                    value={this._value !== undefined ? this._value : ""}
-                    onChange={this.onChange}
-                >
-                    {options}
-                </select>
-            );
-        } else if (propertyInfo.type === PropertyType.ObjectReference) {
-            if (this.props.propertyInfo.onSelect) {
+            if (readOnly) {
                 return (
-                    <div className="input-group" title={this._value || ""}>
-                        <input
-                            ref={(ref: any) => (this.input = ref)}
-                            type="text"
-                            className="form-control"
-                            value={this._value || ""}
-                            onChange={this.onChange}
-                            readOnly={propertyInfo.computed}
-                        />
-                        <div className="input-group-append">
-                            <button
-                                className="btn btn-secondary"
-                                type="button"
-                                onClick={this.onSelect}
-                                title={this.props.propertyInfo.onSelectTitle}
-                            >
-                                &hellip;
-                            </button>
-                        </div>
-                    </div>
+                    <input
+                        ref={(ref: any) => (this.input = ref)}
+                        type="text"
+                        className="form-control"
+                        value={this._value || ""}
+                        readOnly
+                    />
                 );
             } else {
-                let objects: IEezObject[] = [];
+                let options: JSX.Element[];
 
-                if (propertyInfo.referencedObjectCollectionPath) {
-                    objects = DocumentStore.getObjectFromPath(
-                        propertyInfo.referencedObjectCollectionPath
-                    ) as IEezObject[];
-                    if (!objects) {
-                        objects = [];
-                    }
-                }
-
-                let options = objects
-                    .slice()
-                    .sort((a, b) => stringCompare(getLabel(a), getLabel(b)))
-                    .map(object => {
+                if (propertyInfo.enumItems) {
+                    options = propertyInfo.enumItems.map(enumItem => {
+                        const id = enumItem.id.toString();
                         return (
-                            <option key={getId(object)} value={getProperty(object, "name")}>
-                                {objectToString(object)}
+                            <option key={id} value={id}>
+                                {enumItem.label || humanize(id)}
                             </option>
                         );
                     });
+                } else {
+                    options = [];
+                }
 
                 options.unshift(<option key="__empty" value="" />);
-
-                if (
-                    this._value &&
-                    !objects.find(object => getProperty(object, "name") == this._value)
-                ) {
-                    if (typeof this._value == "object") {
-                        options.unshift(
-                            <option key="__not_found" value={getProperty(this._value, "name")}>
-                                {objectToString(this._value)}
-                            </option>
-                        );
-                    } else {
-                        options.unshift(
-                            <option key="__not_found" value={this._value}>
-                                {this._value}
-                            </option>
-                        );
-                    }
-                }
 
                 return (
                     <select
                         ref={(ref: any) => (this.select = ref)}
                         className="form-control"
-                        value={this._value || ""}
+                        value={this._value !== undefined ? this._value : ""}
                         onChange={this.onChange}
                     >
                         {options}
                     </select>
                 );
+            }
+        } else if (propertyInfo.type === PropertyType.ObjectReference) {
+            if (readOnly) {
+                return (
+                    <input
+                        ref={(ref: any) => (this.input = ref)}
+                        type="text"
+                        className="form-control"
+                        value={this._value || ""}
+                        readOnly
+                    />
+                );
+            } else {
+                if (this.props.propertyInfo.onSelect) {
+                    return (
+                        <div className="input-group" title={this._value || ""}>
+                            <input
+                                ref={(ref: any) => (this.input = ref)}
+                                type="text"
+                                className="form-control"
+                                value={this._value || ""}
+                                onChange={this.onChange}
+                                readOnly={propertyInfo.computed}
+                            />
+                            <div className="input-group-append">
+                                <button
+                                    className="btn btn-secondary"
+                                    type="button"
+                                    onClick={this.onSelect}
+                                    title={this.props.propertyInfo.onSelectTitle}
+                                >
+                                    &hellip;
+                                </button>
+                            </div>
+                        </div>
+                    );
+                } else {
+                    let objects: IEezObject[] = [];
+
+                    if (propertyInfo.referencedObjectCollectionPath) {
+                        objects = DocumentStore.getObjectFromPath(
+                            propertyInfo.referencedObjectCollectionPath.split("/")
+                        ) as IEezObject[];
+                        if (!objects) {
+                            objects = [];
+                        }
+                    }
+
+                    let options = objects
+                        .slice()
+                        .sort((a, b) => stringCompare(getLabel(a), getLabel(b)))
+                        .map(object => {
+                            return (
+                                <option key={getId(object)} value={getProperty(object, "name")}>
+                                    {objectToString(object)}
+                                </option>
+                            );
+                        });
+
+                    options.unshift(<option key="__empty" value="" />);
+
+                    if (
+                        this._value &&
+                        !objects.find(object => getProperty(object, "name") == this._value)
+                    ) {
+                        if (typeof this._value == "object") {
+                            options.unshift(
+                                <option key="__not_found" value={getProperty(this._value, "name")}>
+                                    {objectToString(this._value)}
+                                </option>
+                            );
+                        } else {
+                            options.unshift(
+                                <option key="__not_found" value={this._value}>
+                                    {this._value}
+                                </option>
+                            );
+                        }
+                    }
+
+                    return (
+                        <select
+                            ref={(ref: any) => (this.select = ref)}
+                            className="form-control"
+                            value={this._value || ""}
+                            onChange={this.onChange}
+                        >
+                            {options}
+                        </select>
+                    );
+                }
             }
         } else if (propertyInfo.type === PropertyType.Boolean) {
             return (
@@ -1111,8 +1178,9 @@ class Property extends React.Component<PropertyProps> {
                         type="checkbox"
                         checked={this._value || false}
                         onChange={this.onChange}
+                        readOnly={readOnly}
                     />
-                    <span>{" " + (propertyInfo.displayName || humanize(propertyInfo.name))}</span>
+                    <span>{" " + getPropertyName(propertyInfo)}</span>
                 </label>
             );
         } else if (propertyInfo.type === PropertyType.GUID) {
@@ -1124,21 +1192,24 @@ class Property extends React.Component<PropertyProps> {
                         className="form-control"
                         value={this._value || ""}
                         onChange={this.onChange}
+                        readOnly={readOnly}
                     />
-                    <div className="input-group-append">
-                        <button
-                            className="btn btn-secondary"
-                            type="button"
-                            title="Generate GUID"
-                            onClick={this.onGenerateGuid}
-                        >
-                            +
-                        </button>
-                    </div>
+                    {!readOnly && (
+                        <div className="input-group-append">
+                            <button
+                                className="btn btn-secondary"
+                                type="button"
+                                title="Generate GUID"
+                                onClick={this.onGenerateGuid}
+                            >
+                                +
+                            </button>
+                        </div>
+                    )}
                 </div>
             );
         } else if (propertyInfo.type === PropertyType.String) {
-            if (this.props.propertyInfo.onSelect) {
+            if (!readOnly && this.props.propertyInfo.onSelect) {
                 return (
                     <div className="input-group" title={this._value || ""}>
                         <input
@@ -1171,7 +1242,7 @@ class Property extends React.Component<PropertyProps> {
                         value={this._value || ""}
                         onChange={this.onChange}
                         onKeyDown={this.onKeyDown}
-                        readOnly={propertyInfo.computed}
+                        readOnly={readOnly || propertyInfo.computed}
                     />
                 );
             }
@@ -1184,6 +1255,7 @@ class Property extends React.Component<PropertyProps> {
                     value={this._value != undefined ? this._value : ""}
                     onChange={this.onChange}
                     onKeyDown={this.onKeyDown}
+                    readOnly={readOnly}
                 />
             );
         } else if (propertyInfo.type === PropertyType.Color) {
@@ -1194,10 +1266,17 @@ class Property extends React.Component<PropertyProps> {
                     className="form-control"
                     value={this._value || ""}
                     onChange={this.onChange}
+                    readOnly={readOnly}
                 />
             );
         } else if (propertyInfo.type === PropertyType.ThemedColor) {
-            return <ThemedColorInput value={this._value || ""} onChange={this.changeValue} />;
+            return (
+                <ThemedColorInput
+                    value={this._value || ""}
+                    onChange={this.changeValue}
+                    readOnly={readOnly}
+                />
+            );
         } else if (propertyInfo.type === PropertyType.Array) {
             return <ArrayProperty {...this.props} />;
         } else if (propertyInfo.type === PropertyType.ConfigurationReference) {
@@ -1205,12 +1284,13 @@ class Property extends React.Component<PropertyProps> {
                 <ConfigurationReferencesPropertyValue
                     value={this._value || ""}
                     onChange={this.changeValue}
+                    readOnly={readOnly}
                 />
             );
         } else if (propertyInfo.type === PropertyType.RelativeFolder) {
             let clearButton: JSX.Element | undefined;
 
-            if (this._value !== undefined) {
+            if (this._value !== undefined && !readOnly) {
                 clearButton = (
                     <button
                         className="btn btn-secondary"
@@ -1230,44 +1310,46 @@ class Property extends React.Component<PropertyProps> {
                         value={this._value || ""}
                         readOnly
                     />
-                    <div className="input-group-append">
-                        {clearButton}
-                        <button
-                            className="btn btn-secondary"
-                            type="button"
-                            onClick={async () => {
-                                if (ProjectStore.filePath) {
-                                    const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
-                                        {
-                                            properties: ["openDirectory"]
-                                        }
-                                    );
+                    {!readOnly && (
+                        <div className="input-group-append">
+                            {clearButton}
+                            <button
+                                className="btn btn-secondary"
+                                type="button"
+                                onClick={async () => {
+                                    if (ProjectStore.filePath) {
+                                        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
+                                            {
+                                                properties: ["openDirectory"]
+                                            }
+                                        );
 
-                                    const filePaths = result.filePaths;
-                                    if (filePaths && filePaths[0]) {
-                                        this.changeValue(
-                                            ProjectStore.getFolderPathRelativeToProjectPath(
-                                                filePaths[0]
-                                            )
+                                        const filePaths = result.filePaths;
+                                        if (filePaths && filePaths[0]) {
+                                            this.changeValue(
+                                                ProjectStore.getFolderPathRelativeToProjectPath(
+                                                    filePaths[0]
+                                                )
+                                            );
+                                        }
+                                    } else {
+                                        info(
+                                            "Project not saved.",
+                                            "To be able to select folder you need to save the project first."
                                         );
                                     }
-                                } else {
-                                    info(
-                                        "Project not saved.",
-                                        "To be able to select folder you need to save the project first."
-                                    );
-                                }
-                            }}
-                        >
-                            &hellip;
-                        </button>
-                    </div>
+                                }}
+                            >
+                                &hellip;
+                            </button>
+                        </div>
+                    )}
                 </div>
             );
         } else if (propertyInfo.type === PropertyType.RelativeFile) {
             let clearButton: JSX.Element | undefined;
 
-            if (this._value !== undefined) {
+            if (this._value !== undefined && !readOnly) {
                 clearButton = (
                     <button
                         className="btn btn-secondary"
@@ -1287,39 +1369,41 @@ class Property extends React.Component<PropertyProps> {
                         value={this._value || ""}
                         readOnly
                     />
-                    <div className="input-group-append">
-                        {clearButton}
-                        <button
-                            className="btn btn-secondary"
-                            type="button"
-                            onClick={async () => {
-                                if (ProjectStore.filePath) {
-                                    const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
-                                        {
-                                            properties: ["openFile"],
-                                            filters: propertyInfo.fileFilters
-                                        }
-                                    );
+                    {!readOnly && (
+                        <div className="input-group-append">
+                            {clearButton}
+                            <button
+                                className="btn btn-secondary"
+                                type="button"
+                                onClick={async () => {
+                                    if (ProjectStore.filePath) {
+                                        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
+                                            {
+                                                properties: ["openFile"],
+                                                filters: propertyInfo.fileFilters
+                                            }
+                                        );
 
-                                    const filePaths = result.filePaths;
-                                    if (filePaths && filePaths[0]) {
-                                        this.changeValue(
-                                            ProjectStore.getFolderPathRelativeToProjectPath(
-                                                filePaths[0]
-                                            )
+                                        const filePaths = result.filePaths;
+                                        if (filePaths && filePaths[0]) {
+                                            this.changeValue(
+                                                ProjectStore.getFolderPathRelativeToProjectPath(
+                                                    filePaths[0]
+                                                )
+                                            );
+                                        }
+                                    } else {
+                                        info(
+                                            "Project not saved.",
+                                            "To be able to select file you need to save the project first."
                                         );
                                     }
-                                } else {
-                                    info(
-                                        "Project not saved.",
-                                        "To be able to select file you need to save the project first."
-                                    );
-                                }
-                            }}
-                        >
-                            &hellip;
-                        </button>
-                    </div>
+                                }}
+                            >
+                                &hellip;
+                            </button>
+                        </div>
+                    )}
                 </div>
             );
         } else if (propertyInfo.type === PropertyType.Image) {
@@ -1334,51 +1418,53 @@ class Property extends React.Component<PropertyProps> {
                             }
                             readOnly
                         />
-                        <div className="input-group-append">
-                            <button
-                                className="btn btn-secondary"
-                                type="button"
-                                onClick={async () => {
-                                    const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
-                                        {
-                                            properties: ["openFile"],
-                                            filters: [
-                                                {
-                                                    name: "Image files",
-                                                    extensions: ["png", "jpg", "jpeg"]
-                                                },
-                                                { name: "All Files", extensions: ["*"] }
-                                            ]
-                                        }
-                                    );
-                                    const filePaths = result.filePaths;
-                                    if (filePaths && filePaths[0]) {
-                                        if (propertyInfo.embeddedImage) {
-                                            const fs = EEZStudio.electron.remote.require("fs");
-                                            fs.readFile(
-                                                ProjectStore.getAbsoluteFilePath(filePaths[0]),
-                                                "base64",
-                                                (err: any, data: any) => {
-                                                    if (!err) {
-                                                        this.changeValue(
-                                                            "data:image/png;base64," + data
-                                                        );
+                        {!readOnly && (
+                            <div className="input-group-append">
+                                <button
+                                    className="btn btn-secondary"
+                                    type="button"
+                                    onClick={async () => {
+                                        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
+                                            {
+                                                properties: ["openFile"],
+                                                filters: [
+                                                    {
+                                                        name: "Image files",
+                                                        extensions: ["png", "jpg", "jpeg"]
+                                                    },
+                                                    { name: "All Files", extensions: ["*"] }
+                                                ]
+                                            }
+                                        );
+                                        const filePaths = result.filePaths;
+                                        if (filePaths && filePaths[0]) {
+                                            if (propertyInfo.embeddedImage) {
+                                                const fs = EEZStudio.electron.remote.require("fs");
+                                                fs.readFile(
+                                                    ProjectStore.getAbsoluteFilePath(filePaths[0]),
+                                                    "base64",
+                                                    (err: any, data: any) => {
+                                                        if (!err) {
+                                                            this.changeValue(
+                                                                "data:image/png;base64," + data
+                                                            );
+                                                        }
                                                     }
-                                                }
-                                            );
-                                        } else {
-                                            this.changeValue(
-                                                ProjectStore.getFilePathRelativeToProjectPath(
-                                                    filePaths[0]
-                                                )
-                                            );
+                                                );
+                                            } else {
+                                                this.changeValue(
+                                                    ProjectStore.getFilePathRelativeToProjectPath(
+                                                        filePaths[0]
+                                                    )
+                                                );
+                                            }
                                         }
-                                    }
-                                }}
-                            >
-                                &hellip;
-                            </button>
-                        </div>
+                                    }}
+                                >
+                                    &hellip;
+                                </button>
+                            </div>
+                        )}
                     </div>
                     {this._value && !propertyInfo.embeddedImage && (
                         <img
@@ -1712,6 +1798,8 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             return null;
         }
 
+        const readOnly = isAnyObjectReadOnly(objects);
+
         let highlightedPropertyName: string | undefined;
         if (objects.length === 1) {
             let object;
@@ -1750,10 +1838,16 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                     (!propertyCollapsedStore.isCollapsed(propertyInfo) ||
                         !propertyInfo.propertyGridCollapsableDefaultPropertyName));
 
-            const propertyProps = { propertyInfo, objects, updateObject: this.updateObject };
+            const propertyProps = {
+                propertyInfo,
+                objects,
+                updateObject: this.updateObject,
+                readOnly
+            };
 
             let propertyMenuEnabled =
                 !propertyInfo.readOnlyInPropertyGrid &&
+                !readOnly &&
                 (propertyInfo.inheritable ||
                     (propertyInfo.propertyMenu &&
                         propertyInfo.propertyMenu(propertyProps).length > 0));
@@ -1801,6 +1895,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                                     propertyInfo={propertyInfo}
                                     objects={objects}
                                     updateObject={this.updateObject}
+                                    readOnly={readOnly}
                                 />
                             )}
                         </td>

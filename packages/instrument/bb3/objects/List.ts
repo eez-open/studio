@@ -27,7 +27,7 @@ export async function getListsOnTheInstrument(connection: Connection) {
     for (const fileInfoLine of filesInFolderAsArray) {
         const fileName = fileInfoLine.split(",")[0];
         if (fileName.toLowerCase().endsWith(".list")) {
-            const name = fileName.substr(0, fileName.indexOf("."));
+            const name = fileName.substr(0, fileName.lastIndexOf("."));
 
             const dateStr = await connection.query(`MMEMory:DATE? "/Lists/${fileName}"`);
             const [year, month, day] = dateStr.split(",");

@@ -15,14 +15,14 @@ const ConfigurationReferencesPropertyValueConfigurationsDiv = styled.div`
     padding-left: 1.25rem;
 `;
 
-export class ConfigurationReferencesPropertyValue extends React.Component<
-    {
-        value: string[] | undefined;
-        onChange: (value: string[] | undefined) => void;
-    },
-    {}
-> {
+export class ConfigurationReferencesPropertyValue extends React.Component<{
+    value: string[] | undefined;
+    onChange: (value: string[] | undefined) => void;
+    readOnly: boolean;
+}> {
     render() {
+        const { readOnly } = this.props;
+
         return (
             <ConfigurationReferencesPropertyValueDiv className="EezStudio_ProjectEditor_PropertyGrid">
                 <div className="form-check">
@@ -33,6 +33,7 @@ export class ConfigurationReferencesPropertyValue extends React.Component<
                             value="all"
                             checked={!this.props.value}
                             onChange={() => this.props.onChange(undefined)}
+                            readOnly={readOnly}
                         />
                         All build configurations
                     </label>
@@ -45,6 +46,7 @@ export class ConfigurationReferencesPropertyValue extends React.Component<
                             value="selected"
                             checked={!!this.props.value}
                             onChange={() => this.props.onChange([])}
+                            readOnly={readOnly}
                         />
                         Selected build configurations
                     </label>
@@ -72,6 +74,7 @@ export class ConfigurationReferencesPropertyValue extends React.Component<
                                                 }
                                                 this.props.onChange(value);
                                             }}
+                                            readOnly={readOnly}
                                         />
                                         {" " + configuration.name}
                                     </label>

@@ -102,6 +102,10 @@ export function fileExists(filePath: string) {
     });
 }
 
+export function fileExistsSync(filePath: string) {
+    return fs.existsSync(filePath);
+}
+
 export function copyFile(srcFilePath: string, destFilePath: string) {
     const { copy } = require("fs-extra");
     return copy(srcFilePath, destFilePath);

@@ -343,14 +343,6 @@ export class Tree extends React.Component<TreeProps, {}> {
 
     @bind
     onKeyDown(event: any) {
-        let focusedItemId = $(this.treeDiv).find(".tree-row.selected").attr("data-object-id");
-
-        if (!focusedItemId) {
-            return;
-        }
-
-        let $focusedItem = $(this.treeDiv).find(`.tree-row[data-object-id="${focusedItemId}"]`);
-
         if (event.altKey) {
         } else if (event.shiftKey) {
         } else if (event.ctrlKey) {
@@ -362,6 +354,14 @@ export class Tree extends React.Component<TreeProps, {}> {
                 this.props.treeAdapter.pasteSelection();
             }
         } else {
+            let focusedItemId = $(this.treeDiv).find(".tree-row.selected").attr("data-object-id");
+
+            if (!focusedItemId) {
+                return;
+            }
+
+            let $focusedItem = $(this.treeDiv).find(`.tree-row[data-object-id="${focusedItemId}"]`);
+
             if (
                 event.keyCode == 38 ||
                 event.keyCode == 40 ||

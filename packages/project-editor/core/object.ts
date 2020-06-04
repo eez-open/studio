@@ -99,6 +99,7 @@ export const specificGroup: IPropertyGridGroupDefinition = {
 export interface PropertyProps {
     propertyInfo: PropertyInfo;
     objects: IEezObject[];
+    readOnly: boolean;
     updateObject: (propertyValues: Object) => void;
 }
 
@@ -117,13 +118,7 @@ export interface PropertyInfo {
     displayName?: string;
     enumItems?: EnumItem[];
     typeClass?: EezClass;
-    referencedObjectCollectionPath?: string[];
-    matchObjectReference?: (
-        object: IEezObject,
-        path: (string | number)[],
-        value: string
-    ) => boolean;
-    replaceObjectReference?: (value: string) => string;
+    referencedObjectCollectionPath?: string;
     computed?: boolean;
     onSelect?: (
         object: IEezObject,
@@ -134,7 +129,9 @@ export interface PropertyInfo {
     hideInPropertyGrid?: boolean | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     readOnlyInPropertyGrid?: boolean;
     propertyGridGroup?: IPropertyGridGroupDefinition;
-    propertyGridComponent?: typeof React.Component;
+    propertyGridComponent?:
+        | React.ComponentClass<PropertyProps>
+        | React.FunctionComponent<PropertyProps>;
     propertyGridCollapsable?: boolean;
     propertyGridCollapsableDefaultPropertyName?: string;
     propertyGridCollapsableEnabled?: () => boolean;

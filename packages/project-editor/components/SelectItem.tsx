@@ -91,7 +91,7 @@ export async function onSelectItem(
                 ? getObjectFromPath(ProjectStore.project, ["gui", "fonts"])
                 : getObjectFromPath(
                       ProjectStore.project,
-                      propertyInfo.referencedObjectCollectionPath!
+                      propertyInfo.referencedObjectCollectionPath!.split("/")
                   );
 
         const navigationStore = new SimpleNavigationStoreClass(

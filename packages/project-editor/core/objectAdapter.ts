@@ -1345,14 +1345,12 @@ export class ListAdapter implements ITreeAdapter {
     }
 
     pasteSelection() {
-        if (this.selectedItem) {
-            const aNewObject = pasteItem(this.selectedItem.object);
-            if (aNewObject) {
-                if (Array.isArray(aNewObject)) {
-                    this.selectObjects(aNewObject);
-                } else {
-                    this.selectObject(aNewObject);
-                }
+        const aNewObject = pasteItem(this.selectedItem?.object ?? this.object);
+        if (aNewObject) {
+            if (Array.isArray(aNewObject)) {
+                this.selectObjects(aNewObject);
+            } else {
+                this.selectObject(aNewObject);
             }
         }
     }
