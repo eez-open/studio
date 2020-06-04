@@ -150,6 +150,9 @@ interface GenericDialogProps {
     embedded?: boolean;
     modal?: boolean;
     opts?: IDialogOptions;
+    okButtonText?: string;
+    cancelButtonText?: string;
+    okDisabled?: (result: GenericDialogResult) => boolean;
     onOk?: (result: GenericDialogResult) => void;
     onCancel?: () => void;
     onValueChange?: (name: string, value: string) => void;
@@ -503,6 +506,16 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                     modal={this.modal}
                     title={this.props.dialogDefinition.title}
                     size={this.props.dialogDefinition.size}
+                    okButtonText={this.props.okButtonText}
+                    cancelButtonText={this.props.cancelButtonText}
+                    okDisabled={() =>
+                        this.props.okDisabled
+                            ? this.props.okDisabled({
+                                  values: this.values,
+                                  context: this.fieldContext
+                              })
+                            : false
+                    }
                     onOk={this.props.onOk && this.onOk}
                     onCancel={this.props.onCancel}
                 >
@@ -525,6 +538,8 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
 export function showGenericDialog(conf: {
     dialogDefinition: DialogDefinition;
     values: any;
+    okButtonText?: string;
+    okDisabled?: (result: GenericDialogResult) => boolean;
     showOkButton?: boolean;
     opts?: IDialogOptions;
 }) {
@@ -535,6 +550,8 @@ export function showGenericDialog(conf: {
                 dialogContext={undefined}
                 values={conf.values}
                 opts={conf.opts}
+                okButtonText={conf.okButtonText}
+                okDisabled={conf.okDisabled}
                 onOk={
                     conf.showOkButton === undefined || conf.showOkButton
                         ? values => {

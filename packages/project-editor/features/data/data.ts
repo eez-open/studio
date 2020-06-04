@@ -49,7 +49,8 @@ export class DataItem extends EezObject implements IDataItem {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                unique: true,
+                isAssetName: true
             },
             {
                 name: "description",
@@ -127,7 +128,6 @@ export class DataItem extends EezObject implements IDataItem {
                 });
             });
         },
-        findItemByName: findDataItem,
         navigationComponent: ListNavigationWithProperties,
         navigationComponentId: "data-items",
         icon: "dns"

@@ -39,7 +39,8 @@ export class Action extends EezObject implements IAction {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                unique: true,
+                isAssetName: true
             },
             {
                 name: "description",
@@ -87,7 +88,6 @@ export class Action extends EezObject implements IAction {
                 });
             });
         },
-        findItemByName: findAction,
         navigationComponent: ListNavigationWithProperties,
         navigationComponentId: "actions",
         icon: "code"

@@ -57,8 +57,8 @@ import { ProjectStore } from "project-editor/core/store";
 
 // import * as data from "project-editor/features/data/data";
 
-import { Page } from "project-editor/features/gui/page";
-import { findPage, findBitmap } from "project-editor/features/gui/gui";
+import { Page, findPage } from "project-editor/features/gui/page";
+import { findBitmap } from "project-editor/features/gui/bitmap";
 import { Style, IStyle } from "project-editor/features/gui/style";
 import { DataContext, dataContext, findDataItem } from "project-editor/features/data/data";
 import {

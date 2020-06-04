@@ -3,7 +3,7 @@ import { observable, computed, runInAction, action } from "mobx";
 import { observer } from "mobx-react";
 
 import { fileExistsSync, getFileNameWithoutExtension } from "eez-studio-shared/util-electron";
-import { _map, _keys } from "eez-studio-shared/algorithm";
+import { _map, _keys, _filter } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
 import { showGenericDialog, FieldComponent } from "eez-studio-ui/generic-dialog";
@@ -28,7 +28,7 @@ import {
 import { loadObject, objectToJson } from "project-editor/core/serialization";
 import * as output from "project-editor/core/output";
 
-import { ProjectStore } from "project-editor/core/store";
+import { DocumentStore, ProjectStore, UIStateStore } from "project-editor/core/store";
 
 import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
 
@@ -46,7 +46,7 @@ import {
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
-import { usage } from "project-editor/core/search";
+import { usage, startSearch, SearchCallbackMessage } from "project-editor/core/search";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -233,19 +233,26 @@ class UsageTreeNode {
     }
 }
 
+interface IAssetsUsage {
+    assets: {
+        [path: string]: string;
+    };
+    selectedAsset: string | undefined;
+}
+
 @observer
 class UsageTreeField extends FieldComponent {
     @observable selectedNode: UsageTreeNode | undefined;
 
     @computed
     get rootNode() {
-        let assetsUsage = this.props.values[this.props.fieldProperties.name];
+        let assetsUsage: IAssetsUsage = this.props.values[this.props.fieldProperties.name];
         return new UsageTreeNode(
             "",
-            _keys(assetsUsage)
+            _keys(assetsUsage.assets)
                 .sort()
                 .map(key => {
-                    return new UsageTreeNode(humanize(key), assetsUsage[key].split(", "));
+                    return new UsageTreeNode(humanize(key), assetsUsage.assets[key].split(", "));
                 })
         );
     }
@@ -254,7 +261,16 @@ class UsageTreeField extends FieldComponent {
         if (this.selectedNode) {
             this.selectedNode.selected = false;
         }
+
         this.selectedNode = node;
+
+        let assetsUsage: IAssetsUsage = this.props.values[this.props.fieldProperties.name];
+        if (this.selectedNode && this.selectedNode.children.length === 0) {
+            assetsUsage.selectedAsset = this.selectedNode.id;
+        } else {
+            assetsUsage.selectedAsset = undefined;
+        }
+
         if (this.selectedNode) {
             this.selectedNode.selected = true;
         }
@@ -267,90 +283,96 @@ class UsageTreeField extends FieldComponent {
     }
 }
 
-const ImportUsage = observer((props: PropertyProps) => {
-    const importObject: ImportDirective = props.objects[0] as ImportDirective;
+class BuildAssetsUssage {
+    assets: {
+        [path: string]: Set<string>;
+    } = {};
 
+    @observable
+    assetsUsage: IAssetsUsage = {
+        assets: {},
+        selectedAsset: undefined
+    };
+
+    constructor(private importDirective: ImportDirective) {}
+
+    onMessage(message: SearchCallbackMessage) {
+        if (message.type == "value") {
+            const path = message.valueObject.propertyInfo.referencedObjectCollectionPath!;
+
+            const importedProject = this.importDirective.project!;
+
+            const assetName = message.valueObject.value;
+            if (!importedProject.assetCollectionPaths.has(path)) {
+                // console.log("NOT INTERESTED", path, assetName);
+                return true;
+            }
+
+            const collection = getObjectFromPath(importedProject, path.split("/")) as EezObject[];
+            const object = collection.find(object => assetName == getProperty(object, "name"));
+
+            if (object) {
+                // console.log("FOUND", path, assetName, object);
+                const set = this.assets[path] ?? new Set<string>();
+                set.add(assetName);
+                this.assets[path] = set;
+                runInAction(() => (this.assetsUsage.assets[path] = Array.from(set).join(", ")));
+            } else {
+                // console.log("NOT FOUND", path, assetName);
+            }
+            return true;
+        } else {
+            // console.log("finish");
+            return true;
+        }
+    }
+}
+
+function showUsage(importDirective: ImportDirective) {
+    const buildAssetsUsage = new BuildAssetsUssage(importDirective);
+
+    usage(message => buildAssetsUsage.onMessage(message));
+
+    showGenericDialog({
+        dialogDefinition: {
+            title: "Imported Project Assets Usage",
+            fields: [
+                {
+                    name: "assetsUsage",
+                    fullLine: true,
+                    type: UsageTreeField
+                }
+            ]
+        },
+        values: {
+            assetsUsage: buildAssetsUsage.assetsUsage
+        },
+        okButtonText: "Search",
+        okDisabled: result => {
+            const assetsUsage: IAssetsUsage = result.values.assetsUsage;
+            return !assetsUsage.selectedAsset;
+        }
+    })
+        .then(
+            action(result => {
+                const assetsUsage: IAssetsUsage = result.values.assetsUsage;
+                if (assetsUsage.selectedAsset) {
+                    UIStateStore.searchPattern = assetsUsage.selectedAsset;
+                    UIStateStore.searchMatchCase = true;
+                    UIStateStore.searchMatchWholeWord = true;
+                    startSearch(assetsUsage.selectedAsset, true, true);
+                }
+            })
+        )
+        .catch(() => {});
+}
+
+const ImportUsage = observer((props: PropertyProps) => {
     return (
         <BootstrapButton
             color="primary"
             size="small"
-            onClick={() => {
-                const assets: {
-                    [path: string]: Set<string>;
-                } = {};
-
-                const assetsUsage = observable<{
-                    [path: string]: string;
-                }>({});
-
-                usage(message => {
-                    if (message.type == "value") {
-                        const path = message.valueObject.propertyInfo
-                            .referencedObjectCollectionPath!;
-
-                        const collection = getObjectFromPath(
-                            importObject.project!,
-                            path.split("/")
-                        ) as EezObject[];
-
-                        const assetName = message.valueObject.value;
-                        if (
-                            [
-                                "data",
-                                "actions",
-                                "gui/pages",
-                                "gui/styles",
-                                "gui/fonts",
-                                "gui/bitmaps",
-                                "gui/colors"
-                            ].indexOf(path) == -1
-                        ) {
-                            // console.log("NOT INTERESTED", path, assetName);
-                            return true;
-                        }
-
-                        const object = collection.find(
-                            object =>
-                                assetName ==
-                                (importObject.project!.namespace
-                                    ? importObject.project!.namespace + NAMESPACE_PREFIX
-                                    : "") +
-                                    getProperty(object, "name")
-                        );
-
-                        if (object) {
-                            // console.log("FOUND", path, assetName, object);
-                            const set = assets[path] ?? new Set<string>();
-                            set.add(assetName);
-                            assets[path] = set;
-                            runInAction(() => (assetsUsage[path] = Array.from(set).join(", ")));
-                        } else {
-                            // console.log("NOT FOUND", path, assetName);
-                        }
-                        return true;
-                    } else {
-                        // console.log("finish");
-                        return true;
-                    }
-                });
-
-                showGenericDialog({
-                    dialogDefinition: {
-                        title: "Imported Project Assets/Resources Usage",
-                        fields: [
-                            {
-                                name: "assetsUsage",
-                                fullLine: true,
-                                type: UsageTreeField
-                            }
-                        ]
-                    },
-                    values: {
-                        assetsUsage
-                    },
-                    showOkButton: false
-                }).catch(() => {});
-            }}
+            onClick={() => showUsage(props.objects[0] as ImportDirective)}
         >
             Usage
         </BootstrapButton>
@@ -468,7 +490,8 @@ export class General extends EezObject implements IGeneral {
                 name: "imports",
                 type: PropertyType.Array,
                 typeClass: ImportDirective,
-                defaultValue: []
+                defaultValue: [],
+                hideInPropertyGrid: () => !!ProjectStore.project.masterProject
             }
         ],
         showInNavigation: true,
@@ -599,6 +622,19 @@ export interface IProject {
     extensionDefinitions: IExtensionDefinition[];
 }
 
+class BuildAssetsMap {
+    assets = new Map<string, IEezObject[]>();
+
+    addAsset(path: string, object: IEezObject) {
+        let asset = this.assets.get(path);
+        if (!asset) {
+            this.assets.set(path, [object]);
+        } else {
+            asset.push(object);
+        }
+    }
+}
+
 export class Project extends EezObject implements IProject {
     @observable settings: Settings;
     @observable data: DataItem[];
@@ -649,7 +685,7 @@ export class Project extends EezObject implements IProject {
     }
 
     @computed({ keepAlive: true })
-    get allResourceMaps() {
+    get allAssetsMaps() {
         return [
             { path: "data", map: this.dataItemsMap },
             { path: "actions", map: this.actionsMap },
@@ -662,44 +698,37 @@ export class Project extends EezObject implements IProject {
     }
 
     @computed({ keepAlive: true })
-    get localResources() {
-        const resources = new Map<string, IEezObject[]>();
-
-        function addResource(path: string, object: IEezObject) {
-            let resource = resources.get(path);
-            if (!resource) {
-                resources.set(path, [object]);
-            } else {
-                resource.push(object);
-            }
-        }
-
-        this.allResourceMaps.forEach(({ path, map }) => {
-            map.forEach((object: IEezObject, key: string) => addResource(path + "/" + key, object));
-        });
-
-        return resources;
+    get assetCollectionPaths() {
+        const assetCollectionPaths = new Set<string>();
+        ProjectStore.project.allAssetsMaps.forEach(assetsMap =>
+            assetCollectionPaths.add(assetsMap.path)
+        );
+        return assetCollectionPaths;
     }
 
     @computed({ keepAlive: true })
-    get importedResources() {
-        const resources = new Map<string, IEezObject[]>();
+    get localAssets() {
+        const buildAssets = new BuildAssetsMap();
 
-        function addResource(path: string, object: IEezObject) {
-            let resource = resources.get(path);
-            if (!resource) {
-                resources.set(path, [object]);
-            } else {
-                resource.push(object);
-            }
-        }
+        this.allAssetsMaps.forEach(({ path, map }) => {
+            map.forEach((object: IEezObject, key: string) =>
+                buildAssets.addAsset(path + "/" + key, object)
+            );
+        });
+
+        return buildAssets.assets;
+    }
+
+    @computed({ keepAlive: true })
+    get importedAssets() {
+        const buildAssets = new BuildAssetsMap();
 
         for (const importDirective of this.settings.general.imports) {
             const project = importDirective.project;
             if (project) {
-                project.allResourceMaps.forEach(({ path, map }) => {
+                project.allAssetsMaps.forEach(({ path, map }) => {
                     map.forEach((object: IEezObject, key: string) =>
-                        addResource(
+                        buildAssets.addAsset(
                             path +
                                 "/" +
                                 (project.namespace ? project.namespace + NAMESPACE_PREFIX : "") +
@@ -711,50 +740,47 @@ export class Project extends EezObject implements IProject {
             }
         }
 
-        return resources;
+        return buildAssets.assets;
     }
 
-    getMasterResources(allInMasterProject: boolean) {
-        const resources = new Map<string, IEezObject[]>();
-
-        function addResource(path: string, object: IEezObject) {
-            let resource = resources.get(path);
-            if (!resource) {
-                resources.set(path, [object]);
-            } else {
-                resource.push(object);
-            }
-        }
+    @computed({ keepAlive: true })
+    get masterAssets() {
+        const buildAssets = new BuildAssetsMap();
 
         if (this.masterProject) {
-            this.masterProject.allResourceMaps.forEach(({ path, map }) => {
+            this.masterProject.allAssetsMaps.forEach(({ path, map }) => {
                 map.forEach((object: IEezObject, key: string) => {
-                    if (allInMasterProject || (object as any).id) {
-                        addResource(path + "/" + key, object);
+                    if ((object as any).id) {
+                        buildAssets.addAsset(path + "/" + key, object);
                     }
                 });
             });
         }
 
-        return resources;
-    }
-
-    getAllResoureces(allInMasterProject: boolean) {
-        return new Map([
-            ...this.localResources,
-            ...this.getMasterResources(allInMasterProject),
-            ...this.importedResources
-        ]);
+        return buildAssets.assets;
     }
 
     @computed({ keepAlive: true })
-    get allResources() {
-        return this.getAllResoureces(false);
+    get allAssets() {
+        return new Map([...this.localAssets, ...this.masterAssets, ...this.importedAssets]);
     }
 
-    @computed({ keepAlive: true })
-    get allVisibleResources() {
-        return this.getAllResoureces(true);
+    getAllObjectsOfType(referencedObjectCollectionPath: string) {
+        const isAssetType = this.assetCollectionPaths.has(referencedObjectCollectionPath);
+
+        if (isAssetType) {
+            return Array.from(this.allAssets.keys())
+                .filter(key => key.startsWith(referencedObjectCollectionPath))
+                .map(key => this.allAssets.get(key)!)
+                .filter(assets => assets.length == 1)
+                .map(assets => assets[0]);
+        } else {
+            return (
+                (DocumentStore.getObjectFromPath(
+                    referencedObjectCollectionPath.split("/")
+                ) as IEezObject[]) || []
+            );
+        }
     }
 }
 
@@ -825,36 +851,19 @@ export function save(filePath: string) {
 export function findAllReferencedObjects(
     project: Project,
     referencedObjectCollectionPath: string,
-    referencedObjectName: string,
-    allInMasterProject: boolean = false
+    referencedObjectName: string
 ) {
-    if (allInMasterProject) {
-        return project.allResources.get(
-            referencedObjectCollectionPath + "/" + referencedObjectName
-        );
-    } else {
-        return project.allVisibleResources.get(
-            referencedObjectCollectionPath + "/" + referencedObjectName
-        );
-    }
+    return project.allAssets.get(referencedObjectCollectionPath + "/" + referencedObjectName);
 }
 
 export function findReferencedObject(
     project: Project,
     referencedObjectCollectionPath: string,
-    referencedObjectName: string,
-    allInMasterProject: boolean = false
+    referencedObjectName: string
 ) {
-    let objects;
-    if (allInMasterProject) {
-        objects = project.allResources.get(
-            referencedObjectCollectionPath + "/" + referencedObjectName
-        );
-    } else {
-        objects = project.allVisibleResources.get(
-            referencedObjectCollectionPath + "/" + referencedObjectName
-        );
-    }
+    let objects = project.allAssets.get(
+        referencedObjectCollectionPath + "/" + referencedObjectName
+    );
     if (objects && objects.length === 1) {
         return objects[0];
     }

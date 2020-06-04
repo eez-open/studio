@@ -2077,7 +2077,8 @@ export class Font extends EezObject implements IFont {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                unique: true,
+                isAssetName: true
             },
             {
                 name: "description",
@@ -2264,7 +2265,6 @@ export class Font extends EezObject implements IFont {
         },
         navigationComponent: FontsNavigation,
         navigationComponentId: "fonts",
-        findItemByName: findFont,
         icon: "font_download"
     };
 

@@ -19,12 +19,13 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { findStyle } from "project-editor/features/gui/gui";
+import { findStyle } from "project-editor/features/gui/style";
 import { getThemedColor } from "project-editor/features/gui/theme";
 
 import { ProjectStore } from "project-editor/core/store";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
+import { Project, findReferencedObject } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -124,7 +125,8 @@ export class Bitmap extends EezObject implements IBitmap {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                unique: true,
+                isAssetName: true
             },
             {
                 name: "description",
@@ -319,4 +321,12 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
             reject();
         };
     });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function findBitmap(bitmapName: any, project?: Project) {
+    return findReferencedObject(project ?? ProjectStore.project, "gui/bitmaps", bitmapName) as
+        | Bitmap
+        | undefined;
 }

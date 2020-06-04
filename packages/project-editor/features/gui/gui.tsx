@@ -20,7 +20,7 @@ import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
-import { Project, findReferencedObject } from "project-editor/project/project";
+import { Project } from "project-editor/project/project";
 
 import { Page, IPage } from "project-editor/features/gui/page";
 import { Style, IStyle, findStyle } from "project-editor/features/gui/style";
@@ -30,9 +30,6 @@ import { Theme, ITheme, Color, IColor } from "project-editor/features/gui/theme"
 
 import { build } from "project-editor/features/gui/build";
 import { metrics } from "project-editor/features/gui/metrics";
-
-export { findStyle } from "project-editor/features/gui/style";
-export { findFont } from "project-editor/features/gui/font";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -304,17 +301,3 @@ registerFeatureImplementation("gui", {
         }
     }
 });
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function findPage(pageName: string, project?: Project) {
-    return findReferencedObject(project ?? ProjectStore.project, "gui/pages", pageName) as
-        | Page
-        | undefined;
-}
-
-export function findBitmap(bitmapName: any, project?: Project) {
-    return findReferencedObject(project ?? ProjectStore.project, "gui/bitmaps", bitmapName) as
-        | Bitmap
-        | undefined;
-}

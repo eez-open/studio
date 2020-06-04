@@ -15,12 +15,11 @@ import { Project, BuildConfiguration } from "project-editor/project/project";
 import { DataItem, findDataItem } from "project-editor/features/data/data";
 import { Action, findAction } from "project-editor/features/action/action";
 
-import { findPage, findStyle, findFont, findBitmap } from "project-editor/features/gui/gui";
-import { getData as getBitmapData, Bitmap } from "project-editor/features/gui/bitmap";
-import { Style, getStyleProperty } from "project-editor/features/gui/style";
+import { getData as getBitmapData, Bitmap, findBitmap } from "project-editor/features/gui/bitmap";
+import { Style, getStyleProperty, findStyle } from "project-editor/features/gui/style";
 import * as Widget from "project-editor/features/gui/widget";
-import { Page } from "project-editor/features/gui/page";
-import { Font } from "project-editor/features/gui/font";
+import { Page, findPage } from "project-editor/features/gui/page";
+import { Font, findFont } from "project-editor/features/gui/font";
 import { Theme } from "project-editor/features/gui/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -747,7 +746,7 @@ function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer | null) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiThemesEnum(assets: Assets) {
-    let themes = assets.project.gui.themes.map(
+    let themes = assets.rootProject.gui.themes.map(
         (theme, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "THEME_ID_",
@@ -762,7 +761,7 @@ function buildGuiThemesEnum(assets: Assets) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiColorsEnum(assets: Assets) {
-    let colors = assets.project.gui.colors.map(
+    let colors = assets.rootProject.gui.colors.map(
         (color, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "COLOR_ID_",
@@ -1321,7 +1320,7 @@ function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
         let themes = new ObjectList();
 
         if (!ProjectStore.masterProject) {
-            assets.project.gui.themes.forEach(theme => {
+            assets.rootProject.gui.themes.forEach(theme => {
                 themes.addItem(buildTheme(theme));
             });
         }
@@ -1421,6 +1420,8 @@ function buildGuiAssetsDef(data: Buffer) {
 ////////////////////////////////////////////////////////////////////////////////
 
 class Assets {
+    projects: Project[];
+
     dataItems: DataItem[];
     actions: Action[];
     pages: Page[];
@@ -1429,58 +1430,59 @@ class Assets {
     bitmaps: Bitmap[] = [];
     colors: string[] = [];
 
-    static getAssets<T>(
-        project: Project,
+    collectProjects(project: Project) {
+        if (this.projects.indexOf(project) === -1) {
+            this.projects.push(project);
+            for (const importDirective of ProjectStore.project.settings.general.imports) {
+                if (importDirective.project) {
+                    this.collectProjects(importDirective.project);
+                }
+            }
+        }
+    }
+
+    getAssets<T>(
         getCollection: (project: Project) => T[],
         assetIncludePredicate: (asset: T) => boolean
     ) {
-        const assets = getCollection(project).filter(assetIncludePredicate);
-        for (const importDirective of ProjectStore.project.settings.general.imports) {
-            if (importDirective.project) {
-                assets.push(
-                    ...getCollection(importDirective.project).filter(assetIncludePredicate)
-                );
-            }
+        const assets = [];
+        for (const project of this.projects) {
+            assets.push(...getCollection(project).filter(assetIncludePredicate));
         }
         return assets;
     }
 
-    constructor(public project: Project, buildConfiguration: BuildConfiguration | undefined) {
+    constructor(public rootProject: Project, buildConfiguration: BuildConfiguration | undefined) {
+        this.projects = [];
+        this.collectProjects(rootProject);
+
         {
             const assetIncludePredicate = (asset: DataItem | Action | Page) =>
                 !buildConfiguration ||
                 !asset.usedIn ||
                 asset.usedIn.indexOf(buildConfiguration.name) !== -1;
 
-            this.dataItems = Assets.getAssets<DataItem>(
-                project,
+            this.dataItems = this.getAssets<DataItem>(
                 project => project.data,
                 assetIncludePredicate
             );
 
-            this.actions = Assets.getAssets<Action>(
-                project,
+            this.actions = this.getAssets<Action>(
                 project => project.actions,
                 assetIncludePredicate
             );
 
-            this.pages = Assets.getAssets<Page>(
-                project,
-                project => project.gui.pages,
-                assetIncludePredicate
-            );
+            this.pages = this.getAssets<Page>(project => project.gui.pages, assetIncludePredicate);
         }
 
         this.styles = [undefined];
         if (!ProjectStore.masterProject) {
-            Assets.getAssets<Style>(
-                project,
+            this.getAssets<Style>(
                 project => project.gui.styles,
                 style => style.id != undefined
             ).forEach(style => this.addStyle(style));
 
-            Assets.getAssets<Style>(
-                project,
+            this.getAssets<Style>(
                 project => project.gui.styles,
                 style => style.alwaysBuild
             ).forEach(style => this.addStyle(style));
@@ -1489,14 +1491,9 @@ class Assets {
         {
             const assetIncludePredicate = (asset: Font | Bitmap) => asset.alwaysBuild;
 
-            this.fonts = Assets.getAssets<Font>(
-                project,
-                project => project.gui.fonts,
-                assetIncludePredicate
-            );
+            this.fonts = this.getAssets<Font>(project => project.gui.fonts, assetIncludePredicate);
 
-            this.bitmaps = Assets.getAssets<Bitmap>(
-                project,
+            this.bitmaps = this.getAssets<Bitmap>(
                 project => project.gui.bitmaps,
                 assetIncludePredicate
             );
@@ -1570,7 +1567,7 @@ class Assets {
         if (ProjectStore.masterProject) {
             if (typeof styleNameOrObject === "string") {
                 const styleName = styleNameOrObject;
-                const style = findStyle(styleName, false, project);
+                const style = findStyle(styleName, project);
                 if (style && style.id != undefined) {
                     return style.id;
                 }
@@ -1594,7 +1591,7 @@ class Assets {
                     }
                 }
 
-                const style = findStyle(styleName, false, project);
+                const style = findStyle(styleName, project);
                 if (style) {
                     if (style.id != undefined) {
                         return style.id;
@@ -1606,7 +1603,7 @@ class Assets {
                 const style = styleNameOrObject;
 
                 if (style.inheritFrom) {
-                    const parentStyle = findStyle(style.inheritFrom, false, project);
+                    const parentStyle = findStyle(style.inheritFrom, project);
                     if (parentStyle) {
                         if (style.compareTo(parentStyle)) {
                             if (style.id != undefined) {
@@ -1636,7 +1633,7 @@ class Assets {
 
         let style: string | Style | undefined = object[propertyName];
         if (style === undefined) {
-            style = findStyle("default", false, project);
+            style = findStyle("default", project);
             if (!style) {
                 return 0;
             }
@@ -1686,57 +1683,59 @@ class Assets {
     }
 
     reportUnusedAssets() {
-        this.project.gui.styles.forEach(style => {
-            if (
-                !this.styles.find(usedStyle => {
-                    if (!usedStyle) {
-                        return false;
-                    }
+        this.projects.forEach(project => {
+            project.gui.styles.forEach(style => {
+                if (
+                    !this.styles.find(usedStyle => {
+                        if (!usedStyle) {
+                            return false;
+                        }
 
-                    if (usedStyle == style) {
-                        return true;
-                    }
-
-                    let baseStyle = findStyle(usedStyle.inheritFrom);
-                    while (baseStyle) {
-                        if (baseStyle == style) {
+                        if (usedStyle == style) {
                             return true;
                         }
-                        baseStyle = findStyle(baseStyle.inheritFrom);
-                    }
 
-                    return false;
-                })
-            ) {
-                OutputSectionsStore.write(
-                    output.Section.OUTPUT,
-                    output.Type.INFO,
-                    "Unused style: " + style.name,
-                    style
-                );
-            }
-        });
+                        let baseStyle = findStyle(usedStyle.inheritFrom);
+                        while (baseStyle) {
+                            if (baseStyle == style) {
+                                return true;
+                            }
+                            baseStyle = findStyle(baseStyle.inheritFrom);
+                        }
 
-        this.project.gui.fonts.forEach(font => {
-            if (this.fonts.indexOf(font) === -1) {
-                OutputSectionsStore.write(
-                    output.Section.OUTPUT,
-                    output.Type.INFO,
-                    "Unused font: " + font.name,
-                    font
-                );
-            }
-        });
+                        return false;
+                    })
+                ) {
+                    OutputSectionsStore.write(
+                        output.Section.OUTPUT,
+                        output.Type.INFO,
+                        "Unused style: " + style.name,
+                        style
+                    );
+                }
+            });
 
-        this.project.gui.bitmaps.forEach(bitmap => {
-            if (this.bitmaps.indexOf(bitmap) === -1) {
-                OutputSectionsStore.write(
-                    output.Section.OUTPUT,
-                    output.Type.INFO,
-                    "Unused bitmap: " + bitmap.name,
-                    bitmap
-                );
-            }
+            project.gui.fonts.forEach(font => {
+                if (this.fonts.indexOf(font) === -1) {
+                    OutputSectionsStore.write(
+                        output.Section.OUTPUT,
+                        output.Type.INFO,
+                        "Unused font: " + font.name,
+                        font
+                    );
+                }
+            });
+
+            project.gui.bitmaps.forEach(bitmap => {
+                if (this.bitmaps.indexOf(bitmap) === -1) {
+                    OutputSectionsStore.write(
+                        output.Section.OUTPUT,
+                        output.Type.INFO,
+                        "Unused bitmap: " + bitmap.name,
+                        bitmap
+                    );
+                }
+            });
         });
     }
 }

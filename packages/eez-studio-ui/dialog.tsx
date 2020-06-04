@@ -35,6 +35,7 @@ export interface IDialogComponentProps {
     disableButtons: boolean;
     buttons: IDialogButton[];
     children: React.ReactNode;
+    additionalFooterControl?: React.ReactNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,6 +54,7 @@ export class Dialog extends React.Component<
         onCancel?: (() => void) | null;
         cancelDisabled?: boolean;
         additionalButton?: IDialogButton;
+        additionalFooterControl?: React.ReactNode;
     },
     {}
 > {
@@ -138,6 +140,7 @@ export class Dialog extends React.Component<
                 cancelDisabled={this.props.cancelDisabled}
                 disableButtons={this.disableButtons}
                 buttons={buttons}
+                additionalFooterControl={this.props.additionalFooterControl}
             >
                 {this.props.children}
             </BootstrapDialog>

@@ -150,6 +150,7 @@ export interface PropertyInfo {
     embeddedImage?: boolean;
     partOfNavigation?: boolean;
     fileFilters?: any;
+    isAssetName?: boolean;
 }
 
 export interface NavigationComponentProps {
@@ -210,7 +211,6 @@ export interface ClassInfo {
 
     createEditorState?: (object: IEezObject) => IEditorState;
     newItem?: (object: IEezObject) => Promise<any>;
-    findItemByName?: (name: string) => IEezObject | undefined;
     getInheritedValue?: (object: IEezObject, propertyName: string) => InheritedValue;
     defaultValue?: any;
     findPastePlaceInside?: (

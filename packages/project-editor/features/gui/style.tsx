@@ -42,7 +42,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { Project, findReferencedObject } from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
-import { findFont } from "project-editor/features/gui/gui";
+import { findFont } from "project-editor/features/gui/font";
 import { drawText } from "project-editor/features/gui/draw";
 import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
 import { Font } from "project-editor/features/gui/font";
@@ -243,6 +243,7 @@ const idProperty: PropertyInfo = {
     inheritable: false,
     isOptional: true,
     unique: true,
+    isAssetName: true,
     hideInPropertyGrid: isWidgetParentOfStyle,
     defaultValue: undefined
 };
@@ -612,7 +613,6 @@ function getInheritedValue(
     if (styleObject.inheritFrom) {
         let inheritFromStyleObject = findStyle(
             styleObject.inheritFrom,
-            true,
             getRootObject(styleObject) as Project
         );
 
@@ -706,7 +706,6 @@ export class Style extends EezObject implements IStyle {
                 name: "Style"
             });
         },
-        findItemByName: findStyle,
         getInheritedValue: (styleObject: Style, propertyName: string) =>
             getInheritedValue(styleObject, propertyName, [], false),
         navigationComponentId: "styles",
@@ -850,7 +849,6 @@ export class Style extends EezObject implements IStyle {
         if (this.inheritFrom) {
             let inheritFromStyleObject = findStyle(
                 this.inheritFrom,
-                true,
                 getRootObject(this) as Project
             );
 
@@ -1198,19 +1196,12 @@ export function drawStylePreview(canvas: HTMLCanvasElement, style: Style, text: 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findStyle(
-    styleName: string | undefined,
-    allInMasterProject: boolean = false,
-    project?: Project
-) {
+export function findStyle(styleName: string | undefined, project?: Project) {
     if (styleName == undefined) {
-        return;
+        return undefined;
     }
 
-    return findReferencedObject(
-        project ?? ProjectStore.project,
-        "gui/styles",
-        styleName,
-        allInMasterProject
-    ) as Style | undefined;
+    return findReferencedObject(project ?? ProjectStore.project, "gui/styles", styleName) as
+        | Style
+        | undefined;
 }

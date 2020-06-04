@@ -121,7 +121,10 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
             return (
                 <NonModalDialogContainer>
                     <div>{props.children}</div>
-                    <div>{buttons}</div>
+                    <div>
+                        {this.props.additionalFooterControl}
+                        {buttons}
+                    </div>
                 </NonModalDialogContainer>
             );
         }
@@ -162,6 +165,7 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
                         <div className="modal-body">{props.children}</div>
 
                         <div className="modal-footer" style={{ justifyContent: "flex-start" }}>
+                            {this.props.additionalFooterControl}
                             {buttons}
                         </div>
                     </div>

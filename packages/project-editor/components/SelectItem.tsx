@@ -1,8 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 
 import { showDialog, Dialog } from "eez-studio-ui/dialog";
+import { PropertyList, BooleanProperty } from "eez-studio-ui/properties";
 import { styled } from "eez-studio-ui/styled-components";
 
 import {
@@ -12,8 +14,10 @@ import {
     PropertyType,
     getObjectFromPath,
     IOnSelectParams,
-    getClassInfo
+    getClassInfo,
+    getClass
 } from "project-editor/core/object";
+import { loadObject, objectToJS } from "project-editor/core/serialization";
 import {
     ProjectStore,
     SimpleNavigationStoreClass,
@@ -33,39 +37,97 @@ const SelectItemDialogDiv = styled.div`
 
 @observer
 class SelectItemDialog extends React.Component<{
-    navigationStore: INavigationStore;
-    dragAndDropManager: DragAndDropManagerClass;
-    collectionObject: IEezObject;
-    okDisabled: () => boolean;
-    onOk: () => boolean;
+    object: IEezObject;
+    propertyInfo: PropertyInfo;
+    okDisabled: (navigationStore: INavigationStore) => boolean;
+    onOk: (navigationStore: INavigationStore) => boolean;
     onCancel: () => void;
 }> {
-    render() {
-        const {
-            navigationStore,
-            dragAndDropManager,
-            collectionObject,
-            okDisabled,
-            onOk,
-            onCancel
-        } = this.props;
+    @observable showOnlyLocalAssets = false;
 
-        let NavigationComponent = getClassInfo(collectionObject).navigationComponent!;
+    @computed
+    get hasImportedProjects() {
+        return ProjectStore.project.settings.general.imports.length > 0;
+    }
+
+    @computed
+    get collectionPath() {
+        const { propertyInfo } = this.props;
+        return propertyInfo.type === PropertyType.String
+            ? "gui/fonts"
+            : propertyInfo.referencedObjectCollectionPath!;
+    }
+
+    @computed
+    get collectionObject() {
+        const collectionObject = getObjectFromPath(
+            ProjectStore.project,
+            this.collectionPath.split("/")
+        );
+        if (this.showOnlyLocalAssets || !this.hasImportedProjects) {
+            return collectionObject;
+        } else {
+            return loadObject(
+                ProjectStore.project,
+                objectToJS(ProjectStore.project.getAllObjectsOfType(this.collectionPath)),
+                getClass(collectionObject),
+                "_all_" + this.collectionPath.split("/").slice(-1)[0]
+            );
+        }
+    }
+
+    @computed
+    get navigationStore() {
+        const { object, propertyInfo } = this.props;
+        return new SimpleNavigationStoreClass(
+            (this.collectionObject as IEezObject[]).find(
+                item =>
+                    (item as any).name ===
+                    (propertyInfo.type === PropertyType.String
+                        ? (object as Widget).style.fontName
+                        : getProperty(object, propertyInfo.name))
+            )
+        );
+    }
+
+    @computed
+    get dragAndDropManager() {
+        return new DragAndDropManagerClass();
+    }
+
+    render() {
+        const { okDisabled, onOk, onCancel } = this.props;
+
+        let NavigationComponent = getClassInfo(this.collectionObject).navigationComponent!;
 
         return (
             <Dialog
                 modal={false}
                 okButtonText="Select"
-                okDisabled={okDisabled}
-                onOk={onOk}
+                okDisabled={() => okDisabled(this.navigationStore)}
+                onOk={() => onOk(this.navigationStore)}
                 onCancel={onCancel}
+                additionalFooterControl={
+                    this.hasImportedProjects && (
+                        <PropertyList>
+                            <BooleanProperty
+                                name={`Show only local ${this.collectionPath
+                                    .split("/")
+                                    .slice(-1)[0]
+                                    .toLowerCase()}`}
+                                value={this.showOnlyLocalAssets}
+                                onChange={action(value => (this.showOnlyLocalAssets = value))}
+                            />
+                        </PropertyList>
+                    )
+                }
             >
                 <SelectItemDialogDiv>
                     <NavigationComponent
-                        id={getClassInfo(collectionObject!).navigationComponentId! + "-dialog"}
-                        navigationObject={collectionObject}
-                        navigationStore={navigationStore}
-                        dragAndDropManager={dragAndDropManager}
+                        id={getClassInfo(this.collectionObject!).navigationComponentId! + "-dialog"}
+                        navigationObject={this.collectionObject}
+                        navigationStore={this.navigationStore}
+                        dragAndDropManager={this.dragAndDropManager}
                         onDoubleClickItem={onOk}
                     />
                 </SelectItemDialogDiv>
@@ -86,25 +148,7 @@ export async function onSelectItem(
     return new Promise<{
         [propertyName: string]: string;
     }>((resolve, reject) => {
-        const collectionObject =
-            propertyInfo.type === PropertyType.String
-                ? getObjectFromPath(ProjectStore.project, ["gui", "fonts"])
-                : getObjectFromPath(
-                      ProjectStore.project,
-                      propertyInfo.referencedObjectCollectionPath!.split("/")
-                  );
-
-        const navigationStore = new SimpleNavigationStoreClass(
-            getClassInfo(collectionObject!).findItemByName!(
-                propertyInfo.type === PropertyType.String
-                    ? (object as Widget).style.fontName
-                    : getProperty(object, propertyInfo.name)
-            )
-        );
-
-        const dragAndDropManager = new DragAndDropManagerClass();
-
-        const onOkDisabled = () => {
+        const onOkDisabled = (navigationStore: INavigationStore) => {
             if (propertyInfo.type === PropertyType.String) {
                 return !(navigationStore.selectedObject instanceof Glyph);
             }
@@ -112,7 +156,7 @@ export async function onSelectItem(
             return !navigationStore.selectedObject;
         };
 
-        const onOk = () => {
+        const onOk = (navigationStore: INavigationStore) => {
             if (!navigationStore.selectedObject) {
                 return false;
             }
@@ -159,9 +203,8 @@ export async function onSelectItem(
 
         const [modalDialog, element] = showDialog(
             <SelectItemDialog
-                collectionObject={collectionObject}
-                navigationStore={navigationStore}
-                dragAndDropManager={dragAndDropManager}
+                object={object}
+                propertyInfo={propertyInfo}
                 okDisabled={onOkDisabled}
                 onOk={onOk}
                 onCancel={onCancel}

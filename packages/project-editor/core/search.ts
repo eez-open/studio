@@ -19,11 +19,7 @@ import { DocumentStore, OutputSectionsStore, ProjectStore } from "project-editor
 
 import { Section, Type } from "project-editor/core/output";
 
-import {
-    ImportDirective,
-    findReferencedObject,
-    NAMESPACE_PREFIX
-} from "project-editor/project/project";
+import { ImportDirective, findReferencedObject } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -293,7 +289,7 @@ interface SearchCallbackMessageFinish {
     type: "finish";
 }
 
-type SearchCallbackMessage = SearchCallbackMessageValue | SearchCallbackMessageFinish;
+export type SearchCallbackMessage = SearchCallbackMessageValue | SearchCallbackMessageFinish;
 
 type SearchCallback = (message: SearchCallbackMessage) => boolean;
 
@@ -438,19 +434,7 @@ export function replaceObjectReference(object: IEezObject, newValue: string) {
         if (searchValue) {
             let value: string | string[] = newValue;
 
-            if (object instanceof ImportDirective) {
-                if (object.project) {
-                    if (object.project.namespace) {
-                        value =
-                            newValue +
-                            (searchValue.value as string).substr(
-                                object.project.namespace.length + NAMESPACE_PREFIX.length
-                            );
-                    } else {
-                        value = newValue + searchValue.value;
-                    }
-                }
-            } else if (searchValue.propertyInfo.type === PropertyType.ConfigurationReference) {
+            if (searchValue.propertyInfo.type === PropertyType.ConfigurationReference) {
                 value = [];
                 for (let i = 0; i < searchValue.value.length; i++) {
                     if (searchValue.value[i] !== getProperty(object, "name")) {

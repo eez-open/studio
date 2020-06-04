@@ -31,7 +31,13 @@ import {
     ITreeObjectAdapter,
     TreeAdapter
 } from "project-editor/core/objectAdapter";
-import { NavigationStore, EditorsStore, IPanel, UIStateStore } from "project-editor/core/store";
+import {
+    ProjectStore,
+    NavigationStore,
+    EditorsStore,
+    IPanel,
+    UIStateStore
+} from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
@@ -47,11 +53,12 @@ import { PageEditor as StudioPageEditor } from "project-editor/features/gui/page
 import { WidgetPalette } from "project-editor/features/gui/page-editor/WidgetPalette";
 import { WidgetContainerComponent } from "project-editor/features/gui/page-editor/render";
 
+import { Project, findReferencedObject } from "project-editor/project/project";
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 import { Widget, IWidget } from "project-editor/features/gui/widget";
 
-import { findStyle } from "project-editor/features/gui/gui";
+import { findStyle } from "project-editor/features/gui/style";
 import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -418,6 +425,7 @@ export class Page extends EezObject implements IPage {
                 name: "name",
                 type: PropertyType.String,
                 unique: true,
+                isAssetName: true,
                 propertyGridGroup: generalGroup
             },
             {
@@ -600,3 +608,11 @@ export class Page extends EezObject implements IPage {
 }
 
 registerClass(Page);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function findPage(pageName: string, project?: Project) {
+    return findReferencedObject(project ?? ProjectStore.project, "gui/pages", pageName) as
+        | Page
+        | undefined;
+}

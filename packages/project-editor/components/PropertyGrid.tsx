@@ -1115,16 +1115,9 @@ class Property extends React.Component<PropertyProps> {
                         </div>
                     );
                 } else {
-                    let objects: IEezObject[] = [];
-
-                    if (propertyInfo.referencedObjectCollectionPath) {
-                        objects = DocumentStore.getObjectFromPath(
-                            propertyInfo.referencedObjectCollectionPath.split("/")
-                        ) as IEezObject[];
-                        if (!objects) {
-                            objects = [];
-                        }
-                    }
+                    let objects: IEezObject[] = ProjectStore.project.getAllObjectsOfType(
+                        propertyInfo.referencedObjectCollectionPath!
+                    );
 
                     let options = objects
                         .slice()
