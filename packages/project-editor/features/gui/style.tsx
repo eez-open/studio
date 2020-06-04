@@ -346,7 +346,10 @@ const inheritFromProperty: PropertyInfo = {
                     })
                 );
 
-                const style = findStyle((props.objects[0] as Style).inheritFrom);
+                const style = findStyle(
+                    ProjectStore.project,
+                    (props.objects[0] as Style).inheritFrom
+                );
                 if (style) {
                     menuItems.push(
                         new MenuItem({
@@ -612,8 +615,8 @@ function getInheritedValue(
 
     if (styleObject.inheritFrom) {
         let inheritFromStyleObject = findStyle(
-            styleObject.inheritFrom,
-            getRootObject(styleObject) as Project
+            getRootObject(styleObject) as Project,
+            styleObject.inheritFrom
         );
 
         if (inheritFromStyleObject) {
@@ -732,7 +735,7 @@ export class Style extends EezObject implements IStyle {
                 }
             }
 
-            if (object.inheritFrom && !findStyle(object.inheritFrom)) {
+            if (object.inheritFrom && !findStyle(ProjectStore.project, object.inheritFrom)) {
                 messages.push(output.propertyNotFoundMessage(object, "inheritFrom"));
             } else {
                 // if (!object.fontName) {
@@ -843,13 +846,13 @@ export class Style extends EezObject implements IStyle {
     @computed
     get fontObject(): Font | undefined {
         if (this.font) {
-            return findFont(this.font, getRootObject(this) as Project);
+            return findFont(getRootObject(this) as Project, this.font);
         }
 
         if (this.inheritFrom) {
             let inheritFromStyleObject = findStyle(
-                this.inheritFrom,
-                getRootObject(this) as Project
+                getRootObject(this) as Project,
+                this.inheritFrom
             );
 
             if (inheritFromStyleObject) {
@@ -1196,12 +1199,10 @@ export function drawStylePreview(canvas: HTMLCanvasElement, style: Style, text: 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findStyle(styleName: string | undefined, project?: Project) {
+export function findStyle(project: Project, styleName: string | undefined) {
     if (styleName == undefined) {
         return undefined;
     }
 
-    return findReferencedObject(project ?? ProjectStore.project, "gui/styles", styleName) as
-        | Style
-        | undefined;
+    return findReferencedObject(project, "gui/styles", styleName) as Style | undefined;
 }

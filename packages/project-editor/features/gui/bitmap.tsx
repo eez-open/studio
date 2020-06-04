@@ -221,7 +221,7 @@ export class Bitmap extends EezObject implements IBitmap {
     @computed
     get backgroundColor() {
         if (this.bpp !== 32) {
-            const style = findStyle(this.style || "default");
+            const style = findStyle(ProjectStore.project, this.style || "default");
             if (style && style.backgroundColorProperty) {
                 return getThemedColor(style.backgroundColorProperty);
             }
@@ -325,8 +325,6 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findBitmap(bitmapName: any, project?: Project) {
-    return findReferencedObject(project ?? ProjectStore.project, "gui/bitmaps", bitmapName) as
-        | Bitmap
-        | undefined;
+export function findBitmap(project: Project, bitmapName: any) {
+    return findReferencedObject(project, "gui/bitmaps", bitmapName) as Bitmap | undefined;
 }

@@ -122,8 +122,8 @@ registerFeatureImplementation("action", {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findAction(actionName: string, project?: Project) {
-    return findReferencedObject(project ?? ProjectStore.project, "actions", actionName) as
+export function findAction(project: Project, actionName: string) {
+    return findReferencedObject(project, "actions", actionName) as
         | Action
         | undefined;
 }

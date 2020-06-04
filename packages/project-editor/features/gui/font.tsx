@@ -2285,11 +2285,9 @@ registerClass(Font);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findFont(fontName: string | undefined, project?: Project) {
+export function findFont(project: Project, fontName: string | undefined) {
     if (fontName == undefined) {
         return undefined;
     }
-    return findReferencedObject(project ?? ProjectStore.project, "gui/fonts", fontName) as
-        | Font
-        | undefined;
+    return findReferencedObject(project, "gui/fonts", fontName) as Font | undefined;
 }

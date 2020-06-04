@@ -249,8 +249,8 @@ abstract class Field {
     offset: number;
     size: number;
 
-    enumObjects(objects: ObjectField[]) {}
-    finish() {}
+    enumObjects(objects: ObjectField[]) { }
+    finish() { }
     abstract pack(dataBuffer: DataBuffer): void;
 }
 
@@ -778,7 +778,7 @@ function buildGuiColorsEnum(assets: Assets) {
 function buildWidgetText(text: string) {
     try {
         return JSON.parse('"' + text + '"');
-    } catch (e) {}
+    } catch (e) { }
     return text;
 }
 
@@ -1506,12 +1506,12 @@ class Assets {
     static getAssetIndex<T>(
         object: any,
         propertyName: string,
-        findAsset: (assetName: string, project: Project) => T | undefined,
+        findAsset: (project: Project, assetName: string) => T | undefined,
         collection: T[]
     ) {
         const project = getRootObject(object) as Project;
         const assetName = object[propertyName];
-        const asset = findAsset(assetName, project);
+        const asset = findAsset(project, assetName);
 
         if (asset) {
             let assetIndex = collection.indexOf(asset);
@@ -1567,7 +1567,7 @@ class Assets {
         if (ProjectStore.masterProject) {
             if (typeof styleNameOrObject === "string") {
                 const styleName = styleNameOrObject;
-                const style = findStyle(styleName, project);
+                const style = findStyle(project, styleName);
                 if (style && style.id != undefined) {
                     return style.id;
                 }
@@ -1591,7 +1591,7 @@ class Assets {
                     }
                 }
 
-                const style = findStyle(styleName, project);
+                const style = findStyle(project, styleName);
                 if (style) {
                     if (style.id != undefined) {
                         return style.id;
@@ -1603,7 +1603,7 @@ class Assets {
                 const style = styleNameOrObject;
 
                 if (style.inheritFrom) {
-                    const parentStyle = findStyle(style.inheritFrom, project);
+                    const parentStyle = findStyle(project, style.inheritFrom);
                     if (parentStyle) {
                         if (style.compareTo(parentStyle)) {
                             if (style.id != undefined) {
@@ -1633,7 +1633,7 @@ class Assets {
 
         let style: string | Style | undefined = object[propertyName];
         if (style === undefined) {
-            style = findStyle("default", project);
+            style = findStyle(project, "default");
             if (!style) {
                 return 0;
             }
@@ -1695,12 +1695,12 @@ class Assets {
                             return true;
                         }
 
-                        let baseStyle = findStyle(usedStyle.inheritFrom);
+                        let baseStyle = findStyle(ProjectStore.project, usedStyle.inheritFrom);
                         while (baseStyle) {
                             if (baseStyle == style) {
                                 return true;
                             }
-                            baseStyle = findStyle(baseStyle.inheritFrom);
+                            baseStyle = findStyle(ProjectStore.project, baseStyle.inheritFrom);
                         }
 
                         return false;

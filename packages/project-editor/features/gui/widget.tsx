@@ -1198,7 +1198,7 @@ export class SelectWidget extends Widget implements ISelectWidget {
             if (!object.data) {
                 messages.push(output.propertyNotSetMessage(object, "data"));
             } else {
-                let dataItem = findDataItem(object.data);
+                let dataItem = findDataItem(ProjectStore.project, object.data);
                 if (dataItem) {
                     let enumItems: string[] = [];
                     if (dataItem.type == "enum") {
@@ -1239,7 +1239,7 @@ export class SelectWidget extends Widget implements ISelectWidget {
             let index = this.widgets.indexOf(childObject);
             if (index != -1) {
                 if (this.data) {
-                    let dataItem = findDataItem(this.data);
+                    let dataItem = findDataItem(ProjectStore.project, this.data);
                     if (dataItem) {
                         if (dataItem.type == "enum") {
                             let enumItems: string[];
@@ -1432,7 +1432,7 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
                 }
 
                 if (object.layout) {
-                    let layout = findPage(object.layout);
+                    let layout = findPage(ProjectStore.project, object.layout);
                     if (!layout) {
                         messages.push(output.propertyNotFoundMessage(object, "layout"));
                     }
@@ -1451,12 +1451,12 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
         if (this.data) {
             const layoutName = dataContext.get(this.data);
             if (layoutName) {
-                layout = findPage(layoutName);
+                layout = findPage(ProjectStore.project, layoutName);
             }
         }
 
         if (!layout) {
-            layout = findPage(this.layout);
+            layout = findPage(ProjectStore.project, this.layout);
         }
 
         if (!layout) {
@@ -1477,12 +1477,12 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
         if (this.data) {
             const layoutName = dataContext.get(this.data);
             if (layoutName) {
-                layout = findPage(layoutName);
+                layout = findPage(ProjectStore.project, layoutName);
             }
         }
 
         if (!layout) {
-            layout = findPage(this.layout);
+            layout = findPage(ProjectStore.project, this.layout);
         }
 
         if (!layout) {
@@ -2282,7 +2282,7 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
                 }
 
                 if (object.bitmap) {
-                    let bitmap = findBitmap(object.bitmap);
+                    let bitmap = findBitmap(ProjectStore.project, object.bitmap);
                     if (!bitmap) {
                         messages.push(output.propertyNotFoundMessage(object, "bitmap"));
                     }
@@ -2296,17 +2296,17 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
     @computed
     get bitmapObject() {
         return this.bitmap
-            ? findBitmap(this.bitmap)
+            ? findBitmap(ProjectStore.project, this.bitmap)
             : this.data
-            ? findBitmap(dataContext.get(this.data) as string)
+            ? findBitmap(ProjectStore.project, dataContext.get(this.data) as string)
             : undefined;
     }
 
     getBitmapObject(dataContext: DataContext) {
         return this.bitmap
-            ? findBitmap(this.bitmap)
+            ? findBitmap(ProjectStore.project, this.bitmap)
             : this.data
-            ? findBitmap(dataContext.get(this.data) as string)
+            ? findBitmap(ProjectStore.project, dataContext.get(this.data) as string)
             : undefined;
     }
 
@@ -2676,7 +2676,7 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
             }
 
             if (object.line1Data) {
-                if (!findDataItem(object.line1Data)) {
+                if (!findDataItem(ProjectStore.project, object.line1Data)) {
                     messages.push(output.propertyNotFoundMessage(object, "line1Data"));
                 }
             } else {
@@ -2684,7 +2684,7 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
             }
 
             if (object.line2Data) {
-                if (!findDataItem(object.line2Data)) {
+                if (!findDataItem(ProjectStore.project, object.line2Data)) {
                     messages.push(output.propertyNotFoundMessage(object, "line2Data"));
                 }
             } else {
@@ -2855,7 +2855,7 @@ export class YTGraphWidget extends Widget implements IYTGraphWidget {
 
             if (ProjectStore.project.settings.general.projectVersion === "v1") {
                 if (object.y2Data) {
-                    if (!findDataItem(object.y2Data)) {
+                    if (!findDataItem(ProjectStore.project, object.y2Data)) {
                         messages.push(output.propertyNotFoundMessage(object, "y2Data"));
                     }
                 } else {
@@ -3063,7 +3063,7 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
             }
 
             if (object.dwellData) {
-                if (!findDataItem(object.dwellData)) {
+                if (!findDataItem(ProjectStore.project, object.dwellData)) {
                     messages.push(output.propertyNotFoundMessage(object, "dwellData"));
                 }
             } else {
@@ -3071,7 +3071,7 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
             }
 
             if (object.y1Data) {
-                if (!findDataItem(object.y1Data)) {
+                if (!findDataItem(ProjectStore.project, object.y1Data)) {
                     messages.push(output.propertyNotFoundMessage(object, "y1Data"));
                 }
             } else {
@@ -3079,7 +3079,7 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
             }
 
             if (object.y2Data) {
-                if (!findDataItem(object.y2Data)) {
+                if (!findDataItem(ProjectStore.project, object.y2Data)) {
                     messages.push(output.propertyNotFoundMessage(object, "y2Data"));
                 }
             } else {
@@ -3087,7 +3087,7 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
             }
 
             if (object.cursorData) {
-                if (!findDataItem(object.cursorData)) {
+                if (!findDataItem(ProjectStore.project, object.cursorData)) {
                     messages.push(output.propertyNotFoundMessage(object, "cursorData"));
                 }
             } else {
@@ -3170,7 +3170,7 @@ export class AppViewWidget extends Widget implements IAppViewWidget {
             return null;
         }
 
-        const page = findPage(pageName);
+        const page = findPage(ProjectStore.project, pageName);
         if (!page) {
             return null;
         }

@@ -170,8 +170,8 @@ registerFeatureImplementation("data", {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findDataItem(dataItemName: string, project?: Project) {
-    return findReferencedObject(project ?? ProjectStore.project, "data", dataItemName) as
+export function findDataItem(project: Project, dataItemName: string) {
+    return findReferencedObject(project, "data", dataItemName) as
         | DataItem
         | undefined;
 }
@@ -179,7 +179,7 @@ export function findDataItem(dataItemName: string, project?: Project) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DataContext {
-    constructor(public parentDataContext?: DataContext, public defaultValueOverrides?: any) {}
+    constructor(public parentDataContext?: DataContext, public defaultValueOverrides?: any) { }
 
     findDataItemDefaultValue(dataItemId: string): any {
         if (this.defaultValueOverrides) {
@@ -195,7 +195,7 @@ export class DataContext {
     }
 
     findDataItem(dataItemId: string) {
-        let dataItem = findDataItem(dataItemId);
+        let dataItem = findDataItem(ProjectStore.project, dataItemId);
         if (dataItem) {
             const defaultValue = this.findDataItemDefaultValue(dataItemId);
             if (defaultValue != undefined) {
@@ -333,7 +333,7 @@ export class DataContext {
         return [];
     }
 
-    executeAction(action: string) {}
+    executeAction(action: string) { }
 }
 
 export const dataContext = new DataContext();

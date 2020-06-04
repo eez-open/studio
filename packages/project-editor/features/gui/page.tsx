@@ -596,7 +596,7 @@ export class Page extends EezObject implements IPage {
     }
 
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
-        const pageStyle = findStyle(this.style || "default");
+        const pageStyle = findStyle(ProjectStore.project, this.style || "default");
         if (pageStyle && pageStyle.backgroundColorProperty) {
             style.backgroundColor = to16bitsColor(
                 getThemedColor(pageStyle.backgroundColorProperty)
@@ -611,8 +611,6 @@ registerClass(Page);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findPage(pageName: string, project?: Project) {
-    return findReferencedObject(project ?? ProjectStore.project, "gui/pages", pageName) as
-        | Page
-        | undefined;
+export function findPage(project: Project, pageName: string) {
+    return findReferencedObject(project, "gui/pages", pageName) as Page | undefined;
 }

@@ -126,7 +126,7 @@ export class Gui extends EezObject implements IGui {
                         );
                     }
 
-                    if (!findStyle("default")) {
+                    if (!findStyle(ProjectStore.project, "default")) {
                         messages.push(
                             new output.Message(
                                 output.Type.ERROR,
