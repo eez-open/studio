@@ -97,7 +97,7 @@ export class ExtensionDefinition extends EezObject implements IExtensionDefiniti
             {
                 name: "buildConfiguration",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["settings", "build", "configurations"],
+                referencedObjectCollectionPath: "settings/build/configurations",
                 defaultValue: undefined
             },
             {

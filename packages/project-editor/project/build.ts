@@ -13,14 +13,15 @@ import {
     IMessage,
     getArrayAndObjectProperties,
     getPropertyInfo,
-    getClassInfo
+    getClassInfo,
+    getRootObject
 } from "project-editor/core/object";
 import { OutputSectionsStore } from "project-editor/core/store";
 import { Section, Type } from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/core/store";
 
-import { BuildConfiguration } from "project-editor/project/project";
+import { BuildConfiguration, Project } from "project-editor/project/project";
 import {
     extensionDefinitionAnythingToBuild,
     extensionDefinitionBuild
@@ -37,7 +38,18 @@ export enum NamingConvention {
     UnderscoreLowerCase
 }
 
-export function getName(prefix: string, name: string, namingConvention: NamingConvention) {
+export function getName<
+    T extends {
+        name: string;
+    }
+>(prefix: string, objectOrName: T | string, namingConvention: NamingConvention) {
+    let name;
+    if (typeof objectOrName == "string") {
+        name = objectOrName;
+    } else {
+        const project = getRootObject(objectOrName) as Project;
+        name = project.namespace ? project.namespace + "_" + objectOrName.name : objectOrName.name;
+    }
     name = name.replace(/[^a-zA-Z_0-9]/g, " ");
 
     if (namingConvention == NamingConvention.UnderscoreUpperCase) {
@@ -435,12 +447,16 @@ let setMessagesTimeoutId: any;
 
 export function backgroundCheck() {
     //console.time("backgroundCheck");
+
     const messages = checkTransformer(ProjectStore.project);
+
     if (setMessagesTimeoutId) {
         clearTimeout(setMessagesTimeoutId);
     }
+
     setMessagesTimeoutId = setTimeout(() => {
         OutputSectionsStore.setMessages(Section.CHECKS, messages);
     }, 100);
+
     //console.timeEnd("backgroundCheck");
 }

@@ -9,7 +9,7 @@ import {
     runInAction
 } from "mobx";
 
-import { _each, _isArray, _map, _uniqWith } from "eez-studio-shared/algorithm";
+import { _each, _isArray, _map, _uniqWith, _find } from "eez-studio-shared/algorithm";
 import { confirmSave } from "eez-studio-shared/util";
 
 import * as notification from "eez-studio-ui/notification";
@@ -1591,13 +1591,19 @@ class ProjectStoreClass {
         return path.relative(path.dirname(this.filePath), absoluteFilePath);
     }
 
-    getAbsoluteFilePath(relativeFilePath: string) {
+    getProjectFilePath(project: Project) {
+        if (project == this.project) {
+            return this.filePath;
+        } else {
+            return this.mapExternalProjectToAbsolutePath.get(project);
+        }
+    }
+
+    getAbsoluteFilePath(relativeFilePath: string, project?: Project) {
         const path = EEZStudio.electron.remote.require("path");
-        return this.filePath
-            ? path.resolve(
-                  path.dirname(this.filePath),
-                  relativeFilePath.replace(/(\\|\/)/g, path.sep)
-              )
+        const filePath = this.getProjectFilePath(project ?? this.project);
+        return filePath
+            ? path.resolve(path.dirname(filePath), relativeFilePath.replace(/(\\|\/)/g, path.sep))
             : relativeFilePath;
     }
 
@@ -1817,26 +1823,41 @@ class ProjectStoreClass {
         return !!this.project.settings.general.masterProject;
     }
 
-    masterProjectFilePath: string;
-    @observable _masterPoject: Project | undefined;
-
     @computed
     get masterProject() {
-        const masterProjectFilePath = this.project.settings.general.masterProject;
-        if (masterProjectFilePath != this.masterProjectFilePath) {
-            this.masterProjectFilePath = masterProjectFilePath;
+        return this.project.masterProject;
+    }
+
+    @observable externalProjects = new Map<string, Project>();
+    @observable mapExternalProjectToAbsolutePath = new Map<Project, string>();
+    externalProjectsLoading = new Map<string, boolean>();
+
+    loadExternalProject(filePath: string) {
+        if (filePath == this.filePath) {
+            return this.project;
+        }
+
+        const project = this.externalProjects.get(filePath);
+        if (project) {
+            return project;
+        }
+
+        if (!this.externalProjectsLoading.get(filePath)) {
+            this.externalProjectsLoading.set(filePath, true);
 
             (async () => {
-                const project = await loadProject(
-                    ProjectStore.getAbsoluteFilePath(masterProjectFilePath)
-                );
+                const project = await loadProject(filePath);
+
                 runInAction(() => {
-                    ProjectStore._masterPoject = project;
+                    this.externalProjects.set(filePath, project);
+                    this.mapExternalProjectToAbsolutePath.set(project, filePath);
                 });
+
+                this.externalProjectsLoading.set(filePath, false);
             })();
         }
 
-        return this._masterPoject;
+        return undefined;
     }
 }
 

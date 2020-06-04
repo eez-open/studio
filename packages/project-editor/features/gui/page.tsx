@@ -331,7 +331,7 @@ export class PageOrientation extends EezObject {
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
+                referencedObjectCollectionPath: "gui/styles",
                 propertyGridGroup: styleGroup
             },
             {
@@ -454,7 +454,7 @@ export class Page extends EezObject implements IPage {
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"],
+                referencedObjectCollectionPath: "gui/styles",
                 propertyGridGroup: styleGroup
             },
             {
@@ -466,6 +466,7 @@ export class Page extends EezObject implements IPage {
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
+                referencedObjectCollectionPath: "settings/build/configurations",
                 propertyGridGroup: generalGroup
             },
             {

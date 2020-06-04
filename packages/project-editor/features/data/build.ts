@@ -1,6 +1,7 @@
 import { BuildResult } from "project-editor/core/extensions";
 
 import { Project, BuildConfiguration } from "project-editor/project/project";
+import { ProjectStore } from "project-editor/core/store";
 import * as projectBuild from "project-editor/project/build";
 
 import { DataItem } from "project-editor/features/data/data";
@@ -12,7 +13,7 @@ function buildDataEnum(projectDataItems: DataItem[]) {
         (dataItem, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "DATA_ID_",
-                dataItem.name,
+                dataItem,
                 projectBuild.NamingConvention.UnderscoreUpperCase
             )} = ${i + 1}`
     );
@@ -26,7 +27,7 @@ function buildDataFuncsDecl(projectDataItems: DataItem[]) {
     let dataItems = projectDataItems.map(dataItem => {
         return `void ${projectBuild.getName(
             "data_",
-            dataItem.name,
+            dataItem,
             projectBuild.NamingConvention.UnderscoreLowerCase
         )}(DataOperationEnum operation, Cursor cursor, Value &value);`;
     });
@@ -45,7 +46,7 @@ function buildDataArrayDef(projectDataItems: DataItem[]) {
         dataItem =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "data_",
-                dataItem.name,
+                dataItem,
                 projectBuild.NamingConvention.UnderscoreLowerCase
             )}`
     );
@@ -69,6 +70,18 @@ export function build(
                 !dataItem.usedIn ||
                 dataItem.usedIn.indexOf(buildConfiguration.name) !== -1
         );
+        for (const importDirective of ProjectStore.project.settings.general.imports) {
+            if (importDirective.project) {
+                projectDataItems.push(
+                    ...importDirective.project.data.filter(
+                        dataItem =>
+                            !buildConfiguration ||
+                            !dataItem.usedIn ||
+                            dataItem.usedIn.indexOf(buildConfiguration.name) !== -1
+                    )
+                );
+            }
+        }
 
         if (!sectionNames || sectionNames.indexOf("DATA_ENUM") !== -1) {
             result.DATA_ENUM = buildDataEnum(projectDataItems);

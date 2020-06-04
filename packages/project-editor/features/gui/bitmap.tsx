@@ -146,7 +146,7 @@ export class Bitmap extends EezObject implements IBitmap {
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "styles"]
+                referencedObjectCollectionPath: "gui/styles"
             },
             {
                 name: "alwaysBuild",

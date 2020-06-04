@@ -22,7 +22,8 @@ import {
     NavigationComponent,
     PropertyProps,
     isAnyPropertyModified,
-    getParent
+    getParent,
+    getRootObject
 } from "project-editor/core/object";
 import {
     NavigationStore,
@@ -32,19 +33,19 @@ import {
     ProjectStore
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
-import { loadObject } from "project-editor/core/serialization";
 import * as output from "project-editor/core/output";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { onSelectItem } from "project-editor/components/SelectItem";
 import { Splitter } from "eez-studio-ui/splitter";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { Project } from "project-editor/project/project";
+import { Project, findReferencedObject } from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 import { findFont } from "project-editor/features/gui/gui";
 import { drawText } from "project-editor/features/gui/draw";
 import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
+import { Font } from "project-editor/features/gui/font";
 
 const { MenuItem } = EEZStudio.electron.remote;
 
@@ -262,7 +263,7 @@ const descriptionProperty: PropertyInfo = {
 const inheritFromProperty: PropertyInfo = {
     name: "inheritFrom",
     type: PropertyType.ObjectReference,
-    referencedObjectCollectionPath: ["gui", "styles"],
+    referencedObjectCollectionPath: "gui/styles",
     onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
         onSelectItem(object, propertyInfo, {
             title: propertyInfo.onSelectTitle!,
@@ -386,7 +387,7 @@ const inheritFromProperty: PropertyInfo = {
 const fontProperty: PropertyInfo = {
     name: "font",
     type: PropertyType.ObjectReference,
-    referencedObjectCollectionPath: ["gui", "fonts"],
+    referencedObjectCollectionPath: "gui/fonts",
     defaultValue: undefined,
     inheritable: true
 };
@@ -433,7 +434,7 @@ const alignVerticalProperty: PropertyInfo = {
 const colorProperty: PropertyInfo = {
     name: "color",
     type: PropertyType.ThemedColor,
-    referencedObjectCollectionPath: ["gui", "colors"],
+    referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#000000",
     inheritable: true
 };
@@ -441,7 +442,7 @@ const colorProperty: PropertyInfo = {
 const backgroundColorProperty: PropertyInfo = {
     name: "backgroundColor",
     type: PropertyType.ThemedColor,
-    referencedObjectCollectionPath: ["gui", "colors"],
+    referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#ffffff",
     inheritable: true
 };
@@ -449,7 +450,7 @@ const backgroundColorProperty: PropertyInfo = {
 const activeColorProperty: PropertyInfo = {
     name: "activeColor",
     type: PropertyType.ThemedColor,
-    referencedObjectCollectionPath: ["gui", "colors"],
+    referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#ffffff",
     inheritable: true,
     hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
@@ -458,7 +459,7 @@ const activeColorProperty: PropertyInfo = {
 const activeBackgroundColorProperty: PropertyInfo = {
     name: "activeBackgroundColor",
     type: PropertyType.ThemedColor,
-    referencedObjectCollectionPath: ["gui", "colors"],
+    referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#000000",
     inheritable: true,
     hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
@@ -467,7 +468,7 @@ const activeBackgroundColorProperty: PropertyInfo = {
 const focusColorProperty: PropertyInfo = {
     name: "focusColor",
     type: PropertyType.ThemedColor,
-    referencedObjectCollectionPath: ["gui", "colors"],
+    referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#ffffff",
     inheritable: true,
     hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
@@ -476,7 +477,7 @@ const focusColorProperty: PropertyInfo = {
 const focusBackgroundColorProperty: PropertyInfo = {
     name: "focusBackgroundColor",
     type: PropertyType.ThemedColor,
-    referencedObjectCollectionPath: ["gui", "colors"],
+    referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#000000",
     inheritable: true,
     hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
@@ -499,7 +500,7 @@ const borderRadiusProperty: PropertyInfo = {
 const borderColorProperty: PropertyInfo = {
     name: "borderColor",
     type: PropertyType.ThemedColor,
-    referencedObjectCollectionPath: ["gui", "colors"],
+    referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#000000",
     inheritable: true
 };
@@ -609,7 +610,12 @@ function getInheritedValue(
     }
 
     if (styleObject.inheritFrom) {
-        let inheritFromStyleObject = findStyle(styleObject.inheritFrom, true);
+        let inheritFromStyleObject = findStyle(
+            styleObject.inheritFrom,
+            true,
+            getRootObject(styleObject) as Project
+        );
+
         if (inheritFromStyleObject) {
             return getInheritedValue(
                 inheritFromStyleObject,
@@ -721,11 +727,7 @@ export class Style extends EezObject implements IStyle {
                         )
                     );
                 } else {
-                    if (
-                        (getParent(object) as Style[]).find(
-                            style => style !== object && style.id === object.id
-                        )
-                    ) {
+                    if (ProjectStore.project.gui.allStyleIdToStyleMap.get(object.id)!.length > 1) {
                         messages.push(output.propertyNotUniqueMessage(object, "id"));
                     }
                 }
@@ -840,12 +842,25 @@ export class Style extends EezObject implements IStyle {
     }
 
     @computed
-    get fontObject(): any {
-        let fontName = this.fontName;
-        if (fontName) {
-            return findFont(fontName);
+    get fontObject(): Font | undefined {
+        if (this.font) {
+            return findFont(this.font, getRootObject(this) as Project);
         }
-        return getDefaultStyle().fontObject;
+
+        if (this.inheritFrom) {
+            let inheritFromStyleObject = findStyle(
+                this.inheritFrom,
+                true,
+                getRootObject(this) as Project
+            );
+
+            if (inheritFromStyleObject) {
+                return getInheritedValue(inheritFromStyleObject, "fontObject", [this])
+                    ?.value as Font;
+            }
+        }
+
+        return undefined;
     }
 
     static getRect(value: string) {
@@ -1153,59 +1168,11 @@ registerClass(Style);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let DEFAULT_STYLE: Style;
-
-export function getDefaultStyle(): Style {
-    let defaultStyle = findStyle("default");
-    if (defaultStyle) {
-        return defaultStyle;
-    }
-
-    if (!DEFAULT_STYLE) {
-        DEFAULT_STYLE = loadObject(
-            undefined,
-            {
-                name: "default",
-                font: fontProperty.defaultValue,
-                alignHorizontal: alignHorizontalProperty.defaultValue,
-                alignVertical: alignVerticalProperty.defaultValue,
-                color: colorProperty.defaultValue,
-                backgroundColor: backgroundColorProperty.defaultValue,
-                activeColor: activeColorProperty.defaultValue,
-                activeBackgroundColor: activeBackgroundColorProperty.defaultValue,
-                focusColor: focusColorProperty.defaultValue,
-                focusBackgroundColor: focusBackgroundColorProperty.defaultValue,
-                borderSize: borderSizeProperty.defaultValue,
-                borderRadius: borderRadiusProperty.defaultValue,
-                borderColor: borderColorProperty.defaultValue,
-                padding: paddingProperty.defaultValue,
-                margin: marginProperty.defaultValue,
-                opacity: opacityProperty.defaultValue,
-                blink: blinkProperty.defaultValue
-            },
-            Style
-        ) as Style;
-    }
-
-    return DEFAULT_STYLE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 export function getStyleProperty(
-    styleNameOrObject: Style | string | undefined,
+    style: Style,
     propertyName: string,
     translateThemedColors?: boolean
 ): any {
-    let style: Style;
-    if (!styleNameOrObject) {
-        style = getDefaultStyle();
-    } else if (typeof styleNameOrObject == "string") {
-        style = findStyle(styleNameOrObject) || getDefaultStyle();
-    } else {
-        style = styleNameOrObject;
-    }
-
     let inheritedValue = getInheritedValue(style, propertyName, [], translateThemedColors);
     if (inheritedValue) {
         return inheritedValue.value;
@@ -1231,24 +1198,19 @@ export function drawStylePreview(canvas: HTMLCanvasElement, style: Style, text: 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findStyle(styleName: string | undefined, allInMasterProject: boolean = false) {
-    if (!styleName) {
-        return undefined;
+export function findStyle(
+    styleName: string | undefined,
+    allInMasterProject: boolean = false,
+    project?: Project
+) {
+    if (styleName == undefined) {
+        return;
     }
 
-    const style = ProjectStore.project.gui.stylesMap.get(styleName);
-    if (style) {
-        return style;
-    }
-
-    if (ProjectStore.masterProject) {
-        if (ProjectStore.masterProject.gui) {
-            const style = ProjectStore.masterProject.gui.stylesMap.get(styleName);
-            if (style && (allInMasterProject || style.id != undefined)) {
-                return style;
-            }
-        }
-    }
-
-    return undefined;
+    return findReferencedObject(
+        project ?? ProjectStore.project,
+        "gui/styles",
+        styleName,
+        allInMasterProject
+    ) as Style | undefined;
 }

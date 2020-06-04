@@ -38,7 +38,7 @@ import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { DocumentStore, NavigationStore, IContextMenuContext } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
-import { Project } from "project-editor/project/project";
+import { Project, checkObjectReference } from "project-editor/project/project";
 
 import {
     IResizeHandler,
@@ -60,8 +60,7 @@ import { ProjectStore } from "project-editor/core/store";
 import { Page } from "project-editor/features/gui/page";
 import { findPage, findBitmap } from "project-editor/features/gui/gui";
 import { Style, IStyle } from "project-editor/features/gui/style";
-import { findDataItem, DataContext, dataContext } from "project-editor/features/data/data";
-import { findAction } from "project-editor/features/action/action";
+import { DataContext, dataContext, findDataItem } from "project-editor/features/data/data";
 import {
     drawText,
     styleGetBorderRadius,
@@ -90,7 +89,7 @@ function makeDataPropertyInfo(
         name,
         displayName,
         type: PropertyType.ObjectReference,
-        referencedObjectCollectionPath: ["data"],
+        referencedObjectCollectionPath: "data",
         propertyGridGroup: propertyGridGroup || dataGroup,
         onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
             onSelectItem(object, propertyInfo, {
@@ -110,7 +109,7 @@ function makeActionPropertyInfo(
         name,
         displayName,
         type: PropertyType.ObjectReference,
-        referencedObjectCollectionPath: ["actions"],
+        referencedObjectCollectionPath: "actions",
         propertyGridGroup: propertyGridGroup || actionsGroup,
         onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
             onSelectItem(object, propertyInfo, {
@@ -500,17 +499,8 @@ export class Widget extends EezObject implements IWidget {
                 }
             }
 
-            if (object.data) {
-                if (!findDataItem(object.data)) {
-                    messages.push(output.propertyNotFoundMessage(object, "data"));
-                }
-            }
-
-            if (object.action) {
-                if (!findAction(object.action)) {
-                    messages.push(output.propertyNotFoundMessage(object, "action"));
-                }
-            }
+            checkObjectReference(object, "data", messages);
+            checkObjectReference(object, "action", messages);
 
             return messages;
         }
@@ -887,11 +877,7 @@ export class ContainerWidget extends Widget implements IContainerWidget {
         check: (object: ContainerWidget) => {
             let messages: output.Message[] = [];
 
-            if (object.overlay) {
-                if (!findDataItem(object.overlay)) {
-                    messages.push(output.propertyNotFoundMessage(object, "overlay"));
-                }
-            }
+            checkObjectReference(object, "overlay", messages);
 
             return messages;
         }
@@ -1393,7 +1379,7 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
                 name: "layout",
                 type: PropertyType.ObjectReference,
                 propertyGridGroup: specificGroup,
-                referencedObjectCollectionPath: ["gui", "pages"]
+                referencedObjectCollectionPath: "gui/pages"
             },
             makeDataPropertyInfo("context"),
             {
@@ -1453,11 +1439,7 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
                 }
             }
 
-            if (object.context) {
-                if (!findDataItem(object.context)) {
-                    messages.push(output.propertyNotFoundMessage(object, "context"));
-                }
-            }
+            checkObjectReference(object, "context", messages);
 
             return messages;
         }
@@ -2217,6 +2199,10 @@ class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
     }
 
     render() {
+        if (this.props.readOnly) {
+            return null;
+        }
+
         if (this.props.objects.length > 1) {
             return null;
         }
@@ -2257,7 +2243,7 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
             {
                 name: "bitmap",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["gui", "bitmaps"],
+                referencedObjectCollectionPath: "gui/bitmaps",
                 propertyGridGroup: specificGroup
             },
             {
@@ -2421,13 +2407,7 @@ export class ButtonWidget extends Widget implements IButtonWidget {
                 messages.push(output.propertyNotSetMessage(object, "text"));
             }
 
-            if (object.enabled) {
-                if (!findDataItem(object.enabled)) {
-                    messages.push(output.propertyNotFoundMessage(object, "enabled"));
-                }
-            } else {
-                messages.push(output.propertyNotSetMessage(object, "enabled"));
-            }
+            checkObjectReference(object, "enabled", messages, true);
 
             return messages;
         }

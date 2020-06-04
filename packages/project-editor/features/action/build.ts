@@ -1,6 +1,7 @@
 import { BuildResult } from "project-editor/core/extensions";
 
 import { Project, BuildConfiguration } from "project-editor/project/project";
+import { ProjectStore } from "project-editor/core/store";
 import * as projectBuild from "project-editor/project/build";
 
 import { Action } from "project-editor/features/action/action";
@@ -12,7 +13,7 @@ function buildActionsEnum(projectActions: Action[]) {
         (action, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "ACTION_ID_",
-                action.name,
+                action,
                 projectBuild.NamingConvention.UnderscoreUpperCase
             )} = ${i + 1}`
     );
@@ -26,7 +27,7 @@ function buildActionsFuncsDecl(projectActions: Action[]) {
     let actions = projectActions.map(action => {
         return `void ${projectBuild.getName(
             "action_",
-            action.name,
+            action,
             projectBuild.NamingConvention.UnderscoreLowerCase
         )}();`;
     });
@@ -50,7 +51,7 @@ function buildActionsFuncsDef(projectActions: Action[]) {
 
         return `void ${projectBuild.getName(
             "action_",
-            action.name,
+            action,
             projectBuild.NamingConvention.UnderscoreLowerCase
         )}() {\n${implementationCode}\n}\n`;
     });
@@ -67,7 +68,7 @@ function buildActionsArrayDef(projectActions: Action[]) {
         action =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "action_",
-                action.name,
+                action,
                 projectBuild.NamingConvention.UnderscoreLowerCase
             )}`
     );
@@ -91,6 +92,18 @@ export function build(
                 !action.usedIn ||
                 action.usedIn.indexOf(buildConfiguration.name) !== -1
         );
+        for (const importDirective of ProjectStore.project.settings.general.imports) {
+            if (importDirective.project) {
+                projectActions.push(
+                    ...importDirective.project.actions.filter(
+                        action =>
+                            !buildConfiguration ||
+                            !action.usedIn ||
+                            action.usedIn.indexOf(buildConfiguration.name) !== -1
+                    )
+                );
+            }
+        }
 
         if (!sectionNames || sectionNames.indexOf("ACTIONS_ENUM") !== -1) {
             result.ACTIONS_ENUM = buildActionsEnum(projectActions);

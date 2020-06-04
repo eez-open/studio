@@ -38,8 +38,30 @@ const { MenuItem } = EEZStudio.electron.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function getProjectWithThemes() {
+    if (ProjectStore.masterProject) {
+        return ProjectStore.masterProject;
+    }
+
+    if (ProjectStore.project.gui.themes.length > 0) {
+        return ProjectStore.project;
+    }
+
+    for (const importDirective of ProjectStore.project.settings.general.imports) {
+        if (importDirective.project) {
+            if (importDirective.project.gui.themes.length > 0) {
+                return importDirective.project;
+            }
+        }
+    }
+
+    return ProjectStore.project;
+}
+
 const navigationStore = computed(() => {
-    return ProjectStore.masterProject ? new SimpleNavigationStoreClass(undefined) : NavigationStore;
+    return getProjectWithThemes() != ProjectStore.project
+        ? new SimpleNavigationStoreClass(undefined)
+        : NavigationStore;
 });
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,10 +99,7 @@ class ColorItem extends React.Component<{
 }> {
     @computed
     get colorObject() {
-        return getObjectFromObjectId(
-            ProjectStore.masterProject || ProjectStore.project,
-            this.props.itemId
-        ) as Color;
+        return getObjectFromObjectId(getProjectWithThemes(), this.props.itemId) as Color;
     }
 
     @computed
@@ -90,7 +109,7 @@ class ColorItem extends React.Component<{
 
     @computed
     get selectedTheme() {
-        const gui = (ProjectStore.masterProject || ProjectStore.project).gui;
+        const gui = getProjectWithThemes().gui;
 
         let selectedTheme = getObjectFromNavigationItem(
             navigationStore.get().getNavigationSelectedItem(gui.themes)
@@ -168,10 +187,7 @@ export class ThemesSideView extends React.Component<{
     hasCloseButton?: boolean;
 }> {
     onEditThemeName = (itemId: string) => {
-        const theme = getObjectFromObjectId(
-            ProjectStore.masterProject || ProjectStore.project,
-            itemId
-        ) as Theme;
+        const theme = getObjectFromObjectId(getProjectWithThemes(), itemId) as Theme;
 
         showGenericDialog({
             dialogDefinition: {
@@ -207,10 +223,7 @@ export class ThemesSideView extends React.Component<{
     };
 
     onEditColorName = (itemId: string) => {
-        const color = getObjectFromObjectId(
-            ProjectStore.masterProject || ProjectStore.project,
-            itemId
-        ) as Color;
+        const color = getObjectFromObjectId(getProjectWithThemes(), itemId) as Color;
 
         showGenericDialog({
             dialogDefinition: {
@@ -254,7 +267,7 @@ export class ThemesSideView extends React.Component<{
             return null;
         }
 
-        const gui = (ProjectStore.masterProject || ProjectStore.project).gui;
+        const gui = getProjectWithThemes().gui;
 
         const themes = (
             <ListNavigation
@@ -363,7 +376,7 @@ export class Color extends EezObject implements IColor {
                     click: () => {
                         UndoManager.setCombineCommands(true);
 
-                        const gui = (ProjectStore.masterProject || ProjectStore.project).gui;
+                        const gui = getProjectWithThemes().gui;
 
                         const selectedTheme = getObjectFromNavigationItem(
                             navigationStore.get().getNavigationSelectedItem(gui.themes)
@@ -481,7 +494,7 @@ function getThemedColorInGui(gui: Gui, colorValue: string): string | undefined {
         return colorValue;
     }
 
-    let index = gui.colorsMap.get(colorValue);
+    let index = gui.colorToIndexMap.get(colorValue);
     if (index === undefined) {
         return undefined;
     }
@@ -499,7 +512,7 @@ export function getThemedColor(colorValue: string): string {
         return colorValue;
     }
 
-    const gui = (ProjectStore.masterProject || ProjectStore.project).gui;
+    const gui = getProjectWithThemes().gui;
     let color = getThemedColorInGui(gui, colorValue);
     if (color) {
         return color;

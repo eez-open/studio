@@ -2,7 +2,6 @@ import tinycolor from "tinycolor2";
 
 import { blendColor, to16bitsColor } from "eez-studio-shared/color";
 
-import { findFont } from "project-editor/features/gui/gui";
 import { Style } from "project-editor/features/gui/style";
 import { Font, getPixelByteIndex } from "project-editor/features/gui/font";
 
@@ -262,8 +261,7 @@ export function styleIsVertAlignBottom(style: Style) {
 }
 
 export function styleGetFont(style: Style) {
-    let font = style.fontName;
-    return font && findFont(font);
+    return style.fontObject;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

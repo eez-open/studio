@@ -38,18 +38,18 @@ import {
     NavigationStore,
     INavigationStore,
     IPanel,
-    createObjectNavigationItem
+    createObjectNavigationItem,
+    ProjectStore
 } from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
-import { ProjectStore } from "project-editor/core/store";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
+import { Project, findReferencedObject } from "project-editor/project/project";
 
 import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";
 import { FontProperties as FontValue } from "font-services/interfaces";
 
-import { Gui } from "project-editor/features/gui/gui";
 import { drawGlyph, setColor, setBackColor } from "project-editor/features/gui/draw";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2285,26 +2285,11 @@ registerClass(Font);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findFontInGui(gui: Gui, fontName: any) {
-    let fonts = (gui && gui.fonts) || [];
-    for (const font of fonts) {
-        if (font.name == fontName) {
-            return font;
-        }
+export function findFont(fontName: string | undefined, project?: Project) {
+    if (fontName == undefined) {
+        return undefined;
     }
-
-    return undefined;
-}
-
-export function findFont(fontName: any) {
-    const font = findFontInGui(ProjectStore.project.gui, fontName);
-    if (font) {
-        return font;
-    }
-
-    if (ProjectStore.masterProject && ProjectStore.masterProject.gui) {
-        return findFontInGui(ProjectStore.masterProject.gui, fontName);
-    }
-
-    return undefined;
+    return findReferencedObject(project ?? ProjectStore.project, "gui/fonts", fontName) as
+        | Font
+        | undefined;
 }

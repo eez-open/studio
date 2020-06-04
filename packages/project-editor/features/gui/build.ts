@@ -2,6 +2,7 @@ const LZ4 = require("lz4");
 
 import { strToColor16 } from "eez-studio-shared/color";
 
+import { getRootObject } from "project-editor/core/object";
 import { OutputSectionsStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
@@ -11,10 +12,10 @@ import { ProjectStore } from "project-editor/core/store";
 import * as projectBuild from "project-editor/project/build";
 import { Project, BuildConfiguration } from "project-editor/project/project";
 
-import { DataItem } from "project-editor/features/data/data";
-import { Action } from "project-editor/features/action/action";
+import { DataItem, findDataItem } from "project-editor/features/data/data";
+import { Action, findAction } from "project-editor/features/action/action";
 
-import { findStyle, findFont, findBitmap } from "project-editor/features/gui/gui";
+import { findPage, findStyle, findFont, findBitmap } from "project-editor/features/gui/gui";
 import { getData as getBitmapData, Bitmap } from "project-editor/features/gui/bitmap";
 import { Style, getStyleProperty } from "project-editor/features/gui/style";
 import * as Widget from "project-editor/features/gui/widget";
@@ -486,7 +487,7 @@ function buildGuiFontsEnum(assets: Assets) {
         (font, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "FONT_ID_",
-                font.name,
+                font,
                 projectBuild.NamingConvention.UnderscoreUpperCase
             )} = ${i + 1}`
     );
@@ -512,7 +513,7 @@ function buildGuiBitmapsEnum(assets: Assets) {
         (bitmap, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "BITMAP_ID_",
-                bitmap.name,
+                bitmap,
                 projectBuild.NamingConvention.UnderscoreUpperCase
             )} = ${i + 1}`
     );
@@ -577,7 +578,7 @@ function buildGuiStylesEnum(assets: Assets) {
             if (style) {
                 return `${projectBuild.TAB}${projectBuild.getName(
                     "STYLE_ID_",
-                    style.name || "inline" + i,
+                    style.name ? style : "inline" + i,
                     projectBuild.NamingConvention.UnderscoreUpperCase
                 )} = ${i}`;
             } else {
@@ -710,7 +711,7 @@ function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer | null) {
         result.addField(new UInt16(borderColor));
 
         // font
-        let fontIndex = style.fontName ? assets.getFontIndex(style.fontName) : 0;
+        let fontIndex = style.fontName ? assets.getFontIndex(style, "fontName") : 0;
         result.addField(new UInt8(fontIndex));
 
         // opacity
@@ -750,7 +751,7 @@ function buildGuiThemesEnum(assets: Assets) {
         (theme, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "THEME_ID_",
-                theme.name,
+                theme,
                 projectBuild.NamingConvention.UnderscoreUpperCase
             )} = ${i}`
     );
@@ -765,7 +766,7 @@ function buildGuiColorsEnum(assets: Assets) {
         (color, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "COLOR_ID_",
-                color.name,
+                color,
                 projectBuild.NamingConvention.UnderscoreUpperCase
             )} = ${i}`
     );
@@ -868,13 +869,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
     result.addField(new Int16(object.height || 0));
 
     // style
-    let style: number;
-    if (object.style) {
-        style = assets.getStyleIndex(object.style);
-    } else {
-        style = assets.getStyleIndex("default");
-    }
-    result.addField(new UInt16(style));
+    result.addField(new UInt16(assets.getStyleIndex(object, "style")));
 
     // specific
     let specific: Struct | undefined;
@@ -1044,17 +1039,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific = new Struct();
 
         // selectedStyle
-        let selectedStyle: number;
-        if (widget.selectedStyle) {
-            selectedStyle = assets.getStyleIndex(widget.selectedStyle);
-            if (selectedStyle == 0) {
-                selectedStyle = style;
-            }
-        } else {
-            selectedStyle = style;
-        }
-
-        specific.addField(new UInt16(selectedStyle));
+        specific.addField(new UInt16(assets.getStyleIndex(widget, "selectedStyle")));
     } else if (type == WIDGET_TYPE_BAR_GRAPH) {
         let widget = object as Widget.BarGraphWidget;
         specific = new Struct();
@@ -1078,12 +1063,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific.addField(new UInt8(orientation));
 
         // textStyle
-        let textStyle: number = 0;
-        if (widget.textStyle) {
-            textStyle = assets.getStyleIndex(widget.textStyle);
-        }
-
-        specific.addField(new UInt16(textStyle));
+        specific.addField(new UInt16(assets.getStyleIndex(widget, "textStyle")));
 
         // line1Data
         let line1Data = 0;
@@ -1094,12 +1074,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific.addField(new UInt16(line1Data));
 
         // line1Style
-        let line1Style: number = 0;
-        if (widget.line1Style) {
-            line1Style = assets.getStyleIndex(widget.line1Style);
-        }
-
-        specific.addField(new UInt16(line1Style));
+        specific.addField(new UInt16(assets.getStyleIndex(widget, "line1Style")));
 
         // line2Data
         let line2Data = 0;
@@ -1110,23 +1085,13 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific.addField(new UInt16(line2Data));
 
         // line2Style
-        let line2Style: number = 0;
-        if (widget.line2Style) {
-            line2Style = assets.getStyleIndex(widget.line2Style);
-        }
-
-        specific.addField(new UInt16(line2Style));
+        specific.addField(new UInt16(assets.getStyleIndex(widget, "line2Style")));
     } else if (type == WIDGET_TYPE_UP_DOWN) {
         let widget = object as Widget.UpDownWidget;
         specific = new Struct();
 
         // buttonStyle
-        let buttonsStyle: number = 0;
-        if (widget.buttonsStyle) {
-            buttonsStyle = assets.getStyleIndex(widget.buttonsStyle);
-        }
-
-        specific.addField(new UInt16(buttonsStyle));
+        specific.addField(new UInt16(assets.getStyleIndex(widget, "buttonsStyle")));
 
         // down button text
         let downButtonText: string;
@@ -1167,12 +1132,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific.addField(new UInt16(y1Data));
 
         // y1Style
-        let y1Style: number = 0;
-        if (widget.y1Style) {
-            y1Style = assets.getStyleIndex(widget.y1Style);
-        }
-
-        specific.addField(new UInt16(y1Style));
+        specific.addField(new UInt16(assets.getStyleIndex(widget, "y1Style")));
 
         // y2Data
         let y2Data = 0;
@@ -1183,12 +1143,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific.addField(new UInt16(y2Data));
 
         // y2Style
-        let y2Style: number = 0;
-        if (widget.y2Style) {
-            y2Style = assets.getStyleIndex(widget.y2Style);
-        }
-
-        specific.addField(new UInt16(y2Style));
+        specific.addField(new UInt16(assets.getStyleIndex(widget, "y2Style")));
 
         // cursorData
         let cursorData = 0;
@@ -1199,12 +1154,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific.addField(new UInt16(cursorData));
 
         // cursorStyle
-        let cursorStyle: number = 0;
-        if (widget.cursorStyle) {
-            cursorStyle = assets.getStyleIndex(widget.cursorStyle);
-        }
-
-        specific.addField(new UInt16(cursorStyle));
+        specific.addField(new UInt16(assets.getStyleIndex(widget, "cursorStyle")));
     } else if (type == WIDGET_TYPE_BUTTON) {
         let widget = object as Widget.ButtonWidget;
         specific = new Struct();
@@ -1228,12 +1178,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific.addField(new UInt16(enabledData));
 
         // disabledStyle
-        let disabledStyle: number = 0;
-        if (widget.disabledStyle) {
-            disabledStyle = assets.getStyleIndex(widget.disabledStyle);
-        }
-
-        specific.addField(new UInt16(disabledStyle));
+        specific.addField(new UInt16(assets.getStyleIndex(widget, "disabledStyle")));
     } else if (type == WIDGET_TYPE_TOGGLE_BUTTON) {
         let widget = object as Widget.ToggleButtonWidget;
         specific = new Struct();
@@ -1264,7 +1209,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         // bitmap
         let bitmap: number = 0;
         if (widget.bitmap) {
-            bitmap = assets.getBitmapIndex(widget.bitmap);
+            bitmap = assets.getBitmapIndex(widget, "bitmap");
         }
 
         specific.addField(new UInt8(bitmap));
@@ -1275,7 +1220,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         // layout
         let layout: number = 0;
         if (widget.layout) {
-            layout = assets.getPageIndex(widget.layout);
+            layout = assets.getPageIndex(widget, "layout");
         }
 
         specific.addField(new Int16(layout));
@@ -1293,18 +1238,10 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific = new Struct();
 
         // thumbStyle
-        let thumbStyle: number = 0;
-        if (widget.thumbStyle) {
-            thumbStyle = assets.getStyleIndex(widget.thumbStyle);
-        }
-        specific.addField(new UInt16(thumbStyle));
+        specific.addField(new UInt16(assets.getStyleIndex(widget, "thumbStyle")));
 
         // buttonStyle
-        let buttonsStyle: number = 0;
-        if (widget.buttonsStyle) {
-            buttonsStyle = assets.getStyleIndex(widget.buttonsStyle);
-        }
-        specific.addField(new UInt16(buttonsStyle));
+        specific.addField(new UInt16(assets.getStyleIndex(widget, "buttonsStyle")));
 
         // down button text
         let leftButtonText: string;
@@ -1339,7 +1276,7 @@ function buildGuiPagesEnum(assets: Assets) {
         (widget, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "PAGE_ID_",
-                widget.name,
+                widget,
                 projectBuild.NamingConvention.UnderscoreUpperCase
             )} = ${i + 1}`
     );
@@ -1486,62 +1423,107 @@ function buildGuiAssetsDef(data: Buffer) {
 class Assets {
     dataItems: DataItem[];
     actions: Action[];
-
     pages: Page[];
     styles: (Style | undefined)[];
     fonts: Font[] = [];
     bitmaps: Bitmap[] = [];
     colors: string[] = [];
 
+    static getAssets<T>(
+        project: Project,
+        getCollection: (project: Project) => T[],
+        assetIncludePredicate: (asset: T) => boolean
+    ) {
+        const assets = getCollection(project).filter(assetIncludePredicate);
+        for (const importDirective of ProjectStore.project.settings.general.imports) {
+            if (importDirective.project) {
+                assets.push(
+                    ...getCollection(importDirective.project).filter(assetIncludePredicate)
+                );
+            }
+        }
+        return assets;
+    }
+
     constructor(public project: Project, buildConfiguration: BuildConfiguration | undefined) {
-        this.dataItems = project.data.filter(
-            dataItem =>
+        {
+            const assetIncludePredicate = (asset: DataItem | Action | Page) =>
                 !buildConfiguration ||
-                !dataItem.usedIn ||
-                dataItem.usedIn.indexOf(buildConfiguration.name) !== -1
-        );
+                !asset.usedIn ||
+                asset.usedIn.indexOf(buildConfiguration.name) !== -1;
 
-        this.actions = project.actions.filter(
-            action =>
-                !buildConfiguration ||
-                !action.usedIn ||
-                action.usedIn.indexOf(buildConfiguration.name) !== -1
-        );
+            this.dataItems = Assets.getAssets<DataItem>(
+                project,
+                project => project.data,
+                assetIncludePredicate
+            );
 
-        const gui = project.gui;
+            this.actions = Assets.getAssets<Action>(
+                project,
+                project => project.actions,
+                assetIncludePredicate
+            );
 
-        this.pages = gui.pages.filter(
-            page =>
-                !buildConfiguration ||
-                !page.usedIn ||
-                page.usedIn.indexOf(buildConfiguration.name) !== -1
-        );
-
-        this.styles = [undefined];
-
-        if (!ProjectStore.masterProject) {
-            gui.styles
-                .filter(style => style.id != undefined)
-                .forEach(style => this.addStyle(style));
-            gui.styles.filter(style => style.alwaysBuild).forEach(style => this.addStyle(style));
+            this.pages = Assets.getAssets<Page>(
+                project,
+                project => project.gui.pages,
+                assetIncludePredicate
+            );
         }
 
-        this.fonts = gui.fonts.filter(bitmap => bitmap.alwaysBuild);
+        this.styles = [undefined];
+        if (!ProjectStore.masterProject) {
+            Assets.getAssets<Style>(
+                project,
+                project => project.gui.styles,
+                style => style.id != undefined
+            ).forEach(style => this.addStyle(style));
 
-        this.bitmaps = gui.bitmaps.filter(font => font.alwaysBuild);
+            Assets.getAssets<Style>(
+                project,
+                project => project.gui.styles,
+                style => style.alwaysBuild
+            ).forEach(style => this.addStyle(style));
+        }
+
+        {
+            const assetIncludePredicate = (asset: Font | Bitmap) => asset.alwaysBuild;
+
+            this.fonts = Assets.getAssets<Font>(
+                project,
+                project => project.gui.fonts,
+                assetIncludePredicate
+            );
+
+            this.bitmaps = Assets.getAssets<Bitmap>(
+                project,
+                project => project.gui.bitmaps,
+                assetIncludePredicate
+            );
+        }
 
         buildGuiDocumentData(this, null);
         buildGuiStylesData(this, null);
     }
 
-    getDataItemIndex(object: any, propertyName: string) {
-        const dataItemName = object[propertyName];
+    static getAssetIndex<T>(
+        object: any,
+        propertyName: string,
+        findAsset: (assetName: string, project: Project) => T | undefined,
+        collection: T[]
+    ) {
+        const project = getRootObject(object) as Project;
+        const assetName = object[propertyName];
+        const asset = findAsset(assetName, project);
 
-        for (let i = 0; i < this.dataItems.length; i++) {
-            if (this.dataItems[i].name === dataItemName) {
-                const dataItemIndex = Math.min(i + 1, 32767);
-                return ProjectStore.masterProject ? -dataItemIndex : dataItemIndex;
+        if (asset) {
+            let assetIndex = collection.indexOf(asset);
+            if (assetIndex == -1) {
+                collection.push(asset);
+                assetIndex = collection.length - 1;
             }
+            assetIndex++;
+            return ProjectStore.masterProject ? -assetIndex : assetIndex;
         }
 
         const message = output.propertyNotFoundMessage(object, propertyName);
@@ -1553,45 +1535,18 @@ class Assets {
         );
 
         return 0;
+    }
+
+    getDataItemIndex(object: any, propertyName: string) {
+        return Assets.getAssetIndex(object, propertyName, findDataItem, this.dataItems);
     }
 
     getActionIndex(object: any, propertyName: string) {
-        const actionName = object[propertyName];
-        for (let i = 0; i < this.actions.length; i++) {
-            if (this.actions[i].name === actionName) {
-                const actionItemIndex = Math.min(i + 1, 32767);
-                return ProjectStore.masterProject ? -actionItemIndex : actionItemIndex;
-            }
-        }
-
-        const message = output.propertyNotFoundMessage(object, propertyName);
-        OutputSectionsStore.write(
-            output.Section.OUTPUT,
-            message.type,
-            message.text,
-            message.object
-        );
-
-        return 0;
+        return Assets.getAssetIndex(object, propertyName, findAction, this.actions);
     }
 
-    get totalGuiAssets() {
-        return (
-            this.pages.length +
-            this.styles.filter(style => !!style).length +
-            this.fonts.length +
-            this.bitmaps.length
-        );
-    }
-
-    getPageIndex(pageName: string) {
-        for (let i = 0; i < this.pages.length; i++) {
-            if (this.pages[i].name == pageName) {
-                return ProjectStore.masterProject ? -(i + 1) : i + 1;
-            }
-        }
-
-        return 0;
+    getPageIndex(object: any, propertyName: string) {
+        return Assets.getAssetIndex(object, propertyName, findPage, this.pages);
     }
 
     addStyle(style: Style) {
@@ -1611,18 +1566,21 @@ class Assets {
         return this.styles.length - 1;
     }
 
-    getStyleIndex(styleNameOrObject: string | Style): number {
+    doGetStyleIndex(project: Project, styleNameOrObject: string | Style): number {
         if (ProjectStore.masterProject) {
             if (typeof styleNameOrObject === "string") {
                 const styleName = styleNameOrObject;
-                const style = findStyle(styleName);
+                const style = findStyle(styleName, false, project);
                 if (style && style.id != undefined) {
                     return style.id;
                 }
             } else {
                 const style = styleNameOrObject;
+                if (style.id != undefined) {
+                    return style.id;
+                }
                 if (style.inheritFrom) {
-                    return this.getStyleIndex(style.inheritFrom);
+                    return this.doGetStyleIndex(project, style.inheritFrom);
                 }
             }
         } else {
@@ -1636,7 +1594,7 @@ class Assets {
                     }
                 }
 
-                const style = findStyle(styleName);
+                const style = findStyle(styleName, false, project);
                 if (style) {
                     if (style.id != undefined) {
                         return style.id;
@@ -1648,13 +1606,13 @@ class Assets {
                 const style = styleNameOrObject;
 
                 if (style.inheritFrom) {
-                    const parentStyle = findStyle(style.inheritFrom);
+                    const parentStyle = findStyle(style.inheritFrom, false, project);
                     if (parentStyle) {
                         if (style.compareTo(parentStyle)) {
                             if (style.id != undefined) {
                                 return style.id;
                             }
-                            return this.getStyleIndex(parentStyle.name);
+                            return this.doGetStyleIndex(project, parentStyle.name);
                         }
                     }
                 }
@@ -1673,34 +1631,26 @@ class Assets {
         return 0;
     }
 
-    getFontIndex(fontName: string) {
-        for (let i = 0; i < this.fonts.length; i++) {
-            if (this.fonts[i].name == fontName) {
-                return i + 1;
+    getStyleIndex(object: any, propertyName: string): number {
+        const project = getRootObject(object) as Project;
+
+        let style: string | Style | undefined = object[propertyName];
+        if (style === undefined) {
+            style = findStyle("default", false, project);
+            if (!style) {
+                return 0;
             }
         }
 
-        const font = findFont(fontName);
-        if (font) {
-            this.fonts.push(font);
-        }
-
-        return 0;
+        return this.doGetStyleIndex(project, style);
     }
 
-    getBitmapIndex(bitmapName: string) {
-        for (let i = 0; i < this.bitmaps.length; i++) {
-            if (this.bitmaps[i].name == bitmapName) {
-                return ProjectStore.masterProject ? -(i + 1) : i + 1;
-            }
-        }
+    getFontIndex(object: any, propertyName: string) {
+        return Assets.getAssetIndex(object, propertyName, findFont, this.fonts);
+    }
 
-        const bitmap = findBitmap(bitmapName);
-        if (bitmap) {
-            this.bitmaps.push(bitmap);
-        }
-
-        return 0;
+    getBitmapIndex(object: any, propertyName: string) {
+        return Assets.getAssetIndex(object, propertyName, findBitmap, this.bitmaps);
     }
 
     getColorIndex(

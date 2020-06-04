@@ -9,14 +9,11 @@ import {
     PropertyType
 } from "project-editor/core/object";
 import { Message, Type } from "project-editor/core/output";
-
 import { ProjectStore } from "project-editor/core/store";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
-
+import { findReferencedObject, Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
-
 import { build } from "project-editor/features/action/build";
 import { metrics } from "project-editor/features/action/metrics";
 
@@ -67,7 +64,8 @@ export class Action extends EezObject implements IAction {
             },
             {
                 name: "usedIn",
-                type: PropertyType.ConfigurationReference
+                type: PropertyType.ConfigurationReference,
+                referencedObjectCollectionPath: "settings/build/configurations"
             }
         ],
         newItem: (parent: IEezObject) => {
@@ -124,6 +122,8 @@ registerFeatureImplementation("action", {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findAction(actionName: string) {
-    return ProjectStore.project.actionsMap.get(actionName);
+export function findAction(actionName: string, project?: Project) {
+    return findReferencedObject(project ?? ProjectStore.project, "actions", actionName) as
+        | Action
+        | undefined;
 }

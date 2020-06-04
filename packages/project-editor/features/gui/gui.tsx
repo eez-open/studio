@@ -20,7 +20,7 @@ import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
-import { Project } from "project-editor/project/project";
+import { Project, findReferencedObject } from "project-editor/project/project";
 
 import { Page, IPage } from "project-editor/features/gui/page";
 import { Style, IStyle, findStyle } from "project-editor/features/gui/style";
@@ -180,9 +180,54 @@ export class Gui extends EezObject implements IGui {
     };
 
     @computed
+    get pagesMap() {
+        const map = new Map<String, Page>();
+        this.pages.forEach(page => map.set(page.name, page));
+        return map;
+    }
+
+    @computed
     get stylesMap() {
         const map = new Map<String, Style>();
         this.styles.forEach(style => map.set(style.name, style));
+        return map;
+    }
+
+    @computed({ keepAlive: true })
+    get allStyleIdToStyleMap() {
+        const map = new Map<number, Style[]>();
+
+        this.stylesMap.forEach(style => {
+            if (style.id != undefined) {
+                map.set(style.id, (map.get(style.id) || []).concat([style]));
+            }
+        });
+
+        for (const importDirective of ProjectStore.project.settings.general.imports) {
+            const project = importDirective.project;
+            if (project) {
+                project.gui.stylesMap.forEach(style => {
+                    if (style.id != undefined) {
+                        map.set(style.id, (map.get(style.id) || []).concat([style]));
+                    }
+                });
+            }
+        }
+
+        return map;
+    }
+
+    @computed
+    get fontsMap() {
+        const map = new Map<String, Font>();
+        this.fonts.forEach(font => map.set(font.name, font));
+        return map;
+    }
+
+    @computed
+    get bitmapsMap() {
+        const map = new Map<String, Bitmap>();
+        this.bitmaps.forEach(bitmap => map.set(bitmap.name, bitmap));
         return map;
     }
 
@@ -198,9 +243,16 @@ export class Gui extends EezObject implements IGui {
     }
 
     @computed
-    get colorsMap() {
+    get colorToIndexMap() {
         const map = new Map<String, number>();
         this.colors.forEach((color, i) => map.set(color.name, i));
+        return map;
+    }
+
+    @computed
+    get colorsMap() {
+        const map = new Map<String, Color>();
+        this.colors.forEach((color, i) => map.set(color.name, color));
         return map;
     }
 }
@@ -255,26 +307,14 @@ registerFeatureImplementation("gui", {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function getPages() {
-    return (ProjectStore.project.gui && ProjectStore.project.gui.pages) || [];
+export function findPage(pageName: string, project?: Project) {
+    return findReferencedObject(project ?? ProjectStore.project, "gui/pages", pageName) as
+        | Page
+        | undefined;
 }
 
-export function findPage(pageName: string) {
-    let pages = getPages();
-    for (const page of pages) {
-        if (page.name == pageName) {
-            return page;
-        }
-    }
-    return undefined;
-}
-
-export function findBitmap(bitmapName: any) {
-    let bitmaps = (ProjectStore.project.gui && ProjectStore.project.gui.bitmaps) || [];
-    for (const bitmap of bitmaps) {
-        if (bitmap.name == bitmapName) {
-            return bitmap;
-        }
-    }
-    return undefined;
+export function findBitmap(bitmapName: any, project?: Project) {
+    return findReferencedObject(project ?? ProjectStore.project, "gui/bitmaps", bitmapName) as
+        | Bitmap
+        | undefined;
 }

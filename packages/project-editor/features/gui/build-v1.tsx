@@ -530,7 +530,7 @@ function buildGuiFontsEnum(project: Project) {
         font =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "FONT_ID_",
-                font.name,
+                font,
                 projectBuild.NamingConvention.UnderscoreUpperCase
             )}`
     );
@@ -648,7 +648,7 @@ function buildGuiFontsDef(project: Project) {
     project.gui.fonts.forEach(font => {
         let fontItemDataName = projectBuild.getName(
             "font_data_",
-            font.name,
+            font,
             projectBuild.NamingConvention.UnderscoreLowerCase
         );
 
@@ -683,7 +683,7 @@ function buildGuiBitmapsEnum(project: Project) {
         bitmap =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "BITMAP_ID_",
-                bitmap.name,
+                bitmap,
                 projectBuild.NamingConvention.UnderscoreUpperCase
             )}`
     );
@@ -741,7 +741,7 @@ function buildGuiBitmapsDef(project: Project) {
             bitmaps.forEach(bitmap => {
                 let bitmapPixelDataName = projectBuild.getName(
                     "bitmap_pixel_data_",
-                    bitmap.name,
+                    bitmap,
                     projectBuild.NamingConvention.UnderscoreLowerCase
                 );
                 bitmapsPixelData.push(
@@ -926,7 +926,7 @@ function buildGuiStylesEnum(project: Project) {
         style =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "STYLE_ID_",
-                style.name,
+                style,
                 projectBuild.NamingConvention.UnderscoreUpperCase
             )}`
     );
@@ -1572,7 +1572,7 @@ function buildGuiPagesEnum(project: Project) {
             widget =>
                 `${projectBuild.TAB}${projectBuild.getName(
                     "PAGE_ID_",
-                    widget.name,
+                    widget,
                     projectBuild.NamingConvention.UnderscoreUpperCase
                 )}`
         )

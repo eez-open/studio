@@ -62,7 +62,7 @@ export class ScpiParameterType extends EezObject implements IParameterType {
             {
                 name: "enumeration",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["scpi", "enums"]
+                referencedObjectCollectionPath: "scpi/enums"
             }
         ],
         defaultValue: {
@@ -405,7 +405,7 @@ export class ScpiResponse extends EezObject implements IScpiResponse {
             {
                 name: "enumeration",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: ["scpi", "enums"],
+                referencedObjectCollectionPath: "scpi/enums",
                 hideInPropertyGrid: (response: ScpiResponse) => {
                     return response.type !== "discrete";
                 }
@@ -481,7 +481,8 @@ export class ScpiCommand extends EezObject implements IScpiCommand {
             },
             {
                 name: "usedIn",
-                type: PropertyType.ConfigurationReference
+                type: PropertyType.ConfigurationReference,
+                referencedObjectCollectionPath: "settings/build/configurations"
             },
             {
                 name: "parameters",

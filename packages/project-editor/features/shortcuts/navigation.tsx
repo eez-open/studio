@@ -69,6 +69,7 @@ export class ShortcutsNavigation extends NavigationComponent {
                                 onChange={value => {
                                     action(() => (shortcut.usedIn = value))();
                                 }}
+                                readOnly={false}
                             />
                         </td>
                     </tr>

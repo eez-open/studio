@@ -84,7 +84,8 @@ export class Shortcut extends EezObject implements IShortcut {
             },
             {
                 name: "usedIn",
-                type: PropertyType.ConfigurationReference
+                type: PropertyType.ConfigurationReference,
+                referencedObjectCollectionPath: "settings/build/configurations"
             },
             {
                 name: "action",

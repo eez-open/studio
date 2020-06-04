@@ -11,13 +11,11 @@ import {
     EezObject,
     PropertyType
 } from "project-editor/core/object";
-import * as output from "project-editor/core/output";
-
 import { ProjectStore } from "project-editor/core/store";
+import * as output from "project-editor/core/output";
+import { findReferencedObject, Project } from "project-editor/project/project";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
-
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
-
 import { build } from "project-editor/features/data/build";
 import { metrics } from "project-editor/features/data/metrics";
 
@@ -106,7 +104,8 @@ export class DataItem extends EezObject implements IDataItem {
             },
             {
                 name: "usedIn",
-                type: PropertyType.ConfigurationReference
+                type: PropertyType.ConfigurationReference,
+                referencedObjectCollectionPath: "settings/build/configurations"
             }
         ],
         newItem: (parent: IEezObject) => {
@@ -171,8 +170,10 @@ registerFeatureImplementation("data", {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findDataItem(dataItemName: string) {
-    return ProjectStore.project.dataItemsMap.get(dataItemName);
+export function findDataItem(dataItemName: string, project?: Project) {
+    return findReferencedObject(project ?? ProjectStore.project, "data", dataItemName) as
+        | DataItem
+        | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,8 +261,6 @@ export class DataContext {
             return value;
         }
 
-        console.error(`Data item '${dataItemId}' not found`);
-
         return "ERR!";
     }
 
@@ -276,7 +275,6 @@ export class DataContext {
             return value ? true : false;
         }
 
-        console.error(`Data item '${dataItemId}' is not boolean or integer`);
         return false;
     }
 
@@ -300,8 +298,6 @@ export class DataContext {
             }
         }
 
-        console.error(`Data item '${dataItemId}' is not boolean or integer or enum`);
-
         return 0;
     }
 
@@ -311,8 +307,6 @@ export class DataContext {
             return dataItem.defaultMinValue;
         }
 
-        console.error(`Data item '${dataItemId}' not found`);
-
         return 0;
     }
 
@@ -321,8 +315,6 @@ export class DataContext {
         if (dataItem) {
             return dataItem.defaultMaxValue;
         }
-
-        console.error(`Data item '${dataItemId}' not found`);
 
         return 1;
     }
@@ -337,8 +329,6 @@ export class DataContext {
                 return [];
             }
         }
-
-        console.error(`Data item '${dataItemId}' not found`);
 
         return [];
     }
