@@ -31,7 +31,7 @@ export interface IDialogComponentProps {
     onSubmit: (event: React.FormEvent) => void;
     onCancel: () => void;
     cancelDisabled?: boolean;
-    okDisabled?: () => boolean;
+    okEnabled?: () => boolean;
     disableButtons: boolean;
     buttons: IDialogButton[];
     children: React.ReactNode;
@@ -50,7 +50,7 @@ export class Dialog extends React.Component<
         okButtonText?: string;
         cancelButtonText?: string;
         onOk?: () => Promise<boolean> | boolean;
-        okDisabled?: () => boolean;
+        okEnabled?: () => boolean;
         onCancel?: (() => void) | null;
         cancelDisabled?: boolean;
         additionalButton?: IDialogButton;
@@ -122,8 +122,7 @@ export class Dialog extends React.Component<
                 position: "right",
                 onClick: this.handleSumbit,
                 disabled:
-                    this.disableButtons ||
-                    (this.props.okDisabled ? this.props.okDisabled() : false),
+                    this.disableButtons || (this.props.okEnabled ? !this.props.okEnabled() : false),
                 style: {},
                 text: this.props.okButtonText || "OK"
             });

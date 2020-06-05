@@ -13,15 +13,14 @@ import {
     IMessage,
     getArrayAndObjectProperties,
     getPropertyInfo,
-    getClassInfo,
-    getRootObject
+    getClassInfo
 } from "project-editor/core/object";
 import { OutputSectionsStore } from "project-editor/core/store";
 import { Section, Type } from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/core/store";
 
-import { BuildConfiguration, Project } from "project-editor/project/project";
+import { BuildConfiguration, getProject } from "project-editor/project/project";
 import {
     extensionDefinitionAnythingToBuild,
     extensionDefinitionBuild
@@ -47,7 +46,7 @@ export function getName<
     if (typeof objectOrName == "string") {
         name = objectOrName;
     } else {
-        const project = getRootObject(objectOrName) as Project;
+        const project = getProject(objectOrName);
         name = project.namespace ? project.namespace + "_" + objectOrName.name : objectOrName.name;
     }
     name = name.replace(/[^a-zA-Z_0-9]/g, " ");

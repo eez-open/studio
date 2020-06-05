@@ -22,8 +22,7 @@ import {
     NavigationComponent,
     PropertyProps,
     isAnyPropertyModified,
-    getParent,
-    getRootObject
+    getParent
 } from "project-editor/core/object";
 import {
     NavigationStore,
@@ -39,7 +38,7 @@ import { onSelectItem } from "project-editor/components/SelectItem";
 import { Splitter } from "eez-studio-ui/splitter";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { Project, findReferencedObject } from "project-editor/project/project";
+import { Project, findReferencedObject, getProject } from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 import { findFont } from "project-editor/features/gui/font";
@@ -614,10 +613,7 @@ function getInheritedValue(
     }
 
     if (styleObject.inheritFrom) {
-        let inheritFromStyleObject = findStyle(
-            getRootObject(styleObject) as Project,
-            styleObject.inheritFrom
-        );
+        let inheritFromStyleObject = findStyle(getProject(styleObject), styleObject.inheritFrom);
 
         if (inheritFromStyleObject) {
             return getInheritedValue(
@@ -846,14 +842,11 @@ export class Style extends EezObject implements IStyle {
     @computed
     get fontObject(): Font | undefined {
         if (this.font) {
-            return findFont(getRootObject(this) as Project, this.font);
+            return findFont(getProject(this), this.font);
         }
 
         if (this.inheritFrom) {
-            let inheritFromStyleObject = findStyle(
-                getRootObject(this) as Project,
-                this.inheritFrom
-            );
+            let inheritFromStyleObject = findStyle(getProject(this), this.inheritFrom);
 
             if (inheritFromStyleObject) {
                 return getInheritedValue(inheritFromStyleObject, "fontObject", [this])

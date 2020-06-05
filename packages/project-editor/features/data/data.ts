@@ -11,13 +11,13 @@ import {
     EezObject,
     PropertyType
 } from "project-editor/core/object";
-import { ProjectStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 import { findReferencedObject, Project } from "project-editor/project/project";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 import { build } from "project-editor/features/data/build";
 import { metrics } from "project-editor/features/data/metrics";
+import { ProjectStore } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -171,15 +171,21 @@ registerFeatureImplementation("data", {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findDataItem(project: Project, dataItemName: string) {
-    return findReferencedObject(project, "data", dataItemName) as
-        | DataItem
-        | undefined;
+    return findReferencedObject(project, "data", dataItemName) as DataItem | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DataContext {
-    constructor(public parentDataContext?: DataContext, public defaultValueOverrides?: any) { }
+    constructor(
+        private _project?: Project,
+        public parentDataContext?: DataContext,
+        public defaultValueOverrides?: any
+    ) {}
+
+    get project() {
+        return this._project ?? ProjectStore.project;
+    }
 
     findDataItemDefaultValue(dataItemId: string): any {
         if (this.defaultValueOverrides) {
@@ -195,7 +201,7 @@ export class DataContext {
     }
 
     findDataItem(dataItemId: string) {
-        let dataItem = findDataItem(ProjectStore.project, dataItemId);
+        let dataItem = findDataItem(this.project, dataItemId);
         if (dataItem) {
             const defaultValue = this.findDataItemDefaultValue(dataItemId);
             if (defaultValue != undefined) {
@@ -333,7 +339,7 @@ export class DataContext {
         return [];
     }
 
-    executeAction(action: string) { }
+    executeAction(action: string) {}
 }
 
 export const dataContext = new DataContext();

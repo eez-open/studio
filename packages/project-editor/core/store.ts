@@ -161,12 +161,13 @@ export interface INavigationStore {
         navigationSelectedItem: NavigationItem
     ): void;
     setSelectedPanel(selectedPanel: IPanel | undefined): void;
+    editable: boolean;
 }
 
 export class SimpleNavigationStoreClass implements INavigationStore {
     @observable selectedItem: NavigationItem | undefined;
 
-    constructor(selectedObject: IEezObject | undefined) {
+    constructor(selectedObject: IEezObject | undefined, public editable = true) {
         this.selectedItem = createObjectNavigationItem(selectedObject);
     }
 
@@ -196,6 +197,8 @@ export class SimpleNavigationStoreClass implements INavigationStore {
 class NavigationStoreClass implements INavigationStore {
     @observable navigationMap = new Map<string, NavigationItem>();
     @observable selectedPanel: IPanel | undefined;
+
+    editable = true;
 
     load(map: { [stringPath: string]: string }) {
         let navigationMap = new Map<string, NavigationItem>();

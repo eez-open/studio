@@ -771,8 +771,9 @@ export function getObjectPropertyAsObject(object: IEezObject, propertyInfo: Prop
 }
 
 export function getRootObject(object: IEezObject) {
-    while (getParent(object)) {
-        object = getParent(object);
+    let parent;
+    while (!!(parent = getParent(object))) {
+        object = parent;
     }
     return object;
 }

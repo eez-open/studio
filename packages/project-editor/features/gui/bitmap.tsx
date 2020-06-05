@@ -25,7 +25,7 @@ import { getThemedColor } from "project-editor/features/gui/theme";
 import { ProjectStore } from "project-editor/core/store";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
-import { Project, findReferencedObject } from "project-editor/project/project";
+import { Project, findReferencedObject, getProject } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -221,7 +221,7 @@ export class Bitmap extends EezObject implements IBitmap {
     @computed
     get backgroundColor() {
         if (this.bpp !== 32) {
-            const style = findStyle(ProjectStore.project, this.style || "default");
+            const style = findStyle(getProject(this), this.style || "default");
             if (style && style.backgroundColorProperty) {
                 return getThemedColor(style.backgroundColorProperty);
             }

@@ -348,9 +348,9 @@ function showUsage(importDirective: ImportDirective) {
             assetsUsage: buildAssetsUsage.assetsUsage
         },
         okButtonText: "Search",
-        okDisabled: result => {
+        okEnabled: result => {
             const assetsUsage: IAssetsUsage = result.values.assetsUsage;
-            return !assetsUsage.selectedAsset;
+            return !!assetsUsage.selectedAsset;
         }
     })
         .then(
@@ -432,7 +432,7 @@ export class ImportDirective {
     @computed({ keepAlive: true })
     get project() {
         return ProjectStore.loadExternalProject(
-            ProjectStore.getAbsoluteFilePath(this.projectFilePath, getRootObject(this) as Project)
+            ProjectStore.getAbsoluteFilePath(this.projectFilePath, getProject(this))
         );
     }
 
@@ -643,6 +643,22 @@ export class Project extends EezObject implements IProject {
     @observable scpi: Scpi;
     @observable shortcuts: Shortcuts;
     @observable extensionDefinitions: ExtensionDefinition[];
+
+    @computed get projectName() {
+        if (ProjectStore.project === this) {
+            return ProjectStore.filePath
+                ? getFileNameWithoutExtension(ProjectStore.filePath)
+                : "<current project>";
+        }
+
+        if (this.importDirective) {
+            return getFileNameWithoutExtension(
+                ProjectStore.getAbsoluteFilePath(this.importDirective.projectFilePath)
+            );
+        }
+
+        throw "unknwon project";
+    }
 
     @computed
     get importDirective() {
@@ -870,22 +886,6 @@ export function findReferencedObject(
     return undefined;
 }
 
-function getProjectName(project: Project) {
-    if (ProjectStore.project === project) {
-        return ProjectStore.filePath
-            ? getFileNameWithoutExtension(ProjectStore.filePath)
-            : "<current project>";
-    }
-
-    if (project.importDirective) {
-        return getFileNameWithoutExtension(
-            ProjectStore.getAbsoluteFilePath(project.importDirective.projectFilePath)
-        );
-    }
-
-    throw "unknwon project";
-}
-
 export function checkObjectReference(
     object: IEezObject,
     propertyName: string,
@@ -915,7 +915,7 @@ export function checkObjectReference(
                 new output.Message(
                     output.Type.ERROR,
                     `Ambiguous, found in multiple projects: ${objects
-                        .map(object => getProjectName(getRootObject(object) as Project))
+                        .map(object => getProject(object).projectName)
                         .join(", ")}`,
                     getChildOfObject(object, propertyName)
                 )
@@ -926,4 +926,25 @@ export function checkObjectReference(
             messages.push(output.propertyNotSetMessage(object, propertyName));
         }
     }
+}
+
+export function getProject(object: IEezObject) {
+    return getRootObject(object) as Project;
+}
+
+export function isObjectReadOnly(object: IEezObject) {
+    return getProject(object) != ProjectStore.project;
+}
+
+export function isAnyObjectReadOnly(objects: IEezObject[]) {
+    return !!objects.find(isObjectReadOnly);
+}
+
+export function getNameProperty(object: IEezObject) {
+    let name = getProperty(object, "name");
+    const project = getProject(object);
+    if (project != ProjectStore.project && project.namespace) {
+        name = project.namespace + NAMESPACE_PREFIX + name;
+    }
+    return name;
 }

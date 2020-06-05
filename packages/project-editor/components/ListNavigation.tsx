@@ -205,6 +205,12 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
         );
     }
 
+    @computed
+    get editable() {
+        const navigationStore = this.props.navigationStore || NavigationStore;
+        return this.props.editable != false && navigationStore.editable;
+    }
+
     @bind
     onDoubleClickItem(object: IEezObject) {
         if (this.props.onDoubleClickItem) {
@@ -226,7 +232,9 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
     }
 
     cutSelection() {
-        this.listAdapter.cutSelection();
+        if (this.editable) {
+            this.listAdapter.cutSelection();
+        }
     }
 
     copySelection() {
@@ -234,11 +242,15 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
     }
 
     pasteSelection() {
-        this.listAdapter.pasteSelection();
+        if (this.editable) {
+            this.listAdapter.pasteSelection();
+        }
     }
 
     deleteSelection() {
-        this.listAdapter.deleteSelection();
+        if (this.editable) {
+            this.listAdapter.deleteSelection();
+        }
     }
 
     @computed
@@ -267,7 +279,7 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
     }
 
     render() {
-        const { onEditItem, renderItem, editable } = this.props;
+        const { onEditItem, renderItem } = this.props;
         const title = (
             <SortableTitle
                 title={this.props.title || objectToString(this.props.navigationObject)}
@@ -284,7 +296,7 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
             buttons.push(...this.props.additionalButtons);
         }
 
-        if (editable !== false) {
+        if (this.editable) {
             buttons.push(
                 <AddButton
                     key="add"
@@ -319,7 +331,7 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
                 listAdapter={this.listAdapter}
                 tabIndex={0}
                 onFocus={this.onFocus.bind(this)}
-                onEditItem={editable === false ? undefined : onEditItem}
+                onEditItem={this.editable ? undefined : onEditItem}
                 renderItem={renderItem}
             />
         );

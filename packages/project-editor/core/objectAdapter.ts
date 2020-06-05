@@ -1445,6 +1445,10 @@ export class ListAdapter implements ITreeAdapter {
         prevObjectId: string | undefined,
         nextObjectId: string | undefined
     ): boolean {
+        if (!this.navigationStore.editable) {
+            return false;
+        }
+
         const dragObject = this.dragAndDropManager.dragObject!;
 
         // check: can't drop object if parent can't accept it

@@ -152,7 +152,7 @@ interface GenericDialogProps {
     opts?: IDialogOptions;
     okButtonText?: string;
     cancelButtonText?: string;
-    okDisabled?: (result: GenericDialogResult) => boolean;
+    okEnabled?: (result: GenericDialogResult) => boolean;
     onOk?: (result: GenericDialogResult) => void;
     onCancel?: () => void;
     onValueChange?: (name: string, value: string) => void;
@@ -508,13 +508,13 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                     size={this.props.dialogDefinition.size}
                     okButtonText={this.props.okButtonText}
                     cancelButtonText={this.props.cancelButtonText}
-                    okDisabled={() =>
-                        this.props.okDisabled
-                            ? this.props.okDisabled({
+                    okEnabled={() =>
+                        this.props.okEnabled
+                            ? this.props.okEnabled({
                                   values: this.values,
                                   context: this.fieldContext
                               })
-                            : false
+                            : true
                     }
                     onOk={this.props.onOk && this.onOk}
                     onCancel={this.props.onCancel}
@@ -539,7 +539,7 @@ export function showGenericDialog(conf: {
     dialogDefinition: DialogDefinition;
     values: any;
     okButtonText?: string;
-    okDisabled?: (result: GenericDialogResult) => boolean;
+    okEnabled?: (result: GenericDialogResult) => boolean;
     showOkButton?: boolean;
     opts?: IDialogOptions;
 }) {
@@ -551,7 +551,7 @@ export function showGenericDialog(conf: {
                 values={conf.values}
                 opts={conf.opts}
                 okButtonText={conf.okButtonText}
-                okDisabled={conf.okDisabled}
+                okEnabled={conf.okEnabled}
                 onOk={
                     conf.showOkButton === undefined || conf.showOkButton
                         ? values => {

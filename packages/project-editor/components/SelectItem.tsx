@@ -4,7 +4,7 @@ import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 
 import { showDialog, Dialog } from "eez-studio-ui/dialog";
-import { PropertyList, BooleanProperty } from "eez-studio-ui/properties";
+import { PropertyList, SelectProperty } from "eez-studio-ui/properties";
 import { styled } from "eez-studio-ui/styled-components";
 
 import {
@@ -14,19 +14,20 @@ import {
     PropertyType,
     getObjectFromPath,
     IOnSelectParams,
-    getClassInfo,
-    getClass
+    getClassInfo
 } from "project-editor/core/object";
-import { loadObject, objectToJS } from "project-editor/core/serialization";
-import {
-    ProjectStore,
-    SimpleNavigationStoreClass,
-    INavigationStore
-} from "project-editor/core/store";
+import { ProjectStore, SimpleNavigationStoreClass } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 
 import { Widget } from "project-editor/features/gui/widget";
 import { Glyph } from "project-editor/features/gui/font";
+
+import {
+    Project,
+    getNameProperty,
+    findReferencedObject,
+    getProject
+} from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,15 +40,31 @@ const SelectItemDialogDiv = styled.div`
 class SelectItemDialog extends React.Component<{
     object: IEezObject;
     propertyInfo: PropertyInfo;
-    okDisabled: (navigationStore: INavigationStore) => boolean;
-    onOk: (navigationStore: INavigationStore) => boolean;
+    params?: IOnSelectParams;
+    onOk: (value: any) => void;
     onCancel: () => void;
 }> {
-    @observable showOnlyLocalAssets = false;
+    @observable _selectedProject: Project | undefined;
 
     @computed
-    get hasImportedProjects() {
-        return ProjectStore.project.settings.general.imports.length > 0;
+    get allProjects() {
+        return [
+            ProjectStore.project,
+            ...ProjectStore.project.settings.general.imports
+                .filter(importDirective => !!importDirective.project)
+                .map(importDirective => importDirective.project!)
+        ];
+    }
+
+    @computed
+    get selectedProject(): Project {
+        if (this._selectedProject) {
+            return this._selectedProject;
+        }
+        if (this.currentlySelectedObject) {
+            return getProject(this.currentlySelectedObject);
+        }
+        return ProjectStore.project;
     }
 
     @computed
@@ -60,33 +77,26 @@ class SelectItemDialog extends React.Component<{
 
     @computed
     get collectionObject() {
-        const collectionObject = getObjectFromPath(
-            ProjectStore.project,
-            this.collectionPath.split("/")
-        );
-        if (this.showOnlyLocalAssets || !this.hasImportedProjects) {
-            return collectionObject;
-        } else {
-            return loadObject(
-                ProjectStore.project,
-                objectToJS(ProjectStore.project.getAllObjectsOfType(this.collectionPath)),
-                getClass(collectionObject),
-                "_all_" + this.collectionPath.split("/").slice(-1)[0]
-            );
-        }
+        return getObjectFromPath(this.selectedProject, this.collectionPath.split("/"));
+    }
+
+    @computed
+    get currentlySelectedObject() {
+        const { object, propertyInfo } = this.props;
+
+        const name =
+            propertyInfo.type === PropertyType.String
+                ? (object as Widget).style.fontName
+                : getProperty(object, propertyInfo.name);
+
+        return findReferencedObject(ProjectStore.project, this.collectionPath, name);
     }
 
     @computed
     get navigationStore() {
-        const { object, propertyInfo } = this.props;
         return new SimpleNavigationStoreClass(
-            (this.collectionObject as IEezObject[]).find(
-                item =>
-                    (item as any).name ===
-                    (propertyInfo.type === PropertyType.String
-                        ? (object as Widget).style.fontName
-                        : getProperty(object, propertyInfo.name))
-            )
+            this.currentlySelectedObject,
+            this.selectedProject === ProjectStore.project // editable
         );
     }
 
@@ -95,29 +105,83 @@ class SelectItemDialog extends React.Component<{
         return new DragAndDropManagerClass();
     }
 
-    render() {
-        const { okDisabled, onOk, onCancel } = this.props;
+    onSelectProject = action((projectName: string) => {
+        this._selectedProject = this.allProjects.find(
+            project => project.projectName === projectName
+        );
+    });
 
+    onOkEnabled = () => {
+        if (this.props.propertyInfo.type === PropertyType.String) {
+            return this.navigationStore.selectedObject instanceof Glyph;
+        }
+        return !!this.navigationStore.selectedObject;
+    };
+
+    onOk = () => {
+        if (!this.navigationStore.selectedObject) {
+            return false;
+        }
+
+        const { object, propertyInfo, params } = this.props;
+
+        let value;
+
+        if (propertyInfo.type === PropertyType.String) {
+            const glyphCode = `\\u${(this.navigationStore.selectedObject as Glyph).encoding
+                .toString(16)
+                .padStart(4, "0")}`;
+
+            if (
+                params &&
+                params.textInputSelection &&
+                params.textInputSelection.start != null &&
+                params.textInputSelection.end != null
+            ) {
+                const existingValue: string = getProperty(object, propertyInfo.name);
+                value =
+                    existingValue.substring(0, params.textInputSelection.start) +
+                    glyphCode +
+                    existingValue.substring(params.textInputSelection.end);
+            } else {
+                value = glyphCode;
+            }
+        } else {
+            value = getNameProperty(this.navigationStore.selectedObject!);
+        }
+
+        this.props.onOk({
+            [propertyInfo.name]: value
+        });
+
+        return true;
+    };
+
+    render() {
         let NavigationComponent = getClassInfo(this.collectionObject).navigationComponent!;
 
         return (
             <Dialog
                 modal={false}
                 okButtonText="Select"
-                okDisabled={() => okDisabled(this.navigationStore)}
-                onOk={() => onOk(this.navigationStore)}
-                onCancel={onCancel}
+                okEnabled={this.onOkEnabled}
+                onOk={this.onOk}
+                onCancel={this.props.onCancel}
                 additionalFooterControl={
-                    this.hasImportedProjects && (
+                    this.allProjects.length > 1 && (
                         <PropertyList>
-                            <BooleanProperty
-                                name={`Show only local ${this.collectionPath
-                                    .split("/")
-                                    .slice(-1)[0]
-                                    .toLowerCase()}`}
-                                value={this.showOnlyLocalAssets}
-                                onChange={action(value => (this.showOnlyLocalAssets = value))}
-                            />
+                            <SelectProperty
+                                name="Project"
+                                value={this.selectedProject.projectName}
+                                onChange={this.onSelectProject}
+                                selectStyle={{ width: "auto" }}
+                            >
+                                {this.allProjects.map(project => (
+                                    <option key={project.projectName} value={project.projectName}>
+                                        {project.projectName}
+                                    </option>
+                                ))}
+                            </SelectProperty>
                         </PropertyList>
                     )
                 }
@@ -128,7 +192,7 @@ class SelectItemDialog extends React.Component<{
                         navigationObject={this.collectionObject}
                         navigationStore={this.navigationStore}
                         dragAndDropManager={this.dragAndDropManager}
-                        onDoubleClickItem={onOk}
+                        onDoubleClickItem={this.onOk}
                     />
                 </SelectItemDialogDiv>
             </Dialog>
@@ -148,66 +212,23 @@ export async function onSelectItem(
     return new Promise<{
         [propertyName: string]: string;
     }>((resolve, reject) => {
-        const onOkDisabled = (navigationStore: INavigationStore) => {
-            if (propertyInfo.type === PropertyType.String) {
-                return !(navigationStore.selectedObject instanceof Glyph);
-            }
-
-            return !navigationStore.selectedObject;
-        };
-
-        const onOk = (navigationStore: INavigationStore) => {
-            if (!navigationStore.selectedObject) {
-                return false;
-            }
-
-            let value;
-
-            if (propertyInfo.type === PropertyType.String) {
-                const glyphCode = `\\u${(navigationStore.selectedObject as Glyph).encoding
-                    .toString(16)
-                    .padStart(4, "0")}`;
-
-                if (
-                    params &&
-                    params.textInputSelection &&
-                    params.textInputSelection.start != null &&
-                    params.textInputSelection.end != null
-                ) {
-                    const existingValue: string = getProperty(object, propertyInfo.name);
-                    value =
-                        existingValue.substring(0, params.textInputSelection.start) +
-                        glyphCode +
-                        existingValue.substring(params.textInputSelection.end);
-                } else {
-                    value = glyphCode;
-                }
-            } else {
-                value = (navigationStore.selectedObject! as any).name;
-            }
-
-            resolve({
-                [propertyInfo.name]: value
-            });
-
+        const onDispose = () => {
             ReactDOM.unmountComponentAtNode(element);
             modalDialog.close();
-
-            return true;
         };
 
-        const onCancel = () => {
-            ReactDOM.unmountComponentAtNode(element);
-            modalDialog.close();
+        const onOk = (value: any) => {
+            resolve(value);
+            onDispose();
         };
 
         const [modalDialog, element] = showDialog(
             <SelectItemDialog
                 object={object}
                 propertyInfo={propertyInfo}
-                okDisabled={onOkDisabled}
+                params={params}
                 onOk={onOk}
-                onCancel={onCancel}
+                onCancel={onDispose}
             />,
             {
                 jsPanel: Object.assign({}, opts)

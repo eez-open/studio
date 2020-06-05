@@ -12,14 +12,13 @@ import {
     getObjectPropertyAsObject,
     getParent,
     getKey,
-    getClassInfo,
-    getRootObject
+    getClassInfo
 } from "project-editor/core/object";
 import { DocumentStore, OutputSectionsStore, ProjectStore } from "project-editor/core/store";
 
 import { Section, Type } from "project-editor/core/output";
 
-import { ImportDirective, findReferencedObject } from "project-editor/project/project";
+import { ImportDirective, findReferencedObject, getProject } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -204,7 +203,7 @@ function* searchForReference(
                                     valueObject.value
                                 );
 
-                                if (object && getRootObject(object) == importedProject) {
+                                if (object && getProject(object) == importedProject) {
                                     match = true;
                                 }
                             }

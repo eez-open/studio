@@ -38,7 +38,7 @@ import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { DocumentStore, NavigationStore, IContextMenuContext } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
-import { Project, checkObjectReference } from "project-editor/project/project";
+import { Project, checkObjectReference, getProject } from "project-editor/project/project";
 
 import {
     IResizeHandler,
@@ -1009,7 +1009,7 @@ export class ListWidget extends Widget implements IListWidget {
                     widget={itemWidget}
                     left={xListItem}
                     top={yListItem}
-                    dataContext={new DataContext(dataContext, dataValue[i])}
+                    dataContext={new DataContext(getProject(this), dataContext, dataValue[i])}
                 />
             );
         });
@@ -1130,7 +1130,7 @@ export class GridWidget extends Widget implements IGridWidget {
                     widget={itemWidget}
                     left={xListItem}
                     top={yListItem}
-                    dataContext={new DataContext(dataContext, dataValue[i])}
+                    dataContext={new DataContext(getProject(this), dataContext, dataValue[i])}
                 />
             );
         });
@@ -1239,7 +1239,7 @@ export class SelectWidget extends Widget implements ISelectWidget {
             let index = this.widgets.indexOf(childObject);
             if (index != -1) {
                 if (this.data) {
-                    let dataItem = findDataItem(ProjectStore.project, this.data);
+                    let dataItem = findDataItem(getProject(this), this.data);
                     if (dataItem) {
                         if (dataItem.type == "enum") {
                             let enumItems: string[];
@@ -1387,7 +1387,19 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
                 type: PropertyType.Any,
                 propertyGridGroup: specificGroup,
                 computed: true,
-                propertyGridComponent: LayoutViewPropertyGridUI
+                propertyGridComponent: LayoutViewPropertyGridUI,
+                hideInPropertyGrid: (widget: LayoutViewWidget) => {
+                    if (!widget.layout) {
+                        return true;
+                    }
+
+                    const layout = findPage(ProjectStore.project, widget.layout);
+                    if (!layout) {
+                        return true;
+                    }
+
+                    return getProject(layout) != ProjectStore.project;
+                }
             }
         ],
 
@@ -1446,43 +1458,23 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
     });
 
     get layoutPage() {
-        let layout;
-
-        if (this.data) {
-            const layoutName = dataContext.get(this.data);
-            if (layoutName) {
-                layout = findPage(ProjectStore.project, layoutName);
-            }
-        }
-
-        if (!layout) {
-            layout = findPage(ProjectStore.project, this.layout);
-        }
-
-        if (!layout) {
-            return null;
-        }
-
-        if (isAncestor(this, layout)) {
-            // prevent cyclic referencing
-            return null;
-        }
-
-        return layout;
+        return this.getLayoutPage(dataContext);
     }
 
     getLayoutPage(dataContext: DataContext) {
         let layout;
 
+        const project = getProject(this);
+
         if (this.data) {
             const layoutName = dataContext.get(this.data);
             if (layoutName) {
-                layout = findPage(ProjectStore.project, layoutName);
+                layout = findPage(project, layoutName);
             }
         }
 
         if (!layout) {
-            layout = findPage(ProjectStore.project, this.layout);
+            layout = findPage(project, this.layout);
         }
 
         if (!layout) {
@@ -2295,18 +2287,14 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
 
     @computed
     get bitmapObject() {
-        return this.bitmap
-            ? findBitmap(ProjectStore.project, this.bitmap)
-            : this.data
-            ? findBitmap(ProjectStore.project, dataContext.get(this.data) as string)
-            : undefined;
+        return this.getBitmapObject(dataContext);
     }
 
     getBitmapObject(dataContext: DataContext) {
         return this.bitmap
-            ? findBitmap(ProjectStore.project, this.bitmap)
+            ? findBitmap(getProject(this), this.bitmap)
             : this.data
-            ? findBitmap(ProjectStore.project, dataContext.get(this.data) as string)
+            ? findBitmap(getProject(this), dataContext.get(this.data) as string)
             : undefined;
     }
 
@@ -3170,7 +3158,7 @@ export class AppViewWidget extends Widget implements IAppViewWidget {
             return null;
         }
 
-        const page = findPage(ProjectStore.project, pageName);
+        const page = findPage(getProject(this), pageName);
         if (!page) {
             return null;
         }

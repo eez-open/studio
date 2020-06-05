@@ -380,6 +380,10 @@ export class Canvas extends React.Component<{
         const xt = Math.round(transform.translate.x + transform.clientRect.width / 2);
         const yt = Math.round(transform.translate.y + transform.clientRect.height / 2);
 
+        if (transform.clientRect.width <= 1 || transform.clientRect.height <= 1) {
+            style.visibility = "hidden";
+        }
+
         return (
             <CanvasDiv
                 ref={(ref: any) => (this.div = ref!)}

@@ -31,13 +31,7 @@ import {
     ITreeObjectAdapter,
     TreeAdapter
 } from "project-editor/core/objectAdapter";
-import {
-    ProjectStore,
-    NavigationStore,
-    EditorsStore,
-    IPanel,
-    UIStateStore
-} from "project-editor/core/store";
+import { NavigationStore, EditorsStore, IPanel, UIStateStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
@@ -53,7 +47,7 @@ import { PageEditor as StudioPageEditor } from "project-editor/features/gui/page
 import { WidgetPalette } from "project-editor/features/gui/page-editor/WidgetPalette";
 import { WidgetContainerComponent } from "project-editor/features/gui/page-editor/render";
 
-import { Project, findReferencedObject } from "project-editor/project/project";
+import { Project, findReferencedObject, getProject } from "project-editor/project/project";
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 import { Widget, IWidget } from "project-editor/features/gui/widget";
@@ -590,13 +584,15 @@ export class Page extends EezObject implements IPage {
         return (
             <WidgetContainerComponent
                 widgets={this.widgets}
-                dataContext={new DataContext(dataContext, this.dataContextOverridesObject)}
+                dataContext={
+                    new DataContext(getProject(this), dataContext, this.dataContextOverridesObject)
+                }
             />
         );
     }
 
     styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
-        const pageStyle = findStyle(ProjectStore.project, this.style || "default");
+        const pageStyle = findStyle(getProject(this), this.style || "default");
         if (pageStyle && pageStyle.backgroundColorProperty) {
             style.backgroundColor = to16bitsColor(
                 getThemedColor(pageStyle.backgroundColorProperty)

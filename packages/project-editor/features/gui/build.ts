@@ -2,7 +2,6 @@ const LZ4 = require("lz4");
 
 import { strToColor16 } from "eez-studio-shared/color";
 
-import { getRootObject } from "project-editor/core/object";
 import { OutputSectionsStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
@@ -10,7 +9,7 @@ import { BuildResult } from "project-editor/core/extensions";
 import { ProjectStore } from "project-editor/core/store";
 
 import * as projectBuild from "project-editor/project/build";
-import { Project, BuildConfiguration } from "project-editor/project/project";
+import { Project, BuildConfiguration, getProject } from "project-editor/project/project";
 
 import { DataItem, findDataItem } from "project-editor/features/data/data";
 import { Action, findAction } from "project-editor/features/action/action";
@@ -249,8 +248,8 @@ abstract class Field {
     offset: number;
     size: number;
 
-    enumObjects(objects: ObjectField[]) { }
-    finish() { }
+    enumObjects(objects: ObjectField[]) {}
+    finish() {}
     abstract pack(dataBuffer: DataBuffer): void;
 }
 
@@ -778,7 +777,7 @@ function buildGuiColorsEnum(assets: Assets) {
 function buildWidgetText(text: string) {
     try {
         return JSON.parse('"' + text + '"');
-    } catch (e) { }
+    } catch (e) {}
     return text;
 }
 
@@ -1509,7 +1508,7 @@ class Assets {
         findAsset: (project: Project, assetName: string) => T | undefined,
         collection: T[]
     ) {
-        const project = getRootObject(object) as Project;
+        const project = getProject(object);
         const assetName = object[propertyName];
         const asset = findAsset(project, assetName);
 
@@ -1629,7 +1628,7 @@ class Assets {
     }
 
     getStyleIndex(object: any, propertyName: string): number {
-        const project = getRootObject(object) as Project;
+        const project = getProject(object);
 
         let style: string | Style | undefined = object[propertyName];
         if (style === undefined) {

@@ -45,9 +45,7 @@ import {
     getParent,
     getKey,
     getId,
-    getClassInfo,
-    getLabel,
-    getRootObject
+    getClassInfo
 } from "project-editor/core/object";
 
 import { replaceObjectReference } from "project-editor/core/search";
@@ -58,6 +56,8 @@ import { info } from "project-editor/core/util";
 
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
+import { isAnyObjectReadOnly, getNameProperty } from "project-editor/project/project";
+
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,14 +65,6 @@ const { Menu, MenuItem } = EEZStudio.electron.remote;
 export { PropertyProps } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-function isObjectReadOnly(object: IEezObject) {
-    return getRootObject(object) != ProjectStore.project;
-}
-
-function isAnyObjectReadOnly(objects: IEezObject[]) {
-    return !!objects.find(isObjectReadOnly);
-}
 
 function getPropertyName(propertyInfo: PropertyInfo) {
     return propertyInfo.displayName ?? humanize(propertyInfo.name);
@@ -1121,11 +1113,12 @@ class Property extends React.Component<PropertyProps> {
 
                     let options = objects
                         .slice()
-                        .sort((a, b) => stringCompare(getLabel(a), getLabel(b)))
+                        .sort((a, b) => stringCompare(getNameProperty(a), getNameProperty(b)))
                         .map(object => {
+                            let name = getNameProperty(object);
                             return (
-                                <option key={getId(object)} value={getProperty(object, "name")}>
-                                    {objectToString(object)}
+                                <option key={getId(object)} value={name}>
+                                    {name}
                                 </option>
                             );
                         });
