@@ -1,6 +1,7 @@
 import React from "react";
 import { observable, computed, runInAction, action, autorun } from "mobx";
 import { observer } from "mobx-react";
+import chokidar from "chokidar";
 
 import { confirmSave } from "eez-studio-shared/util";
 import { fileExistsSync, getFileNameWithoutExtension } from "eez-studio-shared/util-electron";
@@ -998,6 +999,31 @@ class ProjectStoreClass {
                 backgroundCheck();
             }
         });
+
+        let watcher: chokidar.FSWatcher | undefined = undefined;
+        autorun(() => {
+            if (watcher) {
+                watcher.close();
+            }
+
+            if (this.project) {
+                const importedProjectFiles = this.project.settings.general.imports
+                    .filter(importDirective => !!importDirective.projectFilePath)
+                    .map(importDirective =>
+                        this.getAbsoluteFilePath(importDirective.projectFilePath)
+                    );
+                watcher = chokidar.watch(importedProjectFiles);
+                watcher.on("change", path => {
+                    const project = this.externalProjects.get(path);
+                    if (project) {
+                        runInAction(() => {
+                            this.externalProjects.delete(path);
+                            this.mapExternalProjectToAbsolutePath.delete(project);
+                        });
+                    }
+                });
+            }
+        });
     }
 
     updateProjectWindowState() {
@@ -1024,7 +1050,7 @@ class ProjectStoreClass {
         }
 
         EEZStudio.electron.ipcRenderer.send("windowSetState", {
-            modified: DocumentStore?.modified,
+            modified: DocumentStore.modified,
             projectFilePath: this.filePath,
             undo: (UndoManager && UndoManager.canUndo && UndoManager.undoDescription) || null,
             redo: (UndoManager && UndoManager.canRedo && UndoManager.redoDescription) || null
@@ -1032,7 +1058,7 @@ class ProjectStoreClass {
     }
 
     get project() {
-        return DocumentStore?.document as Project;
+        return DocumentStore.document as Project;
     }
 
     updateMruFilePath() {

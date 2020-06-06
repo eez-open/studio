@@ -61,8 +61,9 @@ import {
 } from "project-editor/core/commands";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { TreeObjectAdapter, ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { findAllReferences, isReferenced } from "project-editor/core/search";
 import { OutputSections, OutputSection } from "project-editor/core/output";
+
+import * as SearchModule from "project-editor/core/search";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -1361,6 +1362,7 @@ export function createContextMenu(context: IContextMenuContext, object: IEezObje
             new MenuItem({
                 label: "Find All References",
                 click: () => {
+                    const { findAllReferences } = require("project-editor/core/search") as typeof SearchModule;
                     findAllReferences(object);
                 }
             })
@@ -1461,6 +1463,8 @@ export function showContextMenu(context: IContextMenuContext, object: IEezObject
 ////////////////////////////////////////////////////////////////////////////////
 
 export function deleteItems(objects: IEezObject[], callback?: () => void) {
+    const { isReferenced } = require("project-editor/core/search") as typeof SearchModule;
+
     function doDelete() {
         DocumentStore.deleteObjects(objects);
         if (callback) {
