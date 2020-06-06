@@ -253,14 +253,15 @@ class PageEditorDesignerContext extends DesignerContext {
 ////////////////////////////////////////////////////////////////////////////////
 
 class PageDocument implements IDocument {
-    rootObject: EditorObject;
-
     constructor(
         private page: ITreeObjectAdapter,
         private pageEditorContext: PageEditorDesignerContext
-    ) {
-        const transformer = createObjectToEditorObjectTransformer(pageEditorContext);
-        this.rootObject = transformer(page);
+    ) {}
+
+    @computed
+    get rootObject() {
+        const transformer = createObjectToEditorObjectTransformer(this.pageEditorContext);
+        return transformer(this.page);
     }
 
     get rootObjects() {

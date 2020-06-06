@@ -1,12 +1,13 @@
 import React from "react";
-import { observable, computed, runInAction, action } from "mobx";
+import { observable, computed, runInAction, action, autorun } from "mobx";
 import { observer } from "mobx-react";
 
+import { confirmSave } from "eez-studio-shared/util";
 import { fileExistsSync, getFileNameWithoutExtension } from "eez-studio-shared/util-electron";
 import { _map, _keys, _filter } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
-import { showGenericDialog, FieldComponent } from "eez-studio-ui/generic-dialog";
+import { showGenericDialog, FieldComponent, TableField } from "eez-studio-ui/generic-dialog";
 import { Tree } from "eez-studio-ui/tree";
 import { BootstrapButton } from "project-editor/components/BootstrapButton";
 
@@ -28,7 +29,7 @@ import {
 import { loadObject, objectToJson } from "project-editor/core/serialization";
 import * as output from "project-editor/core/output";
 
-import { DocumentStore, ProjectStore, UIStateStore } from "project-editor/core/store";
+import { DocumentStore, UIStateStore, UndoManager } from "project-editor/core/store";
 
 import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
 
@@ -47,6 +48,15 @@ import {
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
 import { usage, startSearch, SearchCallbackMessage } from "project-editor/core/search";
+
+import {
+    build as buildProject,
+    backgroundCheck,
+    buildExtensions
+} from "project-editor/project/build";
+import { getAllMetrics } from "project-editor/project/metrics";
+
+const ipcRenderer = EEZStudio.electron.ipcRenderer;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -309,7 +319,8 @@ class BuildAssetsUssage {
             }
 
             const collection = getObjectFromPath(importedProject, path.split("/")) as EezObject[];
-            const object = collection.find(object => assetName == getProperty(object, "name"));
+            const object =
+                collection && collection.find(object => assetName == getProperty(object, "name"));
 
             if (object) {
                 // console.log("FOUND", path, assetName, object);
@@ -431,9 +442,11 @@ export class ImportDirective {
 
     @computed({ keepAlive: true })
     get project() {
-        return ProjectStore.loadExternalProject(
-            ProjectStore.getAbsoluteFilePath(this.projectFilePath, getProject(this))
-        );
+        return this.projectFilePath
+            ? ProjectStore.loadExternalProject(
+                  ProjectStore.getAbsoluteFilePath(this.projectFilePath, getProject(this))
+              )
+            : undefined;
     }
 
     @computed
@@ -484,7 +497,10 @@ export class General extends EezObject implements IGeneral {
                 fileFilters: [
                     { name: "EEZ Project", extensions: ["eez-project"] },
                     { name: "All Files", extensions: ["*"] }
-                ]
+                ],
+                hideInPropertyGrid: (general: General) => {
+                    return general.imports.length > 0;
+                }
             },
             {
                 name: "imports",
@@ -703,13 +719,13 @@ export class Project extends EezObject implements IProject {
     @computed({ keepAlive: true })
     get allAssetsMaps() {
         return [
-            { path: "data", map: this.dataItemsMap },
-            { path: "actions", map: this.actionsMap },
-            { path: "gui/pages", map: this.gui.pagesMap },
-            { path: "gui/styles", map: this.gui.stylesMap },
-            { path: "gui/fonts", map: this.gui.fontsMap },
-            { path: "gui/bitmaps", map: this.gui.bitmapsMap },
-            { path: "gui/colors", map: this.gui.colorsMap }
+            { path: "data", map: this.data && this.dataItemsMap },
+            { path: "actions", map: this.actions && this.actionsMap },
+            { path: "gui/pages", map: this.gui && this.gui.pagesMap },
+            { path: "gui/styles", map: this.gui && this.gui.stylesMap },
+            { path: "gui/fonts", map: this.gui && this.gui.fontsMap },
+            { path: "gui/bitmaps", map: this.gui && this.gui.bitmapsMap },
+            { path: "gui/colors", map: this.gui && this.gui.colorsMap }
         ];
     }
 
@@ -727,9 +743,11 @@ export class Project extends EezObject implements IProject {
         const buildAssets = new BuildAssetsMap();
 
         this.allAssetsMaps.forEach(({ path, map }) => {
-            map.forEach((object: IEezObject, key: string) =>
-                buildAssets.addAsset(path + "/" + key, object)
-            );
+            if (map) {
+                map.forEach((object: IEezObject, key: string) =>
+                    buildAssets.addAsset(path + "/" + key, object)
+                );
+            }
         });
 
         return buildAssets.assets;
@@ -743,15 +761,19 @@ export class Project extends EezObject implements IProject {
             const project = importDirective.project;
             if (project) {
                 project.allAssetsMaps.forEach(({ path, map }) => {
-                    map.forEach((object: IEezObject, key: string) =>
-                        buildAssets.addAsset(
-                            path +
-                                "/" +
-                                (project.namespace ? project.namespace + NAMESPACE_PREFIX : "") +
-                                key,
-                            object
-                        )
-                    );
+                    if (map) {
+                        map.forEach((object: IEezObject, key: string) =>
+                            buildAssets.addAsset(
+                                path +
+                                    "/" +
+                                    (project.namespace
+                                        ? project.namespace + NAMESPACE_PREFIX
+                                        : "") +
+                                    key,
+                                object
+                            )
+                        );
+                    }
                 });
             }
         }
@@ -765,11 +787,13 @@ export class Project extends EezObject implements IProject {
 
         if (this.masterProject) {
             this.masterProject.allAssetsMaps.forEach(({ path, map }) => {
-                map.forEach((object: IEezObject, key: string) => {
-                    if ((object as any).id) {
-                        buildAssets.addAsset(path + "/" + key, object);
-                    }
-                });
+                if (map) {
+                    map.forEach((object: IEezObject, key: string) => {
+                        if ((object as any).id) {
+                            buildAssets.addAsset(path + "/" + key, object);
+                        }
+                    });
+                }
             });
         }
 
@@ -948,3 +972,346 @@ export function getNameProperty(object: IEezObject) {
     }
     return name;
 }
+
+function getUIStateFilePath(projectFilePath: string) {
+    return projectFilePath + "-ui-state";
+}
+
+class ProjectStoreClass {
+    @observable filePath: string | undefined;
+    @observable backgroundCheckEnabled = true;
+
+    constructor() {
+        autorun(() => {
+            this.updateProjectWindowState();
+        });
+
+        autorun(() => {
+            if (this.filePath) {
+                this.updateMruFilePath();
+            }
+        });
+
+        autorun(() => {
+            // check the project in the background
+            if (this.project && this.backgroundCheckEnabled) {
+                backgroundCheck();
+            }
+        });
+    }
+
+    updateProjectWindowState() {
+        const path = EEZStudio.electron.remote.require("path");
+
+        let title = "";
+
+        if (this.project) {
+            if (DocumentStore.modified) {
+                title += "\u25CF ";
+            }
+
+            if (this.filePath) {
+                title += path.basename(this.filePath) + " - ";
+            } else {
+                title += "untitled - ";
+            }
+        }
+
+        title += EEZStudio.title;
+
+        if (title != document.title) {
+            document.title = title;
+        }
+
+        EEZStudio.electron.ipcRenderer.send("windowSetState", {
+            modified: DocumentStore?.modified,
+            projectFilePath: this.filePath,
+            undo: (UndoManager && UndoManager.canUndo && UndoManager.undoDescription) || null,
+            redo: (UndoManager && UndoManager.canRedo && UndoManager.redoDescription) || null
+        });
+    }
+
+    get project() {
+        return DocumentStore?.document as Project;
+    }
+
+    updateMruFilePath() {
+        ipcRenderer.send("setMruFilePath", this.filePath);
+    }
+
+    getFilePathRelativeToProjectPath(absoluteFilePath: string) {
+        const path = EEZStudio.electron.remote.require("path");
+        return path.relative(path.dirname(this.filePath), absoluteFilePath);
+    }
+
+    getProjectFilePath(project: Project) {
+        if (project == this.project) {
+            return this.filePath;
+        } else {
+            return this.mapExternalProjectToAbsolutePath.get(project);
+        }
+    }
+
+    getAbsoluteFilePath(relativeFilePath: string, project?: Project) {
+        const path = EEZStudio.electron.remote.require("path");
+        const filePath = this.getProjectFilePath(project ?? this.project);
+        return filePath
+            ? path.resolve(path.dirname(filePath), relativeFilePath.replace(/(\\|\/)/g, path.sep))
+            : relativeFilePath;
+    }
+
+    getFolderPathRelativeToProjectPath(absoluteFolderPath: string) {
+        const path = EEZStudio.electron.remote.require("path");
+        let folder = path.relative(path.dirname(this.filePath), absoluteFolderPath);
+        if (folder == "") {
+            folder = ".";
+        }
+        return folder;
+    }
+
+    @computed
+    get selectedBuildConfiguration() {
+        let configuration =
+            this.project &&
+            this.project.settings.build.configurations.find(
+                configuration => configuration.name == UIStateStore.selectedBuildConfiguration
+            );
+        if (!configuration) {
+            if (this.project.settings.build.configurations.length > 0) {
+                configuration = this.project.settings.build.configurations[0];
+            }
+        }
+        return configuration;
+    }
+
+    changeProject(projectFilePath: string | undefined, project?: Project, uiState?: Project) {
+        action(() => {
+            this.filePath = projectFilePath;
+        })();
+
+        DocumentStore.changeDocument(project, uiState);
+    }
+
+    doSave(callback: (() => void) | undefined) {
+        if (this.filePath) {
+            save(this.filePath)
+                .then(() => {
+                    DocumentStore.setModified(false);
+
+                    if (callback) {
+                        callback();
+                    }
+                })
+                .catch(error => console.error("Save", error));
+        }
+    }
+
+    @action
+    savedAsFilePath(filePath: string, callback: (() => void) | undefined) {
+        if (filePath) {
+            this.filePath = filePath;
+            this.doSave(() => {
+                this.saveUIState();
+                if (callback) {
+                    callback();
+                }
+            });
+        }
+    }
+
+    async saveToFile(saveAs: boolean, callback: (() => void) | undefined) {
+        if (this.project) {
+            if (!this.filePath || saveAs) {
+                const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
+                    EEZStudio.electron.remote.getCurrentWindow(),
+                    {
+                        filters: [
+                            { name: "EEZ Project", extensions: ["eez-project"] },
+                            { name: "All Files", extensions: ["*"] }
+                        ]
+                    }
+                );
+                if (result.filePath) {
+                    this.savedAsFilePath(result.filePath, callback);
+                }
+            } else {
+                this.doSave(callback);
+            }
+        }
+    }
+
+    newProject() {
+        this.changeProject(undefined, getNewProject());
+    }
+
+    loadUIState(projectFilePath: string) {
+        return new Promise<any>((resolve, reject) => {
+            const fs = EEZStudio.electron.remote.require("fs");
+            fs.readFile(getUIStateFilePath(projectFilePath), "utf8", (err: any, data: string) => {
+                if (err) {
+                    resolve({});
+                } else {
+                    resolve(JSON.parse(data));
+                }
+            });
+        });
+    }
+
+    saveUIState() {
+        if (this.filePath && UIStateStore.isModified) {
+            const fs = EEZStudio.electron.remote.require("fs");
+            fs.writeFile(
+                getUIStateFilePath(this.filePath),
+                UIStateStore.save(),
+                "utf8",
+                (err: any) => {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        console.log("UI state saved");
+                    }
+                }
+            );
+        }
+    }
+
+    openFile(filePath: string) {
+        load(filePath)
+            .then(project => {
+                this.loadUIState(filePath)
+                    .then(uiState => {
+                        this.changeProject(filePath, project, uiState);
+                    })
+                    .catch(error => console.error(error));
+            })
+            .catch(error => console.error(error));
+    }
+
+    open(sender: any, filePath: any) {
+        if (!this.project || (!this.filePath && !DocumentStore.modified)) {
+            this.openFile(filePath);
+        }
+    }
+
+    saveModified(callback: any) {
+        this.saveUIState();
+
+        if (this.project && DocumentStore.modified) {
+            confirmSave({
+                saveCallback: () => {
+                    this.saveToFile(false, callback);
+                },
+
+                dontSaveCallback: () => {
+                    callback();
+                },
+
+                cancelCallback: () => {}
+            });
+        } else {
+            callback();
+        }
+    }
+
+    save() {
+        this.saveToFile(false, undefined);
+    }
+
+    saveAs() {
+        this.saveToFile(true, undefined);
+    }
+
+    check() {
+        buildProject({ onlyCheck: true });
+    }
+
+    build() {
+        buildProject({ onlyCheck: false });
+    }
+
+    buildExtensions() {
+        buildExtensions();
+    }
+
+    closeWindow() {
+        if (this.project) {
+            this.saveModified(() => {
+                this.changeProject(undefined);
+                EEZStudio.electron.ipcRenderer.send("readyToClose");
+            });
+        } else {
+            EEZStudio.electron.ipcRenderer.send("readyToClose");
+        }
+    }
+
+    noProject() {
+        this.changeProject(undefined);
+    }
+
+    showMetrics() {
+        const ID = "eez-project-editor-project-metrics";
+        if (!document.getElementById(ID)) {
+            showGenericDialog({
+                dialogDefinition: {
+                    id: ID,
+                    title: "Project Metrics",
+                    fields: [
+                        {
+                            name: "metrics",
+                            fullLine: true,
+                            type: TableField
+                        }
+                    ]
+                },
+                values: {
+                    metrics: getAllMetrics()
+                },
+                showOkButton: false
+            }).catch(() => {});
+        }
+    }
+
+    @computed
+    get masterProjectEnabled() {
+        return !!this.project.settings.general.masterProject;
+    }
+
+    @computed
+    get masterProject() {
+        return this.project.masterProject;
+    }
+
+    @observable externalProjects = new Map<string, Project>();
+    @observable mapExternalProjectToAbsolutePath = new Map<Project, string>();
+    externalProjectsLoading = new Map<string, boolean>();
+
+    loadExternalProject(filePath: string) {
+        if (filePath == this.filePath) {
+            return this.project;
+        }
+
+        const project = this.externalProjects.get(filePath);
+        if (project) {
+            return project;
+        }
+
+        if (!this.externalProjectsLoading.get(filePath)) {
+            this.externalProjectsLoading.set(filePath, true);
+
+            (async () => {
+                const project = await load(filePath);
+
+                runInAction(() => {
+                    this.externalProjects.set(filePath, project);
+                    this.mapExternalProjectToAbsolutePath.set(project, filePath);
+                });
+
+                this.externalProjectsLoading.set(filePath, false);
+            })();
+        }
+
+        return undefined;
+    }
+}
+
+export const ProjectStore = new ProjectStoreClass();

@@ -18,9 +18,7 @@ import {
 import { OutputSectionsStore } from "project-editor/core/store";
 import { Section, Type } from "project-editor/core/output";
 
-import { ProjectStore } from "project-editor/core/store";
-
-import { BuildConfiguration, getProject } from "project-editor/project/project";
+import { ProjectStore, BuildConfiguration, getProject } from "project-editor/project/project";
 import {
     extensionDefinitionAnythingToBuild,
     extensionDefinitionBuild
@@ -113,7 +111,7 @@ function showCheckResult() {
 }
 
 class BuildException {
-    constructor(public message: string, public object?: IEezObject | undefined) {}
+    constructor(public message: string, public object?: IEezObject | undefined) { }
 }
 
 async function getBuildResults(
@@ -201,15 +199,15 @@ async function generateFiles(
     if (ProjectStore.masterProject) {
         generateFile(
             configurationBuildResults[
-                ProjectStore.selectedBuildConfiguration
-                    ? ProjectStore.selectedBuildConfiguration.name
-                    : "default"
+            ProjectStore.selectedBuildConfiguration
+                ? ProjectStore.selectedBuildConfiguration.name
+                : "default"
             ],
             undefined,
             destinationFolderPath +
-                "/" +
-                path.basename(ProjectStore.filePath, ".eez-project") +
-                ".res"
+            "/" +
+            path.basename(ProjectStore.filePath, ".eez-project") +
+            ".res"
         );
     } else {
         const build = ProjectStore.project.settings.build;
@@ -221,16 +219,16 @@ async function generateFiles(
                         configurationBuildResults[configuration.name],
                         buildFile.template,
                         destinationFolderPath +
-                            "/" +
-                            buildFile.fileName.replace("<configuration>", configuration.name)
+                        "/" +
+                        buildFile.fileName.replace("<configuration>", configuration.name)
                     );
                 }
             } else {
                 generateFile(
                     configurationBuildResults[
-                        ProjectStore.selectedBuildConfiguration
-                            ? ProjectStore.selectedBuildConfiguration.name
-                            : "default"
+                    ProjectStore.selectedBuildConfiguration
+                        ? ProjectStore.selectedBuildConfiguration.name
+                        : "default"
                     ],
                     buildFile.template,
                     destinationFolderPath + "/" + buildFile.fileName

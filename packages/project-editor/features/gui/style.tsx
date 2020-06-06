@@ -28,8 +28,7 @@ import {
     NavigationStore,
     SimpleNavigationStoreClass,
     DocumentStore,
-    UndoManager,
-    ProjectStore
+    UndoManager
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import * as output from "project-editor/core/output";
@@ -38,7 +37,12 @@ import { onSelectItem } from "project-editor/components/SelectItem";
 import { Splitter } from "eez-studio-ui/splitter";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { Project, findReferencedObject, getProject } from "project-editor/project/project";
+import {
+    ProjectStore,
+    Project,
+    findReferencedObject,
+    getProject
+} from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 import { findFont } from "project-editor/features/gui/font";

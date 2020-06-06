@@ -9,6 +9,9 @@ import * as HomeWindowModule from "main/home-window";
 import * as SettingsModule from "main/settings";
 import { openFile } from "main/project-editor-window";
 
+// disable security warnings inside dev console
+process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = true as any;
+
 configure({ enforceActions: "observed" });
 
 ////////////////////////////////////////////////////////////////////////////////

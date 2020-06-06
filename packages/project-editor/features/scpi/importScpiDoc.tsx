@@ -20,7 +20,7 @@ import {
 
 import { IParameter, IParameterType, IEnum } from "instrument/scpi";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { ScpiEnum } from "project-editor/features/scpi/enum";

@@ -7,7 +7,7 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { NavigationComponent } from "project-editor/core/object";
 import { NavigationStore, getObjectFromNavigationItem } from "project-editor/core/store";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
 

@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "eez-studio-ui/styled-components";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 

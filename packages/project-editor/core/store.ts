@@ -5,12 +5,10 @@ import {
     action,
     toJS,
     reaction,
-    autorun,
-    runInAction
+    autorun
 } from "mobx";
 
 import { _each, _isArray, _map, _uniqWith, _find } from "eez-studio-shared/algorithm";
-import { confirmSave } from "eez-studio-shared/util";
 
 import * as notification from "eez-studio-ui/notification";
 
@@ -66,24 +64,7 @@ import { TreeObjectAdapter, ITreeObjectAdapter } from "project-editor/core/objec
 import { findAllReferences, isReferenced } from "project-editor/core/search";
 import { OutputSections, OutputSection } from "project-editor/core/output";
 
-import { showGenericDialog, TableField } from "eez-studio-ui/generic-dialog";
-
-import {
-    Project,
-    save as saveProject,
-    load as loadProject,
-    getNewProject
-} from "project-editor/project/project";
-import {
-    build as buildProject,
-    backgroundCheck,
-    buildExtensions
-} from "project-editor/project/build";
-import { getAllMetrics } from "project-editor/project/metrics";
-
 const { Menu, MenuItem } = EEZStudio.electron.remote;
-
-const ipcRenderer = EEZStudio.electron.ipcRenderer;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -119,9 +100,9 @@ export function createObjectNavigationItem(
 ): ObjectNavigationItem | undefined {
     return object
         ? {
-              type: "object",
-              object
-          }
+            type: "object",
+            object
+        }
         : undefined;
 }
 
@@ -130,9 +111,9 @@ export function createObjectAdapterNavigationItem(
 ): ObjectAdapterNavigationItem | undefined {
     return objectAdapter
         ? {
-              type: "objectAdapter",
-              objectAdapter
-          }
+            type: "objectAdapter",
+            objectAdapter
+        }
         : undefined;
 }
 
@@ -191,7 +172,7 @@ export class SimpleNavigationStoreClass implements INavigationStore {
         this.selectedItem = navigationSelectedItem;
     }
 
-    setSelectedPanel(selectedPanel: IPanel | undefined) {}
+    setSelectedPanel(selectedPanel: IPanel | undefined) { }
 }
 
 class NavigationStoreClass implements INavigationStore {
@@ -1519,417 +1500,6 @@ export function deleteItems(objects: IEezObject[], callback?: () => void) {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-function getUIStateFilePath(projectFilePath: string) {
-    return projectFilePath + "-ui-state";
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-class ProjectStoreClass {
-    @observable filePath: string | undefined;
-    @observable backgroundCheckEnabled = true;
-
-    constructor() {
-        autorun(() => {
-            this.updateProjectWindowState();
-        });
-
-        autorun(() => {
-            if (this.filePath) {
-                this.updateMruFilePath();
-            }
-        });
-
-        autorun(() => {
-            // check the project in the background
-            if (this.project && this.backgroundCheckEnabled) {
-                backgroundCheck();
-            }
-        });
-    }
-
-    updateProjectWindowState() {
-        const path = EEZStudio.electron.remote.require("path");
-
-        let title = "";
-
-        if (this.project) {
-            if (DocumentStore.modified) {
-                title += "\u25CF ";
-            }
-
-            if (this.filePath) {
-                title += path.basename(this.filePath) + " - ";
-            } else {
-                title += "untitled - ";
-            }
-        }
-
-        title += EEZStudio.title;
-
-        if (title != document.title) {
-            document.title = title;
-        }
-
-        EEZStudio.electron.ipcRenderer.send("windowSetState", {
-            modified: DocumentStore.modified,
-            projectFilePath: this.filePath,
-            undo: (UndoManager && UndoManager.canUndo && UndoManager.undoDescription) || null,
-            redo: (UndoManager && UndoManager.canRedo && UndoManager.redoDescription) || null
-        });
-    }
-
-    get project() {
-        return DocumentStore.document as Project;
-    }
-
-    updateMruFilePath() {
-        ipcRenderer.send("setMruFilePath", this.filePath);
-    }
-
-    getFilePathRelativeToProjectPath(absoluteFilePath: string) {
-        const path = EEZStudio.electron.remote.require("path");
-        return path.relative(path.dirname(this.filePath), absoluteFilePath);
-    }
-
-    getProjectFilePath(project: Project) {
-        if (project == this.project) {
-            return this.filePath;
-        } else {
-            return this.mapExternalProjectToAbsolutePath.get(project);
-        }
-    }
-
-    getAbsoluteFilePath(relativeFilePath: string, project?: Project) {
-        const path = EEZStudio.electron.remote.require("path");
-        const filePath = this.getProjectFilePath(project ?? this.project);
-        return filePath
-            ? path.resolve(path.dirname(filePath), relativeFilePath.replace(/(\\|\/)/g, path.sep))
-            : relativeFilePath;
-    }
-
-    getFolderPathRelativeToProjectPath(absoluteFolderPath: string) {
-        const path = EEZStudio.electron.remote.require("path");
-        let folder = path.relative(path.dirname(this.filePath), absoluteFolderPath);
-        if (folder == "") {
-            folder = ".";
-        }
-        return folder;
-    }
-
-    @computed
-    get selectedBuildConfiguration() {
-        let configuration =
-            this.project &&
-            this.project.settings.build.configurations.find(
-                configuration => configuration.name == UIStateStore.selectedBuildConfiguration
-            );
-        if (!configuration) {
-            if (this.project.settings.build.configurations.length > 0) {
-                configuration = this.project.settings.build.configurations[0];
-            }
-        }
-        return configuration;
-    }
-
-    changeProject(projectFilePath: string | undefined, project?: Project, uiState?: Project) {
-        action(() => {
-            this.filePath = projectFilePath;
-        })();
-
-        DocumentStore.changeDocument(project, uiState);
-    }
-
-    doSave(callback: (() => void) | undefined) {
-        if (this.filePath) {
-            saveProject(this.filePath)
-                .then(() => {
-                    DocumentStore.setModified(false);
-
-                    if (callback) {
-                        callback();
-                    }
-                })
-                .catch(error => console.error("Save", error));
-        }
-    }
-
-    @action
-    savedAsFilePath(filePath: string, callback: (() => void) | undefined) {
-        if (filePath) {
-            this.filePath = filePath;
-            this.doSave(() => {
-                this.saveUIState();
-                if (callback) {
-                    callback();
-                }
-            });
-        }
-    }
-
-    async saveToFile(saveAs: boolean, callback: (() => void) | undefined) {
-        if (this.project) {
-            if (!this.filePath || saveAs) {
-                const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
-                    EEZStudio.electron.remote.getCurrentWindow(),
-                    {
-                        filters: [
-                            { name: "EEZ Project", extensions: ["eez-project"] },
-                            { name: "All Files", extensions: ["*"] }
-                        ]
-                    }
-                );
-                if (result.filePath) {
-                    this.savedAsFilePath(result.filePath, callback);
-                }
-            } else {
-                this.doSave(callback);
-            }
-        }
-    }
-
-    newProject() {
-        this.changeProject(undefined, getNewProject());
-    }
-
-    loadUIState(projectFilePath: string) {
-        return new Promise<any>((resolve, reject) => {
-            const fs = EEZStudio.electron.remote.require("fs");
-            fs.readFile(getUIStateFilePath(projectFilePath), "utf8", (err: any, data: string) => {
-                if (err) {
-                    resolve({});
-                } else {
-                    resolve(JSON.parse(data));
-                }
-            });
-        });
-    }
-
-    saveUIState() {
-        if (this.filePath && UIStateStore.isModified) {
-            const fs = EEZStudio.electron.remote.require("fs");
-            fs.writeFile(
-                getUIStateFilePath(this.filePath),
-                UIStateStore.save(),
-                "utf8",
-                (err: any) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        console.log("UI state saved");
-                    }
-                }
-            );
-        }
-    }
-
-    openFile(filePath: string) {
-        loadProject(filePath)
-            .then(project => {
-                this.loadUIState(filePath)
-                    .then(uiState => {
-                        this.changeProject(filePath, project, uiState);
-                    })
-                    .catch(error => console.error(error));
-            })
-            .catch(error => console.error(error));
-    }
-
-    open(sender: any, filePath: any) {
-        if (!this.project || (!this.filePath && !DocumentStore.modified)) {
-            this.openFile(filePath);
-        }
-    }
-
-    saveModified(callback: any) {
-        this.saveUIState();
-
-        if (this.project && DocumentStore.modified) {
-            confirmSave({
-                saveCallback: () => {
-                    this.saveToFile(false, callback);
-                },
-
-                dontSaveCallback: () => {
-                    callback();
-                },
-
-                cancelCallback: () => {}
-            });
-        } else {
-            callback();
-        }
-    }
-
-    save() {
-        this.saveToFile(false, undefined);
-    }
-
-    saveAs() {
-        this.saveToFile(true, undefined);
-    }
-
-    check() {
-        buildProject({ onlyCheck: true });
-    }
-
-    build() {
-        buildProject({ onlyCheck: false });
-    }
-
-    buildExtensions() {
-        buildExtensions();
-    }
-
-    closeWindow() {
-        if (this.project) {
-            this.saveModified(() => {
-                this.changeProject(undefined);
-                EEZStudio.electron.ipcRenderer.send("readyToClose");
-            });
-        } else {
-            EEZStudio.electron.ipcRenderer.send("readyToClose");
-        }
-    }
-
-    noProject() {
-        this.changeProject(undefined);
-    }
-
-    showMetrics() {
-        const ID = "eez-project-editor-project-metrics";
-        if (!document.getElementById(ID)) {
-            showGenericDialog({
-                dialogDefinition: {
-                    id: ID,
-                    title: "Project Metrics",
-                    fields: [
-                        {
-                            name: "metrics",
-                            fullLine: true,
-                            type: TableField
-                        }
-                    ]
-                },
-                values: {
-                    metrics: getAllMetrics()
-                },
-                showOkButton: false
-            }).catch(() => {});
-        }
-    }
-
-    @computed
-    get masterProjectEnabled() {
-        return !!this.project.settings.general.masterProject;
-    }
-
-    @computed
-    get masterProject() {
-        return this.project.masterProject;
-    }
-
-    @observable externalProjects = new Map<string, Project>();
-    @observable mapExternalProjectToAbsolutePath = new Map<Project, string>();
-    externalProjectsLoading = new Map<string, boolean>();
-
-    loadExternalProject(filePath: string) {
-        if (filePath == this.filePath) {
-            return this.project;
-        }
-
-        const project = this.externalProjects.get(filePath);
-        if (project) {
-            return project;
-        }
-
-        if (!this.externalProjectsLoading.get(filePath)) {
-            this.externalProjectsLoading.set(filePath, true);
-
-            (async () => {
-                const project = await loadProject(filePath);
-
-                runInAction(() => {
-                    this.externalProjects.set(filePath, project);
-                    this.mapExternalProjectToAbsolutePath.set(project, filePath);
-                });
-
-                this.externalProjectsLoading.set(filePath, false);
-            })();
-        }
-
-        return undefined;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function init() {
-    EEZStudio.electron.ipcRenderer.on("newProject", () => ProjectStore.newProject());
-
-    EEZStudio.electron.ipcRenderer.on("open", (sender: any, filePath: any) =>
-        ProjectStore.open(sender, filePath)
-    );
-
-    EEZStudio.electron.ipcRenderer.on("save", () => ProjectStore.save());
-    EEZStudio.electron.ipcRenderer.on("saveAs", () => ProjectStore.saveAs());
-
-    EEZStudio.electron.ipcRenderer.on("check", () => ProjectStore.check());
-    EEZStudio.electron.ipcRenderer.on("build", () => ProjectStore.build());
-    EEZStudio.electron.ipcRenderer.on("build-extensions", () => ProjectStore.buildExtensions());
-
-    EEZStudio.electron.ipcRenderer.on("undo", () => UndoManager.undo());
-    EEZStudio.electron.ipcRenderer.on("redo", () => UndoManager.redo());
-
-    EEZStudio.electron.ipcRenderer.on(
-        "cut",
-        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.cutSelection()
-    );
-    EEZStudio.electron.ipcRenderer.on(
-        "copy",
-        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.copySelection()
-    );
-    EEZStudio.electron.ipcRenderer.on(
-        "paste",
-        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.pasteSelection()
-    );
-    EEZStudio.electron.ipcRenderer.on(
-        "delete",
-        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.deleteSelection()
-    );
-
-    // EEZStudio.electron.ipcRenderer.on('goBack', () => ProjectStore.selection.selectionGoBack());
-    // EEZStudio.electron.ipcRenderer.on('goForward', () => ProjectStore.selection.selectionGoForward());
-
-    EEZStudio.electron.ipcRenderer.on(
-        "toggleOutput",
-        action(
-            () => (UIStateStore.viewOptions.outputVisible = !UIStateStore.viewOptions.outputVisible)
-        )
-    );
-
-    EEZStudio.electron.ipcRenderer.on("showProjectMetrics", () => ProjectStore.showMetrics());
-
-    if (window.location.search == "?mru") {
-        let mruFilePath = ipcRenderer.sendSync("getMruFilePath");
-        if (mruFilePath) {
-            ProjectStore.openFile(mruFilePath);
-        } else {
-            ProjectStore.newProject();
-        }
-    } else if (window.location.search.startsWith("?open=")) {
-        let ProjectStorePath = decodeURIComponent(
-            window.location.search.substring("?open=".length)
-        );
-        ProjectStore.openFile(ProjectStorePath);
-    } else if (window.location.search.startsWith("?new")) {
-        ProjectStore.newProject();
-    } else {
-        ProjectStore.noProject();
-    }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1939,7 +1509,6 @@ export const EditorsStore = new EditorsStoreClass();
 export const OutputSectionsStore = new OutputSections();
 export const UIStateStore = new UIStateStoreClass();
 export const UndoManager = new UndoManagerClass();
-export const ProjectStore = new ProjectStoreClass();
 
 ////////////////////////////////////////////////////////////////////////////////
 

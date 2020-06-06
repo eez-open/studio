@@ -3,7 +3,7 @@ import React from "react";
 import { Icon } from "eez-studio-ui/icon";
 import { FieldComponent } from "eez-studio-ui/generic-dialog";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 

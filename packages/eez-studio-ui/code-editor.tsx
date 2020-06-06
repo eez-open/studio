@@ -24,6 +24,7 @@ function createEditor(
         function aceReady() {
             const editor = ace.edit(element);
 
+            editor.getSession().setUseWorker(false);
             editor.getSession().setMode("ace/mode/" + mode);
             editor.setShowPrintMargin(false);
 
@@ -101,6 +102,7 @@ function onEditorEvent(editor: any, eventName: string, handler: any) {
 }
 
 function destroyEditor(editor: any) {
+    editor.renderer.freeze();
     editor.destroy();
 }
 
@@ -110,7 +112,7 @@ const CodeEditorDiv = styled.div`
     flex-grow: 1;
 `;
 
-export type CodeEditorMode = "c_cpp" | "javascript" | "json" | "scpi" | "css" | "python";
+export type CodeEditorMode = "c_cpp" | "javascript" | "json" | "scpi" | "python";
 
 interface CodeEditorProps {
     mode: CodeEditorMode;
@@ -215,7 +217,7 @@ export class CodeEditor extends React.Component<CodeEditorProps, {}> {
         );
     }
 
-    componentWillUpdate(nextProps: any, nextState: any) {
+    UNSAFE_componentWillUpdate(nextProps: any, nextState: any) {
         this.componentWillUnmount();
     }
 

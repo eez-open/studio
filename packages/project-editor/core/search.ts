@@ -14,11 +14,11 @@ import {
     getKey,
     getClassInfo
 } from "project-editor/core/object";
-import { DocumentStore, OutputSectionsStore, ProjectStore } from "project-editor/core/store";
+import { DocumentStore, OutputSectionsStore } from "project-editor/core/store";
 
 import { Section, Type } from "project-editor/core/output";
 
-import { ImportDirective, findReferencedObject, getProject } from "project-editor/project/project";
+import { ProjectStore, ImportDirective, findReferencedObject, getProject } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -210,7 +210,7 @@ function* searchForReference(
                         } else {
                             if (
                                 valueObject.propertyInfo.referencedObjectCollectionPath ==
-                                    objectParentPath &&
+                                objectParentPath &&
                                 valueObject.value === objectName
                             ) {
                                 match = true;
@@ -221,7 +221,7 @@ function* searchForReference(
                     ) {
                         if (
                             valueObject.propertyInfo.referencedObjectCollectionPath ==
-                                objectParentPath &&
+                            objectParentPath &&
                             valueObject.value
                         ) {
                             for (let i = 0; i < valueObject.value.length; i++) {
@@ -330,8 +330,8 @@ class CurrentSearch {
                 typeof patternOrObject == "string"
                     ? searchForPattern(root, patternOrObject, matchCase, matchWholeWord, true)
                     : patternOrObject
-                    ? searchForReference(root, patternOrObject, true)
-                    : searchForAllReferences(root, true);
+                        ? searchForReference(root, patternOrObject, true)
+                        : searchForAllReferences(root, true);
 
             this.interval = setInterval(() => {
                 let startTime = new Date().getTime();

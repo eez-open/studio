@@ -19,7 +19,7 @@ import {
     getLabel
 } from "project-editor/core/object";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 
 import { ScpiEnumsNavigation } from "project-editor/features/scpi/ScpiEnumsNavigation";
 

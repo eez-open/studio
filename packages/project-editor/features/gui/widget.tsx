@@ -53,7 +53,7 @@ import { EditorObject } from "project-editor/features/gui/page-editor/editor";
 import { PropertyProps } from "project-editor/components/PropertyGrid";
 import { onSelectItem } from "project-editor/components/SelectItem";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 
 // import * as data from "project-editor/features/data/data";
 

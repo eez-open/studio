@@ -22,7 +22,7 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { findStyle } from "project-editor/features/gui/style";
 import { getThemedColor } from "project-editor/features/gui/theme";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 import { Project, findReferencedObject, getProject } from "project-editor/project/project";

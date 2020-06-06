@@ -28,15 +28,13 @@ import {
 import { startSearch } from "project-editor/core/search";
 import { Section } from "project-editor/core/output";
 
-import { ProjectStore } from "project-editor/core/store";
-
 import { IconAction } from "eez-studio-ui/action";
 import { Panel } from "project-editor/components/Panel";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Output } from "project-editor/components/Output";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
-import { BuildConfiguration } from "project-editor/project/project";
+import { ProjectStore, BuildConfiguration } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 

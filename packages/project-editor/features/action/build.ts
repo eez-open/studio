@@ -1,7 +1,7 @@
 import { BuildResult } from "project-editor/core/extensions";
 
 import { Project, BuildConfiguration } from "project-editor/project/project";
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
 
 import { Action } from "project-editor/features/action/action";

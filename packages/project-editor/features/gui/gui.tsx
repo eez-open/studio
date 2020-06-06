@@ -15,7 +15,7 @@ import {
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
@@ -202,7 +202,7 @@ export class Gui extends EezObject implements IGui {
 
         for (const importDirective of ProjectStore.project.settings.general.imports) {
             const project = importDirective.project;
-            if (project) {
+            if (project && project.gui) {
                 project.gui.stylesMap.forEach(style => {
                     if (style.id != undefined) {
                         map.set(style.id, (map.get(style.id) || []).concat([style]));

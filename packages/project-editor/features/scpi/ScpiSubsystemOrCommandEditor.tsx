@@ -3,7 +3,7 @@ import React from "react";
 
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 import { ScpiSubsystem, ScpiCommand } from "project-editor/features/scpi/scpi";
 

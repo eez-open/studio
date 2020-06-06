@@ -20,7 +20,6 @@ import {
     NavigationStore,
     UndoManager,
     DocumentStore,
-    ProjectStore,
     OutputSectionsStore
 } from "project-editor/core/store";
 import { Section } from "project-editor/core/output";
@@ -56,7 +55,7 @@ import { info } from "project-editor/core/util";
 
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
-import { isAnyObjectReadOnly, getNameProperty } from "project-editor/project/project";
+import { ProjectStore, isAnyObjectReadOnly, getNameProperty } from "project-editor/project/project";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 

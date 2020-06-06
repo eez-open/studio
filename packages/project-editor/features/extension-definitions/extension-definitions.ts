@@ -13,7 +13,7 @@ import {
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";

@@ -16,13 +16,14 @@ import {
     IOnSelectParams,
     getClassInfo
 } from "project-editor/core/object";
-import { ProjectStore, SimpleNavigationStoreClass } from "project-editor/core/store";
+import { SimpleNavigationStoreClass } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 
 import { Widget } from "project-editor/features/gui/widget";
 import { Glyph } from "project-editor/features/gui/font";
 
 import {
+    ProjectStore,
     Project,
     getNameProperty,
     findReferencedObject,

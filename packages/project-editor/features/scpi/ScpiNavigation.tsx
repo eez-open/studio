@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 import { NavigationComponent } from "project-editor/core/object";
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 

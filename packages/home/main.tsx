@@ -2,6 +2,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { configure } from "mobx";
+import "mobx-react-lite/batchingForReactDom";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";

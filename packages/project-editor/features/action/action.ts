@@ -9,7 +9,7 @@ import {
     PropertyType
 } from "project-editor/core/object";
 import { Message, Type } from "project-editor/core/output";
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 import { findReferencedObject, Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";

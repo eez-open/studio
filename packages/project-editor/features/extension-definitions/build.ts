@@ -11,7 +11,7 @@ import { objectToJS } from "project-editor/core/serialization";
 import { OutputSectionsStore } from "project-editor/core/store";
 import { Section, Type } from "project-editor/core/output";
 
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
@@ -137,9 +137,9 @@ export async function extensionDefinitionBuild() {
                 instrumentIdf.image && ProjectStore.getAbsoluteFilePath(instrumentIdf.image),
 
                 ProjectStore.project.settings.general.scpiDocFolder &&
-                    ProjectStore.getAbsoluteFilePath(
-                        ProjectStore.project.settings.general.scpiDocFolder
-                    ),
+                ProjectStore.getAbsoluteFilePath(
+                    ProjectStore.project.settings.general.scpiDocFolder
+                ),
 
                 properties
             );

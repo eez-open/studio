@@ -38,13 +38,12 @@ import {
     NavigationStore,
     INavigationStore,
     IPanel,
-    createObjectNavigationItem,
-    ProjectStore
+    createObjectNavigationItem
 } from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
-import { Project, findReferencedObject } from "project-editor/project/project";
+import { ProjectStore, Project, findReferencedObject } from "project-editor/project/project";
 
 import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";

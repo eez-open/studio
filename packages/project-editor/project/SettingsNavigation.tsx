@@ -14,11 +14,10 @@ import {
 import { loadObject } from "project-editor/core/serialization";
 import { DocumentStore, NavigationStore } from "project-editor/core/store";
 
-import { ProjectStore } from "project-editor/core/store";
 import { confirm } from "project-editor/core/util";
 import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
 
-import { BuildFile } from "project-editor/project/project";
+import { ProjectStore, BuildFile } from "project-editor/project/project";
 import { Panel } from "project-editor/components/Panel";
 import { TreeNavigationPanel } from "project-editor/components/TreeNavigation";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";

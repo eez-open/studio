@@ -30,8 +30,9 @@ import { Splitter } from "eez-studio-ui/splitter";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
 
-import { ProjectStore, UIStateStore } from "project-editor/core/store";
+import { UIStateStore } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
+import { ProjectStore } from "project-editor/project/project";
 import { Gui } from "project-editor/features/gui/gui";
 
 const { MenuItem } = EEZStudio.electron.remote;

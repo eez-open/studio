@@ -12,8 +12,9 @@ import { Shortcuts as ShortcutsComponent, ShortcutsToolbarButtons } from "shortc
 import { NavigationComponent } from "project-editor/core/object";
 import { NavigationStore, DocumentStore } from "project-editor/core/store";
 
-import { ProjectStore } from "project-editor/core/store";
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
+
+import { ProjectStore } from "project-editor/project/project";
 
 import { Shortcut } from "project-editor/features/shortcuts/shortcuts";
 

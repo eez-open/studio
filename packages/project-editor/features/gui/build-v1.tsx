@@ -6,14 +6,14 @@ import {
     DisplayItemChildrenObject,
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
-import { ProjectStore, OutputSectionsStore } from "project-editor/core/store";
+import { OutputSectionsStore } from "project-editor/core/store";
 import { IEezObject } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import { loadObject } from "project-editor/core/serialization";
 import { BuildResult } from "project-editor/core/extensions";
 
 import * as projectBuild from "project-editor/project/build";
-import { Project, BuildConfiguration } from "project-editor/project/project";
+import { ProjectStore, Project, BuildConfiguration } from "project-editor/project/project";
 
 import * as data from "project-editor/features/data/data";
 

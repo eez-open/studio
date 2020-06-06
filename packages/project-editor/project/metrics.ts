@@ -1,6 +1,6 @@
 import { getProperty } from "project-editor/core/object";
-import { ProjectStore } from "project-editor/core/store";
 import { getExtensionsByCategory } from "project-editor/core/extensions";
+import { ProjectStore } from "project-editor/project/project";
 
 export function getAllMetrics() {
     let allMetrics: any = {};

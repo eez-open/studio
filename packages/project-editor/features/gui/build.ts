@@ -6,7 +6,7 @@ import { OutputSectionsStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
 import { BuildResult } from "project-editor/core/extensions";
-import { ProjectStore } from "project-editor/core/store";
+import { ProjectStore } from "project-editor/project/project";
 
 import * as projectBuild from "project-editor/project/build";
 import { Project, BuildConfiguration, getProject } from "project-editor/project/project";
@@ -248,8 +248,8 @@ abstract class Field {
     offset: number;
     size: number;
 
-    enumObjects(objects: ObjectField[]) {}
-    finish() {}
+    enumObjects(objects: ObjectField[]) { }
+    finish() { }
     abstract pack(dataBuffer: DataBuffer): void;
 }
 
@@ -777,7 +777,7 @@ function buildGuiColorsEnum(assets: Assets) {
 function buildWidgetText(text: string) {
     try {
         return JSON.parse('"' + text + '"');
-    } catch (e) {}
+    } catch (e) { }
     return text;
 }
 
