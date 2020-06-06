@@ -164,6 +164,10 @@ class BoundingRects {
 
 const boundingRects = new BoundingRects();
 
+export function getObjectBoundingRectFromId(id: string, viewState?: IViewState) {
+    return boundingRects.getBoundingRectFromId(id, viewState);
+}
+
 export function getObjectBoundingRect(object: IBaseObject, viewState: IViewState) {
     return boundingRects.getBoundingRect(object, viewState);
 }

@@ -9,7 +9,7 @@ import {
     findClosestHorizontalSnapLinesToPosition,
     findClosestVerticalSnapLinesToPosition,
     drawSnapLinesGeneric
-} from "eez-studio-shared/snap-lines";
+} from "project-editor/features/gui/page-editor/snap-lines";
 
 import {
     IDesignerContext,
