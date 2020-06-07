@@ -49,6 +49,10 @@ import {
     WidgetComponent
 } from "project-editor/features/gui/page-editor/render";
 import { EditorObject } from "project-editor/features/gui/page-editor/editor";
+import {
+    IResizing,
+    resizingProperty
+} from "project-editor/features/gui/page-editor/resizing-widget-property";
 
 import { PropertyProps } from "project-editor/components/PropertyGrid";
 import { onSelectItem } from "project-editor/components/SelectItem";
@@ -217,6 +221,8 @@ export class Widget extends EezObject implements IWidget {
     @observable width: number;
     @observable height: number;
 
+    @observable resizing: IResizing;
+
     get label() {
         return this.type;
     }
@@ -263,6 +269,7 @@ export class Widget extends EezObject implements IWidget {
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup
             },
+            resizingProperty,
             {
                 name: "absolutePosition",
                 type: PropertyType.String,
