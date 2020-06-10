@@ -132,4 +132,6 @@ async function init() {
     } else {
         ProjectStore.noProject();
     }
+
+    ProjectStore.waitUntilready();
 }

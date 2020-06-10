@@ -993,13 +993,6 @@ class ProjectStoreClass {
             }
         });
 
-        autorun(() => {
-            // check the project in the background
-            if (this.project && this.backgroundCheckEnabled) {
-                backgroundCheck();
-            }
-        });
-
         let watcher: chokidar.FSWatcher | undefined = undefined;
         autorun(() => {
             if (watcher) {
@@ -1022,6 +1015,32 @@ class ProjectStoreClass {
                         });
                     }
                 });
+            }
+        });
+    }
+
+    async waitUntilready() {
+        while (true) {
+            const project = this.project;
+            if (project) {
+                let i;
+                for (i = 0; i < project.settings.general.imports.length; i++) {
+                    if (project.settings.general.imports[i].project === undefined) {
+                        break;
+                    }
+                }
+                if (i == project.settings.general.imports.length) {
+                    break;
+                }
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 10));
+        }
+
+        autorun(() => {
+            // check the project in the background
+            if (ProjectStore.project && ProjectStore.backgroundCheckEnabled) {
+                backgroundCheck();
             }
         });
     }
