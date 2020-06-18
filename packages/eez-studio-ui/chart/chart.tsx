@@ -1335,7 +1335,25 @@ export class ChartController {
 
     lineControllers: ILineController[] = [];
 
-    chartView: ChartView | undefined;
+    chartViews: ChartView[] = [];
+
+    get chartView(): ChartView | undefined {
+        for (let i = 0; i < this.chartViews.length; i++) {
+            const svg = this.chartViews[i].svg;
+            if (svg) {
+                const chartViewRect = svg.getBoundingClientRect();
+                if (chartViewRect.width > 0 && chartViewRect.height > 0) {
+                    return this.chartViews[i];
+                }
+            }
+        }
+
+        if (this.chartViews.length > 0) {
+            return this.chartViews[0];
+        }
+
+        return undefined;
+    }
 
     @computed
     get axes() {
@@ -3254,7 +3272,13 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
 
         const charts = chartsController.chartControllers.map(chartController => (
             <ChartView
-                ref={ref => runInAction(() => (chartController.chartView = ref!))}
+                ref={ref =>
+                    runInAction(() => {
+                        if (ref) {
+                            chartController.chartViews.push(ref);
+                        }
+                    })
+                }
                 key={chartController.id}
                 chartController={chartController}
                 mode={mode}

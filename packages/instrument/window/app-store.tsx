@@ -166,8 +166,10 @@ export class InstrumentAppStore implements IEditor {
     }
 
     onTerminate() {
-        console.error("TODO");
         EEZStudio.electron.ipcRenderer.removeListener("beforeClose", this.onBeforeClose);
+        if (this.instrument) {
+            this.instrument.terminate();
+        }
         this.editor = null;
         this.terminal = null;
         this.scriptView = null;

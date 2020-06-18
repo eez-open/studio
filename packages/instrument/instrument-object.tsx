@@ -38,8 +38,8 @@ import { ConnectionErrorCode, ConnectionParameters } from "instrument/connection
 import { IFileUploadInstructions } from "instrument/connection/file-upload";
 
 import * as UiPropertiesModule from "eez-studio-ui/properties";
-
 import * as AppStoreModule from "instrument/window/app-store";
+import * as Bb3Module from "instrument/bb3";
 
 import { showFileUploadDialog } from "instrument/window/terminal/file-upload-dialog";
 
@@ -936,6 +936,24 @@ export class InstrumentObject {
 
     getIcon() {
         return this.image;
+    }
+
+    @computed
+    get isBB3() {
+        return (
+            this.instrumentExtensionId == "687b6dee-2093-4c36-afb7-cfc7ea2bf262" ||
+            this.instrumentExtensionId == "7cab6860-e593-4ba2-ee68-57fe84460fa4"
+        );
+    }
+
+    terminate() {
+        if (this.isBB3) {
+            const { getBB3Instrument } = require("instrument/bb3") as typeof Bb3Module;
+            const bb3Instrument = getBB3Instrument(this._instrumentAppStore, false);
+            if (bb3Instrument) {
+                bb3Instrument.terminate();
+            }
+        }
     }
 }
 

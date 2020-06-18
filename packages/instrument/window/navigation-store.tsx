@@ -145,17 +145,7 @@ export class NavigationStore {
 
     @computed
     get startPageNavigationItem() {
-        const isBb3 =
-            this.appStore.instrument &&
-            this.appStore.instrument.instrumentExtensionId ==
-                "687b6dee-2093-4c36-afb7-cfc7ea2bf262";
-
-        const isBb3Simulator =
-            this.appStore.instrument &&
-            this.appStore.instrument.instrumentExtensionId ==
-                "7cab6860-e593-4ba2-ee68-57fe84460fa4";
-
-        if (isBb3 || isBb3Simulator) {
+        if (this.appStore.instrument?.isBB3) {
             return {
                 id: "start-page",
                 icon: "material:dashboard",

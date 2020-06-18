@@ -8,12 +8,12 @@ import { scriptsCatalog, bb3InstrumentsMap } from "instrument/bb3/global-objects
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import { StartPage } from "instrument/bb3/components/StartPage";
 
-function getBB3Instrument(appStore: InstrumentAppStore) {
+export function getBB3Instrument(appStore: InstrumentAppStore, create: boolean) {
     if (!appStore.instrument) {
         return undefined;
     }
     let bb3Instrument = bb3InstrumentsMap.get(appStore.instrument.id);
-    if (!bb3Instrument) {
+    if (!bb3Instrument && create) {
         bb3Instrument = new BB3Instrument(scriptsCatalog, appStore, appStore.instrument);
         bb3InstrumentsMap.set(appStore.instrument.id, bb3Instrument);
     }
@@ -21,7 +21,7 @@ function getBB3Instrument(appStore: InstrumentAppStore) {
 }
 
 export function render(appStore: InstrumentAppStore) {
-    const bb3Instrument = getBB3Instrument(appStore);
+    const bb3Instrument = getBB3Instrument(appStore, true);
 
     if (!bb3Instrument) {
         return <div />;
@@ -44,7 +44,7 @@ export function toolbarButtonsRender(appStore: InstrumentAppStore) {
                     className="btn-secondary"
                     title="Refresh"
                     onClick={() => {
-                        const bb3Instrument = getBB3Instrument(appStore);
+                        const bb3Instrument = getBB3Instrument(appStore, true);
                         if (bb3Instrument) {
                             bb3Instrument.refresh(true);
                         }

@@ -180,6 +180,8 @@ export class BB3Instrument {
     @observable scriptsOnInstrumentFetchError: boolean = false;
     @observable listsOnInstrumentFetchError: boolean = false;
 
+    terminate: () => void;
+
     constructor(
         public scriptsCatalog: ScriptsCatalog,
         public appStore: InstrumentAppStore,
@@ -219,7 +221,7 @@ export class BB3Instrument {
         }
 
         this.refreshScripts(bb3Properties?.scriptsOnInstrument ?? []);
-        reaction(
+        const dispose1 = reaction(
             () => scriptsCatalog.scriptItems,
             state => {
                 this.refreshScripts(this.scriptsOnInstrument);
@@ -229,14 +231,14 @@ export class BB3Instrument {
         this.selectedScriptsCollectionType = "allScriptsCollection";
 
         this.refreshLists(bb3Properties?.listsOnInstrument ?? []);
-        reaction(
+        const dispose2 = reaction(
             () => this.appStore.instrumentLists.map(list => list.name),
             () => {
                 this.refreshLists(this.listsOnInstrument);
             }
         );
 
-        reaction(
+        const dispose3 = reaction(
             () => ({
                 timeOfLastRefresh: this.timeOfLastRefresh,
                 mcu: toJS(this.mcu),
@@ -257,22 +259,39 @@ export class BB3Instrument {
             }
         );
 
-        autorun(() => {
+        const dispose4 = autorun(() => {
             if (getConnection(appStore).isConnected) {
                 setTimeout(() => this.refresh(false), 50);
             }
         });
 
-        autorun(() => {
+        const dispose5 = autorun(() => {
             if (appStore.history.items.length > 0) {
                 const historyItem = appStore.history.items[appStore.history.items.length - 1];
-                if (!this.latestHistoryItem || historyItem.date >= this.latestHistoryItem.date) {
+                const latestHistoryItem = this.latestHistoryItem;
+                if (
+                    !latestHistoryItem ||
+                    latestHistoryItem.deleted ||
+                    latestHistoryItem.id == historyItem.id ||
+                    appStore.deletedItemsHistory.items.find(
+                        historyItem => latestHistoryItem.id == historyItem.id
+                    ) ||
+                    historyItem.date >= latestHistoryItem.date
+                ) {
                     runInAction(() => {
                         this.latestHistoryItem = historyItem;
                     });
                 }
             }
         });
+
+        this.terminate = () => {
+            dispose1();
+            dispose2();
+            dispose3();
+            dispose4();
+            dispose5();
+        };
     }
 
     @action setRefreshInProgress(value: boolean) {
