@@ -266,7 +266,7 @@ export class Script {
     }
 
     replace = async () => {
-        this.uninstall();
+        await this.uninstall();
         await this.install();
     };
 }
