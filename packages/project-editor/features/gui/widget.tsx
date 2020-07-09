@@ -2057,7 +2057,7 @@ export class MultilineTextWidget extends Widget implements IMultilineTextWidget 
     });
 
     draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
-        let text = (this.data ? (dataContext.get(this.data) as string) : this.text) || "";
+        let text = this.text ? this.text : this.data ? (dataContext.get(this.data) as string) : "";
 
         const w = this.width;
         const h = this.height;
