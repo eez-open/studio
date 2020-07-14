@@ -66,7 +66,7 @@ export const activityLogStore = createStore({
         UPDATE activityLogVersion SET version = 3;`,
 
         // version 4
-        `UPDATE activityLog SET type = 'instrument/file-attachment' WHERE type == "instrument/file"
+        `UPDATE activityLog SET type = 'instrument/file-attachment' WHERE type == 'instrument/file'
             AND json_extract(message, '$.direction') = 'upload'
             AND json_extract(message, '$.sourceFilePath') IS NOT NULL;
 
@@ -76,16 +76,16 @@ export const activityLogStore = createStore({
         UPDATE activityLog SET type = 'instrument/file-upload' WHERE type = 'instrument/file';
 
         UPDATE activityLog SET message == json_replace(message, '$.state', 'upload-filesize') WHERE
-            type = "instrument/file-upload" AND json_extract(message, '$.state') = 'download-filesize';
+            type = 'instrument/file-upload' AND json_extract(message, '$.state') = 'download-filesize';
 
         UPDATE activityLog SET message == json_replace(message, '$.state', 'upload-start') WHERE
-            type = "instrument/file-upload" AND json_extract(message, '$.state') = 'download-start';
+            type = 'instrument/file-upload' AND json_extract(message, '$.state') = 'download-start';
 
         UPDATE activityLog SET message == json_replace(message, '$.state', 'upload-error') WHERE
-            type = "instrument/file-upload" AND json_extract(message, '$.state') = 'download-error';
+            type = 'instrument/file-upload' AND json_extract(message, '$.state') = 'download-error';
 
         UPDATE activityLog SET message == json_replace(message, '$.state', 'upload-finish') WHERE
-            type = "instrument/file-upload" AND json_extract(message, '$.state') = 'download-finish';
+            type = 'instrument/file-upload' AND json_extract(message, '$.state') = 'download-finish';
 
         UPDATE activityLogVersion SET version = 4;`,
 
@@ -97,7 +97,7 @@ export const activityLogStore = createStore({
             FROM
                 activityLog
             WHERE
-                type="instrument/connected" AND
+                type='instrument/connected' AND
                 json_valid(message) AND
                 json_extract(message, '$.sessionName') IS NOT NULL;
 
@@ -107,16 +107,16 @@ export const activityLogStore = createStore({
             FROM
                 activityLog
             WHERE
-                type="instrument/connected" AND
+                type='instrument/connected' AND
                 message IS NOT NULL AND
-                message <> "" AND
+                message <> '' AND
                 NOT json_valid(message);
 
         UPDATE activityLogVersion SET version = 5;`,
 
         // version 6
         // rename activity-log/session to activity-log/session-start
-        `UPDATE activityLog SET type="activity-log/session-start" WHERE type="activity-log/session";
+        `UPDATE activityLog SET type='activity-log/session-start' WHERE type='activity-log/session';
 
         UPDATE activityLogVersion SET version = 6;`,
 
@@ -149,7 +149,7 @@ export const activityLogStore = createStore({
             SELECT s2.id
             FROM activityLog AS s2
             WHERE
-                s2.type = "activity-log/session-start" AND
+                s2.type = 'activity-log/session-start' AND
                 (
                     (
                         json_valid(activityLog.message) AND
@@ -159,38 +159,38 @@ export const activityLogStore = createStore({
                     OR
 
                     (
-                        activityLog.message <> "" AND
+                        activityLog.message <> '' AND
                         json_extract(s2.message, '$.sessionName') = activityLog.message
                     )
                 )
 
             )
-        WHERE type = "instrument/connected";
+        WHERE type = 'instrument/connected';
 
         UPDATE activityLog
         SET sid = (
             SELECT s2.sid
             FROM activityLog AS s2
             WHERE
-                s2.type = "instrument/connected" AND
+                s2.type = 'instrument/connected' AND
                 s2.oid = activityLog.oid AND
                 s2.date < activityLog.date
             ORDER BY s2.date DESC
             LIMIT 1
         )
-        WHERE type <> "instrument/connected" AND type <> "activity-log/session-start";
+        WHERE type <> 'instrument/connected' AND type <> 'activity-log/session-start';
 
         UPDATE activityLogVersion SET version = 8;`,
 
         // version 9
-        // close sessions by searching for "instrument/disconnected"
+        // close sessions by searching for 'instrument/disconnected'
         `INSERT INTO activityLog(date, sid, oid, type, message, data, deleted)
             SELECT
-                date+1, sid, '0', 'activity-log/session-close', "", NULL, 0
+                date+1, sid, '0', 'activity-log/session-close', '', NULL, 0
             FROM
                 activityLog
             WHERE
-                type="instrument/disconnected" AND
+                type='instrument/disconnected' AND
                 sid IS NOT NULL;
 
         UPDATE activityLog
@@ -213,13 +213,13 @@ export const activityLogStore = createStore({
         // version 10
         // close sessions that are left unclosed by searching for another session-start
         `INSERT INTO activityLog(date, sid, oid, type, message, data, deleted)
-            SELECT a2.date - 1, a1.id, '0', 'activity-log/session-close', "", NULL, 0
+            SELECT a2.date - 1, a1.id, '0', 'activity-log/session-close', '', NULL, 0
             FROM
                 activityLog a1 JOIN activityLog a2 ON
-                    a2.id = (SELECT id FROM activityLog a3 WHERE a3.type="activity-log/session-start" AND a3.date > a1.date ORDER BY a3.date LIMIT 1)
+                    a2.id = (SELECT id FROM activityLog a3 WHERE a3.type='activity-log/session-start' AND a3.date > a1.date ORDER BY a3.date LIMIT 1)
             WHERE
-                a1.type="activity-log/session-start" AND
-                json_extract(a1.message, "$.sessionCloseId") IS NULL;
+                a1.type='activity-log/session-start' AND
+                json_extract(a1.message, '$.sessionCloseId') IS NULL;
 
         UPDATE activityLog
                 SET
@@ -232,7 +232,7 @@ export const activityLogStore = createStore({
                     )
                 WHERE
                     type = 'activity-log/session-start' AND
-                    json_extract(message, "$.sessionCloseId") IS NULL AND
+                    json_extract(message, '$.sessionCloseId') IS NULL AND
                     EXISTS(
                         SELECT * FROM activityLog AS activityLog2 WHERE activityLog2.type = 'activity-log/session-close' AND activityLog2.sid = activityLog.id
                     );
@@ -244,15 +244,15 @@ export const activityLogStore = createStore({
         `UPDATE activityLog
             SET date = (
                 SELECT a2.date-1 FROM activityLog a2
-                WHERE a2.type = "activity-log/session-start" AND
+                WHERE a2.type = 'activity-log/session-start' AND
                 a2.date < activityLog.date AND
                 a2.date > (SELECT a3.date FROM activityLog a3 WHERE a3.id = activityLog.sid)
             )
         WHERE
-            type = "activity-log/session-close" AND
+            type = 'activity-log/session-close' AND
             EXISTS (
                 SELECT * FROM activityLog a2
-                WHERE a2.type = "activity-log/session-start" AND
+                WHERE a2.type = 'activity-log/session-start' AND
                 a2.date < activityLog.date AND
                 a2.date > (SELECT a3.date FROM activityLog a3 WHERE a3.id = activityLog.sid)
             );
@@ -260,7 +260,7 @@ export const activityLogStore = createStore({
         UPDATE activityLogVersion SET version = 11;`,
 
         // version 12
-        `UPDATE activityLog SET oid="0" WHERE type = "activity-log/session-start";
+        `UPDATE activityLog SET oid='0' WHERE type = 'activity-log/session-start';
         UPDATE activityLogVersion SET version = 12;`,
 
         // version 13
