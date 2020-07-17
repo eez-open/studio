@@ -25,6 +25,7 @@ import { SearchResults } from "instrument/window/history/search-results";
 import { FiltersComponent } from "instrument/window/history/filters";
 import { Calendar } from "instrument/window/history/calendar";
 import { SessionList } from "instrument/window/history/session/list-view";
+import { Scrapbook } from "instrument/window/history/scrapbook";
 
 import { showAddNoteDialog } from "instrument/window/note-dialog";
 
@@ -470,6 +471,15 @@ export class HistoryView extends React.Component<{
                 container.getElement()[0]
             );
         });
+
+        factory.registerComponent("Scrapbook", function (container: any, props: any) {
+            ReactDOM.render(
+                <ThemeProvider theme={theme}>
+                    <Scrapbook appStore={appStore} history={appStore.history} />
+                </ThemeProvider>,
+                container.getElement()[0]
+            );
+        });
     }
 
     get searchResultsItem() {
@@ -516,6 +526,17 @@ export class HistoryView extends React.Component<{
         };
     }
 
+    get scrapbookItem() {
+        return {
+            id: "scrapbook",
+            type: "component",
+            componentName: "Scrapbook",
+            componentState: {},
+            title: "Scrapbook",
+            isClosable: false
+        };
+    }
+
     @computed
     get defaultLayoutConfig() {
         let content;
@@ -527,8 +548,9 @@ export class HistoryView extends React.Component<{
                         content: [
                             this.searchResultsItem,
                             this.calendarItem,
+                            this.sessionsItem,
                             this.filtersItem,
-                            this.sessionsItem
+                            this.scrapbookItem
                         ]
                     }
                 ];
@@ -536,7 +558,12 @@ export class HistoryView extends React.Component<{
                 content = [
                     {
                         type: "stack",
-                        content: [this.searchResultsItem, this.calendarItem, this.filtersItem]
+                        content: [
+                            this.searchResultsItem,
+                            this.calendarItem,
+                            this.filtersItem,
+                            this.scrapbookItem
+                        ]
                     }
                 ];
             }
@@ -545,14 +572,19 @@ export class HistoryView extends React.Component<{
                 content = [
                     {
                         type: "stack",
-                        content: [this.calendarItem, this.sessionsItem, this.filtersItem]
+                        content: [
+                            this.calendarItem,
+                            this.sessionsItem,
+                            this.filtersItem,
+                            this.scrapbookItem
+                        ]
                     }
                 ];
             } else {
                 content = [
                     {
                         type: "stack",
-                        content: [this.calendarItem, this.filtersItem]
+                        content: [this.calendarItem, this.filtersItem, this.scrapbookItem]
                     }
                 ];
             }
@@ -647,7 +679,7 @@ export class HistoryView extends React.Component<{
         return (
             <SideDock
                 ref={ref => (this.sideDock = ref)}
-                persistId={this.props.persistId + "/side-dock"}
+                persistId={this.props.persistId + "/side-dock-1"}
                 layoutId={layoutId}
                 defaultLayoutConfig={this.defaultLayoutConfig}
                 registerComponents={this.registerComponents}

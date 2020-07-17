@@ -14,7 +14,11 @@ import { Icon } from "eez-studio-ui/icon";
 
 import { Waveform } from "instrument/window/waveform/generic";
 
-import { History, IAppStore } from "instrument/window/history/history";
+import {
+    History,
+    IAppStore,
+    SelectHistoryItemsSpecification
+} from "instrument/window/history/history";
 import { IHistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,11 +93,20 @@ class ErrorBoundary extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface ISelection {
+    items: IHistoryItem[];
+    selectItems(historyItems: IHistoryItem[]): void;
+}
+
 @observer
 export class HistoryItems extends React.Component<{
     appStore: IAppStore;
-    history: History;
     historyItems: IHistoryItem[];
+    selection: ISelection;
+    selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
+    getAllItemsBetween: (fromItem: IHistoryItem, toItem: IHistoryItem) => IHistoryItem[];
+    isDeletedItemsHistory: boolean;
+    deleteSelectedHistoryItems: () => void;
 }> {
     render() {
         return this.props.historyItems.map(historyItem => {
@@ -101,10 +114,8 @@ export class HistoryItems extends React.Component<{
 
             let showCheckbox = false;
 
-            if (this.props.appStore.selectHistoryItemsSpecification) {
-                if (
-                    this.props.appStore.selectHistoryItemsSpecification.historyItemType === "chart"
-                ) {
+            if (this.props.selectHistoryItemsSpecification) {
+                if (this.props.selectHistoryItemsSpecification.historyItemType === "chart") {
                     if (historyItem instanceof Waveform) {
                         showCheckbox = true;
                     } else {
@@ -121,9 +132,7 @@ export class HistoryItems extends React.Component<{
                     EezStudio_HistoryItemEnclosure_Session: historyItem.type.startsWith(
                         "activity-log/session"
                     ),
-                    selected:
-                        !this.props.appStore.selectHistoryItemsSpecification &&
-                        historyItem.selected,
+                    selected: !this.props.selectHistoryItemsSpecification && historyItem.selected,
                     disablePreview: showCheckbox
                 }
             );
@@ -133,7 +142,7 @@ export class HistoryItems extends React.Component<{
                     key={historyItem.id}
                     className={className}
                     onMouseDown={event => {
-                        if (this.props.appStore.selectHistoryItemsSpecification) {
+                        if (this.props.selectHistoryItemsSpecification) {
                             return;
                         }
 
@@ -143,7 +152,7 @@ export class HistoryItems extends React.Component<{
                         }
                     }}
                     onClick={event => {
-                        if (this.props.appStore.selectHistoryItemsSpecification) {
+                        if (this.props.selectHistoryItemsSpecification) {
                             return;
                         }
 
@@ -155,17 +164,15 @@ export class HistoryItems extends React.Component<{
                         let historyItems;
                         if (event.ctrlKey) {
                             if (historyItem.selected) {
-                                historyItems = this.props.history.selection.items.slice();
+                                historyItems = this.props.selection.items.slice();
                                 historyItems.splice(historyItems.indexOf(historyItem), 1);
                             } else {
-                                historyItems = this.props.history.selection.items.concat([
-                                    historyItem
-                                ]);
+                                historyItems = this.props.selection.items.concat([historyItem]);
                             }
                         } else if (event.shiftKey) {
-                            if (this.props.history.selection.items.length > 0) {
-                                historyItems = this.props.history.getAllItemsBetween(
-                                    this.props.history.selection.items[0],
+                            if (this.props.selection.items.length > 0) {
+                                historyItems = this.props.getAllItemsBetween(
+                                    this.props.selection.items[0],
                                     historyItem
                                 );
                             } else {
@@ -175,23 +182,23 @@ export class HistoryItems extends React.Component<{
                             historyItems = [historyItem];
                         }
 
-                        this.props.history.selection.selectItems(historyItems);
+                        this.props.selection.selectItems(historyItems);
 
                         event.preventDefault();
                     }}
                     onContextMenu={event => {
-                        if (this.props.appStore.selectHistoryItemsSpecification) {
+                        if (this.props.selectHistoryItemsSpecification) {
                             return;
                         }
 
                         if (!historyItem.selected) {
-                            this.props.history.selection.selectItems([historyItem]);
+                            this.props.selection.selectItems([historyItem]);
                         }
 
                         const { Menu, MenuItem } = EEZStudio.electron.remote;
                         const menu = new Menu();
 
-                        if (this.props.history === this.props.appStore.deletedItemsHistory) {
+                        if (this.props.isDeletedItemsHistory) {
                             menu.append(
                                 new MenuItem({
                                     label: "Restore",
@@ -213,7 +220,7 @@ export class HistoryItems extends React.Component<{
                                 new MenuItem({
                                     label: "Delete",
                                     click: () => {
-                                        this.props.history.deleteSelectedHistoryItems();
+                                        this.props.deleteSelectedHistoryItems();
                                     }
                                 })
                             );
@@ -221,6 +228,8 @@ export class HistoryItems extends React.Component<{
 
                         menu.popup({});
                     }}
+                    draggable="true"
+                    onDragStart={event => event.dataTransfer.setData("text", historyItem.id)}
                 >
                     {showCheckbox && (
                         <input
@@ -542,8 +551,20 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
                 )}
                 <HistoryItems
                     appStore={this.props.appStore}
-                    history={this.props.history}
                     historyItems={this.props.history.items}
+                    selection={this.props.history.selection}
+                    selectHistoryItemsSpecification={
+                        this.props.appStore.selectHistoryItemsSpecification
+                    }
+                    getAllItemsBetween={(fromItem: IHistoryItem, toItem: IHistoryItem) =>
+                        this.props.history.getAllItemsBetween(fromItem, toItem)
+                    }
+                    isDeletedItemsHistory={
+                        this.props.history === this.props.appStore.deletedItemsHistory
+                    }
+                    deleteSelectedHistoryItems={() =>
+                        this.props.history.deleteSelectedHistoryItems()
+                    }
                 />
                 {this.props.history.navigator.hasNewer && (
                     <LoadMoreButton icon="material:expand_more" loadMore={this.loadNewer} />
