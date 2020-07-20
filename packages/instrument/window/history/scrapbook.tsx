@@ -162,12 +162,14 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
 
+        const rectContainer = this.div.getBoundingClientRect();
+
         const itemElements = $(this.div).find(">div.EezStudio_HistoryItemEnclosure");
-        let i;
-        let x;
-        let y;
-        let height;
-        for (i = 0; ; i++) {
+        let i = 0;
+        let x = rectContainer.left + 10;
+        let y = rectContainer.top + 10;
+        let height = 100;
+        for (i = 0; i < itemElements.length; i++) {
             const rect = itemElements[i].getBoundingClientRect();
             if (
                 event.nativeEvent.clientX >= rect.left &&
@@ -185,14 +187,11 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
                 x = rect.right;
                 y = rect.top;
                 height = rect.height;
-                i++;
-                break;
             }
         }
 
-        const rect = this.div.getBoundingClientRect();
-        this.dropMarkLeft = x - rect.left + this.div.scrollLeft;
-        this.dropMarkTop = y - rect.top + this.div.scrollTop;
+        this.dropMarkLeft = x - rectContainer.left + this.div.scrollLeft;
+        this.dropMarkTop = y - rectContainer.top + this.div.scrollTop;
         this.dropMarkHeight = height;
 
         this.insertAt = i;
