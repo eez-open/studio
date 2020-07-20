@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import { findDOMNode } from "react-dom";
 import { action } from "mobx";
 import { observer } from "mobx-react";
@@ -383,7 +382,6 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
     componentDidMount() {
         this.autoScroll();
         this.div.addEventListener("scroll", this.onScroll);
-        document.addEventListener("keydown", this.onKeyDown);
 
         this.lastItemInTheCenterId = undefined;
     }
@@ -408,7 +406,6 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
     componentWillUnmount() {
         window.cancelAnimationFrame(this.animationFrameRequestId);
         this.div.removeEventListener("scroll", this.onScroll);
-        document.removeEventListener("keydown", this.onKeyDown);
     }
 
     moveToTop() {
@@ -535,31 +532,6 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
                 }
             }
         }, 100);
-    }
-
-    selectAll() {
-        this.props.history.selection.selectItems(this.props.history.items);
-    }
-
-    @bind
-    onKeyDown(event: KeyboardEvent) {
-        if (event.target && $(event.target).parents(".modal").length > 0) {
-            // ignore if target is modal dialog
-            return;
-        }
-
-        if (event.ctrlKey && event.keyCode == 65) {
-            // Ctrl+A
-            if (event.target instanceof HTMLInputElement) {
-                return;
-            }
-
-            const historyDomNode = ReactDOM.findDOMNode(this);
-            if (historyDomNode && $(historyDomNode).is(":visible")) {
-                event.preventDefault();
-                this.selectAll();
-            }
-        }
     }
 
     @bind

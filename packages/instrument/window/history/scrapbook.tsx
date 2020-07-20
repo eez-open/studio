@@ -10,92 +10,6 @@ import { HistoryItems, CLIPBOARD_DATA_TYPE } from "instrument/window/history/lis
 import { createHistoryItem } from "instrument/window/history/item-factory";
 import { IAppStore, History } from "instrument/window/history/history";
 
-export class ScrapbookStore {
-    @observable items: IHistoryItem[] = [];
-    @observable thumbnailSize = 240;
-    selection = new Selection();
-
-    constructor(private appStore: IAppStore) {
-        const itemIdsStr = localStorage.getItem(
-            `instrument/${this.appStore.instrument!.id}/scrapbook/items`
-        );
-        if (itemIdsStr) {
-            const itemIds: string[] = JSON.parse(itemIdsStr);
-            if (itemIds) {
-                this.items = itemIds
-                    .map(itemId => {
-                        const activityLogEntry = activityLogStore.findById(itemId);
-                        if (activityLogEntry) {
-                            return createHistoryItem(activityLogEntry, this.appStore);
-                        }
-                        return undefined;
-                    })
-                    .filter(item => !!item) as IHistoryItem[];
-            }
-        }
-
-        reaction(
-            () => this.items.map(item => item.id),
-            items =>
-                localStorage.setItem(
-                    `instrument/${this.appStore.instrument!.id}/scrapbook/items`,
-                    JSON.stringify(items)
-                )
-        );
-
-        const thumbnailSizeStr = localStorage.getItem(
-            `instrument/${this.appStore.instrument!.id}/scrapbook/thumbnail-size`
-        );
-        if (thumbnailSizeStr) {
-            this.thumbnailSize = JSON.parse(thumbnailSizeStr);
-        }
-
-        reaction(
-            () => this.thumbnailSize,
-            thumbnailSize =>
-                localStorage.setItem(
-                    `instrument/${this.appStore.instrument!.id}/scrapbook/thumbnail-size`,
-                    JSON.stringify(thumbnailSize)
-                )
-        );
-    }
-
-    findIndexOfItemById(itemId: string) {
-        const item = this.items.find(item => item.id == itemId);
-        if (item) {
-            return this.items.indexOf(item);
-        }
-        return -1;
-    }
-
-    @action
-    deleteItemById(itemId: string) {
-        const i = this.findIndexOfItemById(itemId);
-        if (i != -1) {
-            this.items.splice(i, 1);
-        }
-    }
-
-    @action
-    onUpdateActivityLogEntry(activityLogEntry: IActivityLogEntry) {
-        if (activityLogEntry.message !== undefined) {
-            const i = this.findIndexOfItemById(activityLogEntry.id);
-            if (i != -1) {
-                this.items[i].message = activityLogEntry.message;
-            }
-        }
-    }
-
-    @action
-    onActivityLogEntryRemoved(activityLogEntry: IActivityLogEntry) {
-        this.deleteItemById(activityLogEntry.id);
-    }
-
-    deleteSelectedHistoryItems = action(() => {
-        this.items = this.items.filter(item => this.selection.items.indexOf(item) == -1);
-    });
-}
-
 class Selection {
     @observable items: IHistoryItem[] = [];
 
@@ -106,6 +20,128 @@ class Selection {
         this.items.forEach(historyItem => (historyItem.selected = true));
     }
 }
+
+class ScrapbookStore {
+    @observable _items: IHistoryItem[] = [];
+    @observable thumbnailSize = 240;
+    @observable showAll = true;
+    selection = new Selection();
+
+    constructor() {
+        const itemIdsStr = localStorage.getItem(`instrument/scrapbook/items`);
+        if (itemIdsStr) {
+            const itemIds: string[] = JSON.parse(itemIdsStr);
+            if (itemIds) {
+                this._items = itemIds
+                    .map(itemId => {
+                        const activityLogEntry = activityLogStore.findById(itemId);
+                        if (activityLogEntry) {
+                            return createHistoryItem(activityLogEntry);
+                        }
+                        return undefined;
+                    })
+                    .filter(item => !!item) as IHistoryItem[];
+            }
+        }
+
+        reaction(
+            () => this._items.map(item => item.id),
+            items => localStorage.setItem(`instrument/scrapbook/items`, JSON.stringify(items))
+        );
+
+        //
+
+        const thumbnailSizeStr = localStorage.getItem(`instrument/scrapbook/thumbnail-size`);
+        if (thumbnailSizeStr) {
+            this.thumbnailSize = JSON.parse(thumbnailSizeStr);
+        }
+
+        reaction(
+            () => this.thumbnailSize,
+            thumbnailSize =>
+                localStorage.setItem(
+                    `instrument/scrapbook/thumbnail-size`,
+                    JSON.stringify(thumbnailSize)
+                )
+        );
+
+        //
+
+        const showAllStr = localStorage.getItem(`instrument/scrapbook/show-all`);
+        if (showAllStr) {
+            this.showAll = JSON.parse(showAllStr);
+        }
+
+        reaction(
+            () => this.showAll,
+            showAll =>
+                localStorage.setItem(`instrument/scrapbook/show-all`, JSON.stringify(showAll))
+        );
+    }
+
+    items(appStore: IAppStore) {
+        return this.showAll
+            ? this._items
+            : this._items.filter(item => item.oid == appStore.instrument!.id);
+    }
+
+    private findIndexOfItemById(itemId: string) {
+        const item = this._items.find(item => item.id == itemId);
+        if (item) {
+            return this._items.indexOf(item);
+        }
+        return -1;
+    }
+
+    @action
+    private deleteItemById(itemId: string) {
+        const i = this.findIndexOfItemById(itemId);
+        if (i != -1) {
+            this._items.splice(i, 1);
+        }
+    }
+
+    insertBeforeItem(item: IHistoryItem | undefined, activityLogEntry: IActivityLogEntry): void {
+        let insertAt = item ? this._items.indexOf(item) : this._items.length;
+
+        item = this._items.find(item => item.id == activityLogEntry.id);
+        if (item) {
+            const i = this._items.indexOf(item);
+            if (i < insertAt) {
+                insertAt--;
+            }
+            this._items.splice(i, 1);
+            this._items.splice(insertAt, 0, item);
+        } else {
+            this._items.splice(insertAt, 0, createHistoryItem(activityLogEntry));
+        }
+    }
+
+    @action
+    onUpdateActivityLogEntry(activityLogEntry: IActivityLogEntry) {
+        if (activityLogEntry.message !== undefined) {
+            const i = this.findIndexOfItemById(activityLogEntry.id);
+            if (i != -1) {
+                this._items[i].message = activityLogEntry.message;
+            }
+        }
+    }
+
+    @action
+    onActivityLogEntryRemoved(activityLogEntry: IActivityLogEntry) {
+        this.deleteItemById(activityLogEntry.id);
+    }
+
+    deleteSelectedHistoryItems = action(() => {
+        this._items = this._items.filter(item => this.selection.items.indexOf(item) == -1);
+    });
+
+    selectAllItems = action((appStore: IAppStore) => {
+        this.selection.selectItems(this.items(appStore).slice());
+    });
+}
+
+export const theScrapbook = new ScrapbookStore();
 
 const Container = styled.div`
     position: absolute;
@@ -147,6 +183,31 @@ const DropMark = styled.div`
         border-left: 4px solid transparent;
         border-right: 4px solid transparent;
         border-bottom: 4px solid ${props => props.theme.dropPlaceColor};
+    }
+`;
+
+const HeaderContainer = styled.div`
+    flex-grow: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    label {
+        white-space: nowrap;
+    }
+
+    div:nth-child(2) {
+        display: flex;
+        align-items: center;
+
+        > span {
+            white-space: nowrap;
+            margin-right: 10px;
+        }
+
+        > input {
+            max-width: 200px;
+        }
     }
 `;
 
@@ -199,28 +260,18 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
 
     onDragLeave = action((event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
-        //this.dropMarkLeft = undefined;
+        this.dropMarkLeft = undefined;
     });
 
     onDrop = action((event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         if (this.insertAt != undefined) {
-            const items = this.props.appStore.scrapbook.items;
             const itemId = event.dataTransfer.getData(CLIPBOARD_DATA_TYPE);
             const activityLogEntry = activityLogStore.findById(itemId);
             if (activityLogEntry) {
-                const i = this.props.appStore.scrapbook.findIndexOfItemById(itemId);
-                if (i != -1) {
-                    if (i < this.insertAt) {
-                        this.insertAt--;
-                    }
-                    items.splice(i, 1);
-                }
-
-                items.splice(
-                    this.insertAt,
-                    0,
-                    createHistoryItem(activityLogEntry, this.props.appStore)
+                theScrapbook.insertBeforeItem(
+                    theScrapbook.items(this.props.appStore)[this.insertAt],
+                    activityLogEntry
                 );
             }
         }
@@ -230,15 +281,15 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
     });
 
     getAllItemsBetween = (fromItem: IHistoryItem, toItem: IHistoryItem) => {
-        const items = this.props.appStore.scrapbook.items;
+        const items = theScrapbook.items(this.props.appStore);
         const i = items.indexOf(fromItem);
         const j = items.indexOf(toItem);
         return items.slice(i, j + 1);
     };
 
     showInHistory = () => {
-        console.log(this.props.appStore.scrapbook.selection.items[0].id);
-        this.props.appStore.history.showItem(this.props.appStore.scrapbook.selection.items[0]);
+        console.log(theScrapbook.selection.items[0].id);
+        this.props.appStore.history.showItem(theScrapbook.selection.items[0]);
     };
 
     setDiv = (ref: any) => {
@@ -255,19 +306,37 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
                 }}
             >
                 <ToolbarHeader>
-                    <span style={{ marginRight: 10 }}>Thumbnail size</span>
-                    <input
-                        type="range"
-                        value={this.props.appStore.scrapbook.thumbnailSize}
-                        onChange={action(
-                            event =>
-                                (this.props.appStore.scrapbook.thumbnailSize = parseInt(
-                                    event.currentTarget.value
-                                ))
-                        )}
-                        min={48}
-                        max={480}
-                    />
+                    <HeaderContainer>
+                        <div className="form-check">
+                            <label className="form-check-label">
+                                <input
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    checked={theScrapbook.showAll}
+                                    onChange={action(
+                                        event => (theScrapbook.showAll = event.target.checked)
+                                    )}
+                                />
+                                Show all
+                            </label>
+                        </div>
+                        <div>
+                            <span>Thumbnail size</span>
+                            <input
+                                type="range"
+                                value={theScrapbook.thumbnailSize}
+                                onChange={action(
+                                    event =>
+                                        (theScrapbook.thumbnailSize = parseInt(
+                                            event.currentTarget.value
+                                        ))
+                                )}
+                                min={48}
+                                max={480}
+                                className="form-control"
+                            />
+                        </div>
+                    </HeaderContainer>
                 </ToolbarHeader>
                 <Body tabIndex={0}>
                     <Container
@@ -279,22 +348,28 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
                         tabIndex={0}
                         style={{
                             gridTemplateColumns: `repeat(auto-fit, ${
-                                26 + this.props.appStore.scrapbook.thumbnailSize
+                                26 + theScrapbook.thumbnailSize
                             }px)`
+                        }}
+                        onClick={event => {
+                            if (
+                                $(event.target).closest(".EezStudio_HistoryItemEnclosure")
+                                    .length === 0
+                            ) {
+                                theScrapbook.selection.selectItems([]);
+                            }
                         }}
                     >
                         <HistoryItems
                             appStore={this.props.appStore}
-                            historyItems={this.props.appStore.scrapbook.items}
-                            selection={this.props.appStore.scrapbook.selection}
+                            historyItems={theScrapbook.items(this.props.appStore)}
+                            selection={theScrapbook.selection}
                             selectHistoryItemsSpecification={undefined}
                             getAllItemsBetween={this.getAllItemsBetween}
                             isDeletedItemsHistory={false}
-                            deleteSelectedHistoryItems={
-                                this.props.appStore.scrapbook.deleteSelectedHistoryItems
-                            }
+                            deleteSelectedHistoryItems={theScrapbook.deleteSelectedHistoryItems}
                             viewType="thumbs"
-                            thumbnailSize={this.props.appStore.scrapbook.thumbnailSize}
+                            thumbnailSize={theScrapbook.thumbnailSize}
                             showInHistory={this.showInHistory}
                         />
                         {this.dropMarkLeft != undefined && (

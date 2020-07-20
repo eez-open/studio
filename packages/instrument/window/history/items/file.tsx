@@ -129,7 +129,6 @@ class PdfPreview extends React.Component<{
 
     constructor(props: any) {
         super(props);
-        console.log("const");
     }
 
     @action.bound

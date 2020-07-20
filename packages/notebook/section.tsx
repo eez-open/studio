@@ -42,7 +42,6 @@ import {
 import { importNotebook } from "notebook/import";
 
 import { showDeletedNotebooksDialog } from "notebook/deleted-notebooks-dialog";
-import { ScrapbookStore } from "instrument/window/history/scrapbook";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -293,8 +292,6 @@ class AppStore implements IAppStore {
     };
 
     filters: Filters = new Filters();
-
-    scrapbook: ScrapbookStore = new ScrapbookStore(this);
 
     history: History = new History(this, {
         store: itemsStore,

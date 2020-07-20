@@ -32,7 +32,7 @@ import { CommandsTree } from "instrument/window/terminal/commands-tree";
 
 import { createInstrumentListStore } from "instrument/window/lists/store";
 import { BaseList } from "instrument/window/lists/store-renderer";
-import { ScrapbookStore } from "instrument/window/history/scrapbook";
+import { theScrapbook } from "instrument/window/history/scrapbook";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -40,7 +40,6 @@ export class InstrumentAppStore implements IEditor {
     @observable instrument: InstrumentObject | undefined = undefined;
     @observable helpVisible: boolean = false;
     @observable filters: Filters = new Filters();
-    @observable scrapbook: ScrapbookStore;
     @observable selectHistoryItemsSpecification:
         | SelectHistoryItemsSpecification
         | undefined = undefined;
@@ -78,8 +77,6 @@ export class InstrumentAppStore implements IEditor {
             Priority.High,
             action(async () => {
                 this.instrument = instruments.get(this.instrumentId);
-
-                this.scrapbook = new ScrapbookStore(this);
 
                 this.helpVisible =
                     localStorage.getItem(`instrument/${this.instrumentId}/window/help-visible`) ===
@@ -160,6 +157,7 @@ export class InstrumentAppStore implements IEditor {
         EEZStudio.electron.ipcRenderer.on("redo", this.undoManager.redo);
         EEZStudio.electron.ipcRenderer.on("save", this.onSave);
         EEZStudio.electron.ipcRenderer.on("delete", this.onDeleteShortcut);
+        document.addEventListener("keydown", this.onKeyDown);
     }
 
     onDeactivate() {
@@ -167,6 +165,7 @@ export class InstrumentAppStore implements IEditor {
         EEZStudio.electron.ipcRenderer.removeListener("redo", this.undoManager.redo);
         EEZStudio.electron.ipcRenderer.removeListener("save", this.onSave);
         EEZStudio.electron.ipcRenderer.removeListener("delete", this.onDeleteShortcut);
+        document.removeEventListener("keydown", this.onKeyDown);
     }
 
     onTerminate() {
@@ -220,7 +219,40 @@ export class InstrumentAppStore implements IEditor {
             } else if (
                 $(document.activeElement).closest(".EezStudio_Scrapbook_Container").length > 0
             ) {
-                this.history.appStore.scrapbook.deleteSelectedHistoryItems();
+                theScrapbook.deleteSelectedHistoryItems();
+            }
+        }
+    }
+
+    @bind
+    onKeyDown(event: KeyboardEvent) {
+        if (event.target && $(event.target).parents(".modal").length > 0) {
+            // ignore if target is modal dialog
+            return;
+        }
+
+        if (event.ctrlKey && event.keyCode == 65) {
+            // Ctrl+A
+            if (event.target instanceof HTMLInputElement) {
+                return;
+            }
+
+            if (document.activeElement) {
+                if ($(document.activeElement).closest(".EezStudio_History_Container").length > 0) {
+                    event.preventDefault();
+                    this.history.selection.selectItems(this.history.items);
+                } else if (
+                    $(document.activeElement).closest(".EezStudio_DeletedHistory_Container")
+                        .length > 0
+                ) {
+                    event.preventDefault();
+                    this.deletedItemsHistory.selection.selectItems(this.deletedItemsHistory.items);
+                } else if (
+                    $(document.activeElement).closest(".EezStudio_Scrapbook_Container").length > 0
+                ) {
+                    event.preventDefault();
+                    theScrapbook.selectAllItems(this.history.appStore);
+                }
             }
         }
     }

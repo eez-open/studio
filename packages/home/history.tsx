@@ -17,7 +17,6 @@ import {
     DeletedHistoryItemsView
 } from "instrument/window/history/deleted-history-items-view";
 import { tabs } from "home/tabs-store";
-import { ScrapbookStore } from "instrument/window/history/scrapbook";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,8 +45,6 @@ class HomeAppStore implements IAppStore {
     };
 
     filters: Filters = new Filters();
-
-    scrapbook: ScrapbookStore = new ScrapbookStore(this);
 
     history: History = new History(this);
     deletedItemsHistory: DeletedItemsHistory = new DeletedItemsHistory(this);
