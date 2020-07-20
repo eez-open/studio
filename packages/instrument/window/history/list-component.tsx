@@ -26,6 +26,8 @@ import { IHistoryItem } from "instrument/window/history/item";
 const CONF_AUTO_RELOAD_TIMEOUT = 1000 / 30;
 const CONF_AUTO_RELOAD_Y_THRESHOLD = 20;
 
+export const CLIPBOARD_DATA_TYPE = "application/eez-studio-history-item";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const HistoryItemEnclosure = styled.div`
@@ -53,6 +55,38 @@ const HistoryItemEnclosure = styled.div`
     &.disablePreview .EezStudio_ItemPreview {
         pointer-events: none;
     }
+
+    &.thumbs {
+        .EezStudio_HistoryItemDate {
+            display: none;
+        }
+
+        .EezStudio_HistoryItemText {
+            display: none;
+        }
+
+        .EezStudio_Toolbar {
+            display: none;
+        }
+
+        .EezStudio_Icon {
+            display: none;
+        }
+
+        .EezStudio_ChartPreview {
+            padding: 0 !important;
+        }
+
+        .EezStudio_ItemPreview > img,
+        .EezStudio_ChartView_Preview {
+            width: 240px;
+        }
+
+        .EezStudio_ChartView_Preview {
+            height: 240px;
+            overflow: auto;
+        }
+    }
 `;
 
 const HistoryItemRenderError = styled.div`
@@ -60,6 +94,29 @@ const HistoryItemRenderError = styled.div`
     border-radius: 8px;
     padding: 10px;
 `;
+
+let CachedHistoryItemThumbnailEnclosure = HistoryItemEnclosure;
+let cachedHistoryItemThumbnailEnclosureThumbnailSize = 240;
+
+function getThumbnailEnclosure(thumbnailSize: number) {
+    if (thumbnailSize != cachedHistoryItemThumbnailEnclosureThumbnailSize) {
+        cachedHistoryItemThumbnailEnclosureThumbnailSize = thumbnailSize;
+
+        CachedHistoryItemThumbnailEnclosure = styled(HistoryItemEnclosure)`
+            &.thumbs {
+                .EezStudio_ItemPreview > img,
+                .EezStudio_ChartView_Preview {
+                    width: ${thumbnailSize}px;
+                }
+                .EezStudio_ChartView_Preview {
+                    height: ${thumbnailSize}px;
+                }
+            }
+        `;
+    }
+
+    return CachedHistoryItemThumbnailEnclosure;
+}
 
 class ErrorBoundary extends React.Component<
     {},
@@ -107,6 +164,9 @@ export class HistoryItems extends React.Component<{
     getAllItemsBetween: (fromItem: IHistoryItem, toItem: IHistoryItem) => IHistoryItem[];
     isDeletedItemsHistory: boolean;
     deleteSelectedHistoryItems: () => void;
+    viewType: "chat" | "thumbs";
+    thumbnailSize: number;
+    showInHistory?: () => void;
 }> {
     render() {
         return this.props.historyItems.map(historyItem => {
@@ -134,11 +194,18 @@ export class HistoryItems extends React.Component<{
                     ),
                     selected: !this.props.selectHistoryItemsSpecification && historyItem.selected,
                     disablePreview: showCheckbox
-                }
+                },
+                this.props.viewType
             );
 
+            let Enclosure = HistoryItemEnclosure;
+
+            if (this.props.viewType === "thumbs") {
+                Enclosure = getThumbnailEnclosure(this.props.thumbnailSize);
+            }
+
             return (
-                <HistoryItemEnclosure
+                <Enclosure
                     key={historyItem.id}
                     className={className}
                     onMouseDown={event => {
@@ -216,6 +283,15 @@ export class HistoryItems extends React.Component<{
                                 })
                             );
                         } else {
+                            if (this.props.showInHistory) {
+                                menu.append(
+                                    new MenuItem({
+                                        label: "Show in History",
+                                        click: this.props.showInHistory
+                                    })
+                                );
+                            }
+
                             menu.append(
                                 new MenuItem({
                                     label: "Delete",
@@ -229,7 +305,11 @@ export class HistoryItems extends React.Component<{
                         menu.popup({});
                     }}
                     draggable="true"
-                    onDragStart={event => event.dataTransfer.setData("text", historyItem.id)}
+                    onDragStart={event => {
+                        event.dataTransfer.effectAllowed = "move";
+                        event.dataTransfer.setData(CLIPBOARD_DATA_TYPE, historyItem.id);
+                    }}
+                    onDrag={() => false}
                 >
                     {showCheckbox && (
                         <input
@@ -244,7 +324,7 @@ export class HistoryItems extends React.Component<{
                         />
                     )}
                     <ErrorBoundary>{element}</ErrorBoundary>
-                </HistoryItemEnclosure>
+                </Enclosure>
             );
         });
     }
@@ -565,6 +645,8 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
                     deleteSelectedHistoryItems={() =>
                         this.props.history.deleteSelectedHistoryItems()
                     }
+                    viewType="chat"
+                    thumbnailSize={480}
                 />
                 {this.props.history.navigator.hasNewer && (
                     <LoadMoreButton icon="material:expand_more" loadMore={this.loadNewer} />

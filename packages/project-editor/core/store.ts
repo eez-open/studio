@@ -1,12 +1,4 @@
-import {
-    observable,
-    extendObservable,
-    computed,
-    action,
-    toJS,
-    reaction,
-    autorun
-} from "mobx";
+import { observable, extendObservable, computed, action, toJS, reaction, autorun } from "mobx";
 
 import { _each, _isArray, _map, _uniqWith, _find } from "eez-studio-shared/algorithm";
 
@@ -101,9 +93,9 @@ export function createObjectNavigationItem(
 ): ObjectNavigationItem | undefined {
     return object
         ? {
-            type: "object",
-            object
-        }
+              type: "object",
+              object
+          }
         : undefined;
 }
 
@@ -112,9 +104,9 @@ export function createObjectAdapterNavigationItem(
 ): ObjectAdapterNavigationItem | undefined {
     return objectAdapter
         ? {
-            type: "objectAdapter",
-            objectAdapter
-        }
+              type: "objectAdapter",
+              objectAdapter
+          }
         : undefined;
 }
 
@@ -173,7 +165,7 @@ export class SimpleNavigationStoreClass implements INavigationStore {
         this.selectedItem = navigationSelectedItem;
     }
 
-    setSelectedPanel(selectedPanel: IPanel | undefined) { }
+    setSelectedPanel(selectedPanel: IPanel | undefined) {}
 }
 
 class NavigationStoreClass implements INavigationStore {
@@ -1362,7 +1354,9 @@ export function createContextMenu(context: IContextMenuContext, object: IEezObje
             new MenuItem({
                 label: "Find All References",
                 click: () => {
-                    const { findAllReferences } = require("project-editor/core/search") as typeof SearchModule;
+                    const {
+                        findAllReferences
+                    } = require("project-editor/core/search") as typeof SearchModule;
                     findAllReferences(object);
                 }
             })
@@ -1504,7 +1498,6 @@ export function deleteItems(objects: IEezObject[], callback?: () => void) {
     }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export const DocumentStore = new DocumentStoreClass();
@@ -1516,4 +1509,4 @@ export const UndoManager = new UndoManagerClass();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-DocumentStore.clipboardDataId = "text/eez-studio-project-editor-data";
+DocumentStore.clipboardDataId = "application/eez-studio-project-editor-data";

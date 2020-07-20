@@ -34,6 +34,7 @@ import {
     showHistoryItem
 } from "instrument/window/history/history-view";
 import { FileHistoryItem } from "instrument/window/history/items/file";
+import { ISelection } from "./list-component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,6 +65,16 @@ export interface INavigationStore {
     selectedListId: string | undefined;
 }
 
+export interface IScrapbookStore {
+    items: IHistoryItem[];
+    thumbnailSize: number;
+    selection: ISelection;
+    findIndexOfItemById(itemId: string): number;
+    onUpdateActivityLogEntry(activityLogEntry: IActivityLogEntry): void;
+    onActivityLogEntryRemoved(activityLogEntry: IActivityLogEntry): void;
+    deleteSelectedHistoryItems(): void;
+}
+
 export interface IAppStore {
     selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
     history: History;
@@ -89,6 +100,8 @@ export interface IAppStore {
     navigationStore: INavigationStore;
 
     filters: Filters;
+
+    scrapbook: IScrapbookStore;
 
     findListIdByName(listName: string): string | undefined;
 }
@@ -1082,6 +1095,8 @@ export class History {
             this.sessions.onActivityLogEntryUpdated(activityLogEntry);
         }
 
+        this.appStore.scrapbook.onUpdateActivityLogEntry(activityLogEntry);
+
         const foundItem = this.findHistoryItemById(activityLogEntry.id);
         if (!foundItem) {
             return;
@@ -1106,6 +1121,9 @@ export class History {
         if (this.sessions) {
             this.sessions.onActivityLogEntryRemoved(activityLogEntry);
         }
+
+        this.appStore.scrapbook.onActivityLogEntryRemoved(activityLogEntry);
+
         this.removeActivityLogEntry(activityLogEntry);
     }
 
@@ -1194,6 +1212,30 @@ export class History {
         } else {
             this.itemInTheCenterOfTheView = undefined;
         }
+    }
+
+    async showItem(historyItem: IHistoryItem) {
+        const rows = await dbQuery(
+            `SELECT
+                    id,
+                    ${this.options.store.nonTransientAndNonLazyProperties}
+                FROM
+                    (
+                        SELECT
+                            *
+                        FROM
+                            ${this.table} AS T1
+                        WHERE
+                            ${this.oidWhereClause} AND id >= ? ${this.getFilter()}
+                        ORDER BY
+                            id
+                    )
+                LIMIT ?`
+        ).all(historyItem.id, CONF_ITEMS_BLOCK_SIZE);
+
+        this.displayRows(rows);
+
+        moveToTopOfHistory(this.appStore.navigationStore.mainHistoryView);
     }
 
     @computed

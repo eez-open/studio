@@ -11,8 +11,8 @@ export default service("pdf-services/pdf-to-png", async (data: string) => {
     var viewport = page.getViewport(1.0);
 
     var canvas = document.createElement("canvas");
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
+    canvas.height = (viewport.height * 640) / viewport.width;
+    canvas.width = 640;
 
     var context = canvas.getContext("2d");
 

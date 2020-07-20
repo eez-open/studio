@@ -84,6 +84,7 @@ export class DisconnectedHistoryItem extends HistoryItem {
         super(activityLogEntry, appStore);
     }
 
+    @computed
     get listItemElement(): JSX.Element | null {
         return <DisconnectedHistoryItemComponent historyItem={this} />;
     }

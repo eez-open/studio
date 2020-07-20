@@ -63,6 +63,7 @@ export class ConnectFailedHistoryItem extends HistoryItem {
         super(activityLogEntry, appStore);
     }
 
+    @computed
     get listItemElement(): JSX.Element | null {
         return <ConnectFailedHistoryItemComponent historyItem={this} />;
     }

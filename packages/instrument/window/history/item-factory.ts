@@ -130,6 +130,7 @@ export function createHistoryItem(
         const {
             FileHistoryItem
         } = require("instrument/window/history/items/file") as typeof FileHistoryItemModule;
+
         return new FileHistoryItem(activityLogEntry, appStore);
     }
 

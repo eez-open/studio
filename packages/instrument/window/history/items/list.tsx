@@ -164,6 +164,7 @@ export class ListHistoryItem extends HistoryItem {
         }
     }
 
+    @computed
     get listItemElement(): JSX.Element | null {
         return <ListHistoryItemComponent historyItem={this} />;
     }

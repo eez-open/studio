@@ -1,4 +1,5 @@
 import React from "react";
+import { computed } from "mobx";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
@@ -58,6 +59,7 @@ export class CreatedHistoryItem extends HistoryItem {
         super(activityLogEntry, appStore);
     }
 
+    @computed
     get listItemElement(): JSX.Element | null {
         return <CreatedHistoryItemComponent historyItem={this} />;
     }

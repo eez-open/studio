@@ -127,6 +127,11 @@ class PdfPreview extends React.Component<{
     webView: any;
     @observable zoom: boolean = false;
 
+    constructor(props: any) {
+        super(props);
+        console.log("const");
+    }
+
     @action.bound
     toggleZoom() {
         this.zoom = !this.zoom;
@@ -568,6 +573,7 @@ export class FileHistoryItem extends HistoryItem {
         );
     }
 
+    @computed
     get listItemElement(): JSX.Element | null {
         return <FileHistoryItemComponent appStore={this.appStore!} historyItem={this} />;
     }

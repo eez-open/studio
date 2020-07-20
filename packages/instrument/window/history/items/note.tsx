@@ -1,4 +1,5 @@
 import React from "react";
+import { computed } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -106,6 +107,7 @@ export class NoteHistoryItem extends HistoryItem {
         );
     }
 
+    @computed
     get listItemElement(): JSX.Element | null {
         return <NoteHistoryItemComponent historyItem={this} />;
     }

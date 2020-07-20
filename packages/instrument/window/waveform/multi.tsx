@@ -353,6 +353,7 @@ export class MultiWaveform extends HistoryItem {
         return this.linkedWaveforms[0].waveform.xAxisDefaultSubdivisionScale;
     }
 
+    @computed
     get listItemElement(): JSX.Element | null {
         return <ChartHistoryItemComponent historyItem={this} />;
     }

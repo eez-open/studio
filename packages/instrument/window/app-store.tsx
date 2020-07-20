@@ -32,6 +32,7 @@ import { CommandsTree } from "instrument/window/terminal/commands-tree";
 
 import { createInstrumentListStore } from "instrument/window/lists/store";
 import { BaseList } from "instrument/window/lists/store-renderer";
+import { ScrapbookStore } from "instrument/window/history/scrapbook";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +40,7 @@ export class InstrumentAppStore implements IEditor {
     @observable instrument: InstrumentObject | undefined = undefined;
     @observable helpVisible: boolean = false;
     @observable filters: Filters = new Filters();
+    @observable scrapbook: ScrapbookStore;
     @observable selectHistoryItemsSpecification:
         | SelectHistoryItemsSpecification
         | undefined = undefined;
@@ -76,6 +78,8 @@ export class InstrumentAppStore implements IEditor {
             Priority.High,
             action(async () => {
                 this.instrument = instruments.get(this.instrumentId);
+
+                this.scrapbook = new ScrapbookStore(this);
 
                 this.helpVisible =
                     localStorage.getItem(`instrument/${this.instrumentId}/window/help-visible`) ===
@@ -213,6 +217,10 @@ export class InstrumentAppStore implements IEditor {
                 $(document.activeElement).closest(".EezStudio_DeletedHistory_Container").length > 0
             ) {
                 this.deletedItemsHistory.deleteSelectedHistoryItems();
+            } else if (
+                $(document.activeElement).closest(".EezStudio_Scrapbook_Container").length > 0
+            ) {
+                this.history.appStore.scrapbook.deleteSelectedHistoryItems();
             }
         }
     }
