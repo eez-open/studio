@@ -9,6 +9,7 @@ import { IHistoryItem } from "instrument/window/history/item";
 import { HistoryItems, CLIPBOARD_DATA_TYPE } from "instrument/window/history/list-component";
 import { createHistoryItem } from "instrument/window/history/item-factory";
 import { IAppStore, History } from "instrument/window/history/history";
+import { instruments } from "instrument/instrument-object";
 
 class Selection {
     @observable items: IHistoryItem[] = [];
@@ -19,6 +20,13 @@ class Selection {
         this.items = historyItems;
         this.items.forEach(historyItem => (historyItem.selected = true));
     }
+}
+
+function getAppStore(instrumentId: string) {
+    const instrument = instruments.get(instrumentId);
+    const appStore = instrument?.getEditor();
+    appStore?.onCreate();
+    return appStore;
 }
 
 class ScrapbookStore {
@@ -36,7 +44,10 @@ class ScrapbookStore {
                     .map(itemId => {
                         const activityLogEntry = activityLogStore.findById(itemId);
                         if (activityLogEntry) {
-                            return createHistoryItem(activityLogEntry);
+                            return createHistoryItem(
+                                activityLogEntry,
+                                getAppStore(activityLogEntry.oid)
+                            );
                         }
                         return undefined;
                     })
@@ -113,7 +124,11 @@ class ScrapbookStore {
             this._items.splice(i, 1);
             this._items.splice(insertAt, 0, item);
         } else {
-            this._items.splice(insertAt, 0, createHistoryItem(activityLogEntry));
+            this._items.splice(
+                insertAt,
+                0,
+                createHistoryItem(activityLogEntry, getAppStore(activityLogEntry.oid))
+            );
         }
     }
 
@@ -269,8 +284,9 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
             const itemId = event.dataTransfer.getData(CLIPBOARD_DATA_TYPE);
             const activityLogEntry = activityLogStore.findById(itemId);
             if (activityLogEntry) {
+                const items = theScrapbook.items(this.props.appStore);
                 theScrapbook.insertBeforeItem(
-                    theScrapbook.items(this.props.appStore)[this.insertAt],
+                    this.insertAt < items.length ? items[this.insertAt] : undefined,
                     activityLogEntry
                 );
             }
@@ -297,6 +313,10 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
     };
 
     render() {
+        if (location.href.indexOf("home/index.html") == -1) {
+            return null;
+        }
+
         return (
             <VerticalHeaderWithBody
                 style={{

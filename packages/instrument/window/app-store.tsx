@@ -69,9 +69,16 @@ export class InstrumentAppStore implements IEditor {
     autorunDisposer: any;
     reactionDisposer: any;
 
+    _created = false;
+
     constructor(private instrumentId: string) {}
 
     onCreate() {
+        if (this._created) {
+            return;
+        }
+        this._created = true;
+
         scheduleTask(
             "Load instrument",
             Priority.High,
