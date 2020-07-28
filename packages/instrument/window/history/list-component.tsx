@@ -85,6 +85,10 @@ const HistoryItemEnclosure = styled.div`
             height: 240px;
             overflow: auto;
         }
+
+        .EezStudio_HistoryItem_File_Note {
+            min-width: auto;
+        }
     }
 `;
 

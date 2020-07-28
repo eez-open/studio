@@ -304,7 +304,6 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
     };
 
     showInHistory = () => {
-        console.log(theScrapbook.selection.items[0].id);
         this.props.appStore.history.showItem(theScrapbook.selection.items[0]);
     };
 
