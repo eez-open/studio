@@ -40,6 +40,7 @@ interface ShortcutDialogProps {
     codeError: string | undefined;
     codeErrorLineNumber: number | undefined;
     codeErrorColumnNumber: number | undefined;
+    hideCodeEditor: boolean | undefined;
 }
 
 @observer
@@ -91,7 +92,10 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
         ],
         actionCode: [
             () => {
-                if (this.shortcut.action!.data.trim() === "") {
+                if (
+                    this.props.hideCodeEditor !== true &&
+                    this.shortcut.action!.data.trim() === ""
+                ) {
                     return VALIDATION_MESSAGE_REQUIRED;
                 }
                 return null;
@@ -352,19 +356,21 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
                         />
                     )}
 
-                    <CodeEditorProperty
-                        name={"Action code" + (this.isExtensionShortcut ? " (read only)" : "")}
-                        value={this.shortcut.action!.data}
-                        onChange={action((value: string) => {
-                            this.codeError = undefined;
-                            this.shortcut.action!.data = value;
-                        })}
-                        errors={this.codeErrors}
-                        readOnly={this.isExtensionShortcut}
-                        mode={this.codeEditorMode}
-                        lineNumber={this.props.codeErrorLineNumber}
-                        columnNumber={this.props.codeErrorColumnNumber}
-                    />
+                    {this.props.hideCodeEditor !== true && (
+                        <CodeEditorProperty
+                            name={"Action code" + (this.isExtensionShortcut ? " (read only)" : "")}
+                            value={this.shortcut.action!.data}
+                            onChange={action((value: string) => {
+                                this.codeError = undefined;
+                                this.shortcut.action!.data = value;
+                            })}
+                            errors={this.codeErrors}
+                            readOnly={this.isExtensionShortcut}
+                            mode={this.codeEditorMode}
+                            lineNumber={this.props.codeErrorLineNumber}
+                            columnNumber={this.props.codeErrorColumnNumber}
+                        />
+                    )}
 
                     {this.shortcut.action!.type !== "micropython" && (
                         <BooleanProperty
@@ -432,7 +438,8 @@ export function showShortcutDialog(
     callback: (shortcut: Partial<IShortcut>) => void,
     codeError?: string,
     codeErrorLineNumber?: number,
-    codeErrorColumnNumber?: number
+    codeErrorColumnNumber?: number,
+    hideCodeEditor?: boolean
 ) {
     showDialog(
         <ShortcutDialog
@@ -443,6 +450,7 @@ export function showShortcutDialog(
             codeError={codeError}
             codeErrorLineNumber={codeErrorLineNumber}
             codeErrorColumnNumber={codeErrorColumnNumber}
+            hideCodeEditor={hideCodeEditor}
         />
     );
 
