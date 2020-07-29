@@ -6,6 +6,7 @@ import { bind } from "bind-decorator";
 import { stringCompare } from "eez-studio-shared/string";
 import { validators } from "eez-studio-shared/validation";
 import { readTextFile } from "eez-studio-shared/util-electron";
+import { _map } from "eez-studio-shared/algorithm";
 
 import styled from "eez-studio-ui/styled-components";
 import { AlertDanger } from "eez-studio-ui/alert";
@@ -13,15 +14,22 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { List } from "eez-studio-ui/list";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
 import { CodeEditor } from "eez-studio-ui/code-editor";
-import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    ToolbarHeader,
+    Header,
+    Body
+} from "eez-studio-ui/header-with-body";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { confirm } from "eez-studio-ui/dialog-electron";
 import { Icon } from "eez-studio-ui/icon";
 import * as notification from "eez-studio-ui/notification";
+import { Toolbar } from "eez-studio-ui/toolbar";
 
 import { IShortcut } from "shortcuts/interfaces";
 import { SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } from "shortcuts/shortcuts";
 import { DEFAULT_TOOLBAR_BUTTON_COLOR } from "shortcuts/toolbar-button-colors";
+import { showShortcutDialog } from "shortcuts/shortcut-dialog";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { executeShortcut, isShorcutRunning, stopActiveShortcut } from "instrument/window/script";
@@ -373,6 +381,64 @@ class MasterView extends React.Component<{
     }
 }
 
+const HeaderContainer = styled(Header)`
+    padding: 10px;
+    border-bottom: 1px solid ${props => props.theme.borderColor};
+`;
+
+@observer
+export class ScriptHeader extends React.Component<{ appStore: InstrumentAppStore }> {
+    editShortcut = () => {
+        const selectedScript = this.props.appStore.scriptsModel.selectedScript;
+        if (!selectedScript) {
+            return;
+        }
+
+        showShortcutDialog(
+            this.props.appStore.shortcutsStore,
+            this.props.appStore.groupsStore,
+            selectedScript,
+            shortcut => {
+                this.props.appStore.shortcutsStore.updateShortcut!(shortcut);
+            },
+            undefined,
+            undefined,
+            undefined,
+            true
+        );
+    };
+
+    render() {
+        return (
+            <HeaderContainer>
+                <Toolbar>
+                    <ButtonAction
+                        text="Edit Shortcut"
+                        className="btn-secondary"
+                        title="Edit shortcut"
+                        onClick={this.editShortcut}
+                    />
+                </Toolbar>
+            </HeaderContainer>
+        );
+    }
+}
+
+@observer
+export class DetailsView extends React.Component<{ appStore: InstrumentAppStore }> {
+    render() {
+        const { appStore } = this.props;
+        return this.props.appStore.scriptsModel.selectedScript ? (
+            <VerticalHeaderWithBody>
+                <ScriptHeader appStore={appStore} />
+                <Body>
+                    <ScriptView appStore={appStore} />
+                </Body>
+            </VerticalHeaderWithBody>
+        ) : null;
+    }
+}
+
 @observer
 export class ScriptsEditor extends React.Component<{ appStore: InstrumentAppStore }> {
     render() {
@@ -398,7 +464,7 @@ export class ScriptsEditor extends React.Component<{ appStore: InstrumentAppStor
                             (script: IShortcut) => (navigationStore.selectedScriptId = script.id)
                         )}
                     />
-                    <ScriptView appStore={appStore} />
+                    <DetailsView appStore={appStore} />
                 </Splitter>
 
                 {scriptsModel.terminalVisible && appStore.instrument && (
