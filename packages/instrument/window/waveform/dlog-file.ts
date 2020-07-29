@@ -234,7 +234,17 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
 
                 yAxisIndex--;
                 while (yAxisIndex >= yAxes.length) {
-                    yAxes.push(JSON.parse(JSON.stringify(yAxis)));
+                    yAxes.push({
+                        unit: yAxis.unit,
+                        range: yAxis.range
+                            ? {
+                                  min: yAxis.range.min,
+                                  max: yAxis.range.max
+                              }
+                            : undefined,
+                        label: yAxis.label,
+                        channelIndex: yAxis.channelIndex
+                    });
                 }
 
                 fieldDataLength -= 1;

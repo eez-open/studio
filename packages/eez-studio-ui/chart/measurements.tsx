@@ -1181,6 +1181,14 @@ export class ChartMeasurements extends React.Component<{
             goldenLayout.registerComponent("MeasurementValue", function () {});
             goldenLayout.init();
 
+            goldenLayout.root.getItemsByType("component").map((contentItem: any) => {
+                const measurement = this.props.measurementsController.measurements.find(
+                    measurement => measurement.measurementId === contentItem.config.id
+                );
+
+                contentItem.setTitle(measurement!.chartPanelTitle);
+            });
+
             goldenLayout.root
                 .getItemsByType("stack")
                 .map(

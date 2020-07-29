@@ -28,30 +28,35 @@ export interface ISession {
 
 export class HistorySessions {
     constructor(public history: History) {
-        autorun(() => {
-            let newActiveSession: SessionHistoryItem | undefined;
+        autorun(
+            () => {
+                let newActiveSession: SessionHistoryItem | undefined;
 
-            if (activeSession.id) {
-                const activityLogEntry = activityLogStore.findById(activeSession.id);
-                if (activityLogEntry) {
-                    newActiveSession = createHistoryItem(
-                        activityLogEntry,
-                        this.history.appStore
-                    ) as SessionHistoryItem;
+                if (activeSession.id) {
+                    const activityLogEntry = activityLogStore.findById(activeSession.id);
+                    if (activityLogEntry) {
+                        newActiveSession = createHistoryItem(
+                            activityLogEntry,
+                            this.history.appStore
+                        ) as SessionHistoryItem;
+                    }
+                } else {
+                    newActiveSession = undefined;
                 }
-            } else {
-                newActiveSession = undefined;
+
+                const newMessage = activeSession.message;
+
+                runInAction(() => {
+                    this.activeSession = newActiveSession;
+                    if (this.activeSession && newMessage) {
+                        this.activeSession.message = newMessage;
+                    }
+                });
+            },
+            {
+                delay: 100
             }
-
-            const newMessage = activeSession.message;
-
-            runInAction(() => {
-                this.activeSession = newActiveSession;
-                if (this.activeSession && newMessage) {
-                    this.activeSession.message = newMessage;
-                }
-            });
-        });
+        );
     }
 
     @observable sessions: ISession[] = [];

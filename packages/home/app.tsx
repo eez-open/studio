@@ -195,7 +195,7 @@ class AppComponent extends React.Component {
         );
     }
 
-    @computed get addTabPopuo() {
+    @computed get addTabPopup() {
         return theAddTabPopupStuff.anythingToAdd && <AddTabPopup />;
     }
 
@@ -211,7 +211,7 @@ class AppComponent extends React.Component {
                 <AppHeader>
                     <TabsView
                         tabs={tabs.tabs}
-                        addTabPopup={this.addTabPopuo}
+                        addTabPopup={this.addTabPopup}
                         addTabAttention={this.addTabAttention}
                     />
                     {appStore.history.sessions.activeSession && (

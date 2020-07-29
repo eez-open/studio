@@ -186,7 +186,9 @@ export abstract class AxisController {
         public axisModel: IAxisModel
     ) {}
 
-    unit: IUnit = this.axisModel.unit;
+    get unit() {
+        return this.axisModel.unit;
+    }
 
     @observable labelTextsWidth: number = 0;
     @observable labelTextsHeight: number = 0;

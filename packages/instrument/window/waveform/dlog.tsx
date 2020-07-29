@@ -4,7 +4,7 @@ import { observable, computed, reaction, toJS } from "mobx";
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
-import { IUnit, TIME_UNIT, UNKNOWN_UNIT, UNITS } from "eez-studio-shared/units";
+import { TIME_UNIT, UNKNOWN_UNIT, UNITS } from "eez-studio-shared/units";
 import { Point } from "eez-studio-shared/geometry";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { log } from "eez-studio-shared/activity-log";
@@ -43,10 +43,10 @@ import { IDlog, IDlogYAxis, decodeDlog, Scale } from "instrument/window/waveform
 ////////////////////////////////////////////////////////////////////////////////
 
 class DlogWaveformAxisModel implements IAxisModel {
-    unit: IUnit;
+    constructor(public yAxis: IDlogYAxis, public semiLogarithmic?: { a: number; b: number }) {}
 
-    constructor(public yAxis: IDlogYAxis, public semiLogarithmic?: { a: number; b: number }) {
-        this.unit = yAxis.unit;
+    get unit() {
+        return this.yAxis.unit;
     }
 
     get minValue() {

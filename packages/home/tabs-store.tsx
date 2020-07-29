@@ -2,7 +2,6 @@ import React from "react";
 import { observable, action, runInAction, reaction, autorun, computed } from "mobx";
 
 import { onSimpleMessage } from "eez-studio-shared/util";
-import { isRenderer } from "eez-studio-shared/util-electron";
 
 import { loadPreinstalledExtension, extensions } from "eez-studio-shared/extensions/extensions";
 import { IEditor, IHomeSection } from "eez-studio-shared/extensions/extension";
@@ -551,7 +550,7 @@ class Tabs {
         this.viewDeletedHistory = true;
     }
 
-    @action
+    @action.bound
     navigateToSessionsList() {
         this.openTabById("history", true);
         this.viewDeletedHistory = false;
@@ -577,6 +576,6 @@ class Tabs {
 
 export let tabs: Tabs;
 
-if (isRenderer()) {
+export function loadTabs() {
     tabs = new Tabs();
 }

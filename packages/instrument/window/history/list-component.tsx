@@ -121,12 +121,7 @@ function getThumbnailEnclosure(thumbnailSize: number) {
     return CachedHistoryItemThumbnailEnclosure;
 }
 
-class ErrorBoundary extends React.Component<
-    {},
-    {
-        hasError: boolean;
-    }
-> {
+class ErrorBoundary extends React.Component<{ id: string }, { hasError: boolean }> {
     constructor(props: any) {
         super(props);
         this.state = { hasError: false };
@@ -143,7 +138,9 @@ class ErrorBoundary extends React.Component<
     render() {
         if (this.state.hasError) {
             return (
-                <HistoryItemRenderError>Error while rendering history item!</HistoryItemRenderError>
+                <HistoryItemRenderError>
+                    Error while rendering history item {this.props.id}!
+                </HistoryItemRenderError>
             );
         }
 
@@ -326,7 +323,7 @@ export class HistoryItems extends React.Component<{
                             }}
                         />
                     )}
-                    <ErrorBoundary>{element}</ErrorBoundary>
+                    <ErrorBoundary id={historyItem.id}>{element}</ErrorBoundary>
                 </Enclosure>
             );
         });

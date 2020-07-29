@@ -9,6 +9,7 @@ import { ThemeProvider } from "eez-studio-ui/styled-components";
 import * as notification from "eez-studio-ui/notification";
 
 import { handleDragAndDrop } from "home/drag-and-drop";
+import { loadTabs } from "home/tabs-store";
 
 import * as ImportInstrumentDefinitionModule from "instrument/import-instrument-definition";
 
@@ -37,19 +38,19 @@ EEZStudio.electron.ipcRenderer.on(
 );
 
 async function main() {
+    const { loadExtensions } = await import("eez-studio-shared/extensions/extensions");
+    await loadExtensions();
+
+    loadTabs();
+
     const { App } = await import("home/app");
     ReactDOM.render(
         <ThemeProvider theme={theme}>
-            <>
-                <App />
-                {notification.container}
-            </>
+            <App />
+            {notification.container}
         </ThemeProvider>,
         document.getElementById("EezStudio_Content")
     );
-
-    const { loadExtensions } = await import("eez-studio-shared/extensions/extensions");
-    loadExtensions();
 
     handleDragAndDrop();
 }

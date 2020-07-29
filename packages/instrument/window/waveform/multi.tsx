@@ -3,7 +3,7 @@ import { observable, computed, action, runInAction, reaction, toJS } from "mobx"
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { objectEqual, objectClone, formatDateTimeLong } from "eez-studio-shared/util";
+import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
 import { TIME_UNIT } from "eez-studio-shared/units";
@@ -44,11 +44,6 @@ export type IWaveformLink = {
     label: string;
     color: string;
     colorInverse: string;
-};
-
-type IMultiWaveformHistoryItemMessage = {
-    waveformLinks: IWaveformLink[];
-    viewOptions: ViewOptions;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -211,8 +206,6 @@ export class MultiWaveform extends HistoryItem {
             }
         );
 
-        this.measurements = new MeasurementsModel(message.measurements);
-
         // save measurements when changed
         reaction(
             () => toJS(this.measurements),
@@ -246,7 +239,14 @@ export class MultiWaveform extends HistoryItem {
     viewOptions: ViewOptions;
 
     rulers: RulersModel;
-    measurements: MeasurementsModel;
+
+    @computed get messageObject() {
+        return JSON.parse(this.message);
+    }
+
+    @computed get measurements() {
+        return new MeasurementsModel(this.messageObject.measurements);
+    }
 
     @computed
     get linkedWaveforms() {
@@ -262,14 +262,6 @@ export class MultiWaveform extends HistoryItem {
                 };
             })
             .filter(waveformLink => !!waveformLink.waveform);
-    }
-
-    @computed
-    get multiWaveformHistoryItemMessage(): IMultiWaveformHistoryItemMessage {
-        return {
-            waveformLinks: this.waveformLinks,
-            viewOptions: this.viewOptions
-        };
     }
 
     @computed
@@ -305,9 +297,9 @@ export class MultiWaveform extends HistoryItem {
     chartsController: ChartsController;
 
     createChartsController(mode: ChartMode): ChartsController {
-        if (this.chartsController && this.chartsController.mode === mode) {
-            return this.chartsController;
-        }
+        // if (this.chartsController && this.chartsController.mode === mode) {
+        //     return this.chartsController;
+        // }
 
         const chartsController = new MultiWaveformChartsController(
             this,
@@ -524,7 +516,7 @@ class MultiWaveformConfigurationDialog extends React.Component<
             )
         ) {
             const multiWaveformHistoryItemMessage = Object.assign(
-                objectClone(this.props.multiWaveform.multiWaveformHistoryItemMessage),
+                JSON.parse(this.props.multiWaveform.message),
                 {
                     waveformLinks
                 }
