@@ -408,15 +408,29 @@ export class ScriptHeader extends React.Component<{ appStore: InstrumentAppStore
         );
     };
 
+    searchAndReplace = action(() => {
+        if (this.props.appStore.scriptsModel.codeEditor) {
+            this.props.appStore.scriptsModel.codeEditor.openSearchbox();
+        }
+    });
+
     render() {
         return (
             <HeaderContainer>
-                <Toolbar>
+                <Toolbar style={{ display: "flex", justifyContent: "space-between" }}>
                     <ButtonAction
                         text="Edit Shortcut"
-                        className="btn-secondary"
+                        className="btn-secondary btn-sm"
                         title="Edit shortcut"
                         onClick={this.editShortcut}
+                    />
+                    <ButtonAction
+                        text="Search and replace"
+                        icon="material:search"
+                        iconSize={20}
+                        className="btn-secondary btn-sm"
+                        title="Search and replace"
+                        onClick={this.searchAndReplace}
                     />
                 </Toolbar>
             </HeaderContainer>

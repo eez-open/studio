@@ -108,19 +108,16 @@ export class IconAction extends React.Component<
 }
 
 @observer
-export class ButtonAction extends React.Component<
-    {
-        text: string;
-        icon?: string;
-        iconSize?: number;
-        title: string;
-        onClick?: (event: any) => void;
-        enabled?: boolean;
-        className?: string;
-        style?: React.CSSProperties;
-    },
-    {}
-> {
+export class ButtonAction extends React.Component<{
+    text: string;
+    icon?: string;
+    iconSize?: number;
+    title: string;
+    onClick?: (event: any) => void;
+    enabled?: boolean;
+    className?: string;
+    style?: React.CSSProperties;
+}> {
     render() {
         const { style, icon, iconSize, text } = this.props;
         let className = classNames("EezStudio_ButtonAction btn", this.props.className);

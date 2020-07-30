@@ -58,15 +58,16 @@ function createEditor(
         if ((window as any).ace) {
             aceReady();
         } else {
-            addScript("../../libs/brace-0.8.0/index.min.js").then(() => {
+            addScript("../../libs/brace-0.11.1/index.js").then(() => {
                 Promise.all([
-                    addScript("../../libs/brace-0.8.0/mode/c_cpp.min.js"),
-                    addScript("../../libs/brace-0.8.0/mode/css.js"),
-                    addScript("../../libs/brace-0.8.0/mode/json.min.js"),
-                    addScript("../../libs/brace-0.8.0/mode/javascript.js"),
-                    addScript("../../libs/brace-0.8.0/mode/python.js"),
-                    addScript("../../libs/brace-0.8.0/mode/scpi.js"),
-                    addScript("../../libs/brace-0.8.0/theme/github.js")
+                    addScript("../../libs/brace-0.11.1/mode/c_cpp.js"),
+                    addScript("../../libs/brace-0.11.1/mode/css.js"),
+                    addScript("../../libs/brace-0.11.1/mode/json.js"),
+                    addScript("../../libs/brace-0.11.1/mode/javascript.js"),
+                    addScript("../../libs/brace-0.11.1/mode/python.js"),
+                    addScript("../../libs/brace-0.11.1/mode/scpi.js"),
+                    addScript("../../libs/brace-0.11.1/theme/github.js"),
+                    addScript("../../libs/brace-0.11.1/ext/searchbox.js")
                 ]).then(aceReady);
             });
         }
@@ -104,6 +105,10 @@ function onEditorEvent(editor: any, eventName: string, handler: any) {
 function destroyEditor(editor: any) {
     editor.renderer.freeze();
     editor.destroy();
+}
+
+function openSearchbox(editor: any) {
+    editor.execCommand("find");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,6 +166,10 @@ export class CodeEditor extends React.Component<CodeEditorProps, {}> {
 
     redo() {
         redo(this.editor);
+    }
+
+    openSearchbox() {
+        openSearchbox(this.editor);
     }
 
     @bind
