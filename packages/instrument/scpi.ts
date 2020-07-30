@@ -33,7 +33,7 @@ export interface IParameter {
     description?: string;
 }
 
-export type ResponseType =
+export type IResponseTypeType =
     | "any"
     | "nr1"
     | "nr2"
@@ -46,9 +46,13 @@ export type ResponseType =
     | "non-standard-data-block"
     | "discrete";
 
-export interface IResponse {
-    type: ResponseType;
+export interface IResponseType {
+    type: IResponseTypeType;
     enumeration?: string;
+}
+
+export interface IResponse {
+    type: IResponseType[];
     description?: string;
 }
 
@@ -69,6 +73,13 @@ export interface ISubsystem {
 export function getSdlSemanticTypeForParameter(parameter: IParameter) {
     if (parameter.type[0]) {
         return getSdlSemanticType(parameter.type[0].type);
+    }
+    return "Unknown";
+}
+
+export function getSdlSemanticTypeForResponse(response: IResponse) {
+    if (response.type[0]) {
+        return getSdlSemanticType(response.type[0].type);
     }
     return "Unknown";
 }
@@ -109,7 +120,7 @@ export function getSdlParameterType(parameterType: IParameterType) {
     return "<UnknownType />";
 }
 
-export function getSdlSemanticType(responseType: ResponseType | IParameterTypeType) {
+export function getSdlSemanticType(responseType: IParameterTypeType | IResponseTypeType) {
     if (responseType === "nr1") {
         return "Integer";
     }
@@ -153,7 +164,7 @@ export function getSdlSemanticType(responseType: ResponseType | IParameterTypeTy
     return "Unknown";
 }
 
-export function getSdlResponseType(response: IResponse) {
+export function getSdlResponseType(response: IResponseType) {
     if (response.type === "any") {
         return "<Any />";
     }

@@ -19,7 +19,12 @@ import {
     getParent
 } from "project-editor/core/object";
 
-import { IParameterType, IParameterTypeType, ResponseType } from "instrument/scpi";
+import {
+    IParameterType,
+    IParameterTypeType,
+    IResponseType,
+    IResponseTypeType
+} from "instrument/scpi";
 
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
@@ -51,13 +56,7 @@ export class ScpiParameterType extends EezObject implements IParameterType {
         properties: [
             {
                 name: "type",
-                type: PropertyType.Enum,
-                enumItems: [
-                    { id: "numeric" },
-                    { id: "boolean" },
-                    { id: "string" },
-                    { id: "discrete" }
-                ]
+                type: PropertyType.String
             },
             {
                 name: "enumeration",
@@ -89,15 +88,24 @@ export class ScpiParameterType extends EezObject implements IParameterType {
     }
 }
 
-function getScpiType(object: ScpiParameter, type: IParameterTypeType) {
-    return object.type.find(scpiType => scpiType.type === type);
+function getScpiType(
+    object: ScpiParameter | ScpiResponse,
+    type: IParameterTypeType | IResponseTypeType
+) {
+    return object.type.find(
+        (scpiType: ScpiParameterType | ScpiResponseType) =>
+            scpiType.type === type || (scpiType.type === ("numeric" as any) && type === "nr3")
+    );
 }
 
-function isScpiType(object: ScpiParameter, type: IParameterTypeType) {
+function isScpiType(
+    object: ScpiParameter | ScpiResponse,
+    type: IParameterTypeType | IResponseTypeType
+) {
     return !!getScpiType(object, type);
 }
 
-function getNumericType(object: ScpiParameter) {
+function getNumericType(object: ScpiParameter | ScpiResponse) {
     if (isScpiType(object, "nr2")) {
         return "nr2";
     }
@@ -108,7 +116,7 @@ function getNumericType(object: ScpiParameter) {
     return "nr1";
 }
 
-function getDiscreteTypeEnumeration(object: ScpiParameter) {
+function getDiscreteTypeEnumeration(object: ScpiParameter | ScpiResponse) {
     const discreteType = getScpiType(object, "discrete");
     if (discreteType) {
         return discreteType.enumeration;
@@ -372,42 +380,238 @@ export class ScpiParameter extends EezObject implements IScpiParameter {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class ScpiResponseType extends EezObject implements IResponseType {
+    @observable type: IResponseTypeType;
+    @observable enumeration?: string;
+
+    static classInfo: ClassInfo = {
+        label: (scpiType: ScpiResponseType) => {
+            if (scpiType.type === "discrete") {
+                return `Discrete<${scpiType.enumeration || ""}>`;
+            } else {
+                return humanize(scpiType.type);
+            }
+        },
+        properties: [
+            {
+                name: "type",
+                type: PropertyType.String
+            },
+            {
+                name: "enumeration",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "scpi/enums"
+            }
+        ],
+        defaultValue: {
+            type: "numeric"
+        }
+    };
+
+    check(object: IEezObject) {
+        const messages: output.Message[] = [];
+
+        if (!this.type) {
+            messages.push(output.propertyNotSetMessage(this, "type"));
+        } else if (this.type === "discrete") {
+            if (!this.enumeration) {
+                messages.push(output.propertyNotSetMessage(this, "enumeration"));
+            } else {
+                if (!findScpiEnum(this.enumeration)) {
+                    messages.push(output.propertyNotFoundMessage(this, "enumeration"));
+                }
+            }
+        }
+
+        return messages;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export interface IScpiResponse {
-    type: ResponseType;
-    enumeration?: string;
+    type: IResponseType[];
     description?: string;
 }
 
 export class ScpiResponse extends EezObject implements IScpiResponse {
-    @observable type: ResponseType;
-    @observable enumeration?: string;
+    @observable type: ScpiResponseType[];
     @observable description?: string;
 
     static classInfo: ClassInfo = {
         properties: [
             {
                 name: "type",
-                type: PropertyType.Enum,
-                enumItems: [
-                    { id: "nr1", label: "Integer (NR1)" },
-                    { id: "nr2", label: "Decimal (NR2)" },
-                    { id: "nr3", label: "Real (NR3)" },
-                    { id: "boolean" },
-                    { id: "quoted-string" },
-                    { id: "arbitrary-ascii" },
-                    { id: "list-of-quoted-string" },
-                    { id: "data-block" },
-                    { id: "non-standard-data-block" },
-                    { id: "discrete" },
-                    { id: "any" }
-                ]
-            },
-            {
-                name: "enumeration",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "scpi/enums",
-                hideInPropertyGrid: (response: ScpiResponse) => {
-                    return response.type !== "discrete";
+                type: PropertyType.Array,
+                typeClass: ScpiResponseType,
+                defaultValue: [],
+                onSelect: async (object: ScpiResponse, propertyInfo: PropertyInfo) => {
+                    const result = await showGenericDialog({
+                        dialogDefinition: {
+                            title: "Select one or more type",
+                            size: "medium",
+                            fields: [
+                                {
+                                    name: "numeric",
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
+                                },
+                                {
+                                    name: "numericType",
+                                    displayName: "",
+                                    type: "enum",
+                                    enumItems: [
+                                        { id: "nr1", label: "Integer (NR1)" },
+                                        { id: "nr2", label: "Decimal (NR2)" },
+                                        { id: "nr3", label: "Real (NR3)" }
+                                    ],
+                                    visible: (values: any) => {
+                                        return !values.any && values.numeric;
+                                    }
+                                },
+                                {
+                                    name: "boolean",
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
+                                },
+                                {
+                                    name: "string",
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
+                                },
+                                {
+                                    name: "arbitraryAscii",
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
+                                },
+                                {
+                                    name: "listOfQuotedString",
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
+                                },
+                                {
+                                    name: "dataBlock",
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
+                                },
+                                {
+                                    name: "nonStandardDataBlock",
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
+                                },
+                                {
+                                    name: "discrete",
+                                    type: "boolean",
+                                    visible: (values: any) => {
+                                        return !values.any;
+                                    }
+                                },
+                                {
+                                    name: "enumeration",
+                                    type: "enum",
+                                    enumItems: () => {
+                                        return getScpiEnumsAsDialogEnumItems();
+                                    },
+                                    visible: (values: any) => {
+                                        return !values.any && values.discrete;
+                                    }
+                                },
+                                {
+                                    name: "any",
+                                    type: "boolean"
+                                }
+                            ]
+                        },
+                        values: {
+                            any: isScpiType(object, "any"),
+                            numeric:
+                                isScpiType(object, "nr1") ||
+                                isScpiType(object, "nr2") ||
+                                isScpiType(object, "nr3"),
+                            numericType: getNumericType(object),
+                            boolean: isScpiType(object, "boolean"),
+                            string: isScpiType(object, "quoted-string"),
+                            dataBlock: isScpiType(object, "data-block"),
+                            channelList: isScpiType(object, "channel-list"),
+                            discrete: isScpiType(object, "discrete"),
+                            enumeration: getDiscreteTypeEnumeration(object)
+                        }
+                    });
+
+                    const type: IResponseType[] = [];
+
+                    if (result.values.any) {
+                        type.push({
+                            type: "any"
+                        });
+                    } else {
+                        if (result.values.numeric) {
+                            type.push({
+                                type: result.values.numericType
+                            });
+                        }
+
+                        if (result.values.boolean) {
+                            type.push({
+                                type: "boolean"
+                            });
+                        }
+
+                        if (result.values.string) {
+                            type.push({
+                                type: "quoted-string"
+                            });
+                        }
+
+                        if (result.values.arbitraryAscii) {
+                            type.push({
+                                type: "arbitrary-ascii"
+                            });
+                        }
+
+                        if (result.values.listOfQuotedString) {
+                            type.push({
+                                type: "list-of-quoted-string"
+                            });
+                        }
+
+                        if (result.values.dataBlock) {
+                            type.push({
+                                type: "data-block"
+                            });
+                        }
+
+                        if (result.values.nonStandardDataBlock) {
+                            type.push({
+                                type: "non-standard-data-block"
+                            });
+                        }
+
+                        if (result.values.discrete) {
+                            type.push({
+                                type: "discrete",
+                                enumeration: result.values.enumeration
+                            });
+                        }
+                    }
+
+                    return {
+                        type
+                    };
                 }
             },
             {
@@ -416,7 +620,17 @@ export class ScpiResponse extends EezObject implements IScpiResponse {
                 isOptional: true
             }
         ],
-        defaultValue: {}
+        defaultValue: {},
+        beforeLoadHook(object: IEezObject, jsObject: any) {
+            if (!Array.isArray(jsObject.type)) {
+                jsObject.type = [
+                    {
+                        type: jsObject.type,
+                        enumeration: jsObject.enumeration
+                    }
+                ];
+            }
+        }
     };
 
     check(object: IEezObject) {
@@ -424,16 +638,8 @@ export class ScpiResponse extends EezObject implements IScpiResponse {
 
         const command: ScpiCommand = getParent(this) as ScpiCommand;
         if (command.isQuery) {
-            if (!this.type) {
+            if (!this.type || this.type.length === 0) {
                 messages.push(output.propertyNotSetMessage(this, "type"));
-            } else if (this.type === "discrete") {
-                if (!this.enumeration) {
-                    messages.push(output.propertyNotSetMessage(this, "enumeration"));
-                } else {
-                    if (!findScpiEnum(this.enumeration)) {
-                        messages.push(output.propertyNotFoundMessage(this, "enumeration"));
-                    }
-                }
             }
         }
 

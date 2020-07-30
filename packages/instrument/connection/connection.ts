@@ -17,7 +17,7 @@ import {
 } from "instrument/connection/interface";
 import { FileDownload } from "instrument/connection/file-download";
 import { IFileUploadInstructions, FileUpload } from "instrument/connection/file-upload";
-import { parseScpiValue, ResponseType } from "instrument/scpi";
+import { parseScpiValue, IResponseTypeType } from "instrument/scpi";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -45,7 +45,7 @@ export interface ConnectionStatus {
 interface ISendOptions {
     log?: boolean;
     longOperation?: boolean;
-    queryResponseType?: ResponseType;
+    queryResponseType?: IResponseTypeType;
 }
 
 abstract class ConnectionBase {
@@ -157,7 +157,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     housekeepingIntervalId: any;
     callbackWindowId: number | undefined;
     traceEnabled: boolean = true;
-    expectedResponseType: ResponseType | undefined;
+    expectedResponseType: IResponseTypeType | undefined;
 
     constructor(public instrument: InstrumentObject) {
         super(instrument);

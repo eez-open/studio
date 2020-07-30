@@ -25,7 +25,7 @@ import {
     IParameter,
     IParameterType,
     IResponse,
-    ResponseType
+    IResponseTypeType
 } from "instrument/scpi";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,9 +172,7 @@ function buildParameters(dom: JQuery): IParameter[] {
             if ($(element).find("Character>EnumRef").length) {
                 type.push({
                     type: "discrete",
-                    enumeration: $(element)
-                        .find("Character>EnumRef")
-                        .attr("name")
+                    enumeration: $(element).find("Character>EnumRef").attr("name")
                 });
             }
 
@@ -203,7 +201,7 @@ function buildParameters(dom: JQuery): IParameter[] {
 }
 
 function buildResponse(dom: JQuery): IResponse {
-    let type: ResponseType;
+    let type: IResponseTypeType;
 
     let enumeration;
 
@@ -237,8 +235,7 @@ function buildResponse(dom: JQuery): IResponse {
     const description = dom.find("Responses>Response").attr("description");
 
     return {
-        type,
-        enumeration,
+        type: [{ type, enumeration }],
         description
     };
 }

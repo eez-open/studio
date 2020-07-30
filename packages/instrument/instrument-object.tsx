@@ -892,8 +892,8 @@ export class InstrumentObject {
     getQueryResponseType(query: string) {
         const command = this._instrumentAppStore.commandsTree.findCommand(query);
         const response = command && (command as IQuerySyntax).response;
-        if (response) {
-            return response.type;
+        if (response && response.type && response.type.length > 0) {
+            return response.type[0].type;
         }
         return undefined;
     }

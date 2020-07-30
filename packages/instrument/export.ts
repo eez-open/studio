@@ -6,7 +6,7 @@ import {
     IResponse,
     getSdlSemanticTypeForParameter,
     getSdlParameterType,
-    getSdlSemanticType,
+    getSdlSemanticTypeForResponse,
     getSdlResponseType
 } from "instrument/scpi";
 
@@ -184,11 +184,11 @@ function buildParameters(parameters: IParameter[]) {
 function buildResponse(response: IResponse) {
     return `<Response
                 name="result"
-                semanticType="${getSdlSemanticType(response.type)}"
+                semanticType="${getSdlSemanticTypeForResponse(response)}"
                 description="${quoteAttr(response.description || "")}"
             >
             <ResponseType>
-                ${getSdlResponseType(response)}
+                ${response.type.map(responseType => getSdlResponseType(responseType)).join("")}
             </ResponseType>
         </Response>`;
 }
@@ -402,15 +402,15 @@ export function buildInstrumentExtension(
             }
         });
 
-        output.on("close", function() {
+        output.on("close", function () {
             resolve();
         });
 
-        archive.on("warning", function(err: any) {
+        archive.on("warning", function (err: any) {
             reject(err);
         });
 
-        archive.on("error", function(err: any) {
+        archive.on("error", function (err: any) {
             reject(err);
         });
 
