@@ -146,12 +146,18 @@ class Unit implements IUnit {
 ////////////////////////////////////////////////////////////////////////////////
 
 class TimeUnit extends Unit {
-    constructor(config: IUnitConfig, private customFormat: boolean) {
+    constructor(
+        config: IUnitConfig,
+        private options: {
+            customFormat: boolean;
+            showMinutesHoursAndDays: boolean;
+        }
+    ) {
         super(config);
     }
 
     formatValue(value: number, precision?: number) {
-        if (!this.customFormat) {
+        if (!this.options.customFormat) {
             return super.formatValue(value, precision);
         }
 
@@ -181,28 +187,30 @@ class TimeUnit extends Unit {
 
         let result = "";
 
-        let d = Math.floor(value / (24 * 60 * 60));
-        if (d >= 1) {
-            result = d + "d";
-            value -= d * 24 * 60 * 60;
-        }
-
-        let h = Math.floor(value / (60 * 60));
-        if (h >= 1) {
-            if (result.length) {
-                result += " ";
+        if (this.options.showMinutesHoursAndDays) {
+            let d = Math.floor(value / (24 * 60 * 60));
+            if (d >= 1) {
+                result = d + "d";
+                value -= d * 24 * 60 * 60;
             }
-            result += h + "h";
-            value -= h * 60 * 60;
-        }
 
-        let m = Math.floor(value / 60);
-        if (m >= 1) {
-            if (result.length) {
-                result += " ";
+            let h = Math.floor(value / (60 * 60));
+            if (h >= 1) {
+                if (result.length) {
+                    result += " ";
+                }
+                result += h + "h";
+                value -= h * 60 * 60;
             }
-            result += m + "m";
-            value -= m * 60;
+
+            let m = Math.floor(value / 60);
+            if (m >= 1) {
+                if (result.length) {
+                    result += " ";
+                }
+                result += m + "m";
+                value -= m * 60;
+            }
         }
 
         value = roundNumber(value, this.precision);
@@ -259,79 +267,57 @@ class TimeUnit extends Unit {
     }
 
     clone() {
-        return new TimeUnit(this, this.customFormat);
+        return new TimeUnit(this, this.options);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const TIME_UNIT = new TimeUnit(
-    {
-        name: "time",
-        color: "white",
-        colorInverse: "black",
-        unitSymbol: "s",
-        units: [
-            0.000000000001,
-            0.00000000001,
-            0.0000000001,
-            0.000000001,
-            0.00000001,
-            0.0000001,
-            0.000001,
-            0.00001,
-            0.0001,
-            0.001,
-            0.01,
-            0.1,
-            1,
-            10,
-            60,
-            10 * 60,
-            60 * 60,
-            24 * 60 * 60,
-            7 * 24 * 60 * 60,
-            30 * 24 * 60 * 60,
-            365 * 24 * 60 * 60
-        ],
-        precision: 12
-    },
-    true
-);
+const TIME_UNIT_CONFIG = {
+    name: "time",
+    color: "white",
+    colorInverse: "black",
+    unitSymbol: "s",
+    units: [
+        0.000000000001,
+        0.00000000001,
+        0.0000000001,
+        0.000000001,
+        0.00000001,
+        0.0000001,
+        0.000001,
+        0.00001,
+        0.0001,
+        0.001,
+        0.01,
+        0.1,
+        1,
+        10,
+        60,
+        10 * 60,
+        60 * 60,
+        24 * 60 * 60,
+        7 * 24 * 60 * 60,
+        30 * 24 * 60 * 60,
+        365 * 24 * 60 * 60
+    ],
+    precision: 12
+};
 
-export const TIME_UNIT_NO_CUSTOM_FORMAT = new TimeUnit(
-    {
-        name: "time",
-        color: "white",
-        colorInverse: "black",
-        unitSymbol: "s",
-        units: [
-            0.000000000001,
-            0.00000000001,
-            0.0000000001,
-            0.000000001,
-            0.00000001,
-            0.0000001,
-            0.000001,
-            0.00001,
-            0.0001,
-            0.001,
-            0.01,
-            0.1,
-            1,
-            10,
-            60,
-            10 * 60,
-            60 * 60,
-            24 * 60 * 60,
-            7 * 24 * 60 * 60,
-            30 * 24 * 60 * 60,
-            365 * 24 * 60 * 60
-        ],
-        precision: 12
-    },
-    false
-);
+export const TIME_UNIT = new TimeUnit(TIME_UNIT_CONFIG, {
+    customFormat: true,
+    showMinutesHoursAndDays: true
+});
+
+export const TIME_UNIT_NO_SHOW_MINUTES_HOURS_AND_DAYS = new TimeUnit(TIME_UNIT_CONFIG, {
+    customFormat: true,
+    showMinutesHoursAndDays: false
+});
+
+export const TIME_UNIT_NO_CUSTOM_FORMAT = new TimeUnit(TIME_UNIT_CONFIG, {
+    customFormat: false,
+    showMinutesHoursAndDays: false
+});
 
 export const VOLTAGE_UNIT = new Unit({
     name: "voltage",
