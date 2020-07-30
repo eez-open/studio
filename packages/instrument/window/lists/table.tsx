@@ -9,7 +9,7 @@ import { addAlphaToColor } from "eez-studio-shared/color";
 import { _range } from "eez-studio-shared/algorithm";
 import {
     IUnit,
-    TIME_UNIT_NO_SHOW_MINUTES_HOURS_AND_DAYS,
+    TIME_UNIT_NO_CUSTOM_FORMAT,
     VOLTAGE_UNIT,
     CURRENT_UNIT
 } from "eez-studio-shared/units";
@@ -170,7 +170,7 @@ const selectedCell = observable<{
 
 class TableListTimeAxisModel extends ListAxisModel {
     constructor(public $eez_noser_list: TableList) {
-        super($eez_noser_list, TIME_UNIT_NO_SHOW_MINUTES_HOURS_AND_DAYS);
+        super($eez_noser_list, TIME_UNIT_NO_CUSTOM_FORMAT);
     }
 
     get minValue() {
@@ -312,7 +312,7 @@ function executeCommand(list: TableList, modificator: (data: TableListData) => v
 }
 
 function cellKeyFromUnit(unit: IUnit): CellKey {
-    if (unit === TIME_UNIT_NO_SHOW_MINUTES_HOURS_AND_DAYS) {
+    if (unit === TIME_UNIT_NO_CUSTOM_FORMAT) {
         return "dwell";
     }
     return unit.name as "voltage" | "current";
@@ -687,7 +687,7 @@ export class Table extends React.Component<
                             <td>{index + 1}</td>
                             <Cell
                                 index={index}
-                                unit={TIME_UNIT_NO_SHOW_MINUTES_HOURS_AND_DAYS}
+                                unit={TIME_UNIT_NO_CUSTOM_FORMAT}
                                 value={this.getValue(index, "dwell")}
                                 onChange={this.onValueChange}
                                 onFocus={() => this.props.onCellFocus(index, "dwell")}

@@ -64,23 +64,37 @@ class Unit implements IUnit {
             return roundedValue + space + dim + unitSymbol;
         }
 
-        if (Math.abs(value) >= 1000000000) {
-            return result(roundNumber(value / 1000000000, this.precision - 9), "G");
-        } else if (Math.abs(value) >= 1000000) {
-            return result(roundNumber(value / 1000000, this.precision - 6), "M");
-        } else if (Math.abs(value) >= 1000) {
-            return result(roundNumber(value / 1000, this.precision - 3), "K");
-        } else if (this.precision >= 12 && Math.abs(value) < 0.000000001) {
-            return result(roundNumber(value * 1000000000000, this.precision - 12), "p");
-        } else if (this.precision >= 9 && Math.abs(value) < 0.000001) {
-            return result(roundNumber(value * 1000000000, this.precision - 9), "n");
-        } else if (this.precision >= 6 && Math.abs(value) < 0.001) {
-            return result(roundNumber(value * 1000000, this.precision - 6), "u");
-        } else if (this.precision >= 3 && Math.abs(value) < 1) {
-            return result(roundNumber(value * 1000, this.precision - 3), "m");
-        } else {
-            return result(value, "");
+        if (!(this instanceof TimeUnit)) {
+            if (Math.abs(value) >= 1000000000) {
+                return result(roundNumber(value / 1000000000, this.precision - 9), "G");
+            }
+
+            if (Math.abs(value) >= 1000000) {
+                return result(roundNumber(value / 1000000, this.precision - 6), "M");
+            }
+
+            if (Math.abs(value) >= 1000) {
+                return result(roundNumber(value / 1000, this.precision - 3), "K");
+            }
         }
+
+        if (this.precision >= 12 && Math.abs(value) < 0.000000001) {
+            return result(roundNumber(value * 1000000000000, this.precision - 12), "p");
+        }
+
+        if (this.precision >= 9 && Math.abs(value) < 0.000001) {
+            return result(roundNumber(value * 1000000000, this.precision - 9), "n");
+        }
+
+        if (this.precision >= 6 && Math.abs(value) < 0.001) {
+            return result(roundNumber(value * 1000000, this.precision - 6), "u");
+        }
+
+        if (this.precision >= 3 && Math.abs(value) < 1) {
+            return result(roundNumber(value * 1000, this.precision - 3), "m");
+        }
+
+        return result(value, "");
     }
 
     parseValue(value: string): number | null {
@@ -150,7 +164,6 @@ class TimeUnit extends Unit {
         config: IUnitConfig,
         private options: {
             customFormat: boolean;
-            showMinutesHoursAndDays: boolean;
         }
     ) {
         super(config);
@@ -187,30 +200,28 @@ class TimeUnit extends Unit {
 
         let result = "";
 
-        if (this.options.showMinutesHoursAndDays) {
-            let d = Math.floor(value / (24 * 60 * 60));
-            if (d >= 1) {
-                result = d + "d";
-                value -= d * 24 * 60 * 60;
-            }
+        let d = Math.floor(value / (24 * 60 * 60));
+        if (d >= 1) {
+            result = d + "d";
+            value -= d * 24 * 60 * 60;
+        }
 
-            let h = Math.floor(value / (60 * 60));
-            if (h >= 1) {
-                if (result.length) {
-                    result += " ";
-                }
-                result += h + "h";
-                value -= h * 60 * 60;
+        let h = Math.floor(value / (60 * 60));
+        if (h >= 1) {
+            if (result.length) {
+                result += " ";
             }
+            result += h + "h";
+            value -= h * 60 * 60;
+        }
 
-            let m = Math.floor(value / 60);
-            if (m >= 1) {
-                if (result.length) {
-                    result += " ";
-                }
-                result += m + "m";
-                value -= m * 60;
+        let m = Math.floor(value / 60);
+        if (m >= 1) {
+            if (result.length) {
+                result += " ";
             }
+            result += m + "m";
+            value -= m * 60;
         }
 
         value = roundNumber(value, this.precision);
@@ -231,6 +242,10 @@ class TimeUnit extends Unit {
         let result = super.parseValue(value);
         if (result !== null) {
             return result;
+        }
+
+        if (!this.options.customFormat) {
+            return null;
         }
 
         result = 0;
@@ -305,18 +320,11 @@ const TIME_UNIT_CONFIG = {
 };
 
 export const TIME_UNIT = new TimeUnit(TIME_UNIT_CONFIG, {
-    customFormat: true,
-    showMinutesHoursAndDays: true
-});
-
-export const TIME_UNIT_NO_SHOW_MINUTES_HOURS_AND_DAYS = new TimeUnit(TIME_UNIT_CONFIG, {
-    customFormat: true,
-    showMinutesHoursAndDays: false
+    customFormat: true
 });
 
 export const TIME_UNIT_NO_CUSTOM_FORMAT = new TimeUnit(TIME_UNIT_CONFIG, {
-    customFormat: false,
-    showMinutesHoursAndDays: false
+    customFormat: false
 });
 
 export const VOLTAGE_UNIT = new Unit({
