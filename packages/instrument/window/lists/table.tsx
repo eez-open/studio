@@ -10,7 +10,7 @@ import { _range } from "eez-studio-shared/algorithm";
 import {
     IUnit,
     TIME_UNIT,
-    TIME_UNIT_NO_CUSTOM_FORMAT,
+    //TIME_UNIT_NO_CUSTOM_FORMAT,
     VOLTAGE_UNIT,
     CURRENT_UNIT
 } from "eez-studio-shared/units";
@@ -45,13 +45,13 @@ import { InstrumentAppStore } from "instrument/window/app-store";
 import {
     BaseList,
     BaseListData,
-    ListAxisModel,
+    ListAxisModel /*,
     checkVoltage,
     getMaxVoltage,
     checkCurrent,
     getMaxCurrent,
     checkPower,
-    getPowerLimitErrorMessage
+    getPowerLimitErrorMessage*/
 } from "instrument/window/lists/store-renderer";
 import {
     displayOption,
@@ -587,54 +587,59 @@ export class Table extends React.Component<
             }
 
             if (key === "voltage" || key === "current") {
-                let power;
-                if (key === "voltage") {
-                    if (!checkVoltage(numValue, this.props.list.$eez_noser_instrument)) {
-                        $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-                        this.props.setError(
-                            `Allowed range: 0 - ${unit.formatValue(
-                                getMaxVoltage(this.props.list.$eez_noser_instrument)
-                            )}`
-                        );
-                        return;
-                    }
-                    power = numValue * this.props.list.data.current[index];
-                } else {
-                    if (!checkCurrent(numValue, this.props.list.$eez_noser_instrument)) {
-                        $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-                        this.props.setError(
-                            `Allowed range: 0 - ${unit.formatValue(
-                                getMaxCurrent(this.props.list.$eez_noser_instrument)
-                            )}`
-                        );
-                        return;
-                    }
-                    power = numValue * this.props.list.data.voltage[index];
-                }
-
-                if (!checkPower(power, this.props.list.$eez_noser_instrument)) {
-                    $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-                    this.props.setError(
-                        getPowerLimitErrorMessage(this.props.list.$eez_noser_instrument)
-                    );
-                    return;
-                }
+                // let power;
+                // if (key === "voltage") {
+                //     if (!checkVoltage(numValue, this.props.list.$eez_noser_instrument)) {
+                //         $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
+                //         this.props.setError(
+                //             `Allowed range: 0 - ${unit.formatValue(
+                //                 getMaxVoltage(this.props.list.$eez_noser_instrument)
+                //             )}`
+                //         );
+                //         return;
+                //     }
+                //     power = numValue * this.props.list.data.current[index];
+                // } else {
+                //     if (!checkCurrent(numValue, this.props.list.$eez_noser_instrument)) {
+                //         $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
+                //         this.props.setError(
+                //             `Allowed range: 0 - ${unit.formatValue(
+                //                 getMaxCurrent(this.props.list.$eez_noser_instrument)
+                //             )}`
+                //         );
+                //         return;
+                //     }
+                //     power = numValue * this.props.list.data.voltage[index];
+                // }
+                // if (!checkPower(power, this.props.list.$eez_noser_instrument)) {
+                //     $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
+                //     this.props.setError(
+                //         getPowerLimitErrorMessage(this.props.list.$eez_noser_instrument)
+                //     );
+                //     return;
+                // }
             } else {
-                const minDwell = this.props.list.$eez_noser_appStore.instrument!
-                    .listsMinDwellProperty;
-                const maxDwell = this.props.list.$eez_noser_appStore.instrument!
-                    .listsMaxDwellProperty;
-                if (numValue < minDwell || numValue > maxDwell) {
+                // const minDwell = this.props.list.$eez_noser_appStore.instrument!
+                //     .listsMinDwellProperty;
+                // const maxDwell = this.props.list.$eez_noser_appStore.instrument!
+                //     .listsMaxDwellProperty;
+                // if (numValue < minDwell || numValue > maxDwell) {
+                //     $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
+                //     this.props.setError(
+                //         `Allowed range: ${TIME_UNIT_NO_CUSTOM_FORMAT.formatValue(
+                //             minDwell,
+                //             this.props.list.$eez_noser_appStore.instrument!.getDigits(TIME_UNIT)
+                //         )} - ${TIME_UNIT_NO_CUSTOM_FORMAT.formatValue(
+                //             maxDwell,
+                //             this.props.list.$eez_noser_appStore.instrument!.getDigits(TIME_UNIT)
+                //         )}`
+                //     );
+                //     return;
+                // }
+
+                if (numValue <= 0) {
                     $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-                    this.props.setError(
-                        `Allowed range: ${TIME_UNIT_NO_CUSTOM_FORMAT.formatValue(
-                            minDwell,
-                            this.props.list.$eez_noser_appStore.instrument!.getDigits(TIME_UNIT)
-                        )} - ${TIME_UNIT_NO_CUSTOM_FORMAT.formatValue(
-                            maxDwell,
-                            this.props.list.$eez_noser_appStore.instrument!.getDigits(TIME_UNIT)
-                        )}`
-                    );
+                    this.props.setError("Invalid value");
                     return;
                 }
             }

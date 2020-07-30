@@ -31,7 +31,8 @@ import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { error, confirm } from "eez-studio-ui/dialog-electron";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import * as notification from "eez-studio-ui/notification";
-import { PropertyList, SelectProperty } from "eez-studio-ui/properties";
+import { PropertyList, NumberInputProperty } from "eez-studio-ui/properties";
+// import { SelectProperty } from "eez-studio-ui/properties";
 import { Header } from "eez-studio-ui/header-with-body";
 
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/import";
@@ -304,32 +305,53 @@ export class SelectChannelDialog extends React.Component<
     },
     {}
 > {
-    @observable channelIndex: number = 0;
+    static lastChannelIndex = 1;
+    @observable channelIndex: number = SelectChannelDialog.lastChannelIndex;
+    @observable inputErrors: string[] = [];
 
-    @bind
+    @action.bound
     handleSubmit() {
-        this.props.callback(this.channelIndex);
+        if (this.channelIndex <= 0) {
+            this.inputErrors = ["Invalid value"];
+            return false;
+        }
+
+        SelectChannelDialog.lastChannelIndex = this.channelIndex;
+        this.props.callback(this.channelIndex - 1);
         return true;
     }
 
     render() {
-        const { label, numChannels } = this.props;
+        const { label } = this.props;
+
+        // const {numChannels} = this.props;
+        // const property = (
+        //     <SelectProperty
+        //         name={label}
+        //         value={this.channelIndex.toString()}
+        //         onChange={action((value: string) => (this.channelIndex = parseInt(value)))}
+        //     >
+        //         {_range(numChannels).map(channelIndex => (
+        //             <option key={channelIndex} value={channelIndex}>
+        //                 {channelIndex + 1}
+        //             </option>
+        //         ))}
+        //     </SelectProperty>
+        // );
+
+        const property = (
+            <NumberInputProperty
+                name={label}
+                value={this.channelIndex}
+                onChange={action(value => (this.channelIndex = value))}
+                min={1}
+                errors={this.inputErrors}
+            ></NumberInputProperty>
+        );
 
         return (
             <Dialog onOk={this.handleSubmit}>
-                <PropertyList>
-                    <SelectProperty
-                        name={label}
-                        value={this.channelIndex.toString()}
-                        onChange={action((value: string) => (this.channelIndex = parseInt(value)))}
-                    >
-                        {_range(numChannels).map(channelIndex => (
-                            <option key={channelIndex} value={channelIndex}>
-                                {channelIndex + 1}
-                            </option>
-                        ))}
-                    </SelectProperty>
-                </PropertyList>
+                <PropertyList>{property}</PropertyList>
             </Dialog>
         );
     }
