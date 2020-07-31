@@ -9,6 +9,8 @@ import { Loader } from "eez-studio-ui/loader";
 
 const STUDIO_RELEASES_URL = "https://api.github.com/repos/eez-open/studio/releases";
 const STUDIO_SPECIFIC_RELEASE_URL = "https://github.com/eez-open/studio/releases/tag/";
+const STUDIO_HOME_PAGE_URL = "https://www.envox.hr/eez/studio/studio-introduction.html";
+const STUDIO_GITHUB_PAGE_URL = "https://github.com/eez-open/studio";
 
 const GET_LATEST_VERSION_MIN_DURATION = 1000;
 
@@ -98,8 +100,6 @@ const Container = styled.div`
 class AboutBox extends React.Component {
     packageJSON: {
         version: string;
-        homepage: string;
-        repository: string;
     };
 
     @observable checkingForUpdates: boolean;
@@ -222,7 +222,7 @@ class AboutBox extends React.Component {
                             href="#"
                             onClick={event => {
                                 event.preventDefault();
-                                openLink(this.packageJSON.homepage);
+                                openLink(STUDIO_HOME_PAGE_URL);
                             }}
                         >
                             Home
@@ -232,7 +232,7 @@ class AboutBox extends React.Component {
                             href="#"
                             onClick={event => {
                                 event.preventDefault();
-                                openLink(this.packageJSON.repository);
+                                openLink(STUDIO_GITHUB_PAGE_URL);
                             }}
                         >
                             GitHub
