@@ -36,21 +36,21 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
 
     req.addEventListener("load", async () => {
         if (Array.isArray(req.response)) {
-            let latestRealeaseVersion: string | undefined = undefined;
+            let latestReleaseVersion: string | undefined = undefined;
             for (const release of req.response) {
                 if (typeof release.tag_name == "string") {
                     if (
-                        !latestRealeaseVersion ||
-                        compareVersions(release.tag_name, latestRealeaseVersion) > 1
+                        !latestReleaseVersion ||
+                        compareVersions(release.tag_name, latestReleaseVersion) > 1
                     ) {
-                        latestRealeaseVersion = release.tag_name;
+                        latestReleaseVersion = release.tag_name;
                     }
                 }
             }
 
-            if (latestRealeaseVersion) {
+            if (latestReleaseVersion) {
                 runInAction(() => {
-                    bb3Instrument.mcu.latestFirmwareVersion = latestRealeaseVersion;
+                    bb3Instrument.mcu.latestFirmwareVersion = latestReleaseVersion;
                 });
             } else {
                 console.error("not found latest release version");

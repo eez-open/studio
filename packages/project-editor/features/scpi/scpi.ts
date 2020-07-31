@@ -92,7 +92,7 @@ function getScpiType(
     object: ScpiParameter | ScpiResponse,
     type: IParameterTypeType | IResponseTypeType
 ) {
-    return object.type.find(
+    return (object.type as (ScpiParameterType | ScpiResponseType)[]).find(
         (scpiType: ScpiParameterType | ScpiResponseType) =>
             scpiType.type === type || (scpiType.type === ("numeric" as any) && type === "nr3")
     );

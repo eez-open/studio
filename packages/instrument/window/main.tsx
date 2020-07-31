@@ -44,4 +44,9 @@ EEZStudio.electron.ipcRenderer.on("reload", () => {
     window.location.reload();
 });
 
+EEZStudio.electron.ipcRenderer.on("show-about-box", async () => {
+    const { showAboutBox } = await import("eez-studio-ui/about-box");
+    showAboutBox();
+});
+
 //require("eez-studio-shared/module-stat");

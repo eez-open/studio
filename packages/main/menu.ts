@@ -16,8 +16,15 @@ import {
 } from "main/window";
 import { settings } from "main/settings";
 import { APP_NAME } from "main/util";
-import showAboutBox from "main/about-box";
 import { undoManager } from "eez-studio-shared/store";
+
+////////////////////////////////////////////////////////////////////////////////
+
+function showAboutBox(item: any, focusedWindow: any) {
+    if (focusedWindow) {
+        focusedWindow.webContents.send("show-about-box");
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

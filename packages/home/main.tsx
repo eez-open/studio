@@ -37,6 +37,11 @@ EEZStudio.electron.ipcRenderer.on(
     }
 );
 
+EEZStudio.electron.ipcRenderer.on("show-about-box", async () => {
+    const { showAboutBox } = await import("eez-studio-ui/about-box");
+    showAboutBox();
+});
+
 async function main() {
     const { loadExtensions } = await import("eez-studio-shared/extensions/extensions");
     await loadExtensions();
