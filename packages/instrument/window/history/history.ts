@@ -35,7 +35,7 @@ import {
 } from "instrument/window/history/history-view";
 import { FileHistoryItem } from "instrument/window/history/items/file";
 import { ISelection } from "./list-component";
-import { theScrapbook } from "instrument/window/history/scrapbook";
+import { getScrapbookStore } from "instrument/window/history/scrapbook";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -119,7 +119,7 @@ class HistoryCalendar {
 
     @observable lastSelectedDay: Date;
 
-    constructor(public history: History) { }
+    constructor(public history: History) {}
 
     @action
     async load() {
@@ -182,8 +182,8 @@ class HistoryCalendar {
                                 ${this.history.table} AS T1
                             WHERE
                                 ${
-                this.history.oidWhereClause
-                } AND date >= ? ${this.history.getFilter()}
+                                    this.history.oidWhereClause
+                                } AND date >= ? ${this.history.getFilter()}
                             ORDER BY
                                 date
                         )
@@ -303,7 +303,7 @@ class HistoryCalendar {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class SearchResult {
-    constructor(public logEntry: IActivityLogEntry) { }
+    constructor(public logEntry: IActivityLogEntry) {}
 
     @observable selected = false;
 }
@@ -318,7 +318,7 @@ class HistorySearch {
     @observable selectedSearchResult: SearchResult | undefined;
     startSearchTimeout: any;
 
-    constructor(public history: History) { }
+    constructor(public history: History) {}
 
     update() {
         this.search("");
@@ -522,7 +522,7 @@ class HistoryNavigator {
     @observable hasOlder = false;
     @observable hasNewer = false;
 
-    constructor(public history: History) { }
+    constructor(public history: History) {}
 
     @action
     update() {
@@ -592,8 +592,8 @@ class HistoryNavigator {
                                 ${this.history.table} AS T1
                             WHERE
                                 ${
-                this.history.oidWhereClause
-                } AND date < ? ${this.history.getFilter()}
+                                    this.history.oidWhereClause
+                                } AND date < ? ${this.history.getFilter()}
                             ORDER BY
                                 date DESC
                         )
@@ -628,8 +628,8 @@ class HistoryNavigator {
                                 ${this.history.table} AS T1
                             WHERE
                                 ${
-                this.history.oidWhereClause
-                } AND date > ? ${this.history.getFilter()}
+                                    this.history.oidWhereClause
+                                } AND date > ? ${this.history.getFilter()}
                             ORDER BY
                                 date
                         )
@@ -653,7 +653,7 @@ class HistoryNavigator {
 class HistorySelection {
     @observable _items: IHistoryItem[] = [];
 
-    constructor(public history: History) { }
+    constructor(public history: History) {}
 
     @computed
     get canDelete() {
@@ -1096,7 +1096,7 @@ export class History {
             this.sessions.onActivityLogEntryUpdated(activityLogEntry);
         }
 
-        theScrapbook.onUpdateActivityLogEntry(activityLogEntry);
+        getScrapbookStore().onUpdateActivityLogEntry(activityLogEntry);
 
         const foundItem = this.findHistoryItemById(activityLogEntry.id);
         if (!foundItem) {
@@ -1123,7 +1123,7 @@ export class History {
             this.sessions.onActivityLogEntryRemoved(activityLogEntry);
         }
 
-        theScrapbook.onActivityLogEntryRemoved(activityLogEntry);
+        getScrapbookStore().onActivityLogEntryRemoved(activityLogEntry);
 
         this.removeActivityLogEntry(activityLogEntry);
     }

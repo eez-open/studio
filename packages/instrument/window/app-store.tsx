@@ -32,7 +32,7 @@ import { CommandsTree } from "instrument/window/terminal/commands-tree";
 
 import { createInstrumentListStore } from "instrument/window/lists/store";
 import { BaseList } from "instrument/window/lists/store-renderer";
-import { theScrapbook } from "instrument/window/history/scrapbook";
+import { getScrapbookStore } from "instrument/window/history/scrapbook";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -226,7 +226,7 @@ export class InstrumentAppStore implements IEditor {
             } else if (
                 $(document.activeElement).closest(".EezStudio_Scrapbook_Container").length > 0
             ) {
-                theScrapbook.deleteSelectedHistoryItems();
+                getScrapbookStore().deleteSelectedHistoryItems();
             }
         }
     }
@@ -258,7 +258,7 @@ export class InstrumentAppStore implements IEditor {
                     $(document.activeElement).closest(".EezStudio_Scrapbook_Container").length > 0
                 ) {
                     event.preventDefault();
-                    theScrapbook.selectAllItems(this.history.appStore);
+                    getScrapbookStore().selectAllItems(this.history.appStore);
                 }
             }
         }

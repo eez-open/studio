@@ -156,7 +156,14 @@ class ScrapbookStore {
     });
 }
 
-export const theScrapbook = new ScrapbookStore();
+let _theScrapbook: ScrapbookStore;
+
+export function getScrapbookStore() {
+    if (!_theScrapbook) {
+        _theScrapbook = new ScrapbookStore();
+    }
+    return _theScrapbook;
+}
 
 const Container = styled.div`
     position: absolute;
@@ -284,8 +291,8 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
             const itemId = event.dataTransfer.getData(CLIPBOARD_DATA_TYPE);
             const activityLogEntry = activityLogStore.findById(itemId);
             if (activityLogEntry) {
-                const items = theScrapbook.items(this.props.appStore);
-                theScrapbook.insertBeforeItem(
+                const items = getScrapbookStore().items(this.props.appStore);
+                getScrapbookStore().insertBeforeItem(
                     this.insertAt < items.length ? items[this.insertAt] : undefined,
                     activityLogEntry
                 );
@@ -297,14 +304,14 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
     });
 
     getAllItemsBetween = (fromItem: IHistoryItem, toItem: IHistoryItem) => {
-        const items = theScrapbook.items(this.props.appStore);
+        const items = getScrapbookStore().items(this.props.appStore);
         const i = items.indexOf(fromItem);
         const j = items.indexOf(toItem);
         return items.slice(i, j + 1);
     };
 
     showInHistory = () => {
-        this.props.appStore.history.showItem(theScrapbook.selection.items[0]);
+        this.props.appStore.history.showItem(getScrapbookStore().selection.items[0]);
     };
 
     setDiv = (ref: any) => {
@@ -315,6 +322,8 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
         if (location.href.indexOf("home/index.html") == -1) {
             return null;
         }
+
+        const theScrapbook = getScrapbookStore();
 
         return (
             <VerticalHeaderWithBody
