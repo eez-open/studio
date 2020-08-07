@@ -9,6 +9,7 @@ import styled from "eez-studio-ui/styled-components";
 
 import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
+import { PreventDraggable } from "instrument/window/history/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -45,7 +46,7 @@ export class AnswerHistoryItemComponent extends React.Component<
         let content;
         if (message.length > 1024 && !this.showAll) {
             content = (
-                <div>
+                <PreventDraggable tag="div">
                     <pre className={textClassName}>{message.slice(0, 1024)}</pre>
                     <div style={{ margin: "5px 0" }}>
                         <button
@@ -55,10 +56,14 @@ export class AnswerHistoryItemComponent extends React.Component<
                             Show all
                         </button>
                     </div>
-                </div>
+                </PreventDraggable>
             );
         } else {
-            content = <pre className={textClassName}>{message}</pre>;
+            content = (
+                <PreventDraggable tag="pre" className={textClassName}>
+                    {message}
+                </PreventDraggable>
+            );
         }
 
         return (

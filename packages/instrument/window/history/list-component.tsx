@@ -209,6 +209,11 @@ export class HistoryItems extends React.Component<{
                     key={historyItem.id}
                     className={className}
                     onMouseDown={event => {
+                        if (event.target instanceof HTMLAnchorElement) {
+                            // ignore <a>
+                            return;
+                        }
+
                         if (this.props.selectHistoryItemsSpecification) {
                             return;
                         }
@@ -220,6 +225,11 @@ export class HistoryItems extends React.Component<{
                     }}
                     onClick={event => {
                         if (this.props.selectHistoryItemsSpecification) {
+                            return;
+                        }
+
+                        if (event.target instanceof HTMLAnchorElement) {
+                            // ignore <a>
                             return;
                         }
 
@@ -304,7 +314,7 @@ export class HistoryItems extends React.Component<{
 
                         menu.popup({});
                     }}
-                    draggable="true"
+                    draggable={true}
                     onDragStart={event => {
                         event.dataTransfer.effectAllowed = "move";
                         event.dataTransfer.setData(CLIPBOARD_DATA_TYPE, historyItem.id);

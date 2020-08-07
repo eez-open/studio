@@ -17,6 +17,7 @@ import { showEditNoteDialog } from "instrument/window/note-dialog";
 
 import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
+import { PreventDraggable } from "instrument/window/history/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,9 +77,11 @@ export class NoteHistoryItemComponent extends React.Component<
                         </HistoryItemDate>
                     </p>
                     {this.props.historyItem.sourceDescriptionElement}
-                    <PropertyList>
-                        <StaticRichTextProperty value={this.props.historyItem.message} />
-                    </PropertyList>
+                    <PreventDraggable tag="div">
+                        <PropertyList>
+                            <StaticRichTextProperty value={this.props.historyItem.message} />
+                        </PropertyList>
+                    </PreventDraggable>
                 </Balloon>
                 <Toolbar>
                     <IconAction

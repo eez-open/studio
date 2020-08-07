@@ -41,6 +41,7 @@ import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
 import { DlogWaveform } from "instrument/window/waveform/dlog";
 import { convertDlogToCsv } from "instrument/window/waveform/dlog-file";
+import { PreventDraggable } from "instrument/window/history/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -463,9 +464,11 @@ export class FileHistoryItemComponent extends React.Component<
                         onDoubleClick={this.onEditNote}
                     >
                         <Balloon>
-                            <PropertyList>
-                                <StaticRichTextProperty value={this.props.historyItem.note} />
-                            </PropertyList>
+                            <PreventDraggable tag="div">
+                                <PropertyList>
+                                    <StaticRichTextProperty value={this.props.historyItem.note} />
+                                </PropertyList>
+                            </PreventDraggable>
                         </Balloon>
                         <Toolbar>
                             <IconAction

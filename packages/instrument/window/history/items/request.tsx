@@ -9,6 +9,7 @@ import styled from "eez-studio-ui/styled-components";
 
 import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
+import { PreventDraggable } from "instrument/window/history/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +37,7 @@ export class RequestHistoryItemComponent extends React.Component<
                     </HistoryItemDate>
                 </p>
                 {this.props.historyItem.sourceDescriptionElement}
-                <pre>{this.props.historyItem.message}</pre>
+                <PreventDraggable tag="pre">{this.props.historyItem.message}</PreventDraggable>
             </RequestHistoryItemDiv>
         );
     }
