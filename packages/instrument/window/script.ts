@@ -48,15 +48,15 @@ function input(dialogDefinition: any, defaultValues: any): any {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ScpiSession {
-    constructor(shortcut: IShortcut) {}
+    constructor(shortcut: IShortcut) { }
 
-    set _scriptDone(value: boolean) {}
+    set _scriptDone(value: boolean) { }
 
     set scriptError(value: string) {
         NotificationModule.error(value);
     }
 
-    _stop() {}
+    _stop() { }
 }
 
 function prepareScpiModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
@@ -93,8 +93,8 @@ class JavaScriptSession {
                 shortcut.action.type === "scpi-commands"
                     ? "SCPI"
                     : shortcut.action.type === "javascript"
-                    ? "JavaScript"
-                    : "MicroPython",
+                        ? "JavaScript"
+                        : "MicroPython",
             done: false
         };
 
@@ -164,6 +164,8 @@ class JavaScriptSession {
                 if (typeof config.data[i] === "string") {
                     dataBuffers.push(new Buffer(config.data[i], "binary"));
                 } else if (config.data[i] instanceof Buffer) {
+                    dataBuffers.push(config.data[i]);
+                } else if (config.data[i] instanceof Uint8Array) {
                     dataBuffers.push(config.data[i]);
                 } else {
                     console.log("UNKNOWN!!!");
@@ -295,7 +297,7 @@ function prepareJavaScriptModules(appStore: InstrumentAppStore, shortcut: IShort
                     if (jsonValue) {
                         return JSON.parse(jsonValue);
                     }
-                } catch (err) {}
+                } catch (err) { }
                 return defaultValue;
             },
 
