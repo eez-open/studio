@@ -10,7 +10,7 @@ import {
 export class EthernetInterface implements CommunicationInterface {
     socket: any;
 
-    constructor(private host: CommunicationInterfaceHost) {}
+    constructor(private host: CommunicationInterfaceHost) { }
 
     connect() {
         this.socket = new net.Socket();
@@ -94,6 +94,7 @@ export class EthernetInterface implements CommunicationInterface {
                 this.destroy();
             } else {
                 this.socket.end();
+                this.destroy();
             }
         }
     }
