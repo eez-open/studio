@@ -39,6 +39,7 @@ import { IAppStore } from "instrument/window/history/history";
 import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
+import { Waveform, convertToCsv } from "instrument/window/waveform/generic";
 import { DlogWaveform } from "instrument/window/waveform/dlog";
 import { convertDlogToCsv } from "instrument/window/waveform/dlog-file";
 import { PreventDraggable } from "instrument/window/history/helper";
@@ -103,6 +104,7 @@ class ImagePreview extends React.Component<{
                 className="EezStudio_ImagePreview"
                 zoom={this.zoom}
                 toggleZoom={this.toggleZoom}
+                enableUnzoomWithEsc={true}
             >
                 <img
                     src={this.props.src}
@@ -209,6 +211,7 @@ class PdfPreview extends React.Component<{
                 className="EezStudio_PdfPreview"
                 zoom={this.zoom}
                 toggleZoom={this.toggleZoom}
+                enableUnzoomWithEsc={true}
             >
                 {content}
             </HistoryItemPreview>
@@ -297,11 +300,27 @@ export class FileHistoryItemComponent extends React.Component<
         }
     }
 
+    @observable onSaveAsCsvInProgress = false;
+
     @bind
     async onSaveAsCsv() {
-        const data = convertDlogToCsv(this.props.historyItem.data);
+        if (this.onSaveAsCsvInProgress) {
+            return;
+        }
+
+        runInAction(() => (this.onSaveAsCsvInProgress = true));
+
+        let data;
+
+        if (this.props.historyItem instanceof DlogWaveform) {
+            data = convertDlogToCsv(this.props.historyItem.data);
+        } else if (this.props.historyItem instanceof Waveform) {
+            data = await convertToCsv(this.props.historyItem);
+        }
+
         if (!data) {
-            notification.error(`Failed to convert DLOG to CSV!`);
+            notification.error(`Failed to convert to CSV!`);
+            runInAction(() => (this.onSaveAsCsvInProgress = false));
             return;
         }
 
@@ -331,9 +350,16 @@ export class FileHistoryItemComponent extends React.Component<
                 filePath += ".csv";
             }
 
-            await writeBinaryData(filePath, data);
-            notification.success(`Saved as "${filePath}"`);
+            try {
+                await writeBinaryData(filePath, data);
+                notification.success(`Saved as "${filePath}"`);
+            } catch (err) {
+                console.error(err);
+                notification.error(err.toString());
+            }
         }
+
+        runInAction(() => (this.onSaveAsCsvInProgress = false));
     }
 
     @bind
@@ -430,12 +456,14 @@ export class FileHistoryItemComponent extends React.Component<
                 actions = (
                     <Toolbar>
                         <IconAction icon="material:save" title="Save file" onClick={this.onSave} />
-                        {this.props.historyItem instanceof DlogWaveform && (
+                        {(this.props.historyItem instanceof DlogWaveform ||
+                            this.props.historyItem instanceof Waveform) && (
                             <IconAction
                                 icon="material:save"
                                 title="Save as CSV file"
                                 onClick={this.onSaveAsCsv}
                                 overlayText={"CSV"}
+                                enabled={!this.onSaveAsCsvInProgress}
                             />
                         )}
                         {(this.props.historyItem.isImage || this.props.historyItem.isText) && (

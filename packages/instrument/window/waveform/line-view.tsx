@@ -96,11 +96,12 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
     }
 
     draw() {
-        if (this.requestAnimationFrameId) {
-            window.cancelAnimationFrame(this.requestAnimationFrameId);
-            this.requestAnimationFrameId = undefined;
-        }
         if (this.nextJob != this.waveformRenderJobSpecification) {
+            if (this.requestAnimationFrameId) {
+                window.cancelAnimationFrame(this.requestAnimationFrameId);
+                this.requestAnimationFrameId = undefined;
+            }
+
             this.nextJob = this.waveformRenderJobSpecification;
             this.continuation = undefined;
             this.drawStep();

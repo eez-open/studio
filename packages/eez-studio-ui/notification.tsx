@@ -24,7 +24,7 @@ export function update(toastId: ToastId, options: UpdateOptions) {
     return toast.update(toastId, options);
 }
 
-export function dismiss(toastId: number) {
+export function dismiss(toastId: ToastId) {
     toast.dismiss(toastId);
 }
 

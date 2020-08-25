@@ -45,7 +45,8 @@ function showCalculating() {
     if (!calculatingToastId) {
         calculatingToastId = notification.info("Calculating...", {
             transition: Fade,
-            closeButton: false
+            closeButton: false,
+            position: "top-center"
         });
     }
 }
@@ -612,7 +613,13 @@ export class MeasurementsController {
             }),
             ({ isAnimationActive, measurementsInterval, measurements }) => {
                 if (!isAnimationActive && measurements.length > 0) {
-                    this.startMeasurement(measurementsInterval);
+                    if (
+                        !this.measurementsInterval ||
+                        measurementsInterval.x1 != this.measurementsInterval.x1 ||
+                        measurementsInterval.x2 != this.measurementsInterval.x2
+                    ) {
+                        this.startMeasurement(measurementsInterval);
+                    }
                 }
             }
         );

@@ -125,6 +125,9 @@ export class Draggable {
     @bind
     onKeyDown(e: KeyboardEvent) {
         if (e.keyCode == 27 /* ESC */) {
+            e.preventDefault();
+            e.stopPropagation();
+
             this.finishDragging(undefined, true);
         }
     }
@@ -136,7 +139,9 @@ export class Draggable {
         }
 
         if (this.config.onDragEnd) {
-            this.config.onDragEnd(e, cancel, this.params);
+            try {
+                this.config.onDragEnd(e, cancel, this.params);
+            } catch {}
         }
 
         this.overlayElement.remove();

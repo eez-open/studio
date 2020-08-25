@@ -88,6 +88,7 @@ export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
                 toolbarWhenZoomed={toolbarWhenZoomed}
                 zoom={this.zoom}
                 toggleZoom={this.toggleZoom}
+                enableUnzoomWithEsc={false}
             >
                 <ChartsView
                     chartsController={this.chartsController}

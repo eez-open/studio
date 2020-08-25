@@ -52,6 +52,7 @@ class ZoomedPreview extends React.Component<{
     toolbar?: JSX.Element;
     className?: string;
     toggleZoom: (event: React.MouseEvent<HTMLElement>) => void;
+    enableUnzoomWithEsc: boolean;
 }> {
     el: HTMLDivElement;
 
@@ -80,7 +81,7 @@ class ZoomedPreview extends React.Component<{
 
     @bind
     onKeyDown(event: KeyboardEvent) {
-        if (event.keyCode == 27) {
+        if (this.props.enableUnzoomWithEsc && event.keyCode == 27) {
             this.props.toggleZoom(event as any);
         }
     }
@@ -184,6 +185,7 @@ export class HistoryItemPreview extends React.Component<{
     toolbarWhenZoomed?: JSX.Element;
     zoom: boolean;
     toggleZoom: () => void;
+    enableUnzoomWithEsc: boolean;
 }> {
     @bind
     toggleZoom(event: React.MouseEvent<HTMLElement>) {
@@ -204,6 +206,7 @@ export class HistoryItemPreview extends React.Component<{
                     className={className}
                     toggleZoom={this.toggleZoom}
                     toolbar={this.props.toolbarWhenZoomed}
+                    enableUnzoomWithEsc={this.props.enableUnzoomWithEsc}
                 >
                     {this.props.children}
                 </ZoomedPreview>

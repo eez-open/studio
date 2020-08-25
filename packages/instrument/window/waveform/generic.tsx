@@ -11,6 +11,7 @@ import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
 import { IUnit, SAMPLING_RATE_UNIT, UNITS, TIME_UNIT } from "eez-studio-shared/units";
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 import { Point } from "eez-studio-shared/geometry";
+import * as I10nModule from "eez-studio-shared/i10n";
 
 import { makeValidator, validators } from "eez-studio-shared/validation";
 
@@ -32,6 +33,7 @@ import { RulersModel } from "eez-studio-ui/chart/rulers";
 import { MeasurementsModel } from "eez-studio-ui/chart/measurements";
 import { initValuesAccesor, WaveformFormat } from "eez-studio-ui/chart/buffer";
 import { getNearestValuePoint } from "eez-studio-ui/chart/generic-chart";
+import * as notification from "eez-studio-ui/notification";
 
 import { checkMime } from "instrument/connection/file-type";
 
@@ -963,4 +965,54 @@ class WaveformConfigurationDialog extends React.Component<
             </Dialog>
         );
     }
+}
+
+export async function convertToCsv(waveform: Waveform) {
+    const { getLocale } = require("eez-studio-shared/i10n") as typeof I10nModule;
+    const locale = getLocale();
+
+    // determine CSV separator depending of locale usage of ","
+    let separator;
+    if ((0.1).toLocaleString(locale).indexOf(",") != -1) {
+        separator = ";";
+    } else {
+        separator = ",";
+    }
+
+    const numberFormat = new Intl.NumberFormat(locale, { minimumFractionDigits: 9 });
+
+    let csv = "";
+
+    let progressToastId = notification.info("Exporting to CSV ...", {
+        autoClose: false,
+        closeButton: false,
+        closeOnClick: false,
+        hideProgressBar: false,
+        progressStyle: {
+            transition: "none"
+        }
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    for (let i = 0; i < waveform.length; i++) {
+        csv += numberFormat.format(i / waveform.samplingRate);
+        csv += separator;
+        csv += numberFormat.format(waveform.value(i));
+        csv += "\n";
+
+        if (i > 0 && i % 100000 === 0) {
+            const progress = i / waveform.length;
+
+            notification.update(progressToastId, {
+                progress
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+    }
+
+    notification.dismiss(progressToastId);
+
+    return csv;
 }

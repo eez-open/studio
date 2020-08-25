@@ -19,6 +19,7 @@ import styled from "eez-studio-ui/styled-components";
 import { Draggable } from "eez-studio-ui/draggable";
 import { SideDock, DockablePanels } from "eez-studio-ui/side-dock";
 import { Splitter } from "eez-studio-ui/splitter";
+import { SvgLabel } from "eez-studio-ui/svg-label";
 
 import { ChartViewOptionsProps, ChartViewOptions } from "eez-studio-ui/chart/view-options";
 import { WaveformRenderAlgorithm } from "eez-studio-ui/chart/render";
@@ -832,7 +833,7 @@ const MAX_FIXED_SCALE_POWER = 15;
 function calcSubdivisionScaleAndOffset(from: number, to: number, subdivision: number) {
     // first try heuristic to find nice round numbers
     for (let i = MIN_FIXED_SCALE_POWER; i <= MAX_FIXED_SCALE_POWER; i++) {
-        for (let k = 1; k <= 9; k++) {
+        for (let k = 1; k < 10.0; k += 0.01) {
             const scale = k * Math.pow(10, i);
             const offset = Math.floor(from / scale) * scale;
             const range = scale * subdivision;
@@ -2444,6 +2445,50 @@ class ZoomToRectMouseHandler implements MouseHandler {
         }
     }
 
+    @computed
+    get xLabel() {
+        let label;
+
+        if (this.orientation === "x" || this.orientation === "both") {
+            const xAxisController = this.chartController.chartsController.xAxisController;
+            let fromPx = Math.min(this.startPoint.x, this.endPoint.x);
+            let toPx = Math.max(this.startPoint.x, this.endPoint.x);
+            let from = xAxisController.pxToLinearValue(fromPx);
+            let to = xAxisController.pxToLinearValue(toPx);
+            label = `X1 = ${xAxisController.unit.formatValue(
+                from,
+                3
+            )}, X2 = ${xAxisController.unit.formatValue(
+                to,
+                3
+            )}, ΔX = ${xAxisController.unit.formatValue(to - from, 3)}`;
+        }
+
+        return label;
+    }
+
+    @computed
+    get yLabel() {
+        let label;
+
+        if (this.orientation === "y" || this.orientation === "both") {
+            const yAxisController = this.chartController.yAxisController;
+            let fromPx = Math.min(this.startPoint.y, this.endPoint.y);
+            let toPx = Math.max(this.startPoint.y, this.endPoint.y);
+            let from = yAxisController.pxToLinearValue(fromPx);
+            let to = yAxisController.pxToLinearValue(toPx);
+            label = `Y1 = ${yAxisController.unit.formatValue(
+                from,
+                3
+            )}, Y2 = ${yAxisController.unit.formatValue(
+                to,
+                3
+            )}, ΔY = ${yAxisController.unit.formatValue(to - from, 3)}`;
+        }
+
+        return label;
+    }
+
     updateCursor(event: PointerEvent | undefined, cursor: ICursor) {
         cursor.visible = false;
     }
@@ -2469,13 +2514,51 @@ class ZoomToRectMouseHandler implements MouseHandler {
         }
 
         return (
-            <rect
-                className="EezStudio_ZoomRectangle"
-                x={chartsController.chartLeft + x}
-                y={chartsController.chartBottom - y}
-                width={width}
-                height={height}
-            />
+            <>
+                <rect
+                    className="EezStudio_ZoomRectangle"
+                    x={chartsController.chartLeft + x}
+                    y={chartsController.chartBottom - y}
+                    width={width}
+                    height={height}
+                />
+                {this.xLabel && !this.yLabel && (
+                    <SvgLabel
+                        text={this.xLabel}
+                        x={chartsController.chartLeft + x + width / 2}
+                        y={chartsController.chartBottom - y + height / 2}
+                        horizontalAlignement="center"
+                        verticalAlignment="center"
+                    ></SvgLabel>
+                )}
+                {!this.xLabel && this.yLabel && (
+                    <SvgLabel
+                        text={this.yLabel}
+                        x={chartsController.chartLeft + x + width / 2}
+                        y={chartsController.chartBottom - y + height / 2}
+                        horizontalAlignement="center"
+                        verticalAlignment="center"
+                    ></SvgLabel>
+                )}
+                {this.xLabel && this.yLabel && (
+                    <>
+                        <SvgLabel
+                            text={this.xLabel}
+                            x={chartsController.chartLeft + x + width / 2}
+                            y={chartsController.chartBottom - y + height / 2 - 2}
+                            horizontalAlignement="center"
+                            verticalAlignment="bottom"
+                        ></SvgLabel>
+                        <SvgLabel
+                            text={this.yLabel}
+                            x={chartsController.chartLeft + x + width / 2}
+                            y={chartsController.chartBottom - y + height / 2 + 2}
+                            horizontalAlignement="center"
+                            verticalAlignment="top"
+                        ></SvgLabel>
+                    </>
+                )}
+            </>
         );
     }
 }
@@ -2855,11 +2938,13 @@ export class ChartView extends React.Component<
 
         let point = this.transformEventPoint(event);
 
-        if (point.x < 0) {
+        /*if (point.x < 0) {
             this.mouseHandler = new PanMouseHandler([this.props.chartController.yAxisController]);
         } else if (point.y < 0) {
             this.mouseHandler = new PanMouseHandler([this.props.chartController.xAxisController]);
-        } else if (event.buttons === 1) {
+        } else */ if (
+            event.buttons === 1
+        ) {
             if (this.cursor && this.cursor.visible && this.cursor.addPoint) {
                 this.mouseHandler = this.cursor.lineController.addPoint(this, this.cursor);
             } else {
@@ -2985,7 +3070,7 @@ export class ChartView extends React.Component<
         }
 
         return (
-            <div className="EezStudio_ChartContainer">
+            <div className="EezStudio_ChartContainer" ref={ref => this.draggable.attach(ref)}>
                 <svg
                     className="EezStudio_Chart"
                     ref={ref => (this.svg = ref!)}
@@ -3012,7 +3097,6 @@ export class ChartView extends React.Component<
                     </defs>
 
                     <g
-                        ref={ref => this.draggable.attach(ref)}
                         cursor={
                             (this.mouseHandler && this.mouseHandler.cursor) ||
                             (this.cursor &&
