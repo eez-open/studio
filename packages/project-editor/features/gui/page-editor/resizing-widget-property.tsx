@@ -393,7 +393,9 @@ export class ResizingProperty extends React.Component<PropertyProps> {
     animateReaction(props: any) {
         return reaction(
             () => {
-                const resizing = getProperty(props.object, props.propertyInfo.name) as IResizing;
+                const resizing =
+                    props.object &&
+                    (getProperty(props.object, props.propertyInfo.name) as IResizing);
                 return {
                     pinToEdge: (resizing && resizing.pinToEdge) || 0,
                     fixSize: (resizing && resizing.fixSize) || 0
