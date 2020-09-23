@@ -334,6 +334,11 @@ class FindChanges {
                                 types.push({
                                     type: "channel-list"
                                 });
+                            } else if (type === "channel") {
+                                types.push({
+                                    type: "discrete",
+                                    enumeration: "Channel"
+                                });
                             } else if (type === "discrete") {
                                 types.push({
                                     type: "discrete",
@@ -702,13 +707,13 @@ class FindChanges {
     }
 
     compareParameters(parameters1: IParameter[], parameters2: IParameter[]) {
-        const sortedParameters1: IParameter[] = parameters1.sort((a: IParameter, b: IParameter) =>
-            stringCompare(a.name, b.name)
-        );
+        const sortedParameters1: IParameter[] = parameters1
+            .slice()
+            .sort((a: IParameter, b: IParameter) => stringCompare(a.name, b.name));
 
-        const sortedParameters2: IParameter[] = parameters2.sort((a: IParameter, b: IParameter) =>
-            stringCompare(a.name, b.name)
-        );
+        const sortedParameters2: IParameter[] = parameters2
+            .slice()
+            .sort((a: IParameter, b: IParameter) => stringCompare(a.name, b.name));
 
         if (sortedParameters1.length !== sortedParameters2.length) {
             return false;
