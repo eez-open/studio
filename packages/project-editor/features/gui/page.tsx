@@ -164,6 +164,9 @@ export class PagesNavigation extends NavigationComponent {
             return undefined;
         }
         let pageTabState = EditorsStore.activeEditor.state as PageTabState;
+        if (!pageTabState) {
+            return undefined;
+        }
         return pageTabState.widgetContainerDisplayItem;
     }
 
