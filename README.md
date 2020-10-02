@@ -9,7 +9,7 @@ To report an issue, use the [EEZ Studio issue tracker](https://github.com/eez-op
 
 ## Introduction
 
-The EEZ Studio is an open source cross-platform modular visual tool aimed to address various programming and management tasks for [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and other test and measurement instruments that support SCPI.
+The EEZ Studio is an open-source cross-platform modular visual tool aimed to address various programming and management tasks for [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and other test and measurement instruments that support SCPI.
 
 ### EEZ Studio Project Editor (ESP)
 
@@ -22,10 +22,10 @@ The EEZ Studio is an open source cross-platform modular visual tool aimed to add
     -   _Data_
     -   _Extentsion definitions_
     -   _GUI (Pages, Widgets, Styles, Fonts, Bitmaps)_
-    -   _SCPI (command subsystems, commands and context sensitive help)_
+    -   _SCPI (command subsystems, commands, and context-sensitive help)_
     -   _Shortcuts_
 -   Generate C++ code for HMI functionality that can be directly included in Arduino IDE and upload into the 32-bit Arduino Due board
--   _Instrument definition file_ (IDF) builder with context sensitive SCPI commands help (based on Keysight’s [Offline Command Expert command set](https://www.keysight.com/main/software.jspx?cc=US&lc=eng&ckey=2333687&nid=-11143.0.00&id=2333687) XML structure) suitable for EEZ Studio Workbench (ESW) and [Keysight Command Expert](https://www.keysight.com/en/pd-2036130/command-expert)
+-   _Instrument definition file_ (IDF) builder with context-sensitive SCPI commands help (based on Keysight’s [Offline Command Expert command set](https://www.keysight.com/main/software.jspx?cc=US&lc=eng&ckey=2333687&nid=-11143.0.00&id=2333687) XML structure) suitable for EEZ Studio Workbench (ESW) and [Keysight Command Expert](https://www.keysight.com/en/pd-2036130/command-expert)
 -   SCPI command help generator based on bookmarked HTML generated directly from .odt file using [EEZ WebPublish](https://github.com/eez-open/WebPublish) extension for OpenOffice/LibreOffice.
 
 ### EEZ Studio Workbench (ESW)
@@ -39,11 +39,11 @@ The EEZ Studio is an open source cross-platform modular visual tool aimed to add
 -   **Built-in instrument extensions for Rigol 1000 series of DSO/MSO**
 -   History of all activities with search/content filtering
 -   Quick navigation via calendar ("heatmap") or sessions list view
--   Shortcuts (hotkeys and buttons) that can be user defined or come predefined from imported IDF. The shortcut can contain single or sequence of SCPI commands or Javascript code.
+-   Shortcuts (hotkeys and buttons) that can be user-defined or come predefined from imported IDF. The shortcut can contain a single or sequence of SCPI commands or Javascript code.
 -   Javascript code for task automation (e.g. logfile, or programming list upload/download, etc.) can be also assigned to the shortcut
--   SCPI commands context sensitive help with search
+-   SCPI commands context-sensitive help with search
 -   File upload (instrument to PC) with image preview (e.g. screenshots)
--   File download (PC to instrument) automation for transferring instrument profiles
+-   File download (PC to the instrument) automation for transferring instrument profiles
 -   Simple arbitrary waveform editor (envelope and table mode)
 -   Displaying measurement data as graphs
 
@@ -54,7 +54,7 @@ The EEZ Studio is an open source cross-platform modular visual tool aimed to add
 -   Support for other connections (i.e. VXI-11, USBTMC, IVI) using 3rd party open source
 -   Instrument extensions for popular instruments from other vendors
 -   Print and PDF export
--   (External) Data logger functionality
+-   (External) Datalogger functionality
 -   Protocol analyzer using 3rd party open source
 -   Import/export of all working data (i.e. measurements, session history, shortcuts, settings, etc.) for archiving purposes or easier integration with e.g. [ELN](https://en.wikipedia.org/wiki/Electronic_lab_notebook)s
 
@@ -64,7 +64,7 @@ The EEZ Studio is an open source cross-platform modular visual tool aimed to add
 
 ### Linux
 
-Download `eezstudio-linux-x64.tar.gz`, unpack and select `eezstudio`.
+Download `eezstudio-Linux-x64.tar.gz`, unpack and select `eezstudio`.
 
 ### Mac
 
@@ -89,10 +89,10 @@ npm start
 
 ### Build DEB package on Ubuntu
 
-First: install dependecies:
+First: install dependencies:
 
 ```
-sudo npm install -g electron-installer-debian
+sudo npm install -g electron-installer-Debian
 ```
 
 Then build the package:
@@ -109,14 +109,14 @@ Or in one step:
 npm run build-deb-all
 ```
 
-Built DEB package is located in `installation/linux`.
+Built DEB package is located in `installation/Linux`.
 
 ### Build RPM package on Ubuntu
 
-First, install dependecies:
+First, install dependencies:
 
 ```
-sudo npm install -g electron-installer-redhat
+sudo npm install -g electron-installer-RedHat
 sudo apt install rpm
 ```
 
@@ -134,7 +134,7 @@ Or in one step:
 npm run build-rpm-all
 ```
 
-Built RPM package is located in `installation/linux`.
+Built RPM package is located in `installation/Linux`.
 
 ### Build Snap package on Ubuntu
 
@@ -146,19 +146,19 @@ npm run build-installation
 npm run build-snap
 ```
 
-Built Snap package is located in `installation/linux`.
+Built Snap package is located in `installation/Linux`.
 
 ### Build Linux installation using Docker
 
 Execute `./docker_start.sh` first, then execute `./docker-build.sh` inside docker container.
 
-Installation packages are located inside `builder-output` folder.
+Installation packages are located inside the `builder-output` folder.
 
 ## USB TMC
 
 ### Windows
 
-Download and start [Zadig](http://zadig.akeo.ie/). Select your device and click "Install WCID Driver" button.
+Download and start [Zadig](http://zadig.akeo.ie/). Select your device and click the "Install WCID Driver" button.
 
 ### Linux
 
@@ -166,13 +166,13 @@ Follow instructions described [here](https://www.teuniz.net/DSRemote/) under "US
 
 ## FAQ
 
-### Where is database file located?
+### Where is the database file located?
 
 -   Linux: `~/.config/eezstudio/storage.db`
 -   Mac: `~/Library/Application\ Support/eezstudio/storage.db`
 -   Windows: `%appdata%\eezstudio\storage.db`
 
-Creating database someplace else can be done from ESW Settings.
+Creating a database someplace else can be done from ESW Settings.
 
 ### Where are installed extensions stored?
 
