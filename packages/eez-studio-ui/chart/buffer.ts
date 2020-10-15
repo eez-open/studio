@@ -60,7 +60,7 @@ export function initValuesAccesor(
     },
     disableNaNs: boolean = false
 ) {
-    const values = object.values;
+    const values = object.values || [];
     const format = object.format;
     const offset = object.offset;
     const scale = object.scale;
