@@ -82,7 +82,7 @@ async function getExtraResource() {
             ],
 
             mac: {
-                target: ["dmg", "pkg", "zip"],
+                target: ["dmg", "pkg", "zip", "dir"],
                 category: "public.app-category.utilities",
                 bundleVersion: packageJson.version,
                 icon: "./icon.icns",
