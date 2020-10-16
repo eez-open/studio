@@ -45,6 +45,23 @@ const fftParametersDescription: IFieldProperties[] = [
         type: "enum",
         defaultValue: "decibel",
         enumItems: [{ id: "decibel", label: "Decibel" }, { id: "linear", label: "Linear" }]
+    },
+    {
+        name: "onlyHarmonics",
+        displayName: "Show only harmonics",
+        type: "boolean",
+        defaultValue: true
+    },
+    {
+        name: "numHarmonics",
+        displayName: "No. of harmonics",
+        type: "number",
+        defaultValue: 40
+    },
+    {
+        name: "copyToClipboard",
+        displayName: "Copy harmonics to clipboard",
+        type: "button"
     }
 ];
 

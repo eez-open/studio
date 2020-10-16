@@ -123,6 +123,10 @@ export default function(task: IMeasureTask) {
 
     let F = task.xNumSamples / numSamples;
 
+    console.log("xNumSamples", task.xNumSamples);
+    console.log("numSamples", numSamples);
+    console.log("F", F);
+
     let halfNumSamples = Math.floor(numSamples / 2);
 
     //
@@ -158,7 +162,7 @@ export default function(task: IMeasureTask) {
     const getYValue = yAxisInDecibels ? toDecibels : getLinearYValue;
 
     const data = new Array(halfNumSamples);
-    let minValue, maxValue;
+    let minValue, maxValue, maxValueIndex;
     minValue = maxValue = data[0] = getYValue(0);
     for (let i = 1; i < halfNumSamples; ++i) {
         data[i] = getYValue(i);
@@ -166,8 +170,11 @@ export default function(task: IMeasureTask) {
             minValue = data[i];
         } else if (data[i] > maxValue) {
             maxValue = data[i];
+            maxValueIndex = i;
         }
     }
+
+    console.log(maxValueIndex);
 
     //
     task.result = {

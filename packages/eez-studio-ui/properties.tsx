@@ -734,3 +734,25 @@ export class RangeProperty extends React.Component<
         );
     }
 }
+
+@observer
+export class ButtonProperty extends React.Component<
+    {
+        name?: string;
+        onChange: (value: number) => void;
+    },
+    {}
+> {
+    render() {
+        return (
+            <tr >
+                <td />
+                <td>
+                <button
+                onClick={value => this.props.onChange(1)}
+            >{this.props.name}</button>
+                </td>
+            </tr>
+        );
+    }
+}

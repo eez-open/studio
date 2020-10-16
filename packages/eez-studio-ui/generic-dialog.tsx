@@ -19,7 +19,8 @@ import {
     TextInputProperty,
     SelectProperty,
     Radio,
-    RangeProperty
+    RangeProperty,
+    ButtonProperty
 } from "eez-studio-ui/properties";
 import styled from "eez-studio-ui/styled-components";
 
@@ -44,6 +45,7 @@ export interface IFieldProperties {
         | "enum"
         | "radio"
         | "range"
+        | "button"
         | typeof FieldComponent;
     unit?: keyof typeof UNITS;
     enumItems?: EnumItems | (() => EnumItems);
@@ -444,6 +446,8 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             min = fieldProperties.minValue || 0;
                             max = fieldProperties.maxValue || 100;
                             Field = RangeProperty;
+                        } else if (fieldProperties.type === "button") {
+                            Field = ButtonProperty;
                         } else {
                             return (
                                 <PropertyEnclosure
