@@ -32,6 +32,8 @@ export class SvgLabel extends React.Component<
     },
     {}
 > {
+    myRef = React.createRef<SVGTextElement>();
+
     @observable contentWidth: number = 0;
     @observable contentHeight: number = 0;
 
@@ -75,6 +77,18 @@ export class SvgLabel extends React.Component<
         return this.props.textColor || "white";
     }
 
+    componentDidMount() {
+        if (this.myRef.current) {
+            const bbox = this.myRef.current.getBBox();
+            runInAction(() => {
+                this.contentWidth =
+                    this.padding.left + bbox.width + this.padding.right;
+                this.contentHeight =
+                    this.padding.top + bbox.height + this.padding.bottom;
+            });
+        }
+    }
+
     render() {
         let { text, x, y, horizontalAlignement, verticalAlignment } = this.props;
 
@@ -109,17 +123,7 @@ export class SvgLabel extends React.Component<
                     strokeWidth={this.border.size}
                 />
                 <text
-                    ref={ref => {
-                        if (ref) {
-                            const bbox = ref.getBBox();
-                            runInAction(() => {
-                                this.contentWidth =
-                                    this.padding.left + bbox.width + this.padding.right;
-                                this.contentHeight =
-                                    this.padding.top + bbox.height + this.padding.bottom;
-                            });
-                        }
-                    }}
+                    ref={this.myRef}
                     x={x + this.contentWidth / 2}
                     y={y + this.contentHeight / 2}
                     fill={this.textColor}
