@@ -399,16 +399,18 @@ export class Waveform extends FileHistoryItem {
             measurements => {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.measurements, measurements)) {
+                    const messageStr = JSON.stringify(
+                        Object.assign(message, {
+                            measurements
+                        })
+                    );
+                    runInAction(() => (this.message = messageStr));
                     logUpdate(
                         this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,
-                            message: JSON.stringify(
-                                Object.assign(message, {
-                                    measurements
-                                })
-                            )
+                            message: messageStr
                         },
                         {
                             undoable: false
@@ -595,9 +597,18 @@ export class Waveform extends FileHistoryItem {
     chartsController: ChartsController;
 
     createChartsController(mode: ChartMode): ChartsController {
-        // if (this.chartsController && this.chartsController.mode === mode) {
-        //     return this.chartsController;
-        // }
+        if (
+            this.chartsController &&
+            this.chartsController.mode === mode &&
+            this.chartsController.xAxisController.axisModel === this.xAxisModel &&
+            this.chartsController.chartControllers[0].yAxisController.axisModel === this.yAxisModel
+        ) {
+            return this.chartsController;
+        }
+
+        if (this.chartsController) {
+            this.chartsController.destroy();
+        }
 
         const chartsController = new WaveformChartsController(this, mode, this.xAxisModel);
         this.chartsController = chartsController;
@@ -979,7 +990,10 @@ export async function convertToCsv(waveform: Waveform) {
         separator = ",";
     }
 
-    const numberFormat = new Intl.NumberFormat(locale, { minimumFractionDigits: 9 });
+    const numberFormat = new Intl.NumberFormat(locale, {
+        useGrouping: false,
+        maximumFractionDigits: 9
+    });
 
     let csv = "";
 

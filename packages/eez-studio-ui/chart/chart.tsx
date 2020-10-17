@@ -1610,6 +1610,10 @@ export abstract class ChartsController {
             }
         }
 
+        if (this.mode === "preview") {
+            return maxLabelTextsWidth;
+        }
+
         return Math.max(
             CONF_MIN_Y_SCALE_LABELS_WIDTH,
             maxLabelTextsWidth + CONF_LABEL_TICK_GAP_HORZ
@@ -1852,7 +1856,16 @@ export abstract class ChartsController {
 
     createMeasurementsController(measurementsModel: MeasurementsModel) {
         if (this.supportRulers && this.mode !== "preview") {
+            if (this.measurementsController) {
+                this.measurementsController.destroy();
+            }
             this.measurementsController = new MeasurementsController(this, measurementsModel);
+        }
+    }
+
+    destroy() {
+        if (this.measurementsController) {
+            this.measurementsController.destroy();
         }
     }
 }
@@ -3012,61 +3025,67 @@ export class ChartView extends React.Component<
             ? chartController.xAxisController.axisModel.color
             : chartController.xAxisController.axisModel.colorInverse;
 
-        let chartXAxisTitle = chartController.xAxisController.axisModel.label && (
-            <div
-                className="EezStudio_Chart_Title"
-                style={{
-                    color: color,
-                    right: `calc(100% - ${chartsController.chartRight}px)`,
-                    bottom: `calc(100% - ${chartsController.chartBottom}px)`,
-                    borderColor: color
-                }}
-            >
-                {chartController.xAxisController.axisModel.label}
-            </div>
-        );
+        let isNonEmpty = chartsController.xAxisController.range > 0;
 
-        color = globalViewOptions.blackBackground
-            ? chartController.yAxisController.axisModel.color
-            : chartController.yAxisController.axisModel.colorInverse;
-
-        let chartTitle = chartController.yAxisController.axisModel.label && (
-            <div
-                className="EezStudio_Chart_Title"
-                style={{
-                    color: color,
-                    left: chartsController.chartLeft,
-                    top: chartsController.chartTop,
-                    borderColor: color
-                }}
-            >
-                {chartController.yAxisController.axisModel.label}
-            </div>
-        );
-
-        if (chartController.yAxisControllerOnRightSide) {
-            const color = globalViewOptions.blackBackground
-                ? chartController.yAxisControllerOnRightSide.axisModel.color
-                : chartController.yAxisControllerOnRightSide.axisModel.colorInverse;
-
-            chartTitle = (
-                <React.Fragment>
-                    {chartTitle}
-                    <div
-                        className="EezStudio_Chart_Title"
-                        style={{
-                            color: color,
-                            right:
-                                (chartsController.chartViewWidth || 0) -
-                                chartsController.chartRight,
-                            top: chartsController.chartTop,
-                            borderColor: color
-                        }}
-                    >
-                        {chartController.yAxisControllerOnRightSide.axisModel.label}
-                    </div>
-                </React.Fragment>
+        let chartXAxisTitle;
+        let chartTitle;
+        if (isNonEmpty) {
+            chartXAxisTitle = chartController.xAxisController.axisModel.label && (
+                <div
+                    className="EezStudio_Chart_Title"
+                    style={{
+                        color: color,
+                        right: `calc(100% - ${chartsController.chartRight}px)`,
+                        bottom: `calc(100% - ${chartsController.chartBottom}px)`,
+                        borderColor: color
+                    }}
+                >
+                    {chartController.xAxisController.axisModel.label}
+                </div>
             );
+
+            color = globalViewOptions.blackBackground
+                ? chartController.yAxisController.axisModel.color
+                : chartController.yAxisController.axisModel.colorInverse;
+
+            chartTitle = chartController.yAxisController.axisModel.label && (
+                <div
+                    className="EezStudio_Chart_Title"
+                    style={{
+                        color: color,
+                        left: chartsController.chartLeft,
+                        top: chartsController.chartTop,
+                        borderColor: color
+                    }}
+                >
+                    {chartController.yAxisController.axisModel.label}
+                </div>
+            );
+
+            if (chartController.yAxisControllerOnRightSide) {
+                const color = globalViewOptions.blackBackground
+                    ? chartController.yAxisControllerOnRightSide.axisModel.color
+                    : chartController.yAxisControllerOnRightSide.axisModel.colorInverse;
+
+                chartTitle = (
+                    <React.Fragment>
+                        {chartTitle}
+                        <div
+                            className="EezStudio_Chart_Title"
+                            style={{
+                                color: color,
+                                right:
+                                    (chartsController.chartViewWidth || 0) -
+                                    chartsController.chartRight,
+                                top: chartsController.chartTop,
+                                borderColor: color
+                            }}
+                        >
+                            {chartController.yAxisControllerOnRightSide.axisModel.label}
+                        </div>
+                    </React.Fragment>
+                );
+            }
         }
 
         return (
@@ -3078,11 +3097,12 @@ export class ChartView extends React.Component<
                 >
                     {chartController.customRender()}
 
-                    {<AxisLines axisController={chartController.xAxisController} />}
-                    {<AxisView axisController={chartController.yAxisController} />}
-                    {chartController.yAxisControllerOnRightSide && (
+                    {isNonEmpty && <AxisLines axisController={chartController.xAxisController} />}
+                    {isNonEmpty && <AxisView axisController={chartController.yAxisController} />}
+                    {isNonEmpty && chartController.yAxisControllerOnRightSide && (
                         <AxisView axisController={chartController.yAxisControllerOnRightSide} />
                     )}
+
                     <ChartBorder chartsController={chartController.chartsController} />
 
                     <defs>

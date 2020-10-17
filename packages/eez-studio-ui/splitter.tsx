@@ -1,4 +1,4 @@
-import { action, observable } from "mobx";
+import { action, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import classNames from "classnames";
@@ -57,6 +57,10 @@ export class Splitter extends React.Component<SplitterProps, {}> {
     }
 
     UNSAFE_componentWillReceiveProps(nextProps: SplitterProps) {
+        runInAction(() => {
+            this.width = 0;
+            this.height = 0;
+        });
         this.calcSizes(nextProps);
     }
 

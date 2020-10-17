@@ -1103,13 +1103,15 @@ export class History {
             return;
         }
 
-        if (activityLogEntry.message !== undefined) {
+        if (
+            activityLogEntry.message !== undefined && 
+            foundItem.historyItem.message !== activityLogEntry.message
+        ) {
             foundItem.historyItem.message = activityLogEntry.message;
-        }
-
-        const updatedHistoryItem = updateHistoryItemClass(foundItem.historyItem, this.appStore);
-        if (updatedHistoryItem !== foundItem.historyItem) {
-            this.items[foundItem.index] = updatedHistoryItem;
+            const updatedHistoryItem = updateHistoryItemClass(foundItem.historyItem, this.appStore);
+            if (updatedHistoryItem !== foundItem.historyItem) {
+                this.items[foundItem.index] = updatedHistoryItem;
+            }
         }
     }
 

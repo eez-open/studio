@@ -160,7 +160,7 @@ class GenericChartWaveform implements IWaveform {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class GenericChartXAxisModel implements IAxisModel {
+export class GenericChartXAxisModel implements IAxisModel {
     constructor(private data: GenericChartWaveform) {}
 
     @computed
@@ -233,7 +233,7 @@ class GenericChartXAxisModel implements IAxisModel {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class GenericChartYAxisModel implements IAxisModel {
+export class GenericChartYAxisModel implements IAxisModel {
     constructor(private data: GenericChartWaveform) {}
 
     @computed

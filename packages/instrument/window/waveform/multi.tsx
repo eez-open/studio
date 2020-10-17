@@ -212,16 +212,18 @@ export class MultiWaveform extends HistoryItem {
             measurements => {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.measurements, measurements)) {
+                    const messageStr = JSON.stringify(
+                        Object.assign(message, {
+                            measurements
+                        })
+                    );
+                    runInAction(() => (this.message = messageStr));
                     logUpdate(
                         this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,
-                            message: JSON.stringify(
-                                Object.assign(message, {
-                                    measurements
-                                })
-                            )
+                            message: messageStr
                         },
                         {
                             undoable: false
@@ -297,9 +299,17 @@ export class MultiWaveform extends HistoryItem {
     chartsController: ChartsController;
 
     createChartsController(mode: ChartMode): ChartsController {
-        // if (this.chartsController && this.chartsController.mode === mode) {
-        //     return this.chartsController;
-        // }
+        if (
+            this.chartsController &&
+            this.chartsController.mode === mode &&
+            this.chartsController.chartControllers.length === this.linkedWaveforms.length
+        ) {
+            return this.chartsController;
+        }
+
+        if (this.chartsController) {
+            this.chartsController.destroy();
+        }
 
         const chartsController = new MultiWaveformChartsController(
             this,

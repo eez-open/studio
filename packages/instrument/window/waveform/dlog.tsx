@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, reaction, toJS } from "mobx";
+import { observable, computed, reaction, toJS, runInAction } from "mobx";
 
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
@@ -316,16 +316,18 @@ export class DlogWaveform extends FileHistoryItem {
             measurements => {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.measurements, measurements)) {
+                    const messageStr = JSON.stringify(
+                        Object.assign(message, {
+                            measurements
+                        })
+                    );
+                    runInAction(() => (this.message = messageStr));
                     logUpdate(
                         this.appStore.history.options.store,
                         {
                             id: this.id,
                             oid: this.oid,
-                            message: JSON.stringify(
-                                Object.assign(message, {
-                                    measurements
-                                })
-                            )
+                            message: messageStr
                         },
                         {
                             undoable: false
@@ -558,6 +560,10 @@ export class DlogWaveform extends FileHistoryItem {
             this.chartsController.chartControllers.length === this.channels.length
         ) {
             return this.chartsController;
+        }
+
+        if (this.chartsController) {
+            this.chartsController.destroy();
         }
 
         const chartsController = new DlogWaveformChartsController(this, mode, this.xAxisModel);

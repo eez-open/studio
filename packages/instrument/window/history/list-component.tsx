@@ -84,10 +84,19 @@ const HistoryItemEnclosure = styled.div`
         .EezStudio_ChartView_Preview {
             height: 240px;
             overflow: auto;
+            padding: 0;
         }
 
         .EezStudio_HistoryItem_File_Note {
             min-width: auto;
+        }
+
+        .EezStudio_Chart_Title {
+            visibility: hidden;
+        }
+
+        .EezStudio_ChartContainer {
+            pointer-events: none;
         }
     }
 `;

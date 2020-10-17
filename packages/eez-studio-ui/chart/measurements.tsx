@@ -1,14 +1,18 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { observable, computed, reaction, action, runInAction, toJS } from "mobx";
+import { observable, computed, autorun, reaction, action, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
+import { clipboard, SaveDialogOptions } from "electron";
 
 import { _map, _difference, _range } from "eez-studio-shared/algorithm";
 import { clamp } from "eez-studio-shared/util";
+import { writeBinaryData } from "eez-studio-shared/util-electron";
+
 import { guid } from "eez-studio-shared/guid";
 import { stringCompare } from "eez-studio-shared/string";
 import { UNITS } from "eez-studio-shared/units";
+import * as I10nModule from "eez-studio-shared/i10n";
 
 import { IMeasurementFunction, IMeasureTask, IChart } from "eez-studio-shared/extensions/extension";
 import { extensions } from "eez-studio-shared/extensions/extensions";
@@ -128,6 +132,8 @@ class Measurement {
         public measurementDefinition: IMeasurementDefinition,
         public measurementFunction: IMeasurementFunction | undefined
     ) {}
+
+    @observable dirty = true;
 
     get measurementId() {
         return this.measurementDefinition.measurementId;
@@ -287,6 +293,7 @@ class Measurement {
         initValuesAccesor(accessor, true);
 
         return {
+            values: taskSpec.values,
             xStartValue: taskSpec.xStartValue,
             xStartIndex: taskSpec.xStartIndex,
             xNumSamples: taskSpec.xNumSamples,
@@ -314,6 +321,7 @@ class Measurement {
             initValuesAccesor(accessor, true);
 
             return {
+                values: input.values,
                 samplingRate: input.samplingRate,
                 getSampleValueAtIndex: accessor.value,
                 valueUnit: input.valueUnit
@@ -321,6 +329,7 @@ class Measurement {
         });
 
         return {
+            values: null,
             xStartValue: taskSpec.xStartValue,
             xStartIndex: taskSpec.xStartIndex,
             xNumSamples: taskSpec.xNumSamples,
@@ -393,28 +402,33 @@ class Measurement {
         });
     }
 
-    @computed
-    get result(): {
+    @observable result: {
         result: number | string | IChart | null;
         resultUnit?: keyof typeof UNITS | undefined;
-    } | null {
+    } | null = null;
+
+    refreshResult() {
         if (!this.script) {
-            return null;
+            return;
         }
 
         if (!this.measurementsController.measurementsInterval) {
-            return null;
+            return;
         }
 
         const task = this.task;
         if (!task) {
-            return null;
+            return;
         }
 
         let measureFunction: (task: IMeasureTask) => void;
         measureFunction = (require(this.script) as any).default;
         measureFunction(task);
-        return task;
+
+        runInAction(() => {
+            this.result = task;
+            this.dirty = false;
+        });
     }
 
     get chartPanelTitle() {
@@ -482,11 +496,15 @@ export class MeasurementsModel {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class MeasurementsController {
+    dispose1: any;
+    dispose2: any;
+    dispose3: any;
+
     constructor(
         public chartsController: ChartsController,
         public measurementsModel: MeasurementsModel
     ) {
-        reaction(
+        this.dispose1 = reaction(
             () => toJS(this.measurementsModel.measurements),
             () => {
                 const measurements = this.measurementsModel.measurements.map(
@@ -526,73 +544,75 @@ export class MeasurementsController {
 
         //////////
 
-        reaction(
-            () => toJS(this.chartMeasurements),
-            () => {
-                let newChartPanelsViewState: string | undefined;
+        this.dispose2 = autorun(() => {
+            let newChartPanelsViewState: string | undefined;
 
-                if (this.chartMeasurements.length > 0) {
-                    if (this.chartPanelsViewState) {
-                        const goldenLayout: any = new GoldenLayout(
-                            {
-                                content: JSON.parse(this.measurementsModel.chartPanelsViewState!)
-                            },
-                            document.createElement("div")
-                        );
-                        goldenLayout.registerComponent("MeasurementValue", function () {});
-                        goldenLayout.init();
+            if (this.chartMeasurements.length > 0) {
+                if (this.chartPanelsViewState) {
+                    const goldenLayout: any = new GoldenLayout(
+                        {
+                            content: JSON.parse(this.measurementsModel.chartPanelsViewState!)
+                        },
+                        document.createElement("div")
+                    );
+                    goldenLayout.registerComponent("MeasurementValue", function () {});
+                    goldenLayout.init();
 
-                        const existingChartMeasurementIds = goldenLayout.root
-                            .getItemsByType("component")
-                            .map((contentItem: any) => contentItem.config.id);
+                    const existingChartMeasurementIds = goldenLayout.root
+                        .getItemsByType("component")
+                        .map((contentItem: any) => contentItem.config.id);
 
-                        const chartMeasurementIds = this.chartMeasurements.map(
-                            measurement => measurement.measurementId
-                        );
+                    const chartMeasurementIds = this.chartMeasurements.map(
+                        measurement => measurement.measurementId
+                    );
 
-                        const removed = _difference(
-                            existingChartMeasurementIds,
-                            chartMeasurementIds
-                        );
-                        const added = _difference(chartMeasurementIds, existingChartMeasurementIds);
+                    const removed = _difference(existingChartMeasurementIds, chartMeasurementIds);
+                    const added = _difference(chartMeasurementIds, existingChartMeasurementIds);
 
-                        removed.forEach(id => {
-                            const item = goldenLayout.root.getItemsById(id)[0];
-                            if (item.parent.type === "stack") {
-                                item.parent.setActiveContentItem(item);
-                            }
-                            item.remove();
-                        });
-
-                        added.forEach(id => {
-                            const measurement = this.findMeasurementById(id);
-                            goldenLayout.root.contentItems[0].addChild(
-                                measurement!.chartPanelConfiguration,
-                                goldenLayout.root
-                            );
-                        });
-
-                        goldenLayout.root.getItemsByType("component").map((contentItem: any) => {
-                            const measurement = this.findMeasurementById(contentItem.config.id);
-                            contentItem.setTitle(measurement!.chartPanelTitle);
-                        });
-
-                        newChartPanelsViewState = JSON.stringify(goldenLayout.config.content);
-                    } else {
-                        newChartPanelsViewState = JSON.stringify(this.defaultChartPanelViewState);
-                    }
-                } else {
-                    newChartPanelsViewState = undefined;
-                }
-
-                if (newChartPanelsViewState != this.chartPanelsViewState) {
-                    runInAction(() => {
-                        this.chartPanelsViewState = newChartPanelsViewState;
-                        this.measurementsModel.chartPanelsViewState = newChartPanelsViewState;
+                    removed.forEach(id => {
+                        const item = goldenLayout.root.getItemsById(id)[0];
+                        if (item.parent.type === "stack") {
+                            item.parent.setActiveContentItem(item);
+                        }
+                        item.remove();
                     });
+
+                    added.forEach(id => {
+                        const measurement = this.findMeasurementById(id);
+
+                        if (!goldenLayout.root.contentItems[0]) {
+                            goldenLayout.root.addChild({
+                                type: "stack",
+                                content: []
+                            });
+                        }
+
+                        goldenLayout.root.contentItems[0].addChild(
+                            measurement!.chartPanelConfiguration,
+                            goldenLayout.root
+                        );
+                    });
+
+                    goldenLayout.root.getItemsByType("component").map((contentItem: any) => {
+                        const measurement = this.findMeasurementById(contentItem.config.id);
+                        contentItem.setTitle(measurement!.chartPanelTitle);
+                    });
+
+                    newChartPanelsViewState = JSON.stringify(goldenLayout.config.content);
+                } else {
+                    newChartPanelsViewState = JSON.stringify(this.defaultChartPanelViewState);
                 }
+            } else {
+                newChartPanelsViewState = undefined;
             }
-        );
+
+            if (newChartPanelsViewState != this.chartPanelsViewState) {
+                runInAction(() => {
+                    this.chartPanelsViewState = newChartPanelsViewState;
+                    this.measurementsModel.chartPanelsViewState = newChartPanelsViewState;
+                });
+            }
+        });
 
         if (this.measurementsModel.chartPanelsViewState) {
             this.chartPanelsViewState = this.measurementsModel.chartPanelsViewState;
@@ -600,12 +620,8 @@ export class MeasurementsController {
             this.chartPanelsViewState = JSON.stringify(this.defaultChartPanelViewState);
         }
 
-        this.timeoutId = setTimeout(() => {
-            this.timeoutId = undefined;
-            this.startMeasurement(this.calcMeasurementsInterval());
-        }, 500);
-
-        reaction(
+        // mark dirty all chart measurements when measurement interval changes
+        this.dispose3 = reaction(
             () => ({
                 isAnimationActive: this.chartsController.xAxisController.isAnimationActive,
                 measurementsInterval: this.calcMeasurementsInterval(),
@@ -618,7 +634,9 @@ export class MeasurementsController {
                         measurementsInterval.x1 != this.measurementsInterval.x1 ||
                         measurementsInterval.x2 != this.measurementsInterval.x2
                     ) {
-                        this.startMeasurement(measurementsInterval);
+                        this.chartMeasurements.forEach(
+                            action(measurement => (measurement.dirty = true))
+                        );
                     }
                 }
             }
@@ -627,6 +645,10 @@ export class MeasurementsController {
 
     @observable measurements: Measurement[];
     @observable measurementsInterval: { x1: number; x2: number } | undefined;
+
+    @computed get refreshRequired() {
+        return !!this.measurements.find(measurement => measurement.dirty);
+    }
 
     timeoutId: any;
 
@@ -674,9 +696,11 @@ export class MeasurementsController {
                 setTimeout(() => {
                     hideCalculating();
                 }, 10);
+                this.refreshResults();
             }, 150);
         } else {
             runInAction(() => (this.measurementsInterval = measurementsInterval));
+            this.refreshResults();
         }
     }
 
@@ -713,6 +737,20 @@ export class MeasurementsController {
                 content: charts.map(measurement => measurement.chartPanelConfiguration)
             }
         ];
+    }
+
+    refreshResults() {
+        this.measurements.forEach(measurement => {
+            if (measurement.dirty) {
+                measurement.refreshResult();
+            }
+        });
+    }
+
+    destroy() {
+        this.dispose1();
+        this.dispose2();
+        this.dispose3();
     }
 }
 
@@ -752,7 +790,7 @@ export class MeasurementValue extends React.Component<{
 
         const measurementResult = this.props.measurement.result;
 
-        if (measurementResult === null || measurementResult.result === null) {
+        if (measurementResult == null || measurementResult.result == null) {
             if (this.props.inDockablePanel) {
                 return null;
             }
@@ -846,6 +884,16 @@ class MeasurementResultField extends FieldComponent {
 const INPUT_FILED_NAME = "___input___";
 const RESULT_FILED_NAME = "___result___";
 
+const ActionsContainer = styled.div`
+    padding: 5px 0 15px;
+    text-align: right;
+
+    & > button {
+        margin-left: 10px;
+    }
+`;
+
+@observer
 class MeasurementComponent extends React.Component<{
     measurement: Measurement;
 }> {
@@ -920,6 +968,141 @@ class MeasurementComponent extends React.Component<{
         this.props.measurement.parameters = Object.assign({}, this.props.measurement.parameters, {
             [name]: value
         });
+        this.props.measurement.dirty = true;
+    }
+
+    @observable operationInProgress = false;
+
+    async getCsv() {
+        const result = this.props.measurement.result!.result as IChart;
+        const data = result.data;
+        const samplingRate = result.samplingRate;
+        const xUnit = UNITS[result.xAxes.unit];
+        const yUnit = UNITS[result.yAxes.unit];
+
+        const { getLocale } = require("eez-studio-shared/i10n") as typeof I10nModule;
+        const locale = getLocale();
+
+        // determine CSV separator depending of locale usage of ","
+        let separator;
+        if ((0.1).toLocaleString(locale).indexOf(",") != -1) {
+            separator = ";";
+        } else {
+            separator = ",";
+        }
+
+        const numberFormat = new Intl.NumberFormat(locale, {
+            useGrouping: false,
+            maximumFractionDigits: 9
+        });
+
+        const CHUNK = 100000;
+
+        let progressToastId: string | number = 0;
+
+        if (data.length > CHUNK) {
+            progressToastId = notification.info("Exporting to CSV ...", {
+                autoClose: false,
+                closeButton: false,
+                closeOnClick: false,
+                hideProgressBar: false,
+                progressStyle: {
+                    transition: "none"
+                }
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+
+        let csv = `[${xUnit.unitSymbol}]${separator}[${yUnit.unitSymbol}]\n`;
+        for (let i = 0; i < data.length; i++) {
+            csv += `${numberFormat.format(i / samplingRate)}${separator}${numberFormat.format(
+                data[i]
+            )}\n`;
+
+            if (data.length > CHUNK) {
+                if (i > 0 && i % CHUNK === 0) {
+                    const progress = i / data.length;
+
+                    notification.update(progressToastId, {
+                        progress
+                    });
+
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+            }
+        }
+
+        if (data.length > CHUNK) {
+            notification.dismiss(progressToastId);
+        }
+
+        return csv;
+    }
+
+    @bind
+    async onSaveAsCsv() {
+        if (this.operationInProgress) {
+            return;
+        }
+
+        runInAction(() => (this.operationInProgress = true));
+
+        const csv = await this.getCsv();
+        if (csv) {
+            let options: SaveDialogOptions = {
+                filters: [
+                    {
+                        name: "CSV Files",
+                        extensions: ["csv"]
+                    },
+                    { name: "All Files", extensions: ["*"] }
+                ]
+            };
+
+            const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
+                EEZStudio.electron.remote.getCurrentWindow(),
+                options
+            );
+
+            let filePath = result.filePath;
+            if (filePath) {
+                if (!filePath.toLowerCase().endsWith("csv")) {
+                    filePath += ".csv";
+                }
+
+                try {
+                    await writeBinaryData(filePath, csv);
+                    notification.success(`Saved as "${filePath}"`);
+                } catch (err) {
+                    console.error(err);
+                    notification.error(err.toString());
+                }
+            }
+        } else {
+            notification.error(`Failed to export to CSV!`);
+        }
+
+        runInAction(() => (this.operationInProgress = false));
+    }
+
+    @bind
+    async onCopy() {
+        if (this.operationInProgress) {
+            return;
+        }
+
+        runInAction(() => (this.operationInProgress = true));
+
+        const csv = await this.getCsv();
+        if (csv) {
+            clipboard.writeText(csv);
+            notification.success("CSV copied to the clipboard");
+        } else {
+            notification.error(`Failed to export to CSV!`);
+        }
+
+        runInAction(() => (this.operationInProgress = false));
     }
 
     render() {
@@ -937,6 +1120,23 @@ class MeasurementComponent extends React.Component<{
                         embedded={true}
                         onValueChange={this.onValueChange}
                     />
+                    {measurement.result && !measurement.dirty && (
+                        <ActionsContainer>
+                            <IconAction
+                                icon="material:save"
+                                title="Save as CSV file"
+                                onClick={this.onSaveAsCsv}
+                                overlayText={"CSV"}
+                                enabled={!this.operationInProgress}
+                            />
+                            <IconAction
+                                icon="material:content_copy"
+                                title="Copy to clipboard"
+                                onClick={this.onCopy}
+                                enabled={!this.operationInProgress}
+                            />
+                        </ActionsContainer>
+                    )}
                 </td>
             );
         } else {
@@ -1034,7 +1234,7 @@ const MeasurementsDockViewContainer = styled(SideDockViewContainer)`
 export class MeasurementsDockView extends React.Component<{
     measurementsController: MeasurementsController;
 }> {
-    get measurementModel() {
+    get measurementsModel() {
         return this.props.measurementsController.measurementsModel;
     }
 
@@ -1053,7 +1253,7 @@ export class MeasurementsDockView extends React.Component<{
             if (
                 !measurementFunction.parametersDescription &&
                 this.numCharts === 1 &&
-                this.measurementModel.measurements.find(
+                this.measurementsModel.measurements.find(
                     measurement => measurement.measurementFunctionId === measurementFunctionId
                 )
             ) {
@@ -1068,6 +1268,18 @@ export class MeasurementsDockView extends React.Component<{
     render() {
         return (
             <MeasurementsDockViewContainer>
+                {this.props.measurementsController.refreshRequired && (
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => {
+                            this.props.measurementsController.startMeasurement(
+                                this.props.measurementsController.calcMeasurementsInterval()
+                            );
+                        }}
+                    >
+                        Refresh
+                    </button>
+                )}
                 <div>
                     <table>
                         <tbody>
@@ -1097,12 +1309,10 @@ export class MeasurementsDockView extends React.Component<{
                                         className="dropdown-item"
                                         href="#"
                                         onClick={action(() => {
-                                            this.props.measurementsController.measurementsModel.measurements.push(
-                                                {
-                                                    measurementId: guid(),
-                                                    measurementFunctionId
-                                                }
-                                            );
+                                            this.measurementsModel.measurements.push({
+                                                measurementId: guid(),
+                                                measurementFunctionId
+                                            });
                                         })}
                                     >
                                         {
@@ -1139,11 +1349,12 @@ export class ChartMeasurements extends React.Component<{
         factory.registerComponent("MeasurementValue", function (container: any, props: any) {
             const measurement = measurementsController.findMeasurementById(props.measurementId);
             if (measurement) {
+                const div: HTMLDivElement = container.getElement()[0];
                 ReactDOM.render(
                     <ThemeProvider theme={theme}>
                         <MeasurementValue measurement={measurement} inDockablePanel={true} />
                     </ThemeProvider>,
-                    container.getElement()[0]
+                    div
                 );
             }
         });
@@ -1193,7 +1404,7 @@ export class ChartMeasurements extends React.Component<{
                     measurement => measurement.measurementId === contentItem.config.id
                 );
 
-                contentItem.setTitle(measurement!.chartPanelTitle);
+                contentItem.setTitle(measurement?.chartPanelTitle || "");
             });
 
             goldenLayout.root

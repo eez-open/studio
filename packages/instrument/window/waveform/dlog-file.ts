@@ -8,7 +8,6 @@ import {
     UNKNOWN_UNIT,
     UNITS
 } from "eez-studio-shared/units";
-import { roundNumber } from "eez-studio-shared/roundNumber";
 
 import * as I10nModule from "eez-studio-shared/i10n";
 
@@ -418,6 +417,11 @@ export function convertDlogToCsv(data: Uint8Array) {
         separator = ",";
     }
 
+    const numberFormat = new Intl.NumberFormat(locale, {
+        useGrouping: false,
+        maximumFractionDigits: 9
+    });
+
     // first row contains column names
     let csv = "";
 
@@ -440,16 +444,15 @@ export function convertDlogToCsv(data: Uint8Array) {
 
     //
     for (let rowIndex = 0; rowIndex < dlog.length; rowIndex++) {
-        csv += roundNumber(rowIndex * dlog.xAxis.step, 6).toLocaleString(locale);
+        csv += numberFormat.format(rowIndex * dlog.xAxis.step);
         for (let columnIndex = 0; columnIndex < dlog.yAxes.length; columnIndex++) {
             csv += separator;
-            csv += roundNumber(
+            csv += numberFormat.format(
                 readFloat(
                     dlog.dataOffset +
                         4 * (rowIndex * numColumns + (dlog.hasJitterColumn ? 1 : 0) + columnIndex)
-                ),
-                6
-            ).toLocaleString(locale);
+                )
+            );
         }
         csv += "\n";
     }

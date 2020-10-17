@@ -110,6 +110,7 @@ interface IInput {
     samplingRate: number;
     getSampleValueAtIndex(index: number): number;
     valueUnit: keyof typeof UNITS;
+    values: any;
 }
 
 export interface IMeasureTask extends IInput {
