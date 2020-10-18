@@ -1072,7 +1072,7 @@ class MeasurementComponent extends React.Component<{
 
             let filePath = result.filePath;
             if (filePath) {
-                if (!filePath.toLowerCase().endsWith("csv")) {
+                if (!filePath.toLowerCase().endsWith(".csv")) {
                     filePath += ".csv";
                 }
 

@@ -396,8 +396,12 @@ export async function saveTableListData(
             filters: [{ name: "EEZ List Files", extensions: ["list"] }]
         }
     );
-    const filePath = result.filePath;
+    let filePath = result.filePath;
     if (filePath) {
+        if (!filePath.toLowerCase().endsWith(".list")) {
+            filePath += ".list";
+        }
+
         try {
             await writeCsvFile(filePath, tableListData, getCsvDataColumnDefinitions(instrument));
             notification.success(`List exported to "${filePath}".`);

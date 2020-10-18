@@ -1176,8 +1176,13 @@ class ProjectStoreClass {
                         ]
                     }
                 );
-                if (result.filePath) {
-                    this.savedAsFilePath(result.filePath, callback);
+                let filePath = result.filePath;
+                if (filePath) {
+                    if (!filePath.toLowerCase().endsWith(".eez-project")) {
+                        filePath += ".eez-project";
+                    }
+
+                    this.savedAsFilePath(filePath, callback);
                 }
             } else {
                 this.doSave(callback);

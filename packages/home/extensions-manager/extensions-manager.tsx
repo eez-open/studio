@@ -926,8 +926,12 @@ export class DetailsView extends React.Component {
             }
         );
 
-        const filePath = result.filePath;
+        let filePath = result.filePath;
         if (filePath) {
+            if (!filePath.toLowerCase().endsWith(".zip")) {
+                filePath += ".zip";
+            }
+
             try {
                 const tempFilePath = await getTempFilePath();
                 await exportExtension(extension, tempFilePath);

@@ -218,9 +218,13 @@ export async function exportActivityLogItems(store: IStore, items: IActivityLogE
         }
     );
 
-    const filePath = result.filePath;
 
-    if (filePath) {
+    if (result.filePath) {
+        let filePath = result.filePath;
+        if (!filePath.toLowerCase().endsWith(".eez-notebook")) {
+            filePath += ".eez-notebook";
+        }
+
         const progressToastId = notification.info("Exporting...", {
             autoClose: false
         });

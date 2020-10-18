@@ -148,8 +148,12 @@ export function importInstrumentDefinition(instrumentDefinitionFilePath: string)
                         ]
                     }
                 );
-                const projectFilePath = result.filePath;
+                let projectFilePath = result.filePath;
                 if (projectFilePath) {
+                    if (!projectFilePath.toLowerCase().endsWith(".eez-project")) {
+                        projectFilePath += ".eez-project";
+                    }
+        
                     importInstrumentDefinitionAsProject(
                         instrumentDefinitionFilePath,
                         projectFilePath
