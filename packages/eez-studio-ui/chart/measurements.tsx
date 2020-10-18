@@ -548,11 +548,16 @@ export class MeasurementsController {
             let newChartPanelsViewState: string | undefined;
 
             if (this.chartMeasurements.length > 0) {
-                if (this.chartPanelsViewState) {
+                let content;
+                try {
+                    content = JSON.parse(this.measurementsModel.chartPanelsViewState!);
+                } catch (err) {
+                    content = undefined;
+                }
+
+                if (content) {
                     const goldenLayout: any = new GoldenLayout(
-                        {
-                            content: JSON.parse(this.measurementsModel.chartPanelsViewState!)
-                        },
+                        { content },
                         document.createElement("div")
                     );
                     goldenLayout.registerComponent("MeasurementValue", function () {});
@@ -1362,10 +1367,16 @@ export class ChartMeasurements extends React.Component<{
 
     @computed
     get defaultLayoutConfig() {
+        let content;
+        try {
+            content = JSON.parse(this.props.measurementsController.chartPanelsViewState!);
+        } catch (err) {
+            content = undefined;
+        }
         return {
             settings: DockablePanels.DEFAULT_SETTINGS,
             dimensions: DockablePanels.DEFAULT_DIMENSIONS,
-            content: JSON.parse(this.props.measurementsController.chartPanelsViewState!)
+            content
         };
     }
 

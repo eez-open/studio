@@ -55,9 +55,9 @@ async function run() {
     }
 
     if (task) {
-        //console.time(task.name);
+        console.time(task.name);
         await task.callback();
-        //console.timeEnd(task.name);
+        console.timeEnd(task.name);
 
         timeout = setTimeout(run);
     } else {

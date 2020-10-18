@@ -470,9 +470,9 @@ export class Waveform extends FileHistoryItem {
 
     getDefaultWaveformDefinition(): IWaveformDefinition {
         return {
-            samplingRate: 1000000,
-            format: this.guessWaveformFormat(),
-            unitName: "voltage",
+            samplingRate: 1,
+            format: WaveformFormat.UNKNOWN,
+            unitName: "unknown",
             offset: 0,
             scale: 1,
             cachedMinValue: 0,

@@ -11,7 +11,7 @@ export enum WaveformFormat {
 }
 
 function getCsvValues(valuesArray: any) {
-    var values = new Buffer(valuesArray.buffer).toString("binary");
+    var values = new Buffer(valuesArray.buffer || []).toString("binary");
 
     if (!values || !values.split) {
         return [];
