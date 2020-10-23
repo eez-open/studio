@@ -1,4 +1,4 @@
-import { action, observable, runInAction } from "mobx";
+import { action, observable } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import classNames from "classnames";
@@ -57,10 +57,6 @@ export class Splitter extends React.Component<SplitterProps, {}> {
     }
 
     UNSAFE_componentWillReceiveProps(nextProps: SplitterProps) {
-        runInAction(() => {
-            this.width = 0;
-            this.height = 0;
-        });
         this.calcSizes(nextProps);
     }
 
@@ -72,7 +68,10 @@ export class Splitter extends React.Component<SplitterProps, {}> {
     animationFrameCallback() {
         if (this.element) {
             let rect = this.element.getBoundingClientRect();
-            if (rect.width !== this.width || rect.height !== this.height) {
+
+            const diff = (this.props.type === "horizontal" ? rect.width : rect.height) - (this.offsets[this.offsets.length-1] + this.sizes[this.sizes.length-1]);
+
+            if (rect.width !== this.width || rect.height !== this.height || diff > 0) {
                 this.width = rect.width;
                 this.height = rect.height;
 
