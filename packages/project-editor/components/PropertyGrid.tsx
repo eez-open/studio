@@ -900,8 +900,12 @@ class Property extends React.Component<PropertyProps> {
                 }
                 if (newValue != oldValue) {
                     UndoManager.setCombineCommands(true);
-                    replaceObjectReference(this.props.objects[0], newValue);
-                    this.changeValue(newValue);
+
+                    runInAction(() => {
+                        replaceObjectReference(this.props.objects[0], newValue);
+                        this.changeValue(newValue);
+                    });
+
                     UndoManager.setCombineCommands(false);
                 }
             })
