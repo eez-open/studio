@@ -148,7 +148,7 @@ class HistoryCalendar {
 
             runInAction(() => {
                 if (rows.length > 0) {
-                    rows.forEach(row => this.counters.set(row.date, row.count.toNumber()));
+                    rows.forEach(row => this.counters.set(row.date, Number(row.count)));
                     this.minDate = new Date(rows[0].date + " 00:00:00");
                     this.maxDate = new Date();
                 } else {
@@ -540,7 +540,7 @@ class HistoryNavigator {
                 )
                 .get(this.firstHistoryItemTime);
 
-            this.hasOlder = result && result.count.toNumber() > 0;
+            this.hasOlder = result && Number(result.count) > 0;
         } else {
             this.hasOlder = false;
         }
@@ -559,7 +559,7 @@ class HistoryNavigator {
                 )
                 .get(this.lastHistoryItemTime);
 
-            this.hasNewer = result && result.count.toNumber() > 0;
+            this.hasNewer = result && Number(result.count) > 0;
         } else {
             this.hasNewer = false;
         }
@@ -1045,7 +1045,7 @@ export class History {
                     .get();
 
                 // if instrument IS NOT used in this session ...
-                if (!(result && result.count.toNumber() > 0)) {
+                if (!(result && Number(result.count) > 0)) {
                     // ... no need to show session close item and also remove session start item.
                     const sessionStart: Partial<IActivityLogEntry> = {
                         id: activityLogEntry.sid as string,
@@ -1104,7 +1104,7 @@ export class History {
         }
 
         if (
-            activityLogEntry.message !== undefined && 
+            activityLogEntry.message !== undefined &&
             foundItem.historyItem.message !== activityLogEntry.message
         ) {
             foundItem.historyItem.message = activityLogEntry.message;
@@ -1289,7 +1289,7 @@ export class DeletedItemsHistory extends History {
             .get();
 
         runInAction(() => {
-            this.deletedCount = result ? result.count.toNumber() : 0;
+            this.deletedCount = result ? Number(result.count) : 0;
         });
     }
 

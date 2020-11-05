@@ -19,6 +19,8 @@ configure({ enforceActions: "observed" });
 let setupFinished: boolean = false;
 let projectFilePath: string | undefined;
 
+app.allowRendererProcessReuse = false;
+
 app.on("ready", async function () {
     // make sure there is only one instance of this application
     // var gotTheLock = app.requestSingleInstanceLock();

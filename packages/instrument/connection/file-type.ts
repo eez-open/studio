@@ -67,7 +67,8 @@ export function convertBmpToPng(data: string) {
     return new Promise<string>((resolve, reject) => {
         let browserWindow = new BrowserWindow({
             webPreferences: {
-                nodeIntegration: true
+                nodeIntegration: true,
+                enableRemoteModule: true
             },
             show: false
         });

@@ -627,7 +627,7 @@ export class InstrumentObject {
                 console.error(err);
             }
             if (result) {
-                this._creationDate = new Date(result.date.toNumber());
+                this._creationDate = new Date(Number(result.date));
             } else {
                 this._creationDate = null;
             }
@@ -932,9 +932,11 @@ export class InstrumentObject {
         beginTransaction(`Change instrument ${customPropertyName} custom property`);
         store.updateObject({
             id: this.id,
-            custom: Object.assign(toJS(this.custom), {
-                [customPropertyName]: customPropertyValue
-            })
+            custom: toJS(
+                Object.assign(this.custom, {
+                        [customPropertyName]: customPropertyValue
+                    })
+            )
         });
         commitTransaction();
     }

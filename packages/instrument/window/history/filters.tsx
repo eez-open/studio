@@ -179,7 +179,7 @@ export class FilterStats {
             ).all();
 
             rows.forEach(row => {
-                this.add(row.type, row.count.toNumber());
+                this.add(row.type, Number(row.count));
             });
         });
     }

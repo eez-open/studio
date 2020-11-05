@@ -131,7 +131,8 @@ export async function setup() {
 
         let win = new BrowserWindow({
             webPreferences: {
-                nodeIntegration: true
+                nodeIntegration: true,
+                enableRemoteModule: true
             },
             width: 600,
             height: 200,

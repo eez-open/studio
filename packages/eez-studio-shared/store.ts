@@ -92,11 +92,11 @@ export const types = {
     any: {},
     string: {},
     boolean: {
-        fromDB: (value: any) => !!value.toNumber(),
+        fromDB: (value: any) => !!Number(value),
         toDB: (value: any) => (value ? 1 : 0)
     },
     integer: {
-        fromDB: (value: any) => value.toNumber(),
+        fromDB: (value: any) => Number(value),
         toDB: (value: any) => value
     },
     object: {
@@ -104,7 +104,7 @@ export const types = {
         toDB: (value: any) => JSON.stringify(toJS(value))
     },
     date: {
-        fromDB: (value: any) => (value ? new Date(value.toNumber()) : null),
+        fromDB: (value: any) => (value ? new Date(Number(value)) : null),
         toDB: (value: any) => {
             if (value == null) {
                 return null;

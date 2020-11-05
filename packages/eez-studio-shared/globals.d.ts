@@ -2,7 +2,7 @@
 
 declare const EEZStudio: {
     title: string;
-    electron: Electron.RendererInterface;
+    electron: typeof Electron;
     require: any;
     windowType: string;
 };

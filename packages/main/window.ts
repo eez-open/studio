@@ -48,7 +48,8 @@ export function createWindow(params: IWindowParams) {
             // allowRunningInsecureContent: true,
             webviewTag: true,
             nodeIntegrationInWorker: true,
-            plugins: true
+            plugins: true,
+            enableRemoteModule: true
         },
         show: false
     };

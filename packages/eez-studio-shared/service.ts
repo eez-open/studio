@@ -133,9 +133,10 @@ if (isRenderer()) {
     // create service process
     var windowContructorParams: Electron.BrowserWindowConstructorOptions = {
         webPreferences: {
-            nodeIntegration: true
+            nodeIntegration: true,
+            enableRemoteModule: true
         },
-        show: false
+        show: true
     };
     let browserWindow = new BrowserWindow(windowContructorParams);
     browserWindow.loadURL(`file://${__dirname}/../eez-studio-shared/service.html`);
