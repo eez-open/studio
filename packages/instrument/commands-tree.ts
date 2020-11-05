@@ -7,6 +7,7 @@ export interface ICommandSyntax {
     name: string;
     url?: string;
     parameters: IParameter[];
+    sendsBackDataBlock: boolean;
 }
 
 export interface IQuerySyntax {
@@ -142,7 +143,8 @@ export function addCommandToTree(command: ICommand, tree: ScpiCommandTreeNode) {
         currentNode.command.commandSyntax = {
             name: command.name,
             url: command.helpLink,
-            parameters: command.parameters
+            parameters: command.parameters,
+            sendsBackDataBlock: command.sendsBackDataBlock
         };
     }
 }
@@ -170,7 +172,10 @@ export function makeItShort(command: ICommandSyntax) {
     return shortCommand;
 }
 
-export function matchCommand(commandSyntax: ICommandSyntax | undefined, pattern: string) {
+export function matchCommand(
+    commandSyntax: ICommandSyntax | IQuerySyntax | undefined,
+    pattern: string
+) {
     if (!commandSyntax) {
         return undefined;
     }

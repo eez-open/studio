@@ -250,7 +250,8 @@ function buildCommand(name: string, sdlCommand: JQuery, docPath: string, command
             name: name,
             description,
             parameters: buildParameters(commandSyntax),
-            response: undefined as any
+            response: undefined as any,
+            sendsBackDataBlock: !!parseInt(commandSyntax.attr("sendsBackDataBlock") || "0")
         };
     }
 
@@ -261,7 +262,8 @@ function buildCommand(name: string, sdlCommand: JQuery, docPath: string, command
             name: name + "?",
             description,
             parameters: buildParameters(querySyntax),
-            response: buildResponse(querySyntax)
+            response: buildResponse(querySyntax),
+            sendsBackDataBlock: false
         };
     }
 

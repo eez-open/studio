@@ -29,7 +29,7 @@ import * as CatalogModule from "home/extensions-manager/catalog";
 import { IInstrumentExtensionProperties } from "instrument/instrument-extension";
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/import";
 import { IInstrumentProperties } from "instrument/export";
-import { IQuerySyntax } from "instrument/commands-tree";
+import { ICommandSyntax, IQuerySyntax } from "instrument/commands-tree";
 
 import { createHistoryItem } from "instrument/window/history/item-factory";
 import { IConnection } from "instrument/connection/connection";
@@ -896,6 +896,11 @@ export class InstrumentObject {
             return response.type[0].type;
         }
         return undefined;
+    }
+
+    isCommandSendsBackDataBlock(commandName: string) {
+        const command = this._instrumentAppStore.commandsTree.findCommand(commandName);
+        return command && (command as ICommandSyntax).sendsBackDataBlock;
     }
 
     @computed

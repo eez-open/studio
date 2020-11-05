@@ -207,7 +207,12 @@ function buildCommand(command: ScpiCommand) {
             )}" url="${quoteAttr(command.commandSyntax.url)}" />`;
         }
 
-        commandSyntaxes = `<CommandSyntaxes><CommandSyntax>${buildParameters(
+        let sendsBackDataBlockAttr;
+        if (command.commandSyntax.sendsBackDataBlock) {
+            sendsBackDataBlockAttr = ' sendsBackDataBlock="1"';
+        }
+
+        commandSyntaxes = `<CommandSyntaxes><CommandSyntax${sendsBackDataBlockAttr}>${buildParameters(
             command.commandSyntax.parameters
         )}</CommandSyntax></CommandSyntaxes>`;
     }
@@ -282,7 +287,8 @@ function buildCommonCommands(idf: IdfProperties, subsystems: ISubsystem[]) {
                     command.commandSyntax = {
                         name: "*" + name,
                         url: url,
-                        parameters: subsystemCommand.parameters
+                        parameters: subsystemCommand.parameters,
+                        sendsBackDataBlock: subsystemCommand.sendsBackDataBlock
                     };
                 }
             }

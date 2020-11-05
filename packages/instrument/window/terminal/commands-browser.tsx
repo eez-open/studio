@@ -48,8 +48,8 @@ const ParametersDiv = styled.div`
 export class CommandSyntax extends React.Component<
     {
         appStore: InstrumentAppStore;
-        commandSyntax: ICommandSyntax;
-        copyCommand: (command: ICommandSyntax, commandParameters: string) => void;
+        commandSyntax: ICommandSyntax | IQuerySyntax;
+        copyCommand: (command: ICommandSyntax | IQuerySyntax, commandParameters: string) => void;
     },
     {}
 > {

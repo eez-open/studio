@@ -656,6 +656,7 @@ export interface IScpiCommand {
     usedIn?: string[];
     parameters: IScpiParameter[];
     response?: IScpiResponse;
+    sendsBackDataBlock: boolean;
 }
 
 export class ScpiCommand extends EezObject implements IScpiCommand {
@@ -665,6 +666,7 @@ export class ScpiCommand extends EezObject implements IScpiCommand {
     @observable usedIn?: string[];
     @observable parameters: ScpiParameter[];
     @observable response?: ScpiResponse;
+    @observable sendsBackDataBlock: boolean;
 
     get isQuery() {
         return this.name ? this.name.trim().endsWith("?") : false;
@@ -704,6 +706,15 @@ export class ScpiCommand extends EezObject implements IScpiCommand {
                     return !command.isQuery;
                 },
                 defaultValue: {}
+            },
+            {
+                name: "sendsBackDataBlock",
+                displayName: "This command sends back data block",
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: (command: ScpiCommand) => {
+                    return command.isQuery;
+                },
+                defaultValue: false
             }
         ],
         newItem: (parent: IEezObject) => {

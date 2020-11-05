@@ -694,11 +694,18 @@ export class IpcConnection extends ConnectionBase {
             // no parameters
             commandName = command;
         }
+
         if (commandName.endsWith("?")) {
             // get expected query response
             options = {
                 queryResponseType: this.instrument.getQueryResponseType(commandName)
             };
+        } else {
+            if (this.instrument.isCommandSendsBackDataBlock(commandName)) {
+                options = {
+                    queryResponseType: "non-standard-data-block"
+                };
+            }
         }
 
         EEZStudio.electron.ipcRenderer.send("instrument/connection/send", {

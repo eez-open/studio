@@ -63,6 +63,7 @@ export interface ICommand {
     usedIn?: string[] | undefined;
     parameters: IParameter[];
     response: IResponse;
+    sendsBackDataBlock: boolean;
 }
 
 export interface ISubsystem {
