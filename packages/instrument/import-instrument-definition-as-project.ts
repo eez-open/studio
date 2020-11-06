@@ -1,3 +1,4 @@
+import { toJS } from "mobx";
 import {
     writeJsObjectToFile,
     getFileNameWithoutExtension,
@@ -133,7 +134,10 @@ export async function importInstrumentDefinitionAsProject(
 
         await writeJsObjectToFile(projectFilePath, objectToJS(project));
 
-        EEZStudio.electron.ipcRenderer.send("openWindow", getProjectWindowParams(projectFilePath));
+        EEZStudio.electron.ipcRenderer.send(
+            "openWindow",
+            toJS(getProjectWindowParams(projectFilePath))
+        );
 
         await new Promise(resolve => setTimeout(resolve));
 

@@ -1,4 +1,4 @@
-import { observable, computed, runInAction } from "mobx";
+import { observable, computed, runInAction, toJS } from "mobx";
 
 import { isRenderer } from "eez-studio-shared/util-electron";
 import {
@@ -123,7 +123,10 @@ export class WorkbenchObject implements IWorkbenchObject {
                 tabs.makeActive(tab);
             } else {
                 // close window if open
-                EEZStudio.electron.ipcRenderer.send("closeWindow", this.getEditorWindowArgs());
+                EEZStudio.electron.ipcRenderer.send(
+                    "closeWindow",
+                    toJS(this.getEditorWindowArgs())
+                );
 
                 // open tab
                 const tab = tabs.addObjectTab(this);
@@ -137,7 +140,7 @@ export class WorkbenchObject implements IWorkbenchObject {
             }
 
             // open window
-            EEZStudio.electron.ipcRenderer.send("openWindow", this.getEditorWindowArgs());
+            EEZStudio.electron.ipcRenderer.send("openWindow", toJS(this.getEditorWindowArgs()));
         }
     }
 

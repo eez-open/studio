@@ -1,4 +1,4 @@
-import { autorun } from "mobx";
+import { autorun, toJS } from "mobx";
 
 import { isRenderer } from "eez-studio-shared/util-electron";
 import { roundNumber } from "eez-studio-shared/roundNumber";
@@ -392,7 +392,7 @@ function sendListRenderer(
         instrumentId,
         channelIndex,
         listName,
-        listData,
+        listData: toJS(listData),
         callbackWindowId
     });
 }

@@ -1,5 +1,6 @@
 import { isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
+import { toJS } from "mobx";
 
 // Execute given function in service process.
 // There is exactly one service process, created
@@ -107,7 +108,7 @@ if (isRenderer()) {
                             windowId: EEZStudio.electron.remote.getCurrentWindow().id,
                             taskId,
                             serviceName,
-                            inputParams
+                            inputParams: toJS(inputParams)
                         };
 
                         if (executeInsideMainProcess) {

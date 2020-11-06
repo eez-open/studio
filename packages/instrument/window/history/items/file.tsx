@@ -203,7 +203,7 @@ class PdfPreview extends React.Component<{
                 />
             );
         } else {
-            content = this.thumbnail && <img src={this.thumbnail} />;
+            content = <img src={this.thumbnail || "../instrument/_images/pdf.png"} />;
         }
 
         return (
