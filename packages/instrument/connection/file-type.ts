@@ -4,10 +4,10 @@ const fileType = require("file-type");
 
 import { getFileNameExtension } from "eez-studio-shared/util-electron";
 import { UNITS, PREFIXES } from "eez-studio-shared/units";
+import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import { FileState } from "instrument/connection/file-state";
-
-import { isDlog } from "instrument/window/waveform/dlog-file";
+import { decodeDlog } from "instrument/window/waveform/dlog-file";
 
 export const SAMPLE_LENGTH = 4096;
 
@@ -263,4 +263,21 @@ export function extractColumnFromCSVHeuristically(data: string | Buffer) {
         colorInverse: UNITS[unitName].colorInverse,
         label: label
     };
+}
+
+export function isDlog(dataSample: Uint8Array) {
+    const dlog = decodeDlog(dataSample);
+    if (dlog) {
+        return {
+            ext: "dlog",
+            mime: MIME_EEZ_DLOG,
+            comment: dlog.comment
+        };
+    }
+
+    return undefined;
+}
+
+export function isDlogWaveform(activityLogEntry: IActivityLogEntry) {
+    return checkMime(activityLogEntry.message, [MIME_EEZ_DLOG]);
 }

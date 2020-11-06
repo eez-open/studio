@@ -136,7 +136,7 @@ if (isRenderer()) {
             nodeIntegration: true,
             enableRemoteModule: true
         },
-        show: true
+        show: false
     };
     let browserWindow = new BrowserWindow(windowContructorParams);
     browserWindow.loadURL(`file://${__dirname}/../eez-studio-shared/service.html`);

@@ -41,7 +41,7 @@ import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
 import { Waveform, convertToCsv } from "instrument/window/waveform/generic";
 import { DlogWaveform } from "instrument/window/waveform/dlog";
-import { convertDlogToCsv } from "instrument/window/waveform/dlog-file";
+import { convertDlogToCsv } from "instrument/connection/file-type-utils";
 import { PreventDraggable } from "instrument/window/history/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
