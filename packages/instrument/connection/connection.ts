@@ -666,7 +666,7 @@ export class IpcConnection extends ConnectionBase {
     connect(connectionParameters?: ConnectionParameters) {
         EEZStudio.electron.ipcRenderer.send("instrument/connection/connect", {
             instrumentId: this.instrument.id,
-            connectionParameters
+            connectionParameters: toJS(connectionParameters)
         });
     }
 
@@ -725,7 +725,7 @@ export class IpcConnection extends ConnectionBase {
 
         EEZStudio.electron.ipcRenderer.send("instrument/connection/upload", {
             instrumentId: this.instrument.id,
-            instructions,
+            instructions: toJS(instructions),
             callbackWindowId: EEZStudio.electron.remote.getCurrentWindow().id
         });
     }

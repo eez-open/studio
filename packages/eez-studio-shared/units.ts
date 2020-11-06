@@ -1,6 +1,5 @@
 import { roundNumber } from "eez-studio-shared/roundNumber";
-import { filterFloat } from "eez-studio-shared/validation";
-import { _mapValues } from "eez-studio-shared/algorithm";
+import { filterFloat } from "eez-studio-shared/validation-filters";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -644,7 +643,10 @@ export const UNITS = {
     unkn: UNKNOWN_UNIT
 };
 
-export const format = _mapValues(UNITS, unit => unit.formatValue);
+export const format = Object.entries(UNITS).reduce((a, [key, { formatValue }]) => {
+    a[key] = formatValue;
+    return a;
+}, {} as { [key: string]: (value: number, precision?: number) => string });
 
 export const PREFIXES = {
     f: 0.000000000000001,

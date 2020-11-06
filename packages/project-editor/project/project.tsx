@@ -57,8 +57,6 @@ import {
 } from "project-editor/project/build";
 import { getAllMetrics } from "project-editor/project/metrics";
 
-const ipcRenderer = EEZStudio.electron.ipcRenderer;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export const NAMESPACE_PREFIX = "::";
@@ -1081,7 +1079,7 @@ class ProjectStoreClass {
     }
 
     updateMruFilePath() {
-        ipcRenderer.send("setMruFilePath", this.filePath);
+        EEZStudio.electron.ipcRenderer.send("setMruFilePath", this.filePath);
     }
 
     getFilePathRelativeToProjectPath(absoluteFilePath: string) {
