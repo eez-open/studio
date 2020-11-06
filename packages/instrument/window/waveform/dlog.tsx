@@ -4,7 +4,7 @@ import { observable, computed, reaction, toJS, runInAction } from "mobx";
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
-import { TIME_UNIT, UNKNOWN_UNIT, UNITS } from "eez-studio-shared/units";
+import { TIME_UNIT, UNKNOWN_UNIT, UNITS, IUnit } from "eez-studio-shared/units";
 import { Point } from "eez-studio-shared/geometry";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { log } from "eez-studio-shared/activity-log";
@@ -38,12 +38,21 @@ import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
 import { WaveformLineView } from "instrument/window/waveform/line-view";
 import { WaveformToolbar } from "instrument/window/waveform/toolbar";
 
-import { IDlog, IDlogYAxis, decodeDlog, Scale } from "instrument/window/waveform/dlog-file";
+import {
+    IDlog,
+    IDlogYAxis,
+    decodeDlog,
+    Scale
+} from "instrument/window/waveform/dlog-file";
+import { dlogUnitToStudioUnit } from "instrument/connection/file-type-utils";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class DlogWaveformAxisModel implements IAxisModel {
-    constructor(public yAxis: IDlogYAxis, public semiLogarithmic?: { a: number; b: number }) {}
+    constructor(
+        public yAxis: IDlogYAxis<IUnit>,
+        public semiLogarithmic?: { a: number; b: number }
+    ) {}
 
     get unit() {
         return this.yAxis.unit;
@@ -238,7 +247,7 @@ class DlogWaveformChartsController extends ChartsController {
 interface IDlogChart {}
 
 interface IChannel {
-    yAxis: IDlogYAxis;
+    yAxis: IDlogYAxis<IUnit>;
     axisModel: IAxisModel;
 }
 
@@ -358,9 +367,10 @@ export class DlogWaveform extends FileHistoryItem {
     }
 
     @computed
-    get dlog(): IDlog {
+    get dlog(): IDlog<IUnit> {
         return (
-            (this.values && decodeDlog(this.values)) || {
+            (this.values &&
+                decodeDlog(this.values, dlogUnitToStudioUnit)) || {
                 version: 1,
                 xAxis: {
                     unit: TIME_UNIT,
@@ -622,7 +632,7 @@ export async function importDlog(appStore: InstrumentAppStore, filePath: string)
 
     const data = await readBinaryFile(filePath);
 
-    const dlog = decodeDlog(data);
+    const dlog = decodeDlog(data, unit => unit);
     if (!dlog) {
         return false;
     }

@@ -266,7 +266,7 @@ export function extractColumnFromCSVHeuristically(data: string | Buffer) {
 }
 
 export function isDlog(dataSample: Uint8Array) {
-    const dlog = decodeDlog(dataSample);
+    const dlog = decodeDlog(dataSample, unit => unit);
     if (dlog) {
         return {
             ext: "dlog",

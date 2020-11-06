@@ -1,14 +1,32 @@
-import {
-    IUnit,
-    TIME_UNIT,
-    VOLTAGE_UNIT,
-    CURRENT_UNIT,
-    POWER_UNIT,
-    UNKNOWN_UNIT,
-    UNITS
-} from "eez-studio-shared/units";
-
-////////////////////////////////////////////////////////////////////////////////
+export enum Unit {
+    UNIT_NONE = -1,
+    UNIT_UNKNOWN,
+    UNIT_VOLT,
+    UNIT_MILLI_VOLT,
+    UNIT_AMPER,
+    UNIT_MILLI_AMPER,
+    UNIT_MICRO_AMPER,
+    UNIT_WATT,
+    UNIT_MILLI_WATT,
+    UNIT_SECOND,
+    UNIT_MILLI_SECOND,
+    UNIT_CELSIUS,
+    UNIT_RPM,
+    UNIT_OHM,
+    UNIT_KOHM,
+    UNIT_MOHM,
+    UNIT_PERCENT,
+    UNIT_HERTZ,
+    UNIT_MILLI_HERTZ,
+    UNIT_KHERTZ,
+    UNIT_MHERTZ,
+    UNIT_JOULE,
+    UNIT_FARAD,
+    UNIT_MILLI_FARAD,
+    UNIT_MICRO_FARAD,
+    UNIT_NANO_FARAD,
+    UNIT_PICO_FARAD,
+}
 
 enum Fields {
     FIELD_ID_COMMENT = 1,
@@ -28,16 +46,16 @@ enum Fields {
     FIELD_ID_Y_SCALE = 36,
 
     FIELD_ID_CHANNEL_MODULE_TYPE = 50,
-    FIELD_ID_CHANNEL_MODULE_REVISION = 51
+    FIELD_ID_CHANNEL_MODULE_REVISION = 51,
 }
 
 export enum Scale {
     LINEAR,
-    LOGARITHMIC
+    LOGARITHMIC,
 }
 
-export interface IDlogXAxis {
-    unit: IUnit;
+export interface IDlogXAxis<UnitType> {
+    unit: UnitType;
     step: number;
     scale: Scale;
     range: {
@@ -47,8 +65,8 @@ export interface IDlogXAxis {
     label: string;
 }
 
-export interface IDlogYAxis {
-    unit: IUnit;
+export interface IDlogYAxis<UnitType> {
+    unit: UnitType;
     range?: {
         min: number;
         max: number;
@@ -57,12 +75,12 @@ export interface IDlogYAxis {
     channelIndex: number;
 }
 
-export interface IDlog {
+export interface IDlog<UnitType> {
     version: number;
     comment?: string;
-    xAxis: IDlogXAxis;
-    yAxis: IDlogYAxis;
-    yAxes: IDlogYAxis[];
+    xAxis: IDlogXAxis<UnitType>;
+    yAxis: IDlogYAxis<UnitType>;
+    yAxes: IDlogYAxis<UnitType>[];
     yAxisScale: Scale;
     dataOffset: number;
     length: number;
@@ -77,7 +95,7 @@ const DLOG_MAGIC2 = 0x474f4c44;
 const DLOG_VERSION1 = 0x0001;
 const DLOG_VERSION2 = 0x0002;
 
-export function decodeDlog(data: Uint8Array): IDlog | undefined {
+export function decodeDlog<UnitType>(data: Uint8Array, getUnit: (unit: Unit) => UnitType): IDlog<UnitType> | undefined {
     const buffer = Buffer.allocUnsafe(4);
 
     function readFloat(i: number) {
@@ -111,73 +129,27 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
         return buffer.readUInt32LE(0);
     }
 
-    function getUnit(unit: number) {
-        enum FirmwareUnit {
-            UNIT_NONE = -1,
-            UNIT_UNKNOWN,
-            UNIT_VOLT,
-            UNIT_MILLI_VOLT,
-            UNIT_AMPER,
-            UNIT_MILLI_AMPER,
-            UNIT_MICRO_AMPER,
-            UNIT_WATT,
-            UNIT_MILLI_WATT,
-            UNIT_SECOND,
-            UNIT_MILLI_SECOND,
-            UNIT_CELSIUS,
-            UNIT_RPM,
-            UNIT_OHM,
-            UNIT_KOHM,
-            UNIT_MOHM,
-            UNIT_PERCENT,
-            UNIT_HERTZ,
-            UNIT_MILLI_HERTZ,
-            UNIT_KHERTZ,
-            UNIT_MHERTZ,
-            UNIT_JOULE,
-            UNIT_FARAD,
-            UNIT_MILLI_FARAD,
-            UNIT_MICRO_FARAD,
-            UNIT_NANO_FARAD,
-            UNIT_PICO_FARAD
-        }
-
-        if (unit === FirmwareUnit.UNIT_VOLT) {
-            return UNITS.volt;
-        } else if (unit === FirmwareUnit.UNIT_AMPER) {
-            return UNITS.ampere;
-        } else if (unit === FirmwareUnit.UNIT_WATT) {
-            return UNITS.watt;
-        } else if (unit === FirmwareUnit.UNIT_SECOND) {
-            return UNITS.time;
-        } else if (unit === FirmwareUnit.UNIT_JOULE) {
-            return UNITS.joule;
-        } else {
-            return UNITS.unknown;
-        }
-    }
-
     function readColumns() {
         const columns = readUInt32(12);
         for (let iChannel = 0; iChannel < 8; iChannel++) {
             if (columns & (1 << (4 * iChannel))) {
                 yAxes.push({
-                    unit: VOLTAGE_UNIT,
-                    channelIndex: iChannel
+                    unit: getUnit(Unit.UNIT_VOLT),
+                    channelIndex: iChannel,
                 });
             }
 
             if (columns & (2 << (4 * iChannel))) {
                 yAxes.push({
-                    unit: CURRENT_UNIT,
-                    channelIndex: iChannel
+                    unit: getUnit(Unit.UNIT_AMPER),
+                    channelIndex: iChannel,
                 });
             }
 
             if (columns & (4 << (4 * iChannel))) {
                 yAxes.push({
-                    unit: POWER_UNIT,
-                    channelIndex: iChannel
+                    unit: getUnit(Unit.UNIT_WATT),
+                    channelIndex: iChannel,
                 });
             }
         }
@@ -219,10 +191,7 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
             } else if (fieldId === Fields.FIELD_ID_X_LABEL) {
                 xAxis.label = readString(offset, offset + fieldDataLength);
                 offset += fieldDataLength;
-            } else if (
-                fieldId >= Fields.FIELD_ID_Y_UNIT &&
-                fieldId <= Fields.FIELD_ID_Y_CHANNEL_INDEX
-            ) {
+            } else if (fieldId >= Fields.FIELD_ID_Y_UNIT && fieldId <= Fields.FIELD_ID_Y_CHANNEL_INDEX) {
                 let yAxisIndex = readUInt8(offset);
                 offset++;
 
@@ -233,11 +202,11 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
                         range: yAxis.range
                             ? {
                                   min: yAxis.range.min,
-                                  max: yAxis.range.max
+                                  max: yAxis.range.max,
                               }
                             : undefined,
                         label: yAxis.label,
-                        channelIndex: yAxis.channelIndex
+                        channelIndex: yAxis.channelIndex,
                     });
                 }
 
@@ -307,31 +276,31 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
 
     let comment: string | undefined = undefined;
 
-    let xAxis: IDlogXAxis = {
-        unit: TIME_UNIT,
+    let xAxis: IDlogXAxis<UnitType> = {
+        unit: getUnit(Unit.UNIT_SECOND),
         step: 1,
         range: {
             min: 0,
-            max: 1
+            max: 1,
         },
         label: "",
-        scale: Scale.LINEAR
+        scale: Scale.LINEAR,
     };
 
     let yAxisDefined = false;
-    let yAxis: IDlogYAxis = {
-        unit: UNKNOWN_UNIT,
+    let yAxis: IDlogYAxis<UnitType> = {
+        unit: getUnit(Unit.UNIT_UNKNOWN),
         range: {
             min: 0,
-            max: 1
+            max: 1,
         },
         label: "",
-        channelIndex: -1
+        channelIndex: -1,
     };
 
     let yAxisScale = Scale.LINEAR;
 
-    let yAxes: IDlogYAxis[] = [];
+    let yAxes: IDlogYAxis<UnitType>[] = [];
 
     let startTime = undefined;
     let hasJitterColumn = false;
@@ -365,6 +334,6 @@ export function decodeDlog(data: Uint8Array): IDlog | undefined {
         dataOffset,
         length,
         startTime,
-        hasJitterColumn
+        hasJitterColumn,
     };
 }

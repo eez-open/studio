@@ -1,8 +1,25 @@
 import * as I10nModule from "eez-studio-shared/i10n";
-import { decodeDlog } from "instrument/window/waveform/dlog-file";
+import { UNITS } from "eez-studio-shared/units";
+import { decodeDlog, Unit as DlogUnit } from "instrument/window/waveform/dlog-file";
+
+export function dlogUnitToStudioUnit(unit: DlogUnit) {
+    if (unit === DlogUnit.UNIT_VOLT) {
+        return UNITS.volt;
+    } else if (unit === DlogUnit.UNIT_AMPER) {
+        return UNITS.ampere;
+    } else if (unit === DlogUnit.UNIT_WATT) {
+        return UNITS.watt;
+    } else if (unit === DlogUnit.UNIT_SECOND) {
+        return UNITS.time;
+    } else if (unit === DlogUnit.UNIT_JOULE) {
+        return UNITS.joule;
+    } else {
+        return UNITS.unknown;
+    }
+}
 
 export function convertDlogToCsv(data: Uint8Array) {
-    const dlog = decodeDlog(data);
+    const dlog = decodeDlog(data, dlogUnitToStudioUnit);
     if (!dlog) {
         return undefined;
     }
