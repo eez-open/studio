@@ -693,3 +693,8 @@ ipcMain.on("getReservedKeybindings", function (event: any) {
 
     event.returnValue = keybindings;
 });
+
+ipcMain.on("open-file", function (event, path) {
+    event.preventDefault();
+    openFile(path);
+});

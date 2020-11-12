@@ -11,6 +11,7 @@ import { humanize } from "eez-studio-shared/string";
 import { showGenericDialog, FieldComponent, TableField } from "eez-studio-ui/generic-dialog";
 import { Tree } from "eez-studio-ui/tree";
 import { BootstrapButton } from "project-editor/components/BootstrapButton";
+import { styled } from "eez-studio-ui/styled-components";
 
 import { getExtensionsByCategory } from "project-editor/core/extensions";
 import {
@@ -377,15 +378,38 @@ function showUsage(importDirective: ImportDirective) {
         .catch(() => {});
 }
 
-const ImportUsage = observer((props: PropertyProps) => {
+function openProject(importDirective: ImportDirective) {
+    EEZStudio.electron.ipcRenderer.send(
+        "open-file",
+        ProjectStore.getAbsoluteFilePath(importDirective.projectFilePath)
+    );
+}
+
+const ImportDirectiveCustomUIContainer = styled.div`
+    & > button {
+        margin-right: 10px;
+    }
+`;
+
+const ImportDirectiveCustomUI = observer((props: PropertyProps) => {
     return (
-        <BootstrapButton
-            color="primary"
-            size="small"
-            onClick={() => showUsage(props.objects[0] as ImportDirective)}
-        >
-            Usage
-        </BootstrapButton>
+        <ImportDirectiveCustomUIContainer>
+            <BootstrapButton
+                color="primary"
+                size="small"
+                onClick={() => showUsage(props.objects[0] as ImportDirective)}
+            >
+                Usage
+            </BootstrapButton>
+
+            <BootstrapButton
+                color="primary"
+                size="small"
+                onClick={() => openProject(props.objects[0] as ImportDirective)}
+            >
+                Open
+            </BootstrapButton>
+        </ImportDirectiveCustomUIContainer>
     );
 });
 
@@ -413,7 +437,7 @@ export class ImportDirective {
                 displayName: "",
                 type: PropertyType.Any,
                 computed: true,
-                propertyGridComponent: ImportUsage,
+                propertyGridComponent: ImportDirectiveCustomUI,
                 hideInPropertyGrid: (importObject: ImportDirective) => !importObject.project
             }
         ],
