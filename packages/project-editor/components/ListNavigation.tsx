@@ -331,7 +331,7 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
                 listAdapter={this.listAdapter}
                 tabIndex={0}
                 onFocus={this.onFocus.bind(this)}
-                onEditItem={this.editable ? undefined : onEditItem}
+                onEditItem={this.editable ? onEditItem : undefined}
                 renderItem={renderItem}
             />
         );

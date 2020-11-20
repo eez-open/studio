@@ -290,6 +290,7 @@ export class ThemesSideView extends React.Component<{
                     navigationObject={gui.colors}
                     onEditItem={this.onEditColorName}
                     renderItem={renderColorItem}
+                    editable={!ProjectStore.masterProject}
                     navigationStore={this.props.navigationStore}
                     dragAndDropManager={this.props.dragAndDropManager}
                 />
