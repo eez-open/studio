@@ -33,7 +33,6 @@ const darwinAppMenu: Electron.MenuItemConstructorOptions = {
     submenu: [
         {
             label: "About " + APP_NAME,
-            role: "about",
             click: showAboutBox
         },
         {
@@ -379,7 +378,6 @@ const helpMenu: Electron.MenuItemConstructorOptions = {
     submenu: [
         {
             label: "About",
-            role: "about",
             click: showAboutBox
         }
     ]
