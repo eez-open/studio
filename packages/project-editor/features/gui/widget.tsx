@@ -1496,11 +1496,28 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
         return layout;
     }
 
+    // This is for prevention of circular rendering of layouts, i.e Layout A is using Layout B and Layout B is using Layout A.
+    static renderedLayoutPages: Page[] = [];
+    static clearRenderedLayoutPagesFrameRequestId: number | undefined;
+    static clearRenderedLayoutPages() {
+        LayoutViewWidget.renderedLayoutPages = [];
+        LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId = undefined;
+    }
+
     render(dataContext: DataContext): React.ReactNode {
         const layoutPage = this.getLayoutPage(dataContext);
         if (!layoutPage) {
             return null;
         }
+
+        if (!LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId) {
+            LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId = window.requestAnimationFrame(LayoutViewWidget.clearRenderedLayoutPages)
+        }
+        if (LayoutViewWidget.renderedLayoutPages.indexOf(layoutPage) != -1) {
+            // circular rendering prevented
+            return null;
+        }
+        LayoutViewWidget.renderedLayoutPages.push(layoutPage);
 
         return <WidgetComponent widget={layoutPage} dataContext={dataContext} />;
     }

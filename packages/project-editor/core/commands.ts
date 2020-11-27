@@ -169,14 +169,7 @@ class UpdateCommand implements ICommand {
         }
 
         for (let propertyName in values) {
-            const resolutionDependableProperty = propertyName.endsWith("_");
-
-            let propertyInfo;
-            if (resolutionDependableProperty) {
-                propertyInfo = findPropertyByNameInObject(object, propertyName.slice(0, -1));
-            } else {
-                propertyInfo = findPropertyByNameInObject(object, propertyName);
-            }
+            let propertyInfo = findPropertyByNameInObject(object, propertyName);
 
             if (propertyInfo) {
                 const updateObjectValueHook = getClassInfo(object).updateObjectValueHook;
