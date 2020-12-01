@@ -26,6 +26,8 @@ export enum Unit {
     UNIT_MICRO_FARAD,
     UNIT_NANO_FARAD,
     UNIT_PICO_FARAD,
+    UNIT_MINUTES,
+    UNIT_BIT
 }
 
 enum Fields {
@@ -46,12 +48,12 @@ enum Fields {
     FIELD_ID_Y_SCALE = 36,
 
     FIELD_ID_CHANNEL_MODULE_TYPE = 50,
-    FIELD_ID_CHANNEL_MODULE_REVISION = 51,
+    FIELD_ID_CHANNEL_MODULE_REVISION = 51
 }
 
 export enum Scale {
     LINEAR,
-    LOGARITHMIC,
+    LOGARITHMIC
 }
 
 export interface IDlogXAxis<UnitType> {
@@ -66,6 +68,7 @@ export interface IDlogXAxis<UnitType> {
 }
 
 export interface IDlogYAxis<UnitType> {
+    dlogUnit: Unit;
     unit: UnitType;
     range?: {
         min: number;
@@ -83,11 +86,17 @@ export interface IDlog<UnitType> {
     yAxes: IDlogYAxis<UnitType>[];
     yAxisScale: Scale;
     dataOffset: number;
+
+    numFloatsPerRow: number;
+    columnFloatIndexes: number[];
+
     length: number;
 
     // legacy, version 1
     startTime?: Date;
     hasJitterColumn: boolean;
+
+    getValue(rowIndex: number, columnIndex: number): number;
 }
 
 const DLOG_MAGIC1 = 0x2d5a4545;
@@ -95,7 +104,10 @@ const DLOG_MAGIC2 = 0x474f4c44;
 const DLOG_VERSION1 = 0x0001;
 const DLOG_VERSION2 = 0x0002;
 
-export function decodeDlog<UnitType>(data: Uint8Array, getUnit: (unit: Unit) => UnitType): IDlog<UnitType> | undefined {
+export function decodeDlog<UnitType>(
+    data: Uint8Array,
+    getUnit: (unit: Unit) => UnitType
+): IDlog<UnitType> | undefined {
     const buffer = Buffer.allocUnsafe(4);
 
     function readFloat(i: number) {
@@ -134,22 +146,25 @@ export function decodeDlog<UnitType>(data: Uint8Array, getUnit: (unit: Unit) => 
         for (let iChannel = 0; iChannel < 8; iChannel++) {
             if (columns & (1 << (4 * iChannel))) {
                 yAxes.push({
+                    dlogUnit: Unit.UNIT_VOLT,
                     unit: getUnit(Unit.UNIT_VOLT),
-                    channelIndex: iChannel,
+                    channelIndex: iChannel
                 });
             }
 
             if (columns & (2 << (4 * iChannel))) {
                 yAxes.push({
+                    dlogUnit: Unit.UNIT_AMPER,
                     unit: getUnit(Unit.UNIT_AMPER),
-                    channelIndex: iChannel,
+                    channelIndex: iChannel
                 });
             }
 
             if (columns & (4 << (4 * iChannel))) {
                 yAxes.push({
+                    dlogUnit: Unit.UNIT_WATT,
                     unit: getUnit(Unit.UNIT_WATT),
-                    channelIndex: iChannel,
+                    channelIndex: iChannel
                 });
             }
         }
@@ -191,22 +206,26 @@ export function decodeDlog<UnitType>(data: Uint8Array, getUnit: (unit: Unit) => 
             } else if (fieldId === Fields.FIELD_ID_X_LABEL) {
                 xAxis.label = readString(offset, offset + fieldDataLength);
                 offset += fieldDataLength;
-            } else if (fieldId >= Fields.FIELD_ID_Y_UNIT && fieldId <= Fields.FIELD_ID_Y_CHANNEL_INDEX) {
+            } else if (
+                fieldId >= Fields.FIELD_ID_Y_UNIT &&
+                fieldId <= Fields.FIELD_ID_Y_CHANNEL_INDEX
+            ) {
                 let yAxisIndex = readUInt8(offset);
                 offset++;
 
                 yAxisIndex--;
                 while (yAxisIndex >= yAxes.length) {
                     yAxes.push({
+                        dlogUnit: yAxis.dlogUnit,
                         unit: yAxis.unit,
                         range: yAxis.range
                             ? {
                                   min: yAxis.range.min,
-                                  max: yAxis.range.max,
+                                  max: yAxis.range.max
                               }
                             : undefined,
                         label: yAxis.label,
-                        channelIndex: yAxis.channelIndex,
+                        channelIndex: yAxis.channelIndex
                     });
                 }
 
@@ -221,7 +240,8 @@ export function decodeDlog<UnitType>(data: Uint8Array, getUnit: (unit: Unit) => 
                 }
 
                 if (fieldId === Fields.FIELD_ID_Y_UNIT) {
-                    destYAxis.unit = getUnit(readUInt8(offset));
+                    destYAxis.dlogUnit = readUInt8(offset);
+                    destYAxis.unit = getUnit(destYAxis.dlogUnit);
                     offset++;
                 } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MIN) {
                     destYAxis.range!.min = readFloat(offset);
@@ -230,7 +250,10 @@ export function decodeDlog<UnitType>(data: Uint8Array, getUnit: (unit: Unit) => 
                     destYAxis.range!.max = readFloat(offset);
                     offset += 4;
                 } else if (fieldId === Fields.FIELD_ID_Y_LABEL) {
-                    destYAxis.label = readString(offset, offset + fieldDataLength);
+                    destYAxis.label = readString(
+                        offset,
+                        offset + fieldDataLength
+                    );
                     offset += fieldDataLength;
                 } else if (fieldId === Fields.FIELD_ID_Y_CHANNEL_INDEX) {
                     destYAxis.channelIndex = readUInt8(offset) - 1;
@@ -281,21 +304,22 @@ export function decodeDlog<UnitType>(data: Uint8Array, getUnit: (unit: Unit) => 
         step: 1,
         range: {
             min: 0,
-            max: 1,
+            max: 1
         },
         label: "",
-        scale: Scale.LINEAR,
+        scale: Scale.LINEAR
     };
 
     let yAxisDefined = false;
     let yAxis: IDlogYAxis<UnitType> = {
+        dlogUnit: Unit.UNIT_UNKNOWN,
         unit: getUnit(Unit.UNIT_UNKNOWN),
         range: {
             min: 0,
-            max: 1,
+            max: 1
         },
         label: "",
-        channelIndex: -1,
+        channelIndex: -1
     };
 
     let yAxisScale = Scale.LINEAR;
@@ -318,11 +342,62 @@ export function decodeDlog<UnitType>(data: Uint8Array, getUnit: (unit: Unit) => 
         hasJitterColumn = false;
     }
 
-    let length = (data.length - dataOffset) / (((hasJitterColumn ? 1 : 0) + yAxes.length) * 4);
+    //
+    let columnIndex = hasJitterColumn ? 1 : 0;
+    let bitMask = 0;
+    let columnFloatIndexes: number[] = [];
+
+    for (let yAxisIndex = 0; yAxisIndex < yAxes.length; yAxisIndex++) {
+        const yAxis = yAxes[yAxisIndex];
+
+        columnFloatIndexes[yAxisIndex] = columnIndex;
+
+        if (yAxis.dlogUnit === Unit.UNIT_BIT) {
+            if (bitMask == 0) {
+                bitMask = 0x8000;
+            } else {
+                bitMask >>= 1;
+            }
+
+            if (bitMask == 1) {
+                columnIndex++;
+                bitMask = 0;
+            }
+        } else {
+            if (bitMask != 0) {
+                columnIndex++;
+                bitMask = 0;
+            }
+
+            columnIndex++;
+        }
+    }
+
+    if (bitMask != 0) {
+        columnIndex++;
+    }
+
+    let numFloatsPerRow = columnIndex;
+
+    //
+    let length = (data.length - dataOffset) / (numFloatsPerRow * 4);
 
     if (!yAxisDefined) {
         yAxis = yAxes[0];
     }
+
+    const getValue = (rowIndex: number, columnIndex: number) => {
+        const offset =
+            dataOffset +
+            4 * (rowIndex * numFloatsPerRow + columnFloatIndexes[columnIndex]);
+        if (yAxes[columnIndex].dlogUnit == Unit.UNIT_BIT) {
+            const data = readUInt32(offset);
+            return data & (0x8000 >> yAxes[columnIndex].channelIndex)
+                ? 1.0
+                : 0.0;
+        }
+        return readFloat(offset);
+    };
 
     return {
         version,
@@ -332,8 +407,11 @@ export function decodeDlog<UnitType>(data: Uint8Array, getUnit: (unit: Unit) => 
         yAxisScale,
         yAxes,
         dataOffset,
+        numFloatsPerRow,
+        columnFloatIndexes,
         length,
         startTime,
         hasJitterColumn,
+        getValue
     };
 }

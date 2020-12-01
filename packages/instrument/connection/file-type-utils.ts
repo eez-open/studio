@@ -24,18 +24,6 @@ export function convertDlogToCsv(data: Uint8Array) {
         return undefined;
     }
 
-    const buffer = Buffer.allocUnsafe(4);
-
-    function readFloat(i: number) {
-        buffer[0] = data[i];
-        buffer[1] = data[i + 1];
-        buffer[2] = data[i + 2];
-        buffer[3] = data[i + 3];
-        return buffer.readFloatLE(0);
-    }
-
-    const numColumns = (dlog.hasJitterColumn ? 1 : 0) + dlog.yAxes.length;
-
     const { getLocale } = require("eez-studio-shared/i10n") as typeof I10nModule;
 
     const locale = getLocale();
@@ -79,10 +67,7 @@ export function convertDlogToCsv(data: Uint8Array) {
         for (let columnIndex = 0; columnIndex < dlog.yAxes.length; columnIndex++) {
             csv += separator;
             csv += numberFormat.format(
-                readFloat(
-                    dlog.dataOffset +
-                        4 * (rowIndex * numColumns + (dlog.hasJitterColumn ? 1 : 0) + columnIndex)
-                )
+                    dlog.getValue(rowIndex, columnIndex)
             );
         }
         csv += "\n";

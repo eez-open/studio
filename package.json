@@ -34,7 +34,7 @@
         "build-with-babel": "babel packages --out-dir dist --extensions \".ts,.tsx,.js\" --source-maps inline"
     },
     "prettier": {
-        "printWidth": 100,
+        "printWidth": 80,
         "tabWidth": 4,
         "trailingComma": "none",
         "arrowParens": "avoid"

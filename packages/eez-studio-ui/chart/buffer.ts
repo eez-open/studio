@@ -16,7 +16,9 @@ function getCsvValues(valuesArray: any) {
     if (!values || !values.split) {
         return [];
     }
-    let lines = values.split("\n").map(line => line.split(",").map(value => parseFloat(value)));
+    let lines = values
+        .split("\n")
+        .map(line => line.split(",").map(value => parseFloat(value)));
     if (lines.length === 1) {
         return lines[0];
     }
@@ -24,6 +26,14 @@ function getCsvValues(valuesArray: any) {
 }
 
 const buffer = Buffer.allocUnsafe(8);
+
+function readUInt32(data: any, i: number) {
+    buffer[0] = data[i];
+    buffer[1] = data[i + 1];
+    buffer[2] = data[i + 2];
+    buffer[3] = data[i + 3];
+    return buffer.readUInt32LE(0);
+}
 
 function readFloat(data: any, i: number) {
     buffer[0] = data[i];
@@ -50,7 +60,12 @@ export function initValuesAccesor(
         // input
         format: WaveformFormat;
         values: any;
-        offset: number;
+        offset:
+            | number
+            | {
+                  offset: number;
+                  bitIndex: number;
+              };
         scale: number;
         logOffset?: number;
         // output
@@ -73,13 +88,13 @@ export function initValuesAccesor(
     if (format === WaveformFormat.FLOATS_32BIT) {
         length = Math.floor(values.length / 4);
         value = (index: number) => {
-            return offset + readFloat(values, 4 * index) * scale;
+            return (offset as number) + readFloat(values, 4 * index) * scale;
         };
         waveformData = value;
     } else if (format === WaveformFormat.FLOATS_64BIT) {
         length = Math.floor(values.length / 8);
         value = (index: number) => {
-            return offset + readDouble(values, 8 * index) * scale;
+            return (offset as number) + readDouble(values, 8 * index) * scale;
         };
         waveformData = value;
     } else if (format === WaveformFormat.RIGOL_BYTE) {
@@ -88,7 +103,7 @@ export function initValuesAccesor(
             return values[index];
         };
         value = (index: number) => {
-            return offset + waveformData(index) * scale;
+            return (offset as number) + waveformData(index) * scale;
         };
     } else if (format === WaveformFormat.RIGOL_WORD) {
         length = Math.floor(values.length / 2);
@@ -96,13 +111,13 @@ export function initValuesAccesor(
             return values[index];
         };
         value = (index: number) => {
-            return offset + waveformData(index) * scale;
+            return (offset as number) + waveformData(index) * scale;
         };
     } else if (format === WaveformFormat.CSV_STRING) {
         const csvValues = getCsvValues(values);
         length = csvValues.length;
         value = (index: number) => {
-            return offset + csvValues[index] * scale;
+            return (offset as number) + csvValues[index] * scale;
         };
         waveformData = value;
     } else if (
@@ -113,19 +128,33 @@ export function initValuesAccesor(
         if (length === undefined) {
             length = values.length;
         }
-        value =
-            format === WaveformFormat.EEZ_DLOG_LOGARITHMIC
-                ? (index: number) => {
-                      return Math.log10(logOffset! + readFloat(values, offset + index * scale));
-                  }
-                : (index: number) => {
-                      return readFloat(values, offset + index * scale);
-                  };
+        if (typeof offset === "number") {
+            value =
+                format === WaveformFormat.EEZ_DLOG_LOGARITHMIC
+                    ? (index: number) => {
+                                return Math.log10(
+                                    logOffset! +
+
+
+
+
+                                                                               readFloat(values, offset + index * scale)
+                                );
+                            }
+                    : (index: number) => {
+                                return readFloat(values, offset + index * scale);
+                            };
+        } else {
+            value = (index: number) => {
+                const data = readUInt32(values, offset.offset + index * scale);
+                return data & (0x8000 >> offset.bitIndex) ? 1.0 : 0.0;
+            };
+        }
         waveformData = value;
     } else if (format === WaveformFormat.JS_NUMBERS) {
         length = object.length;
         value = (index: number) => {
-            return values[offset + index * scale];
+            return values[(offset as number) + index * scale];
         };
         waveformData = value;
     } else {

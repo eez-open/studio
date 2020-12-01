@@ -39,6 +39,7 @@ import { WaveformLineView } from "instrument/window/waveform/line-view";
 import { WaveformToolbar } from "instrument/window/waveform/toolbar";
 
 import {
+    Unit,
     IDlog,
     IDlogYAxis,
     decodeDlog,
@@ -125,7 +126,9 @@ class DlogWaveformAxisModel implements IAxisModel {
     get label() {
         return this.yAxis.label
             ? this.yAxis.label
-            : `Channel ${this.yAxis.channelIndex + 1} ${capitalize(this.yAxis.unit.name)}`;
+            : `Channel ${this.yAxis.channelIndex + 1} ${capitalize(
+                  this.yAxis.unit.name
+              )}`;
     }
 
     @computed
@@ -153,15 +156,22 @@ class DlogWaveformLineController extends LineController {
         super(id, yAxisController);
 
         let rowOffset = dataOffset;
-        const rowBytes =
-            4 * ((this.dlogWaveform.hasJitterColumn ? 1 : 0) + this.dlogWaveform.channels.length);
+        const rowBytes = 4 * dlogWaveform.dlog.numFloatsPerRow;
         const length = (values.length - rowOffset) / rowBytes;
 
-        if (this.dlogWaveform.hasJitterColumn) {
-            rowOffset += 4; // skip jitter column
-        }
+        const yAxisIndex = this.dlogWaveform.channels.indexOf(channel);
 
-        rowOffset += 4 * this.dlogWaveform.channels.indexOf(channel);
+        rowOffset += 4 * dlogWaveform.dlog.columnFloatIndexes[yAxisIndex];
+
+        let offset;
+        if (dlogWaveform.dlog.yAxes[yAxisIndex].dlogUnit === Unit.UNIT_BIT) {
+            offset = {
+                offset: rowOffset,
+                bitIndex: dlogWaveform.dlog.yAxes[yAxisIndex].channelIndex
+            };
+        } else {
+            offset = rowOffset;
+        }
 
         this.waveform = {
             format:
@@ -172,7 +182,7 @@ class DlogWaveformLineController extends LineController {
             values,
             length,
             value: undefined as any,
-            offset: rowOffset,
+            offset,
             scale: rowBytes,
             samplingRate: this.dlogWaveform.samplingRate,
             waveformData: undefined as any,
@@ -220,7 +230,11 @@ class DlogWaveformLineController extends LineController {
 ////////////////////////////////////////////////////////////////////////////////
 
 class DlogWaveformChartsController extends ChartsController {
-    constructor(public dlogWaveform: DlogWaveform, mode: ChartMode, xAxisModel: IAxisModel) {
+    constructor(
+        public dlogWaveform: DlogWaveform,
+        mode: ChartMode,
+        xAxisModel: IAxisModel
+    ) {
         super(mode, xAxisModel, dlogWaveform.viewOptions);
     }
 
@@ -237,8 +251,8 @@ class DlogWaveformChartsController extends ChartsController {
 
     getWaveformModel(chartIndex: number): WaveformModel {
         // TODO remove "as any"
-        return (this.chartControllers[chartIndex].lineControllers[0] as DlogWaveformLineController)
-            .waveform as any;
+        return (this.chartControllers[chartIndex]
+            .lineControllers[0] as DlogWaveformLineController).waveform as any;
     }
 }
 
@@ -369,8 +383,7 @@ export class DlogWaveform extends FileHistoryItem {
     @computed
     get dlog(): IDlog<IUnit> {
         return (
-            (this.values &&
-                decodeDlog(this.values, dlogUnitToStudioUnit)) || {
+            (this.values && decodeDlog(this.values, dlogUnitToStudioUnit)) || {
                 version: 1,
                 xAxis: {
                     unit: TIME_UNIT,
@@ -383,6 +396,7 @@ export class DlogWaveform extends FileHistoryItem {
                     label: ""
                 },
                 yAxis: {
+                    dlogUnit: Unit.UNIT_UNKNOWN,
                     unit: UNKNOWN_UNIT,
                     range: {
                         min: 0,
@@ -394,9 +408,12 @@ export class DlogWaveform extends FileHistoryItem {
                 yAxisScale: Scale.LINEAR,
                 yAxes: [],
                 dataOffset: 0,
+                numFloatsPerRow: 1,
+                columnFloatIndexes: [0],
                 length: 0,
                 startTime: undefined,
-                hasJitterColumn: false
+                hasJitterColumn: false,
+                getValue: (rowIndex: number, columnIndex: number) => 0
             }
         );
     }
@@ -491,11 +508,16 @@ export class DlogWaveform extends FileHistoryItem {
         );
     }
 
-    createChartControllerForSingleChannel(chartsController: ChartsController, channel: IChannel) {
+    createChartControllerForSingleChannel(
+        chartsController: ChartsController,
+        channel: IChannel
+    ) {
         const id = `ch${this.channels.indexOf(channel) + 1}`;
         const chartController = new ChartController(chartsController, id);
         chartController.createYAxisController(channel.axisModel);
-        chartController.lineControllers.push(this.createLineController(chartController, channel));
+        chartController.lineControllers.push(
+            this.createLineController(chartController, channel)
+        );
         return chartController;
     }
 
@@ -567,7 +589,8 @@ export class DlogWaveform extends FileHistoryItem {
             this.chartsController &&
             this.chartsController.mode === mode &&
             this.chartsController.chartControllers &&
-            this.chartsController.chartControllers.length === this.channels.length
+            this.chartsController.chartControllers.length ===
+                this.channels.length
         ) {
             return this.chartsController;
         }
@@ -576,7 +599,11 @@ export class DlogWaveform extends FileHistoryItem {
             this.chartsController.destroy();
         }
 
-        const chartsController = new DlogWaveformChartsController(this, mode, this.xAxisModel);
+        const chartsController = new DlogWaveformChartsController(
+            this,
+            mode,
+            this.xAxisModel
+        );
         this.chartsController = chartsController;
 
         this.xAxisModel.chartsController = chartsController;
@@ -587,7 +614,10 @@ export class DlogWaveform extends FileHistoryItem {
             ];
         } else {
             chartsController.chartControllers = this.channels.map(channel =>
-                this.createChartControllerForSingleChannel(chartsController, channel)
+                this.createChartControllerForSingleChannel(
+                    chartsController,
+                    channel
+                )
             );
         }
 
@@ -598,7 +628,12 @@ export class DlogWaveform extends FileHistoryItem {
     }
 
     renderToolbar(chartsController: ChartsController): JSX.Element {
-        return <WaveformToolbar chartsController={chartsController} waveform={this} />;
+        return (
+            <WaveformToolbar
+                chartsController={chartsController}
+                waveform={this}
+            />
+        );
     }
 
     get xAxisDefaultSubdivisionOffset(): number | undefined {
@@ -625,7 +660,10 @@ export class DlogWaveform extends FileHistoryItem {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export async function importDlog(appStore: InstrumentAppStore, filePath: string) {
+export async function importDlog(
+    appStore: InstrumentAppStore,
+    filePath: string
+) {
     if (!filePath.toLowerCase().endsWith(".dlog")) {
         return false;
     }
@@ -652,7 +690,9 @@ export async function importDlog(appStore: InstrumentAppStore, filePath: string)
                     mime: MIME_EEZ_DLOG
                 },
                 dataLength: data.length,
-                note: dlog.comment ? JSON.stringify([{ insert: dlog.comment }]) : undefined
+                note: dlog.comment
+                    ? JSON.stringify([{ insert: dlog.comment }])
+                    : undefined
             }),
             data
         },

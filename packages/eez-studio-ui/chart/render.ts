@@ -43,7 +43,12 @@ export interface IWaveform {
     length: number;
     value: (i: number) => number;
     waveformData: (i: number) => number;
-    offset: number;
+    offset:
+        | number
+        | {
+              offset: number;
+              bitIndex: number;
+          };
     scale: number;
     samplingRate: number;
 }

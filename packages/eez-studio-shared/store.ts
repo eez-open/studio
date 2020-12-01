@@ -445,7 +445,7 @@ export function createStore({
             return EEZStudio.electron.ipcRenderer.sendSync(
                 "shared/store/create-object/" + storeName,
                 {
-                    object,
+                    object: toJS(object),
                     options
                 }
             );
@@ -456,10 +456,13 @@ export function createStore({
 
     function updateObject(object: any, options?: IStoreOperationOptions) {
         if (isRenderer()) {
-            EEZStudio.electron.ipcRenderer.sendSync("shared/store/update-object/" + storeName, {
-                object,
-                options
-            });
+            EEZStudio.electron.ipcRenderer.sendSync(
+                "shared/store/update-object/" + storeName,
+                {
+                    object: toJS(object),
+                    options
+                }
+            );
         } else {
             return execUpdateObject(object, options);
         }
@@ -467,10 +470,13 @@ export function createStore({
 
     function deleteObject(object: any, options?: IStoreOperationOptions) {
         if (isRenderer()) {
-            EEZStudio.electron.ipcRenderer.sendSync("shared/store/delete-object/" + storeName, {
-                object,
-                options
-            });
+            EEZStudio.electron.ipcRenderer.sendSync(
+                "shared/store/delete-object/" + storeName,
+                {
+                    object: toJS(object),
+                    options
+                }
+            );
         } else {
             return execDeleteObject(object, options);
         }
@@ -478,10 +484,13 @@ export function createStore({
 
     function undeleteObject(object: any, options?: IStoreOperationOptions) {
         if (isRenderer()) {
-            EEZStudio.electron.ipcRenderer.sendSync("shared/store/undelete-object/" + storeName, {
-                object,
-                options
-            });
+            EEZStudio.electron.ipcRenderer.sendSync(
+                "shared/store/undelete-object/" + storeName,
+                {
+                    object: toJS(object),
+                    options
+                }
+            );
         } else {
             return execUndeleteObject(object, options);
         }

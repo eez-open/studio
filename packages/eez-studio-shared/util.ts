@@ -287,8 +287,15 @@ export async function delay(time: number) {
 export const studioVersion = require("../../package.json").version;
 
 export function compareVersions(v1: string, v2: string) {
-    const v1Parts = v1.split(".").map(x => parseInt(x));
-    const v2Parts = v2.split(".").map(x => parseInt(x));
+    const v1Parts = v1
+        .toString()
+        .split(".")
+        .map(x => parseInt(x));
+
+    const v2Parts = v2
+        .toString()
+        .split(".")
+        .map(x => parseInt(x));
 
     for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); ++i) {
         if (isNaN(v1Parts[i])) {
