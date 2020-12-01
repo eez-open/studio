@@ -6,7 +6,12 @@ import { UNITS } from "eez-studio-shared/units";
 export interface WaveformModel {
     format: WaveformFormat;
     values: any;
-    offset: number;
+    offset:
+        | number
+        | {
+              offset: number;
+              bitIndex: number;
+          };
     scale: number;
 
     length: number;
@@ -15,6 +20,6 @@ export interface WaveformModel {
 
     valueUnit: keyof typeof UNITS;
 
-    rulers: RulersModel;
-    measurements: MeasurementsModel;
+    rulers?: RulersModel;
+    measurements?: MeasurementsModel;
 }

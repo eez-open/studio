@@ -1,6 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { observable, computed, autorun, reaction, action, runInAction, toJS } from "mobx";
+import {
+    observable,
+    computed,
+    autorun,
+    reaction,
+    action,
+    runInAction,
+    toJS
+} from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import { clipboard, SaveDialogOptions } from "electron";
@@ -14,7 +22,11 @@ import { stringCompare } from "eez-studio-shared/string";
 import { UNITS } from "eez-studio-shared/units";
 import * as I10nModule from "eez-studio-shared/i10n";
 
-import { IMeasurementFunction, IMeasureTask, IChart } from "eez-studio-shared/extensions/extension";
+import {
+    IMeasurementFunction,
+    IMeasureTask,
+    IChart
+} from "eez-studio-shared/extensions/extension";
 import { extensions } from "eez-studio-shared/extensions/extensions";
 
 import { theme } from "eez-studio-ui/theme";
@@ -22,7 +34,11 @@ import { ThemeProvider } from "eez-studio-ui/styled-components";
 import styled from "eez-studio-ui/styled-components";
 import { IconAction } from "eez-studio-ui/action";
 import { DockablePanels } from "eez-studio-ui/side-dock";
-import { GenericDialog, IFieldProperties, FieldComponent } from "eez-studio-ui/generic-dialog";
+import {
+    GenericDialog,
+    IFieldProperties,
+    FieldComponent
+} from "eez-studio-ui/generic-dialog";
 import { SideDockViewContainer } from "eez-studio-ui/side-dock";
 import * as notification from "eez-studio-ui/notification";
 import { cssTransition } from "react-toastify";
@@ -75,7 +91,10 @@ const measurementFunctions = computed(() => {
             allFunctions.set(
                 extensionMeasurementFunction.id,
                 Object.assign({}, extensionMeasurementFunction, {
-                    script: extensionFolderPath + "/" + extensionMeasurementFunction.script
+                    script:
+                        extensionFolderPath +
+                        "/" +
+                        extensionMeasurementFunction.script
                 })
             );
         });
@@ -106,7 +125,12 @@ interface IMeasurementDefinition {
 interface IInput {
     format: WaveformFormat;
     values: any;
-    offset: number;
+    offset:
+        | number
+        | {
+              offset: number;
+              bitIndex: number;
+          };
     scale: number;
     samplingRate: number;
     valueUnit: keyof typeof UNITS;
@@ -162,7 +186,12 @@ class Measurement {
         }
 
         if (i < measurements.length) {
-            for (++i; i < measurements.length && measurements[i].namePrefix !== namePrefix; ++i) {}
+            for (
+                ++i;
+                i < measurements.length &&
+                measurements[i].namePrefix !== namePrefix;
+                ++i
+            ) {}
         }
 
         if (samePrefixBeforeCounter === 0 && i === measurements.length) {
@@ -174,11 +203,16 @@ class Measurement {
     }
 
     get arity() {
-        return (this.measurementFunction && this.measurementFunction.arity) || 1;
+        return (
+            (this.measurementFunction && this.measurementFunction.arity) || 1
+        );
     }
 
     get parametersDescription() {
-        return this.measurementFunction && this.measurementFunction.parametersDescription;
+        return (
+            this.measurementFunction &&
+            this.measurementFunction.parametersDescription
+        );
     }
 
     get parameters() {
@@ -204,7 +238,10 @@ class Measurement {
     }
 
     get resultType() {
-        return (this.measurementFunction && this.measurementFunction.resultType) || "value";
+        return (
+            (this.measurementFunction && this.measurementFunction.resultType) ||
+            "value"
+        );
     }
 
     get script() {
@@ -230,7 +267,9 @@ class Measurement {
         runInAction(() => (this.measurementDefinition.chartIndexes = value));
     }
 
-    getChartTask(chartIndex: number): ISingleInputMeasurementTaskSpecification | null {
+    getChartTask(
+        chartIndex: number
+    ): ISingleInputMeasurementTaskSpecification | null {
         if (!this.script) {
             return null;
         }
@@ -256,8 +295,16 @@ class Measurement {
         const { x1, x2 } = this.measurementsController.measurementsInterval!;
 
         let xStartValue: number = x1;
-        let a: number = clamp(Math.floor(xAxisValueToIndex(x1)), 0, waveformModel.length);
-        let b: number = clamp(Math.ceil(xAxisValueToIndex(x2)), 0, waveformModel.length - 1);
+        let a: number = clamp(
+            Math.floor(xAxisValueToIndex(x1)),
+            0,
+            waveformModel.length
+        );
+        let b: number = clamp(
+            Math.ceil(xAxisValueToIndex(x2)),
+            0,
+            waveformModel.length - 1
+        );
 
         const xNumSamples = b - a + 1;
         if (xNumSamples <= 0) {
@@ -279,7 +326,9 @@ class Measurement {
         };
     }
 
-    getMeasureTaskForSingleInput(taskSpec: ISingleInputMeasurementTaskSpecification) {
+    getMeasureTaskForSingleInput(
+        taskSpec: ISingleInputMeasurementTaskSpecification
+    ) {
         const accessor = {
             format: taskSpec.format,
             values: taskSpec.values,
@@ -306,7 +355,9 @@ class Measurement {
         };
     }
 
-    getMeasureTaskForMultipleInputs(taskSpec: IMultiInputMeasurementTaskSpecification) {
+    getMeasureTaskForMultipleInputs(
+        taskSpec: IMultiInputMeasurementTaskSpecification
+    ) {
         const inputs = taskSpec.inputs.map(input => {
             const accessor = {
                 format: input.format,
@@ -432,15 +483,21 @@ class Measurement {
     }
 
     get chartPanelTitle() {
-        const chartControllers = this.measurementsController.chartsController.chartControllers;
+        const chartControllers = this.measurementsController.chartsController
+            .chartControllers;
         if (chartControllers.length > 1) {
             if (this.arity === 1) {
                 return `${this.name} (${
-                    chartControllers[this.chartIndex].yAxisController.axisModel.label
+                    chartControllers[this.chartIndex].yAxisController.axisModel
+                        .label
                 })`;
             } else {
                 return `${this.name} (${this.chartIndexes
-                    .map(chartIndex => chartControllers[chartIndex].yAxisController.axisModel.label)
+                    .map(
+                        chartIndex =>
+                            chartControllers[chartIndex].yAxisController
+                                .axisModel.label
+                    )
                     .join(", ")})`;
             }
         } else {
@@ -512,7 +569,8 @@ export class MeasurementsController {
                         // reuse existing Measurement object if exists
                         const measurement = this.measurements.find(
                             measurement =>
-                                measurementDefinition.measurementId === measurement.measurementId
+                                measurementDefinition.measurementId ===
+                                measurement.measurementId
                         );
                         if (measurement) {
                             return measurement;
@@ -524,7 +582,9 @@ export class MeasurementsController {
                             measurementDefinition,
                             measurementFunctions
                                 .get()
-                                .get(measurementDefinition.measurementFunctionId)
+                                .get(
+                                    measurementDefinition.measurementFunctionId
+                                )
                         );
                     }
                 );
@@ -538,7 +598,9 @@ export class MeasurementsController {
                 new Measurement(
                     this,
                     measurementDefinition,
-                    measurementFunctions.get().get(measurementDefinition.measurementFunctionId)
+                    measurementFunctions
+                        .get()
+                        .get(measurementDefinition.measurementFunctionId)
                 )
         );
 
@@ -550,7 +612,9 @@ export class MeasurementsController {
             if (this.chartMeasurements.length > 0) {
                 let content;
                 try {
-                    content = JSON.parse(this.measurementsModel.chartPanelsViewState!);
+                    content = JSON.parse(
+                        this.measurementsModel.chartPanelsViewState!
+                    );
                 } catch (err) {
                     content = undefined;
                 }
@@ -560,7 +624,10 @@ export class MeasurementsController {
                         { content },
                         document.createElement("div")
                     );
-                    goldenLayout.registerComponent("MeasurementValue", function () {});
+                    goldenLayout.registerComponent(
+                        "MeasurementValue",
+                        function () {}
+                    );
                     goldenLayout.init();
 
                     const existingChartMeasurementIds = goldenLayout.root
@@ -571,8 +638,14 @@ export class MeasurementsController {
                         measurement => measurement.measurementId
                     );
 
-                    const removed = _difference(existingChartMeasurementIds, chartMeasurementIds);
-                    const added = _difference(chartMeasurementIds, existingChartMeasurementIds);
+                    const removed = _difference(
+                        existingChartMeasurementIds,
+                        chartMeasurementIds
+                    );
+                    const added = _difference(
+                        chartMeasurementIds,
+                        existingChartMeasurementIds
+                    );
 
                     removed.forEach(id => {
                         const item = goldenLayout.root.getItemsById(id)[0];
@@ -598,14 +671,22 @@ export class MeasurementsController {
                         );
                     });
 
-                    goldenLayout.root.getItemsByType("component").map((contentItem: any) => {
-                        const measurement = this.findMeasurementById(contentItem.config.id);
-                        contentItem.setTitle(measurement!.chartPanelTitle);
-                    });
+                    goldenLayout.root
+                        .getItemsByType("component")
+                        .map((contentItem: any) => {
+                            const measurement = this.findMeasurementById(
+                                contentItem.config.id
+                            );
+                            contentItem.setTitle(measurement!.chartPanelTitle);
+                        });
 
-                    newChartPanelsViewState = JSON.stringify(goldenLayout.config.content);
+                    newChartPanelsViewState = JSON.stringify(
+                        goldenLayout.config.content
+                    );
                 } else {
-                    newChartPanelsViewState = JSON.stringify(this.defaultChartPanelViewState);
+                    newChartPanelsViewState = JSON.stringify(
+                        this.defaultChartPanelViewState
+                    );
                 }
             } else {
                 newChartPanelsViewState = undefined;
@@ -622,13 +703,16 @@ export class MeasurementsController {
         if (this.measurementsModel.chartPanelsViewState) {
             this.chartPanelsViewState = this.measurementsModel.chartPanelsViewState;
         } else {
-            this.chartPanelsViewState = JSON.stringify(this.defaultChartPanelViewState);
+            this.chartPanelsViewState = JSON.stringify(
+                this.defaultChartPanelViewState
+            );
         }
 
         // mark dirty all chart measurements when measurement interval changes
         this.dispose3 = reaction(
             () => ({
-                isAnimationActive: this.chartsController.xAxisController.isAnimationActive,
+                isAnimationActive: this.chartsController.xAxisController
+                    .isAnimationActive,
                 measurementsInterval: this.calcMeasurementsInterval(),
                 measurements: this.measurementsModel.measurements
             }),
@@ -636,7 +720,8 @@ export class MeasurementsController {
                 if (!isAnimationActive && measurements.length > 0) {
                     if (
                         !this.measurementsInterval ||
-                        measurementsInterval.x1 != this.measurementsInterval.x1 ||
+                        measurementsInterval.x1 !=
+                            this.measurementsInterval.x1 ||
                         measurementsInterval.x2 != this.measurementsInterval.x2
                     ) {
                         this.chartMeasurements.forEach(
@@ -677,34 +762,52 @@ export class MeasurementsController {
 
         let numSamples = 0;
 
-        for (let i = 0; i < this.chartsController.chartControllers.length; ++i) {
+        for (
+            let i = 0;
+            i < this.chartsController.chartControllers.length;
+            ++i
+        ) {
             const waveformModel = this.chartsController.getWaveformModel(i);
             if (waveformModel) {
-                numSamples = Math.max(numSamples, waveformModel.samplingRate * (x2 - x1));
+                numSamples = Math.max(
+                    numSamples,
+                    waveformModel.samplingRate * (x2 - x1)
+                );
             }
         }
 
         return { x1, x2, numSamples };
     }
 
-    startMeasurement(measurementsInterval: { x1: number; x2: number; numSamples: number }) {
+    startMeasurement(measurementsInterval: {
+        x1: number;
+        x2: number;
+        numSamples: number;
+    }) {
         if (this.timeoutId) {
             clearTimeout(this.timeoutId);
             this.timeoutId = undefined;
         }
 
-        if (measurementsInterval.numSamples > CONF_MAX_NUM_SAMPLES_TO_SHOW_CALCULATING_MESSAGE) {
+        if (
+            measurementsInterval.numSamples >
+            CONF_MAX_NUM_SAMPLES_TO_SHOW_CALCULATING_MESSAGE
+        ) {
             showCalculating();
             this.timeoutId = setTimeout(() => {
                 this.timeoutId = undefined;
-                runInAction(() => (this.measurementsInterval = measurementsInterval));
+                runInAction(
+                    () => (this.measurementsInterval = measurementsInterval)
+                );
                 setTimeout(() => {
                     hideCalculating();
                 }, 10);
                 this.refreshResults();
             }, 150);
         } else {
-            runInAction(() => (this.measurementsInterval = measurementsInterval));
+            runInAction(
+                () => (this.measurementsInterval = measurementsInterval)
+            );
             this.refreshResults();
         }
     }
@@ -725,13 +828,17 @@ export class MeasurementsController {
     }
 
     findMeasurementById(measurementId: string) {
-        return this.measurements.find(measurement => measurement.measurementId === measurementId);
+        return this.measurements.find(
+            measurement => measurement.measurementId === measurementId
+        );
     }
 
     @observable chartPanelsViewState: string | undefined;
 
     get defaultChartPanelViewState() {
-        const charts = this.measurements.filter(measurement => measurement.resultType === "chart");
+        const charts = this.measurements.filter(
+            measurement => measurement.resultType === "chart"
+        );
         if (charts.length === 0) {
             return undefined;
         }
@@ -739,7 +846,9 @@ export class MeasurementsController {
         return [
             {
                 type: "stack",
-                content: charts.map(measurement => measurement.chartPanelConfiguration)
+                content: charts.map(
+                    measurement => measurement.chartPanelConfiguration
+                )
             }
         ];
     }
@@ -799,7 +908,14 @@ export class MeasurementValue extends React.Component<{
             if (this.props.inDockablePanel) {
                 return null;
             }
-            return <input type="text" className="form-control" value={""} readOnly={true} />;
+            return (
+                <input
+                    type="text"
+                    className="form-control"
+                    value={""}
+                    readOnly={true}
+                />
+            );
         }
 
         if (typeof measurementResult.result === "string") {
@@ -813,13 +929,22 @@ export class MeasurementValue extends React.Component<{
             }
 
             if (!unit) {
-                unit = this.props.measurement.measurementsController.chartsController
-                    .chartControllers[this.props.measurement.chartIndex].yAxisController.unit;
+                unit = this.props.measurement.measurementsController
+                    .chartsController.chartControllers[
+                    this.props.measurement.chartIndex
+                ].yAxisController.unit;
             }
 
             const strValue = unit.formatValue(measurementResult.result, 4);
 
-            return <input type="text" className="form-control" value={strValue} readOnly={true} />;
+            return (
+                <input
+                    type="text"
+                    className="form-control"
+                    value={strValue}
+                    readOnly={true}
+                />
+            );
         }
 
         const {
@@ -840,7 +965,9 @@ export class MeasurementValue extends React.Component<{
 class MeasurementInputField extends FieldComponent {
     render() {
         const measurement = this.props.dialogContext;
-        const inputIndex = parseInt(this.props.fieldProperties.name.slice(INPUT_FILED_NAME.length));
+        const inputIndex = parseInt(
+            this.props.fieldProperties.name.slice(INPUT_FILED_NAME.length)
+        );
         return (
             <select
                 className="form-control"
@@ -850,17 +977,19 @@ class MeasurementInputField extends FieldComponent {
                         ? measurement.chartIndex
                         : measurement.chartIndexes[inputIndex]
                 }
-                onChange={action((event: React.ChangeEvent<HTMLSelectElement>) => {
-                    const newChartIndex = parseInt(event.target.value);
+                onChange={action(
+                    (event: React.ChangeEvent<HTMLSelectElement>) => {
+                        const newChartIndex = parseInt(event.target.value);
 
-                    if (measurement.arity === 1) {
-                        measurement.chartIndex = newChartIndex;
-                    } else {
-                        const newChartIndexes = measurement.chartIndexes.slice();
-                        newChartIndexes[inputIndex] = newChartIndex;
-                        measurement.chartIndexes = newChartIndexes;
+                        if (measurement.arity === 1) {
+                            measurement.chartIndex = newChartIndex;
+                        } else {
+                            const newChartIndexes = measurement.chartIndexes.slice();
+                            newChartIndexes[inputIndex] = newChartIndex;
+                            measurement.chartIndexes = newChartIndexes;
+                        }
                     }
-                })}
+                )}
             >
                 {measurement.measurementsController.chartsController.chartControllers.map(
                     (chartController: ChartController, chartIndex: number) => (
@@ -903,8 +1032,8 @@ class MeasurementComponent extends React.Component<{
     measurement: Measurement;
 }> {
     get numCharts() {
-        return this.props.measurement.measurementsController.chartsController.chartControllers
-            .length;
+        return this.props.measurement.measurementsController.chartsController
+            .chartControllers.length;
     }
 
     get isResultVisible() {
@@ -913,7 +1042,8 @@ class MeasurementComponent extends React.Component<{
 
     get deleteAction() {
         const measurement = this.props.measurement;
-        const measurements = measurement.measurementsController.measurementsModel.measurements;
+        const measurements =
+            measurement.measurementsController.measurementsModel.measurements;
         const index = measurements.indexOf(measurement.measurementDefinition);
         return (
             <IconAction
@@ -939,7 +1069,10 @@ class MeasurementComponent extends React.Component<{
                 _range(measurement.arity).map(inputIndex => {
                     return {
                         name: `${INPUT_FILED_NAME}${inputIndex}`,
-                        displayName: measurement.arity === 1 ? "Input" : `Input ${inputIndex + 1}`,
+                        displayName:
+                            measurement.arity === 1
+                                ? "Input"
+                                : `Input ${inputIndex + 1}`,
                         type: MeasurementInputField
                     } as IFieldProperties;
                 })
@@ -955,7 +1088,8 @@ class MeasurementComponent extends React.Component<{
                 name: RESULT_FILED_NAME,
                 displayName: "Result",
                 type: MeasurementResultField,
-                enclosureClassName: "EezStudio_MeasurementsSideDockView_MeasurementResult_Enclosure"
+                enclosureClassName:
+                    "EezStudio_MeasurementsSideDockView_MeasurementResult_Enclosure"
             });
         }
 
@@ -970,9 +1104,13 @@ class MeasurementComponent extends React.Component<{
 
     @action.bound
     onValueChange(name: string, value: string) {
-        this.props.measurement.parameters = Object.assign({}, this.props.measurement.parameters, {
-            [name]: value
-        });
+        this.props.measurement.parameters = Object.assign(
+            {},
+            this.props.measurement.parameters,
+            {
+                [name]: value
+            }
+        );
         this.props.measurement.dirty = true;
     }
 
@@ -985,7 +1123,9 @@ class MeasurementComponent extends React.Component<{
         const xUnit = UNITS[result.xAxes.unit];
         const yUnit = UNITS[result.yAxes.unit];
 
-        const { getLocale } = require("eez-studio-shared/i10n") as typeof I10nModule;
+        const {
+            getLocale
+        } = require("eez-studio-shared/i10n") as typeof I10nModule;
         const locale = getLocale();
 
         // determine CSV separator depending of locale usage of ","
@@ -1021,9 +1161,9 @@ class MeasurementComponent extends React.Component<{
 
         let csv = `[${xUnit.unitSymbol}]${separator}[${yUnit.unitSymbol}]\n`;
         for (let i = 0; i < data.length; i++) {
-            csv += `${numberFormat.format(i / samplingRate)}${separator}${numberFormat.format(
-                data[i]
-            )}\n`;
+            csv += `${numberFormat.format(
+                i / samplingRate
+            )}${separator}${numberFormat.format(data[i])}\n`;
 
             if (data.length > CHUNK) {
                 if (i > 0 && i % CHUNK === 0) {
@@ -1115,7 +1255,10 @@ class MeasurementComponent extends React.Component<{
 
         let content;
 
-        if (this.numCharts > 1 || this.props.measurement.parametersDescription) {
+        if (
+            this.numCharts > 1 ||
+            this.props.measurement.parametersDescription
+        ) {
             content = (
                 <td>
                     <GenericDialog
@@ -1149,7 +1292,9 @@ class MeasurementComponent extends React.Component<{
             content = (
                 <td>
                     {this.isResultVisible && (
-                        <MeasurementValue measurement={this.props.measurement} />
+                        <MeasurementValue
+                            measurement={this.props.measurement}
+                        />
                     )}
                 </td>
             );
@@ -1244,13 +1389,17 @@ export class MeasurementsDockView extends React.Component<{
     }
 
     get numCharts() {
-        return this.props.measurementsController.chartsController.chartControllers.length;
+        return this.props.measurementsController.chartsController
+            .chartControllers.length;
     }
 
     @computed
     get availableMeasurements() {
         const availableMeasurements = [];
-        for (const [measurementFunctionId, measurementFunction] of measurementFunctions.get()) {
+        for (const [
+            measurementFunctionId,
+            measurementFunction
+        ] of measurementFunctions.get()) {
             if ((measurementFunction.arity || 1) > this.numCharts) {
                 continue;
             }
@@ -1259,7 +1408,9 @@ export class MeasurementsDockView extends React.Component<{
                 !measurementFunction.parametersDescription &&
                 this.numCharts === 1 &&
                 this.measurementsModel.measurements.find(
-                    measurement => measurement.measurementFunctionId === measurementFunctionId
+                    measurement =>
+                        measurement.measurementFunctionId ===
+                        measurementFunctionId
                 )
             ) {
                 continue;
@@ -1267,7 +1418,9 @@ export class MeasurementsDockView extends React.Component<{
 
             availableMeasurements.push(measurementFunction);
         }
-        return availableMeasurements.sort((a, b) => stringCompare(a.name, b.name)).map(a => a.id);
+        return availableMeasurements
+            .sort((a, b) => stringCompare(a.name, b.name))
+            .map(a => a.id);
     }
 
     render() {
@@ -1288,12 +1441,15 @@ export class MeasurementsDockView extends React.Component<{
                 <div>
                     <table>
                         <tbody>
-                            {_map(this.props.measurementsController.measurements, measurement => (
-                                <MeasurementComponent
-                                    key={measurement.measurementId}
-                                    measurement={measurement}
-                                />
-                            ))}
+                            {_map(
+                                this.props.measurementsController.measurements,
+                                measurement => (
+                                    <MeasurementComponent
+                                        key={measurement.measurementId}
+                                        measurement={measurement}
+                                    />
+                                )
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -1307,26 +1463,33 @@ export class MeasurementsDockView extends React.Component<{
                             Add Measurement
                         </button>
                         <div className="dropdown-menu">
-                            {_map(this.availableMeasurements, measurementFunctionId => {
-                                return (
-                                    <a
-                                        key={measurementFunctionId}
-                                        className="dropdown-item"
-                                        href="#"
-                                        onClick={action(() => {
-                                            this.measurementsModel.measurements.push({
-                                                measurementId: guid(),
-                                                measurementFunctionId
-                                            });
-                                        })}
-                                    >
-                                        {
-                                            measurementFunctions.get().get(measurementFunctionId)!
-                                                .name
-                                        }
-                                    </a>
-                                );
-                            })}
+                            {_map(
+                                this.availableMeasurements,
+                                measurementFunctionId => {
+                                    return (
+                                        <a
+                                            key={measurementFunctionId}
+                                            className="dropdown-item"
+                                            href="#"
+                                            onClick={action(() => {
+                                                this.measurementsModel.measurements.push(
+                                                    {
+                                                        measurementId: guid(),
+                                                        measurementFunctionId
+                                                    }
+                                                );
+                                            })}
+                                        >
+                                            {
+                                                measurementFunctions
+                                                    .get()
+                                                    .get(measurementFunctionId)!
+                                                    .name
+                                            }
+                                        </a>
+                                    );
+                                }
+                            )}
                         </div>
                     </div>
                 )}
@@ -1351,25 +1514,35 @@ export class ChartMeasurements extends React.Component<{
     registerComponents(factory: any) {
         const measurementsController = this.props.measurementsController;
 
-        factory.registerComponent("MeasurementValue", function (container: any, props: any) {
-            const measurement = measurementsController.findMeasurementById(props.measurementId);
-            if (measurement) {
-                const div: HTMLDivElement = container.getElement()[0];
-                ReactDOM.render(
-                    <ThemeProvider theme={theme}>
-                        <MeasurementValue measurement={measurement} inDockablePanel={true} />
-                    </ThemeProvider>,
-                    div
+        factory.registerComponent(
+            "MeasurementValue",
+            function (container: any, props: any) {
+                const measurement = measurementsController.findMeasurementById(
+                    props.measurementId
                 );
+                if (measurement) {
+                    const div: HTMLDivElement = container.getElement()[0];
+                    ReactDOM.render(
+                        <ThemeProvider theme={theme}>
+                            <MeasurementValue
+                                measurement={measurement}
+                                inDockablePanel={true}
+                            />
+                        </ThemeProvider>,
+                        div
+                    );
+                }
             }
-        });
+        );
     }
 
     @computed
     get defaultLayoutConfig() {
         let content;
         try {
-            content = JSON.parse(this.props.measurementsController.chartPanelsViewState!);
+            content = JSON.parse(
+                this.props.measurementsController.chartPanelsViewState!
+            );
         } catch (err) {
             content = undefined;
         }
@@ -1410,13 +1583,16 @@ export class ChartMeasurements extends React.Component<{
             goldenLayout.registerComponent("MeasurementValue", function () {});
             goldenLayout.init();
 
-            goldenLayout.root.getItemsByType("component").map((contentItem: any) => {
-                const measurement = this.props.measurementsController.measurements.find(
-                    measurement => measurement.measurementId === contentItem.config.id
-                );
+            goldenLayout.root
+                .getItemsByType("component")
+                .map((contentItem: any) => {
+                    const measurement = this.props.measurementsController.measurements.find(
+                        measurement =>
+                            measurement.measurementId === contentItem.config.id
+                    );
 
-                contentItem.setTitle(measurement?.chartPanelTitle || "");
-            });
+                    contentItem.setTitle(measurement?.chartPanelTitle || "");
+                });
 
             goldenLayout.root
                 .getItemsByType("stack")
@@ -1428,9 +1604,14 @@ export class ChartMeasurements extends React.Component<{
                         ))
                 );
 
-            const chartPanelsViewState = JSON.stringify(goldenLayout.config.content);
+            const chartPanelsViewState = JSON.stringify(
+                goldenLayout.config.content
+            );
 
-            runInAction(() => (this.measurementsModel.chartPanelsViewState = chartPanelsViewState));
+            runInAction(
+                () =>
+                    (this.measurementsModel.chartPanelsViewState = chartPanelsViewState)
+            );
         }, 1000);
     }
 

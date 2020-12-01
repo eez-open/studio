@@ -26,7 +26,7 @@ export class RulersModel {
     @observable yAxisRulersEnabled: boolean[] = [];
     @observable y1: number[] = [];
     @observable y2: number[] = [];
-    @observable pauseDbUpdate: boolean = false;
+    @observable pauseDbUpdate?: boolean = false;
 
     constructor(props: any) {
         if (props) {

@@ -250,9 +250,9 @@ class DlogWaveformChartsController extends ChartsController {
     }
 
     getWaveformModel(chartIndex: number): WaveformModel {
-        // TODO remove "as any"
-        return (this.chartControllers[chartIndex]
-            .lineControllers[0] as DlogWaveformLineController).waveform as any;
+        const dlogWaveformLineController = this.chartControllers[chartIndex]
+            .lineControllers[0] as DlogWaveformLineController;
+        return dlogWaveformLineController.waveform;
     }
 }
 
