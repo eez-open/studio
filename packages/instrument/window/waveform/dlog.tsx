@@ -144,33 +144,68 @@ class DlogWaveformAxisModel implements IAxisModel {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class TransformedAxisController extends AxisController {
+    constructor(axisController: AxisController, from: number, to: number) {
+        super(
+            axisController.position,
+            axisController.chartsController,
+            axisController.chartController,
+            axisController.axisModel
+        );
+        this._from = from;
+        this._to = to;
+    }
+
+    _from: number;
+    _to: number;
+
+    get from() {
+        return this._from;
+    }
+
+    get to() {
+        return this._to;
+    }
+
+    get ticks() {
+        return [];
+    }
+
+    panByDirection(direction: number): void {}
+    panTo(to: number): void {}
+    zoomAll(): void {}
+    zoomDefault(): void {}
+    zoomIn(): void {}
+    zoomOut(): void {}
+    zoom(from: number, to: number): void {}
+    zoomAroundPivotPoint(pivotPx: number, zoomIn: boolean): void {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 class DlogWaveformLineController extends LineController {
     constructor(
         public id: string,
         public dlogWaveform: DlogWaveform,
-        public yAxisController: AxisController,
+        yAxisController: AxisController,
         private channel: IChannel,
         values: any,
-        dataOffset: number
+        dataOffset: number,
+        private channelsGroup: IChannelsGroup
     ) {
         super(id, yAxisController);
 
-        let rowOffset = dataOffset;
-        const rowBytes = 4 * dlogWaveform.dlog.numFloatsPerRow;
-        const length = (values.length - rowOffset) / rowBytes;
-
         const yAxisIndex = this.dlogWaveform.channels.indexOf(channel);
 
-        rowOffset += 4 * dlogWaveform.dlog.columnFloatIndexes[yAxisIndex];
+        const rowBytes = 4 * dlogWaveform.dlog.numFloatsPerRow;
+        const rowOffset =
+            dataOffset + 4 * dlogWaveform.dlog.columnFloatIndexes[yAxisIndex];
 
-        let offset;
+        const length = (values.length - dataOffset) / rowBytes;
+
+        let bitIndex: number | undefined;
         if (dlogWaveform.dlog.yAxes[yAxisIndex].dlogUnit === Unit.UNIT_BIT) {
-            offset = {
-                offset: rowOffset,
-                bitIndex: dlogWaveform.dlog.yAxes[yAxisIndex].channelIndex
-            };
-        } else {
-            offset = rowOffset;
+            bitIndex = dlogWaveform.dlog.yAxes[yAxisIndex].channelIndex;
         }
 
         this.waveform = {
@@ -178,14 +213,22 @@ class DlogWaveformLineController extends LineController {
                 dlogWaveform.dlog.yAxisScale === Scale.LINEAR
                     ? WaveformFormat.EEZ_DLOG
                     : WaveformFormat.EEZ_DLOG_LOGARITHMIC,
-            logOffset: channel.yAxis.range ? 1 - channel.yAxis.range.min : 0,
             values,
+            offset: 0,
+            scale: 1,
+
+            dlog: {
+                rowBytes,
+                rowOffset,
+                bitIndex,
+                logOffset: channel.yAxis.range ? 1 - channel.yAxis.range.min : 0
+            },
+
             length,
             value: undefined as any,
-            offset,
-            scale: rowBytes,
-            samplingRate: this.dlogWaveform.samplingRate,
             waveformData: undefined as any,
+
+            samplingRate: this.dlogWaveform.samplingRate,
             valueUnit: yAxisController.unit.name as keyof typeof UNITS
         };
 
@@ -194,8 +237,28 @@ class DlogWaveformLineController extends LineController {
 
     waveform: IWaveform & {
         valueUnit: keyof typeof UNITS;
-        logOffset: number;
     };
+
+    @computed get yAxisController() {
+        const yAxisController = super.yAxisController;
+
+        if (this.channel.yAxis.dlogUnit === Unit.UNIT_BIT) {
+            const offset =
+                1.0 -
+                (this.channelsGroup.channels.indexOf(this.channel) + 1) /
+                    this.channelsGroup.channels.length +
+                1 / 20;
+
+            const scale = 1.0 / this.channelsGroup.channels.length - 2 / 20;
+
+            const from = (yAxisController.from - offset) / scale;
+            const to = (yAxisController.to - offset) / scale;
+
+            return new TransformedAxisController(yAxisController, from, to);
+        }
+
+        return yAxisController;
+    }
 
     @computed
     get yMin(): number {
@@ -205,6 +268,14 @@ class DlogWaveformLineController extends LineController {
     @computed
     get yMax(): number {
         return this.yAxisController.axisModel.maxValue;
+    }
+
+    get label() {
+        return this.channel.axisModel.label;
+    }
+
+    getWaveformModel(): WaveformModel {
+        return this.waveform;
     }
 
     getNearestValuePoint(point: Point): Point {
@@ -248,12 +319,6 @@ class DlogWaveformChartsController extends ChartsController {
     get supportRulers() {
         return true;
     }
-
-    getWaveformModel(chartIndex: number): WaveformModel {
-        const dlogWaveformLineController = this.chartControllers[chartIndex]
-            .lineControllers[0] as DlogWaveformLineController;
-        return dlogWaveformLineController.waveform;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -263,6 +328,11 @@ interface IDlogChart {}
 interface IChannel {
     yAxis: IDlogYAxis<IUnit>;
     axisModel: IAxisModel;
+}
+
+interface IChannelsGroup {
+    id: string;
+    channels: IChannel[];
 }
 
 export class DlogWaveform extends FileHistoryItem {
@@ -494,7 +564,13 @@ export class DlogWaveform extends FileHistoryItem {
         return <div>{info}</div>;
     }
 
-    createLineController(chartController: ChartController, channel: IChannel) {
+    createLineController(
+        chartController: ChartController,
+
+        channel: IChannel,
+
+        channelsGroup: IChannelsGroup
+    ) {
         return new DlogWaveformLineController(
             "waveform-" +
                 chartController.yAxisController.position +
@@ -504,66 +580,113 @@ export class DlogWaveform extends FileHistoryItem {
             chartController.yAxisController,
             channel,
             this.values || "",
-            this.dataOffset
+            this.dataOffset,
+            channelsGroup
         );
     }
 
-    createChartControllerForSingleChannel(
+    @computed get channelsGroups(): IChannelsGroup[] {
+        const channelsGroups: IChannelsGroup[] = [];
+
+        function compareYAxis(
+            yAxis1: IDlogYAxis<IUnit>,
+            yAxis2: IDlogYAxis<IUnit>
+        ) {
+            if (yAxis1.unit != yAxis2.unit) {
+                return false;
+            }
+
+            if (yAxis1.range && yAxis2.range) {
+                if (
+                    yAxis1.range.min != yAxis2.range.min ||
+                    yAxis1.range.max != yAxis2.range.max
+                ) {
+                    return false;
+                }
+            } else if (yAxis1.range || yAxis2.range) {
+                return false;
+            }
+
+            return true;
+        }
+
+        function findChannelsGroup(yAxis: IDlogYAxis<IUnit>) {
+            for (
+                let channelsGroupIndex = 0;
+                channelsGroupIndex < channelsGroups.length;
+                channelsGroupIndex++
+            ) {
+                const channelsGroup = channelsGroups[channelsGroupIndex];
+                if (compareYAxis(yAxis, channelsGroup.channels[0].yAxis)) {
+                    return channelsGroup;
+                }
+            }
+            return undefined;
+        }
+
+        for (
+            let yAxisIndex = 0;
+            yAxisIndex < this.dlog.yAxes.length;
+            yAxisIndex++
+        ) {
+            const yAxis = this.dlog.yAxes[yAxisIndex];
+            const channelsGroup = findChannelsGroup(yAxis);
+            const channel = this.channels[yAxisIndex];
+            if (channelsGroup) {
+                channelsGroup.channels.push(channel);
+            } else {
+                channelsGroups.push({
+                    id: `dlog_chart_controller_${yAxisIndex}`,
+                    channels: [channel]
+                });
+            }
+        }
+
+        return channelsGroups;
+    }
+
+    createChartControllerForChannelsGroup(
         chartsController: ChartsController,
-        channel: IChannel
-    ) {
-        const id = `ch${this.channels.indexOf(channel) + 1}`;
-        const chartController = new ChartController(chartsController, id);
-        chartController.createYAxisController(channel.axisModel);
-        chartController.lineControllers.push(
-            this.createLineController(chartController, channel)
-        );
-        return chartController;
-    }
 
-    createChartControllerForAllChannels(chartsController: ChartsController) {
-        const id = "dlog_chart_controller";
-        const chartController = new ChartController(chartsController, id);
+        channelsGroup: IChannelsGroup
+    ) {
+        const chartController = new ChartController(
+            chartsController,
+
+            channelsGroup.id
+        );
+
+        const yAxis = channelsGroup.channels[0].yAxis;
+
         chartController.createYAxisController(
             new DlogWaveformAxisModel(
-                this.dlog.yAxis,
+                yAxis,
                 this.dlog.yAxisScale == Scale.LOGARITHMIC
                     ? {
                           a: 0,
-                          b: -(1 - this.dlog.yAxis.range!.min)
+                          b: -(1 - yAxis.range!.min)
                       }
                     : undefined
             )
         );
-        this.channels.forEach(channel => {
+
+        if (yAxis.dlogUnit === Unit.UNIT_BIT) {
+            chartController.yAxisController.isDigital = true;
+        }
+
+        channelsGroup.channels.forEach(channel => {
             chartController.lineControllers.push(
-                this.createLineController(chartController, channel)
+                this.createLineController(
+                    chartController,
+
+                    channel,
+
+                    channelsGroup
+                )
             );
         });
+
         return chartController;
-    }
-
-    @computed
-    get singleChart() {
-        const firstYAxis = this.dlog.yAxes[0];
-        for (let i = 1; i < this.dlog.yAxes.length; i++) {
-            const otherYAxis = this.dlog.yAxes[i];
-            if (firstYAxis.unit != otherYAxis.unit) {
-                return false;
-            }
-
-            if (firstYAxis.range && otherYAxis.range) {
-                if (
-                    firstYAxis.range.min != otherYAxis.range.min ||
-                    firstYAxis.range.max != otherYAxis.range.max
-                ) {
-                    return false;
-                }
-            } else if (firstYAxis.range || otherYAxis.range) {
-                return false;
-            }
-        }
-        return true;
     }
 
     viewOptions: ViewOptions;
@@ -608,18 +731,13 @@ export class DlogWaveform extends FileHistoryItem {
 
         this.xAxisModel.chartsController = chartsController;
 
-        if (this.singleChart) {
-            chartsController.chartControllers = [
-                this.createChartControllerForAllChannels(chartsController)
-            ];
-        } else {
-            chartsController.chartControllers = this.channels.map(channel =>
-                this.createChartControllerForSingleChannel(
+        chartsController.chartControllers = this.channelsGroups.map(
+            channelsGroup =>
+                this.createChartControllerForChannelsGroup(
                     chartsController,
-                    channel
+                    channelsGroup
                 )
-            );
-        }
+        );
 
         chartsController.createRulersController(this.rulers);
         chartsController.createMeasurementsController(this.measurements);

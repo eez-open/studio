@@ -19,7 +19,7 @@ import { writeBinaryData } from "eez-studio-shared/util-electron";
 
 import { guid } from "eez-studio-shared/guid";
 import { stringCompare } from "eez-studio-shared/string";
-import { UNITS } from "eez-studio-shared/units";
+import { UNITS, UNKNOWN_UNIT } from "eez-studio-shared/units";
 import * as I10nModule from "eez-studio-shared/i10n";
 
 import {
@@ -43,9 +43,10 @@ import { SideDockViewContainer } from "eez-studio-ui/side-dock";
 import * as notification from "eez-studio-ui/notification";
 import { cssTransition } from "react-toastify";
 
-import { ChartsController, ChartController } from "eez-studio-ui/chart/chart";
+import { ChartsController, ILineController } from "eez-studio-ui/chart/chart";
 import * as GenericChartModule from "eez-studio-ui/chart/generic-chart";
 import { WaveformFormat, initValuesAccesor } from "eez-studio-ui/chart/buffer";
+import type { IWaveformDlogParams } from "eez-studio-ui/chart/render";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -125,13 +126,11 @@ interface IMeasurementDefinition {
 interface IInput {
     format: WaveformFormat;
     values: any;
-    offset:
-        | number
-        | {
-              offset: number;
-              bitIndex: number;
-          };
+    offset: number;
     scale: number;
+
+    dlog?: IWaveformDlogParams;
+
     samplingRate: number;
     valueUnit: keyof typeof UNITS;
 }
@@ -274,9 +273,10 @@ class Measurement {
             return null;
         }
 
-        const waveformModel = this.measurementsController.chartsController.getWaveformModel(
-            chartIndex
-        );
+        const lineController = this.measurementsController.chartsController
+            .lineControllers[chartIndex];
+        const waveformModel =
+            lineController && lineController.getWaveformModel();
 
         if (!waveformModel) {
             return null;
@@ -320,8 +320,10 @@ class Measurement {
             values: waveformModel.values,
             offset: waveformModel.offset,
             scale: waveformModel.scale,
-            samplingRate: waveformModel.samplingRate,
 
+            dlog: waveformModel.dlog,
+
+            samplingRate: waveformModel.samplingRate,
             valueUnit: waveformModel.valueUnit
         };
     }
@@ -334,6 +336,7 @@ class Measurement {
             values: taskSpec.values,
             offset: taskSpec.offset,
             scale: taskSpec.scale,
+            dlog: taskSpec.dlog,
             length: 0,
             value: (value: number) => 0,
             waveformData: (value: number) => 0
@@ -483,26 +486,25 @@ class Measurement {
     }
 
     get chartPanelTitle() {
-        const chartControllers = this.measurementsController.chartsController
-            .chartControllers;
-        if (chartControllers.length > 1) {
+        const lineControllers = this.measurementsController.chartsController
+            .lineControllers;
+        if (lineControllers.length > 1) {
             if (this.arity === 1) {
-                return `${this.name} (${
-                    chartControllers[this.chartIndex].yAxisController.axisModel
-                        .label
-                })`;
+                const lineController = lineControllers[this.chartIndex];
+                if (lineController) {
+                    return `${this.name} (${lineController.label})`;
+                }
             } else {
                 return `${this.name} (${this.chartIndexes
-                    .map(
-                        chartIndex =>
-                            chartControllers[chartIndex].yAxisController
-                                .axisModel.label
-                    )
+                    .map(chartIndex => {
+                        const lineController = lineControllers[this.chartIndex];
+                        return lineController ? lineController.label : "";
+                    })
                     .join(", ")})`;
             }
-        } else {
-            return this.name;
         }
+
+        return this.name;
     }
 
     get chartPanelConfiguration() {
@@ -762,12 +764,10 @@ export class MeasurementsController {
 
         let numSamples = 0;
 
-        for (
-            let i = 0;
-            i < this.chartsController.chartControllers.length;
-            ++i
-        ) {
-            const waveformModel = this.chartsController.getWaveformModel(i);
+        for (let i = 0; i < this.chartsController.lineControllers.length; ++i) {
+            const waveformModel = this.chartsController.lineControllers[
+                i
+            ].getWaveformModel();
             if (waveformModel) {
                 numSamples = Math.max(
                     numSamples,
@@ -929,10 +929,11 @@ export class MeasurementValue extends React.Component<{
             }
 
             if (!unit) {
-                unit = this.props.measurement.measurementsController
-                    .chartsController.chartControllers[
+                const lineController = this.props.measurement
+                    .measurementsController.chartsController.lineControllers[
                     this.props.measurement.chartIndex
-                ].yAxisController.unit;
+                ];
+                unit = lineController ? lineController.yAxisController.unit : UNKNOWN_UNIT;
             }
 
             const strValue = unit.formatValue(measurementResult.result, 4);
@@ -964,7 +965,7 @@ export class MeasurementValue extends React.Component<{
 @observer
 class MeasurementInputField extends FieldComponent {
     render() {
-        const measurement = this.props.dialogContext;
+        const measurement = this.props.dialogContext as Measurement;
         const inputIndex = parseInt(
             this.props.fieldProperties.name.slice(INPUT_FILED_NAME.length)
         );
@@ -991,10 +992,16 @@ class MeasurementInputField extends FieldComponent {
                     }
                 )}
             >
-                {measurement.measurementsController.chartsController.chartControllers.map(
-                    (chartController: ChartController, chartIndex: number) => (
-                        <option key={chartIndex.toString()} value={chartIndex}>
-                            {chartController.yAxisController.axisModel.label}
+                {measurement.measurementsController.chartsController.lineControllers.map(
+                    (
+                        lineController: ILineController,
+                        lineControllerIndex: number
+                    ) => (
+                        <option
+                            key={lineControllerIndex.toString()}
+                            value={lineControllerIndex}
+                        >
+                            {lineController.label}
                         </option>
                     )
                 )}
@@ -1033,7 +1040,7 @@ class MeasurementComponent extends React.Component<{
 }> {
     get numCharts() {
         return this.props.measurement.measurementsController.chartsController
-            .chartControllers.length;
+            .lineControllers.length;
     }
 
     get isResultVisible() {

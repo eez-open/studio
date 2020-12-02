@@ -947,7 +947,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
 }
 
 export class EnvelopeLineController extends LineController {
-    constructor(public id: string, public yAxisController: AxisController) {
+    constructor(public id: string, yAxisController: AxisController) {
         super(id, yAxisController);
     }
 
@@ -972,6 +972,10 @@ export class EnvelopeLineController extends LineController {
     get yMax(): number {
         //return Math.max(...this.values.map(value => value.value));
         return this.yAxisController.axisModel.maxValue;
+    }
+
+    getWaveformModel() {
+        return null;
     }
 
     getNearestValuePoint(point: Point): Point {
@@ -1625,10 +1629,6 @@ export class EnvelopeChartsController extends ChartsController {
             showRenderAlgorithm: false,
             showShowSampledDataOption: true
         };
-    }
-
-    getWaveformModel(chartIndex: number) {
-        return null;
     }
 }
 

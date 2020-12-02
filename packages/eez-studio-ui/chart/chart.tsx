@@ -21,10 +21,17 @@ import { SideDock, DockablePanels } from "eez-studio-ui/side-dock";
 import { Splitter } from "eez-studio-ui/splitter";
 import { SvgLabel } from "eez-studio-ui/svg-label";
 
-import { ChartViewOptionsProps, ChartViewOptions } from "eez-studio-ui/chart/view-options";
+import {
+    ChartViewOptionsProps,
+    ChartViewOptions
+} from "eez-studio-ui/chart/view-options";
 import { WaveformRenderAlgorithm } from "eez-studio-ui/chart/render";
 import { WaveformModel } from "eez-studio-ui/chart/waveform";
-import { RulersController, RulersDockView, RulersModel } from "eez-studio-ui/chart/rulers";
+import {
+    RulersController,
+    RulersDockView,
+    RulersModel
+} from "eez-studio-ui/chart/rulers";
 import {
     MeasurementsDockView,
     MeasurementsController,
@@ -197,6 +204,8 @@ export abstract class AxisController {
     @observable isAnimationActive: boolean;
     animationController = new AnimationController();
 
+    isDigital = false;
+
     get logarithmic() {
         return this.axisModel.logarithmic;
     }
@@ -206,7 +215,10 @@ export abstract class AxisController {
 
     @computed
     get isScrollBarEnabled() {
-        return (this.from > this.minValue || this.to < this.maxValue) && this.range != 0;
+        return (
+            (this.from > this.minValue || this.to < this.maxValue) &&
+            this.range != 0
+        );
     }
 
     get _minValue() {
@@ -264,7 +276,10 @@ export abstract class AxisController {
     }
 
     toLogScale(value: number) {
-        value = Math.pow(10, (value * Math.log10(this.maxValue)) / this.maxValue);
+        value = Math.pow(
+            10,
+            (value * Math.log10(this.maxValue)) / this.maxValue
+        );
         if (value < this.minValue) {
             value = this.minValue;
         } else if (value > this.maxValue) {
@@ -375,8 +390,12 @@ export abstract class AxisController {
 
     get numSamples() {
         let numSamples = 0;
-        for (let i = 0; i < this.chartsController.chartControllers.length; ++i) {
-            let waveformModel = this.chartsController.getWaveformModel(i);
+        for (
+            let i = 0;
+            i < this.chartsController.lineControllers.length;
+            ++i
+        ) {
+            let waveformModel = this.chartsController.lineControllers[i].getWaveformModel();
             if (waveformModel && waveformModel.length > numSamples) {
                 numSamples = waveformModel.length;
             }
@@ -402,6 +421,10 @@ class DynamicAxisController extends AxisController {
 
     @computed
     get from() {
+        if (this.isDigital) {
+            return 0;
+        }
+
         if (this.chartsController.mode === "preview") {
             return this.minValue;
         }
@@ -428,6 +451,10 @@ class DynamicAxisController extends AxisController {
 
     @computed
     get to() {
+        if (this.isDigital) {
+            return 1.0;
+        }
+
         if (this.chartsController.mode === "preview") {
             return this.maxValue;
         }
@@ -459,10 +486,15 @@ class DynamicAxisController extends AxisController {
         if (this.chartsController.viewOptions.axesLines.steps) {
             if (this.position === "x") {
                 steps = this.chartsController.viewOptions.axesLines.steps.x;
-            } else if (Array.isArray(this.chartsController.viewOptions.axesLines.steps.y)) {
+            } else if (
+                Array.isArray(
+                    this.chartsController.viewOptions.axesLines.steps.y
+                )
+            ) {
                 steps = this.chartsController.viewOptions.axesLines.steps.y.find(
                     (vale: number[], i: number) =>
-                        this.chartsController.chartControllers[i] === this.chartController
+                        this.chartsController.chartControllers[i] ===
+                        this.chartController
                 );
             }
         }
@@ -500,7 +532,8 @@ class DynamicAxisController extends AxisController {
             let fromValue = Math.ceil(from / step) * step;
             let toValue = Math.floor(to / step) * step;
 
-            let unitPx = self.valueToPx(fromValue) - self.valueToPx(fromValue - step);
+            let unitPx =
+                self.valueToPx(fromValue) - self.valueToPx(fromValue - step);
             if (unitPx < minDistanceInPx) {
                 return;
             }
@@ -512,7 +545,8 @@ class DynamicAxisController extends AxisController {
 
                 let opacity = clamp(
                     minColorOpacity +
-                        ((maxColorOpacity - minColorOpacity) * (unitPx - minDistanceInPx)) /
+                        ((maxColorOpacity - minColorOpacity) *
+                            (unitPx - minDistanceInPx)) /
                             (maxDistanceInPx - minDistanceInPx),
                     minColorOpacity,
                     maxColorOpacity
@@ -520,7 +554,8 @@ class DynamicAxisController extends AxisController {
 
                 let textOpacity = clamp(
                     minTextColorOpacity +
-                        ((maxTextColorOpacity - minTextColorOpacity) * (unitPx - minDistanceInPx)) /
+                        ((maxTextColorOpacity - minTextColorOpacity) *
+                            (unitPx - minDistanceInPx)) /
                             (maxDistanceInPx - minDistanceInPx),
                     minTextColorOpacity,
                     maxTextColorOpacity
@@ -574,7 +609,8 @@ class DynamicAxisController extends AxisController {
 
                 let opacity = clamp(
                     minColorOpacity +
-                        ((maxColorOpacity - minColorOpacity) * (unitPx - minDistanceInPx)) /
+                        ((maxColorOpacity - minColorOpacity) *
+                            (unitPx - minDistanceInPx)) /
                             (maxDistanceInPx - minDistanceInPx),
                     minColorOpacity,
                     maxColorOpacity
@@ -582,7 +618,8 @@ class DynamicAxisController extends AxisController {
 
                 let textOpacity = clamp(
                     minTextColorOpacity +
-                        ((maxTextColorOpacity - minTextColorOpacity) * (unitPx - minDistanceInPx)) /
+                        ((maxTextColorOpacity - minTextColorOpacity) *
+                            (unitPx - minDistanceInPx)) /
                             (maxDistanceInPx - minDistanceInPx),
                     minTextColorOpacity,
                     maxTextColorOpacity
@@ -592,8 +629,10 @@ class DynamicAxisController extends AxisController {
                     unitPx >= minLabelPx
                         ? self.unit.formatValue(
                               self.axisModel.semiLogarithmic
-                                  ? Math.pow(10, value + self.axisModel.semiLogarithmic.a) +
-                                        self.axisModel.semiLogarithmic.b
+                                  ? Math.pow(
+                                        10,
+                                        value + self.axisModel.semiLogarithmic.a
+                                    ) + self.axisModel.semiLogarithmic.b
                                   : value,
                               4
                           )
@@ -678,7 +717,11 @@ class DynamicAxisController extends AxisController {
                         let foundTooCloseLabel = false;
 
                         // test if there is a label on the left that is too close to this tick
-                        for (let i = iTick - 1; i >= 0 && tick.px - ticks[i].px < minLabelPx; i--) {
+                        for (
+                            let i = iTick - 1;
+                            i >= 0 && tick.px - ticks[i].px < minLabelPx;
+                            i--
+                        ) {
                             if (ticks[i].label) {
                                 foundTooCloseLabel = true;
                                 break;
@@ -691,7 +734,8 @@ class DynamicAxisController extends AxisController {
                         // test if there is a label on the right that is too close to this tick
                         for (
                             let i = iTick + 1;
-                            i < ticks.length && ticks[i].px - tick.px < minLabelPx;
+                            i < ticks.length &&
+                            ticks[i].px - tick.px < minLabelPx;
                             i++
                         ) {
                             if (ticks[i].label) {
@@ -710,14 +754,18 @@ class DynamicAxisController extends AxisController {
         }
 
         // remove duplicates, i.e. ticks with the same label
-        ticks = _uniqWith(ticks, (a, b) => (a.label ? a.label === b.label : false));
+        ticks = _uniqWith(ticks, (a, b) =>
+            a.label ? a.label === b.label : false
+        );
 
         return ticks;
     }
 
     @computed
     get maxScale() {
-        return this.axisModel.maxScale !== undefined ? this.axisModel.maxScale : 1e15;
+        return this.axisModel.maxScale !== undefined
+            ? this.axisModel.maxScale
+            : 1e15;
     }
 
     panByDirection(direction: number) {
@@ -780,9 +828,13 @@ class DynamicAxisController extends AxisController {
             }
         }
 
-        let distance = zoomIn ? this.distance / CONF_ZOOM_STEP : this.distance * CONF_ZOOM_STEP;
+        let distance = zoomIn
+            ? this.distance / CONF_ZOOM_STEP
+            : this.distance * CONF_ZOOM_STEP;
 
-        let from = this.from + ((this.distance - distance) * pivotPx) / this.distancePx;
+        let from =
+            this.from +
+            ((this.distance - distance) * pivotPx) / this.distancePx;
         let to = from + distance;
 
         this.animate(() => {
@@ -812,16 +864,19 @@ class DynamicAxisController extends AxisController {
         const newFrom = this.from;
         const newTo = this.to;
 
-        this.animationController.animate(CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION, {
-            step: action((t: number) => {
-                if (t === 1) {
-                    this.isAnimationActive = false;
-                } else {
-                    this.animationFrom = oldFrom + t * (newFrom - oldFrom);
-                    this.animationTo = oldTo + t * (newTo - oldTo);
-                }
-            })
-        });
+        this.animationController.animate(
+            CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION,
+            {
+                step: action((t: number) => {
+                    if (t === 1) {
+                        this.isAnimationActive = false;
+                    } else {
+                        this.animationFrom = oldFrom + t * (newFrom - oldFrom);
+                        this.animationTo = oldTo + t * (newTo - oldTo);
+                    }
+                })
+            }
+        );
     }
 }
 
@@ -830,7 +885,11 @@ class DynamicAxisController extends AxisController {
 const MIN_FIXED_SCALE_POWER = -15;
 const MAX_FIXED_SCALE_POWER = 15;
 
-function calcSubdivisionScaleAndOffset(from: number, to: number, subdivision: number) {
+function calcSubdivisionScaleAndOffset(
+    from: number,
+    to: number,
+    subdivision: number
+) {
     // first try heuristic to find nice round numbers
     for (let i = MIN_FIXED_SCALE_POWER; i <= MAX_FIXED_SCALE_POWER; i++) {
         for (let k = 1; k < 10.0; k += 0.01) {
@@ -898,8 +957,10 @@ class FixedAxisController extends AxisController {
 
     get majorSubdivison() {
         return this.position === "x"
-            ? this.chartsController.viewOptions.axesLines.majorSubdivision.horizontal
-            : this.chartsController.viewOptions.axesLines.majorSubdivision.vertical;
+            ? this.chartsController.viewOptions.axesLines.majorSubdivision
+                  .horizontal
+            : this.chartsController.viewOptions.axesLines.majorSubdivision
+                  .vertical;
     }
 
     @computed
@@ -918,8 +979,11 @@ class FixedAxisController extends AxisController {
         }
 
         if (this.axisModel.fixed.zoomMode === "all") {
-            return calcSubdivisionScaleAndOffset(this.minValue, this.maxValue, this.majorSubdivison)
-                .offset;
+            return calcSubdivisionScaleAndOffset(
+                this.minValue,
+                this.maxValue,
+                this.majorSubdivison
+            ).offset;
         }
 
         return this.axisModel.fixed.subdivisionOffset;
@@ -941,8 +1005,11 @@ class FixedAxisController extends AxisController {
         }
 
         if (this.axisModel.fixed.zoomMode === "all") {
-            return calcSubdivisionScaleAndOffset(this.minValue, this.maxValue, this.majorSubdivison)
-                .scale;
+            return calcSubdivisionScaleAndOffset(
+                this.minValue,
+                this.maxValue,
+                this.majorSubdivison
+            ).scale;
         }
 
         return this.axisModel.fixed.subdivisonScale;
@@ -950,6 +1017,10 @@ class FixedAxisController extends AxisController {
 
     @computed
     get from() {
+        if (this.isDigital) {
+            return 0;
+        }
+
         if (this.isAnimationActive) {
             return this.animationSubdivisionOffset;
         }
@@ -959,6 +1030,10 @@ class FixedAxisController extends AxisController {
 
     @computed
     get to() {
+        if (this.isDigital) {
+            return 1.0;
+        }
+
         if (this.isAnimationActive) {
             return (
                 this.animationSubdivisionOffset +
@@ -966,13 +1041,19 @@ class FixedAxisController extends AxisController {
             );
         }
 
-        return this.subdivisionOffset + this.subdivisionScale * this.majorSubdivison;
+        return (
+            this.subdivisionOffset +
+            this.subdivisionScale * this.majorSubdivison
+        );
     }
 
     @computed
     get minValue(): number {
         const minValue = this._minValue;
-        if (this.chartsController.mode === "preview" || this.axisModel.fixed.zoomMode === "all") {
+        if (
+            this.chartsController.mode === "preview" ||
+            this.axisModel.fixed.zoomMode === "all"
+        ) {
             return minValue;
         }
         return Math.min(minValue, this.from);
@@ -981,7 +1062,10 @@ class FixedAxisController extends AxisController {
     @computed
     get maxValue(): number {
         const maxValue = super._maxValue;
-        if (this.chartsController.mode === "preview" || this.axisModel.fixed.zoomMode === "all") {
+        if (
+            this.chartsController.mode === "preview" ||
+            this.axisModel.fixed.zoomMode === "all"
+        ) {
             return maxValue;
         }
         return Math.max(maxValue, this.to);
@@ -998,13 +1082,17 @@ class FixedAxisController extends AxisController {
 
         let n =
             this.position === "x"
-                ? this.chartsController.viewOptions.axesLines.majorSubdivision.horizontal
-                : this.chartsController.viewOptions.axesLines.majorSubdivision.vertical;
+                ? this.chartsController.viewOptions.axesLines.majorSubdivision
+                      .horizontal
+                : this.chartsController.viewOptions.axesLines.majorSubdivision
+                      .vertical;
 
         let m =
             this.position === "x"
-                ? this.chartsController.viewOptions.axesLines.minorSubdivision.horizontal
-                : this.chartsController.viewOptions.axesLines.minorSubdivision.vertical;
+                ? this.chartsController.viewOptions.axesLines.minorSubdivision
+                      .horizontal
+                : this.chartsController.viewOptions.axesLines.minorSubdivision
+                      .vertical;
 
         let minorSubdivision = (this.to - this.from) / (m * n);
 
@@ -1039,7 +1127,8 @@ class FixedAxisController extends AxisController {
                     } else {
                         if (
                             px - visibleLabelPx >= minLabelPx &&
-                            Math.round(this.valueToPx(this.to)) - px >= minLabelPx
+                            Math.round(this.valueToPx(this.to)) - px >=
+                                minLabelPx
                         ) {
                             isLabelVisible = true;
                         }
@@ -1058,7 +1147,9 @@ class FixedAxisController extends AxisController {
                 value: value,
                 label: isLabelVisible ? this.unit.formatValue(value) : "",
                 color: isMajorLine ? majorLineColor : minorLineColor,
-                textColor: isMajorLine ? majorLineTextColor : minorLineTextColor,
+                textColor: isMajorLine
+                    ? majorLineTextColor
+                    : minorLineTextColor,
                 isMajorLine: isMajorLine,
                 allowSnapTo: true,
                 step: undefined
@@ -1132,7 +1223,11 @@ class FixedAxisController extends AxisController {
             }
         }
 
-        const result = calcSubdivisionScaleAndOffset(from, to, this.majorSubdivison);
+        const result = calcSubdivisionScaleAndOffset(
+            from,
+            to,
+            this.majorSubdivison
+        );
 
         this.animate(() => {
             this.axisModel.fixed.subdivisonScale = result.scale;
@@ -1162,7 +1257,9 @@ class FixedAxisController extends AxisController {
         if (newScale !== this.subdivisionScale) {
             let fixedOffset =
                 this.subdivisionOffset +
-                ((this.subdivisionScale - newScale) * this.majorSubdivison * pivotPx) /
+                ((this.subdivisionScale - newScale) *
+                    this.majorSubdivison *
+                    pivotPx) /
                     this.distancePx;
 
             //fixedOffset = Math.floor(fixedOffset / newScale) * newScale;
@@ -1197,16 +1294,21 @@ class FixedAxisController extends AxisController {
         const newOffset = this.subdivisionOffset;
         const newScale = this.subdivisionScale;
 
-        this.animationController.animate(CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION, {
-            step: action((t: number) => {
-                if (t === 1) {
-                    this.isAnimationActive = false;
-                } else {
-                    this.animationSubdivisionOffset = oldOffset + t * (newOffset - oldOffset);
-                    this.animationSubdivisionScale = oldScale + t * (newScale - oldScale);
-                }
-            })
-        });
+        this.animationController.animate(
+            CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION,
+            {
+                step: action((t: number) => {
+                    if (t === 1) {
+                        this.isAnimationActive = false;
+                    } else {
+                        this.animationSubdivisionOffset =
+                            oldOffset + t * (newOffset - oldOffset);
+                        this.animationSubdivisionScale =
+                            oldScale + t * (newScale - oldScale);
+                    }
+                })
+            }
+        );
     }
 }
 
@@ -1223,18 +1325,27 @@ export interface ILineController {
     yMin: number;
     yMax: number;
 
+    label: string;
+
+    getWaveformModel(): WaveformModel | null;
+
     getNearestValuePoint(point: Point): Point;
 
     updateCursor(cursor: ICursor, point: Point, event: PointerEvent): void;
     addPoint(chartView: ChartView, cursor: ICursor): MouseHandler | undefined;
-    onDragStart(chartView: ChartView, event: PointerEvent): MouseHandler | undefined;
+    onDragStart(
+        chartView: ChartView,
+        event: PointerEvent
+    ): MouseHandler | undefined;
     render(clipId: string): JSX.Element;
     // find closest point on line to the given point
     closestPoint(point: Point): Point | undefined;
 }
 
 export abstract class LineController implements ILineController {
-    constructor(public id: string, public yAxisController: AxisController) {}
+    constructor(public id: string, yAxisController: AxisController) {
+        this._yAxisController = yAxisController;
+    }
 
     get xAxisController() {
         return this.yAxisController.chartsController.xAxisController;
@@ -1250,12 +1361,28 @@ export abstract class LineController implements ILineController {
         return this.xAxisController.axisModel.maxValue;
     }
 
+    private _yAxisController: AxisController;
+
+    get yAxisController() {
+        return this._yAxisController;
+    }
+
     abstract get yMin(): number;
     abstract get yMax(): number;
 
+    get label() {
+        return this.yAxisController.axisModel.label;
+    }
+
+    abstract getWaveformModel(): WaveformModel | null;
+
     abstract getNearestValuePoint(point: Point): Point;
 
-    updateCursor(cursor: ICursor | undefined, point: Point, event: PointerEvent): void {
+    updateCursor(
+        cursor: ICursor | undefined,
+        point: Point,
+        event: PointerEvent
+    ): void {
         if (cursor) {
             const { x, y } = this.getNearestValuePoint(point);
             if (!isNaN(x) && !isNaN(y)) {
@@ -1273,7 +1400,10 @@ export abstract class LineController implements ILineController {
         return undefined;
     }
 
-    onDragStart(chartView: ChartView, event: PointerEvent): MouseHandler | undefined {
+    onDragStart(
+        chartView: ChartView,
+        event: PointerEvent
+    ): MouseHandler | undefined {
         return undefined;
     }
 
@@ -1312,7 +1442,12 @@ export class ChartController {
                 model
             );
         } else {
-            this.yAxisController = new FixedAxisController("y", this.chartsController, this, model);
+            this.yAxisController = new FixedAxisController(
+                "y",
+                this.chartsController,
+                this,
+                model
+            );
         }
     }
 
@@ -1367,7 +1502,10 @@ export class ChartController {
         return axes;
     }
 
-    onDragStart(chartView: ChartView, event: PointerEvent): MouseHandler | undefined {
+    onDragStart(
+        chartView: ChartView,
+        event: PointerEvent
+    ): MouseHandler | undefined {
         if (this.chartsController.rulersController) {
             const mouseHandler = this.chartsController.rulersController.onDragStart(
                 chartView,
@@ -1379,7 +1517,10 @@ export class ChartController {
         }
 
         for (let i = 0; i < this.lineControllers.length; i++) {
-            const mouseHandler = this.lineControllers[i].onDragStart(chartView, event);
+            const mouseHandler = this.lineControllers[i].onDragStart(
+                chartView,
+                event
+            );
             if (mouseHandler) {
                 return mouseHandler;
             }
@@ -1397,7 +1538,11 @@ export class ChartController {
         return {
             x:
                 this.lineControllers.length > 0
-                    ? Math.min(...this.lineControllers.map(lineController => lineController.xMin))
+                    ? Math.min(
+                          ...this.lineControllers.map(
+                              lineController => lineController.xMin
+                          )
+                      )
                     : 0,
 
             y:
@@ -1406,7 +1551,8 @@ export class ChartController {
                           ...this.lineControllers
                               .filter(
                                   lineController =>
-                                      lineController.yAxisController === this.yAxisController
+                                      lineController.yAxisController ===
+                                      this.yAxisController
                               )
                               .map(lineController => lineController.yMin)
                       )
@@ -1432,7 +1578,11 @@ export class ChartController {
         return {
             x:
                 this.lineControllers.length > 0
-                    ? Math.max(...this.lineControllers.map(lineController => lineController.xMax))
+                    ? Math.max(
+                          ...this.lineControllers.map(
+                              lineController => lineController.xMax
+                          )
+                      )
                     : 1,
 
             y:
@@ -1441,7 +1591,8 @@ export class ChartController {
                           ...this.lineControllers
                               .filter(
                                   lineController =>
-                                      lineController.yAxisController === this.yAxisController
+                                      lineController.yAxisController ===
+                                      this.yAxisController
                               )
                               .map(lineController => lineController.yMax)
                       )
@@ -1538,7 +1689,9 @@ export class GlobalViewOptions {
     @observable showSampledData: boolean = false;
 
     constructor() {
-        const globalViewOptionsJSON = localStorage.getItem(GlobalViewOptions.LOCAL_STORAGE_ITEM_ID);
+        const globalViewOptionsJSON = localStorage.getItem(
+            GlobalViewOptions.LOCAL_STORAGE_ITEM_ID
+        );
         if (globalViewOptionsJSON) {
             try {
                 const globakViewOptionsJS = JSON.parse(globalViewOptionsJSON);
@@ -1573,9 +1726,19 @@ export abstract class ChartsController {
     @computed
     get xAxisController() {
         if (this.viewOptions.axesLines.type === "dynamic") {
-            return new DynamicAxisController("x", this, undefined, this.xAxisModel);
+            return new DynamicAxisController(
+                "x",
+                this,
+                undefined,
+                this.xAxisModel
+            );
         } else {
-            return new FixedAxisController("x", this, undefined, this.xAxisModel);
+            return new FixedAxisController(
+                "x",
+                this,
+                undefined,
+                this.xAxisModel
+            );
         }
     }
 
@@ -1591,7 +1754,10 @@ export abstract class ChartsController {
 
     @computed
     get xAxisLabelTextsHeight() {
-        return Math.max(CONF_MIN_X_AXIS_BAND_HEIGHT, this.xAxisController.labelTextsHeight);
+        return Math.max(
+            CONF_MIN_X_AXIS_BAND_HEIGHT,
+            this.xAxisController.labelTextsHeight
+        );
     }
 
     @computed
@@ -1599,14 +1765,20 @@ export abstract class ChartsController {
         let maxLabelTextsWidth = 0;
         for (let i = 0; i < this.chartControllers.length; i++) {
             const chartController = this.chartControllers[i];
-            if (chartController.yAxisController.labelTextsWidth > maxLabelTextsWidth) {
-                maxLabelTextsWidth = chartController.yAxisController.labelTextsWidth;
+            if (
+                chartController.yAxisController.labelTextsWidth >
+                maxLabelTextsWidth
+            ) {
+                maxLabelTextsWidth =
+                    chartController.yAxisController.labelTextsWidth;
             }
             if (
                 chartController.yAxisControllerOnRightSide &&
-                chartController.yAxisControllerOnRightSide.labelTextsWidth > maxLabelTextsWidth
+                chartController.yAxisControllerOnRightSide.labelTextsWidth >
+                    maxLabelTextsWidth
             ) {
-                maxLabelTextsWidth = chartController.yAxisControllerOnRightSide.labelTextsWidth;
+                maxLabelTextsWidth =
+                    chartController.yAxisControllerOnRightSide.labelTextsWidth;
             }
         }
 
@@ -1623,7 +1795,10 @@ export abstract class ChartsController {
     @computed
     get xAxisHeight() {
         let xAxisHeight = SCROLL_BAR_SIZE;
-        if (this.viewOptions.showZoomButtons && this.viewOptions.showAxisLabels) {
+        if (
+            this.viewOptions.showZoomButtons &&
+            this.viewOptions.showAxisLabels
+        ) {
             xAxisHeight += Math.max(ZOOM_ICON_SIZE, this.xAxisLabelTextsHeight);
         } else if (this.viewOptions.showZoomButtons) {
             xAxisHeight += ZOOM_ICON_SIZE;
@@ -1637,7 +1812,10 @@ export abstract class ChartsController {
     get minLeftMargin() {
         let margin = SCROLL_BAR_SIZE;
 
-        if (this.viewOptions.showZoomButtons && this.viewOptions.showAxisLabels) {
+        if (
+            this.viewOptions.showZoomButtons &&
+            this.viewOptions.showAxisLabels
+        ) {
             margin += Math.max(ZOOM_ICON_SIZE, this.yAxisLabelTextsWidth);
         } else if (this.viewOptions.showZoomButtons) {
             margin += ZOOM_ICON_SIZE;
@@ -1653,7 +1831,10 @@ export abstract class ChartsController {
         let margin = SCROLL_BAR_SIZE;
 
         if (this.yAxisOnRightSideExists) {
-            if (this.viewOptions.showZoomButtons && this.viewOptions.showAxisLabels) {
+            if (
+                this.viewOptions.showZoomButtons &&
+                this.viewOptions.showAxisLabels
+            ) {
                 margin += Math.max(ZOOM_ICON_SIZE, this.yAxisLabelTextsWidth);
             } else if (this.viewOptions.showZoomButtons) {
                 margin += ZOOM_ICON_SIZE;
@@ -1678,13 +1859,23 @@ export abstract class ChartsController {
     @computed
     get maxChartWidth() {
         return this.chartViewWidth
-            ? Math.max(this.chartViewWidth - this.minLeftMargin - this.minRightMargin, 1)
+            ? Math.max(
+                  this.chartViewWidth -
+                      this.minLeftMargin -
+                      this.minRightMargin,
+                  1
+              )
             : 1;
     }
     @computed
     get maxChartHeight() {
         return this.chartViewHeight
-            ? Math.max(this.chartViewHeight - this.minTopMargin - this.minBottomMargin, 1)
+            ? Math.max(
+                  this.chartViewHeight -
+                      this.minTopMargin -
+                      this.minBottomMargin,
+                  1
+              )
             : 1;
     }
 
@@ -1695,14 +1886,17 @@ export abstract class ChartsController {
         }
 
         if (
-            this.maxChartWidth / this.viewOptions.axesLines.majorSubdivision.horizontal <
-            this.maxChartHeight / this.viewOptions.axesLines.majorSubdivision.vertical
+            this.maxChartWidth /
+                this.viewOptions.axesLines.majorSubdivision.horizontal <
+            this.maxChartHeight /
+                this.viewOptions.axesLines.majorSubdivision.vertical
         ) {
             return this.maxChartWidth;
         }
 
         return (
-            (this.viewOptions.axesLines.majorSubdivision.horizontal * this.maxChartHeight) /
+            (this.viewOptions.axesLines.majorSubdivision.horizontal *
+                this.maxChartHeight) /
             this.viewOptions.axesLines.majorSubdivision.vertical
         );
     }
@@ -1714,11 +1908,14 @@ export abstract class ChartsController {
         }
 
         if (
-            this.maxChartWidth / this.viewOptions.axesLines.majorSubdivision.horizontal <
-            this.maxChartHeight / this.viewOptions.axesLines.majorSubdivision.vertical
+            this.maxChartWidth /
+                this.viewOptions.axesLines.majorSubdivision.horizontal <
+            this.maxChartHeight /
+                this.viewOptions.axesLines.majorSubdivision.vertical
         ) {
             return (
-                (this.viewOptions.axesLines.majorSubdivision.vertical * this.maxChartWidth) /
+                (this.viewOptions.axesLines.majorSubdivision.vertical *
+                    this.maxChartWidth) /
                 this.viewOptions.axesLines.majorSubdivision.horizontal
             );
         }
@@ -1731,7 +1928,10 @@ export abstract class ChartsController {
         if (this.chartWidth === this.maxChartWidth) {
             return this.minLeftMargin;
         }
-        return this.minLeftMargin + Math.round((this.maxChartWidth - this.chartWidth) / 2);
+        return (
+            this.minLeftMargin +
+            Math.round((this.maxChartWidth - this.chartWidth) / 2)
+        );
     }
 
     @computed
@@ -1751,7 +1951,10 @@ export abstract class ChartsController {
         if (this.chartHeight === this.maxChartHeight) {
             return this.minTopMargin;
         }
-        return this.minTopMargin + Math.round((this.maxChartHeight - this.chartHeight) / 2);
+        return (
+            this.minTopMargin +
+            Math.round((this.maxChartHeight - this.chartHeight) / 2)
+        );
     }
 
     @computed
@@ -1789,14 +1992,22 @@ export abstract class ChartsController {
     @computed
     get minValue() {
         return this.chartControllers.length > 0
-            ? Math.min(...this.chartControllers.map(chartController => chartController.minValue.x))
+            ? Math.min(
+                  ...this.chartControllers.map(
+                      chartController => chartController.minValue.x
+                  )
+              )
             : 0;
     }
 
     @computed
     get maxValue() {
         return this.chartControllers.length > 0
-            ? Math.max(...this.chartControllers.map(chartController => chartController.maxValue.x))
+            ? Math.max(
+                  ...this.chartControllers.map(
+                      chartController => chartController.maxValue.x
+                  )
+              )
             : 1;
     }
 
@@ -1828,13 +2039,17 @@ export abstract class ChartsController {
     @action.bound
     zoomAll() {
         this.xAxisController.zoomAll();
-        this.chartControllers.forEach(chartController => chartController.zoomAll());
+        this.chartControllers.forEach(chartController =>
+            chartController.zoomAll()
+        );
     }
 
     @action.bound
     zoomDefault() {
         this.xAxisController.zoomDefault();
-        this.chartControllers.forEach(chartController => chartController.zoomDefault());
+        this.chartControllers.forEach(chartController =>
+            chartController.zoomDefault()
+        );
     }
 
     abstract get chartViewOptionsProps(): ChartViewOptionsProps;
@@ -1843,7 +2058,17 @@ export abstract class ChartsController {
         return false;
     }
 
-    abstract getWaveformModel(chartIndex: number): WaveformModel | null;
+    @computed get lineControllers() {
+        const lineControllers: ILineController[] = [];
+
+        this.chartControllers.forEach(
+            chartController => {
+                chartController.lineControllers.forEach(lineController => lineControllers.push(lineController))
+            }
+        );
+
+        return lineControllers;
+    }
 
     rulersController: RulersController;
     measurementsController: MeasurementsController;
@@ -1859,7 +2084,10 @@ export abstract class ChartsController {
             if (this.measurementsController) {
                 this.measurementsController.destroy();
             }
-            this.measurementsController = new MeasurementsController(this, measurementsModel);
+            this.measurementsController = new MeasurementsController(
+                this,
+                measurementsModel
+            );
         }
     }
 
@@ -1873,7 +2101,10 @@ export abstract class ChartsController {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class ChartBorder extends React.Component<{ chartsController: ChartsController }, {}> {
+class ChartBorder extends React.Component<
+    { chartsController: ChartsController },
+    {}
+> {
     render() {
         const chartsController = this.props.chartsController;
 
@@ -1894,7 +2125,10 @@ class ChartBorder extends React.Component<{ chartsController: ChartsController }
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class AxisLines extends React.Component<{ axisController: AxisController }, {}> {
+class AxisLines extends React.Component<
+    { axisController: AxisController },
+    {}
+> {
     @bind
     line(tick: ITick, i: number) {
         const { axisController } = this.props;
@@ -1917,7 +2151,17 @@ class AxisLines extends React.Component<{ axisController: AxisController }, {}> 
             y2 = chartsController.chartBottom - tick.px;
         }
 
-        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} strokeWidth="1" stroke={tick.color} />;
+        return (
+            <line
+                key={i}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                strokeWidth="1"
+                stroke={tick.color}
+            />
+        );
     }
 
     render() {
@@ -2022,7 +2266,10 @@ class SvgButton extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class AxisLabels extends React.Component<{ axisController: AxisController }, {}> {
+class AxisLabels extends React.Component<
+    { axisController: AxisController },
+    {}
+> {
     render() {
         const { axisController } = this.props;
 
@@ -2042,12 +2289,14 @@ class AxisLabels extends React.Component<{ axisController: AxisController }, {}>
                     textAnchor = "middle";
                     alignmentBaseline = "hanging";
                 } else if (axisController.position === "y") {
-                    xText = chartsController.chartLeft - CONF_LABEL_TICK_GAP_HORZ;
+                    xText =
+                        chartsController.chartLeft - CONF_LABEL_TICK_GAP_HORZ;
                     yText = chartsController.chartBottom - tick.px;
                     textAnchor = "end";
                     alignmentBaseline = "middle";
                 } else {
-                    xText = chartsController.chartRight + CONF_LABEL_TICK_GAP_HORZ;
+                    xText =
+                        chartsController.chartRight + CONF_LABEL_TICK_GAP_HORZ;
                     yText = chartsController.chartBottom - tick.px;
                     textAnchor = "start";
                     alignmentBaseline = "middle";
@@ -2074,7 +2323,8 @@ class AxisLabels extends React.Component<{ axisController: AxisController }, {}>
                     runInAction(() => {
                         const rect = ref!.getBBox();
                         this.props.axisController.labelTextsWidth = rect.width;
-                        this.props.axisController.labelTextsHeight = rect.height;
+                        this.props.axisController.labelTextsHeight =
+                            rect.height;
                     })
                 }
                 className="EezStudio_ChartView_Labels"
@@ -2088,15 +2338,24 @@ class AxisLabels extends React.Component<{ axisController: AxisController }, {}>
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class AxisScrollBar extends React.Component<{ axisController: AxisController }, {}> {
+class AxisScrollBar extends React.Component<
+    { axisController: AxisController },
+    {}
+> {
     div: HTMLDivElement | null;
 
     get from() {
-        return Math.min(this.props.axisController.minValue, this.props.axisController.from);
+        return Math.min(
+            this.props.axisController.minValue,
+            this.props.axisController.from
+        );
     }
 
     get to() {
-        return Math.max(this.props.axisController.maxValue, this.props.axisController.to);
+        return Math.max(
+            this.props.axisController.maxValue,
+            this.props.axisController.to
+        );
     }
 
     get range() {
@@ -2110,10 +2369,13 @@ class AxisScrollBar extends React.Component<{ axisController: AxisController }, 
 
             if (axisController.position === "x") {
                 const newScrollPosition = this.div.scrollLeft;
-                const oldScrollPosition = (axisController.from - this.from) * axisController.scale;
+                const oldScrollPosition =
+                    (axisController.from - this.from) * axisController.scale;
 
                 if (Math.abs(newScrollPosition - oldScrollPosition) >= 1) {
-                    axisController.panTo(this.from + newScrollPosition / axisController.scale);
+                    axisController.panTo(
+                        this.from + newScrollPosition / axisController.scale
+                    );
                 }
             } else {
                 const newScrollPosition = this.div.scrollTop;
@@ -2125,7 +2387,9 @@ class AxisScrollBar extends React.Component<{ axisController: AxisController }, 
                 if (Math.abs(newScrollPosition - oldScrollPosition) >= 1) {
                     axisController.panTo(
                         this.from +
-                            (this.div.scrollHeight - this.div.clientHeight - newScrollPosition) /
+                            (this.div.scrollHeight -
+                                this.div.clientHeight -
+                                newScrollPosition) /
                                 axisController.scale
                     );
                 }
@@ -2138,7 +2402,8 @@ class AxisScrollBar extends React.Component<{ axisController: AxisController }, 
             const { axisController } = this.props;
 
             if (axisController.position === "x") {
-                const newScrollPosition = (axisController.from - this.from) * axisController.scale;
+                const newScrollPosition =
+                    (axisController.from - this.from) * axisController.scale;
                 const oldScrollPosition = this.div.scrollLeft;
                 if (Math.abs(newScrollPosition - oldScrollPosition) >= 1) {
                     this.div.scrollLeft = newScrollPosition;
@@ -2205,7 +2470,8 @@ class AxisScrollBar extends React.Component<{ axisController: AxisController }, 
         } else {
             track.x =
                 axisController.position === "y"
-                    ? chartsController.chartLeft - chartsController.minLeftMargin
+                    ? chartsController.chartLeft -
+                      chartsController.minLeftMargin
                     : chartsController.chartRight +
                       chartsController.minRightMargin -
                       SCROLL_BAR_SIZE;
@@ -2227,8 +2493,17 @@ class AxisScrollBar extends React.Component<{ axisController: AxisController }, 
         }
 
         return (
-            <foreignObject x={track.x} y={track.y} width={track.width} height={track.height}>
-                <div ref={ref => (this.div = ref)} style={divStyle} onScroll={this.onScroll}>
+            <foreignObject
+                x={track.x}
+                y={track.y}
+                width={track.width}
+                height={track.height}
+            >
+                <div
+                    ref={ref => (this.div = ref)}
+                    style={divStyle}
+                    onScroll={this.onScroll}
+                >
                     <div style={innerDivStyle} />
                 </div>
             </foreignObject>
@@ -2254,9 +2529,13 @@ class AxisView extends React.Component<
 
         if (axisController.position === "x") {
             x1 = chartsController.chartLeft + ZOOM_ICON_SIZE / 2;
-            y1 = chartsController.xAxisHeight - SCROLL_BAR_SIZE - ZOOM_ICON_SIZE;
+            y1 =
+                chartsController.xAxisHeight - SCROLL_BAR_SIZE - ZOOM_ICON_SIZE;
         } else if (axisController.position === "y") {
-            x1 = chartsController.chartLeft - chartsController.minLeftMargin + SCROLL_BAR_SIZE;
+            x1 =
+                chartsController.chartLeft -
+                chartsController.minLeftMargin +
+                SCROLL_BAR_SIZE;
             y1 = chartsController.chartBottom - (3 * ZOOM_ICON_SIZE) / 2;
         } else {
             x1 =
@@ -2275,46 +2554,60 @@ class AxisView extends React.Component<
             y2 = y1;
         } else if (axisController.position === "y") {
             x2 = x1;
-            y2 = chartsController.chartBottom - (chartsController.chartHeight - ZOOM_ICON_SIZE / 2);
+            y2 =
+                chartsController.chartBottom -
+                (chartsController.chartHeight - ZOOM_ICON_SIZE / 2);
         } else {
             x2 = x1;
-            y2 = chartsController.chartBottom - (chartsController.chartHeight - ZOOM_ICON_SIZE / 2);
+            y2 =
+                chartsController.chartBottom -
+                (chartsController.chartHeight - ZOOM_ICON_SIZE / 2);
         }
 
         return (
             <g>
-                {axisController.position !== "x" && <AxisLines axisController={axisController} />}
+                {axisController.position !== "x" && (
+                    <AxisLines axisController={axisController} />
+                )}
                 {chartsController.viewOptions.showAxisLabels &&
-                    (chartsController.viewOptions.axesLines.type === "dynamic" ||
-                        !axisController.isAnimationActive) && (
+                    (chartsController.viewOptions.axesLines.type ===
+                        "dynamic" ||
+                        !axisController.isAnimationActive) &&
+                    !axisController.isDigital && (
                         <AxisLabels axisController={axisController} />
                     )}
 
-                {chartsController.areZoomButtonsVisible && axisController.zoomOutEnabled && (
-                    <SvgButton
-                        icon={SVG_ICON_ZOOM_OUT}
-                        x={Math.round(x1) + 0.5}
-                        y={Math.round(y1) + 0.5}
-                        width={ZOOM_ICON_SIZE}
-                        height={ZOOM_ICON_SIZE}
-                        padding={ZOOM_ICON_PADDING}
-                        onClick={this.props.axisController.zoomOut}
-                    />
-                )}
+                {chartsController.areZoomButtonsVisible &&
+                    !axisController.isDigital &&
+                    axisController.zoomOutEnabled && (
+                        <SvgButton
+                            icon={SVG_ICON_ZOOM_OUT}
+                            x={Math.round(x1) + 0.5}
+                            y={Math.round(y1) + 0.5}
+                            width={ZOOM_ICON_SIZE}
+                            height={ZOOM_ICON_SIZE}
+                            padding={ZOOM_ICON_PADDING}
+                            onClick={this.props.axisController.zoomOut}
+                        />
+                    )}
 
-                {chartsController.areZoomButtonsVisible && axisController.zoomInEnabled && (
-                    <SvgButton
-                        icon={SVG_ICON_ZOOM_IN}
-                        x={Math.round(x2) + 0.5}
-                        y={Math.round(y2) + 0.5}
-                        width={ZOOM_ICON_SIZE}
-                        height={ZOOM_ICON_SIZE}
-                        padding={ZOOM_ICON_PADDING}
-                        onClick={this.props.axisController.zoomIn}
-                    />
-                )}
+                {chartsController.areZoomButtonsVisible &&
+                    !axisController.isDigital &&
+                    axisController.zoomInEnabled && (
+                        <SvgButton
+                            icon={SVG_ICON_ZOOM_IN}
+                            x={Math.round(x2) + 0.5}
+                            y={Math.round(y2) + 0.5}
+                            width={ZOOM_ICON_SIZE}
+                            height={ZOOM_ICON_SIZE}
+                            padding={ZOOM_ICON_PADDING}
+                            onClick={this.props.axisController.zoomIn}
+                        />
+                    )}
 
-                <AxisScrollBar axisController={axisController} />
+                {!axisController.isDigital && (
+                    <AxisScrollBar axisController={axisController} />
+                )}
             </g>
         );
     }
@@ -2326,7 +2619,11 @@ export interface MouseHandler {
     cursor: string;
     down(point: SVGPoint, event: PointerEvent): void;
     move(point: SVGPoint, event: PointerEvent): void;
-    up(point: SVGPoint | undefined, event: PointerEvent | undefined, cancel: boolean): void;
+    up(
+        point: SVGPoint | undefined,
+        event: PointerEvent | undefined,
+        cancel: boolean
+    ): void;
     updateCursor(event: PointerEvent | undefined, cursor: ICursor): void;
     render(): JSX.Element | null;
 }
@@ -2382,7 +2679,11 @@ class PanMouseHandler implements MouseHandler {
         this.lastPoint = point;
     }
 
-    up(point: SVGPoint | undefined, event: PointerEvent | undefined, cancel: boolean) {}
+    up(
+        point: SVGPoint | undefined,
+        event: PointerEvent | undefined,
+        cancel: boolean
+    ) {}
 
     updateCursor(event: PointerEvent | undefined, cursor: ICursor) {
         cursor.visible = false;
@@ -2404,8 +2705,16 @@ class ZoomToRectMouseHandler implements MouseHandler {
 
     clamp(point: SVGPoint) {
         return {
-            x: clamp(point.x, 0, this.chartController.xAxisController.distancePx),
-            y: clamp(point.y, 0, this.chartController.yAxisController.distancePx)
+            x: clamp(
+                point.x,
+                0,
+                this.chartController.xAxisController.distancePx
+            ),
+            y: clamp(
+                point.y,
+                0,
+                this.chartController.yAxisController.distancePx
+            )
         };
     }
 
@@ -2430,7 +2739,11 @@ class ZoomToRectMouseHandler implements MouseHandler {
         }
     }
 
-    up(point: SVGPoint | undefined, event: PointerEvent | undefined, cancel: boolean) {
+    up(
+        point: SVGPoint | undefined,
+        event: PointerEvent | undefined,
+        cancel: boolean
+    ) {
         if (cancel) {
             return;
         }
@@ -2463,7 +2776,8 @@ class ZoomToRectMouseHandler implements MouseHandler {
         let label;
 
         if (this.orientation === "x" || this.orientation === "both") {
-            const xAxisController = this.chartController.chartsController.xAxisController;
+            const xAxisController = this.chartController.chartsController
+                .xAxisController;
             let fromPx = Math.min(this.startPoint.x, this.endPoint.x);
             let toPx = Math.max(this.startPoint.x, this.endPoint.x);
             let from = xAxisController.pxToLinearValue(fromPx);
@@ -2558,14 +2872,24 @@ class ZoomToRectMouseHandler implements MouseHandler {
                         <SvgLabel
                             text={this.xLabel}
                             x={chartsController.chartLeft + x + width / 2}
-                            y={chartsController.chartBottom - y + height / 2 - 2}
+                            y={
+                                chartsController.chartBottom -
+                                y +
+                                height / 2 -
+                                2
+                            }
                             horizontalAlignement="center"
                             verticalAlignment="bottom"
                         ></SvgLabel>
                         <SvgLabel
                             text={this.yLabel}
                             x={chartsController.chartLeft + x + width / 2}
-                            y={chartsController.chartBottom - y + height / 2 + 2}
+                            y={
+                                chartsController.chartBottom -
+                                y +
+                                height / 2 +
+                                2
+                            }
                             horizontalAlignement="center"
                             verticalAlignment="top"
                         ></SvgLabel>
@@ -2596,19 +2920,24 @@ class CursorPopover extends React.Component<{ cursor: ICursor }, {}> {
         const { cursor } = this.props;
 
         const yAxisController = cursor.lineController.yAxisController;
-        const xAxisController = yAxisController.chartsController.xAxisController;
+        const xAxisController =
+            yAxisController.chartsController.xAxisController;
 
         const time = xAxisController.unit.formatValue(
             xAxisController.axisModel.semiLogarithmic
-                ? Math.pow(10, cursor.time + xAxisController.axisModel.semiLogarithmic.a) +
-                      xAxisController.axisModel.semiLogarithmic.b
+                ? Math.pow(
+                      10,
+                      cursor.time + xAxisController.axisModel.semiLogarithmic.a
+                  ) + xAxisController.axisModel.semiLogarithmic.b
                 : cursor.time,
             4
         );
         const value = cursor.lineController.yAxisController.unit.formatValue(
             yAxisController.axisModel.semiLogarithmic
-                ? Math.pow(10, cursor.value + yAxisController.axisModel.semiLogarithmic.a) +
-                      yAxisController.axisModel.semiLogarithmic.b
+                ? Math.pow(
+                      10,
+                      cursor.value + yAxisController.axisModel.semiLogarithmic.a
+                  ) + yAxisController.axisModel.semiLogarithmic.b
                 : cursor.value,
             5
         );
@@ -2649,7 +2978,10 @@ class Cursor implements ICursor {
     updateCursor(point: Point | undefined, event: PointerEvent | undefined) {
         this.visible = false;
 
-        const { chartWidth, chartHeight } = this.chartView.props.chartController.chartsController;
+        const {
+            chartWidth,
+            chartHeight
+        } = this.chartView.props.chartController.chartsController;
         if (
             !point ||
             !event ||
@@ -2661,24 +2993,27 @@ class Cursor implements ICursor {
             return;
         }
 
-        const cursors = this.chartView.props.chartController.lineControllers.map(lineController => {
-            const cursor: ICursor = {
-                visible: false,
-                lineController,
-                time: 0,
-                value: 0,
-                valueIndex: -1,
-                addPoint: false
-            };
-            lineController.updateCursor(cursor, point, event);
-            return cursor;
-        });
+        const cursors = this.chartView.props.chartController.lineControllers.map(
+            lineController => {
+                const cursor: ICursor = {
+                    visible: false,
+                    lineController,
+                    time: 0,
+                    value: 0,
+                    valueIndex: -1,
+                    addPoint: false
+                };
+                lineController.updateCursor(cursor, point, event);
+                return cursor;
+            }
+        );
 
         let minDistance = Number.MAX_SAFE_INTEGER;
         let minDistanceIndex: number = -1;
         cursors.forEach((cursor, i) => {
             if (cursor.visible) {
-                const lineController = this.chartView.props.chartController.lineControllers[i];
+                const lineController = this.chartView.props.chartController
+                    .lineControllers[i];
                 const closestPoint = lineController.closestPoint(point);
                 if (closestPoint) {
                     let distance = pointDistance(closestPoint, point);
@@ -2708,7 +3043,10 @@ class Cursor implements ICursor {
     }
 
     @action
-    onMouseEvent(event: PointerEvent | undefined, mouseHandler: MouseHandler | undefined) {
+    onMouseEvent(
+        event: PointerEvent | undefined,
+        mouseHandler: MouseHandler | undefined
+    ) {
         if (mouseHandler) {
             mouseHandler.updateCursor(event, this);
         } else {
@@ -2788,12 +3126,13 @@ class Cursor implements ICursor {
         let point = {
             x:
                 Math.round(
-                    this.lineController.yAxisController.chartsController.chartLeft +
-                        this.xAxisController.valueToPx(this.time)
+                    this.lineController.yAxisController.chartsController
+                        .chartLeft + this.xAxisController.valueToPx(this.time)
                 ) + 0.5,
             y:
                 Math.round(
-                    this.lineController.yAxisController.chartsController.chartBottom -
+                    this.lineController.yAxisController.chartsController
+                        .chartBottom -
                         this.yAxisController.valueToPx(this.value)
                 ) + 0.5
         };
@@ -2810,8 +3149,12 @@ class Cursor implements ICursor {
                     cx={point.x}
                     cy={point.y}
                     r={CONF_CURSOR_RADIUS}
-                    fill={this.fillColor || this.yAxisController.axisModel.color}
-                    stroke={this.strokeColor || this.yAxisController.axisModel.color}
+                    fill={
+                        this.fillColor || this.yAxisController.axisModel.color
+                    }
+                    stroke={
+                        this.strokeColor || this.yAxisController.axisModel.color
+                    }
                 />
                 {this.addPoint && (
                     <React.Fragment>
@@ -2820,14 +3163,20 @@ class Cursor implements ICursor {
                             y={point.y - (CONF_CURSOR_RADIUS * 2) / 3}
                             width={CONF_CURSOR_RADIUS / 4}
                             height={(CONF_CURSOR_RADIUS * 4) / 3}
-                            fill={this.fillColor || this.yAxisController.axisModel.color}
+                            fill={
+                                this.fillColor ||
+                                this.yAxisController.axisModel.color
+                            }
                         />
                         <rect
                             x={point.x - (CONF_CURSOR_RADIUS * 2) / 3}
                             y={point.y - CONF_CURSOR_RADIUS / 8}
                             width={(CONF_CURSOR_RADIUS * 4) / 3}
                             height={CONF_CURSOR_RADIUS / 4}
-                            fill={this.fillColor || this.yAxisController.axisModel.color}
+                            fill={
+                                this.fillColor ||
+                                this.yAxisController.axisModel.color
+                            }
                         />
                     </React.Fragment>
                 )}
@@ -2865,7 +3214,8 @@ export class ChartView extends React.Component<
         point.y = event.clientY;
         point = point.matrixTransform(this.svg.getScreenCTM()!.inverse());
         point.x -= this.props.chartController.chartsController.chartLeft;
-        point.y = this.props.chartController.chartsController.chartBottom - point.y;
+        point.y =
+            this.props.chartController.chartsController.chartBottom - point.y;
         return point;
     }
 
@@ -2918,7 +3268,9 @@ export class ChartView extends React.Component<
             if (event.shiftKey) {
                 if (
                     !this.props.chartController.yAxisControllerOnRightSide ||
-                    point.x < this.props.chartController.chartsController.chartWidth / 2
+                    point.x <
+                        this.props.chartController.chartsController.chartWidth /
+                            2
                 ) {
                     this.handleMouseWheelPanAndZoom(
                         event,
@@ -2959,12 +3311,20 @@ export class ChartView extends React.Component<
             event.buttons === 1
         ) {
             if (this.cursor && this.cursor.visible && this.cursor.addPoint) {
-                this.mouseHandler = this.cursor.lineController.addPoint(this, this.cursor);
+                this.mouseHandler = this.cursor.lineController.addPoint(
+                    this,
+                    this.cursor
+                );
             } else {
-                this.mouseHandler = this.props.chartController.onDragStart(this, event);
+                this.mouseHandler = this.props.chartController.onDragStart(
+                    this,
+                    event
+                );
             }
         } else {
-            this.mouseHandler = new PanMouseHandler(this.props.chartController.axes);
+            this.mouseHandler = new PanMouseHandler(
+                this.props.chartController.axes
+            );
         }
 
         if (this.mouseHandler) {
@@ -3030,7 +3390,8 @@ export class ChartView extends React.Component<
         let chartXAxisTitle;
         let chartTitle;
         if (isNonEmpty) {
-            chartXAxisTitle = chartController.xAxisController.axisModel.label && (
+            chartXAxisTitle = chartController.xAxisController.axisModel
+                .label && (
                 <div
                     className="EezStudio_Chart_Title"
                     style={{
@@ -3048,7 +3409,7 @@ export class ChartView extends React.Component<
                 ? chartController.yAxisController.axisModel.color
                 : chartController.yAxisController.axisModel.colorInverse;
 
-            chartTitle = chartController.yAxisController.axisModel.label && (
+            chartTitle = !chartController.yAxisController.isDigital && chartController.yAxisController.axisModel.label && (
                 <div
                     className="EezStudio_Chart_Title"
                     style={{
@@ -3065,7 +3426,8 @@ export class ChartView extends React.Component<
             if (chartController.yAxisControllerOnRightSide) {
                 const color = globalViewOptions.blackBackground
                     ? chartController.yAxisControllerOnRightSide.axisModel.color
-                    : chartController.yAxisControllerOnRightSide.axisModel.colorInverse;
+                    : chartController.yAxisControllerOnRightSide.axisModel
+                          .colorInverse;
 
                 chartTitle = (
                     <React.Fragment>
@@ -3081,7 +3443,10 @@ export class ChartView extends React.Component<
                                 borderColor: color
                             }}
                         >
-                            {chartController.yAxisControllerOnRightSide.axisModel.label}
+                            {
+                                chartController.yAxisControllerOnRightSide
+                                    .axisModel.label
+                            }
                         </div>
                     </React.Fragment>
                 );
@@ -3089,7 +3454,10 @@ export class ChartView extends React.Component<
         }
 
         return (
-            <div className="EezStudio_ChartContainer" ref={ref => this.draggable.attach(ref)}>
+            <div
+                className="EezStudio_ChartContainer"
+                ref={ref => this.draggable.attach(ref)}
+            >
                 <svg
                     className="EezStudio_Chart"
                     ref={ref => (this.svg = ref!)}
@@ -3097,13 +3465,28 @@ export class ChartView extends React.Component<
                 >
                     {chartController.customRender()}
 
-                    {isNonEmpty && <AxisLines axisController={chartController.xAxisController} />}
-                    {isNonEmpty && <AxisView axisController={chartController.yAxisController} />}
-                    {isNonEmpty && chartController.yAxisControllerOnRightSide && (
-                        <AxisView axisController={chartController.yAxisControllerOnRightSide} />
+                    {isNonEmpty && (
+                        <AxisLines
+                            axisController={chartController.xAxisController}
+                        />
                     )}
+                    {isNonEmpty && (
+                        <AxisView
+                            axisController={chartController.yAxisController}
+                        />
+                    )}
+                    {isNonEmpty &&
+                        chartController.yAxisControllerOnRightSide && (
+                            <AxisView
+                                axisController={
+                                    chartController.yAxisControllerOnRightSide
+                                }
+                            />
+                        )}
 
-                    <ChartBorder chartsController={chartController.chartsController} />
+                    <ChartBorder
+                        chartsController={chartController.chartsController}
+                    />
 
                     <defs>
                         <clipPath id={this.clipId}>
@@ -3136,8 +3519,9 @@ export class ChartView extends React.Component<
                         />
 
                         {chartsController.chartViewWidth &&
-                            chartController.lineControllers.map(lineController =>
-                                lineController.render(this.clipId)
+                            chartController.lineControllers.map(
+                                lineController =>
+                                    lineController.render(this.clipId)
                             )}
 
                         {this.cursor.render()}
@@ -3193,8 +3577,10 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             const chartViewHeight = chartViewRect.height;
 
             if (
-                (chartViewWidth && chartViewWidth != chartsController.chartViewWidth) ||
-                (chartViewHeight && chartViewHeight != chartsController.chartViewHeight)
+                (chartViewWidth &&
+                    chartViewWidth != chartsController.chartViewWidth) ||
+                (chartViewHeight &&
+                    chartViewHeight != chartsController.chartViewHeight)
             ) {
                 chartsController.chartViewWidth = chartViewWidth;
                 chartsController.chartViewHeight = chartViewHeight;
@@ -3225,7 +3611,9 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             this.chartMeasurements.updateSize();
         }
 
-        this.animationFrameRequestId = window.requestAnimationFrame(this.frameAnimation);
+        this.animationFrameRequestId = window.requestAnimationFrame(
+            this.frameAnimation
+        );
     }
 
     setFocus() {
@@ -3264,38 +3652,52 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
     registerComponents(factory: any) {
         const chartsController = this.props.chartsController;
 
-        factory.registerComponent("RulersDockView", function (container: any, props: any) {
-            ReactDOM.render(
-                <ThemeProvider theme={theme}>
-                    <RulersDockView chartsController={chartsController} {...props} />
-                </ThemeProvider>,
-                container.getElement()[0]
-            );
-        });
+        factory.registerComponent(
+            "RulersDockView",
+            function (container: any, props: any) {
+                ReactDOM.render(
+                    <ThemeProvider theme={theme}>
+                        <RulersDockView
+                            chartsController={chartsController}
+                            {...props}
+                        />
+                    </ThemeProvider>,
+                    container.getElement()[0]
+                );
+            }
+        );
 
-        factory.registerComponent("MeasurementsDockView", function (container: any, props: any) {
-            ReactDOM.render(
-                <ThemeProvider theme={theme}>
-                    <MeasurementsDockView
-                        measurementsController={chartsController.measurementsController}
-                        {...props}
-                    />
-                </ThemeProvider>,
-                container.getElement()[0]
-            );
-        });
+        factory.registerComponent(
+            "MeasurementsDockView",
+            function (container: any, props: any) {
+                ReactDOM.render(
+                    <ThemeProvider theme={theme}>
+                        <MeasurementsDockView
+                            measurementsController={
+                                chartsController.measurementsController
+                            }
+                            {...props}
+                        />
+                    </ThemeProvider>,
+                    container.getElement()[0]
+                );
+            }
+        );
 
-        factory.registerComponent("ChartViewOptions", function (
-            container: any,
-            props: ChartViewOptionsProps
-        ) {
-            ReactDOM.render(
-                <ThemeProvider theme={theme}>
-                    <ChartViewOptions chartsController={chartsController} {...props} />
-                </ThemeProvider>,
-                container.getElement()[0]
-            );
-        });
+        factory.registerComponent(
+            "ChartViewOptions",
+            function (container: any, props: ChartViewOptionsProps) {
+                ReactDOM.render(
+                    <ThemeProvider theme={theme}>
+                        <ChartViewOptions
+                            chartsController={chartsController}
+                            {...props}
+                        />
+                    </ThemeProvider>,
+                    container.getElement()[0]
+                );
+            }
+        );
     }
 
     get chartViewOptionsItem() {
@@ -3339,7 +3741,10 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
                     content: [
                         {
                             type: "stack",
-                            content: [this.chartViewOptionsItem, this.rulersItem]
+                            content: [
+                                this.chartViewOptionsItem,
+                                this.rulersItem
+                            ]
                         },
                         this.measurementsItem
                     ]
@@ -3372,24 +3777,27 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             `EezStudio_ChartView_${capitalize(mode)}`,
             this.props.className,
             {
-                EezStudio_ChartView_BlackBackground: globalViewOptions.blackBackground
+                EezStudio_ChartView_BlackBackground:
+                    globalViewOptions.blackBackground
             }
         );
 
-        const charts = chartsController.chartControllers.map(chartController => (
-            <ChartView
-                ref={ref =>
-                    runInAction(() => {
-                        if (ref) {
-                            chartController.chartViews.push(ref);
-                        }
-                    })
-                }
-                key={chartController.id}
-                chartController={chartController}
-                mode={mode}
-            />
-        ));
+        const charts = chartsController.chartControllers.map(
+            chartController => (
+                <ChartView
+                    ref={ref =>
+                        runInAction(() => {
+                            if (ref) {
+                                chartController.chartViews.push(ref);
+                            }
+                        })
+                    }
+                    key={chartController.id}
+                    chartController={chartController}
+                    mode={mode}
+                />
+            )
+        );
 
         let div = (
             <div
@@ -3399,8 +3807,13 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
                 tabIndex={this.props.tabIndex}
             >
                 {charts}
-                <svg className="EezStudio_Chart_XAxis" height={chartsController.xAxisHeight}>
-                    <AxisView axisController={chartsController.xAxisController} />
+                <svg
+                    className="EezStudio_Chart_XAxis"
+                    height={chartsController.xAxisHeight}
+                >
+                    <AxisView
+                        axisController={chartsController.xAxisController}
+                    />
                 </svg>
             </div>
         );
@@ -3419,7 +3832,9 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
                     {div}
                     <ChartMeasurements
                         ref={ref => (this.chartMeasurements = ref)}
-                        measurementsController={chartsController.measurementsController}
+                        measurementsController={
+                            chartsController.measurementsController
+                        }
                     />
                 </Splitter>
             );
@@ -3427,7 +3842,10 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
 
         if (this.sideDockAvailable) {
             const layoutId =
-                "layout/2" + (this.props.chartsController.supportRulers ? "/with-rulers" : "");
+                "layout/2" +
+                (this.props.chartsController.supportRulers
+                    ? "/with-rulers"
+                    : "");
 
             return (
                 <SideDock

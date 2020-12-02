@@ -20,7 +20,10 @@ import {
     LineController,
     AxisController
 } from "eez-studio-ui/chart/chart";
-import { IWaveform } from "eez-studio-ui/chart/render";
+import type {
+    IWaveform,
+    IWaveformDlogParams
+} from "eez-studio-ui/chart/render";
 import { WaveformFormat } from "eez-studio-ui/chart/buffer";
 
 import { WaveformLineView } from "instrument/window/waveform/line-view";
@@ -138,6 +141,8 @@ class GenericChartWaveform implements IWaveform {
     waveformData(i: number) {
         return this.chartData.data[i];
     }
+
+    dlog?: IWaveformDlogParams;
 
     offset = 0;
     scale = 1;
@@ -379,7 +384,7 @@ class GenericChartLineController extends LineController {
     constructor(
         public id: string,
         public waveform: GenericChartWaveform,
-        public yAxisController: AxisController
+        yAxisController: AxisController
     ) {
         super(id, yAxisController);
     }
@@ -406,6 +411,10 @@ class GenericChartLineController extends LineController {
     render(): JSX.Element {
         return <WaveformLineView key={this.id} waveformLineController={this} />;
     }
+
+    getWaveformModel() {
+        return null;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -429,10 +438,6 @@ class GenericChartChartsController extends ChartsController {
 
     get supportRulers() {
         return false;
-    }
-
-    getWaveformModel(chartIndex: number) {
-        return null;
     }
 }
 

@@ -1,3 +1,5 @@
+import type { IWaveformDlogParams } from "eez-studio-ui/chart/render";
+
 export enum WaveformFormat {
     UNKNOWN,
     FLOATS_32BIT,
@@ -60,14 +62,11 @@ export function initValuesAccesor(
         // input
         format: WaveformFormat;
         values: any;
-        offset:
-            | number
-            | {
-                  offset: number;
-                  bitIndex: number;
-              };
+        offset: number;
         scale: number;
-        logOffset?: number;
+
+        dlog?: IWaveformDlogParams;
+
         // output
         length: number;
         value(value: number): number;
@@ -79,7 +78,6 @@ export function initValuesAccesor(
     const format = object.format;
     const offset = object.offset;
     const scale = object.scale;
-    const logOffset = object.logOffset;
 
     let length: number;
     let value: (value: number) => number;
@@ -88,13 +86,13 @@ export function initValuesAccesor(
     if (format === WaveformFormat.FLOATS_32BIT) {
         length = Math.floor(values.length / 4);
         value = (index: number) => {
-            return (offset as number) + readFloat(values, 4 * index) * scale;
+            return offset + readFloat(values, 4 * index) * scale;
         };
         waveformData = value;
     } else if (format === WaveformFormat.FLOATS_64BIT) {
         length = Math.floor(values.length / 8);
         value = (index: number) => {
-            return (offset as number) + readDouble(values, 8 * index) * scale;
+            return offset + readDouble(values, 8 * index) * scale;
         };
         waveformData = value;
     } else if (format === WaveformFormat.RIGOL_BYTE) {
@@ -103,7 +101,7 @@ export function initValuesAccesor(
             return values[index];
         };
         value = (index: number) => {
-            return (offset as number) + waveformData(index) * scale;
+            return offset + waveformData(index) * scale;
         };
     } else if (format === WaveformFormat.RIGOL_WORD) {
         length = Math.floor(values.length / 2);
@@ -111,13 +109,13 @@ export function initValuesAccesor(
             return values[index];
         };
         value = (index: number) => {
-            return (offset as number) + waveformData(index) * scale;
+            return offset + waveformData(index) * scale;
         };
     } else if (format === WaveformFormat.CSV_STRING) {
         const csvValues = getCsvValues(values);
         length = csvValues.length;
         value = (index: number) => {
-            return (offset as number) + csvValues[index] * scale;
+            return offset + csvValues[index] * scale;
         };
         waveformData = value;
     } else if (
@@ -128,33 +126,39 @@ export function initValuesAccesor(
         if (length === undefined) {
             length = values.length;
         }
-        if (typeof offset === "number") {
+
+        const { rowOffset, rowBytes, bitIndex, logOffset } = object.dlog!;
+
+        if (bitIndex !== undefined) {
+            value = (index: number) => {
+                const data = readUInt32(values, rowOffset + index * rowBytes);
+                return (
+                    offset + (data & (0x8000 >> bitIndex) ? 1.0 : 0.0) * scale
+                );
+            };
+        } else {
             value =
                 format === WaveformFormat.EEZ_DLOG_LOGARITHMIC
                     ? (index: number) => {
-                                return Math.log10(
-                                    logOffset! +
-
-
-
-
-                                                                               readFloat(values, offset + index * scale)
-                                );
-                            }
-                    : (index: number) => {
-                                return readFloat(values, offset + index * scale);
-                            };
-        } else {
-            value = (index: number) => {
-                const data = readUInt32(values, offset.offset + index * scale);
-                return data & (0x8000 >> offset.bitIndex) ? 1.0 : 0.0;
-            };
+                          return Math.log10(
+                              logOffset! +
+                                  readFloat(
+                                      values,
+                                      rowOffset + index * rowBytes
+                                  )
+                          );
+                      }
+                    : (index: number) =>
+                          offset +
+                          readFloat(values, rowOffset + index * rowBytes) *
+                              scale;
         }
+
         waveformData = value;
     } else if (format === WaveformFormat.JS_NUMBERS) {
         length = object.length;
         value = (index: number) => {
-            return values[(offset as number) + index * scale];
+            return values[offset + index * scale];
         };
         waveformData = value;
     } else {

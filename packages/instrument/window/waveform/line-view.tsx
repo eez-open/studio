@@ -22,7 +22,7 @@ interface WaveformLineViewProperties {
 }
 
 @observer
-export class WaveformLineView extends React.Component<WaveformLineViewProperties, {}> {
+export class WaveformLineView extends React.Component<WaveformLineViewProperties> {
     @observable waveformLineController = this.props.waveformLineController;
 
     nextJob: IWaveformRenderJobSpecification | undefined;
@@ -32,7 +32,9 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
     requestAnimationFrameId: any;
 
     @computed
-    get waveformRenderJobSpecification(): IWaveformRenderJobSpecification | undefined {
+    get waveformRenderJobSpecification():
+        | IWaveformRenderJobSpecification
+        | undefined {
         const yAxisController = this.waveformLineController.yAxisController;
         const chartsController = yAxisController.chartsController;
         const xAxisController = chartsController.xAxisController;
@@ -78,16 +80,22 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
     @action.bound
     drawStep() {
         if (!this.canvas) {
-            const chartsController = this.props.waveformLineController.yAxisController
-                .chartsController;
+            const chartsController = this.props.waveformLineController
+                .yAxisController.chartsController;
             this.canvas = document.createElement("canvas");
             this.canvas.width = Math.floor(chartsController.chartWidth);
             this.canvas.height = Math.floor(chartsController.chartHeight);
         }
 
-        this.continuation = renderWaveformPath(this.canvas, this.nextJob!, this.continuation);
+        this.continuation = renderWaveformPath(
+            this.canvas,
+            this.nextJob!,
+            this.continuation
+        );
         if (this.continuation) {
-            this.requestAnimationFrameId = window.requestAnimationFrame(this.drawStep);
+            this.requestAnimationFrameId = window.requestAnimationFrame(
+                this.drawStep
+            );
         } else {
             this.requestAnimationFrameId = undefined;
             this.chartImage = this.canvas.toDataURL();
@@ -118,7 +126,9 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
         if (!this.waveformRenderJobSpecification) {
             return null;
         }
-        const chartsController = this.props.waveformLineController.yAxisController.chartsController;
+        const chartsController = this.props.waveformLineController
+            .yAxisController.chartsController;
+
         return (
             <image
                 x={Math.floor(chartsController.chartLeft)}

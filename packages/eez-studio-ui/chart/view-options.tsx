@@ -66,7 +66,7 @@ class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOption
         const chartsController = this.props.chartsController;
         const viewOptions = chartsController.viewOptions;
 
-        const yAxisSteps = chartsController.chartControllers.map(
+        const yAxisSteps = chartsController.chartControllers.filter(chartController => !chartController.yAxisController.isDigital).map(
             (chartController: ChartController, i: number) => {
                 const yAxisController = chartController.yAxisController;
 

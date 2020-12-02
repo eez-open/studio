@@ -8,8 +8,6 @@
         "libs": true,
         "dist": true
     },
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "modifications",
     "typescript.reportStyleChecksAsWarnings": false,
     "typescript.suggest.autoImports": true,
     "files.associations": {

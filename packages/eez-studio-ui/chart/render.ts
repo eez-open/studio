@@ -37,19 +37,25 @@ function genRandomOffsets(K: number) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface IWaveformDlogParams {
+    rowBytes: number;
+    rowOffset: number;
+    bitIndex?: number;
+    logOffset?: number;
+}
+
 export interface IWaveform {
     format: any;
     values: any;
+    offset:number;
+    scale: number;
+
+    dlog?: IWaveformDlogParams,
+
     length: number;
     value: (i: number) => number;
     waveformData: (i: number) => number;
-    offset:
-        | number
-        | {
-              offset: number;
-              bitIndex: number;
-          };
-    scale: number;
+
     samplingRate: number;
 }
 

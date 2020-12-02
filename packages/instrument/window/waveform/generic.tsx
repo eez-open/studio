@@ -277,10 +277,6 @@ export class WaveformChartsController extends ChartsController {
     get supportRulers() {
         return true;
     }
-
-    getWaveformModel(chartIndex: number) {
-        return this.waveform;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -740,7 +736,7 @@ class WaveformLineController extends LineController {
     constructor(
         public id: string,
         public waveform: Waveform,
-        public yAxisController: AxisController
+        yAxisController: AxisController
     ) {
         super(id, yAxisController);
     }
@@ -753,6 +749,10 @@ class WaveformLineController extends LineController {
     @computed
     get yMax(): number {
         return this.yAxisController.axisModel.maxValue;
+    }
+
+    getWaveformModel() {
+        return this.waveform;
     }
 
     getNearestValuePoint(point: Point): Point {

@@ -68,10 +68,6 @@ export class MultiWaveformChartsController extends ChartsController {
     get supportRulers() {
         return true;
     }
-
-    getWaveformModel(chartIndex: number) {
-        return this.multiWaveform.linkedWaveforms[chartIndex].waveform;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +118,10 @@ interface ILinkedWaveform {
 }
 
 export class MultiWaveform extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore: InstrumentAppStore) {
+    constructor(
+        activityLogEntry: IActivityLogEntry,
+        appStore: InstrumentAppStore
+    ) {
         super(activityLogEntry, appStore);
 
         const message = JSON.parse(this.message);
@@ -136,8 +135,12 @@ export class MultiWaveform extends HistoryItem {
                 waveformLinks: toJS(this.waveformLinks)
             }),
             arg => {
-                if (!objectEqual(arg.message.waveformLinks, arg.waveformLinks)) {
-                    runInAction(() => (this.waveformLinks = arg.message.waveformLinks));
+                if (
+                    !objectEqual(arg.message.waveformLinks, arg.waveformLinks)
+                ) {
+                    runInAction(
+                        () => (this.waveformLinks = arg.message.waveformLinks)
+                    );
                 }
             }
         );
@@ -299,14 +302,6 @@ export class MultiWaveform extends HistoryItem {
     chartsController: ChartsController;
 
     createChartsController(mode: ChartMode): ChartsController {
-        if (
-            this.chartsController &&
-            this.chartsController.mode === mode &&
-            this.chartsController.chartControllers.length === this.linkedWaveforms.length
-        ) {
-            return this.chartsController;
-        }
-
         if (this.chartsController) {
             this.chartsController.destroy();
         }
@@ -340,7 +335,12 @@ export class MultiWaveform extends HistoryItem {
     }
 
     renderToolbar(chartsController: ChartsController): JSX.Element {
-        return <WaveformToolbar chartsController={chartsController} waveform={this} />;
+        return (
+            <WaveformToolbar
+                chartsController={chartsController}
+                waveform={this}
+            />
+        );
     }
 
     openConfigurationDialog() {
