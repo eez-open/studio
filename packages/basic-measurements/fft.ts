@@ -77,8 +77,9 @@ export default function (task: IMeasureTask) {
 
     let data = new Array(halfNumSamples);
     let minValue, maxValue, maxValueIndex;
-    minValue = maxValue = data[0] = getYValue(0);
-    for (let i = 1; i < halfNumSamples; ++i) {
+    minValue = maxValue = data[1] = getYValue(1);
+    maxValueIndex = 1;
+    for (let i = 2; i < halfNumSamples; ++i) {
         data[i] = getYValue(i);
         if (data[i] < minValue) {
             minValue = data[i];
