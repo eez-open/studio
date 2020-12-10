@@ -404,6 +404,10 @@ export function isValidFileName(fileName: string, shortFileName: boolean) {
 }
 
 export function isValidPath(path: string, shortFileName: boolean) {
+    if (path[0] >= '0' && path[0] <= "9" && path[1] == ":") {
+        path = path.slice(2);
+    }
+
     let parts = path.replace(/\\/g, "/").split("/");
     if (parts[0] === "") {
         parts.shift();
