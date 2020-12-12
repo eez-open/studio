@@ -172,7 +172,8 @@ export class AppBar extends React.Component<
             if (this.props.appStore.history.sendFileStatus) {
                 if (
                     this.props.appStore.navigationStore.mainNavigationSelectedItem !=
-                    this.props.appStore.navigationStore.terminalNavigationItem
+                    this.props.appStore.navigationStore.terminalNavigationItem && this.props.appStore.navigationStore.mainNavigationSelectedItem !=
+                    this.props.appStore.navigationStore.startPageNavigationItem
                 ) {
                     sendFile = this.props.appStore.history.sendFileStatus;
                 }

@@ -1241,6 +1241,16 @@ export class History {
         moveToTopOfHistory(this.appStore.navigationStore.mainHistoryView);
     }
 
+    getDirectionInfo(historyItem: FileHistoryItem) {
+        if (historyItem.direction === "upload") {
+            return "Sending file ...";
+        } else if (historyItem.direction === "download") {
+            return "Receiving file ...";
+        } else {
+            return "Attaching file ...";
+        }
+    }
+
     @computed
     get sendFileStatus() {
         if (this.items.length > 0) {
@@ -1251,7 +1261,7 @@ export class History {
                         ? Math.floor((100 * lastItem.dataLength) / lastItem.expectedDataLength)
                         : 0;
                     let transferSpeed = formatTransferSpeed(lastItem.transferSpeed);
-                    return `Sending file... ${percent}% (${lastItem.dataLength} of ${lastItem.expectedDataLength}) ${transferSpeed}`;
+                    return `${this.getDirectionInfo(lastItem)} ${percent}% (${lastItem.dataLength} of ${lastItem.expectedDataLength}) ${transferSpeed}`;
                 }
             }
         }
