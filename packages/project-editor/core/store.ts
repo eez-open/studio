@@ -381,7 +381,7 @@ class NavigationStoreClass implements INavigationStore {
             object = getParent(object)
         ) {
             if (getEditorComponent(object)) {
-                const editor = EditorsStore.openEditor(object);
+                const editor = DocumentStore.Editors.openEditor(object);
                 setTimeout(() => {
                     if (editor && editor.state) {
                         editor.state.selectObject(
@@ -422,7 +422,7 @@ export class Editor implements IEditor {
 
     @action
     makeActive() {
-        EditorsStore.activateEditor(this);
+        DocumentStore.Editors.activateEditor(this);
     }
 
     @action
@@ -431,7 +431,7 @@ export class Editor implements IEditor {
     }
 
     close() {
-        EditorsStore.closeEditor(this);
+        DocumentStore.Editors.closeEditor(this);
     }
 }
 
@@ -441,9 +441,9 @@ class EditorsStoreClass {
     constructor() {
         // open editor when navigation selection has changed
         autorun(() => {
-            let object = NavigationStore.selectedObject;
+            let object = DocumentStore.Navigation.selectedObject;
             while (object) {
-                let navigationItem = NavigationStore.getNavigationSelectedItem(object);
+                let navigationItem = DocumentStore.Navigation.getNavigationSelectedItem(object);
                 while (navigationItem) {
                     if (isObjectNavigationItem(navigationItem)) {
                         if (
@@ -452,7 +452,7 @@ class EditorsStoreClass {
                         ) {
                             this.openEditor(navigationItem.object);
                         }
-                        navigationItem = NavigationStore.getNavigationSelectedItem(
+                        navigationItem = DocumentStore.Navigation.getNavigationSelectedItem(
                             navigationItem.object
                         );
                     } else {
@@ -674,12 +674,12 @@ class UIStateStoreClass {
         // react when selected panel or selected message in output window has changed
         reaction(
             () => ({
-                message: OutputSectionsStore.activeSection.selectedMessage,
-                panel: NavigationStore.selectedPanel
+                message: DocumentStore.OutputSections.activeSection.selectedMessage,
+                panel: DocumentStore.Navigation.selectedPanel
             }),
             arg => {
                 if (arg.panel instanceof OutputSection && arg.message && arg.message.object) {
-                    NavigationStore.showObject(arg.message.object);
+                    DocumentStore.Navigation.showObject(arg.message.object);
                 }
             }
         );
@@ -695,8 +695,8 @@ class UIStateStoreClass {
     @action
     load(uiState: any) {
         this.viewOptions.load(uiState.viewOptions);
-        NavigationStore.load(uiState.navigationMap);
-        EditorsStore.load(uiState.editors);
+        DocumentStore.Navigation.load(uiState.navigationMap);
+        DocumentStore.Editors.load(uiState.editors);
         this.selectedBuildConfiguration = uiState.selectedBuildConfiguration || "Default";
         this.features = observable(uiState.features || {});
         this.loadObjects(uiState.objects);
@@ -722,8 +722,8 @@ class UIStateStoreClass {
     get toJS() {
         return {
             viewOptions: this.viewOptions.toJS,
-            navigationMap: NavigationStore.toJS,
-            editors: EditorsStore.toJS,
+            navigationMap: DocumentStore.Navigation.toJS,
+            editors: DocumentStore.Editors.toJS,
             selectedBuildConfiguration: this.selectedBuildConfiguration,
             features: this.featuresJS,
             objects: this.objectsJS
@@ -806,7 +806,7 @@ export class UndoManagerClass {
     @action
     pushToUndoStack() {
         if (this.commands.length > 0) {
-            let selectionAfter = NavigationStore.getSelection();
+            let selectionAfter = DocumentStore.Navigation.getSelection();
             this.undoStack.push({
                 commands: this.commands,
                 selectionBefore: this.selectionBeforeFirstCommand,
@@ -814,7 +814,7 @@ export class UndoManagerClass {
             });
 
             this.commands = [];
-            this.selectionBeforeFirstCommand = NavigationStore.getSelection();
+            this.selectionBeforeFirstCommand = DocumentStore.Navigation.getSelection();
         }
     }
 
@@ -827,7 +827,7 @@ export class UndoManagerClass {
     @action
     executeCommand(command: ICommand) {
         if (this.commands.length == 0) {
-            this.selectionBeforeFirstCommand = NavigationStore.getSelection();
+            this.selectionBeforeFirstCommand = DocumentStore.Navigation.getSelection();
         } else {
             if (!this.combineCommands) {
                 this.pushToUndoStack();
@@ -875,7 +875,7 @@ export class UndoManagerClass {
                 undoItem.commands[i].undo();
             }
 
-            NavigationStore.setSelection(undoItem.selectionBefore);
+            DocumentStore.Navigation.setSelection(undoItem.selectionBefore);
 
             this.redoStack.push(undoItem);
 
@@ -908,7 +908,7 @@ export class UndoManagerClass {
                 redoItem.commands[i].execute();
             }
 
-            NavigationStore.setSelection(redoItem.selectionAfter);
+            DocumentStore.Navigation.setSelection(redoItem.selectionAfter);
 
             this.undoStack.push(redoItem);
 
@@ -920,6 +920,12 @@ export class UndoManagerClass {
 ////////////////////////////////////////////////////////////////////////////////
 
 class DocumentStoreClass {
+    Navigation = new NavigationStoreClass();
+    Editors = new EditorsStoreClass();
+    OutputSections = new OutputSections();
+    UIState = new UIStateStoreClass();
+    UndoManager = new UndoManagerClass();
+
     @observable private _document: IEezObject | undefined;
     @observable modified: boolean = false;
 
@@ -955,8 +961,8 @@ class DocumentStoreClass {
     @action
     changeDocument(document?: IEezObject, uiState?: IEezObject) {
         this._document = document;
-        UIStateStore.load(uiState || {});
-        UndoManager.clear();
+        this.UIState.load(uiState || {});
+        this.UndoManager.clear();
     }
 
     canSave() {
@@ -976,8 +982,8 @@ class DocumentStoreClass {
 
         return addObject(
             {
-                undoManager: UndoManager,
-                selectionManager: NavigationStore
+                undoManager: this.UndoManager,
+                selectionManager: this.Navigation
             },
             parentObject,
             object
@@ -987,8 +993,8 @@ class DocumentStoreClass {
     addObjects(parentObject: IEezObject, objects: any[]) {
         return addObjects(
             {
-                undoManager: UndoManager,
-                selectionManager: NavigationStore
+                undoManager: this.UndoManager,
+                selectionManager: this.Navigation
             },
             parentObject,
             objects
@@ -998,8 +1004,8 @@ class DocumentStoreClass {
     insertObject(parentObject: IEezObject, index: number, object: any) {
         return insertObject(
             {
-                undoManager: UndoManager,
-                selectionManager: NavigationStore
+                undoManager: this.UndoManager,
+                selectionManager: this.Navigation
             },
             parentObject,
             index,
@@ -1054,8 +1060,8 @@ class DocumentStoreClass {
 
         updateObject(
             {
-                undoManager: UndoManager,
-                selectionManager: NavigationStore
+                undoManager: this.UndoManager,
+                selectionManager: this.Navigation
             },
             object,
             values
@@ -1070,8 +1076,8 @@ class DocumentStoreClass {
     deleteObject(object: IEezObject) {
         return deleteObject(
             {
-                undoManager: UndoManager,
-                selectionManager: NavigationStore
+                undoManager: this.UndoManager,
+                selectionManager: this.Navigation
             },
             object
         );
@@ -1083,8 +1089,8 @@ class DocumentStoreClass {
         } else {
             deleteObjects(
                 {
-                    undoManager: UndoManager,
-                    selectionManager: NavigationStore
+                    undoManager: this.UndoManager,
+                    selectionManager: this.Navigation
                 },
                 objects
             );
@@ -1098,8 +1104,8 @@ class DocumentStoreClass {
 
         return replaceObject(
             {
-                undoManager: UndoManager,
-                selectionManager: NavigationStore
+                undoManager: this.UndoManager,
+                selectionManager: this.Navigation
             },
             object,
             replaceWithObject
@@ -1113,8 +1119,8 @@ class DocumentStoreClass {
 
         return replaceObjects(
             {
-                undoManager: UndoManager,
-                selectionManager: NavigationStore
+                undoManager: this.UndoManager,
+                selectionManager: this.Navigation
             },
             objects,
             replaceWithObject
@@ -1124,8 +1130,8 @@ class DocumentStoreClass {
     insertObjectBefore(object: IEezObject, objectToInsert: any) {
         return insertObjectBefore(
             {
-                undoManager: UndoManager,
-                selectionManager: NavigationStore
+                undoManager: this.UndoManager,
+                selectionManager: this.Navigation
             },
             object,
             objectToInsert
@@ -1135,8 +1141,8 @@ class DocumentStoreClass {
     insertObjectAfter(object: IEezObject, objectToInsert: any) {
         return insertObjectAfter(
             {
-                undoManager: UndoManager,
-                selectionManager: NavigationStore
+                undoManager: this.UndoManager,
+                selectionManager: this.Navigation
             },
             object,
             objectToInsert
@@ -1501,11 +1507,6 @@ export function deleteItems(objects: IEezObject[], callback?: () => void) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export const DocumentStore = new DocumentStoreClass();
-export const NavigationStore = new NavigationStoreClass();
-export const EditorsStore = new EditorsStoreClass();
-export const OutputSectionsStore = new OutputSections();
-export const UIStateStore = new UIStateStoreClass();
-export const UndoManager = new UndoManagerClass();
 
 ////////////////////////////////////////////////////////////////////////////////
 

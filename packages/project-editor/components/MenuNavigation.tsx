@@ -12,7 +12,7 @@ import {
     getClassInfo
 } from "project-editor/core/object";
 import {
-    NavigationStore,
+    DocumentStore,
     createObjectNavigationItem,
     compareNavigationItem
 } from "project-editor/core/store";
@@ -50,7 +50,7 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
     }
 
     onClick() {
-        NavigationStore.setNavigationSelectedItem(
+        DocumentStore.Navigation.setNavigationSelectedItem(
             this.props.navigationObject,
             createObjectNavigationItem(this.props.item)!
         );
@@ -59,7 +59,7 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
     render() {
         let className = classNames({
             selected: compareNavigationItem(
-                NavigationStore.getNavigationSelectedItem(this.props.navigationObject),
+                DocumentStore.Navigation.getNavigationSelectedItem(this.props.navigationObject),
                 this.props.item
             )
         });
@@ -90,7 +90,7 @@ class Menu extends React.Component<{
     navigationObject: IEezObject;
 }> {
     onFocus() {
-        NavigationStore.setSelectedPanel(undefined);
+        DocumentStore.Navigation.setSelectedPanel(undefined);
     }
 
     render() {
@@ -130,7 +130,7 @@ export class MenuNavigation extends React.Component<
 > {
     render() {
         let subNavigation: JSX.Element | undefined;
-        let selectedItem = NavigationStore.getNavigationSelectedItemAsObject(
+        let selectedItem = DocumentStore.Navigation.getNavigationSelectedItemAsObject(
             this.props.navigationObject
         );
         if (selectedItem) {

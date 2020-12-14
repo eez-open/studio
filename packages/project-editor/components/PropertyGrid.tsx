@@ -17,10 +17,7 @@ import { IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
 
 import {
-    NavigationStore,
-    UndoManager,
-    DocumentStore,
-    OutputSectionsStore
+    DocumentStore
 } from "project-editor/core/store";
 import { Section } from "project-editor/core/output";
 import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
@@ -376,7 +373,7 @@ function isArrayElementPropertyVisible(propertyInfo: PropertyInfo, object?: IEez
 
 function isHighlightedProperty(object: IEezObject, propertyInfo: PropertyInfo) {
     const selectedObject =
-        NavigationStore.selectedPanel && NavigationStore.selectedPanel.selectedObject;
+    DocumentStore.Navigation.selectedPanel && DocumentStore.Navigation.selectedPanel.selectedObject;
     return !!(
         selectedObject &&
         ((getParent(selectedObject) === object && getKey(selectedObject) === propertyInfo.name) ||
@@ -385,7 +382,7 @@ function isHighlightedProperty(object: IEezObject, propertyInfo: PropertyInfo) {
 }
 
 function isPropertyInError(object: IEezObject, propertyInfo: PropertyInfo) {
-    return !!OutputSectionsStore.getSection(Section.CHECKS).messages.find(
+    return !!DocumentStore.OutputSections.getSection(Section.CHECKS).messages.find(
         message =>
             message.object &&
             getParent(message.object) === object &&
@@ -485,7 +482,7 @@ class ArrayProperty extends React.Component<PropertyProps> {
     onAdd(event: any) {
         event.preventDefault();
 
-        UndoManager.setCombineCommands(true);
+        DocumentStore.UndoManager.setCombineCommands(true);
 
         let value = this.value;
         if (value === undefined) {
@@ -502,7 +499,7 @@ class ArrayProperty extends React.Component<PropertyProps> {
             console.error(`Class "${typeClass.name}" is missing defaultValue`);
         } else {
             DocumentStore.addObject(value, typeClass.classInfo.defaultValue);
-            UndoManager.setCombineCommands(false);
+            DocumentStore.UndoManager.setCombineCommands(false);
         }
     }
 
@@ -616,12 +613,12 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
 
     @bind
     updateObject(propertyValues: Object) {
-        UndoManager.setCombineCommands(true);
+        DocumentStore.UndoManager.setCombineCommands(true);
         this.props.objects.forEach(object => {
             object = (object as any)[this.props.propertyInfo.name];
             DocumentStore.updateObject(object, propertyValues);
         });
-        UndoManager.setCombineCommands(false);
+        DocumentStore.UndoManager.setCombineCommands(false);
     }
 
     render() {
@@ -781,11 +778,11 @@ class Property extends React.Component<PropertyProps> {
         let el = this.input || this.textarea || this.select;
         if (el) {
             $(el).on("focus", () => {
-                UndoManager.setCombineCommands(true);
+                DocumentStore.UndoManager.setCombineCommands(true);
             });
 
             $(el).on("blur", () => {
-                UndoManager.setCombineCommands(false);
+                DocumentStore.UndoManager.setCombineCommands(false);
             });
         }
 
@@ -899,14 +896,14 @@ class Property extends React.Component<PropertyProps> {
                     newValue = undefined;
                 }
                 if (newValue != oldValue) {
-                    UndoManager.setCombineCommands(true);
+                    DocumentStore.UndoManager.setCombineCommands(true);
 
                     runInAction(() => {
                         replaceObjectReference(this.props.objects[0], newValue);
                         this.changeValue(newValue);
                     });
 
-                    UndoManager.setCombineCommands(false);
+                    DocumentStore.UndoManager.setCombineCommands(false);
                 }
             })
             .catch(error => {
@@ -1768,7 +1765,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
 
     @bind
     updateObject(propertyValues: Object) {
-        UndoManager.setCombineCommands(true);
+        DocumentStore.UndoManager.setCombineCommands(true);
 
         this.objects.forEach(object => {
             if (isValue(object)) {
@@ -1777,7 +1774,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             DocumentStore.updateObject(object, propertyValues);
         });
 
-        UndoManager.setCombineCommands(false);
+        DocumentStore.UndoManager.setCombineCommands(false);
     }
 
     render() {

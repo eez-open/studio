@@ -31,7 +31,7 @@ import {
     ITreeObjectAdapter,
     TreeAdapter
 } from "project-editor/core/objectAdapter";
-import { NavigationStore, EditorsStore, IPanel, UIStateStore } from "project-editor/core/store";
+import { DocumentStore, IPanel } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
@@ -61,7 +61,7 @@ import { getThemedColor, ThemesSideView } from "project-editor/features/gui/them
 export class PageEditor extends EditorComponent implements IPanel {
     @bind
     focusHandler() {
-        NavigationStore.setSelectedPanel(this);
+        DocumentStore.Navigation.setSelectedPanel(this);
     }
 
     @computed
@@ -152,18 +152,18 @@ export class PageTabState implements IEditorState {
 export class PagesNavigation extends NavigationComponent {
     @computed
     get object() {
-        if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
+        if (DocumentStore.Navigation.selectedPanel) {
+            return DocumentStore.Navigation.selectedPanel.selectedObject;
         }
-        return NavigationStore.selectedObject;
+        return DocumentStore.Navigation.selectedObject;
     }
 
     @computed
     get widgetContainerDisplayItem() {
-        if (!EditorsStore.activeEditor) {
+        if (!DocumentStore.Editors.activeEditor) {
             return undefined;
         }
-        let pageTabState = EditorsStore.activeEditor.state as PageTabState;
+        let pageTabState = DocumentStore.Editors.activeEditor.state as PageTabState;
         if (!pageTabState) {
             return undefined;
         }
@@ -205,8 +205,8 @@ export class PagesNavigation extends NavigationComponent {
             return selectedObjects;
         }
 
-        if (EditorsStore.activeEditor) {
-            let pageTabState = EditorsStore.activeEditor.state as PageTabState;
+        if (DocumentStore.Editors.activeEditor) {
+            let pageTabState = DocumentStore.Editors.activeEditor.state as PageTabState;
             return [pageTabState.page];
         }
 
@@ -215,7 +215,7 @@ export class PagesNavigation extends NavigationComponent {
 
     @bind
     onFocus() {
-        NavigationStore.setSelectedPanel(this);
+        DocumentStore.Navigation.setSelectedPanel(this);
     }
 
     render() {
@@ -247,13 +247,13 @@ export class PagesNavigation extends NavigationComponent {
 
         const buttons: JSX.Element[] = [];
 
-        if (!UIStateStore.viewOptions.themesVisible) {
+        if (!DocumentStore.UIState.viewOptions.themesVisible) {
             buttons.push(
                 <IconAction
                     key="show-themes"
                     icon="material:palette"
                     iconSize={16}
-                    onClick={action(() => (UIStateStore.viewOptions.themesVisible = true))}
+                    onClick={action(() => (DocumentStore.UIState.viewOptions.themesVisible = true))}
                     title="Show themes panel"
                 ></IconAction>
             );
@@ -275,17 +275,17 @@ export class PagesNavigation extends NavigationComponent {
             <Splitter
                 type="horizontal"
                 persistId={`project-editor/pages${
-                    UIStateStore.viewOptions.themesVisible ? "" : "-without-themes"
+                    DocumentStore.UIState.viewOptions.themesVisible ? "" : "-without-themes"
                 }`}
-                sizes={`240px|100%|400px${UIStateStore.viewOptions.themesVisible ? "|240px" : ""}`}
+                sizes={`240px|100%|400px${DocumentStore.UIState.viewOptions.themesVisible ? "|240px" : ""}`}
                 childrenOverflow={`hidden|hidden|hidden${
-                    UIStateStore.viewOptions.themesVisible ? "|hidden" : ""
+                    DocumentStore.UIState.viewOptions.themesVisible ? "|hidden" : ""
                 }`}
             >
                 {navigation}
                 <Editors />
                 {properties}
-                {UIStateStore.viewOptions.themesVisible && <ThemesSideView hasCloseButton={true} />}
+                {DocumentStore.UIState.viewOptions.themesVisible && <ThemesSideView hasCloseButton={true} />}
             </Splitter>
         );
     }

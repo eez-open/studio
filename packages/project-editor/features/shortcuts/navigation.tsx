@@ -10,7 +10,7 @@ import { IShortcut } from "shortcuts/interfaces";
 import { Shortcuts as ShortcutsComponent, ShortcutsToolbarButtons } from "shortcuts/shortcuts";
 
 import { NavigationComponent } from "project-editor/core/object";
-import { NavigationStore, DocumentStore } from "project-editor/core/store";
+import { DocumentStore } from "project-editor/core/store";
 
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
@@ -24,10 +24,10 @@ import { Shortcut } from "project-editor/features/shortcuts/shortcuts";
 export class ShortcutsNavigation extends NavigationComponent {
     @computed
     get object() {
-        if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
+        if (DocumentStore.Navigation.selectedPanel) {
+            return DocumentStore.Navigation.selectedPanel.selectedObject;
         }
-        return NavigationStore.selectedObject;
+        return DocumentStore.Navigation.selectedObject;
     }
 
     @computed

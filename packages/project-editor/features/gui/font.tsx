@@ -35,7 +35,6 @@ import {
 } from "project-editor/core/object";
 import {
     DocumentStore,
-    NavigationStore,
     INavigationStore,
     IPanel,
     createObjectNavigationItem
@@ -1832,7 +1831,7 @@ export class FontEditor
 
     @bind
     onFocus() {
-        NavigationStore.setSelectedPanel(this);
+        DocumentStore.Navigation.setSelectedPanel(this);
     }
 
     @bind
@@ -1911,7 +1910,7 @@ export class FontsNavigation extends NavigationComponent {
 
     @computed
     get object() {
-        const navigationStore = this.props.navigationStore || NavigationStore;
+        const navigationStore = this.props.navigationStore || DocumentStore.Navigation;
 
         if (navigationStore.selectedPanel) {
             const font = FontsNavigation.getFont(navigationStore.selectedPanel.selectedObject);
@@ -1930,7 +1929,7 @@ export class FontsNavigation extends NavigationComponent {
 
     @computed
     get font() {
-        const navigationStore = this.props.navigationStore || NavigationStore;
+        const navigationStore = this.props.navigationStore || DocumentStore.Navigation;
 
         if (navigationStore.selectedPanel) {
             const font = FontsNavigation.getFont(navigationStore.selectedPanel.selectedObject);

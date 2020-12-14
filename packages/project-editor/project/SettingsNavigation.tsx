@@ -12,7 +12,7 @@ import {
     getParent
 } from "project-editor/core/object";
 import { loadObject } from "project-editor/core/serialization";
-import { DocumentStore, NavigationStore } from "project-editor/core/store";
+import { DocumentStore } from "project-editor/core/store";
 
 import { confirm } from "project-editor/core/util";
 import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
@@ -188,10 +188,10 @@ export class SettingsEditor extends React.Component<{ object: IEezObject | undef
 export class SettingsNavigation extends NavigationComponent {
     @computed
     get object() {
-        if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
+        if (DocumentStore.Navigation.selectedPanel) {
+            return DocumentStore.Navigation.selectedPanel.selectedObject;
         }
-        return NavigationStore.selectedObject;
+        return DocumentStore.Navigation.selectedObject;
     }
 
     render() {

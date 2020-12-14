@@ -6,7 +6,7 @@ import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { NavigationComponent, getAncestorOfType } from "project-editor/core/object";
-import { NavigationStore, getObjectFromNavigationItem } from "project-editor/core/store";
+import { DocumentStore, getObjectFromNavigationItem } from "project-editor/core/store";
 
 import { ProjectStore } from "project-editor/project/project";
 
@@ -28,9 +28,9 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
     @computed
     get object(): ScpiSubsystem | ScpiCommand | undefined {
         // return selectedObject from selectedPanel if it is descendant of ScpiCommand or ScpiSubsystem
-        let object = NavigationStore.selectedPanel
-            ? NavigationStore.selectedPanel.selectedObject
-            : NavigationStore.selectedObject;
+        let object = DocumentStore.Navigation.selectedPanel
+            ? DocumentStore.Navigation.selectedPanel.selectedObject
+            : DocumentStore.Navigation.selectedObject;
         if (object) {
             const command = getAncestorOfType(object, ScpiCommand.classInfo);
             if (command) {
@@ -47,19 +47,19 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
         let subsystems = ProjectStore.project.scpi.subsystems;
 
         let subsystem = getObjectFromNavigationItem(
-            NavigationStore.getNavigationSelectedItem(subsystems)
+            DocumentStore.Navigation.getNavigationSelectedItem(subsystems)
         ) as ScpiSubsystem;
 
         let commands =
             subsystem &&
             (getObjectFromNavigationItem(
-                NavigationStore.getNavigationSelectedItem(subsystem)
+                DocumentStore.Navigation.getNavigationSelectedItem(subsystem)
             ) as ScpiCommand[]);
 
         let command =
             commands &&
             (getObjectFromNavigationItem(
-                NavigationStore.getNavigationSelectedItem(commands)
+                DocumentStore.Navigation.getNavigationSelectedItem(commands)
             ) as ScpiCommand);
 
         return command || commands || subsystem;
@@ -69,7 +69,7 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
         let subsystems = ProjectStore.project.scpi.subsystems;
 
         let selectedScpiSubsystem = getObjectFromNavigationItem(
-            NavigationStore.getNavigationSelectedItem(subsystems)
+            DocumentStore.Navigation.getNavigationSelectedItem(subsystems)
         ) as ScpiSubsystem;
 
         let additionalButtons;

@@ -34,10 +34,7 @@ import {
 } from "project-editor/core/object";
 import {
     DocumentStore,
-    NavigationStore,
     deleteItems,
-    UndoManager,
-    UIStateStore,
     IPanel
 } from "project-editor/core/store";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
@@ -338,11 +335,11 @@ class PageDocument implements IDocument {
     }
 
     onDragStart(op: "move" | "resize"): void {
-        UndoManager.setCombineCommands(true);
+        DocumentStore.UndoManager.setCombineCommands(true);
     }
 
     onDragEnd(op: "move" | "resize", changed: boolean, objects: IBaseObject[]): void {
-        UndoManager.setCombineCommands(false);
+        DocumentStore.UndoManager.setCombineCommands(false);
     }
 }
 
@@ -485,14 +482,14 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
 
     @bind
     focusHander() {
-        NavigationStore.setSelectedPanel(this);
+        DocumentStore.Navigation.setSelectedPanel(this);
     }
 
     savedViewState: IViewStatePersistantState | undefined;
 
     @computed
     get viewStatePersistantState(): IViewStatePersistantState {
-        const uiState = UIStateStore.getObjectUIState(this.props.widgetContainer.object);
+        const uiState = DocumentStore.UIState.getObjectUIState(this.props.widgetContainer.object);
 
         let transform: ITransform | undefined;
         if (uiState && uiState.pageEditorCanvasViewState) {
@@ -522,13 +519,13 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
         if (!this.pageEditorContext.dragWidget) {
             this.savedViewState = viewState;
 
-            const uiState = UIStateStore.getObjectUIState(this.props.widgetContainer.object);
+            const uiState = DocumentStore.UIState.getObjectUIState(this.props.widgetContainer.object);
             if (
                 !uiState ||
                 !uiState.pageEditorCanvasViewState ||
                 !_isEqual(uiState.pageEditorCanvasViewState.transform, viewState.transform)
             ) {
-                UIStateStore.updateObjectUIState(this.props.widgetContainer.object, {
+                DocumentStore.UIState.updateObjectUIState(this.props.widgetContainer.object, {
                     pageEditorCanvasViewState: {
                         transform: viewState.transform
                     }

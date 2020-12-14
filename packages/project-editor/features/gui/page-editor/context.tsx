@@ -11,7 +11,7 @@ import stringify from "json-stable-stringify";
 
 import { BoundingRectBuilder } from "eez-studio-shared/geometry";
 
-import { UndoManager, DocumentStore } from "project-editor/core/store";
+import { DocumentStore } from "project-editor/core/store";
 
 import {
     IBaseObject,
@@ -245,7 +245,7 @@ class ViewState implements IViewState {
             widget => getWidgetParent(widget) !== getWidgetParent(widgets[0])
         );
 
-        UndoManager.setCombineCommands(true);
+        DocumentStore.UndoManager.setCombineCommands(true);
 
         widgets.forEach(widget => {
             if (where === "left") {
@@ -293,7 +293,7 @@ class ViewState implements IViewState {
             }
         });
 
-        UndoManager.setCombineCommands(false);
+        DocumentStore.UndoManager.setCombineCommands(false);
     }
 
     destroy() {

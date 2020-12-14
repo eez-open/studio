@@ -12,7 +12,7 @@ import {
     getChildOfObject,
     humanizePropertyName
 } from "project-editor/core/object";
-import { OutputSectionsStore, UIStateStore, IPanel } from "project-editor/core/store";
+import { DocumentStore, IPanel } from "project-editor/core/store";
 
 export { MessageType as Type } from "project-editor/core/object";
 
@@ -75,7 +75,7 @@ export class OutputSection implements IPanel {
             );
         }
 
-        if (this.id == Section.SEARCH && (UIStateStore.searchPattern || this.messages.length > 0)) {
+        if (this.id == Section.SEARCH && (DocumentStore.UIState.searchPattern || this.messages.length > 0)) {
             return `${this.name} (${this.messages.length})`;
         }
 
@@ -145,7 +145,7 @@ export class OutputSection implements IPanel {
     }
 
     makeActive(): void {
-        OutputSectionsStore.setActiveSection(this.id);
+        DocumentStore.OutputSections.setActiveSection(this.id);
     }
 }
 
@@ -169,7 +169,7 @@ export class OutputSections {
 
     @action
     setActiveSection(sectionType: Section) {
-        UIStateStore.viewOptions.outputVisible = true;
+        DocumentStore.UIState.viewOptions.outputVisible = true;
         this.activeSection.active = false;
         this.activeSection = this.sections[sectionType];
         this.activeSection.active = true;

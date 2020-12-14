@@ -2,7 +2,7 @@ const LZ4 = require("lz4");
 
 import { strToColor16 } from "eez-studio-shared/color";
 
-import { OutputSectionsStore } from "project-editor/core/store";
+import { DocumentStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
 import { BuildResult } from "project-editor/core/extensions";
@@ -1388,13 +1388,13 @@ async function buildGuiAssetsData(assets: Assets) {
     compressedData.writeUInt32LE(inputBuffer.length, 0); // write uncomprresed size at the beginning
     outputBuffer.copy(compressedData, 4, 0, compressedSize);
 
-    OutputSectionsStore.write(
+    DocumentStore.OutputSections.write(
         output.Section.OUTPUT,
         output.Type.INFO,
         "Uncompressed size: " + inputBuffer.length
     );
 
-    OutputSectionsStore.write(
+    DocumentStore.OutputSections.write(
         output.Section.OUTPUT,
         output.Type.INFO,
         "Compressed size: " + compressedSize
@@ -1520,7 +1520,7 @@ class Assets {
         }
 
         const message = output.propertyNotFoundMessage(object, propertyName);
-        OutputSectionsStore.write(
+        DocumentStore.OutputSections.write(
             output.Section.OUTPUT,
             message.type,
             message.text,
@@ -1702,7 +1702,7 @@ class Assets {
                         return false;
                     })
                 ) {
-                    OutputSectionsStore.write(
+                    DocumentStore.OutputSections.write(
                         output.Section.OUTPUT,
                         output.Type.INFO,
                         "Unused style: " + style.name,
@@ -1713,7 +1713,7 @@ class Assets {
 
             project.gui.fonts.forEach(font => {
                 if (this.fonts.indexOf(font) === -1) {
-                    OutputSectionsStore.write(
+                    DocumentStore.OutputSections.write(
                         output.Section.OUTPUT,
                         output.Type.INFO,
                         "Unused font: " + font.name,
@@ -1724,7 +1724,7 @@ class Assets {
 
             project.gui.bitmaps.forEach(bitmap => {
                 if (this.bitmaps.indexOf(bitmap) === -1) {
-                    OutputSectionsStore.write(
+                    DocumentStore.OutputSections.write(
                         output.Section.OUTPUT,
                         output.Type.INFO,
                         "Unused bitmap: " + bitmap.name,

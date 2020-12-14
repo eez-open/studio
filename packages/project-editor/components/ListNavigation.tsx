@@ -17,9 +17,8 @@ import {
 } from "project-editor/core/object";
 import { ListAdapter, SortDirectionType } from "project-editor/core/objectAdapter";
 import {
-    NavigationStore,
+    DocumentStore,
     INavigationStore,
-    EditorsStore,
     addItem,
     deleteItem,
     canAdd,
@@ -129,7 +128,7 @@ class DeleteButton extends React.Component<{
     navigationStore?: INavigationStore;
 }> {
     onDelete() {
-        const navigationStore = this.props.navigationStore || NavigationStore;
+        const navigationStore = this.props.navigationStore || DocumentStore.Navigation;
         let selectedItem =
             this.props.navigationObject &&
             navigationStore.getNavigationSelectedItemAsObject(this.props.navigationObject);
@@ -139,7 +138,7 @@ class DeleteButton extends React.Component<{
     }
 
     render() {
-        const navigationStore = this.props.navigationStore || NavigationStore;
+        const navigationStore = this.props.navigationStore || DocumentStore.Navigation;
         let selectedItem =
             this.props.navigationObject &&
             navigationStore.getNavigationSelectedItemAsObject(this.props.navigationObject);
@@ -207,7 +206,7 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
 
     @computed
     get editable() {
-        const navigationStore = this.props.navigationStore || NavigationStore;
+        const navigationStore = this.props.navigationStore || DocumentStore.Navigation;
         return this.props.editable != false && navigationStore.editable;
     }
 
@@ -215,14 +214,14 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
     onDoubleClickItem(object: IEezObject) {
         if (this.props.onDoubleClickItem) {
             this.props.onDoubleClickItem(object);
-        } else if (EditorsStore.activeEditor && EditorsStore.activeEditor.object == object) {
-            EditorsStore.activeEditor.makePermanent();
+        } else if (DocumentStore.Editors.activeEditor && DocumentStore.Editors.activeEditor.object == object) {
+            DocumentStore.Editors.activeEditor.makePermanent();
         }
     }
 
     @computed
     get selectedObject() {
-        const navigationStore = this.props.navigationStore || NavigationStore;
+        const navigationStore = this.props.navigationStore || DocumentStore.Navigation;
         const navigationSelectedItem = navigationStore.getNavigationSelectedItem(
             this.props.navigationObject
         );
@@ -267,7 +266,7 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
     }
 
     onFocus() {
-        const navigationStore = this.props.navigationStore || NavigationStore;
+        const navigationStore = this.props.navigationStore || DocumentStore.Navigation;
         if (isPartOfNavigation(this.props.navigationObject)) {
             navigationStore.setSelectedPanel(this);
         }
@@ -399,7 +398,7 @@ export class ListNavigationWithContent extends React.Component<ListNavigationWit
 export class ListNavigationWithProperties extends NavigationComponent {
     @computed
     get object() {
-        const navigationStore = this.props.navigationStore || NavigationStore;
+        const navigationStore = this.props.navigationStore || DocumentStore.Navigation;
         return (
             (navigationStore.selectedPanel && navigationStore.selectedPanel.selectedObject) ||
             navigationStore.selectedObject

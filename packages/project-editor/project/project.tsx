@@ -31,7 +31,7 @@ import {
 import { loadObject, objectToJson } from "project-editor/core/serialization";
 import * as output from "project-editor/core/output";
 
-import { DocumentStore, UIStateStore, UndoManager } from "project-editor/core/store";
+import { DocumentStore } from "project-editor/core/store";
 
 import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
 
@@ -368,9 +368,9 @@ function showUsage(importDirective: ImportDirective) {
             action(result => {
                 const assetsUsage: IAssetsUsage = result.values.assetsUsage;
                 if (assetsUsage.selectedAsset) {
-                    UIStateStore.searchPattern = assetsUsage.selectedAsset;
-                    UIStateStore.searchMatchCase = true;
-                    UIStateStore.searchMatchWholeWord = true;
+                    DocumentStore.UIState.searchPattern = assetsUsage.selectedAsset;
+                    DocumentStore.UIState.searchMatchCase = true;
+                    DocumentStore.UIState.searchMatchWholeWord = true;
                     startSearch(assetsUsage.selectedAsset, true, true);
                 }
             })
@@ -899,7 +899,7 @@ export function save(filePath: string) {
 
     const json = objectToJson(ProjectStore.project, 2, toJsHook);
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         const fs = EEZStudio.electron.remote.require("fs");
         fs.writeFile(filePath, json, "utf8", (err: any) => {
             if (err) {
@@ -1093,8 +1093,8 @@ class ProjectStoreClass {
         EEZStudio.electron.ipcRenderer.send("windowSetState", {
             modified: DocumentStore.modified,
             projectFilePath: this.filePath,
-            undo: (UndoManager && UndoManager.canUndo && UndoManager.undoDescription) || null,
-            redo: (UndoManager && UndoManager.canRedo && UndoManager.redoDescription) || null
+            undo: (DocumentStore.UndoManager && DocumentStore.UndoManager.canUndo && DocumentStore.UndoManager.undoDescription) || null,
+            redo: (DocumentStore.UndoManager && DocumentStore.UndoManager.canRedo && DocumentStore.UndoManager.redoDescription) || null
         });
     }
 
@@ -1141,7 +1141,7 @@ class ProjectStoreClass {
         let configuration =
             this.project &&
             this.project.settings.build.configurations.find(
-                configuration => configuration.name == UIStateStore.selectedBuildConfiguration
+                configuration => configuration.name == DocumentStore.UIState.selectedBuildConfiguration
             );
         if (!configuration) {
             if (this.project.settings.build.configurations.length > 0) {
@@ -1230,11 +1230,11 @@ class ProjectStoreClass {
     }
 
     saveUIState() {
-        if (this.filePath && UIStateStore.isModified) {
+        if (this.filePath && DocumentStore.UIState.isModified) {
             const fs = EEZStudio.electron.remote.require("fs");
             fs.writeFile(
                 getUIStateFilePath(this.filePath),
-                UIStateStore.save(),
+                DocumentStore.UIState.save(),
                 "utf8",
                 (err: any) => {
                     if (err) {

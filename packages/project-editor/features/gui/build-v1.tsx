@@ -6,7 +6,7 @@ import {
     DisplayItemChildrenObject,
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
-import { OutputSectionsStore } from "project-editor/core/store";
+import { DocumentStore } from "project-editor/core/store";
 import { IEezObject } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import { loadObject } from "project-editor/core/serialization";
@@ -83,7 +83,7 @@ function fixDataForMegaBootloader(data: number[] | Uint8Array, object: IEezObjec
     }
 
     if (threeExclamationsDetected) {
-        //OutputSectionsStore.write(Section.OUTPUT, Type.WARNING, `"!!!" detected and replaced with "!! " (Arduino Mega bootloader bug)`, object);
+        //DocumentStore.OutputSectionsStore.write(Section.OUTPUT, Type.WARNING, `"!!!" detected and replaced with "!! " (Arduino Mega bootloader bug)`, object);
     }
 
     return result;
@@ -443,7 +443,7 @@ function getItem(
     }
 
     const message = output.propertyNotFoundMessage(object, propertyName);
-    OutputSectionsStore.write(output.Section.OUTPUT, message.type, message.text, message.object);
+    DocumentStore.OutputSections.write(output.Section.OUTPUT, message.type, message.text, message.object);
 
     return 0;
 }
@@ -495,7 +495,7 @@ function getStyleIndex(object: any, propertyName: string) {
     }
 
     const message = output.propertyNotFoundMessage(object, propertyName);
-    OutputSectionsStore.write(output.Section.OUTPUT, message.type, message.text, message.object);
+    DocumentStore.OutputSections.write(output.Section.OUTPUT, message.type, message.text, message.object);
 
     return 0;
 }
@@ -1057,7 +1057,7 @@ function buildGuiStylesDef(project: Project) {
         }
     }
     if (threeExclamationsDetected) {
-        // OutputSectionsStore.write(output.Section.OUTPUT, output.Type.ERROR, `"!!!" detected in data, not possible to fix (Arduino Mega bootloader bug).`, project);
+        // DocumentStore.OutputSectionsStore.write(output.Section.OUTPUT, output.Type.ERROR, `"!!!" detected in data, not possible to fix (Arduino Mega bootloader bug).`, project);
     }
 
     return `// STYLES DEFINITION\nconst uint8_t styles[${data.length}] = {${projectBuild.dumpData(
@@ -1225,7 +1225,7 @@ function buildWidget(object: Widget.Widget | Page) {
         if (widget.itemWidget) {
             itemWidget = buildWidget(widget.itemWidget);
         } else {
-            OutputSectionsStore.write(
+            DocumentStore.OutputSections.write(
                 output.Section.OUTPUT,
                 output.Type.ERROR,
                 "List item widget is missing",
@@ -1681,7 +1681,7 @@ function buildGuiDocumentDef(project: Project, orientation: "portrait" | "landsc
         }
     }
     if (threeExclamationsDetected) {
-        //OutputSectionsStore.write(output.Section.OUTPUT, output.Type.ERROR, `"!!!" detected in data, not possible to fix (Arduino Mega bootloader bug).`, project);
+        //DocumentStore.OutputSectionsStore.write(output.Section.OUTPUT, output.Type.ERROR, `"!!!" detected in data, not possible to fix (Arduino Mega bootloader bug).`, project);
     }
 
     return `// DOCUMENT DEFINITION\nconst uint8_t document[${
