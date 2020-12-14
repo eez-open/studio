@@ -25,8 +25,10 @@ import {
     getParent
 } from "project-editor/core/object";
 import {
+    NavigationStore,
     SimpleNavigationStoreClass,
-    DocumentStore
+    DocumentStore,
+    UndoManager
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import * as output from "project-editor/core/output";
@@ -110,7 +112,7 @@ export class StylesNavigation extends NavigationComponent {
 
     @computed
     get style() {
-        const navigationStore = this.props.navigationStore || DocumentStore.Navigation;
+        const navigationStore = this.props.navigationStore || NavigationStore;
 
         if (navigationStore.selectedPanel) {
             if (navigationStore.selectedPanel.selectedObject instanceof Style) {
@@ -317,7 +319,7 @@ const inheritFromProperty: PropertyInfo = {
                                 },
                                 values: {}
                             }).then(result => {
-                                DocumentStore.UndoManager.setCombineCommands(true);
+                                UndoManager.setCombineCommands(true);
 
                                 const stylePropertyValues: any = {};
                                 const objectPropertyValues: any = {};
@@ -341,7 +343,7 @@ const inheritFromProperty: PropertyInfo = {
                                 );
                                 DocumentStore.updateObject(object, objectPropertyValues);
 
-                                DocumentStore.UndoManager.setCombineCommands(false);
+                                UndoManager.setCombineCommands(false);
                             });
                         }
                     })
@@ -356,7 +358,7 @@ const inheritFromProperty: PropertyInfo = {
                         new MenuItem({
                             label: "Update Style",
                             click: () => {
-                                DocumentStore.UndoManager.setCombineCommands(true);
+                                UndoManager.setCombineCommands(true);
 
                                 const stylePropertyValues: any = {};
                                 const objectPropertyValues: any = {};
@@ -377,7 +379,7 @@ const inheritFromProperty: PropertyInfo = {
                                 DocumentStore.updateObject(style, stylePropertyValues);
                                 DocumentStore.updateObject(object, objectPropertyValues);
 
-                                DocumentStore.UndoManager.setCombineCommands(false);
+                                UndoManager.setCombineCommands(false);
                             }
                         })
                     );

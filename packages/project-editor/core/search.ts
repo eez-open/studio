@@ -14,7 +14,7 @@ import {
     getKey,
     getClassInfo
 } from "project-editor/core/object";
-import { DocumentStore } from "project-editor/core/store";
+import { DocumentStore, OutputSectionsStore } from "project-editor/core/store";
 
 import { Section, Type } from "project-editor/core/output";
 
@@ -316,7 +316,7 @@ class CurrentSearch {
         matchWholeWord: boolean,
         searchCallback?: SearchCallback
     ) {
-        DocumentStore.OutputSections.clear(Section.SEARCH);
+        OutputSectionsStore.clear(Section.SEARCH);
 
         this.finishSearch();
 
@@ -351,7 +351,7 @@ class CurrentSearch {
                                 return;
                             }
                         } else {
-                            DocumentStore.OutputSections.write(
+                            OutputSectionsStore.write(
                                 Section.SEARCH,
                                 Type.INFO,
                                 objectToString(valueObject),
@@ -390,12 +390,12 @@ function startNewSearch(
 }
 
 export function startSearch(pattern: string, matchCase: boolean, matchWholeWord: boolean) {
-    DocumentStore.OutputSections.setActiveSection(Section.SEARCH);
+    OutputSectionsStore.setActiveSection(Section.SEARCH);
     startNewSearch(DocumentStore.document, pattern, matchCase, matchWholeWord);
 }
 
 export function findAllReferences(object: IEezObject) {
-    DocumentStore.OutputSections.setActiveSection(Section.SEARCH);
+    OutputSectionsStore.setActiveSection(Section.SEARCH);
     startNewSearch(DocumentStore.document, object, true, true);
 }
 

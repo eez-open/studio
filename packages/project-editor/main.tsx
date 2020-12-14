@@ -59,7 +59,7 @@ EEZStudio.electron.ipcRenderer.on("reload", async () => {
 })();
 
 async function init() {
-    const { DocumentStore } = (await import(
+    const { UndoManager, NavigationStore, UIStateStore } = (await import(
         "project-editor/core/store"
     )) as typeof StoreModule;
 
@@ -83,24 +83,24 @@ async function init() {
     EEZStudio.electron.ipcRenderer.on("build", () => ProjectStore.build());
     EEZStudio.electron.ipcRenderer.on("build-extensions", () => ProjectStore.buildExtensions());
 
-    EEZStudio.electron.ipcRenderer.on("undo", () => DocumentStore.UndoManager.undo());
-    EEZStudio.electron.ipcRenderer.on("redo", () => DocumentStore.UndoManager.redo());
+    EEZStudio.electron.ipcRenderer.on("undo", () => UndoManager.undo());
+    EEZStudio.electron.ipcRenderer.on("redo", () => UndoManager.redo());
 
     EEZStudio.electron.ipcRenderer.on(
         "cut",
-        () => DocumentStore.Navigation.selectedPanel && DocumentStore.Navigation.selectedPanel.cutSelection()
+        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.cutSelection()
     );
     EEZStudio.electron.ipcRenderer.on(
         "copy",
-        () => DocumentStore.Navigation.selectedPanel && DocumentStore.Navigation.selectedPanel.copySelection()
+        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.copySelection()
     );
     EEZStudio.electron.ipcRenderer.on(
         "paste",
-        () => DocumentStore.Navigation.selectedPanel && DocumentStore.Navigation.selectedPanel.pasteSelection()
+        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.pasteSelection()
     );
     EEZStudio.electron.ipcRenderer.on(
         "delete",
-        () => DocumentStore.Navigation.selectedPanel && DocumentStore.Navigation.selectedPanel.deleteSelection()
+        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.deleteSelection()
     );
 
     // EEZStudio.electron.ipcRenderer.on('goBack', () => ProjectStore.selection.selectionGoBack());
@@ -109,7 +109,7 @@ async function init() {
     EEZStudio.electron.ipcRenderer.on(
         "toggleOutput",
         action(
-            () => (DocumentStore.UIState.viewOptions.outputVisible = !DocumentStore.UIState.viewOptions.outputVisible)
+            () => (UIStateStore.viewOptions.outputVisible = !UIStateStore.viewOptions.outputVisible)
         )
     );
 

@@ -11,7 +11,7 @@ import {
     PropertyType,
     NavigationComponent
 } from "project-editor/core/object";
-import { DocumentStore } from "project-editor/core/store";
+import { NavigationStore } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -72,14 +72,14 @@ class BitmapEditor extends React.Component<{ bitmap: Bitmap }> {
 export class BitmapsNavigation extends NavigationComponent {
     @computed
     get bitmap() {
-        if (DocumentStore.Navigation.selectedPanel) {
-            if (DocumentStore.Navigation.selectedPanel.selectedObject instanceof Bitmap) {
-                return DocumentStore.Navigation.selectedPanel.selectedObject;
+        if (NavigationStore.selectedPanel) {
+            if (NavigationStore.selectedPanel.selectedObject instanceof Bitmap) {
+                return NavigationStore.selectedPanel.selectedObject;
             }
         }
 
-        if (DocumentStore.Navigation.selectedObject instanceof Bitmap) {
-            return DocumentStore.Navigation.selectedObject;
+        if (NavigationStore.selectedObject instanceof Bitmap) {
+            return NavigationStore.selectedObject;
         }
 
         return undefined;

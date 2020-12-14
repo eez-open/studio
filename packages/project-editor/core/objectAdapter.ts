@@ -42,6 +42,7 @@ import {
     showContextMenu,
     canContainChildren,
     DocumentStore,
+    NavigationStore,
     INavigationStore,
     createObjectNavigationItem,
     isObjectNavigationItem
@@ -1178,7 +1179,7 @@ export class ListAdapter implements ITreeAdapter {
     ) {
         this.onDoubleClickCallback = onDoubleClick;
 
-        this.navigationStore = navigationStore || DocumentStore.Navigation;
+        this.navigationStore = navigationStore || NavigationStore;
         this.dragAndDropManager = dragAndDropManager || DragAndDropManager;
 
         autorun(() => {

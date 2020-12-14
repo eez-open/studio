@@ -17,8 +17,13 @@ import {
     getEditorComponent
 } from "project-editor/core/object";
 import {
+    UndoManager,
     DocumentStore,
-    INavigationStore
+    UIStateStore,
+    EditorsStore,
+    NavigationStore,
+    INavigationStore,
+    OutputSectionsStore
 } from "project-editor/core/store";
 import { startSearch } from "project-editor/core/search";
 import { Section } from "project-editor/core/output";
@@ -56,32 +61,32 @@ const ToolbarNav = styled.nav`
 class Toolbar extends React.Component {
     startSearch() {
         startSearch(
-            DocumentStore.UIState.searchPattern,
-            DocumentStore.UIState.searchMatchCase,
-            DocumentStore.UIState.searchMatchWholeWord
+            UIStateStore.searchPattern,
+            UIStateStore.searchMatchCase,
+            UIStateStore.searchMatchWholeWord
         );
     }
 
     @action.bound
     onSearchPatternChange(event: any) {
-        DocumentStore.UIState.searchPattern = event.target.value;
+        UIStateStore.searchPattern = event.target.value;
         this.startSearch();
     }
 
     @action.bound
     toggleMatchCase() {
-        DocumentStore.UIState.searchMatchCase = !DocumentStore.UIState.searchMatchCase;
+        UIStateStore.searchMatchCase = !UIStateStore.searchMatchCase;
         this.startSearch();
     }
 
     @action.bound
     toggleMatchWholeWord() {
-        DocumentStore.UIState.searchMatchWholeWord = !DocumentStore.UIState.searchMatchWholeWord;
+        UIStateStore.searchMatchWholeWord = !UIStateStore.searchMatchWholeWord;
         this.startSearch();
     }
 
     onSelectedBuildConfigurationChange(event: any) {
-        DocumentStore.UIState.setSelectedBuildConfiguration(event.target.value);
+        UIStateStore.setSelectedBuildConfiguration(event.target.value);
     }
 
     get isBuildConfigurationSelectorVisible() {
@@ -118,19 +123,19 @@ class Toolbar extends React.Component {
                     <div className="btn-group" role="group">
                         <IconAction
                             title={
-                                DocumentStore.UndoManager.canUndo ? `Undo "${DocumentStore.UndoManager.undoDescription}"` : ""
+                                UndoManager.canUndo ? `Undo "${UndoManager.undoDescription}"` : ""
                             }
                             icon="material:undo"
-                            onClick={() => DocumentStore.UndoManager.undo()}
-                            enabled={DocumentStore.UndoManager.canUndo}
+                            onClick={() => UndoManager.undo()}
+                            enabled={UndoManager.canUndo}
                         />
                         <IconAction
                             title={
-                                DocumentStore.UndoManager.canRedo ? `Redo "${DocumentStore.UndoManager.redoDescription}"` : ""
+                                UndoManager.canRedo ? `Redo "${UndoManager.redoDescription}"` : ""
                             }
                             icon="material:redo"
-                            onClick={() => DocumentStore.UndoManager.redo()}
-                            enabled={DocumentStore.UndoManager.canRedo}
+                            onClick={() => UndoManager.redo()}
+                            enabled={UndoManager.canRedo}
                         />
                     </div>
 
@@ -140,7 +145,7 @@ class Toolbar extends React.Component {
                                 title="Configuration"
                                 id="btn-toolbar-configuration"
                                 className="form-control"
-                                value={DocumentStore.UIState.selectedBuildConfiguration}
+                                value={UIStateStore.selectedBuildConfiguration}
                                 onChange={this.onSelectedBuildConfigurationChange.bind(this)}
                             >
                                 {configurations}
@@ -168,7 +173,7 @@ class Toolbar extends React.Component {
                             className="form-control"
                             type="text"
                             placeholder="search"
-                            value={DocumentStore.UIState.searchPattern}
+                            value={UIStateStore.searchPattern}
                             onChange={this.onSearchPatternChange}
                         />
                         <div className="btn-group" role="group">
@@ -177,7 +182,7 @@ class Toolbar extends React.Component {
                                 title="Match case"
                                 iconSize={20}
                                 enabled={true}
-                                selected={DocumentStore.UIState.searchMatchCase}
+                                selected={UIStateStore.searchMatchCase}
                                 onClick={this.toggleMatchCase}
                             />
                             <IconAction
@@ -185,7 +190,7 @@ class Toolbar extends React.Component {
                                 title="Match whole word"
                                 iconSize={20}
                                 enabled={true}
-                                selected={DocumentStore.UIState.searchMatchWholeWord}
+                                selected={UIStateStore.searchMatchWholeWord}
                                 onClick={this.toggleMatchWholeWord}
                             />
                             <IconAction
@@ -209,7 +214,7 @@ class Editor extends React.Component<{}, {}> {
     render() {
         let editor: JSX.Element | undefined;
 
-        let activeEditor = DocumentStore.Editors.activeEditor;
+        let activeEditor = EditorsStore.activeEditor;
         if (activeEditor) {
             let EditorComponent = getEditorComponent(activeEditor.object);
             if (EditorComponent) {
@@ -239,7 +244,7 @@ export class Editors extends React.Component<{}, {}> {
         return (
             <EditorsDiv>
                 <div>
-                    <TabsView tabs={DocumentStore.Editors.editors} />
+                    <TabsView tabs={EditorsStore.editors} />
                 </div>
                 <Editor />
             </EditorsDiv>
@@ -257,7 +262,7 @@ export class PropertiesPanel extends React.Component<
     render() {
         let objects: IEezObject[];
 
-        const navigationStore = this.props.navigationStore || DocumentStore.Navigation;
+        const navigationStore = this.props.navigationStore || NavigationStore;
 
         if (
             navigationStore.selectedPanel &&
@@ -302,10 +307,10 @@ export class PropertiesPanel extends React.Component<
 class Content extends React.Component<{}, {}> {
     @computed
     get object() {
-        if (DocumentStore.Navigation.selectedPanel) {
-            return DocumentStore.Navigation.selectedPanel.selectedObject;
+        if (NavigationStore.selectedPanel) {
+            return NavigationStore.selectedPanel.selectedObject;
         }
-        return DocumentStore.Navigation.selectedObject;
+        return NavigationStore.selectedObject;
     }
 
     @computed
@@ -360,8 +365,8 @@ const StatusBarDiv = styled.div`
 class StatusBar extends React.Component<{}, {}> {
     @action
     onChecksClicked() {
-        DocumentStore.UIState.viewOptions.outputVisible = !DocumentStore.UIState.viewOptions.outputVisible;
-        DocumentStore.OutputSections.setActiveSection(Section.CHECKS);
+        UIStateStore.viewOptions.outputVisible = !UIStateStore.viewOptions.outputVisible;
+        OutputSectionsStore.setActiveSection(Section.CHECKS);
     }
 
     render() {
@@ -369,7 +374,7 @@ class StatusBar extends React.Component<{}, {}> {
             <StatusBarDiv>
                 <StatusBarItem
                     key="checks"
-                    body={DocumentStore.OutputSections.getSection(Section.CHECKS).title}
+                    body={OutputSectionsStore.getSection(Section.CHECKS).title}
                     onClick={this.onChecksClicked}
                 />
             </StatusBarDiv>
@@ -419,12 +424,12 @@ export class ProjectEditor extends React.Component<{}, {}> {
         }
 
         let statusBar: JSX.Element | undefined;
-        if (!DocumentStore.UIState.viewOptions.outputVisible) {
+        if (!UIStateStore.viewOptions.outputVisible) {
             statusBar = <StatusBar />;
         }
 
         let outputPanel: JSX.Element | undefined;
-        if (DocumentStore.UIState.viewOptions.outputVisible) {
+        if (UIStateStore.viewOptions.outputVisible) {
             outputPanel = <Output />;
         }
 

@@ -4,7 +4,7 @@ import { bind } from "bind-decorator";
 
 import { CodeEditor } from "eez-studio-ui/code-editor";
 
-import { DocumentStore } from "project-editor/core/store";
+import { DocumentStore, UndoManager } from "project-editor/core/store";
 
 import { BuildFile } from "project-editor/project/project";
 
@@ -23,12 +23,12 @@ export class BuildFileEditor extends React.Component<{
 
     @bind
     onFocus() {
-        DocumentStore.UndoManager.setCombineCommands(true);
+        UndoManager.setCombineCommands(true);
     }
 
     @bind
     onBlur() {
-        DocumentStore.UndoManager.setCombineCommands(false);
+        UndoManager.setCombineCommands(false);
     }
 
     componentDidMount() {

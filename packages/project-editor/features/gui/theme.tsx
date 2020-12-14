@@ -13,9 +13,11 @@ import {
     getParent
 } from "project-editor/core/object";
 import {
+    NavigationStore,
     INavigationStore,
     SimpleNavigationStoreClass,
     DocumentStore,
+    UndoManager,
     IContextMenuContext,
     getObjectFromNavigationItem
 } from "project-editor/core/store";
@@ -28,6 +30,7 @@ import { Splitter } from "eez-studio-ui/splitter";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
 
+import { UIStateStore } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { ProjectStore } from "project-editor/project/project";
 import { Gui } from "project-editor/features/gui/gui";
@@ -59,7 +62,7 @@ function getProjectWithThemes() {
 const navigationStore = computed(() => {
     return getProjectWithThemes() != ProjectStore.project
         ? new SimpleNavigationStoreClass(undefined)
-        : DocumentStore.Navigation;
+        : NavigationStore;
 });
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,12 +208,12 @@ export class ThemesSideView extends React.Component<{
             .then(result => {
                 let newValue = result.values.name.trim();
                 if (newValue != theme.name) {
-                    DocumentStore.UndoManager.setCombineCommands(true);
+                    UndoManager.setCombineCommands(true);
                     replaceObjectReference(theme, newValue);
                     DocumentStore.updateObject(theme, {
                         name: newValue
                     });
-                    DocumentStore.UndoManager.setCombineCommands(false);
+                    UndoManager.setCombineCommands(false);
                 }
             })
             .catch(error => {
@@ -241,12 +244,12 @@ export class ThemesSideView extends React.Component<{
             .then(result => {
                 let newValue = result.values.name.trim();
                 if (newValue != color.name) {
-                    DocumentStore.UndoManager.setCombineCommands(true);
+                    UndoManager.setCombineCommands(true);
                     replaceObjectReference(color, newValue);
                     DocumentStore.updateObject(color, {
                         name: newValue
                     });
-                    DocumentStore.UndoManager.setCombineCommands(false);
+                    UndoManager.setCombineCommands(false);
                 }
             })
             .catch(error => {
@@ -257,7 +260,7 @@ export class ThemesSideView extends React.Component<{
     };
 
     onClose = action(() => {
-        DocumentStore.UIState.viewOptions.themesVisible = false;
+        UIStateStore.viewOptions.themesVisible = false;
     });
 
     render() {
@@ -373,7 +376,7 @@ export class Color extends EezObject implements IColor {
                 new MenuItem({
                     label: "Copy to other themes",
                     click: () => {
-                        DocumentStore.UndoManager.setCombineCommands(true);
+                        UndoManager.setCombineCommands(true);
 
                         const gui = getProjectWithThemes().gui;
 
@@ -394,7 +397,7 @@ export class Color extends EezObject implements IColor {
                             }
                         });
 
-                        DocumentStore.UndoManager.setCombineCommands(false);
+                        UndoManager.setCombineCommands(false);
                     }
                 })
             );

@@ -6,7 +6,8 @@ import { IconAction } from "eez-studio-ui/action";
 
 import { IEezObject, objectToString, getClassInfo } from "project-editor/core/object";
 import {
-    DocumentStore,
+    EditorsStore,
+    NavigationStore,
     addItem,
     canAdd,
     createObjectAdapterNavigationItem
@@ -99,17 +100,17 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
 
     @bind
     onTreeDoubleClick(object: IEezObject) {
-        if (DocumentStore.Editors.activeEditor && DocumentStore.Editors.activeEditor.object == object) {
-            DocumentStore.Editors.activeEditor.makePermanent();
+        if (EditorsStore.activeEditor && EditorsStore.activeEditor.object == object) {
+            EditorsStore.activeEditor.makePermanent();
         }
     }
 
     onFocus() {
-        DocumentStore.Navigation.setSelectedPanel(undefined);
+        NavigationStore.setSelectedPanel(undefined);
     }
 
     render() {
-        let navigationObjectAdapter = DocumentStore.Navigation.getNavigationSelectedItemAsObjectAdapter(
+        let navigationObjectAdapter = NavigationStore.getNavigationSelectedItemAsObjectAdapter(
             this.props.navigationObject
         );
 
@@ -117,7 +118,7 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
             const newNavigationObjectAdapter = new TreeObjectAdapter(this.props.navigationObject);
 
             setTimeout(() => {
-                DocumentStore.Navigation.setNavigationSelectedItem(
+                NavigationStore.setNavigationSelectedItem(
                     this.props.navigationObject,
                     createObjectAdapterNavigationItem(newNavigationObjectAdapter)!
                 );

@@ -1,7 +1,7 @@
 import { observable, action } from "mobx";
 
 import { IEezObject } from "project-editor/core/object";
-import { DocumentStore } from "project-editor/core/store";
+import { DocumentStore, UndoManager } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +28,7 @@ export class DragAndDropManagerClass {
         this.dragObject = dragObject;
         this.dragItemDeleted = false;
 
-        DocumentStore.UndoManager.setCombineCommands(true);
+        UndoManager.setCombineCommands(true);
     }
 
     @action
@@ -67,7 +67,7 @@ export class DragAndDropManagerClass {
         }
         this.dragObject = undefined;
         this.unsetDropObject();
-        DocumentStore.UndoManager.setCombineCommands(false);
+        UndoManager.setCombineCommands(false);
     }
 }
 

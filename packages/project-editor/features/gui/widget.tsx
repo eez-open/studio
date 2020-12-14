@@ -35,7 +35,7 @@ import {
     getParent
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
-import { DocumentStore, IContextMenuContext } from "project-editor/core/store";
+import { DocumentStore, NavigationStore, IContextMenuContext } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
 import { Project, checkObjectReference, getProject } from "project-editor/project/project";
@@ -1524,7 +1524,7 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
 
     open() {
         if (this.layoutPage) {
-            DocumentStore.Navigation.showObject(this.layoutPage);
+            NavigationStore.showObject(this.layoutPage);
         }
     }
 

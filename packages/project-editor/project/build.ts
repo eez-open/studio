@@ -15,7 +15,7 @@ import {
     getPropertyInfo,
     getClassInfo
 } from "project-editor/core/object";
-import { DocumentStore } from "project-editor/core/store";
+import { OutputSectionsStore } from "project-editor/core/store";
 import { Section, Type } from "project-editor/core/output";
 
 import { ProjectStore, BuildConfiguration, getProject } from "project-editor/project/project";
@@ -83,7 +83,7 @@ export function dumpData(data: number[] | Buffer) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function showCheckResult() {
-    let outputSection = DocumentStore.OutputSections.getSection(Section.OUTPUT);
+    let outputSection = OutputSectionsStore.getSection(Section.OUTPUT);
 
     let checkResultMassage: string;
 
@@ -107,7 +107,7 @@ function showCheckResult() {
 
     checkResultMassage += " detected";
 
-    DocumentStore.OutputSections.write(Section.OUTPUT, Type.INFO, checkResultMassage);
+    OutputSectionsStore.write(Section.OUTPUT, Type.INFO, checkResultMassage);
 }
 
 class BuildException {
@@ -185,7 +185,7 @@ async function generateFile(
         await writeBinaryData(filePath, parts["GUI_ASSETS_DATA"]);
     }
 
-    DocumentStore.OutputSections.write(Section.OUTPUT, Type.INFO, `File "${filePath}" builded`);
+    OutputSectionsStore.write(Section.OUTPUT, Type.INFO, `File "${filePath}" builded`);
 }
 
 async function generateFiles(
@@ -245,15 +245,15 @@ function anythingToBuild() {
 export async function build({ onlyCheck }: { onlyCheck: boolean }) {
     const timeStart = new Date().getTime();
 
-    DocumentStore.OutputSections.setActiveSection(Section.OUTPUT);
-    DocumentStore.OutputSections.clear(Section.OUTPUT);
+    OutputSectionsStore.setActiveSection(Section.OUTPUT);
+    OutputSectionsStore.clear(Section.OUTPUT);
 
     if (!anythingToBuild()) {
-        DocumentStore.OutputSections.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
+        OutputSectionsStore.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
         return;
     }
 
-    DocumentStore.OutputSections.setLoading(Section.OUTPUT, true);
+    OutputSectionsStore.setLoading(Section.OUTPUT, true);
 
     // give some time for loader to start
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -284,7 +284,7 @@ export async function build({ onlyCheck }: { onlyCheck: boolean }) {
             !ProjectStore.masterProject
         ) {
             for (const configuration of ProjectStore.project.settings.build.configurations) {
-                DocumentStore.OutputSections.write(
+                OutputSectionsStore.write(
                     Section.OUTPUT,
                     Type.INFO,
                     `Building ${configuration.name} configuration`
@@ -299,7 +299,7 @@ export async function build({ onlyCheck }: { onlyCheck: boolean }) {
                 ProjectStore.selectedBuildConfiguration ||
                 ProjectStore.project.settings.build.configurations[0];
             if (selectedBuildConfiguration) {
-                DocumentStore.OutputSections.write(
+                OutputSectionsStore.write(
                     Section.OUTPUT,
                     Type.INFO,
                     `Building ${selectedBuildConfiguration.name} configuration`
@@ -324,42 +324,42 @@ export async function build({ onlyCheck }: { onlyCheck: boolean }) {
 
         await generateFiles(destinationFolderPath, configurationBuildResuts);
 
-        DocumentStore.OutputSections.write(
+        OutputSectionsStore.write(
             Section.OUTPUT,
             Type.INFO,
             `Build duration: ${(new Date().getTime() - timeStart) / 1000} seconds`
         );
 
-        DocumentStore.OutputSections.write(
+        OutputSectionsStore.write(
             Section.OUTPUT,
             Type.INFO,
             `Build successfully finished at ${new Date().toLocaleString()}`
         );
     } catch (err) {
         if (err instanceof BuildException) {
-            DocumentStore.OutputSections.write(Section.OUTPUT, Type.ERROR, err.message, err.object);
+            OutputSectionsStore.write(Section.OUTPUT, Type.ERROR, err.message, err.object);
         } else {
-            DocumentStore.OutputSections.write(Section.OUTPUT, Type.ERROR, `Module build error: ${err}`);
+            OutputSectionsStore.write(Section.OUTPUT, Type.ERROR, `Module build error: ${err}`);
         }
 
         showCheckResult();
     } finally {
-        DocumentStore.OutputSections.setLoading(Section.OUTPUT, false);
+        OutputSectionsStore.setLoading(Section.OUTPUT, false);
     }
 }
 
 export async function buildExtensions() {
     const timeStart = new Date().getTime();
 
-    DocumentStore.OutputSections.setActiveSection(Section.OUTPUT);
-    DocumentStore.OutputSections.clear(Section.OUTPUT);
+    OutputSectionsStore.setActiveSection(Section.OUTPUT);
+    OutputSectionsStore.clear(Section.OUTPUT);
 
     if (!extensionDefinitionAnythingToBuild()) {
-        DocumentStore.OutputSections.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
+        OutputSectionsStore.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
         return;
     }
 
-    DocumentStore.OutputSections.setLoading(Section.OUTPUT, true);
+    OutputSectionsStore.setLoading(Section.OUTPUT, true);
 
     // give some time for loader to start
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -377,27 +377,27 @@ export async function buildExtensions() {
 
         await extensionDefinitionBuild();
 
-        DocumentStore.OutputSections.write(
+        OutputSectionsStore.write(
             Section.OUTPUT,
             Type.INFO,
             `Build duration: ${(new Date().getTime() - timeStart) / 1000} seconds`
         );
 
-        DocumentStore.OutputSections.write(
+        OutputSectionsStore.write(
             Section.OUTPUT,
             Type.INFO,
             `Build successfully finished at ${new Date().toLocaleString()}`
         );
     } catch (err) {
         if (err instanceof BuildException) {
-            DocumentStore.OutputSections.write(Section.OUTPUT, Type.ERROR, err.message, err.object);
+            OutputSectionsStore.write(Section.OUTPUT, Type.ERROR, err.message, err.object);
         } else {
-            DocumentStore.OutputSections.write(Section.OUTPUT, Type.ERROR, `Module build error: ${err}`);
+            OutputSectionsStore.write(Section.OUTPUT, Type.ERROR, `Module build error: ${err}`);
         }
 
         showCheckResult();
     } finally {
-        DocumentStore.OutputSections.setLoading(Section.OUTPUT, false);
+        OutputSectionsStore.setLoading(Section.OUTPUT, false);
     }
 }
 
@@ -452,7 +452,7 @@ export function backgroundCheck() {
     }
 
     setMessagesTimeoutId = setTimeout(() => {
-        DocumentStore.OutputSections.setMessages(Section.CHECKS, messages);
+        OutputSectionsStore.setMessages(Section.CHECKS, messages);
     }, 100);
 
     //console.timeEnd("backgroundCheck");

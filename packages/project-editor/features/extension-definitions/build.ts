@@ -8,7 +8,7 @@ import {
 } from "instrument/export";
 import { getProperty } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/serialization";
-import { DocumentStore } from "project-editor/core/store";
+import { OutputSectionsStore } from "project-editor/core/store";
 import { Section, Type } from "project-editor/core/output";
 
 import { ProjectStore } from "project-editor/project/project";
@@ -144,7 +144,7 @@ export async function extensionDefinitionBuild() {
                 properties
             );
 
-            DocumentStore.OutputSections.write(
+            OutputSectionsStore.write(
                 Section.OUTPUT,
                 Type.INFO,
                 `Instrument definition file "${idfFileName}" builded.`

@@ -13,6 +13,8 @@ import { getProperty } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/serialization";
 import {
     DocumentStore,
+    UndoManager,
+    NavigationStore,
     createObjectNavigationItem
 } from "project-editor/core/store";
 
@@ -1027,7 +1029,7 @@ export class ImportScpiDocDialog extends React.Component<{
 
         $(this.dialog).modal("hide");
 
-        DocumentStore.UndoManager.setCombineCommands(true);
+        UndoManager.setCombineCommands(true);
 
         const scpi = ProjectStore.project.scpi;
 
@@ -1120,10 +1122,10 @@ export class ImportScpiDocDialog extends React.Component<{
             }
         });
 
-        DocumentStore.UndoManager.setCombineCommands(false);
+        UndoManager.setCombineCommands(false);
 
         // always stay in scpi subsystems list view
-        DocumentStore.Navigation.setNavigationSelectedItem(
+        NavigationStore.setNavigationSelectedItem(
             scpi,
             createObjectNavigationItem(scpi.subsystems)!
         );
