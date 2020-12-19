@@ -132,9 +132,13 @@ export function initValuesAccesor(
         if (bitIndex !== undefined) {
             value = (index: number) => {
                 const data = readUInt32(values, rowOffset + index * rowBytes);
-                return (
-                    offset + (data & (0x8000 >> bitIndex) ? 1.0 : 0.0) * scale
-                );
+                if (data & 0x8000) {
+                    return (
+                        offset + (data & (0x4000 >> bitIndex) ? 1.0 : 0.0) * scale
+                    );
+                } else {
+                    return NaN;
+                }
             };
         } else {
             value =

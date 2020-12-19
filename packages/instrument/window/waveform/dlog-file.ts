@@ -354,7 +354,7 @@ export function decodeDlog<UnitType>(
 
         if (yAxis.dlogUnit === Unit.UNIT_BIT) {
             if (bitMask == 0) {
-                bitMask = 0x8000;
+                bitMask = 0x4000; // first bit at mask 0x8000 is reserved for sample validity information (0 - not valid, 1 - valid)
             } else {
                 bitMask >>= 1;
             }
@@ -392,11 +392,16 @@ export function decodeDlog<UnitType>(
             4 * (rowIndex * numFloatsPerRow + columnFloatIndexes[columnIndex]);
         if (yAxes[columnIndex].dlogUnit == Unit.UNIT_BIT) {
             const data = readUInt32(offset);
-            return data & (0x8000 >> yAxes[columnIndex].channelIndex)
-                ? 1.0
-                : 0.0;
+            if (data & 0x8000) {
+                return data & (0x4000 >> yAxes[columnIndex].channelIndex)
+                    ? 1.0
+                    : 0.0;
+            } else {
+                return NaN;
+            }
+        } else {
+            return readFloat(offset);
         }
-        return readFloat(offset);
     };
 
     return {
