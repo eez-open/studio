@@ -78,7 +78,11 @@ function parse_visa_resource_string(resource_string: string) {
     return undefined;
 }
 
-function build_request_type(direction: number, type: number, recipient: number) {
+function build_request_type(
+    direction: number,
+    type: number,
+    recipient: number
+) {
     // Build a bmRequestType field for control requests.
 
     // These is a conventional function to build a bmRequestType
@@ -307,7 +311,9 @@ export class Instrument {
 
         if (
             this.device.deviceDescriptor.idVendor === 0x0957 &&
-            [0x2818, 0x4218, 0x4418].indexOf(this.device.deviceDescriptor.idProduct) !== -1
+            [0x2818, 0x4218, 0x4418].indexOf(
+                this.device.deviceDescriptor.idProduct
+            ) !== -1
         ) {
             // Agilent U27xx modular devices
             // U2701A/U2702A, U2722A/U2723A
@@ -327,11 +333,41 @@ export class Instrument {
             if (this.device.deviceDescriptor.idProduct == 0x2818) {
                 // U2701A/U2702A
                 new_id = 0x2918;
-                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x047e, 0x0001);
-                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x047d, 0x0006);
-                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x0484, 0x0005);
-                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x0472, 0x000c);
-                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x047a, 0x0001);
+                await this.deviceControlTransfer(
+                    0xc0,
+                    0x0c,
+                    0x0000,
+                    0x047e,
+                    0x0001
+                );
+                await this.deviceControlTransfer(
+                    0xc0,
+                    0x0c,
+                    0x0000,
+                    0x047d,
+                    0x0006
+                );
+                await this.deviceControlTransfer(
+                    0xc0,
+                    0x0c,
+                    0x0000,
+                    0x0484,
+                    0x0005
+                );
+                await this.deviceControlTransfer(
+                    0xc0,
+                    0x0c,
+                    0x0000,
+                    0x0472,
+                    0x000c
+                );
+                await this.deviceControlTransfer(
+                    0xc0,
+                    0x0c,
+                    0x0000,
+                    0x047a,
+                    0x0001
+                );
                 await this.deviceControlTransfer(
                     0x40,
                     0x0c,
@@ -341,7 +377,11 @@ export class Instrument {
                 );
             }
 
-            if ([0x4218, 0x4418].indexOf(this.device.deviceDescriptor.idProduct) !== -1) {
+            if (
+                [0x4218, 0x4418].indexOf(
+                    this.device.deviceDescriptor.idProduct
+                ) !== -1
+            ) {
                 // U2722A/U2723A
                 if (this.device.deviceDescriptor.idProduct === 0x4218) {
                     // U2722A
@@ -350,11 +390,41 @@ export class Instrument {
                     // U2723A
                     new_id = 0x4318;
                 }
-                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x047e, 0x0001);
-                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x047d, 0x0006);
-                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x0487, 0x0005);
-                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x0472, 0x000c);
-                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x047a, 0x0001);
+                await this.deviceControlTransfer(
+                    0xc0,
+                    0x0c,
+                    0x0000,
+                    0x047e,
+                    0x0001
+                );
+                await this.deviceControlTransfer(
+                    0xc0,
+                    0x0c,
+                    0x0000,
+                    0x047d,
+                    0x0006
+                );
+                await this.deviceControlTransfer(
+                    0xc0,
+                    0x0c,
+                    0x0000,
+                    0x0487,
+                    0x0005
+                );
+                await this.deviceControlTransfer(
+                    0xc0,
+                    0x0c,
+                    0x0000,
+                    0x0472,
+                    0x000c
+                );
+                await this.deviceControlTransfer(
+                    0xc0,
+                    0x0c,
+                    0x0000,
+                    0x047a,
+                    0x0001
+                );
                 await this.deviceControlTransfer(
                     0x40,
                     0x0c,
@@ -375,7 +445,9 @@ export class Instrument {
             }
 
             if (!this.device) {
-                throw new UsbtmcException("Agilent U27xx modular device initialization failed");
+                throw new UsbtmcException(
+                    "Agilent U27xx modular device initialization failed"
+                );
             }
         }
 
@@ -385,7 +457,8 @@ export class Instrument {
         for (let iface of this.device.interfaces) {
             if (
                 iface.descriptor.bInterfaceClass === USBTMC_bInterfaceClass &&
-                iface.descriptor.bInterfaceSubClass === USBTMC_bInterfaceSubClass
+                iface.descriptor.bInterfaceSubClass ===
+                    USBTMC_bInterfaceSubClass
             ) {
                 // USBTMC device
                 //this.cfg = ???;
@@ -426,8 +499,11 @@ export class Instrument {
         //     self.device.set_configuration(self.cfg)
 
         // claim interface
-        if (this.iface.isKernelDriverActive()) {
-            this.iface.detachKernelDriver();
+        const os = require("os");
+        if (os.platform() != "win32") {
+            if (this.iface.isKernelDriverActive()) {
+                this.iface.detachKernelDriver();
+            }
         }
         this.iface.claim();
 
@@ -435,17 +511,25 @@ export class Instrument {
 
         // find endpoints
         for (let i = 0; i < this.iface.endpoints.length; i++) {
-            if (this.iface.endpoints[i].transferType === usb.LIBUSB_TRANSFER_TYPE_BULK) {
+            if (
+                this.iface.endpoints[i].transferType ===
+                usb.LIBUSB_TRANSFER_TYPE_BULK
+            ) {
                 if (this.iface.endpoints[i] instanceof usb.InEndpoint) {
                     this.bulk_in_ep = this.iface.endpoints[i] as usb.InEndpoint;
                 } else {
-                    this.bulk_out_ep = this.iface.endpoints[i] as usb.OutEndpoint;
+                    this.bulk_out_ep = this.iface.endpoints[
+                        i
+                    ] as usb.OutEndpoint;
                 }
             } else if (
-                this.iface.endpoints[i].transferType === usb.LIBUSB_TRANSFER_TYPE_INTERRUPT
+                this.iface.endpoints[i].transferType ===
+                usb.LIBUSB_TRANSFER_TYPE_INTERRUPT
             ) {
                 if (this.iface.endpoints[i] instanceof usb.InEndpoint) {
-                    this.interrupt_in_ep = this.iface.endpoints[i] as usb.InEndpoint;
+                    this.interrupt_in_ep = this.iface.endpoints[
+                        i
+                    ] as usb.InEndpoint;
                 }
             }
         }
@@ -464,7 +548,8 @@ export class Instrument {
 
         if (
             this.device.deviceDescriptor.idVendor == 0x1ab1 &&
-            RIGOL_QUIRK_PIDS.indexOf(this.device.deviceDescriptor.idProduct) !== -1
+            RIGOL_QUIRK_PIDS.indexOf(this.device.deviceDescriptor.idProduct) !==
+                -1
         ) {
             //this.rigol_quirk = true;
             // if (this.device.deviceDescriptor.idProduct == 0x04ce) {
@@ -507,7 +592,10 @@ export class Instrument {
     }
 
     is_usb488() {
-        return this.iface.descriptor.bInterfaceProtocol === USB488_bInterfaceProtocol;
+        return (
+            this.iface.descriptor.bInterfaceProtocol ===
+            USB488_bInterfaceProtocol
+        );
     }
 
     async get_capabilities() {
@@ -516,14 +604,22 @@ export class Instrument {
         }
 
         const result = await this.deviceControlTransfer(
-            build_request_type(CTRL_IN, CTRL_TYPE_CLASS, CTRL_RECIPIENT_INTERFACE),
+            build_request_type(
+                CTRL_IN,
+                CTRL_TYPE_CLASS,
+                CTRL_RECIPIENT_INTERFACE
+            ),
             USBTMC_REQUEST_GET_CAPABILITIES,
             0x0000,
             this.iface.descriptor.iInterface,
             0x0018
         );
 
-        if (!result.err && result.buffer && result.buffer[0] == USBTMC_STATUS_SUCCESS) {
+        if (
+            !result.err &&
+            result.buffer &&
+            result.buffer[0] == USBTMC_STATUS_SUCCESS
+        ) {
             this.bcdUSBTMC = (result.buffer[3] << 8) + result.buffer[2];
             this.support_pulse = (result.buffer[4] & 4) !== 0;
             this.support_talk_only = (result.buffer[4] & 2) !== 0;
@@ -541,7 +637,10 @@ export class Instrument {
                 this.support_DT = (result.buffer[4] & 1) !== 0;
             }
         } else {
-            throw new UsbtmcException("Get capabilities failed", "get_capabilities");
+            throw new UsbtmcException(
+                "Get capabilities failed",
+                "get_capabilities"
+            );
         }
     }
 
@@ -554,13 +653,21 @@ export class Instrument {
 
         if (this.support_pulse) {
             const result = await this.deviceControlTransfer(
-                build_request_type(CTRL_IN, CTRL_TYPE_CLASS, CTRL_RECIPIENT_INTERFACE),
+                build_request_type(
+                    CTRL_IN,
+                    CTRL_TYPE_CLASS,
+                    CTRL_RECIPIENT_INTERFACE
+                ),
                 USBTMC_REQUEST_INDICATOR_PULSE,
                 0x0000,
                 this.iface.descriptor.iInterface,
                 0x0001
             );
-            if (result.err || !result.buffer || result.buffer[0] != USBTMC_STATUS_SUCCESS) {
+            if (
+                result.err ||
+                !result.buffer ||
+                result.buffer[0] != USBTMC_STATUS_SUCCESS
+            ) {
                 throw new UsbtmcException("Pulse failed", "pulse");
             }
         }
@@ -685,7 +792,12 @@ export class Instrument {
         const transfer_attributes = buffer.readUInt8(8);
 
         const data = Buffer.alloc(transfer_size);
-        buffer.copy(data, 0, USBTMC_HEADER_SIZE, transfer_size + USBTMC_HEADER_SIZE);
+        buffer.copy(
+            data,
+            0,
+            USBTMC_HEADER_SIZE,
+            transfer_size + USBTMC_HEADER_SIZE
+        );
 
         return {
             msgid,
@@ -729,7 +841,10 @@ export class Instrument {
                     eom = true;
                 }
 
-                const block = data.slice(offset, offset + this.max_transfer_size);
+                const block = data.slice(
+                    offset,
+                    offset + this.max_transfer_size
+                );
                 const size = block.length;
 
                 const req = Buffer.concat([
@@ -788,11 +903,16 @@ export class Instrument {
                 if (!this.rigol_quirk || read_data.length === 0) {
                     // if the rigol sees this again, it will restart the transfer
                     // so only send it the first time
-                    const req = this.pack_dev_dep_msg_in_header(read_len, this.term_char);
+                    const req = this.pack_dev_dep_msg_in_header(
+                        read_len,
+                        this.term_char
+                    );
                     await this.bulk_out_ep_write(req);
                 }
 
-                const resp = await this.bulk_in_ep_read(read_len + USBTMC_HEADER_SIZE + 3);
+                const resp = await this.bulk_in_ep_read(
+                    read_len + USBTMC_HEADER_SIZE + 3
+                );
                 if (resp.length === 0) {
                     break;
                 }
@@ -825,10 +945,15 @@ export class Instrument {
                         if (read_data.length > 0) {
                             read_data = Buffer.concat([read_data, resp]);
                         } else {
-                            if (this.rigol_quirk_ieee_block && data[0] === "#".charCodeAt(0)) {
+                            if (
+                                this.rigol_quirk_ieee_block &&
+                                data[0] === "#".charCodeAt(0)
+                            ) {
                                 // ieee block incoming, the transfer_size usbtmc header is lying about the transaction size
                                 const l = data[1] - "0".charCodeAt(0);
-                                const n = parseInt(data.slice(2, l + 2).toString());
+                                const n = parseInt(
+                                    data.slice(2, l + 2).toString()
+                                );
                                 transfer_size = n + (l + 2); // account for ieee header
                             }
 
@@ -924,12 +1049,18 @@ export class Instrument {
 
     async readWithCallback(callback: (data: string) => void) {
         // Read string from instrument
-        return (await this.read_raw(-1, buffer => {
-            callback(buffer.toString("binary"));
-        })).toString("binary");
+        return (
+            await this.read_raw(-1, buffer => {
+                callback(buffer.toString("binary"));
+            })
+        ).toString("binary");
     }
 
-    async ask(message: string, num: number = -1, encoding: BufferEncoding = "binary") {
+    async ask(
+        message: string,
+        num: number = -1,
+        encoding: BufferEncoding = "binary"
+    ) {
         // Write then read string
         // Advantest/ADCMT hardware won't respond to a command unless it's in Local Lockout mode
         const was_locked = this.advantest_locked;
@@ -955,24 +1086,40 @@ export class Instrument {
 
         // Send INITIATE_CLEAR
         const result = await this.deviceControlTransfer(
-            build_request_type(CTRL_IN, CTRL_TYPE_CLASS, CTRL_RECIPIENT_INTERFACE),
+            build_request_type(
+                CTRL_IN,
+                CTRL_TYPE_CLASS,
+                CTRL_RECIPIENT_INTERFACE
+            ),
             USBTMC_REQUEST_INITIATE_CLEAR,
             0x0000,
             this.iface.descriptor.iInterface,
             0x0001
         );
-        if (!result.err && result.buffer && result.buffer[0] == USBTMC_STATUS_SUCCESS) {
+        if (
+            !result.err &&
+            result.buffer &&
+            result.buffer[0] == USBTMC_STATUS_SUCCESS
+        ) {
             // Initiate clear succeeded, wait for completion
             while (true) {
                 const result = await this.deviceControlTransfer(
-                    build_request_type(CTRL_IN, CTRL_TYPE_CLASS, CTRL_RECIPIENT_INTERFACE),
+                    build_request_type(
+                        CTRL_IN,
+                        CTRL_TYPE_CLASS,
+                        CTRL_RECIPIENT_INTERFACE
+                    ),
                     USBTMC_REQUEST_CHECK_CLEAR_STATUS,
                     0x0000,
                     this.iface.descriptor.iInterface,
                     0x0002
                 );
 
-                if (!result.err && result.buffer && result.buffer[0] != USBTMC_STATUS_PENDING) {
+                if (
+                    !result.err &&
+                    result.buffer &&
+                    result.buffer[0] != USBTMC_STATUS_PENDING
+                ) {
                     break;
                 }
 
@@ -1000,24 +1147,40 @@ export class Instrument {
 
         // Send INITIATE_ABORT_BULK_OUT
         const result = await this.deviceControlTransfer(
-            build_request_type(CTRL_IN, CTRL_TYPE_CLASS, CTRL_RECIPIENT_ENDPOINT),
+            build_request_type(
+                CTRL_IN,
+                CTRL_TYPE_CLASS,
+                CTRL_RECIPIENT_ENDPOINT
+            ),
             USBTMC_REQUEST_INITIATE_ABORT_BULK_OUT,
             btag,
             this.bulk_out_ep.descriptor.bEndpointAddress,
             0x0002
         );
-        if (!result.err && result.buffer && result.buffer[0] == USBTMC_STATUS_SUCCESS) {
+        if (
+            !result.err &&
+            result.buffer &&
+            result.buffer[0] == USBTMC_STATUS_SUCCESS
+        ) {
             // Initiate abort bulk out succeeded, wait for completion
             while (true) {
                 // Check status
                 const result = await this.deviceControlTransfer(
-                    build_request_type(CTRL_IN, CTRL_TYPE_CLASS, CTRL_RECIPIENT_ENDPOINT),
+                    build_request_type(
+                        CTRL_IN,
+                        CTRL_TYPE_CLASS,
+                        CTRL_RECIPIENT_ENDPOINT
+                    ),
                     USBTMC_REQUEST_CHECK_ABORT_BULK_OUT_STATUS,
                     0x0000,
                     this.bulk_out_ep.descriptor.bEndpointAddress,
                     0x0008
                 );
-                if (!result.err && result.buffer && result.buffer[0] != USBTMC_STATUS_PENDING) {
+                if (
+                    !result.err &&
+                    result.buffer &&
+                    result.buffer[0] != USBTMC_STATUS_PENDING
+                ) {
                     break;
                 }
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -1040,24 +1203,40 @@ export class Instrument {
 
         // Send INITIATE_ABORT_BULK_IN
         const result = await this.deviceControlTransfer(
-            build_request_type(CTRL_IN, CTRL_TYPE_CLASS, CTRL_RECIPIENT_ENDPOINT),
+            build_request_type(
+                CTRL_IN,
+                CTRL_TYPE_CLASS,
+                CTRL_RECIPIENT_ENDPOINT
+            ),
             USBTMC_REQUEST_INITIATE_ABORT_BULK_IN,
             btag,
             this.bulk_in_ep.descriptor.bEndpointAddress,
             0x0002
         );
-        if (!result.err && result.buffer && result.buffer[0] == USBTMC_STATUS_SUCCESS) {
+        if (
+            !result.err &&
+            result.buffer &&
+            result.buffer[0] == USBTMC_STATUS_SUCCESS
+        ) {
             // Initiate abort bulk in succeeded, wait for completion
             while (true) {
                 // Check status
                 const result = await this.deviceControlTransfer(
-                    build_request_type(CTRL_IN, CTRL_TYPE_CLASS, CTRL_RECIPIENT_ENDPOINT),
+                    build_request_type(
+                        CTRL_IN,
+                        CTRL_TYPE_CLASS,
+                        CTRL_RECIPIENT_ENDPOINT
+                    ),
                     USBTMC_REQUEST_CHECK_ABORT_BULK_IN_STATUS,
                     0x0000,
                     this.bulk_in_ep.descriptor.bEndpointAddress,
                     0x0008
                 );
-                if (!result.err && result.buffer && result.buffer[0] != USBTMC_STATUS_PENDING) {
+                if (
+                    !result.err &&
+                    result.buffer &&
+                    result.buffer[0] != USBTMC_STATUS_PENDING
+                ) {
                     break;
                 }
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -1127,9 +1306,35 @@ export class UsbTmcInterface implements CommunicationInterface {
                 .then(() => {
                     this.instrument = instrument;
                     this.host.connected();
+
+                    var that = this;
+
+                    function read() {
+                        if (that.instrument) {
+                            that.instrument
+                                .readWithCallback(data => {
+                                    console.log("readWithCallback", data);
+                                    that.host.onData(data);
+                                })
+                                .catch(() => {
+                                    console.log("timeout");
+                                })
+                                .finally(() => {
+                                    console.log("finally");
+                                    setTimeout(read, 100);
+                                });
+                        }
+                    }
+
+                    read();
+
+
                 })
                 .catch(err => {
-                    this.host.setError(ConnectionErrorCode.NONE, err.toString());
+                    this.host.setError(
+                        ConnectionErrorCode.NONE,
+                        err.toString()
+                    );
                     this.destroy();
                 });
         } catch (err) {
@@ -1153,49 +1358,51 @@ export class UsbTmcInterface implements CommunicationInterface {
     }
 
     flush() {
-        if (!this.instrument) {
-            return;
-        }
-
-        const command = this.commands.shift();
-        if (command) {
-            this.executing = true;
-            try {
-                this.instrument.write(command).then(() => {
-                    if (this.instrument) {
-                        try {
-                            this.instrument
-                                .readWithCallback(data => {
-                                    this.host.onData(data);
-                                })
-                                .then(data => {
-                                    if (data && data.length > 0) {
-                                        this.host.onData(data);
-                                    }
-                                    this.executing = false;
-                                    this.flush();
-                                })
-                                .catch(err => {
-                                    this.executing = false;
-                                    this.flush();
-                                });
-                        } catch (err) {
-                            this.host.setError(ConnectionErrorCode.NONE, err.toString());
-                            this.destroy();
-                        }
-                    }
-                });
-            } catch (err) {
-                this.host.setError(ConnectionErrorCode.NONE, err.toString());
-                this.destroy();
-            }
-        }
+        // if (!this.instrument) {
+        //     return;
+        // }
+        // const command = this.commands.shift();
+        // if (command) {
+        //     this.executing = true;
+        //     try {
+        //         this.instrument.write(command).then(() => {
+        //             if (this.instrument) {
+        //                 try {
+        //                     this.instrument
+        //                         .readWithCallback(data => {
+        //                             this.host.onData(data);
+        //                         })
+        //                         .then(data => {
+        //                             if (data && data.length > 0) {
+        //                                 this.host.onData(data);
+        //                             }
+        //                             this.executing = false;
+        //                             this.flush();
+        //                         })
+        //                         .catch(err => {
+        //                             this.executing = false;
+        //                             this.flush();
+        //                         });
+        //                 } catch (err) {
+        //                     this.host.setError(ConnectionErrorCode.NONE, err.toString());
+        //                     this.destroy();
+        //                 }
+        //             }
+        //         });
+        //     } catch (err) {
+        //         this.host.setError(ConnectionErrorCode.NONE, err.toString());
+        //         this.destroy();
+        //     }
+        // }
     }
 
     write(data: string) {
-        this.commands.push(data);
-        if (!this.executing) {
-            this.flush();
+        // this.commands.push(data);
+        // if (!this.executing) {
+        //     this.flush();
+        // }
+        if (this.instrument) {
+            this.instrument.write(data);
         }
     }
 
@@ -1214,15 +1421,24 @@ export async function getUsbDevices() {
         try {
             device.open();
 
-            productName = await new Promise<string | undefined>((resolve, reject) => {
-                device.getStringDescriptor(device.deviceDescriptor.iProduct, (err, product) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(product !== undefined ? product.toString() : product);
-                    }
-                });
-            });
+            productName = await new Promise<string | undefined>(
+                (resolve, reject) => {
+                    device.getStringDescriptor(
+                        device.deviceDescriptor.iProduct,
+                        (err, product) => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                resolve(
+                                    product !== undefined
+                                        ? product.toString()
+                                        : product
+                                );
+                            }
+                        }
+                    );
+                }
+            );
 
             device.close();
         } catch (err) {}

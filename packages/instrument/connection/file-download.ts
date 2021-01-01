@@ -10,7 +10,7 @@ import { FileTransfer } from "instrument/connection/file-transfer";
 import { Connection } from "instrument/connection/connection";
 import { detectFileType, convertBmpToPng } from "instrument/connection/file-type";
 
-const CONF_FILE_TRANSFER_TIMEOUT_FOR_ARBITRARY_BLOCK_MS = 500;
+const CONF_FILE_TRANSFER_TIMEOUT_FOR_ARBITRARY_BLOCK_MS = 2500;
 
 export class FileDownload extends FileTransfer {
     fileType:
