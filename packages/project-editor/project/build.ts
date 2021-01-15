@@ -215,13 +215,25 @@ async function generateFiles(
         for (const buildFile of build.files) {
             if (buildFile.fileName.indexOf("<configuration>") !== -1) {
                 for (const configuration of build.configurations) {
-                    await generateFile(
-                        configurationBuildResults[configuration.name],
-                        buildFile.template,
-                        destinationFolderPath +
-                        "/" +
-                        buildFile.fileName.replace("<configuration>", configuration.name)
-                    );
+                    try {
+                        await generateFile(
+                            configurationBuildResults[configuration.name],
+                            buildFile.template,
+                            destinationFolderPath +
+                            "/" +
+                            buildFile.fileName.replace("<configuration>", configuration.name)
+                        );
+                    } catch (err) {
+                        await new Promise(resolve => setTimeout(resolve, 10));
+
+                        await generateFile(
+                            configurationBuildResults[configuration.name],
+                            buildFile.template,
+                            destinationFolderPath +
+                            "/" +
+                            buildFile.fileName.replace("<configuration>", configuration.name)
+                        );
+                    }
                 }
             } else {
                 generateFile(

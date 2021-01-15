@@ -924,7 +924,7 @@ export class Glyph extends EezObject {
 
             for (let x = 0; x < width; x++) {
                 for (let y = 0; y < height; y++) {
-                    pixelArray[y * width + x] = buffer[(y * width + x) * 4];
+                    pixelArray[y * width + x] = 255 - buffer[(y * width + x) * 4];
                 }
             }
 
@@ -1048,7 +1048,7 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
 
         if (!fontFilePath.toLowerCase().endsWith(".bdf")) {
             fontSize = this.props.values[this.props.fieldProperties.options.fontSizeField];
-            if (!fontSize || fontSize < 8 || fontSize > 100) {
+            if (!fontSize || fontSize < 6 || fontSize > 100) {
                 return;
             }
 
