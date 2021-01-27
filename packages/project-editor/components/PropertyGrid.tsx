@@ -1120,7 +1120,7 @@ class Property extends React.Component<PropertyProps> {
                         .map(object => {
                             let name = getNameProperty(object);
                             return (
-                                <option key={getId(object)} value={name}>
+                                <option key={name} value={name}>
                                     {name}
                                 </option>
                             );

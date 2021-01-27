@@ -1,4 +1,16 @@
-import usb from "usb";
+import type usbTypes from "usb";
+
+import * as UsbModule from "usb";
+
+////////////////////////////////////////////////////////////////////////////////
+
+let usbModule: typeof UsbModule;
+function getUsbModule() {
+    if (!usbModule) {
+        usbModule = require("usb") as typeof UsbModule;
+    }
+    return usbModule;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -148,9 +160,9 @@ export class Instrument {
     idVendor: number;
     idProduct: number;
     iSerial: any = null;
-    device: usb.Device;
+    device: usbTypes.Device;
     //cfg: any = null;
-    iface: usb.Interface;
+    iface: usbTypes.Interface;
     term_char: any = null;
 
     bcdUSBTMC: number = 0;
@@ -172,9 +184,9 @@ export class Instrument {
 
     _timeout: number = 500;
 
-    bulk_in_ep: usb.InEndpoint;
-    bulk_out_ep: usb.OutEndpoint;
-    interrupt_in_ep: usb.InEndpoint | null = null;
+    bulk_in_ep: usbTypes.InEndpoint;
+    bulk_out_ep: usbTypes.OutEndpoint;
+    interrupt_in_ep: usbTypes.InEndpoint | null = null;
 
     last_btag: number = 0;
     last_rstb_btag: number = 0;
@@ -192,6 +204,8 @@ export class Instrument {
 
     constructor(...args: any[]) {
         let resource: string | null = null;
+
+        const usb = getUsbModule();
 
         if (args.length === 1) {
             if (typeof args[0] === "string") {
@@ -436,6 +450,8 @@ export class Instrument {
 
             (this.device as any) = undefined;
 
+            const usb = getUsbModule();
+
             for (let i = 0; i < 40; i++) {
                 this.device = usb.findByIds(0x0957, new_id);
                 if (this.device) {
@@ -507,6 +523,8 @@ export class Instrument {
         }
         this.iface.claim();
 
+        const usb = getUsbModule();
+
         // don't need to set altsetting - USBTMC devices have 1 altsetting as per the spec
 
         // find endpoints
@@ -516,11 +534,11 @@ export class Instrument {
                 usb.LIBUSB_TRANSFER_TYPE_BULK
             ) {
                 if (this.iface.endpoints[i] instanceof usb.InEndpoint) {
-                    this.bulk_in_ep = this.iface.endpoints[i] as usb.InEndpoint;
+                    this.bulk_in_ep = this.iface.endpoints[i] as usbTypes.InEndpoint;
                 } else {
                     this.bulk_out_ep = this.iface.endpoints[
                         i
-                    ] as usb.OutEndpoint;
+                    ] as usbTypes.OutEndpoint;
                 }
             } else if (
                 this.iface.endpoints[i].transferType ===
@@ -529,7 +547,7 @@ export class Instrument {
                 if (this.iface.endpoints[i] instanceof usb.InEndpoint) {
                     this.interrupt_in_ep = this.iface.endpoints[
                         i
-                    ] as usb.InEndpoint;
+                    ] as usbTypes.InEndpoint;
                 }
             }
         }
@@ -1294,6 +1312,8 @@ export class UsbTmcInterface implements CommunicationInterface {
     commands: string[] = [];
     executing: boolean;
 
+    closeConnectionToInstrument: boolean = false;
+
     constructor(private host: CommunicationInterfaceHost) {
         try {
             const instrument = new Instrument(
@@ -1317,11 +1337,17 @@ export class UsbTmcInterface implements CommunicationInterface {
                                     that.host.onData(data);
                                 })
                                 .catch(() => {
-                                    console.log("timeout");
+                                    //console.log("timeout");
                                 })
                                 .finally(() => {
-                                    console.log("finally");
-                                    setTimeout(read, 100);
+                                    //console.log("finally");
+                                    if (that.closeConnectionToInstrument) {
+                                        that.closeConnectionToInstrument = false;
+                                        instrument.close();
+                                        that.instrument = undefined;
+                                    } else {
+                                        setTimeout(read, 0);
+                                    }
                                 });
                         }
                     }
@@ -1351,8 +1377,7 @@ export class UsbTmcInterface implements CommunicationInterface {
 
     destroy() {
         if (this.instrument) {
-            this.instrument.close();
-            this.instrument = undefined;
+            this.closeConnectionToInstrument = true;
         }
         this.host.disconnected();
     }
@@ -1413,6 +1438,8 @@ export class UsbTmcInterface implements CommunicationInterface {
 
 export async function getUsbDevices() {
     let devices = [];
+
+    const usb = getUsbModule();
 
     const deviceList = usb.getDeviceList();
     for (const device of deviceList) {

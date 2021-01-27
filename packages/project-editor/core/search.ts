@@ -324,7 +324,7 @@ class CurrentSearch {
 
         if (
             root &&
-            (!patternOrObject || typeof patternOrObject != "string" || patternOrObject.length > 0)
+            (patternOrObject == undefined || typeof patternOrObject != "string" || patternOrObject.length > 0)
         ) {
             let searchResultsGenerator =
                 typeof patternOrObject == "string"
@@ -382,7 +382,7 @@ function startNewSearch(
 ) {
     theCurrentSearch.startNewSearch(
         root,
-        patternOrObject,
+        patternOrObject || "",
         matchCase,
         matchWholeWord,
         searchCallback
