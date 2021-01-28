@@ -51,6 +51,8 @@ export const WidgetComponent = inject("designerContext")(
                 }
             });
 
+            let canvasDiv;
+
             if (widget instanceof Widget && widget.draw) {
                 canvas = document.createElement("canvas");
                 canvas.width = widget.width;
@@ -59,10 +61,8 @@ export const WidgetComponent = inject("designerContext")(
                 canvas.style.display = "block";
                 widget.draw!(canvas.getContext("2d")!, dataContext);
 
-                return (
+                canvasDiv = (
                     <div
-                        data-designer-object-id={dataDesignerObjectId}
-                        style={style}
                         ref={refDiv}
                     ></div>
                 );
@@ -74,6 +74,7 @@ export const WidgetComponent = inject("designerContext")(
 
                 return (
                     <div data-designer-object-id={dataDesignerObjectId} style={style}>
+                        {canvasDiv}
                         {widget.render(dataContext, designerContext)}
                     </div>
                 );

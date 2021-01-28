@@ -890,6 +890,48 @@ export class ContainerWidget extends Widget implements IContainerWidget {
         }
     });
 
+    draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
+        const w = this.width;
+        const h = this.height;
+        const style = this.style;
+
+        if (w > 0 && h > 0) {
+            let x1 = 0;
+            let y1 = 0;
+            let x2 = w - 1;
+            let y2 = h - 1;
+
+            const borderSize = style.borderSizeRect;
+            let borderRadius = styleGetBorderRadius(style) || 0;
+            if (
+                borderSize.top > 0 ||
+                borderSize.right > 0 ||
+                borderSize.bottom > 0 ||
+                borderSize.left > 0
+            ) {
+                draw.setColor(style.borderColorProperty);
+                draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                x1 += borderSize.left;
+                y1 += borderSize.top;
+                x2 -= borderSize.right;
+                y2 -= borderSize.bottom;
+                borderRadius = Math.max(
+                    borderRadius -
+                        Math.max(
+                            borderSize.top,
+                            borderSize.right,
+                            borderSize.bottom,
+                            borderSize.left
+                        ),
+                    0
+                );
+            }
+
+            draw.setColor(style.backgroundColorProperty);
+            draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+        }
+    };
+
     render(dataContext: DataContext) {
         return <WidgetContainerComponent widgets={this.widgets} dataContext={dataContext} />;
     }
