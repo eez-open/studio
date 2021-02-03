@@ -620,6 +620,8 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
     @action.bound
     onDragLeave(event: React.DragEvent) {
         if (this.pageEditorContext.dragWidget) {
+            this.pageEditorContext.dragWidget.x = 0;
+            this.pageEditorContext.dragWidget.y = 0;
             this.pageEditorContext.dragWidget = undefined;
 
             // deselect dragWidget

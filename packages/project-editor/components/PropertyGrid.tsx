@@ -1,5 +1,11 @@
 import React from "react";
-import { computed, observable, action, runInAction, autorun } from "mobx";
+import {
+    computed,
+    observable,
+    action,
+    runInAction,
+    autorun
+} from "mobx";
 import { observer, disposeOnUnmount } from "mobx-react";
 import { bind } from "bind-decorator";
 import classNames from "classnames";
@@ -55,7 +61,11 @@ import { info } from "project-editor/core/util";
 
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
-import { ProjectStore, isAnyObjectReadOnly, getNameProperty } from "project-editor/project/project";
+import {
+    ProjectStore,
+    isAnyObjectReadOnly,
+    getNameProperty
+} from "project-editor/project/project";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -105,7 +115,10 @@ function getPropertyValue(objects: IEezObject[], propertyInfo: PropertyInfo) {
     return result;
 }
 
-function getPropertyValueAsString(objects: IEezObject[], propertyInfo: PropertyInfo) {
+function getPropertyValueAsString(
+    objects: IEezObject[],
+    propertyInfo: PropertyInfo
+) {
     if (objects.length === 0) {
         return undefined;
     }
@@ -229,7 +242,10 @@ class CodeEditorProperty extends React.Component<
 
         let value;
 
-        let getPropertyValueResult = getPropertyValue(props.objects, props.propertyInfo);
+        let getPropertyValueResult = getPropertyValue(
+            props.objects,
+            props.propertyInfo
+        );
         if (getPropertyValueResult !== undefined) {
             value = getPropertyValueResult.value;
             if (value === undefined) {
@@ -358,7 +374,10 @@ class ThemedColorInput extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function isArrayElementPropertyVisible(propertyInfo: PropertyInfo, object?: IEezObject) {
+function isArrayElementPropertyVisible(
+    propertyInfo: PropertyInfo,
+    object?: IEezObject
+) {
     if (object) {
         return !isPropertyHidden(object, propertyInfo);
     }
@@ -376,11 +395,16 @@ function isArrayElementPropertyVisible(propertyInfo: PropertyInfo, object?: IEez
 
 function isHighlightedProperty(object: IEezObject, propertyInfo: PropertyInfo) {
     const selectedObject =
-        NavigationStore.selectedPanel && NavigationStore.selectedPanel.selectedObject;
+        NavigationStore.selectedPanel &&
+        NavigationStore.selectedPanel.selectedObject;
     return !!(
         selectedObject &&
-        ((getParent(selectedObject) === object && getKey(selectedObject) === propertyInfo.name) ||
-            isProperAncestor(getParent(selectedObject), getProperty(object, propertyInfo.name)))
+        ((getParent(selectedObject) === object &&
+            getKey(selectedObject) === propertyInfo.name) ||
+            isProperAncestor(
+                getParent(selectedObject),
+                getProperty(object, propertyInfo.name)
+            ))
     );
 }
 
@@ -414,8 +438,14 @@ class ArrayElementProperty extends React.Component<{
         const { propertyInfo } = this.props;
 
         const className = classNames(propertyInfo.name, {
-            inError: isPropertyInError(this.props.object, this.props.propertyInfo),
-            highlighted: isHighlightedProperty(this.props.object, this.props.propertyInfo)
+            inError: isPropertyInError(
+                this.props.object,
+                this.props.propertyInfo
+            ),
+            highlighted: isHighlightedProperty(
+                this.props.object,
+                this.props.propertyInfo
+            )
         });
 
         if (isArrayElementPropertyVisible(propertyInfo, this.props.object)) {
@@ -450,14 +480,16 @@ class ArrayElementProperties extends React.Component<{
     render() {
         return (
             <tr>
-                {getClassInfo(this.props.object).properties.map(propertyInfo => (
-                    <ArrayElementProperty
-                        key={propertyInfo.name}
-                        propertyInfo={propertyInfo}
-                        object={this.props.object}
-                        readOnly={this.props.readOnly}
-                    />
-                ))}
+                {getClassInfo(this.props.object).properties.map(
+                    propertyInfo => (
+                        <ArrayElementProperty
+                            key={propertyInfo.name}
+                            propertyInfo={propertyInfo}
+                            object={this.props.object}
+                            readOnly={this.props.readOnly}
+                        />
+                    )
+                )}
                 <td>
                     <Toolbar>
                         <IconAction
@@ -493,7 +525,9 @@ class ArrayProperty extends React.Component<PropertyProps> {
                 [this.props.propertyInfo.name]: []
             });
 
-            value = (this.props.objects[0] as any)[this.props.propertyInfo.name] as IEezObject[];
+            value = (this.props.objects[0] as any)[
+                this.props.propertyInfo.name
+            ] as IEezObject[];
         }
 
         const typeClass = this.props.propertyInfo.typeClass!;
@@ -526,9 +560,14 @@ class ArrayProperty extends React.Component<PropertyProps> {
                 <thead>
                     <tr>
                         {typeClass.classInfo.properties
-                            .filter(propertyInfo => isArrayElementPropertyVisible(propertyInfo))
+                            .filter(propertyInfo =>
+                                isArrayElementPropertyVisible(propertyInfo)
+                            )
                             .map(propertyInfo => (
-                                <th key={propertyInfo.name} className={propertyInfo.name}>
+                                <th
+                                    key={propertyInfo.name}
+                                    className={propertyInfo.name}
+                                >
                                     {getPropertyName(propertyInfo)}
                                 </th>
                             ))}
@@ -599,7 +638,10 @@ class PropertyCollapsedStore {
     @action
     toggleColapsed(propertyInfo: PropertyInfo) {
         this.map[this.getKey(propertyInfo)] = !this.isCollapsed(propertyInfo);
-        localStorage.setItem("PropertyCollapsedStore", JSON.stringify(this.map));
+        localStorage.setItem(
+            "PropertyCollapsedStore",
+            JSON.stringify(this.map)
+        );
     }
 }
 
@@ -630,12 +672,16 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
         if (!propertyInfo.propertyGridCollapsable) {
             return (
                 <PropertyGrid
-                    objects={this.props.objects.map(object => (object as any)[propertyInfo.name])}
+                    objects={this.props.objects.map(
+                        object => (object as any)[propertyInfo.name]
+                    )}
                 />
             );
         }
 
-        const collapsed = propertyCollapsedStore.isCollapsed(this.props.propertyInfo);
+        const collapsed = propertyCollapsedStore.isCollapsed(
+            this.props.propertyInfo
+        );
         if (collapsed) {
             if (propertyInfo.propertyGridCollapsableDefaultPropertyName) {
                 const defaultPropertyInfo = findPropertyByNameInClassInfo(
@@ -675,11 +721,17 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
         return (
             <div className="embedded-property-grid collapsable">
                 <div onClick={this.toggleCollapsed}>
-                    <Icon icon="material:keyboard_arrow_down" size={18} className="triangle" />
+                    <Icon
+                        icon="material:keyboard_arrow_down"
+                        size={18}
+                        className="triangle"
+                    />
                     {getPropertyName(propertyInfo)}
                 </div>
                 <PropertyGrid
-                    objects={this.props.objects.map(object => (object as any)[propertyInfo.name])}
+                    objects={this.props.objects.map(
+                        object => (object as any)[propertyInfo.name]
+                    )}
                 />
             </div>
         );
@@ -704,7 +756,9 @@ class PropertyName extends React.Component<PropertyProps> {
             const enabled =
                 !propertyInfo.propertyGridCollapsableEnabled ||
                 propertyInfo.propertyGridCollapsableEnabled();
-            const collapsed = propertyCollapsedStore.isCollapsed(this.props.propertyInfo);
+            const collapsed = propertyCollapsedStore.isCollapsed(
+                this.props.propertyInfo
+            );
 
             return (
                 <div className="collapsable" onClick={this.toggleCollapsed}>
@@ -752,7 +806,9 @@ class Property extends React.Component<PropertyProps> {
                 this.props.propertyInfo
             );
             runInAction(() => {
-                this._value = getPropertyValueResult ? getPropertyValueResult.value : undefined;
+                this._value = getPropertyValueResult
+                    ? getPropertyValueResult.value
+                    : undefined;
             });
         }
     });
@@ -774,7 +830,9 @@ class Property extends React.Component<PropertyProps> {
             this.props.objects,
             this.props.propertyInfo
         );
-        this._value = getPropertyValueResult ? getPropertyValueResult.value : undefined;
+        this._value = getPropertyValueResult
+            ? getPropertyValueResult.value
+            : undefined;
     }
 
     componentDidMount() {
@@ -817,7 +875,11 @@ class Property extends React.Component<PropertyProps> {
             }
 
             this.props.propertyInfo
-                .onSelect(this.props.objects[0], this.props.propertyInfo, params)
+                .onSelect(
+                    this.props.objects[0],
+                    this.props.propertyInfo,
+                    params
+                )
                 .then(propertyValues => {
                     this.props.updateObject(propertyValues);
                 })
@@ -856,7 +918,9 @@ class Property extends React.Component<PropertyProps> {
     @bind
     onChange(event: any) {
         const target = event.target;
-        if (this.props.propertyInfo.type === PropertyType.ConfigurationReference) {
+        if (
+            this.props.propertyInfo.type === PropertyType.ConfigurationReference
+        ) {
             if (target.value === "all") {
                 this.changeValue(undefined);
             } else {
@@ -869,7 +933,9 @@ class Property extends React.Component<PropertyProps> {
             );
             this.changeValue(enumItem && enumItem!.id);
         } else {
-            this.changeValue(target.type === "checkbox" ? target.checked : target.value);
+            this.changeValue(
+                target.type === "checkbox" ? target.checked : target.value
+            );
         }
     }
 
@@ -886,7 +952,11 @@ class Property extends React.Component<PropertyProps> {
                                 this.props.objects[0],
                                 getParent(this.props.objects[0])
                             )
-                        ].concat(this.props.propertyInfo.isOptional ? [] : [validators.required])
+                        ].concat(
+                            this.props.propertyInfo.isOptional
+                                ? []
+                                : [validators.required]
+                        )
                     }
                 ]
             },
@@ -894,7 +964,9 @@ class Property extends React.Component<PropertyProps> {
         })
             .then(result => {
                 let oldValue = this._value;
-                let newValue = result.values[this.props.propertyInfo.name].trim();
+                let newValue = result.values[
+                    this.props.propertyInfo.name
+                ].trim();
                 if (newValue.length === 0) {
                     newValue = undefined;
                 }
@@ -952,12 +1024,22 @@ class Property extends React.Component<PropertyProps> {
                 (getPropertyValueAsStringResult !== undefined
                     ? getPropertyValueAsStringResult.value
                     : undefined) || "";
-            return <input type="text" className="form-control" value={value} readOnly />;
+            return (
+                <input
+                    type="text"
+                    className="form-control"
+                    value={value}
+                    readOnly
+                />
+            );
         }
 
         if (propertyInfo.propertyGridComponent) {
             return <propertyInfo.propertyGridComponent {...this.props} />;
-        } else if (propertyInfo.type === PropertyType.String && propertyInfo.unique) {
+        } else if (
+            propertyInfo.type === PropertyType.String &&
+            propertyInfo.unique
+        ) {
             return (
                 <div className="input-group">
                     <input
@@ -992,12 +1074,25 @@ class Property extends React.Component<PropertyProps> {
                 />
             );
         } else if (propertyInfo.type === PropertyType.JSON) {
-            return <CodeEditorProperty {...this.props} mode="json" showLabel={false} />;
+            return (
+                <CodeEditorProperty
+                    {...this.props}
+                    mode="json"
+                    showLabel={false}
+                />
+            );
         } else if (propertyInfo.type === PropertyType.Cpp) {
-            return <CodeEditorProperty {...this.props} mode="c_cpp" showLabel={false} />;
+            return (
+                <CodeEditorProperty
+                    {...this.props}
+                    mode="c_cpp"
+                    showLabel={false}
+                />
+            );
         } else if (
             propertyInfo.type === PropertyType.Object ||
-            (propertyInfo.type === PropertyType.Array && this.props.propertyInfo.onSelect)
+            (propertyInfo.type === PropertyType.Array &&
+                this.props.propertyInfo.onSelect)
         ) {
             if (this.props.propertyInfo.onSelect) {
                 const getPropertyValueAsStringResult = getPropertyValueAsString(
@@ -1022,7 +1117,9 @@ class Property extends React.Component<PropertyProps> {
                                 <button
                                     className="btn btn-secondary"
                                     type="button"
-                                    title={this.props.propertyInfo.onSelectTitle}
+                                    title={
+                                        this.props.propertyInfo.onSelectTitle
+                                    }
                                     onClick={this.onSelect}
                                 >
                                     &hellip;
@@ -1102,7 +1199,9 @@ class Property extends React.Component<PropertyProps> {
                                     className="btn btn-secondary"
                                     type="button"
                                     onClick={this.onSelect}
-                                    title={this.props.propertyInfo.onSelectTitle}
+                                    title={
+                                        this.props.propertyInfo.onSelectTitle
+                                    }
                                 >
                                     &hellip;
                                 </button>
@@ -1116,7 +1215,12 @@ class Property extends React.Component<PropertyProps> {
 
                     let options = objects
                         .slice()
-                        .sort((a, b) => stringCompare(getNameProperty(a), getNameProperty(b)))
+                        .sort((a, b) =>
+                            stringCompare(
+                                getNameProperty(a),
+                                getNameProperty(b)
+                            )
+                        )
                         .map(object => {
                             let name = getNameProperty(object);
                             return (
@@ -1130,11 +1234,16 @@ class Property extends React.Component<PropertyProps> {
 
                     if (
                         this._value &&
-                        !objects.find(object => getProperty(object, "name") == this._value)
+                        !objects.find(
+                            object => getProperty(object, "name") == this._value
+                        )
                     ) {
                         if (typeof this._value == "object") {
                             options.unshift(
-                                <option key="__not_found" value={getProperty(this._value, "name")}>
+                                <option
+                                    key="__not_found"
+                                    value={getProperty(this._value, "name")}
+                                >
                                     {objectToString(this._value)}
                                 </option>
                             );
@@ -1369,7 +1478,8 @@ class Property extends React.Component<PropertyProps> {
                                         const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
                                             {
                                                 properties: ["openFile"],
-                                                filters: propertyInfo.fileFilters
+                                                filters:
+                                                    propertyInfo.fileFilters
                                             }
                                         );
 
@@ -1403,7 +1513,9 @@ class Property extends React.Component<PropertyProps> {
                             type="text"
                             className="form-control"
                             value={
-                                propertyInfo.embeddedImage ? "<embedded image>" : this._value || ""
+                                propertyInfo.embeddedImage
+                                    ? "<embedded image>"
+                                    : this._value || ""
                             }
                             readOnly
                         />
@@ -1419,23 +1531,35 @@ class Property extends React.Component<PropertyProps> {
                                                 filters: [
                                                     {
                                                         name: "Image files",
-                                                        extensions: ["png", "jpg", "jpeg"]
+                                                        extensions: [
+                                                            "png",
+                                                            "jpg",
+                                                            "jpeg"
+                                                        ]
                                                     },
-                                                    { name: "All Files", extensions: ["*"] }
+                                                    {
+                                                        name: "All Files",
+                                                        extensions: ["*"]
+                                                    }
                                                 ]
                                             }
                                         );
                                         const filePaths = result.filePaths;
                                         if (filePaths && filePaths[0]) {
                                             if (propertyInfo.embeddedImage) {
-                                                const fs = EEZStudio.electron.remote.require("fs");
+                                                const fs = EEZStudio.electron.remote.require(
+                                                    "fs"
+                                                );
                                                 fs.readFile(
-                                                    ProjectStore.getAbsoluteFilePath(filePaths[0]),
+                                                    ProjectStore.getAbsoluteFilePath(
+                                                        filePaths[0]
+                                                    ),
                                                     "base64",
                                                     (err: any, data: any) => {
                                                         if (!err) {
                                                             this.changeValue(
-                                                                "data:image/png;base64," + data
+                                                                "data:image/png;base64," +
+                                                                    data
                                                             );
                                                         }
                                                     }
@@ -1458,9 +1582,12 @@ class Property extends React.Component<PropertyProps> {
                     {this._value && !propertyInfo.embeddedImage && (
                         <img
                             src={
-                                this._value && this._value.startsWith("data:image/")
+                                this._value &&
+                                this._value.startsWith("data:image/")
                                     ? this._value
-                                    : ProjectStore.getAbsoluteFilePath(this._value || "")
+                                    : ProjectStore.getAbsoluteFilePath(
+                                          this._value || ""
+                                      )
                             }
                             style={{
                                 display: "block",
@@ -1489,13 +1616,17 @@ class GroupMenu extends React.Component<{
 
         const menu = new Menu();
 
-        groupMenu.forEach(groupMenuItem => menu.append(new MenuItem(groupMenuItem)));
+        groupMenu.forEach(groupMenuItem =>
+            menu.append(new MenuItem(groupMenuItem))
+        );
 
         menu.popup({});
     }
 
     render() {
-        return <IconAction icon="material:menu" title="" onClick={this.onClick} />;
+        return (
+            <IconAction icon="material:menu" title="" onClick={this.onClick} />
+        );
     }
 }
 
@@ -1569,6 +1700,60 @@ class GroupTitle extends React.Component<{
                         )}
                     </div>
                 </td>
+            </tr>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class PropertyEnclosure extends React.Component<{
+    objects: IEezObject[];
+    propertyInfo: PropertyInfo;
+    highlightedPropertyName?: string;
+    property: JSX.Element;
+    isPropertyMenuSupported?: boolean;
+    propertyMenuEnabled?: boolean;
+    readOnly: boolean;
+    updateObject: (propertyValues: Object) => void;
+}> {
+    render() {
+        const {
+            objects,
+            propertyInfo,
+            highlightedPropertyName,
+            property,
+            isPropertyMenuSupported,
+            propertyMenuEnabled,
+            readOnly,
+            updateObject
+        } = this.props;
+
+        const className = classNames({
+            inError:
+                objects.length === 1 &&
+                isPropertyInError(objects[0], propertyInfo),
+            highlighted:
+                propertyInfo.name == highlightedPropertyName ||
+                isHighlightedProperty(objects[0], propertyInfo)
+        });
+
+        return (
+            <tr className={className}>
+                {property}
+                {isPropertyMenuSupported &&
+                    !propertyInfo.propertyGridCollapsable && (
+                        <td>
+                            {propertyMenuEnabled && (
+                                <PropertyMenu
+                                    propertyInfo={propertyInfo}
+                                    objects={objects}
+                                    updateObject={updateObject}
+                                    readOnly={readOnly}
+                                />
+                            )}
+                        </td>
+                    )}
             </tr>
         );
     }
@@ -1740,14 +1925,14 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
     div: HTMLDivElement | null;
     lastObject: IEezObject | undefined;
 
-    @computed
     get objects() {
         return this.props.objects.filter(object => !!object);
     }
 
     ensureHighlightedVisible() {
         if (this.div) {
-            const object = this.objects.length === 1 ? this.objects[0] : undefined;
+            const object =
+                this.objects.length === 1 ? this.objects[0] : undefined;
             if (this.lastObject !== object) {
                 const $highlighted = $(this.div).find(".highlighted");
                 if ($highlighted[0]) {
@@ -1811,7 +1996,9 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
 
         const groupPropertiesArray: IGroupProperties[] = [];
 
-        let groupForPropertiesWithoutGroupSpecified: IGroupProperties | undefined;
+        let groupForPropertiesWithoutGroupSpecified:
+            | IGroupProperties
+            | undefined;
 
         const isPropertyMenuSupported = !objects.find(
             object => !getClassInfo(object).isPropertyMenuSupported
@@ -1846,7 +2033,8 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 property = (
                     <td
                         className={classNames({
-                            "embedded-property-cell": propertyInfo.type === PropertyType.Object
+                            "embedded-property-cell":
+                                propertyInfo.type === PropertyType.Object
                         })}
                         colSpan={propertyInfo.propertyGridCollapsable ? 3 : 2}
                     >
@@ -1867,35 +2055,25 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 );
             }
 
-            const className = classNames({
-                inError: objects.length === 1 && isPropertyInError(objects[0], propertyInfo),
-                highlighted:
-                    propertyInfo.name == highlightedPropertyName ||
-                    isHighlightedProperty(objects[0], propertyInfo)
-            });
-
             const propertyComponent = (
-                <tr className={className} key={propertyInfo.name}>
-                    {property}
-                    {isPropertyMenuSupported && !propertyInfo.propertyGridCollapsable && (
-                        <td>
-                            {propertyMenuEnabled && (
-                                <PropertyMenu
-                                    propertyInfo={propertyInfo}
-                                    objects={objects}
-                                    updateObject={this.updateObject}
-                                    readOnly={readOnly}
-                                />
-                            )}
-                        </td>
-                    )}
-                </tr>
+                <PropertyEnclosure
+                    key={propertyInfo.name}
+                    objects={objects}
+                    propertyInfo={propertyInfo}
+                    highlightedPropertyName={highlightedPropertyName}
+                    property={property}
+                    isPropertyMenuSupported={isPropertyMenuSupported}
+                    propertyMenuEnabled={propertyMenuEnabled}
+                    readOnly={readOnly}
+                    updateObject={this.updateObject}
+                />
             );
 
             const propertyGroup = propertyInfo.propertyGridGroup;
             if (propertyGroup) {
                 let groupProperties = groupPropertiesArray.find(
-                    groupProperties => groupProperties.group.id === propertyGroup.id
+                    groupProperties =>
+                        groupProperties.group.id === propertyGroup.id
                 );
 
                 if (!groupProperties) {
@@ -1916,9 +2094,13 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                         },
                         properties: []
                     };
-                    groupPropertiesArray.push(groupForPropertiesWithoutGroupSpecified);
+                    groupPropertiesArray.push(
+                        groupForPropertiesWithoutGroupSpecified
+                    );
                 }
-                groupForPropertiesWithoutGroupSpecified.properties.push(propertyComponent);
+                groupForPropertiesWithoutGroupSpecified.properties.push(
+                    propertyComponent
+                );
             }
         }
 
@@ -1933,19 +2115,31 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             }
         });
 
-        groupPropertiesArray.sort((a: IGroupProperties, b: IGroupProperties) => {
-            const aPosition = a.group.position !== undefined ? a.group.position : maxPosition + 1;
-            const bPosition = b.group.position !== undefined ? b.group.position : maxPosition + 1;
-            return aPosition - bPosition;
-        });
+        groupPropertiesArray.sort(
+            (a: IGroupProperties, b: IGroupProperties) => {
+                const aPosition =
+                    a.group.position !== undefined
+                        ? a.group.position
+                        : maxPosition + 1;
+                const bPosition =
+                    b.group.position !== undefined
+                        ? b.group.position
+                        : maxPosition + 1;
+                return aPosition - bPosition;
+            }
+        );
 
         const rows = groupPropertiesArray.map(groupProperties => {
             if (groupProperties.group.title) {
                 return (
                     <React.Fragment key={groupProperties.group.id}>
-                        <GroupTitle group={groupProperties.group} object={objects[0]} />
-                        {!groupCollapsedStore.isCollapsed(groupProperties.group) &&
-                            groupProperties.properties}
+                        <GroupTitle
+                            group={groupProperties.group}
+                            object={objects[0]}
+                        />
+                        {!groupCollapsedStore.isCollapsed(
+                            groupProperties.group
+                        ) && groupProperties.properties}
                     </React.Fragment>
                 );
             } else {
@@ -1958,7 +2152,10 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
         });
 
         return (
-            <PropertyGridDiv ref={(ref: any) => (this.div = ref)} className={this.props.className}>
+            <PropertyGridDiv
+                ref={(ref: any) => (this.div = ref)}
+                className={this.props.className}
+            >
                 <table>
                     <tbody>{rows}</tbody>
                 </table>
