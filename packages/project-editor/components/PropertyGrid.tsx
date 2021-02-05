@@ -52,12 +52,10 @@ import {
     getId,
     getClassInfo
 } from "project-editor/core/object";
-
+import { info } from "project-editor/core/util";
 import { replaceObjectReference } from "project-editor/core/search";
 
 import { getThemedColor } from "project-editor/features/gui/theme";
-
-import { info } from "project-editor/core/util";
 
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
@@ -68,10 +66,6 @@ import {
 } from "project-editor/project/project";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
-
-////////////////////////////////////////////////////////////////////////////////
-
-export { PropertyProps } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 

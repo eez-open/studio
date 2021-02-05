@@ -32,7 +32,8 @@ import {
     isAncestor,
     IOnSelectParams,
     getChildOfObject,
-    getParent
+    getParent,
+    PropertyProps
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { DocumentStore, NavigationStore, IContextMenuContext } from "project-editor/core/store";
@@ -54,7 +55,6 @@ import {
     resizingProperty
 } from "project-editor/features/gui/page-editor/resizing-widget-property";
 
-import { PropertyProps } from "project-editor/components/PropertyGrid";
 import { onSelectItem } from "project-editor/components/SelectItem";
 
 import { ProjectStore } from "project-editor/project/project";
@@ -1559,9 +1559,14 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
             // circular rendering prevented
             return null;
         }
+
         LayoutViewWidget.renderedLayoutPages.push(layoutPage);
 
-        return <WidgetComponent widget={layoutPage} dataContext={dataContext} />;
+        const element = <WidgetComponent widget={layoutPage} dataContext={dataContext} />;
+
+        LayoutViewWidget.renderedLayoutPages.pop();
+
+        return element;
     }
 
     open() {
